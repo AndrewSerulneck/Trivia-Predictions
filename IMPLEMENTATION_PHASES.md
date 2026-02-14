@@ -4,6 +4,27 @@ This document breaks down the project into manageable phases that can be complet
 
 ---
 
+## 🔑 Key Design Decisions
+
+### 1. **Probability Display: Percentages Only**
+- Prediction probabilities are displayed as **percentages** (e.g., "67.5%", "33.2%")
+- No American Odds conversion required
+- Points calculation remains: **Points = 100 - P%**
+
+### 2. **API Integration: Polymarket Only**
+- Use **Polymarket API** exclusively for prediction markets
+- **No TheOdds API integration** needed
+- Simpler implementation, fewer dependencies
+
+### 3. **Venue-Locked Accounts**
+- Users can only have **one account per venue**
+- Username uniqueness is enforced **per venue** (not globally)
+- When visiting a new venue, users **must create a new account** with a new username
+- This ensures fair competition within each venue's leaderboard
+- Database schema: `UNIQUE(username, venue_id)` constraint
+
+---
+
 ## Phase 0: Project Setup & Configuration (30-45 minutes)
 
 ### Goal
@@ -98,15 +119,11 @@ Create TypeScript interfaces and utility functions for data management.
    - Geolocation utilities: `getCurrentLocation()`, `calculateDistance()`, `isUserAtVenue()`, `watchVenueLocation()`
    - Use Haversine formula for distance calculation
 
-5. **Create `/lib/odds.ts`**
-   - Convert probability to American Odds
+5. **Create `/lib/predictions.ts`**
+   - Utility functions for predictions and probability display
    ```typescript
-   export function probabilityToAmericanOdds(probability: number): string {
-     if (probability >= 50) {
-       return `-${Math.round((probability / (100 - probability)) * 100)}`
-     } else {
-       return `+${Math.round(((100 - probability) / probability) * 100)}`
-     }
+   export function formatProbability(probability: number): string {
+     return `${probability.toFixed(1)}%`
    }
    
    export function calculatePoints(probability: number): number {
@@ -133,11 +150,12 @@ Set up Supabase tables and RLS policies.
    CREATE TABLE users (
      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
      auth_id UUID REFERENCES auth.users(id),
-     username TEXT UNIQUE NOT NULL,
+     username TEXT NOT NULL,
      venue_id TEXT NOT NULL,
      points INTEGER DEFAULT 0,
      created_at TIMESTAMPTZ DEFAULT NOW(),
-     updated_at TIMESTAMPTZ DEFAULT NOW()
+     updated_at TIMESTAMPTZ DEFAULT NOW(),
+     UNIQUE(username, venue_id)
    );
    
    -- Venues table
@@ -239,9 +257,10 @@ Implement anonymous authentication and username selection.
 ### Tasks
 1. **Create `/app/join/page.tsx`**
    - QR code entry point (reads `?v=VENUE_ID` from URL)
-   - Check if user already has anonymous session
+   - Check if user already has a profile for THIS specific venue
+   - If user has account at different venue, require new username for this venue
    - If not, trigger anonymous sign-in via Supabase
-   - Prompt for username (must be unique)
+   - Prompt for username (must be unique per venue)
    - Verify geolocation at venue
    - Save user to database and LocalStorage
    - Redirect to `/trivia` or `/predictions`
@@ -249,13 +268,14 @@ Implement anonymous authentication and username selection.
 2. **Create `/components/UsernameModal.tsx`**
    - Modal form for username input
    - Validation: 3-20 characters, alphanumeric + underscore
-   - Check uniqueness against Supabase
+   - Check uniqueness against Supabase for THIS venue only
    - Submit and create user record
 
 3. **Create `/lib/auth.ts`**
    - `signInAnonymously()` - Create anonymous Supabase session
-   - `checkUsername(username: string)` - Check if username is available
+   - `checkUsernameAtVenue(username: string, venueId: string)` - Check if username is available at specific venue
    - `createUser(username: string, venueId: string)` - Create user in DB
+   - `getUserForVenue(venueId: string)` - Get current user's profile for specific venue
    - `getCurrentUser()` - Get current user from session + DB
 
 4. **Create Auth Context `/lib/AuthContext.tsx`**
@@ -266,8 +286,9 @@ Implement anonymous authentication and username selection.
 ### Validation
 - Test joining via `/join?v=TEST_VENUE`
 - Verify anonymous session is created
-- Confirm username is saved to Supabase
-- Check LocalStorage contains user data
+- Confirm username is saved to Supabase for specific venue
+- Test joining a second venue - should require new username
+- Check LocalStorage contains user data per venue
 
 ---
 
@@ -350,48 +371,43 @@ Build the trivia gameplay system with timer and scoring.
 
 ---
 
-## Phase 6: Polymarket & TheOdds API Integration (3-4 hours)
+## Phase 6: Polymarket API Integration (2-3 hours)
 
 ### Goal
-Fetch and display prediction markets with American Odds.
+Fetch and display prediction markets with percentage probabilities.
 
 ### Tasks
 1. **Create `/lib/polymarket.ts`**
    - `fetchMarkets()` - Get active markets from Polymarket API
    - `getMarketDetails(marketId: string)` - Get specific market
    - Parse outcomes and probabilities
-   - Convert to American Odds format
+   - Keep probabilities as percentages (no conversion needed)
 
-2. **Create `/lib/theodds.ts`**
-   - Load JSON mapping files (if provided)
-   - Map sports events to Polymarket markets
-   - `syncSportsMarkets()` - Keep data in sync
-
-3. **Create `/app/predictions/page.tsx`**
+2. **Create `/app/predictions/page.tsx`**
    - Display list of active prediction markets
    - Filter by category (Sports, Politics, Entertainment, etc.)
-   - Show American Odds for each outcome
+   - Show percentage probability for each outcome
    - Show potential points (100 - P%)
 
-4. **Create `/components/PredictionCard.tsx`**
+3. **Create `/components/PredictionCard.tsx`**
    - Market title and description
-   - List of outcomes with odds
+   - List of outcomes with percentage probabilities
    - "Make Prediction" button for each outcome
    - End time countdown
 
-5. **Create `/app/api/predictions/route.ts`**
+4. **Create `/app/api/predictions/route.ts`**
    - API endpoint to fetch markets
    - Cache results to reduce API calls
-   - Return formatted data with American Odds
+   - Return formatted data with percentage probabilities
 
-6. **Create `/app/api/predictions/submit/route.ts`**
+5. **Create `/app/api/predictions/submit/route.ts`**
    - API endpoint to submit user prediction
    - Save to `user_predictions` table
    - Don't award points yet (pending resolution)
 
 ### Validation
 - Verify markets load from Polymarket
-- Check American Odds conversion is accurate
+- Check percentage probabilities displayed correctly
 - Test submitting predictions
 - Confirm predictions are saved with status "pending"
 
@@ -588,8 +604,10 @@ Ensure all features work correctly and handle edge cases.
 1. **Authentication**
    - [ ] Can join via QR code
    - [ ] Username validation works
-   - [ ] Duplicate usernames are rejected
+   - [ ] Duplicate usernames are rejected per venue
+   - [ ] Same username can be used at different venues
    - [ ] User persists on page refresh
+   - [ ] User switching venues requires new account
 
 2. **Geolocation**
    - [ ] Location permission is requested
@@ -606,7 +624,7 @@ Ensure all features work correctly and handle edge cases.
 
 4. **Predictions**
    - [ ] Markets load from Polymarket
-   - [ ] American Odds displayed correctly
+   - [ ] Percentage probabilities displayed correctly
    - [ ] Points calculation (100 - P%) is correct
    - [ ] Predictions saved as "pending"
    - [ ] Can view pending predictions in Activity
@@ -649,7 +667,6 @@ Prepare app for production deployment.
    NEXT_PUBLIC_SUPABASE_ANON_KEY=
    SUPABASE_SERVICE_ROLE_KEY=
    POLYMARKET_API_KEY=
-   THEODDS_API_KEY=
    ```
 
 2. **Create `.gitignore`**
@@ -721,13 +738,13 @@ Monitor usage and iterate based on feedback.
 
 - **Phase 0-2**: Project setup, types, database schema - **4-6 hours**
 - **Phase 3-4**: Auth and geolocation - **3-5 hours**
-- **Phase 5-6**: Trivia and Predictions - **6-8 hours**
+- **Phase 5-6**: Trivia and Predictions - **5-7 hours**
 - **Phase 7-8**: Activity and Notifications - **4-5 hours**
 - **Phase 9-10**: Leaderboards and Admin - **5-6 hours**
 - **Phase 11-12**: UI polish and testing - **4-6 hours**
 - **Phase 13**: Deployment - **1-2 hours**
 
-**Total estimated time: 27-38 hours** of focused development work, which can be spread over 1-2 weeks working part-time.
+**Total estimated time: 25-36 hours** of focused development work, which can be spread over 1-2 weeks working part-time.
 
 ---
 
@@ -766,7 +783,7 @@ Monitor usage and iterate based on feedback.
 - `package.json`, `tsconfig.json`, `next.config.ts`, `tailwind.config.ts`, `.env.local`
 
 **Types & Utils:**
-- `types/index.ts`, `lib/supabase.ts`, `lib/storage.ts`, `lib/geolocation.ts`, `lib/odds.ts`, `lib/auth.ts`
+- `types/index.ts`, `lib/supabase.ts`, `lib/storage.ts`, `lib/geolocation.ts`, `lib/predictions.ts`, `lib/auth.ts`
 
 **Pages:**
 - `app/page.tsx`, `app/join/page.tsx`, `app/trivia/page.tsx`, `app/predictions/page.tsx`, `app/activity/page.tsx`, `app/leaderboard/page.tsx`, `app/admin/page.tsx`
