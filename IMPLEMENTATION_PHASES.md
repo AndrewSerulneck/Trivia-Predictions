@@ -23,6 +23,14 @@ This document breaks down the project into manageable phases that can be complet
 - This ensures fair competition within each venue's leaderboard
 - Database schema: `UNIQUE(username, venue_id)` constraint
 
+### 4. **Advertising Integration**
+- **6 designated ad slots** strategically placed throughout the application
+- Non-intrusive, mobile-responsive ad placements
+- First-party tracking for impressions and clicks
+- Admin interface for managing advertisements
+- Support for venue-specific and global advertising
+- See [ADVERTISING_GUIDE.md](./ADVERTISING_GUIDE.md) for complete implementation details
+
 ---
 
 ## Phase 0: Project Setup & Configuration (30-45 minutes)
@@ -99,6 +107,7 @@ Create TypeScript interfaces and utility functions for data management.
 ### Tasks
 1. **Create `/types/index.ts`**
    - Define interfaces for: User, Venue, TriviaQuestion, TriviaAnswer, Prediction, PredictionOutcome, UserPrediction, LeaderboardEntry, Notification
+   - **Add advertising types**: Advertisement, AdSlotConfig (see [ADVERTISING_GUIDE.md](./ADVERTISING_GUIDE.md) for complete type definitions)
 
 2. **Create `/lib/supabase.ts`**
    - Initialize Supabase client
@@ -213,12 +222,35 @@ Set up Supabase tables and RLS policies.
      created_at TIMESTAMPTZ DEFAULT NOW()
    );
    
+   -- Advertisements table
+   CREATE TABLE advertisements (
+     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+     slot TEXT NOT NULL CHECK (slot IN ('header', 'inline-content', 'sidebar', 'mid-content', 'leaderboard-sidebar', 'footer')),
+     venue_id TEXT REFERENCES venues(id),
+     advertiser_name TEXT NOT NULL,
+     image_url TEXT NOT NULL,
+     click_url TEXT NOT NULL,
+     alt_text TEXT NOT NULL,
+     width INTEGER NOT NULL,
+     height INTEGER NOT NULL,
+     active BOOLEAN DEFAULT TRUE,
+     start_date TIMESTAMPTZ NOT NULL,
+     end_date TIMESTAMPTZ,
+     impressions INTEGER DEFAULT 0,
+     clicks INTEGER DEFAULT 0,
+     created_at TIMESTAMPTZ DEFAULT NOW(),
+     updated_at TIMESTAMPTZ DEFAULT NOW()
+   );
+   
    -- Create indexes
    CREATE INDEX idx_users_venue ON users(venue_id);
    CREATE INDEX idx_trivia_answers_user ON trivia_answers(user_id);
    CREATE INDEX idx_trivia_answers_time ON trivia_answers(answered_at);
    CREATE INDEX idx_predictions_user ON user_predictions(user_id);
    CREATE INDEX idx_notifications_user ON notifications(user_id);
+   CREATE INDEX idx_ads_slot ON advertisements(slot);
+   CREATE INDEX idx_ads_venue ON advertisements(venue_id);
+   CREATE INDEX idx_ads_active ON advertisements(active);
    ```
 
 2. **Enable Row Level Security (RLS)**
@@ -227,6 +259,7 @@ Set up Supabase tables and RLS policies.
    ALTER TABLE trivia_answers ENABLE ROW LEVEL SECURITY;
    ALTER TABLE user_predictions ENABLE ROW LEVEL SECURITY;
    ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE advertisements ENABLE ROW LEVEL SECURITY;
    
    -- Users can read their own data
    CREATE POLICY "Users can read own data" ON users FOR SELECT USING (auth_id = auth.uid());
@@ -236,12 +269,21 @@ Set up Supabase tables and RLS policies.
    CREATE POLICY "Users can read own answers" ON trivia_answers FOR SELECT USING (user_id IN (SELECT id FROM users WHERE auth_id = auth.uid()));
    CREATE POLICY "Users can insert own answers" ON trivia_answers FOR INSERT WITH CHECK (user_id IN (SELECT id FROM users WHERE auth_id = auth.uid()));
    
+   -- Anyone can view active ads
+   CREATE POLICY "Anyone can view active ads" ON advertisements 
+     FOR SELECT USING (active = TRUE AND start_date <= NOW() AND (end_date IS NULL OR end_date >= NOW()));
+   
+   -- Only admins can manage ads
+   CREATE POLICY "Admins can manage ads" ON advertisements 
+     FOR ALL USING (EXISTS (SELECT 1 FROM users WHERE auth_id = auth.uid() AND is_admin = TRUE));
+   
    -- Similar policies for predictions and notifications
    ```
 
 3. **Seed Initial Data**
    - Add 2-3 test venues
    - Add 50+ trivia questions across categories
+   - **Optionally add sample advertisements** for testing (see [ADVERTISING_GUIDE.md](./ADVERTISING_GUIDE.md))
 
 ### Validation
 - Run queries in Supabase to verify tables exist
@@ -518,13 +560,14 @@ Show top scorers at each venue.
 ## Phase 10: Admin Dashboard (3-4 hours)
 
 ### Goal
-Global admin can manage users and points by venue.
+Global admin can manage users, points by venue, and advertisements.
 
 ### Tasks
 1. **Create `/app/admin/page.tsx`**
    - Admin login/auth check (use Supabase RLS or custom logic)
    - List all venues
    - Click venue to see its users
+   - **Link to advertisement management**
 
 2. **Create `/app/admin/[venueId]/page.tsx`**
    - Show all users at specific venue
@@ -546,11 +589,26 @@ Global admin can manage users and points by venue.
    - Create RLS policy allowing admins to UPDATE any user
    - Check admin status in API routes
 
+6. **Create `/app/admin/ads/page.tsx`** (New for advertising)
+   - List all advertisements with metrics (impressions, clicks, CTR)
+   - Add/Edit/Delete advertisement functionality
+   - Filter by slot, venue, status
+   - See [ADVERTISING_GUIDE.md](./ADVERTISING_GUIDE.md) for complete implementation
+
+7. **Create advertising API routes**
+   - `/app/api/ads/route.ts` - Get ads for slot
+   - `/app/api/ads/impression/route.ts` - Track impression
+   - `/app/api/ads/click/route.ts` - Track click
+   - `/app/api/admin/ads/route.ts` - CRUD operations for ads
+
 ### Validation
 - Log in as admin
 - Navigate to venue page
 - Edit a user's username and points
 - Verify changes persist in database
+- **Navigate to ad management page**
+- **Add/edit advertisements and verify they appear in correct slots**
+- **Test impression and click tracking**
 
 ---
 
@@ -562,7 +620,9 @@ Mobile-first responsive design with Tailwind CSS.
 ### Tasks
 1. **Create Global Layout `/app/layout.tsx`**
    - Header with logo, notification bell, user points
+   - **Header banner ad (Ad Slot 1)**
    - Bottom navigation (Trivia, Predictions, Activity, Leaderboard)
+   - **Footer banner ad (Ad Slot 6)**
    - Mobile-optimized spacing
 
 2. **Create Shared Components**
@@ -571,12 +631,14 @@ Mobile-first responsive design with Tailwind CSS.
    - `/components/ui/Modal.tsx` - Modal overlay
    - `/components/ui/Badge.tsx` - Badge for notifications
    - `/components/ui/Timer.tsx` - Countdown timer component
+   - **`/components/AdBanner.tsx` - Advertisement component (see [ADVERTISING_GUIDE.md](./ADVERTISING_GUIDE.md))**
 
 3. **Add Custom Styles `/app/globals.css`**
    - Import Tailwind directives
    - Custom CSS variables for brand colors
    - Mobile-first breakpoints
    - Dark mode support (optional)
+   - **Ad container styles for consistent spacing**
 
 4. **Create Loading & Error States**
    - `/app/loading.tsx` - Global loading spinner
@@ -645,6 +707,22 @@ Ensure all features work correctly and handle edge cases.
    - [ ] Can edit usernames
    - [ ] Can adjust points
    - [ ] Non-admins cannot access
+   - [ ] **Can manage advertisements**
+   - [ ] **Can view ad analytics (impressions, clicks, CTR)**
+
+8. **Advertising** (New)
+   - [ ] Ads display in correct slots
+   - [ ] Header and footer ads appear on all pages
+   - [ ] Inline ads appear between content
+   - [ ] Sidebar ads visible on desktop only
+   - [ ] Ads are responsive (resize for mobile)
+   - [ ] Impression tracking works
+   - [ ] Click tracking works
+   - [ ] Only active ads within date range are shown
+   - [ ] Venue-specific ads display correctly
+   - [ ] "Ad" label is visible on all ads
+   - [ ] Ad images load properly
+   - [ ] Click opens in new tab
 
 ### Manual Testing
 - Test on real mobile device
@@ -783,20 +861,23 @@ Monitor usage and iterate based on feedback.
 - `package.json`, `tsconfig.json`, `next.config.ts`, `tailwind.config.ts`, `.env.local`
 
 **Types & Utils:**
-- `types/index.ts`, `lib/supabase.ts`, `lib/storage.ts`, `lib/geolocation.ts`, `lib/predictions.ts`, `lib/auth.ts`
+- `types/index.ts`, `lib/supabase.ts`, `lib/storage.ts`, `lib/geolocation.ts`, `lib/predictions.ts`, `lib/auth.ts`, **`lib/ads.ts`**
 
 **Pages:**
-- `app/page.tsx`, `app/join/page.tsx`, `app/trivia/page.tsx`, `app/predictions/page.tsx`, `app/activity/page.tsx`, `app/leaderboard/page.tsx`, `app/admin/page.tsx`
+- `app/page.tsx`, `app/join/page.tsx`, `app/trivia/page.tsx`, `app/predictions/page.tsx`, `app/activity/page.tsx`, `app/leaderboard/page.tsx`, `app/admin/page.tsx`, **`app/admin/ads/page.tsx`**
 
 **API Routes:**
 - `app/api/trivia/question/route.ts`, `app/api/trivia/answer/route.ts`
 - `app/api/predictions/route.ts`, `app/api/predictions/submit/route.ts`
 - `app/api/activity/route.ts`, `app/api/notifications/route.ts`
 - `app/api/leaderboard/route.ts`, `app/api/admin/users/[userId]/route.ts`
+- **`app/api/ads/route.ts`, `app/api/ads/impression/route.ts`, `app/api/ads/click/route.ts`**
+- **`app/api/admin/ads/route.ts`**
 
 **Components:**
 - `components/UsernameModal.tsx`, `components/LocationGuard.tsx`, `components/TriviaCard.tsx`, `components/PredictionCard.tsx`, `components/NotificationBell.tsx`, `components/LeaderboardTable.tsx`
 - `components/ui/Button.tsx`, `components/ui/Card.tsx`, `components/ui/Modal.tsx`, `components/ui/Badge.tsx`, `components/ui/Timer.tsx`
+- **`components/AdBanner.tsx`**
 
 **Styles:**
 - `app/globals.css`
