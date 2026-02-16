@@ -100,6 +100,8 @@ export interface Advertisement {
   active: boolean;
   startDate: string;
   endDate?: string;
+  impressions?: number;
+  clicks?: number;
 }
 
 export interface AdSlotConfig {

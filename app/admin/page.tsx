@@ -1,15 +1,16 @@
 import { PageShell } from "@/components/ui/PageShell";
+import { AdminConsole } from "@/components/admin/AdminConsole";
+import { listVenues } from "@/lib/venues";
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  const venues = await listVenues();
+
   return (
     <PageShell
       title="Admin"
       description="Venue controls, trivia management, and ad slot management."
     >
-      <p className="text-sm text-slate-700">
-        Stub page: admin tools for questions, users, and advertisements will be
-        implemented here.
-      </p>
+      <AdminConsole venues={venues} />
     </PageShell>
   );
 }

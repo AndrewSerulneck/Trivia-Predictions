@@ -8,12 +8,12 @@ export default function HomePage() {
     >
       <div className="space-y-3 text-sm text-slate-700">
         <p>
-          Scaffold is ready with Next.js, TypeScript, Tailwind, Supabase wiring,
-          and mocked prediction markets.
+          Core scaffold is live with Next.js, TypeScript, Tailwind, Supabase
+          wiring, venue-locked join flow, and Polymarket-backed predictions.
         </p>
         <p>
-          Next implementation step is Phase 2 database setup, then venue-locked
-          join flow.
+          Next implementation step is connecting Trivia, Activity, and Leaderboard
+          pages to live Supabase data instead of placeholder content.
         </p>
       </div>
     </PageShell>

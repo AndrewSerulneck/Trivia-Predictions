@@ -1,11 +1,10 @@
 import { PageShell } from "@/components/ui/PageShell";
+import { ActivityTimeline } from "@/components/activity/ActivityTimeline";
 
 export default function ActivityPage() {
   return (
     <PageShell title="Activity" description="Recent answers, picks, and outcomes.">
-      <p className="text-sm text-slate-700">
-        Stub page: user history timeline will be added here.
-      </p>
+      <ActivityTimeline />
     </PageShell>
   );
 }

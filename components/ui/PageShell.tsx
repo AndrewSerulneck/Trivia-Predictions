@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 
 type PageShellProps = {
   title: string;
@@ -20,8 +21,13 @@ export function PageShell({ title, description, children }: PageShellProps) {
   return (
     <div className="space-y-6">
       <header className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h1 className="text-xl font-semibold">{title}</h1>
-        <p className="mt-1 text-sm text-slate-600">{description}</p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-xl font-semibold">{title}</h1>
+            <p className="mt-1 text-sm text-slate-600">{description}</p>
+          </div>
+          <NotificationBell />
+        </div>
       </header>
 
       <nav className="flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">

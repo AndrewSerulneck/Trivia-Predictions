@@ -1,12 +1,17 @@
 import { PageShell } from "@/components/ui/PageShell";
+import { SlotAd } from "@/components/ui/SlotAd";
+import { TriviaGame } from "@/components/trivia/TriviaGame";
+import { getTriviaQuestions } from "@/lib/trivia";
 
-export default function TriviaPage() {
+export default async function TriviaPage() {
+  const questions = await getTriviaQuestions();
+
   return (
     <PageShell title="Trivia" description="Daily trivia gameplay and scoring.">
-      <p className="text-sm text-slate-700">
-        Stub page: question feed and answer submission flow will be implemented
-        here.
-      </p>
+      <div className="space-y-4">
+        <TriviaGame questions={questions} />
+        <SlotAd slot="inline-content" />
+      </div>
     </PageShell>
   );
 }
