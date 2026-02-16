@@ -20,12 +20,23 @@
     - Event-based analytics windows (24h/7d/30d)
     - Admin test buttons for impression/click simulation
   - Notification bell + unread/read flows
+  - Global loading + error boundaries (`app/loading.tsx`, `app/error.tsx`)
+  - Mobile bottom navigation shell (`components/ui/MobileBottomNav.tsx`)
+  - Atomic admin settlement path via RPC with legacy fallback in code
+  - Targeted automated tests for settlement logic (`tests/admin.settlement.test.ts`)
+  - API route tests for admin prediction settlement (`tests/api.admin.predictions-settle.test.ts`)
+  - API route tests for notifications read/mark-read (`tests/api.notifications.test.ts`)
+  - API + lib validation tests for admin user updates (`tests/api.admin.users-update.test.ts`, `tests/admin.update-user.test.ts`)
+  - API route tests for admin users list (`tests/api.admin.users-list.test.ts`)
+  - CI workflow (`.github/workflows/ci.yml`) running test/lint/build on push + PR
+  - Branch protection setup checklist documented in `README.md`
 
 ## Key Migrations
 - Existing baseline migration:
   - `supabase/migrations/20260214153000_initial_schema.sql`
 - New migration added this session:
   - `supabase/migrations/20260216193000_add_ad_events.sql`
+  - `supabase/migrations/20260216204000_add_atomic_prediction_settlement.sql`
 - User confirmed running the `ad_events` migration in Supabase SQL Editor.
 
 ## New/Important API Routes
@@ -57,23 +68,22 @@
   - Activity timeline (immediate refresh)
 
 ## Recommended Next Steps
-1. Phase 11 polish:
-   - Add `app/loading.tsx` and `app/error.tsx`.
-   - Add mobile bottom nav shell for fast page switching.
-2. Phase 12 QA pass:
+1. Phase 12 QA pass:
    - Manual venue switching tests.
    - Prediction settlement scenarios (`won/lost/canceled`) + notification correctness.
    - Ad slot placement QA across mobile/desktop.
-3. Hardening:
-   - Improve settlement path to batch updates/transaction semantics.
+2. Hardening:
+   - Run `20260216204000_add_atomic_prediction_settlement.sql` in Supabase SQL Editor.
+   - Verify admin settlement now uses RPC transaction path (with legacy fallback if migration missing).
    - Add targeted tests for admin routes and notification flows.
 
 ## Quick Verify Checklist
 1. `npm install`
 2. `npm run lint`
 3. `npm run build`
-4. Open `/admin` as admin user and verify:
+4. `npm test`
+5. Open `/admin` as admin user and verify:
    - Ads debug snapshot updates
    - Pending prediction settlement works
    - Venue user edits persist
-5. Open `/activity` and `/leaderboard` to confirm refresh after points-changing actions.
+6. Open `/activity` and `/leaderboard` to confirm refresh after points-changing actions.

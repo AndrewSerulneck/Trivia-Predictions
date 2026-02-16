@@ -642,6 +642,54 @@ export async function resolvePendingPredictionMarket(params: {
     throw new Error("winningOutcomeId is required unless settling as canceled.");
   }
 
+  const { data, error } = await supabaseAdmin!.rpc("settle_prediction_market", {
+    p_prediction_id: predictionId,
+    p_winning_outcome_id: winningOutcomeId || null,
+    p_settle_as_canceled: settleAsCanceled,
+  });
+
+  if (error) {
+    const errorCode = (error as { code?: string }).code;
+    const shouldFallbackToLegacy = errorCode === "PGRST202" || errorCode === "42883";
+    if (shouldFallbackToLegacy) {
+      return resolvePendingPredictionMarketLegacy(params);
+    }
+    throw new Error(error.message ?? "Failed to settle prediction market.");
+  }
+
+  const row = (Array.isArray(data) ? data[0] : data ?? {}) as {
+    affected_picks?: number;
+    winners?: number;
+    losers?: number;
+    canceled?: number;
+  };
+
+  return {
+    affectedPicks: Number(row.affected_picks ?? 0),
+    winners: Number(row.winners ?? 0),
+    losers: Number(row.losers ?? 0),
+    canceled: Number(row.canceled ?? 0),
+  };
+}
+
+async function resolvePendingPredictionMarketLegacy(params: {
+  predictionId: string;
+  winningOutcomeId?: string;
+  settleAsCanceled?: boolean;
+}): Promise<{ affectedPicks: number; winners: number; losers: number; canceled: number }> {
+  assertAdminConfigured();
+
+  const predictionId = params.predictionId.trim();
+  const winningOutcomeId = params.winningOutcomeId?.trim() ?? "";
+  const settleAsCanceled = Boolean(params.settleAsCanceled);
+
+  if (!predictionId) {
+    throw new Error("predictionId is required.");
+  }
+  if (!settleAsCanceled && !winningOutcomeId) {
+    throw new Error("winningOutcomeId is required unless settling as canceled.");
+  }
+
   const { data, error } = await supabaseAdmin!
     .from("user_predictions")
     .select("id, user_id, prediction_id, outcome_id, outcome_title, points, status, created_at")

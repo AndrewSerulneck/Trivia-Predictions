@@ -48,3 +48,17 @@ You get both from your Supabase project dashboard:
 2. Then run:
    - `supabase/seed.sql`
 3. In Supabase Auth settings, enable anonymous sign-ins.
+
+## Branch Protection Checklist (GitHub)
+Use this for the `main` branch after CI is enabled.
+
+1. Open `Settings -> Branches -> Add branch protection rule`.
+2. Branch name pattern: `main`.
+3. Enable `Require a pull request before merging`.
+4. Enable `Require approvals` (recommended: `1` or higher).
+5. Enable `Dismiss stale pull request approvals when new commits are pushed`.
+6. Enable `Require status checks to pass before merging`.
+7. Mark `validate` as a required check (from `.github/workflows/ci.yml`).
+8. Enable `Require branches to be up to date before merging`.
+9. Enable `Require conversation resolution before merging`.
+10. Enable `Do not allow bypassing the above settings` (recommended for stricter control).
