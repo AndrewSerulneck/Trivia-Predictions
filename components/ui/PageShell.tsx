@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { NotificationBell } from "@/components/ui/NotificationBell";
+import { PredictionQuotaBadge } from "@/components/ui/PredictionQuotaBadge";
 
 type PageShellProps = {
   title: string;
@@ -26,7 +27,10 @@ export function PageShell({ title, description, children }: PageShellProps) {
             <h1 className="text-xl font-semibold">{title}</h1>
             <p className="mt-1 text-sm text-slate-600">{description}</p>
           </div>
-          <NotificationBell />
+          <div className="flex items-center gap-2">
+            <PredictionQuotaBadge />
+            <NotificationBell />
+          </div>
         </div>
       </header>
 

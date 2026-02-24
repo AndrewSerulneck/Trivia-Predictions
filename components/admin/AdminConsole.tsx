@@ -66,6 +66,8 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
   const [editUserUsername, setEditUserUsername] = useState("");
   const [editUserPoints, setEditUserPoints] = useState(0);
   const [settlingPredictionId, setSettlingPredictionId] = useState<string | null>(null);
+  const [autoSettlingPredictions, setAutoSettlingPredictions] = useState(false);
+  const [autoSettleMessage, setAutoSettleMessage] = useState("");
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [editingAdId, setEditingAdId] = useState<string | null>(null);
 
@@ -384,6 +386,37 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
     }
   };
 
+  const runAutoSettlement = async () => {
+    setErrorMessage("");
+    setAutoSettleMessage("");
+    setAutoSettlingPredictions(true);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resource: "predictions-auto-settle",
+        }),
+      });
+      const payload = (await response.json()) as {
+        ok: boolean;
+        error?: string;
+        result?: { settledMarkets?: number; affectedPicks?: number };
+      };
+      if (!payload.ok) {
+        throw new Error(payload.error ?? "Failed to auto-settle predictions.");
+      }
+      const settled = payload.result?.settledMarkets ?? 0;
+      const affected = payload.result?.affectedPicks ?? 0;
+      setAutoSettleMessage(`Auto-settlement complete: ${settled} markets, ${affected} picks.`);
+      await loadAll();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Failed to auto-settle predictions.");
+    } finally {
+      setAutoSettlingPredictions(false);
+    }
+  };
+
   const beginEditUser = (user: AdminVenueUser) => {
     setEditingUserId(user.id);
     setEditUserUsername(user.username);
@@ -669,7 +702,20 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       </section>
 
       <section className="space-y-3 rounded-lg border border-slate-200 p-3">
-        <h2 className="text-base font-semibold">Pending Prediction Settlement</h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-base font-semibold">Pending Prediction Settlement</h2>
+          <button
+            type="button"
+            onClick={() => {
+              void runAutoSettlement();
+            }}
+            disabled={autoSettlingPredictions}
+            className="rounded-md bg-indigo-700 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60"
+          >
+            {autoSettlingPredictions ? "Syncing..." : "Run Auto-Settlement Now"}
+          </button>
+        </div>
+        {autoSettleMessage ? <p className="text-xs text-emerald-700">{autoSettleMessage}</p> : null}
         {pendingPredictions.length === 0 ? (
           <p className="text-sm text-slate-600">No pending prediction markets to settle.</p>
         ) : (

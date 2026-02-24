@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { listResolvedPredictionOutcomes } from "@/lib/polymarket";
 import type { AdSlot, Advertisement, TriviaQuestion } from "@/types";
 
 type TriviaQuestionRow = {
@@ -669,6 +670,81 @@ export async function resolvePendingPredictionMarket(params: {
     winners: Number(row.winners ?? 0),
     losers: Number(row.losers ?? 0),
     canceled: Number(row.canceled ?? 0),
+  };
+}
+
+export async function autoSettleResolvedPredictionMarkets(): Promise<{
+  scannedMarkets: number;
+  settledMarkets: number;
+  affectedPicks: number;
+  winners: number;
+  losers: number;
+  canceled: number;
+}> {
+  assertAdminConfigured();
+
+  const { data, error } = await supabaseAdmin!
+    .from("user_predictions")
+    .select("prediction_id")
+    .eq("status", "pending")
+    .limit(5000);
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Failed to load pending markets for settlement.");
+  }
+
+  const pendingPredictionIds = Array.from(
+    new Set((data as Array<{ prediction_id: string }>).map((row) => row.prediction_id).filter(Boolean))
+  );
+  if (pendingPredictionIds.length === 0) {
+    return {
+      scannedMarkets: 0,
+      settledMarkets: 0,
+      affectedPicks: 0,
+      winners: 0,
+      losers: 0,
+      canceled: 0,
+    };
+  }
+
+  const resolvedOutcomes = await listResolvedPredictionOutcomes(pendingPredictionIds);
+  if (resolvedOutcomes.length === 0) {
+    return {
+      scannedMarkets: pendingPredictionIds.length,
+      settledMarkets: 0,
+      affectedPicks: 0,
+      winners: 0,
+      losers: 0,
+      canceled: 0,
+    };
+  }
+
+  let settledMarkets = 0;
+  let affectedPicks = 0;
+  let winners = 0;
+  let losers = 0;
+  let canceled = 0;
+
+  for (const item of resolvedOutcomes) {
+    const result = await resolvePendingPredictionMarket({
+      predictionId: item.predictionId,
+      winningOutcomeId: item.winningOutcomeId,
+      settleAsCanceled: item.settleAsCanceled,
+    });
+    settledMarkets += 1;
+    affectedPicks += result.affectedPicks;
+    winners += result.winners;
+    losers += result.losers;
+    canceled += result.canceled;
+  }
+
+  return {
+    scannedMarkets: pendingPredictionIds.length,
+    settledMarkets,
+    affectedPicks,
+    winners,
+    losers,
+    canceled,
   };
 }
 

@@ -56,6 +56,12 @@ export interface Prediction {
   source: "mock" | "polymarket";
   closesAt: string;
   outcomes: PredictionOutcome[];
+  category?: string;
+  tags?: string[];
+  createdAt?: string;
+  volume?: number;
+  liquidity?: number;
+  isClosed?: boolean;
 }
 
 export interface UserPrediction {

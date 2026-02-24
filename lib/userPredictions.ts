@@ -1,5 +1,5 @@
 import { calculatePoints } from "@/lib/predictions";
-import { getPredictionMarkets } from "@/lib/polymarket";
+import { getPredictionMarketById } from "@/lib/polymarket";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import type { Prediction, UserPrediction } from "@/types";
 
@@ -14,6 +14,22 @@ type UserPredictionRow = {
   created_at: string;
   resolved_at: string | null;
 };
+
+type UserRow = {
+  id: string;
+  is_admin: boolean;
+};
+
+export type PredictionQuota = {
+  limit: number;
+  picksUsed: number;
+  picksRemaining: number;
+  windowSecondsRemaining: number;
+  isAdminBypass: boolean;
+};
+
+const PICK_LIMIT_PER_HOUR = 25;
+const WINDOW_MS = 60 * 60 * 1000;
 
 function mapRow(row: UserPredictionRow): UserPrediction {
   return {
@@ -43,6 +59,82 @@ function findOutcome(markets: Prediction[], predictionId: string, outcomeId: str
   return { market, outcome };
 }
 
+async function getUserRow(userId: string): Promise<UserRow | null> {
+  if (!supabaseAdmin) {
+    return null;
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("users")
+    .select("id, is_admin")
+    .eq("id", userId)
+    .maybeSingle<UserRow>();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data;
+}
+
+export async function getPredictionQuota(userId: string): Promise<PredictionQuota> {
+  const emptyQuota: PredictionQuota = {
+    limit: PICK_LIMIT_PER_HOUR,
+    picksUsed: 0,
+    picksRemaining: PICK_LIMIT_PER_HOUR,
+    windowSecondsRemaining: 0,
+    isAdminBypass: false,
+  };
+
+  if (!userId || !supabaseAdmin) {
+    return emptyQuota;
+  }
+
+  const user = await getUserRow(userId);
+  if (!user) {
+    return emptyQuota;
+  }
+
+  if (user.is_admin) {
+    return {
+      ...emptyQuota,
+      picksRemaining: PICK_LIMIT_PER_HOUR,
+      isAdminBypass: true,
+    };
+  }
+
+  const cutoffIso = new Date(Date.now() - WINDOW_MS).toISOString();
+  const { data, error } = await supabaseAdmin
+    .from("user_predictions")
+    .select("created_at")
+    .eq("user_id", userId)
+    .gte("created_at", cutoffIso)
+    .order("created_at", { ascending: true })
+    .limit(PICK_LIMIT_PER_HOUR + 1);
+
+  if (error || !data) {
+    return emptyQuota;
+  }
+
+  const picksUsed = data.length;
+  const picksRemaining = Math.max(0, PICK_LIMIT_PER_HOUR - picksUsed);
+
+  let windowSecondsRemaining = 0;
+  if (picksRemaining === 0 && data[0]?.created_at) {
+    const oldestIncluded = new Date(data[0].created_at).getTime();
+    const resetAt = oldestIncluded + WINDOW_MS;
+    windowSecondsRemaining = Math.max(0, Math.ceil((resetAt - Date.now()) / 1000));
+  }
+
+  return {
+    limit: PICK_LIMIT_PER_HOUR,
+    picksUsed,
+    picksRemaining,
+    windowSecondsRemaining,
+    isAdminBypass: false,
+  };
+}
+
 export async function submitPredictionPick(params: {
   userId: string;
   predictionId: string;
@@ -59,6 +151,12 @@ export async function submitPredictionPick(params: {
     throw new Error("userId, predictionId, and outcomeId are required.");
   }
 
+  const quota = await getPredictionQuota(userId);
+  if (!quota.isAdminBypass && quota.picksRemaining <= 0) {
+    const minutes = Math.ceil(quota.windowSecondsRemaining / 60);
+    throw new Error(`Hourly pick limit reached (25). Try again in about ${minutes} minute(s).`);
+  }
+
   const { data: existing } = await supabaseAdmin
     .from("user_predictions")
     .select("id")
@@ -71,8 +169,8 @@ export async function submitPredictionPick(params: {
     throw new Error("You already have a pending pick for this market.");
   }
 
-  const markets = await getPredictionMarkets();
-  const selected = findOutcome(markets, predictionId, outcomeId);
+  const market = await getPredictionMarketById(predictionId);
+  const selected = market ? findOutcome([market], predictionId, outcomeId) : null;
   if (!selected) {
     throw new Error("Prediction market or outcome not found.");
   }

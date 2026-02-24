@@ -7,7 +7,7 @@ Mobile-first website for venue-based trivia and prediction competitions.
 - TypeScript
 - Tailwind CSS
 - Supabase (planned backend/auth)
-- Polymarket (currently mocked)
+- Polymarket (live market feed)
 
 ## Getting Started
 1. Install dependencies:
@@ -27,6 +27,18 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+## Prediction Features
+- Live Polymarket markets with pagination (100/page), search, category filter, and sort options.
+- Multi-outcome picks with the same points model based on outcome probability.
+- Hourly limit: non-admin users can place up to 25 picks per rolling hour (use-it-or-lose-it).
+- Admin users bypass the hourly pick limit.
+- Global header shows picks remaining and reset timer.
+
+## Auto Settlement Cron
+- Endpoint: `GET/POST /api/cron/predictions-settle`
+- Auth: `Authorization: Bearer $CRON_SECRET` or `x-cron-secret: $CRON_SECRET`
+- `vercel.json` schedules the cron endpoint every 5 minutes.
+
 ## Current Scaffold
 - Core pages: `/join`, `/trivia`, `/predictions`, `/activity`, `/leaderboard`, `/admin`
 - API stubs: `/api/trivia`, `/api/predictions`, `/api/venues`, `/api/admin`
@@ -38,6 +50,9 @@ Open `http://localhost:3000`.
 ## Supabase Keys (What they are)
 - `NEXT_PUBLIC_SUPABASE_URL`: your Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: public anonymous key for client-side auth/data access
+- `SUPABASE_SERVICE_ROLE_KEY`: required for server/admin APIs
+- `POLYMARKET_API_KEY`: optional bearer token if your Polymarket access requires it
+- `CRON_SECRET`: required to authorize cron settlement calls
 
 You get both from your Supabase project dashboard:
 `Project Settings -> API`.

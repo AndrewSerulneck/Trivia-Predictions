@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   createAdminAdvertisement,
+  autoSettleResolvedPredictionMarkets,
   createAdminTriviaQuestion,
   deleteAdminAdvertisement,
   deleteAdminTriviaQuestion,
@@ -104,6 +105,9 @@ export async function POST(request: Request) {
           predictionId: string;
           winningOutcomeId?: string;
           settleAsCanceled?: boolean;
+        }
+      | {
+          resource: "predictions-auto-settle";
         };
 
     if (body.resource === "trivia") {
@@ -155,6 +159,11 @@ export async function POST(request: Request) {
         winningOutcomeId: body.winningOutcomeId,
         settleAsCanceled: body.settleAsCanceled,
       });
+      return NextResponse.json({ ok: true, result });
+    }
+
+    if (body.resource === "predictions-auto-settle") {
+      const result = await autoSettleResolvedPredictionMarkets();
       return NextResponse.json({ ok: true, result });
     }
 
