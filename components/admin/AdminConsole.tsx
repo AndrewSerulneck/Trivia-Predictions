@@ -65,6 +65,10 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editUserUsername, setEditUserUsername] = useState("");
   const [editUserPoints, setEditUserPoints] = useState(0);
+  const [adminLoginUsername, setAdminLoginUsername] = useState("");
+  const [adminLoginPassword, setAdminLoginPassword] = useState("");
+  const [bootstrappingAdmin, setBootstrappingAdmin] = useState(false);
+  const [adminLoginMessage, setAdminLoginMessage] = useState("");
   const [settlingPredictionId, setSettlingPredictionId] = useState<string | null>(null);
   const [autoSettlingPredictions, setAutoSettlingPredictions] = useState(false);
   const [autoSettleMessage, setAutoSettleMessage] = useState("");
@@ -535,8 +539,88 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
     }
   };
 
+  const bootstrapAdminAccess = async () => {
+    if (!accessToken) {
+      setErrorMessage("No auth session available. Reload and try again.");
+      return;
+    }
+    if (!adminLoginUsername.trim() || !adminLoginPassword) {
+      setErrorMessage("Enter admin username and password.");
+      return;
+    }
+
+    setErrorMessage("");
+    setAdminLoginMessage("");
+    setBootstrappingAdmin(true);
+    try {
+      const response = await fetch("/api/admin/bootstrap", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          username: adminLoginUsername.trim(),
+          password: adminLoginPassword,
+        }),
+      });
+      const payload = (await response.json()) as { ok: boolean; error?: string; promotedProfiles?: number };
+      if (!payload.ok) {
+        throw new Error(payload.error ?? "Failed to bootstrap admin access.");
+      }
+
+      setAdminLoginMessage(
+        `Admin access granted for ${payload.promotedProfiles ?? 0} profile(s). Reloading admin data...`
+      );
+      setAdminLoginPassword("");
+      await Promise.all([loadAll(), loadVenueUsers()]);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Failed to bootstrap admin access.");
+    } finally {
+      setBootstrappingAdmin(false);
+    }
+  };
+
+  const shouldShowBootstrap = errorMessage.toLowerCase().includes("admin privileges required");
+
   return (
     <div className="space-y-6">
+      {shouldShowBootstrap ? (
+        <section className="space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-3">
+          <h2 className="text-base font-semibold text-amber-900">Admin Login</h2>
+          <p className="text-sm text-amber-800">
+            This account is authenticated but not marked as admin yet. Log in as admin to promote this account.
+          </p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              type="text"
+              value={adminLoginUsername}
+              onChange={(event) => setAdminLoginUsername(event.target.value)}
+              placeholder="Admin username"
+              className="w-full rounded-md border border-amber-300 px-3 py-2 text-sm"
+            />
+            <input
+              type="password"
+              value={adminLoginPassword}
+              onChange={(event) => setAdminLoginPassword(event.target.value)}
+              placeholder="Admin password"
+              className="w-full rounded-md border border-amber-300 px-3 py-2 text-sm"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                void bootstrapAdminAccess();
+              }}
+              disabled={bootstrappingAdmin}
+              className="rounded-md bg-amber-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+            >
+              {bootstrappingAdmin ? "Logging in..." : "Admin Login"}
+            </button>
+          </div>
+          {adminLoginMessage ? <p className="text-xs text-emerald-700">{adminLoginMessage}</p> : null}
+        </section>
+      ) : null}
+
       {errorMessage && (
         <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">
           {errorMessage}

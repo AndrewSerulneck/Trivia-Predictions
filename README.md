@@ -53,6 +53,8 @@ Open `http://localhost:3000`.
 - `SUPABASE_SERVICE_ROLE_KEY`: required for server/admin APIs
 - `POLYMARKET_API_KEY`: optional bearer token if your Polymarket access requires it
 - `CRON_SECRET`: required to authorize cron settlement calls
+- `ADMIN_LOGIN_USERNAME`: admin login username used on `/admin`
+- `ADMIN_LOGIN_PASSWORD`: admin login password used on `/admin`
 
 You get both from your Supabase project dashboard:
 `Project Settings -> API`.
