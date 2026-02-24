@@ -102,14 +102,14 @@ describe("PUT /api/admin/users/[userId]", () => {
   it("returns 500 when validation fails in updateAdminUser", async () => {
     mocks.requireAdminAuth.mockResolvedValue({ ok: true, status: 200 });
     mocks.updateAdminUser.mockRejectedValue(
-      new Error("Username must be 3-20 characters and use letters, numbers, or underscore.")
+      new Error("Username is required.")
     );
 
     const response = await PUT(
       new Request("http://localhost/api/admin/users/u1", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: "bad name" }),
+        body: JSON.stringify({ username: "   " }),
       }),
       { params: Promise.resolve({ userId: "u1" }) }
     );
@@ -119,7 +119,7 @@ describe("PUT /api/admin/users/[userId]", () => {
     expect(response.status).toBe(500);
     expect(body).toEqual({
       ok: false,
-      error: "Username must be 3-20 characters and use letters, numbers, or underscore.",
+      error: "Username is required.",
     });
   });
 });

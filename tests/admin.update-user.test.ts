@@ -17,10 +17,10 @@ describe("updateAdminUser validation", () => {
     mocks.from.mockReset();
   });
 
-  it("rejects invalid username format", async () => {
+  it("rejects empty username", async () => {
     await expect(
-      updateAdminUser({ userId: "u1", username: "bad name" })
-    ).rejects.toThrow("Username must be 3-20 characters and use letters, numbers, or underscore.");
+      updateAdminUser({ userId: "u1", username: "   " })
+    ).rejects.toThrow("Username is required.");
 
     expect(mocks.from).not.toHaveBeenCalled();
   });

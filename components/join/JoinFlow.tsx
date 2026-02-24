@@ -22,6 +22,7 @@ type Status = "idle" | "loading" | "ready" | "saving" | "error";
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const router = useRouter();
   const venueParam = initialVenueId.trim();
+  const geofenceBypassed = process.env.NEXT_PUBLIC_DISABLE_GEOFENCE === "true";
 
   const [status, setStatus] = useState<Status>("loading");
   const [errorMessage, setErrorMessage] = useState("");
@@ -38,7 +39,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setStatus("loading");
       setErrorMessage("");
       setExistingUser(null);
-      setLocationVerified(false);
+      setLocationVerified(geofenceBypassed);
       setDistanceMeters(null);
 
       try {
@@ -83,13 +84,17 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     };
 
     void load();
-  }, [venueParam]);
+  }, [venueParam, geofenceBypassed]);
 
   const canCreate = useMemo(() => {
     return Boolean(
-      isSupabaseConfigured && venue && validateUsername(username) && locationVerified && !existingUser
+      isSupabaseConfigured &&
+        venue &&
+        validateUsername(username) &&
+        (locationVerified || geofenceBypassed) &&
+        !existingUser
     );
-  }, [venue, username, locationVerified, existingUser]);
+  }, [venue, username, locationVerified, geofenceBypassed, existingUser]);
 
   const verifyLocation = async () => {
     if (!venue) return;
@@ -132,10 +137,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const createProfile = async () => {
     if (!venue) return;
     if (!validateUsername(username)) {
-      setErrorMessage("Username must be 3-20 characters and only use letters, numbers, or underscore.");
+      setErrorMessage("Username is required.");
       return;
     }
-    if (!locationVerified) {
+    if (!locationVerified && !geofenceBypassed) {
       setErrorMessage("Verify your location before creating a profile.");
       return;
     }
@@ -209,6 +214,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               <p className="text-slate-600">
                 Geofence: within {venue.radius}m. (Adjustable later in the venues table.)
               </p>
+              {geofenceBypassed && (
+                <p className="text-amber-700">
+                  Geofence bypass is enabled for local testing (`NEXT_PUBLIC_DISABLE_GEOFENCE=true`).
+                </p>
+              )}
               {distanceMeters !== null && (
                 <p className="text-slate-600">Your distance: {Math.round(distanceMeters)}m</p>
               )}
@@ -231,7 +241,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                 <button
                   type="button"
                   onClick={continueToGame}
-                  disabled={!locationVerified}
+                  disabled={!locationVerified && !geofenceBypassed}
                   className="rounded-md bg-emerald-700 px-4 py-2 font-medium text-white disabled:opacity-60"
                 >
                   Continue to Trivia

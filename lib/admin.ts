@@ -535,8 +535,8 @@ export async function updateAdminUser(params: {
   const update: { username?: string; points?: number } = {};
   if (typeof params.username === "string") {
     const username = params.username.trim();
-    if (!/^[A-Za-z0-9_]{3,20}$/.test(username)) {
-      throw new Error("Username must be 3-20 characters and use letters, numbers, or underscore.");
+    if (!username) {
+      throw new Error("Username is required.");
     }
     update.username = username;
   }

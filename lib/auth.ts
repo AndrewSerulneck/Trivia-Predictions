@@ -1,8 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import type { User } from "@/types";
 
-const USERNAME_PATTERN = /^[A-Za-z0-9_]{3,20}$/;
-
 type UserProfileRow = {
   id: string;
   auth_id: string | null;
@@ -24,7 +22,7 @@ function mapUserProfileRow(row: UserProfileRow): User {
 }
 
 export function validateUsername(username: string): boolean {
-  return USERNAME_PATTERN.test(username.trim());
+  return username.trim().length > 0;
 }
 
 export async function signInAnonymously(): Promise<void> {
@@ -116,7 +114,7 @@ export async function createUserProfile(params: {
 
   const username = params.username.trim();
   if (!validateUsername(username)) {
-    throw new Error("Username must be 3-20 characters and use letters, numbers, or underscore.");
+    throw new Error("Username is required.");
   }
 
   const authUserId = await ensureAnonymousSession();
