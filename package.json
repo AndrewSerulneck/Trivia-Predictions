@@ -1,5 +1,5 @@
 {
-  "name": "trivia-predictions",
+  "name": "hightop-challenge",
   "version": "0.1.0",
   "private": true,
   "description": "A mobile website that allows users to compete with each other on trivia and predictions.",
@@ -12,15 +12,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AndrewSerulneck/Trivia-Predictions.git"
+    "url": "git+https://github.com/AndrewSerulneck/Hightop-Challenge.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/AndrewSerulneck/Trivia-Predictions/issues"
+    "url": "https://github.com/AndrewSerulneck/Hightop-Challenge/issues"
   },
-  "homepage": "https://github.com/AndrewSerulneck/Trivia-Predictions#readme",
+  "homepage": "https://github.com/AndrewSerulneck/Hightop-Challenge#readme",
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
     "date-fns": "^4.1.0",

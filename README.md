@@ -1,4 +1,4 @@
-# Trivia-Predictions
+# Hightop Challenge
 
 Mobile-first website for venue-based trivia and prediction competitions.
 

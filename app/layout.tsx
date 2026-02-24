@@ -4,7 +4,7 @@ import { SlotAd } from "@/components/ui/SlotAd";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Trivia Predictions",
+  title: "Hightop Challenge",
   description: "Venue-based trivia and prediction competitions.",
 };
 

@@ -3,7 +3,7 @@ import { PageShell } from "@/components/ui/PageShell";
 export default function HomePage() {
   return (
     <PageShell
-      title="Trivia Predictions"
+      title="Hightop Challenge"
       description="Venue-based trivia and prediction competitions."
     >
       <div className="space-y-3 text-sm text-slate-700">

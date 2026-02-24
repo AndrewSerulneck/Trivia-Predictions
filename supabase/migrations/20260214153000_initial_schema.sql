@@ -1,4 +1,4 @@
--- Initial schema for Trivia-Predictions
+-- Initial schema for Hightop Challenge
 -- Phase 2 baseline: venue-locked users + trivia/prediction tables + ads
 
 create extension if not exists pgcrypto;
