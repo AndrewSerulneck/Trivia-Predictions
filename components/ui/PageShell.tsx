@@ -10,7 +10,6 @@ type PageShellProps = {
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
-  { href: "/join", label: "Join" },
   { href: "/trivia", label: "Trivia" },
   { href: "/predictions", label: "Predictions" },
   { href: "/activity", label: "Activity" },

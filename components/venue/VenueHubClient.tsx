@@ -20,11 +20,11 @@ export function VenueHubClient({
     const storedUserId = getUserId() ?? "";
     const storedVenueId = getVenueId() ?? "";
     if (!storedUserId) {
-      router.replace(`/join?v=${venue.id}`);
+      router.replace(`/?v=${venue.id}`);
       return;
     }
     if (storedVenueId !== venue.id) {
-      router.replace(`/join?v=${venue.id}`);
+      router.replace(`/?v=${venue.id}`);
     }
   }, [router, venue.id]);
 

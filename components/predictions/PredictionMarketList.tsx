@@ -77,7 +77,7 @@ export function PredictionMarketList() {
     const nextUserId = getUserId();
     const venueId = getVenueId();
     if (!nextUserId || !venueId) {
-      router.replace("/join");
+      router.replace("/");
       return;
     }
     setUserId(nextUserId);
@@ -223,7 +223,7 @@ export function PredictionMarketList() {
       ) : null}
       {!userId && (
         <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
-          You are not joined to a venue in this browser yet. Use the Join page first to place picks.
+          You are not joined to a venue in this browser yet. Use Home to join a venue first.
         </div>
       )}
 
@@ -377,40 +377,42 @@ export function PredictionMarketList() {
 
       {loading ? <p className="text-sm text-slate-600">Loading Polymarket markets...</p> : null}
 
-      {markets.map((market) => (
-        <article key={market.id} className="rounded-lg border border-slate-200 p-3">
-          <h2 className="font-medium">{market.question}</h2>
-          <p className="mt-1 text-xs text-slate-500">
-            {market.category ? `${market.category} · ` : ""}Closes: {new Date(market.closesAt).toLocaleString()}
-          </p>
-          <ul className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
-            {market.outcomes.map((outcome) => (
-              <li
-                key={outcome.id}
-                className="flex items-center justify-between gap-3 rounded-md border border-slate-100 bg-slate-50 p-2 text-sm"
-              >
-                <span>{outcome.title}</span>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">
-                    {formatProbability(outcome.probability)} · {calculatePoints(outcome.probability)} pts
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void submitPick(market.id, outcome.id);
-                    }}
-                    disabled={Boolean(pendingByMarket[market.id])}
-                    className="rounded-md bg-blue-700 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60"
-                  >
-                    Pick
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-          {messages[market.id] ? <p className="mt-2 text-xs text-slate-600">{messages[market.id]}</p> : null}
-        </article>
-      ))}
+      <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
+        {markets.map((market) => (
+          <article key={market.id} className="rounded-lg border border-slate-200 p-3">
+            <h2 className="font-medium">{market.question}</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              {market.category ? `${market.category} · ` : ""}Closes: {new Date(market.closesAt).toLocaleString()}
+            </p>
+            <ul className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
+              {market.outcomes.map((outcome) => (
+                <li
+                  key={outcome.id}
+                  className="flex items-center justify-between gap-3 rounded-md border border-slate-100 bg-slate-50 p-2 text-sm"
+                >
+                  <span>{outcome.title}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">
+                      {formatProbability(outcome.probability)} · {calculatePoints(outcome.probability)} pts
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void submitPick(market.id, outcome.id);
+                      }}
+                      disabled={Boolean(pendingByMarket[market.id])}
+                      className="rounded-md bg-blue-700 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60"
+                    >
+                      Pick
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            {messages[market.id] ? <p className="mt-2 text-xs text-slate-600">{messages[market.id]}</p> : null}
+          </article>
+        ))}
+      </div>
 
       <section className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
         <button

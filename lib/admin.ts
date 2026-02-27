@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { listResolvedPredictionOutcomes } from "@/lib/polymarket";
+import { getPredictionMarketById, listResolvedPredictionOutcomes } from "@/lib/polymarket";
 import type { AdSlot, Advertisement, TriviaQuestion } from "@/types";
 
 type TriviaQuestionRow = {
@@ -643,17 +643,26 @@ export async function resolvePendingPredictionMarket(params: {
     throw new Error("winningOutcomeId is required unless settling as canceled.");
   }
 
+  let marketQuestion = "";
+  try {
+    const market = await getPredictionMarketById(predictionId);
+    marketQuestion = market?.question?.trim() ?? "";
+  } catch {
+    marketQuestion = "";
+  }
+
   const { data, error } = await supabaseAdmin!.rpc("settle_prediction_market", {
     p_prediction_id: predictionId,
     p_winning_outcome_id: winningOutcomeId || null,
     p_settle_as_canceled: settleAsCanceled,
+    p_market_question: marketQuestion || null,
   });
 
   if (error) {
     const errorCode = (error as { code?: string }).code;
     const shouldFallbackToLegacy = errorCode === "PGRST202" || errorCode === "42883";
     if (shouldFallbackToLegacy) {
-      return resolvePendingPredictionMarketLegacy(params);
+      return resolvePendingPredictionMarketLegacy({ ...params, marketQuestion });
     }
     throw new Error(error.message ?? "Failed to settle prediction market.");
   }
@@ -752,6 +761,7 @@ async function resolvePendingPredictionMarketLegacy(params: {
   predictionId: string;
   winningOutcomeId?: string;
   settleAsCanceled?: boolean;
+  marketQuestion?: string;
 }): Promise<{ affectedPicks: number; winners: number; losers: number; canceled: number }> {
   assertAdminConfigured();
 
@@ -765,6 +775,51 @@ async function resolvePendingPredictionMarketLegacy(params: {
   if (!settleAsCanceled && !winningOutcomeId) {
     throw new Error("winningOutcomeId is required unless settling as canceled.");
   }
+
+  let marketQuestion = params.marketQuestion?.trim() ?? "";
+  if (!marketQuestion) {
+    const market = await getPredictionMarketById(predictionId);
+    marketQuestion = market?.question?.trim() ?? "";
+  }
+
+  const asStatement = (question: string) => question.replace(/\?+$/, "").trim();
+  const buildNotificationMessage = (status: PendingPredictionRow["status"], row: PendingPredictionRow): string => {
+    const outcome = row.outcome_title.trim();
+    const outcomeLower = outcome.toLowerCase();
+    const eventText = marketQuestion ? asStatement(marketQuestion) : "";
+    const isBinaryOutcome = outcomeLower === "yes" || outcomeLower === "no";
+
+    if (status === "canceled") {
+      if (eventText) {
+        return `${eventText} market was canceled.`;
+      }
+      return `Prediction canceled: ${outcome} market was canceled.`;
+    }
+
+    if (status === "won") {
+      if (eventText) {
+        if (isBinaryOutcome) {
+          const happened = outcomeLower === "yes";
+          return happened
+            ? `${eventText}. You won ${row.points} points.`
+            : `${eventText} did not happen. You won ${row.points} points.`;
+        }
+        return `${eventText}. Result: ${outcome}. You won ${row.points} points.`;
+      }
+      return `Prediction resolved: ${outcome} won. You earned ${row.points} points.`;
+    }
+
+    if (eventText) {
+      if (isBinaryOutcome) {
+        const happened = outcomeLower === "yes";
+        return happened
+          ? `${eventText}. This one did not go your way.`
+          : `${eventText} did not happen. This one did not go your way.`;
+      }
+      return `${eventText}. Result: ${outcome}. This one did not go your way.`;
+    }
+    return `Prediction resolved: ${outcome} did not win.`;
+  };
 
   const { data, error } = await supabaseAdmin!
     .from("user_predictions")
@@ -810,12 +865,7 @@ async function resolvePendingPredictionMarketLegacy(params: {
     notifications.push({
       user_id: row.user_id,
       type: status === "won" ? "success" : status === "canceled" ? "info" : "warning",
-      message:
-        status === "won"
-          ? `Prediction resolved: ${row.outcome_title} won. You earned ${row.points} points.`
-          : status === "canceled"
-            ? `Prediction canceled: ${row.outcome_title} market was canceled.`
-            : `Prediction resolved: ${row.outcome_title} did not win.`,
+      message: buildNotificationMessage(status, row),
     });
   }
 

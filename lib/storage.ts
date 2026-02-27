@@ -4,8 +4,18 @@ const STORAGE_KEYS = {
   userId: "tp:user-id",
 };
 
+const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
+
+function setCookie(name: string, value: string): void {
+  if (typeof document === "undefined") return;
+  const safeName = encodeURIComponent(name);
+  const safeValue = encodeURIComponent(value);
+  document.cookie = `${safeName}=${safeValue}; Max-Age=${COOKIE_MAX_AGE_SECONDS}; Path=/; SameSite=Lax`;
+}
+
 export function saveVenueId(venueId: string): void {
   localStorage.setItem(STORAGE_KEYS.venueId, venueId);
+  setCookie("tp_venue_id", venueId);
 }
 
 export function getVenueId(): string | null {
@@ -22,6 +32,7 @@ export function getUsername(): string | null {
 
 export function saveUserId(userId: string): void {
   localStorage.setItem(STORAGE_KEYS.userId, userId);
+  setCookie("tp_user_id", userId);
 }
 
 export function getUserId(): string | null {

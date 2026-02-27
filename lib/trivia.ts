@@ -16,6 +16,11 @@ type TriviaAnswerLookupRow = {
   is_correct: boolean;
 };
 
+type UserRow = {
+  id: string;
+  is_admin: boolean;
+};
+
 const MAX_CANDIDATE_QUESTIONS = 2000;
 const TRIVIA_LIMIT_PER_HOUR = 10;
 const WINDOW_MS = 60 * 60 * 1000;
@@ -25,6 +30,7 @@ export type TriviaQuota = {
   questionsUsed: number;
   questionsRemaining: number;
   windowSecondsRemaining: number;
+  isAdminBypass: boolean;
 };
 
 const FALLBACK_QUESTIONS: TriviaQuestion[] = [
@@ -172,10 +178,24 @@ export async function getTriviaQuota(userId: string): Promise<TriviaQuota> {
     questionsUsed: 0,
     questionsRemaining: TRIVIA_LIMIT_PER_HOUR,
     windowSecondsRemaining: 0,
+    isAdminBypass: false,
   };
 
   if (!userId || !supabaseAdmin) {
     return emptyQuota;
+  }
+
+  const { data: userData } = await supabaseAdmin
+    .from("users")
+    .select("id, is_admin")
+    .eq("id", userId)
+    .maybeSingle<UserRow>();
+
+  if (userData?.is_admin) {
+    return {
+      ...emptyQuota,
+      isAdminBypass: true,
+    };
   }
 
   const cutoffIso = new Date(Date.now() - WINDOW_MS).toISOString();
@@ -205,6 +225,7 @@ export async function getTriviaQuota(userId: string): Promise<TriviaQuota> {
     questionsUsed,
     questionsRemaining,
     windowSecondsRemaining,
+    isAdminBypass: false,
   };
 }
 
@@ -247,7 +268,7 @@ export async function submitTriviaAnswer(params: {
 
   if (supabaseAdmin && params.userId) {
     const quota = await getTriviaQuota(params.userId);
-    if (quota.questionsRemaining <= 0) {
+    if (!quota.isAdminBypass && quota.questionsRemaining <= 0) {
       const minutes = Math.ceil(quota.windowSecondsRemaining / 60);
       throw new Error(`Hourly trivia limit reached (10). Try again in about ${minutes} minute(s).`);
     }

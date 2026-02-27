@@ -1,4 +1,4 @@
-import { JoinFlow } from "@/components/join/JoinFlow";
+import { redirect } from "next/navigation";
 
 export default async function JoinPage({
   searchParams,
@@ -6,5 +6,6 @@ export default async function JoinPage({
   searchParams: Promise<{ v?: string }>;
 }) {
   const params = await searchParams;
-  return <JoinFlow initialVenueId={params.v ?? ""} />;
+  const target = params.v ? `/?v=${encodeURIComponent(params.v)}` : "/";
+  redirect(target);
 }
