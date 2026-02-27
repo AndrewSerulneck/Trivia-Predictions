@@ -629,13 +629,13 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       {state === "loading" && <p className="text-sm text-slate-600">Loading admin data...</p>}
 
       <section className="space-y-3 rounded-lg border border-slate-200 p-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-base font-semibold">Ad Debug Snapshot</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <select
               value={adsWindowHours}
               onChange={(event) => setAdsWindowHours(Number(event.target.value))}
-              className="rounded-md border border-slate-300 px-2 py-1.5 text-xs"
+              className="rounded-md border border-slate-300 px-2 py-2 text-xs"
             >
               <option value={24}>Last 24h</option>
               <option value={168}>Last 7d</option>
@@ -646,7 +646,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
               onClick={() => {
                 void loadAll();
               }}
-              className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white"
+              className="rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white"
             >
               Refresh
             </button>
@@ -786,7 +786,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       </section>
 
       <section className="space-y-3 rounded-lg border border-slate-200 p-3">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-base font-semibold">Pending Prediction Settlement</h2>
           <button
             type="button"
@@ -794,7 +794,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
               void runAutoSettlement();
             }}
             disabled={autoSettlingPredictions}
-            className="rounded-md bg-indigo-700 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60"
+            className="w-full rounded-md bg-indigo-700 px-3 py-2 text-sm font-medium text-white disabled:opacity-60 sm:w-auto sm:text-xs"
           >
             {autoSettlingPredictions ? "Syncing..." : "Run Auto-Settlement Now"}
           </button>
@@ -806,7 +806,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
           <ul className="space-y-2">
             {pendingPredictions.map((market) => (
               <li key={market.predictionId} className="rounded-md border border-slate-200 p-3 text-sm">
-                <p className="font-medium">Market: {market.predictionId}</p>
+                <p className="break-all font-medium">Market: {market.predictionId}</p>
                 <p className="text-xs text-slate-500">
                   Picks: {market.totalPicks} | Latest: {new Date(market.latestPickAt).toLocaleString()}
                 </p>
@@ -814,7 +814,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
                   {market.outcomes.map((outcome) => (
                     <div
                       key={`${market.predictionId}-${outcome.outcomeId}`}
-                      className="flex items-center justify-between gap-2 rounded-md border border-slate-100 bg-slate-50 px-2 py-1.5"
+                      className="flex flex-col gap-2 rounded-md border border-slate-100 bg-slate-50 px-2 py-2 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <p className="text-xs text-slate-700">
                         {outcome.outcomeTitle} ({outcome.pickCount} picks)
@@ -828,7 +828,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
                           });
                         }}
                         disabled={settlingPredictionId === market.predictionId}
-                        className="rounded-md bg-emerald-700 px-2 py-1 text-xs font-medium text-white disabled:opacity-60"
+                        className="w-full rounded-md bg-emerald-700 px-3 py-2 text-sm font-medium text-white disabled:opacity-60 sm:w-auto sm:px-2 sm:py-1 sm:text-xs"
                       >
                         Settle Winner
                       </button>
@@ -844,7 +844,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
                     });
                   }}
                   disabled={settlingPredictionId === market.predictionId}
-                  className="mt-2 rounded-md bg-amber-700 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60"
+                  className="mt-2 w-full rounded-md bg-amber-700 px-3 py-2 text-sm font-medium text-white disabled:opacity-60 sm:w-auto sm:py-1.5 sm:text-xs"
                 >
                   Settle as Canceled
                 </button>
@@ -892,20 +892,20 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
                         className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                       />
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
                         onClick={() => {
                           void saveUserEdit();
                         }}
-                        className="rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white"
+                        className="rounded-md bg-emerald-700 px-3 py-2 text-sm font-medium text-white sm:py-1.5 sm:text-xs"
                       >
                         Save
                       </button>
                       <button
                         type="button"
                         onClick={() => setEditingUserId(null)}
-                        className="rounded-md bg-slate-500 px-3 py-1.5 text-xs font-medium text-white"
+                        className="rounded-md bg-slate-500 px-3 py-2 text-sm font-medium text-white sm:py-1.5 sm:text-xs"
                       >
                         Cancel
                       </button>
@@ -921,13 +921,13 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
                         </span>
                       ) : null}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="break-words text-xs text-slate-500">
                       Points: {user.points} | Joined: {new Date(user.createdAt).toLocaleString()}
                     </p>
                     <button
                       type="button"
                       onClick={() => beginEditUser(user)}
-                      className="mt-2 rounded-md bg-slate-700 px-3 py-1.5 text-xs font-medium text-white"
+                      className="mt-2 rounded-md bg-slate-700 px-3 py-2 text-sm font-medium text-white sm:py-1.5 sm:text-xs"
                     >
                       Edit User
                     </button>
@@ -981,7 +981,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
           onClick={() => {
             void createTrivia();
           }}
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white"
+          className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white sm:w-auto"
         >
           Create Question
         </button>
@@ -1083,7 +1083,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
           onClick={() => {
             void createAd();
           }}
-          className="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white"
+          className="w-full rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white sm:w-auto"
         >
           Create Advertisement
         </button>
@@ -1125,20 +1125,20 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
                       className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                     />
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={() => {
                         void saveQuestionEdit();
                       }}
-                      className="rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white"
+                      className="rounded-md bg-emerald-700 px-3 py-2 text-sm font-medium text-white sm:py-1.5 sm:text-xs"
                     >
                       Save
                     </button>
                     <button
                       type="button"
                       onClick={() => setEditingQuestionId(null)}
-                      className="rounded-md bg-slate-500 px-3 py-1.5 text-xs font-medium text-white"
+                      className="rounded-md bg-slate-500 px-3 py-2 text-sm font-medium text-white sm:py-1.5 sm:text-xs"
                     >
                       Cancel
                     </button>
@@ -1151,11 +1151,11 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
                     Correct: {item.options[item.correctAnswer] ?? "n/a"} | {item.category ?? "uncategorized"} |{" "}
                     {item.difficulty ?? "unspecified"}
                   </p>
-                  <div className="mt-2 flex gap-2">
+                  <div className="mt-2 flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={() => beginEditQuestion(item)}
-                      className="rounded-md bg-slate-700 px-3 py-1.5 text-xs font-medium text-white"
+                      className="rounded-md bg-slate-700 px-3 py-2 text-sm font-medium text-white sm:py-1.5 sm:text-xs"
                     >
                       Edit
                     </button>
@@ -1164,7 +1164,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
                       onClick={() => {
                         void deleteItem("trivia", item.id);
                       }}
-                      className="rounded-md bg-rose-700 px-3 py-1.5 text-xs font-medium text-white"
+                      className="rounded-md bg-rose-700 px-3 py-2 text-sm font-medium text-white sm:py-1.5 sm:text-xs"
                     >
                       Delete
                     </button>
@@ -1266,20 +1266,20 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
                     />
                     Active
                   </label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={() => {
                         void saveAdEdit();
                       }}
-                      className="rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white"
+                      className="rounded-md bg-emerald-700 px-3 py-2 text-sm font-medium text-white sm:py-1.5 sm:text-xs"
                     >
                       Save
                     </button>
                     <button
                       type="button"
                       onClick={() => setEditingAdId(null)}
-                      className="rounded-md bg-slate-500 px-3 py-1.5 text-xs font-medium text-white"
+                      className="rounded-md bg-slate-500 px-3 py-2 text-sm font-medium text-white sm:py-1.5 sm:text-xs"
                     >
                       Cancel
                     </button>
@@ -1298,11 +1298,11 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
                       ? `${(((item.clicks ?? 0) / item.impressions) * 100).toFixed(2)}%`
                       : "0.00%"}
                   </p>
-                  <div className="mt-2 flex gap-2">
+                  <div className="mt-2 flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={() => beginEditAd(item)}
-                      className="rounded-md bg-slate-700 px-3 py-1.5 text-xs font-medium text-white"
+                      className="rounded-md bg-slate-700 px-3 py-2 text-sm font-medium text-white sm:py-1.5 sm:text-xs"
                     >
                       Edit
                     </button>
@@ -1311,7 +1311,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
                       onClick={() => {
                         void simulateAdEvent(item.id, "impression");
                       }}
-                      className="rounded-md bg-blue-700 px-3 py-1.5 text-xs font-medium text-white"
+                      className="rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white sm:py-1.5 sm:text-xs"
                     >
                       Test Impression
                     </button>
@@ -1320,7 +1320,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
                       onClick={() => {
                         void simulateAdEvent(item.id, "click");
                       }}
-                      className="rounded-md bg-indigo-700 px-3 py-1.5 text-xs font-medium text-white"
+                      className="rounded-md bg-indigo-700 px-3 py-2 text-sm font-medium text-white sm:py-1.5 sm:text-xs"
                     >
                       Test Click
                     </button>
@@ -1329,7 +1329,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
                       onClick={() => {
                         void deleteItem("ads", item.id);
                       }}
-                      className="rounded-md bg-rose-700 px-3 py-1.5 text-xs font-medium text-white"
+                      className="rounded-md bg-rose-700 px-3 py-2 text-sm font-medium text-white sm:py-1.5 sm:text-xs"
                     >
                       Delete
                     </button>

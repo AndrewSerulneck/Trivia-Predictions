@@ -22,7 +22,7 @@ export function PageShell({ title, description, children }: PageShellProps) {
   return (
     <div className="space-y-6">
       <header className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-xl font-semibold">{title}</h1>
             <p className="mt-1 text-sm text-slate-600">{description}</p>
@@ -34,7 +34,7 @@ export function PageShell({ title, description, children }: PageShellProps) {
         </div>
       </header>
 
-      <nav className="flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+      <nav className="hidden flex-wrap gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:flex">
         {NAV_LINKS.map((link) => (
           <Link
             key={link.href}

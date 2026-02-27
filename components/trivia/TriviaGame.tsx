@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getUserId } from "@/lib/storage";
 import type { TriviaQuestion } from "@/types";
 
@@ -16,11 +16,15 @@ type SubmitResponse = {
     isCorrect: boolean;
     correctAnswer: number;
     saved: boolean;
+    alreadyAnswered?: boolean;
   };
   error?: string;
 };
 
-export function TriviaGame({ questions }: { questions: TriviaQuestion[] }) {
+export function TriviaGame({ questions: initialQuestions = [] }: { questions?: TriviaQuestion[] }) {
+  const [questions, setQuestions] = useState<TriviaQuestion[]>(initialQuestions);
+  const [loadingQuestions, setLoadingQuestions] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [index, setIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,6 +38,26 @@ export function TriviaGame({ questions }: { questions: TriviaQuestion[] }) {
     if (attempted === 0) return 0;
     return Math.round((correctAnswers / attempted) * 100);
   }, [attempted, correctAnswers]);
+
+  useEffect(() => {
+    const loadQuestions = async () => {
+      setLoadingQuestions(true);
+      setLoadError("");
+      try {
+        const items = await fetchTriviaQuestions(getUserId() ?? undefined);
+        setQuestions(items);
+        setIndex(0);
+        setSelectedAnswer(null);
+        setFeedback("");
+      } catch (error) {
+        setLoadError(error instanceof Error ? error.message : "Failed to load trivia.");
+      } finally {
+        setLoadingQuestions(false);
+      }
+    };
+
+    void loadQuestions();
+  }, []);
 
   const chooseAnswer = async (answerIndex: number) => {
     if (!question || isSubmitting || selectedAnswer !== null) {
@@ -59,6 +83,11 @@ export function TriviaGame({ questions }: { questions: TriviaQuestion[] }) {
       const payload = (await response.json()) as SubmitResponse;
       if (!payload.ok || !payload.result) {
         throw new Error(payload.error ?? "Failed to submit answer.");
+      }
+
+      if (payload.result.alreadyAnswered) {
+        setFeedback("You already answered this question earlier. Skipping scoring.");
+        return;
       }
 
       const wasCorrect = payload.result.isCorrect;
@@ -92,6 +121,22 @@ export function TriviaGame({ questions }: { questions: TriviaQuestion[] }) {
     setIndex((value) => value + 1);
   };
 
+  if (loadingQuestions) {
+    return (
+      <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+        Loading trivia questions...
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="rounded-md border border-rose-300 bg-rose-50 p-4 text-sm text-rose-700">
+        {loadError}
+      </div>
+    );
+  }
+
   if (finished) {
     return (
       <div className="space-y-3 rounded-md border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900">
@@ -106,7 +151,7 @@ export function TriviaGame({ questions }: { questions: TriviaQuestion[] }) {
   if (!question) {
     return (
       <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-        No trivia questions available.
+        No new trivia questions available right now.
       </div>
     );
   }
@@ -161,8 +206,13 @@ export function TriviaGame({ questions }: { questions: TriviaQuestion[] }) {
   );
 }
 
-export async function fetchTriviaQuestions(): Promise<TriviaQuestion[]> {
-  const response = await fetch("/api/trivia", { method: "GET", cache: "no-store" });
+export async function fetchTriviaQuestions(userId?: string): Promise<TriviaQuestion[]> {
+  const query = new URLSearchParams();
+  if (userId) {
+    query.set("userId", userId);
+  }
+  const suffix = query.toString() ? `?${query.toString()}` : "";
+  const response = await fetch(`/api/trivia${suffix}`, { method: "GET", cache: "no-store" });
   const payload = (await response.json()) as TriviaApiResponse;
   if (!payload.ok || !payload.questions) {
     throw new Error(payload.error ?? "Failed to load trivia.");

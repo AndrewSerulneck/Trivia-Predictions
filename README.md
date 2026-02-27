@@ -2,11 +2,17 @@
 
 Mobile-first website for venue-based trivia and prediction competitions.
 
+## Mobile-First Product Rule
+- This app is phone-first by default. Design and UX decisions should start at small viewport sizes first.
+- Desktop/tablet behavior is progressive enhancement only; mobile flows and tap targets take priority.
+- Preferred navigation on phones is the bottom nav (`components/ui/MobileBottomNav.tsx`); avoid adding mobile-only dependence on top nav bars.
+- Any new page/component should be tested at typical phone widths before desktop refinement.
+
 ## Stack
 - Next.js (App Router)
 - TypeScript
 - Tailwind CSS
-- Supabase (planned backend/auth)
+- Supabase (auth + database)
 - Polymarket (live market feed)
 
 ## Getting Started
@@ -39,12 +45,16 @@ Open `http://localhost:3000`.
 - Auth: `Authorization: Bearer $CRON_SECRET` or `x-cron-secret: $CRON_SECRET`
 - `vercel.json` schedules the cron endpoint every 5 minutes.
 
-## Current Scaffold
+## Current App Status
 - Core pages: `/join`, `/trivia`, `/predictions`, `/activity`, `/leaderboard`, `/admin`
-- API stubs: `/api/trivia`, `/api/predictions`, `/api/venues`, `/api/admin`
-- Utilities: Supabase client wiring, probability formatting, mocked Polymarket service
-- Join flow: anonymous auth + venue-locked usernames + geofence verification (100m default)
-- SQL migrations: `supabase/migrations/20260214153000_initial_schema.sql`
+- API routes: `/api/trivia`, `/api/predictions`, `/api/predictions/quota`, `/api/venues`, `/api/activity`, `/api/leaderboard`, `/api/notifications`, `/api/admin`, `/api/admin/users`, `/api/admin/bootstrap`, `/api/ads/impression`, `/api/ads/click`, `/api/cron/predictions-settle`
+- Join flow: anonymous auth + venue-locked usernames + geofence verification (100m default, optional local bypass)
+- SQL migrations:
+  - `supabase/migrations/20260214153000_initial_schema.sql`
+  - `supabase/migrations/20260216193000_add_ad_events.sql`
+  - `supabase/migrations/20260216204000_add_atomic_prediction_settlement.sql`
+  - `supabase/migrations/20260224214000_remove_username_format_constraint.sql`
+  - `supabase/migrations/20260224224500_add_prediction_rate_limit_index.sql`
 - Seed data: `supabase/seed.sql`
 
 ## Supabase Keys (What they are)
@@ -63,8 +73,68 @@ You get both from your Supabase project dashboard:
 1. In Supabase SQL Editor, run:
    - `supabase/migrations/20260214153000_initial_schema.sql`
 2. Then run:
+   - `supabase/migrations/20260216193000_add_ad_events.sql`
+   - `supabase/migrations/20260216204000_add_atomic_prediction_settlement.sql`
+   - `supabase/migrations/20260224214000_remove_username_format_constraint.sql`
+   - `supabase/migrations/20260224224500_add_prediction_rate_limit_index.sql`
+   - `supabase/migrations/20260227132000_add_trivia_slug.sql`
+   - `supabase/migrations/20260227134500_prevent_duplicate_trivia_answers.sql`
+3. Then run:
    - `supabase/seed.sql`
-3. In Supabase Auth settings, enable anonymous sign-ins.
+4. In Supabase Auth settings, enable anonymous sign-ins.
+
+## Trivia Content Workflow (JSON -> Supabase)
+Use this when building and updating your trivia bank.
+
+1. Edit questions in:
+   - `data/trivia/categories/*.json` (one file per category)
+2. Validate JSON format locally:
+   - `npm run trivia:check`
+3. Import questions into Supabase (upsert by `slug`):
+   - `npm run trivia:import`
+4. Re-run import whenever the JSON changes.
+
+Suggested category files:
+- `data/trivia/categories/sports.v1.json`
+- `data/trivia/categories/general-knowledge.v1.json`
+- `data/trivia/categories/history.v1.json`
+- `data/trivia/categories/science.v1.json`
+
+### JSON Format
+Each question must include exactly 4 options (3 wrong + 1 correct):
+
+```json
+[
+  {
+    "slug": "science-red-planet",
+    "question": "Which planet in our solar system is known as the Red Planet?",
+    "options": ["Mars", "Jupiter", "Venus", "Mercury"],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "easy"
+  }
+]
+```
+
+### What to Tell Gemini
+Ask Gemini to return strict JSON only (no markdown), using this schema:
+
+```text
+Return a JSON array only. No markdown, no commentary.
+Each item must have:
+- slug: lowercase kebab-case unique identifier
+- question: string
+- options: array of exactly 4 strings
+- correctAnswer: integer 0-3 (index into options)
+- category: short string
+- difficulty: one of "easy", "medium", "hard"
+
+Rules:
+- Exactly one correct option per question.
+- Keep distractors plausible and non-repetitive.
+- Keep wording concise for mobile users.
+- Do not include explanations.
+```
 
 ## Branch Protection Checklist (GitHub)
 Use this for the `main` branch after CI is enabled.

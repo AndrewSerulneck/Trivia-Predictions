@@ -8,12 +8,12 @@ export default function HomePage() {
     >
       <div className="space-y-3 text-sm text-slate-700">
         <p>
-          Hi Dad. Welcome to Hightop Challenge! Core scaffold is live with Next.js, TypeScript, Tailwind, Supabase
-          wiring, venue-locked join flow, and Polymarket-backed predictions.
+          Welcome to Hightop Challenge. The core gameplay loop is live: venue-locked join flow, trivia gameplay,
+          Polymarket-backed predictions, activity timeline, leaderboard, notifications, and admin tools.
         </p>
         <p>
-          Next step is to connect Trivia, Activity, and Leaderboard
-          pages to live Supabase data instead of placeholder content.
+          Current focus is production hardening and QA across migration state, settlement paths, and cross-device ad
+          placement.
         </p>
       </div>
     </PageShell>

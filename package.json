@@ -8,7 +8,9 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "trivia:check": "node scripts/import-trivia-questions.cjs --dir data/trivia/categories --check",
+    "trivia:import": "node --env-file=.env.local scripts/import-trivia-questions.cjs --dir data/trivia/categories"
   },
   "repository": {
     "type": "git",

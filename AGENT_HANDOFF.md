@@ -31,6 +31,16 @@
   - CI workflow (`.github/workflows/ci.yml`) running test/lint/build on push + PR
   - Branch protection setup checklist documented in `README.md`
 
+## Product Direction Guardrail
+- Mobile-first is a hard requirement for this project.
+- Primary UX target is phone screens; desktop is secondary enhancement.
+- Keep phone navigation centered on `components/ui/MobileBottomNav.tsx`.
+
+## Trivia Content Source Of Truth
+- Author trivia content in `data/trivia/categories/*.json` (category-based files).
+- Validate format with `npm run trivia:check`.
+- Import to Supabase with `npm run trivia:import` (upsert by `slug`).
+
 ## Key Migrations
 - Existing baseline migration:
   - `supabase/migrations/20260214153000_initial_schema.sql`

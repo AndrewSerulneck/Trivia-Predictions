@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { getTriviaQuestions, submitTriviaAnswer } from "@/lib/trivia";
 
-export async function GET() {
-  const questions = await getTriviaQuestions();
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get("userId")?.trim() || undefined;
+  const questions = await getTriviaQuestions(10, userId);
   return NextResponse.json({ ok: true, questions });
 }
 

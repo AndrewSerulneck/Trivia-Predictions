@@ -10,6 +10,12 @@ type TriviaQuestionRow = {
   difficulty: string | null;
 };
 
+type TriviaAnswerLookupRow = {
+  id: string;
+  question_id: string;
+  is_correct: boolean;
+};
+
 const FALLBACK_QUESTIONS: TriviaQuestion[] = [
   {
     id: "fallback-1",
@@ -48,22 +54,51 @@ function mapQuestionRow(row: TriviaQuestionRow): TriviaQuestion {
   };
 }
 
-export async function getTriviaQuestions(limit = 10): Promise<TriviaQuestion[]> {
+export async function getTriviaQuestions(limit = 10, userId?: string): Promise<TriviaQuestion[]> {
   if (!supabaseAdmin) {
     return FALLBACK_QUESTIONS.slice(0, limit);
   }
 
+  const safeLimit = Math.max(1, Math.min(limit, 100));
+  let answeredQuestionIds = new Set<string>();
+
+  if (userId) {
+    const { data: answersData, error: answersError } = await supabaseAdmin
+      .from("trivia_answers")
+      .select("question_id")
+      .eq("user_id", userId)
+      .limit(5000);
+
+    if (answersError) {
+      return FALLBACK_QUESTIONS.slice(0, safeLimit);
+    }
+
+    answeredQuestionIds = new Set(
+      (answersData ?? [])
+        .map((row) => (row as { question_id?: string }).question_id)
+        .filter((value): value is string => Boolean(value))
+    );
+  }
+
+  const queryLimit = userId ? Math.max(safeLimit * 5, 100) : safeLimit;
   const { data, error } = await supabaseAdmin
     .from("trivia_questions")
     .select("id, question, options, correct_answer, category, difficulty")
     .order("created_at", { ascending: false })
-    .limit(limit);
+    .limit(queryLimit);
 
-  if (error || !data || data.length === 0) {
-    return FALLBACK_QUESTIONS.slice(0, limit);
+  if (error || !data) {
+    return FALLBACK_QUESTIONS.slice(0, safeLimit);
   }
 
-  return data.map((row) => mapQuestionRow(row as TriviaQuestionRow));
+  const mapped = data.map((row) => mapQuestionRow(row as TriviaQuestionRow));
+  if (!userId) {
+    return mapped.slice(0, safeLimit);
+  }
+
+  return mapped
+    .filter((question) => !answeredQuestionIds.has(question.id))
+    .slice(0, safeLimit);
 }
 
 async function getQuestionById(questionId: string): Promise<TriviaQuestion | null> {
@@ -93,7 +128,7 @@ export async function submitTriviaAnswer(params: {
   questionId: string;
   answer: number;
   timeElapsed: number;
-}): Promise<{ isCorrect: boolean; correctAnswer: number; saved: boolean }> {
+}): Promise<{ isCorrect: boolean; correctAnswer: number; saved: boolean; alreadyAnswered?: boolean }> {
   const question = await getQuestionById(params.questionId);
   if (!question) {
     throw new Error("Question not found.");
@@ -104,6 +139,22 @@ export async function submitTriviaAnswer(params: {
   let saved = false;
 
   if (supabaseAdmin && params.userId) {
+    const { data: existingAnswer, error: existingAnswerError } = await supabaseAdmin
+      .from("trivia_answers")
+      .select("id, question_id, is_correct")
+      .eq("user_id", params.userId)
+      .eq("question_id", params.questionId)
+      .maybeSingle<TriviaAnswerLookupRow>();
+
+    if (!existingAnswerError && existingAnswer) {
+      return {
+        isCorrect: existingAnswer.is_correct,
+        correctAnswer: question.correctAnswer,
+        saved: false,
+        alreadyAnswered: true,
+      };
+    }
+
     const { error: answerError } = await supabaseAdmin.from("trivia_answers").insert({
       user_id: params.userId,
       question_id: params.questionId,
@@ -111,6 +162,15 @@ export async function submitTriviaAnswer(params: {
       is_correct: isCorrect,
       time_elapsed: safeTimeElapsed,
     });
+
+    if (answerError && answerError.code === "23505") {
+      return {
+        isCorrect,
+        correctAnswer: question.correctAnswer,
+        saved: false,
+        alreadyAnswered: true,
+      };
+    }
 
     if (!answerError) {
       saved = true;
