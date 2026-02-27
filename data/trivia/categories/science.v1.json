@@ -1,0 +1,882 @@
+[
+{
+"slug": "water-chemical-formula",
+"question": "What is the chemical formula for water?",
+"options": ["CO2", "H2O", "NaCl", "HO2"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "closest-planet-to-sun",
+"question": "Which planet is closest to the Sun?",
+"options": ["Venus", "Mars", "Mercury", "Earth"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "human-body-largest-organ",
+"question": "What is the largest organ in the human body?",
+"options": ["Liver", "Brain", "Skin", "Heart"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "gas-plants-absorb",
+"question": "Which gas do plants primarily absorb from the atmosphere for photosynthesis?",
+"options": ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "speed-of-light-vacuum",
+"question": "What is the approximate speed of light in a vacuum?",
+"options": ["300,000 km/s", "150,000 km/s", "1,000,000 km/s", "50,000 km/s"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "noble-gas-symbol-he",
+"question": "Which element is represented by the symbol 'He'?",
+"options": ["Hydrogen", "Helium", "Hafnium", "Mercury"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "powerhouse-of-the-cell",
+"question": "Which organelle is known as the powerhouse of the cell?",
+"options": ["Nucleus", "Ribosome", "Mitochondria", "Golgi apparatus"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "boiling-point-water-celsius",
+"question": "What is the boiling point of water at sea level in Celsius?",
+"options": ["90°C", "100°C", "110°C", "120°C"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "dna-structure-shape",
+"question": "What is the shape of a DNA molecule?",
+"options": ["Sphere", "Single Strand", "Double Helix", "Triple Coil"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "gravity-discovery-scientist",
+"question": "Which scientist is famously associated with the law of universal gravitation?",
+"options": ["Albert Einstein", "Isaac Newton", "Galileo Galilei", "Nikola Tesla"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "blood-type-universal-donor",
+"question": "Which blood type is considered the universal donor?",
+"options": ["A positive", "B negative", "AB positive", "O negative"],
+"correctAnswer": 3,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "most-abundant-gas-atmosphere",
+"question": "What is the most abundant gas in Earth's atmosphere?",
+"options": ["Oxygen", "Carbon Dioxide", "Nitrogen", "Argon"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "subatomic-particle-negative-charge",
+"question": "Which subatomic particle carries a negative electric charge?",
+"options": ["Proton", "Neutron", "Electron", "Quark"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "planet-red-appearance",
+"question": "Which planet is known as the Red Planet?",
+"options": ["Venus", "Jupiter", "Mars", "Saturn"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "ph-scale-neutral-value",
+"question": "What value represents a neutral pH?",
+"options": ["0", "5", "7", "14"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "absolute-zero-kelvin",
+"question": "What temperature is considered absolute zero in Kelvin?",
+"options": ["-273 K", "0 K", "32 K", "100 K"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "hardest-natural-substance",
+"question": "What is the hardest known natural substance on Earth?",
+"options": ["Gold", "Iron", "Diamond", "Quartz"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "galaxy-earth-location",
+"question": "What is the name of the galaxy that contains our Solar System?",
+"options": ["Andromeda", "Milky Way", "Sombrero", "Messier 81"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "sound-travel-medium-fastest",
+"question": "In which medium does sound travel the fastest?",
+"options": ["Air", "Water", "Steel", "Vacuum"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "periodic-table-first-element",
+"question": "What is the first element on the periodic table?",
+"options": ["Helium", "Oxygen", "Lithium", "Hydrogen"],
+"correctAnswer": 3,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "cell-membrane-function",
+"question": "Which component of the cell is responsible for regulating what enters and exits?",
+"options": ["Cell Wall", "Cytoplasm", "Cell Membrane", "Vacuole"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "diamond-element",
+"question": "Which chemical element is a diamond made of?",
+"options": ["Carbon", "Silicon", "Nitrogen", "Oxygen"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "jupiter-moons-count",
+"question": "Which planet in our solar system has the largest number of moons?",
+"options": ["Mars", "Jupiter", "Saturn", "Neptune"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "sound-wave-type",
+"question": "What type of wave is a sound wave?",
+"options": ["Transverse", "Electromagnetic", "Longitudinal", "Radio"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "earliest-antibiotic",
+"question": "What was the first antibiotic to be discovered?",
+"options": ["Amoxicillin", "Tetracycline", "Penicillin", "Streptomycin"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "sun-energy-process",
+"question": "By what process does the Sun produce energy?",
+"options": ["Nuclear Fission", "Chemical Combustion", "Nuclear Fusion", "Radioactive Decay"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "human-bone-count-adult",
+"question": "How many bones are in the adult human body?",
+"options": ["186", "206", "216", "256"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "light-refraction-definition",
+"question": "What is the bending of light as it passes from one medium to another called?",
+"options": ["Reflection", "Refraction", "Diffraction", "Dispersion"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "lithium-symbol",
+"question": "What is the chemical symbol for the element Lithium?",
+"options": ["L", "Li", "Lt", "Lm"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "earth-inner-core-composition",
+"question": "What are the two main metals found in the Earth's inner core?",
+"options": ["Iron and Nickel", "Gold and Silver", "Copper and Zinc", "Magnesium and Silicon"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "photosynthesis-byproduct",
+"question": "What primary gas do plants release as a byproduct of photosynthesis?",
+"options": ["Carbon Dioxide", "Hydrogen", "Nitrogen", "Oxygen"],
+"correctAnswer": 3,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "light-year-measure",
+"question": "A light-year is a unit of measurement for what?",
+"options": ["Time", "Distance", "Brightness", "Speed"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "noble-gas-neon-symbol",
+"question": "What is the chemical symbol for Neon?",
+"options": ["N", "Na", "Ne", "Ni"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "human-stomach-acid",
+"question": "Which acid is primarily found in the human stomach?",
+"options": ["Sulfuric Acid", "Hydrochloric Acid", "Nitric Acid", "Acetic Acid"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "planet-rings-most-visible",
+"question": "Which planet is famous for its large and visible ring system?",
+"options": ["Jupiter", "Uranus", "Neptune", "Saturn"],
+"correctAnswer": 3,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "electron-cloud-atom-center",
+"question": "What is the center of an atom called?",
+"options": ["Nucleus", "Proton", "Core", "Electron"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "radioactive-element-polonium-discoverer",
+"question": "Who discovered the radioactive elements Polonium and Radium?",
+"options": ["Isaac Newton", "Marie Curie", "Albert Einstein", "Niels Bohr"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "solid-to-gas-transition",
+"question": "What is the process called when a solid turns directly into a gas?",
+"options": ["Evaporation", "Condensation", "Sublimation", "Deposition"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "kelvin-boiling-point-water",
+"question": "What is the boiling point of water in Kelvin?",
+"options": ["100 K", "273 K", "373 K", "473 K"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "earth-atmosphere-lowest-layer",
+"question": "What is the lowest layer of Earth's atmosphere?",
+"options": ["Stratosphere", "Mesosphere", "Troposphere", "Exosphere"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "einstein-relativity-equation",
+"question": "In the equation E=mc^2, what does the 'c' represent?",
+"options": ["Current", "Speed of Light", "Calories", "Charge"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "human-eye-colored-part",
+"question": "What is the name of the colored part of the human eye?",
+"options": ["Pupil", "Cornea", "Iris", "Retina"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "gold-symbol",
+"question": "What is the chemical symbol for Gold?",
+"options": ["Gd", "Ag", "Au", "Pb"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "mars-moons-names",
+"question": "What are the names of the two moons of Mars?",
+"options": ["Io & Europa", "Phobos & Deimos", "Titan & Rhea", "Ganymede & Callisto"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "vitamin-c-chemical-name",
+"question": "What is the chemical name for Vitamin C?",
+"options": ["Ascorbic Acid", "Retinol", "Thiamine", "Calciferol"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "universe-age-estimate",
+"question": "What is the estimated age of the universe in billions of years?",
+"options": ["4.5", "10.2", "13.8", "20.1"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "earth-crust-most-abundant-metal",
+"question": "Which is the most abundant metal in the Earth's crust?",
+"options": ["Iron", "Aluminum", "Copper", "Gold"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "blood-circulation-discovery",
+"question": "Who was the first person to describe the circulation of blood in detail?",
+"options": ["William Harvey", "Hippocrates", "Galen", "Louis Pasteur"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "seismic-waves-instrument",
+"question": "What instrument is used to detect and record earthquakes?",
+"options": ["Barometer", "Seismograph", "Hygrometer", "Thermometer"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "dna-bases-cytosine-pair",
+"question": "In DNA, which nitrogenous base always pairs with Cytosine?",
+"options": ["Adenine", "Thymine", "Guanine", "Uracil"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "mercury-state-at-room-temperature",
+"question": "Which metal is the only one that is liquid at room temperature?",
+"options": ["Gallium", "Mercury", "Cesium", "Bromine"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "force-mass-acceleration-law",
+"question": "Newton's Second Law states that Force equals mass times what?",
+"options": ["Velocity", "Inertia", "Acceleration", "Density"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "ocean-tides-cause",
+"question": "Which celestial body's gravity is primarily responsible for Earth's tides?",
+"options": ["The Sun", "The Moon", "Mars", "Jupiter"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "noble-gas-argon-symbol",
+"question": "What is the chemical symbol for Argon?",
+"options": ["A", "Ar", "Ag", "An"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "blood-clotting-cells",
+"question": "Which component of blood is responsible for clotting?",
+"options": ["Red Blood Cells", "White Blood Cells", "Platelets", "Plasma"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "absolute-zero-celsius",
+"question": "What is absolute zero expressed in degrees Celsius?",
+"options": ["-100°C", "-212°C", "-273.15°C", "-459.67°C"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "largest-planet-solar-system",
+"question": "Which is the largest planet in our solar system?",
+"options": ["Saturn", "Jupiter", "Neptune", "Uranus"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "ozone-layer-gas",
+"question": "What gas is the ozone layer primarily composed of?",
+"options": ["Oxygen", "Trioxygen", "Nitrous Oxide", "Carbon Monoxide"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "speed-of-sound-dry-air",
+"question": "What is the approximate speed of sound in dry air at 20°C?",
+"options": ["120 m/s", "343 m/s", "767 m/s", "1,125 m/s"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "human-chromosome-count",
+"question": "How many pairs of chromosomes do humans typically have?",
+"options": ["21", "22", "23", "24"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "alkali-metal-symbol-na",
+"question": "Which element is represented by the symbol 'Na'?",
+"options": ["Nickel", "Neon", "Sodium", "Nitrogen"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "plant-cell-wall-material",
+"question": "What is the primary material that makes up plant cell walls?",
+"options": ["Protein", "Cellulose", "Chitin", "Keratin"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "light-frequency-color-highest",
+"question": "In the visible spectrum, which color has the highest frequency?",
+"options": ["Red", "Yellow", "Green", "Violet"],
+"correctAnswer": 3,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "earth-diameter-approximate",
+"question": "What is the approximate diameter of the Earth?",
+"options": ["8,000 miles", "12,000 miles", "25,000 miles", "50,000 miles"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "radio-waves-speed",
+"question": "How fast do radio waves travel in a vacuum?",
+"options": ["Speed of Sound", "Speed of Light", "1,000 km/h", "Variable"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "process-liquid-to-solid",
+"question": "What is the scientific term for a liquid turning into a solid?",
+"options": ["Condensation", "Freezing", "Evaporation", "Melting"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "main-gas-in-the-sun",
+"question": "What is the most abundant element in the Sun?",
+"options": ["Helium", "Hydrogen", "Carbon", "Oxygen"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "silver-symbol",
+"question": "What is the chemical symbol for Silver?",
+"options": ["Si", "Ag", "Au", "Sl"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "earliest-hominid-species",
+"question": "Which species is widely considered the first of the 'Homo' genus?",
+"options": ["Homo erectus", "Homo habilis", "Homo sapiens", "Homo neanderthalensis"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "human-insulin-organ",
+"question": "Which organ in the human body produces insulin?",
+"options": ["Liver", "Pancreas", "Kidney", "Spleen"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "functional-unit-of-kidney",
+"question": "What is the basic functional unit of the human kidney?",
+"options": ["Neuron", "Nephron", "Alveoli", "Villi"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "potassium-chemical-symbol",
+"question": "What is the chemical symbol for Potassium?",
+"options": ["P", "Po", "K", "Pt"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "longest-wavelength-visible-light",
+"question": "Which color of visible light has the longest wavelength?",
+"options": ["Violet", "Blue", "Green", "Red"],
+"correctAnswer": 3,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "moon-phases-new-moon",
+"question": "In which moon phase is the moon positioned between the Earth and the Sun?",
+"options": ["Full Moon", "New Moon", "First Quarter", "Third Quarter"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "rarest-blood-type",
+"question": "Which is the rarest blood type in the human population?",
+"options": ["O Negative", "B Positive", "AB Negative", "A Negative"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "ear-drum-scientific-name",
+"question": "What is the medical term for the eardrum?",
+"options": ["Cochlea", "Tympanic membrane", "Stapes", "Pinna"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "earth-most-abundant-gas",
+"question": "Which gas makes up approximately 78% of Earth's atmosphere?",
+"options": ["Oxygen", "Carbon Dioxide", "Argon", "Nitrogen"],
+"correctAnswer": 3,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "mitosis-first-stage",
+"question": "What is the first stage of mitosis?",
+"options": ["Metaphase", "Anaphase", "Prophase", "Telophase"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "iron-chemical-symbol",
+"question": "What is the chemical symbol for Iron?",
+"options": ["Ir", "Fe", "In", "I"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "study-of-fungi",
+"question": "What is the scientific study of fungi called?",
+"options": ["Mycology", "Botany", "Zoology", "Phycology"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "speed-of-light-value",
+"question": "The speed of light is approximately how many meters per second?",
+"options": ["30,000", "3,000,000", "300,000,000", "30,000,000,000"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "dry-ice-composition",
+"question": "Dry ice is the solid form of which substance?",
+"options": ["Nitrogen", "Oxygen", "Carbon Dioxide", "Methane"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "smallest-bone-human-body",
+"question": "Where is the smallest bone in the human body located?",
+"options": ["Toe", "Ear", "Nose", "Finger"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "gravity-constant-earth",
+"question": "What is the approximate acceleration due to gravity on Earth?",
+"options": ["5.4 m/s²", "9.8 m/s²", "12.2 m/s²", "32.0 m/s²"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "mercury-planet-atmosphere",
+"question": "Which planet is known for having almost no atmosphere?",
+"options": ["Venus", "Mars", "Mercury", "Neptune"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "helium-atomic-number",
+"question": "What is the atomic number of Helium?",
+"options": ["1", "2", "4", "8"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "ph-scale-acid-range",
+"question": "On the pH scale, values below 7 indicate what type of substance?",
+"options": ["Acidic", "Basic", "Neutral", "Saline"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "celsius-to-fahrenheit-freezing",
+"question": "At what temperature does water freeze in Fahrenheit?",
+"options": ["0°F", "12°F", "32°F", "100°F"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "halley-comet-orbit-period",
+"question": "Approximately how often does Halley's Comet appear to observers on Earth?",
+"options": ["25 years", "50 years", "76 years", "102 years"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "magnesium-chemical-symbol",
+"question": "What is the chemical symbol for Magnesium?",
+"options": ["Ma", "Mg", "Mn", "Ms"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "uranus-rotation-axis",
+"question": "Which planet in our solar system rotates on its side, with its axis tilted at about 98 degrees?",
+"options": ["Neptune", "Saturn", "Uranus", "Jupiter"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "human-tailbone-name",
+"question": "What is the scientific name for the human tailbone?",
+"options": ["Sacrum", "Coccyx", "Pelvis", "Femur"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "chemical-symbol-for-tin",
+"question": "What is the chemical symbol for Tin?",
+"options": ["Ti", "Tn", "Sn", "St"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "speed-of-light-unit-miles",
+"question": "The speed of light is approximately how many miles per second?",
+"options": ["186,000", "93,000", "300,000", "500,000"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "blood-pressure-instrument",
+"question": "What is the name of the instrument used to measure blood pressure?",
+"options": ["Stethoscope", "Sphygmomanometer", "Thermometer", "Barometer"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "photosynthesis-organelle",
+"question": "In which plant cell organelle does photosynthesis occur?",
+"options": ["Mitochondria", "Nucleus", "Chloroplast", "Ribosome"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "tungsten-chemical-symbol",
+"question": "What is the chemical symbol for Tungsten?",
+"options": ["T", "Tu", "Tg", "W"],
+"correctAnswer": 3,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "earliest-living-organisms",
+"question": "The earliest known life forms on Earth are believed to be what?",
+"options": ["Viruses", "Fungi", "Cyanobacteria", "Algae"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "newton-third-law-concept",
+"question": "Newton's Third Law of Motion states that for every action there is an equal and opposite what?",
+"options": ["Force", "Reaction", "Inertia", "Velocity"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "blood-red-color-protein",
+"question": "What is the name of the protein in red blood cells that carries oxygen?",
+"options": ["Plasma", "Insulin", "Hemoglobin", "Keratin"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "mercury-closest-neighbor-planet",
+"question": "Which planet is the second closest to the Sun?",
+"options": ["Earth", "Mars", "Venus", "Mercury"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "copper-chemical-symbol",
+"question": "What is the chemical symbol for Copper?",
+"options": ["Co", "Cp", "Cu", "Cr"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "dna-bases-adenine-pair",
+"question": "In DNA, which base pairs with Adenine?",
+"options": ["Guanine", "Cytosine", "Thymine", "Uracil"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "hottest-planet-solar-system",
+"question": "Which planet is the hottest in our solar system?",
+"options": ["Mercury", "Venus", "Mars", "Jupiter"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "human-respiration-waste-gas",
+"question": "What gas is the primary waste product exhaled by humans?",
+"options": ["Oxygen", "Nitrogen", "Carbon Dioxide", "Carbon Monoxide"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "study-of-insects",
+"question": "What is the scientific study of insects called?",
+"options": ["Etymology", "Entomology", "Ichthyology", "Ornithology"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "earth-distance-from-sun",
+"question": "What is the approximate distance from the Earth to the Sun in miles?",
+"options": ["45 million", "93 million", "150 million", "210 million"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "sodium-chloride-common-name",
+"question": "What is the common name for the chemical compound Sodium Chloride?",
+"options": ["Sugar", "Baking Soda", "Salt", "Vinegar"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "radioactivity-unit",
+"question": "What is the SI unit of radioactivity?",
+"options": ["Hertz", "Becquerel", "Joule", "Watt"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "total-planets-solar-system",
+"question": "How many planets are currently recognized in our solar system?",
+"options": ["7", "8", "9", "10"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+}
+]

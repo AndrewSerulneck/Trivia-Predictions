@@ -1,1 +1,962 @@
-[]
+[
+{
+"slug": "first-emperor-of-rome",
+"question": "Who was the first official emperor of the Roman Empire?",
+"options": ["Julius Caesar", "Augustus", "Nero", "Tiberius"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "magna-carta-signing-year",
+"question": "In what year was the Magna Carta signed?",
+"options": ["1066", "1215", "1492", "1776"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "french-revolution-start",
+"question": "The storming of which prison signaled the start of the French Revolution?",
+"options": ["Versailles", "The Louvre", "Bastille", "Palace of Justice"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "last-egyptian-pharaoh",
+"question": "Who was the last active pharaoh of Ptolemaic Egypt?",
+"options": ["Nefertiti", "Cleopatra VII", "Tutankhamun", "Ramses II"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "cold-war-berlin-wall-fall",
+"question": "In which year did the Berlin Wall fall?",
+"options": ["1987", "1989", "1991", "1993"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "american-civil-war-start",
+"question": "The first shots of the American Civil War were fired at which location?",
+"options": ["Gettysburg", "Appomattox", "Fort Sumter", "Bull Run"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "industrial-revolution-origin",
+"question": "In which country did the Industrial Revolution begin?",
+"options": ["USA", "France", "Germany", "Great Britain"],
+"correctAnswer": 3,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "black-death-century",
+"question": "In which century did the Black Death peak in Europe?",
+"options": ["12th", "13th", "14th", "15th"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "discovery-of-penicillin",
+"question": "Who discovered penicillin in 1928?",
+"options": ["Marie Curie", "Alexander Fleming", "Louis Pasteur", "Gregor Mendel"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "apartheid-end-south-africa",
+"question": "Who was the first black president of South Africa after Apartheid?",
+"options": ["Desmond Tutu", "Nelson Mandela", "F.W. de Klerk", "Thabo Mbeki"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "battle-of-hastings-date",
+"question": "Which group won the Battle of Hastings in 1066?",
+"options": ["Vikings", "Normans", "Saxons", "Romans"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "ancient-greek-philosopher-plato-teacher",
+"question": "Who was the teacher of Plato?",
+"options": ["Aristotle", "Socrates", "Epicurus", "Herodotus"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "aztec-empire-conqueror",
+"question": "Which Spanish conquistador led the expedition that caused the fall of the Aztec Empire?",
+"options": ["Francisco Pizarro", "Hernán Cortés", "Vasco da Gama", "Ponce de León"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "world-war-one-trigger",
+"question": "The assassination of which figure triggered World War I?",
+"options": ["Archduke Franz Ferdinand", "Kaiser Wilhelm II", "Tsar Nicholas II", "King George V"],
+"correctAnswer": 0,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "women-suffrage-us-amendment",
+"question": "Which amendment to the US Constitution granted women the right to vote?",
+"options": ["18th", "19th", "21st", "15th"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "mali-empire-richest-man",
+"question": "Who was the 14th-century ruler of the Mali Empire, often cited as the wealthiest person in history?",
+"options": ["Askia Muhammad", "Mansa Musa", "Sundiata Keita", "Ewuare the Great"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "ottoman-empire-fall-of-constantinople",
+"question": "In what year did the Ottoman Empire capture Constantinople?",
+"options": ["1453", "1492", "1204", "1517"],
+"correctAnswer": 0,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "voyage-of-beagle-scientist",
+"question": "Which scientist traveled on the HMS Beagle?",
+"options": ["Isaac Newton", "Charles Darwin", "James Cook", "John Locke"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "invention-of-printing-press",
+"question": "Who is credited with inventing the movable-type printing press in Europe?",
+"options": ["Leonardo da Vinci", "Johannes Gutenberg", "John Locke", "Isaac Newton"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "soviet-union-first-leader",
+"question": "Who was the first leader of the Soviet Union?",
+"options": ["Joseph Stalin", "Leon Trotsky", "Vladimir Lenin", "Nikita Khrushchev"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "american-revolution-tea-party-city",
+"question": "In which city did the famous 'Tea Party' of 1773 take place?",
+"options": ["New York", "Philadelphia", "Boston", "Charleston"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "battle-of-waterloo-loser",
+"question": "Which leader was defeated at the Battle of Waterloo?",
+"options": ["Duke of Wellington", "Napoleon Bonaparte", "King Louis XVIII", "Tsar Alexander I"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "renaissance-birthplace",
+"question": "In which city is the Renaissance generally considered to have started?",
+"options": ["Rome", "Venice", "Florence", "Paris"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "civil-rights-act-year",
+"question": "In what year was the US Civil Rights Act signed into law?",
+"options": ["1960", "1964", "1968", "1954"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "mayan-civilization-region",
+"question": "The Mayan civilization was primarily located in which modern-day region?",
+"options": ["South America", "Central America", "Egypt", "Southwest USA"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "great-fire-of-london-year",
+"question": "In what year did the Great Fire of London occur?",
+"options": ["1666", "1776", "1555", "1888"],
+"correctAnswer": 0,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "mongol-empire-founder",
+"question": "Who founded the Mongol Empire?",
+"options": ["Kublai Khan", "Genghis Khan", "Batu Khan", "Tamerlane"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "us-independence-day",
+"question": "In which year did the United States declare independence from Great Britain?",
+"options": ["1774", "1775", "1776", "1783"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "first-man-in-space",
+"question": "Who was the first human to travel into space?",
+"options": ["Neil Armstrong", "Buzz Aldrin", "Yuri Gagarin", "John Glenn"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "spanish-armada-defeat",
+"question": "Which English monarch reigned during the defeat of the Spanish Armada?",
+"options": ["Henry VIII", "Elizabeth I", "Mary I", "James I"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "inca-empire-capital",
+"question": "What was the capital city of the Inca Empire?",
+"options": ["Tenochtitlán", "Cusco", "Lima", "Machu Picchu"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "fall-of-berlin-wall-leader",
+"question": "Who was the leader of the Soviet Union when the Berlin Wall fell?",
+"options": ["Leonid Brezhnev", "Mikhail Gorbachev", "Boris Yeltsin", "Vladimir Putin"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "vietnam-war-end-year",
+"question": "In what year did the Vietnam War officially end with the fall of Saigon?",
+"options": ["1973", "1975", "1970", "1980"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "first-circumnavigation-leader",
+"question": "Who led the first expedition to circumnavigate the globe?",
+"options": ["Christopher Columbus", "Ferdinand Magellan", "Vasco da Gama", "Marco Polo"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "rossetta-stone-discovery",
+"question": "The Rosetta Stone was key to deciphering which ancient writing system?",
+"options": ["Cuneiform", "Sanskrit", "Hieroglyphics", "Linear B"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "wwii-d-day-date",
+"question": "In which month and year did the D-Day landings occur?",
+"options": ["May 1945", "June 1944", "August 1943", "December 1941"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "emancipation-proclamation-president",
+"question": "Which US President issued the Emancipation Proclamation?",
+"options": ["Andrew Jackson", "Abraham Lincoln", "Ulysses S. Grant", "Thomas Jefferson"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "meiji-restoration-country",
+"question": "In which country did the Meiji Restoration take place?",
+"options": ["China", "Korea", "Japan", "Thailand"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "boxing-rebellion-location",
+"question": "In which country did the Boxer Rebellion occur at the end of the 19th century?",
+"options": ["China", "India", "Vietnam", "Japan"],
+"correctAnswer": 0,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "first-woman-nobel-prize",
+"question": "Who was the first woman to win a Nobel Prize?",
+"options": ["Mother Teresa", "Marie Curie", "Jane Addams", "Rosalind Franklin"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "louisiana-purchase-seller",
+"question": "From which country did the United States purchase the Louisiana Territory?",
+"options": ["Spain", "France", "Great Britain", "Mexico"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "punic-wars-rivals",
+"question": "The Punic Wars were fought between Rome and which other city-state?",
+"options": ["Athens", "Sparta", "Carthage", "Troy"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "titanic-sinking-year",
+"question": "In which year did the RMS Titanic sink?",
+"options": ["1910", "1912", "1914", "1916"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "nelson-mandela-prison-years",
+"question": "For approximately how many years was Nelson Mandela imprisoned?",
+"options": ["10", "18", "27", "35"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "gutenberg-bible-century",
+"question": "In which century was the Gutenberg Bible printed?",
+"options": ["14th", "15th", "16th", "17th"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "mohandas-gandhi-title",
+"question": "What honorific title, meaning 'Great Soul', was given to Mohandas Gandhi?",
+"options": ["Pandit", "Mahatma", "Sardar", "Guru"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "un-founding-year",
+"question": "In what year was the United Nations (UN) founded?",
+"options": ["1919", "1945", "1950", "1939"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "viking-explorer-america",
+"question": "Which Viking explorer is credited with reaching North America before Columbus?",
+"options": ["Erik the Red", "Leif Erikson", "Ragnar Lothbrok", "Ivar the Boneless"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "war-of-the-roses-houses",
+"question": "The War of the Roses was fought between which two royal houses?",
+"options": ["Tudor & Stuart", "York & Lancaster", "Windsor & Bourbon", "Habsburg & Medici"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "trail-of-tears-president",
+"question": "Which US President signed the Indian Removal Act, leading to the Trail of Tears?",
+"options": ["Andrew Jackson", "Martin Van Buren", "John Quincy Adams", "James K. Polk"],
+"correctAnswer": 0,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "code-of-hammurabi-origin",
+"question": "The Code of Hammurabi originated from which ancient civilization?",
+"options": ["Egyptian", "Babylonian", "Persian", "Sumerian"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "hiroshima-bombing-date",
+"question": "In which month and year was the atomic bomb dropped on Hiroshima?",
+"options": ["May 1945", "June 1945", "August 1945", "September 1945"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "battle-of-thermopylae-king",
+"question": "Which Spartan king led the 300 at the Battle of Thermopylae?",
+"options": ["Leonidas", "Agis", "Cleomenes", "Lycurgus"],
+"correctAnswer": 0,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "six-day-war-year",
+"question": "In what year was the Six-Day War fought?",
+"options": ["1948", "1956", "1967", "1973"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "magellan-strait-discovery",
+"question": "Ferdinand Magellan was the first European to sail across which ocean?",
+"options": ["Atlantic", "Pacific", "Indian", "Arctic"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "abolition-of-slavery-uk-year",
+"question": "In what year did the Slavery Abolition Act pass in the British Empire?",
+"options": ["1807", "1833", "1865", "1792"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "manhattan-project-leader",
+"question": "Who was the scientific director of the Manhattan Project?",
+"options": ["Albert Einstein", "J. Robert Oppenheimer", "Enrico Fermi", "Richard Feynman"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "ancient-library-of-alexandria-location",
+"question": "In which modern-day country was the Library of Alexandria located?",
+"options": ["Greece", "Italy", "Egypt", "Turkey"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "marshall-plan-purpose",
+"question": "What was the primary goal of the Marshall Plan after WWII?",
+"options": ["Military invasion", "Economic aid to Europe", "Space exploration", "Trade with China"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "fall-of-the-bastille-date",
+"question": "On which date is Bastille Day celebrated in France?",
+"options": ["July 4", "July 14", "August 14", "June 14"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "glorious-revolution-country",
+"question": "In which country did the Glorious Revolution of 1688 take place?",
+"options": ["France", "England", "Spain", "Russia"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "crusades-target-city",
+"question": "What was the main target city of the First Crusade?",
+"options": ["Constantinople", "Rome", "Jerusalem", "Cairo"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "apartheid-country",
+"question": "Which country enforced the system of racial segregation known as Apartheid?",
+"options": ["USA", "Zimbabwe", "South Africa", "Australia"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "invention-of-the-telephone",
+"question": "Who is officially credited with the invention of the telephone?",
+"options": ["Thomas Edison", "Nikola Tesla", "Alexander Graham Bell", "Guglielmo Marconi"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "first-man-on-moon-year",
+"question": "In what year did Neil Armstrong walk on the moon?",
+"options": ["1967", "1968", "1969", "1970"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "hundred-years-war-belligerents",
+"question": "The Hundred Years' War was fought primarily between which two countries?",
+"options": ["England & France", "Spain & Portugal", "Germany & Austria", "France & Spain"],
+"correctAnswer": 0,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "pearl-harbor-attack-year",
+"question": "In which year did the attack on Pearl Harbor occur?",
+"options": ["1939", "1940", "1941", "1942"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "great-depression-start-year",
+"question": "In what year did the US stock market crash, sparking the Great Depression?",
+"options": ["1925", "1929", "1931", "1933"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "pax-romana-meaning",
+"question": "What does the term 'Pax Romana' refer to?",
+"options": ["Roman War", "Roman Law", "Roman Peace", "Roman Trade"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "tiananmen-square-protest-year",
+"question": "In what year did the Tiananmen Square protests occur?",
+"options": ["1987", "1988", "1989", "1990"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "conquest-of-england-duke",
+"question": "Which Norman Duke became King of England in 1066?",
+"options": ["Richard the Lionheart", "William the Conqueror", "Edward the Confessor", "Harold Godwinson"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "bolshevik-revolution-leader",
+"question": "Who led the Bolshevik Party during the Russian Revolution of 1917?",
+"options": ["Vladimir Lenin", "Joseph Stalin", "Leon Trotsky", "Nicholas II"],
+"correctAnswer": 0,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "great-wall-of-china-purpose",
+"question": "What was the primary purpose of the Great Wall of China?",
+"options": ["Trade route", "Defense against invaders", "Flood control", "Communication line"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "reign-of-terror-leader",
+"question": "Who was the leading figure during the Reign of Terror in revolutionary France?",
+"options": ["Louis XVI", "Maximilien Robespierre", "Napoleon Bonaparte", "Jean-Paul Marat"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "boston-massacre-year",
+"question": "In what year did the Boston Massacre occur?",
+"options": ["1770", "1773", "1775", "1776"],
+"correctAnswer": 0,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "salem-witch-trials-century",
+"question": "In which century did the Salem Witch Trials take place?",
+"options": ["15th", "16th", "17th", "18th"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "berlin-wall-construction-year",
+"question": "In what year did construction on the Berlin Wall begin?",
+"options": ["1945", "1951", "1961", "1971"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "mona-lisa-artist",
+"question": "Which historical figure painted the Mona Lisa?",
+"options": ["Michelangelo", "Raphael", "Leonardo da Vinci", "Donatello"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "war-of-1812-belligerents",
+"question": "The War of 1812 was fought between the US and which other power?",
+"options": ["France", "Spain", "Great Britain", "Mexico"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "protestant-reformation-starter",
+"question": "Who started the Protestant Reformation by nailing his 95 Theses to a church door?",
+"options": ["John Calvin", "Martin Luther", "Henry VIII", "John Wesley"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "panama-canal-completion-year",
+"question": "In what year was the Panama Canal completed?",
+"options": ["1881", "1903", "1914", "1925"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "cuban-missile-crisis-year",
+"question": "In what year did the Cuban Missile Crisis occur?",
+"options": ["1959", "1961", "1962", "1963"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "suez-crisis-year",
+"question": "In what year did the Suez Crisis take place?",
+"options": ["1948", "1952", "1956", "1967"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "battle-of-gettysburg-year",
+"question": "In what year did the Battle of Gettysburg occur?",
+"options": ["1861", "1862", "1863", "1865"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "first-crusade-pope",
+"question": "Which Pope called for the First Crusade in 1095?",
+"options": ["Urban II", "Gregory VII", "Innocent III", "Leo X"],
+"correctAnswer": 0,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "spanish-civil-war-start-year",
+"question": "In what year did the Spanish Civil War begin?",
+"options": ["1931", "1936", "1939", "1945"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "byzantine-empire-capital",
+"question": "What was the capital of the Byzantine Empire?",
+"options": ["Rome", "Athens", "Constantinople", "Alexandria"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "viet-minh-leader",
+"question": "Who was the leader of the Viet Minh during the struggle against French colonial rule?",
+"options": ["Ho Chi Minh", "Ngo Dinh Diem", "Pol Pot", "Mao Zedong"],
+"correctAnswer": 0,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "tokugawa-shogunate-end-year",
+"question": "In what year did the Tokugawa Shogunate end?",
+"options": ["1603", "1853", "1868", "1912"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "fall-of-the-incas-conquistador",
+"question": "Which conquistador conquered the Inca Empire?",
+"options": ["Hernán Cortés", "Francisco Pizarro", "Vasco Núñez de Balboa", "Hernando de Soto"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "golden-age-of-pericles-city",
+"question": "The Golden Age of Pericles is associated with which ancient city?",
+"options": ["Sparta", "Thebes", "Athens", "Corinth"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "founding-of-rome-traditional-year",
+"question": "According to tradition, in what year was Rome founded?",
+"options": ["509 BC", "753 BC", "44 BC", "27 BC"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "gulf-war-operation-name",
+"question": "What was the codename for the US-led air offensive in the 1991 Gulf War?",
+"options": ["Desert Storm", "Desert Shield", "Overlord", "Barbarossa"],
+"correctAnswer": 0,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "invention-of-the-airplane",
+"question": "In what year did the Wright brothers make their first powered flight?",
+"options": ["1899", "1901", "1903", "1905"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "signing-of-treaty-of-versailles",
+"question": "In what year was the Treaty of Versailles signed, ending WWI?",
+"options": ["1918", "1919", "1920", "1921"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "first-us-president",
+"question": "Who was the first president of the United States?",
+"options": ["Thomas Jefferson", "John Adams", "George Washington", "James Madison"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "hindenburg-disaster-year",
+"question": "In what year did the Hindenburg airship disaster occur?",
+"options": ["1935", "1936", "1937", "1938"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "reunification-of-germany-year",
+"question": "In what year was Germany officially reunited?",
+"options": ["1989", "1990", "1991", "1992"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "invention-of-the-wheel-civilization",
+"question": "Which ancient civilization is credited with inventing the wheel?",
+"options": ["Egyptian", "Sumerian", "Indus Valley", "Chinese"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "war-of-independence-mexico-start",
+"question": "In what year did the Mexican War of Independence begin?",
+"options": ["1810", "1821", "1836", "1848"],
+"correctAnswer": 0,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "black-death-origin-continent",
+"question": "Which continent is believed to be the origin of the Black Death?",
+"options": ["Europe", "Africa", "Asia", "South America"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "napoleon-final-exile-island",
+"question": "On which island did Napoleon Bonaparte die in exile?",
+"options": ["Elba", "Corsica", "Saint Helena", "Malta"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "first-human-on-the-moon",
+"question": "Who was the second person to walk on the moon?",
+"options": ["Neil Armstrong", "Buzz Aldrin", "Yuri Gagarin", "Michael Collins"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "berlin-wall-fall-year",
+"question": "In what year did the Berlin Wall fall?",
+"options": ["1987", "1988", "1989", "1990"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "ancient-egypt-unification-king",
+"question": "Which king is credited with unifying Upper and Lower Egypt around 3100 BC?",
+"options": ["Khufu", "Narmer", "Tutankhamun", "Akhenaten"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "magna-carta-king",
+"question": "Which English King was forced to sign the Magna Carta?",
+"options": ["Richard the Lionheart", "King John", "Henry VIII", "Edward I"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "industrial-revolution-steam-engine",
+"question": "Who improved the steam engine in the late 18th century, driving the Industrial Revolution?",
+"options": ["James Watt", "Robert Fulton", "George Stephenson", "Eli Whitney"],
+"correctAnswer": 0,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "wwii-axis-powers",
+"question": "Which of these countries was NOT part of the Axis Powers in WWII?",
+"options": ["Germany", "Italy", "Japan", "Soviet Union"],
+"correctAnswer": 3,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "aztec-empire-capital",
+"question": "What was the capital city of the Aztec Empire?",
+"options": ["Cusco", "Chichen Itza", "Tenochtitlan", "Palenque"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "french-revolution-executed-king",
+"question": "Which French King was executed by guillotine during the French Revolution?",
+"options": ["Louis XIV", "Louis XV", "Louis XVI", "Louis XVIII"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "cold-war-cuban-missile-crisis-president",
+"question": "Who was the US President during the Cuban Missile Crisis?",
+"options": ["Dwight D. Eisenhower", "John F. Kennedy", "Lyndon B. Johnson", "Richard Nixon"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "ancient-greece-marathon-distance-origin",
+"question": "The marathon race commemorates a run from which battlefield to Athens?",
+"options": ["Thermopylae", "Marathon", "Plataea", "Salamis"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "vietnam-war-tet-offensive-year",
+"question": "In what year did the Tet Offensive take place during the Vietnam War?",
+"options": ["1965", "1968", "1972", "1975"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "rosie-the-riveter-era",
+"question": "The cultural icon 'Rosie the Riveter' represented women working during which war?",
+"options": ["WWI", "WWII", "Korean War", "Vietnam War"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "viking-first-raid-england",
+"question": "The 793 AD raid on which monastery is often cited as the start of the Viking Age?",
+"options": ["Iona", "Lindisfarne", "Whitby", "Jarrow"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "invention-of-the-light-bulb",
+"question": "Who is most commonly credited with the invention of the practical incandescent light bulb?",
+"options": ["Nikola Tesla", "Benjamin Franklin", "Thomas Edison", "Alexander Graham Bell"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "apartheid-release-of-mandela-year",
+"question": "In what year was Nelson Mandela released from prison?",
+"options": ["1985", "1990", "1994", "1999"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "ancient-rome-crossing-the-rubicon",
+"question": "Which general's crossing of the Rubicon river led to a civil war in Rome?",
+"options": ["Pompey", "Julius Caesar", "Mark Antony", "Scipio Africanus"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "soviet-union-sputnik-launch",
+"question": "What was the name of the first artificial satellite launched into orbit in 1957?",
+"options": ["Vostok 1", "Sputnik 1", "Explorer 1", "Apollo 1"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "renaissance-printing-press-inventor",
+"question": "Johannes Gutenberg's printing press was first used to mass-produce which book?",
+"options": ["The Canterbury Tales", "The Bible", "The Republic", "The Prince"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+}
+]

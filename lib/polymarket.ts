@@ -2,6 +2,23 @@ import type { Prediction } from "@/types";
 
 const GAMMA_API_URL = process.env.POLYMARKET_API_URL ?? "https://gamma-api.polymarket.com/markets";
 const DEFAULT_SCAN_LIMIT = Number.parseInt(process.env.POLYMARKET_SCAN_LIMIT ?? "1000", 10);
+const CATEGORY_STOP_WORDS = new Set(["and", "or", "of", "the", "in", "on", "to", "for", "vs", "v"]);
+const CATEGORY_ACRONYMS = new Map([
+  ["nba", "NBA"],
+  ["nfl", "NFL"],
+  ["mlb", "MLB"],
+  ["nhl", "NHL"],
+  ["ufc", "UFC"],
+  ["wwe", "WWE"],
+  ["ncaa", "NCAA"],
+  ["f1", "F1"],
+  ["usa", "USA"],
+  ["us", "US"],
+  ["uk", "UK"],
+  ["eu", "EU"],
+  ["u.s.", "US"],
+  ["u.k.", "UK"],
+]);
 
 export type PredictionSort = "closing-soon" | "newest" | "volume" | "liquidity";
 
@@ -10,6 +27,7 @@ export type PredictionListParams = {
   pageSize?: number | string;
   search?: string;
   category?: string;
+  broadCategory?: string;
   sort?: PredictionSort | string;
 };
 
@@ -20,6 +38,8 @@ export type PredictionListResult = {
   totalItems: number;
   totalPages: number;
   categories: string[];
+  trendingCategories: string[];
+  broadCategories: string[];
 };
 
 type GammaMarket = {
@@ -37,11 +57,120 @@ type GammaMarket = {
   closed?: boolean | null;
   category?: string | null;
   tags?: unknown;
+  events?: unknown;
   volume?: unknown;
   volumeNum?: unknown;
   liquidity?: unknown;
   liquidityNum?: unknown;
 };
+
+const BROAD_CATEGORIES = [
+  "trending",
+  "breaking",
+  "new",
+  "politics",
+  "sports",
+  "crypto",
+  "finance",
+  "geopolitics",
+  "earnings",
+  "tech",
+  "culture",
+  "world",
+  "economy",
+  "climate & science",
+  "mentions",
+  "elections",
+] as const;
+
+const BROAD_CATEGORY_SET = new Set(BROAD_CATEGORIES);
+
+function includesAny(text: string, keywords: string[]): boolean {
+  return keywords.some((keyword) => text.includes(keyword));
+}
+
+function getTrendingVolumeThreshold(markets: Prediction[]): number {
+  const volumes = markets
+    .map((market) => market.volume ?? market.liquidity ?? 0)
+    .filter((value) => Number.isFinite(value))
+    .sort((a, b) => b - a);
+
+  if (volumes.length === 0) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  const index = Math.max(0, Math.floor(volumes.length * 0.2) - 1);
+  return volumes[index] ?? Number.POSITIVE_INFINITY;
+}
+
+function classifyBroadCategories(
+  market: Prediction,
+  context: { now: number; trendingThreshold: number }
+): Set<string> {
+  const broad = new Set<string>();
+  const haystack = [
+    market.question,
+    market.category ?? "",
+    ...(market.tags ?? []),
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  const volume = market.volume ?? market.liquidity ?? 0;
+  if (volume >= context.trendingThreshold) {
+    broad.add("trending");
+  }
+  if (haystack.includes("breaking")) {
+    broad.add("breaking");
+  }
+
+  const createdAt = market.createdAt ? +new Date(market.createdAt) : Number.NaN;
+  if (Number.isFinite(createdAt) && context.now - createdAt <= 1000 * 60 * 60 * 72) {
+    broad.add("new");
+  }
+
+  if (includesAny(haystack, ["election", "vote", "voter", "ballot", "campaign", "primary", "poll"])) {
+    broad.add("elections");
+  }
+  if (includesAny(haystack, ["politic", "government", "senate", "congress", "president", "prime minister", "parliament"])) {
+    broad.add("politics");
+  }
+  if (includesAny(haystack, ["sport", "nba", "nfl", "mlb", "nhl", "soccer", "football", "basketball", "baseball", "tennis", "golf", "ufc", "f1"])) {
+    broad.add("sports");
+  }
+  if (includesAny(haystack, ["crypto", "bitcoin", "btc", "ethereum", "eth", "solana", "token", "coin"])) {
+    broad.add("crypto");
+  }
+  if (includesAny(haystack, ["finance", "stock", "shares", "bond", "fed", "nasdaq", "s&p", "sp500", "dow"])) {
+    broad.add("finance");
+  }
+  if (includesAny(haystack, ["geopolitic", "war", "military", "nato", "sanction", "ukraine", "russia", "china", "taiwan", "israel", "gaza", "iran"])) {
+    broad.add("geopolitics");
+  }
+  if (includesAny(haystack, ["earnings", "eps", "revenue", "guidance", "quarter", "q1", "q2", "q3", "q4"])) {
+    broad.add("earnings");
+  }
+  if (includesAny(haystack, ["tech", "technology", "ai", "artificial intelligence", "openai", "apple", "google", "microsoft", "nvidia", "tesla"])) {
+    broad.add("tech");
+  }
+  if (includesAny(haystack, ["culture", "entertainment", "movie", "tv", "music", "celebrity", "award", "box office"])) {
+    broad.add("culture");
+  }
+  if (includesAny(haystack, ["world", "global", "international", "country"])) {
+    broad.add("world");
+  }
+  if (includesAny(haystack, ["economy", "gdp", "inflation", "recession", "unemployment", "cpi", "jobs report"])) {
+    broad.add("economy");
+  }
+  if (includesAny(haystack, ["climate", "weather", "temperature", "hurricane", "earthquake", "science", "space", "nasa"])) {
+    broad.add("climate & science");
+  }
+  if (includesAny(haystack, ["mention", "mentions", "said", "says"])) {
+    broad.add("mentions");
+  }
+
+  return broad;
+}
 
 function normalizePage(input: unknown, fallback: number): number {
   const value = Number.parseInt(String(input ?? ""), 10);
@@ -114,12 +243,39 @@ function parseArrayField(value: unknown): unknown[] {
   return [];
 }
 
+function formatCategoryLabel(value: string): string {
+  const cleaned = value
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/\s*\/\s*/g, " / ")
+    .trim();
+
+  if (!cleaned) {
+    return "";
+  }
+
+  const words = cleaned.split(" ");
+  return words
+    .map((word, index) => {
+      const lower = word.toLowerCase();
+      const acronym = CATEGORY_ACRONYMS.get(lower);
+      if (acronym) {
+        return acronym;
+      }
+      if (index > 0 && CATEGORY_STOP_WORDS.has(lower)) {
+        return lower;
+      }
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
+    .join(" ");
+}
+
 function parseTags(value: unknown): string[] {
   const raw = parseArrayField(value);
   const tags: string[] = [];
   for (const entry of raw) {
     if (typeof entry === "string") {
-      const normalized = entry.trim();
+      const normalized = formatCategoryLabel(entry.trim());
       if (normalized) {
         tags.push(normalized);
       }
@@ -127,17 +283,59 @@ function parseTags(value: unknown): string[] {
     }
 
     if (entry && typeof entry === "object") {
-      const candidate = (entry as { label?: unknown; slug?: unknown; name?: unknown }).label
-        ?? (entry as { slug?: unknown }).slug
-        ?? (entry as { name?: unknown }).name;
-      const normalized = String(candidate ?? "").trim();
-      if (normalized) {
-        tags.push(normalized);
+      const objectEntry = entry as {
+        label?: unknown;
+        slug?: unknown;
+        name?: unknown;
+        title?: unknown;
+        category?: unknown;
+      };
+
+      const candidates = [
+        objectEntry.label,
+        objectEntry.slug,
+        objectEntry.name,
+        objectEntry.title,
+        objectEntry.category,
+      ];
+
+      for (const candidate of candidates) {
+        const normalized = formatCategoryLabel(String(candidate ?? "").trim());
+        if (normalized) {
+          tags.push(normalized);
+        }
       }
     }
   }
 
-  return Array.from(new Set(tags));
+  const byKey = new Map<string, string>();
+  for (const tag of tags) {
+    const key = tag.toLowerCase();
+    if (!byKey.has(key)) {
+      byKey.set(key, tag);
+    }
+  }
+
+  return [...byKey.values()];
+}
+
+function normalizeCategoryValue(value: unknown): string {
+  if (typeof value === "string") {
+    return formatCategoryLabel(value.trim());
+  }
+
+  if (value && typeof value === "object") {
+    const objectValue = value as {
+      label?: unknown;
+      name?: unknown;
+      title?: unknown;
+      slug?: unknown;
+    };
+    const fallback = objectValue.label ?? objectValue.name ?? objectValue.title ?? objectValue.slug;
+    return formatCategoryLabel(String(fallback ?? "").trim());
+  }
+
+  return "";
 }
 
 function normalizeMarket(market: GammaMarket): Prediction | null {
@@ -178,8 +376,11 @@ function normalizeMarket(market: GammaMarket): Prediction | null {
     return null;
   }
 
-  const category = String(market.category ?? "").trim();
-  const tags = parseTags(market.tags);
+  const tags = Array.from(new Set([
+    ...parseTags(market.tags),
+    ...parseTags(market.events),
+  ]));
+  const category = normalizeCategoryValue(market.category);
 
   return {
     id: marketId,
@@ -239,6 +440,7 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
   const pageSize = normalizePageSize(params.pageSize);
   const search = String(params.search ?? "").trim().toLowerCase();
   const category = String(params.category ?? "").trim();
+  const broadCategory = String(params.broadCategory ?? "").trim().toLowerCase();
   const sort = normalizeSort(params.sort);
 
   const query = new URLSearchParams({
@@ -251,9 +453,39 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
   const normalized = gammaMarkets
     .map((item) => normalizeMarket(item))
     .filter((item): item is Prediction => Boolean(item));
+  const now = Date.now();
+  const trendingThreshold = getTrendingVolumeThreshold(normalized);
+  const broadByMarketId = new Map<string, Set<string>>();
+  for (const market of normalized) {
+    broadByMarketId.set(market.id, classifyBroadCategories(market, { now, trendingThreshold }));
+  }
 
-  const categories = Array.from(new Set(normalized.map((item) => item.category ?? "Uncategorized")))
-    .sort((a, b) => a.localeCompare(b));
+  const categories = Array.from(new Set(
+    normalized.flatMap((item) => {
+      const values = [item.category ?? "Uncategorized", ...(item.tags ?? [])]
+        .map((value) => String(value ?? "").trim())
+        .filter(Boolean);
+      return values.length > 0 ? values : ["Uncategorized"];
+    })
+  ))
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+
+  const categoryScores = new Map<string, number>();
+  for (const market of normalized) {
+    const marketCategories = new Set(
+      [market.category ?? "Uncategorized", ...(market.tags ?? [])]
+        .map((value) => String(value ?? "").trim())
+        .filter(Boolean)
+    );
+    const weight = Math.max(1, market.volume ?? market.liquidity ?? 1);
+    for (const value of marketCategories) {
+      categoryScores.set(value, (categoryScores.get(value) ?? 0) + weight);
+    }
+  }
+  const trendingCategories = [...categoryScores.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], undefined, { sensitivity: "base" }))
+    .slice(0, 12)
+    .map(([name]) => name);
 
   let filtered = normalized;
   if (search) {
@@ -266,7 +498,16 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
   }
 
   if (category) {
-    filtered = filtered.filter((market) => (market.category ?? "") === category);
+    filtered = filtered.filter((market) => {
+      if ((market.category ?? "") === category) {
+        return true;
+      }
+      return (market.tags ?? []).includes(category);
+    });
+  }
+
+  if (broadCategory && BROAD_CATEGORY_SET.has(broadCategory as (typeof BROAD_CATEGORIES)[number])) {
+    filtered = filtered.filter((market) => broadByMarketId.get(market.id)?.has(broadCategory));
   }
 
   filtered = filtered.sort((a, b) => compareBySort(a, b, sort));
@@ -284,6 +525,8 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
     totalItems,
     totalPages,
     categories,
+    trendingCategories,
+    broadCategories: [...BROAD_CATEGORIES],
   };
 }
 

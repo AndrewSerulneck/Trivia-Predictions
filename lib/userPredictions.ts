@@ -28,7 +28,7 @@ export type PredictionQuota = {
   isAdminBypass: boolean;
 };
 
-const PICK_LIMIT_PER_HOUR = 25;
+const PICK_LIMIT_PER_HOUR = 10;
 const WINDOW_MS = 60 * 60 * 1000;
 
 function mapRow(row: UserPredictionRow): UserPrediction {
@@ -154,7 +154,7 @@ export async function submitPredictionPick(params: {
   const quota = await getPredictionQuota(userId);
   if (!quota.isAdminBypass && quota.picksRemaining <= 0) {
     const minutes = Math.ceil(quota.windowSecondsRemaining / 60);
-    throw new Error(`Hourly pick limit reached (25). Try again in about ${minutes} minute(s).`);
+    throw new Error(`Hourly pick limit reached (10). Try again in about ${minutes} minute(s).`);
   }
 
   const { data: existing } = await supabaseAdmin

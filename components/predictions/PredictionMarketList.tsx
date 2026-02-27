@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { calculatePoints, formatProbability } from "@/lib/predictions";
-import { getUserId } from "@/lib/storage";
+import { getUserId, getVenueId } from "@/lib/storage";
 import type { Prediction } from "@/types";
 
 type SubmitState = Record<string, string>;
@@ -15,7 +16,17 @@ type PredictionListPayload = {
   totalItems?: number;
   totalPages?: number;
   categories?: string[];
+  trendingCategories?: string[];
+  broadCategories?: string[];
   error?: string;
+};
+
+type PredictionQuota = {
+  limit: number;
+  picksUsed: number;
+  picksRemaining: number;
+  windowSecondsRemaining: number;
+  isAdminBypass: boolean;
 };
 
 type SortKey = "closing-soon" | "newest" | "volume" | "liquidity";
@@ -27,29 +38,76 @@ const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
   { value: "liquidity", label: "Highest Liquidity" },
 ];
 
+function formatBroadCategoryLabel(value: string): string {
+  return value
+    .split(" ")
+    .map((part) => {
+      if (part === "&") return "&";
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    })
+    .join(" ");
+}
+
 export function PredictionMarketList() {
+  const router = useRouter();
   const [messages, setMessages] = useState<SubmitState>({});
   const [pendingByMarket, setPendingByMarket] = useState<Record<string, boolean>>({});
   const [userId, setUserId] = useState<string | null>(null);
+  const [quota, setQuota] = useState<PredictionQuota | null>(null);
 
   const [markets, setMarkets] = useState<Prediction[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [trendingCategories, setTrendingCategories] = useState<string[]>([]);
+  const [broadCategories, setBroadCategories] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
+  const [broadCategory, setBroadCategory] = useState("");
   const [sort, setSort] = useState<SortKey>("closing-soon");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
-  const hasFilters = useMemo(() => Boolean(search || category), [search, category]);
+  const hasFilters = useMemo(() => Boolean(search || category || broadCategory), [search, category, broadCategory]);
 
   useEffect(() => {
-    setUserId(getUserId());
-  }, []);
+    const nextUserId = getUserId();
+    const venueId = getVenueId();
+    if (!nextUserId || !venueId) {
+      router.replace("/join");
+      return;
+    }
+    setUserId(nextUserId);
+  }, [router]);
+
+  useEffect(() => {
+    if (!userId) {
+      setQuota(null);
+      return;
+    }
+
+    const loadQuota = async () => {
+      const response = await fetch(`/api/predictions/quota?userId=${encodeURIComponent(userId)}`, {
+        cache: "no-store",
+      });
+      const payload = (await response.json()) as { ok: boolean; quota?: PredictionQuota | null };
+      if (payload.ok) {
+        setQuota(payload.quota ?? null);
+      }
+    };
+
+    void loadQuota();
+    const interval = window.setInterval(() => {
+      void loadQuota();
+    }, 15000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [userId]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -64,6 +122,7 @@ export function PredictionMarketList() {
           pageSize: "100",
           search,
           category,
+          broadCategory,
           sort,
         });
         const response = await fetch(`/api/predictions?${query.toString()}`, {
@@ -78,6 +137,8 @@ export function PredictionMarketList() {
 
         setMarkets(payload.items ?? []);
         setCategories(payload.categories ?? []);
+        setTrendingCategories(payload.trendingCategories ?? []);
+        setBroadCategories(payload.broadCategories ?? []);
         setTotalItems(payload.totalItems ?? 0);
         setTotalPages(Math.max(1, payload.totalPages ?? 1));
       } catch (error) {
@@ -98,7 +159,7 @@ export function PredictionMarketList() {
     void load();
 
     return () => controller.abort();
-  }, [page, search, category, sort]);
+  }, [page, search, category, broadCategory, sort]);
 
   const submitPick = async (predictionId: string, outcomeId: string) => {
     if (!userId) {
@@ -123,6 +184,15 @@ export function PredictionMarketList() {
 
       setMessages((prev) => ({ ...prev, [predictionId]: "Pick placed successfully." }));
       window.dispatchEvent(new CustomEvent("tp:points-updated", { detail: { source: "prediction-pick" } }));
+      if (userId) {
+        const response = await fetch(`/api/predictions/quota?userId=${encodeURIComponent(userId)}`, {
+          cache: "no-store",
+        });
+        const quotaPayload = (await response.json()) as { ok: boolean; quota?: PredictionQuota | null };
+        if (quotaPayload.ok) {
+          setQuota(quotaPayload.quota ?? null);
+        }
+      }
     } catch (error) {
       setMessages((prev) => ({
         ...prev,
@@ -135,6 +205,22 @@ export function PredictionMarketList() {
 
   return (
     <div className="space-y-4">
+      {quota && !quota.isAdminBypass ? (
+        <div className="space-y-1 rounded-md border border-slate-200 bg-slate-50 p-3">
+          <div className="flex items-center justify-between text-xs font-medium text-slate-700">
+            <span>Predictions Progress This Hour</span>
+            <span>
+              {quota.picksUsed}/{quota.limit}
+            </span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+            <div
+              className="h-full rounded-full bg-slate-900 transition-all"
+              style={{ width: `${Math.min(100, (quota.picksUsed / quota.limit) * 100)}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
       {!userId && (
         <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
           You are not joined to a venue in this browser yet. Use the Join page first to place picks.
@@ -142,6 +228,77 @@ export function PredictionMarketList() {
       )}
 
       <section className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Browse Categories</p>
+          <div className="overflow-x-auto pb-1">
+            <div className="flex w-max items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setBroadCategory("");
+                  setCategory("");
+                  setPage(1);
+                }}
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                  category === "" && broadCategory === ""
+                    ? "border-slate-900 bg-slate-900 text-white"
+                    : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+                }`}
+              >
+                All
+              </button>
+              {broadCategories.map((item) => (
+                <button
+                  key={`broad-${item}`}
+                  type="button"
+                  onClick={() => {
+                    setBroadCategory(item);
+                    setCategory("");
+                    setPage(1);
+                  }}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                    broadCategory === item
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+                  }`}
+                >
+                  {formatBroadCategoryLabel(item)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Trending Categories</p>
+          <div className="overflow-x-auto pb-1">
+            <div className="flex w-max items-center gap-2">
+              {trendingCategories.length === 0 ? (
+                <span className="text-xs text-slate-500">No trending data yet.</span>
+              ) : (
+                trendingCategories.map((item) => (
+                  <button
+                    key={`trend-${item}`}
+                    type="button"
+                    onClick={() => {
+                      setBroadCategory("");
+                      setCategory(item);
+                      setPage(1);
+                    }}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                      category === item
+                        ? "border-blue-700 bg-blue-700 text-white"
+                        : "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300"
+                    }`}
+                  >
+                    {item}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
           <input
             type="text"
@@ -153,6 +310,7 @@ export function PredictionMarketList() {
           <select
             value={category}
             onChange={(event) => {
+              setBroadCategory("");
               setCategory(event.target.value);
               setPage(1);
             }}
@@ -196,6 +354,7 @@ export function PredictionMarketList() {
                 setSearchInput("");
                 setSearch("");
                 setCategory("");
+                setBroadCategory("");
                 setSort("closing-soon");
                 setPage(1);
               }}

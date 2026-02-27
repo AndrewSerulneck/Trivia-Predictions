@@ -131,7 +131,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     saveVenueId(venue.id);
     saveUsername(existingUser.username);
     saveUserId(existingUser.id);
-    router.push("/trivia");
+    router.push(`/venue/${venue.id}`);
   };
 
   const createProfile = async () => {
@@ -164,7 +164,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       saveVenueId(venue.id);
       saveUsername(created.username);
       saveUserId(created.id);
-      router.push("/trivia");
+      router.push(`/venue/${venue.id}`);
     } catch (error) {
       setStatus("ready");
       setErrorMessage(error instanceof Error ? error.message : "Failed to create profile.");

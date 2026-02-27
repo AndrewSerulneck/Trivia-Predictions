@@ -1,0 +1,1123 @@
+[
+{
+"slug": "king-of-pop-nickname",
+"question": "Which artist is widely known as the 'King of Pop'?",
+"options": ["Prince", "Michael Jackson", "Elvis Presley", "Justin Timberlake"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "woodstock-festival-year",
+"question": "In which year did the original Woodstock festival take place?",
+"options": ["1967", "1968", "1969", "1970"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "piano-key-count",
+"question": "How many keys are on a standard modern piano?",
+"options": ["76", "84", "88", "92"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "beatles-original-drummer",
+"question": "Who was the original drummer for The Beatles before Ringo Starr?",
+"options": ["Pete Best", "Stuart Sutcliffe", "George Harrison", "Billy Preston"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "queen-lead-singer",
+"question": "Who was the lead singer of the rock band Queen?",
+"options": ["David Bowie", "Freddie Mercury", "Mick Jagger", "Robert Plant"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "thriller-album-producer",
+"question": "Who produced Michael Jackson's 'Thriller' album?",
+"options": ["Rick Rubin", "Quincy Jones", "Dr. Dre", "Berry Gordy"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "nirvana-lead-singer",
+"question": "Who was the lead singer and guitarist of Nirvana?",
+"options": ["Dave Grohl", "Krist Novoselic", "Kurt Cobain", "Eddie Vedder"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "first-rap-song-billboard-number-one",
+"question": "What was the first rap song to reach number one on the Billboard Hot 100?",
+"options": ["Rapper's Delight", "Ice Ice Baby", "U Can't Touch This", "The Message"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "vivaldi-four-seasons-instrument",
+"question": "What instrument is the solo focus of Vivaldi's 'The Four Seasons'?",
+"options": ["Cello", "Flute", "Violin", "Harpsichord"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "adele-album-titles-pattern",
+"question": "Adele's studio albums are famously titled after what?",
+"options": ["Colors", "Cities", "Her Age", "Ex-boyfriends"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "rolling-stones-logo-designer",
+"question": "Who designed the iconic 'Tongue and Lips' logo for the Rolling Stones?",
+"options": ["Andy Warhol", "John Pasche", "Mick Jagger", "Storm Thorgerson"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "highest-selling-album-worldwide",
+"question": "Which album holds the record for the highest worldwide sales of all time?",
+"options": ["Back in Black", "Thriller", "The Dark Side of the Moon", "The Bodyguard"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "miles-davis-primary-instrument",
+"question": "What instrument did jazz legend Miles Davis play?",
+"options": ["Saxophone", "Piano", "Trumpet", "Drums"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "ziggy-stardust-alter-ego",
+"question": "Which artist created the alter ego Ziggy Stardust?",
+"options": ["Elton John", "David Bowie", "Iggy Pop", "Lou Reed"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "metallica-black-album-year",
+"question": "In which year was Metallica's self-titled 'Black Album' released?",
+"options": ["1988", "1991", "1993", "1995"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "bob-marley-backing-band",
+"question": "What was the name of Bob Marley's backing band?",
+"options": ["The Wailers", "The Revolution", "The E Street Band", "The Maytals"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "pink-floyd-prism-album",
+"question": "Which Pink Floyd album features a prism on the cover artwork?",
+"options": ["The Wall", "Wish You Were Here", "The Dark Side of the Moon", "Animals"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "mozart-first-name",
+"question": "What was Wolfgang Amadeus Mozart's middle name at birth?",
+"options": ["Amadeus", "Theophilus", "Johannes", "Gottlieb"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "beyonce-girl-group",
+"question": "Before her solo career, Beyonce was a member of which girl group?",
+"options": ["TLC", "Destiny's Child", "SWV", "En Vogue"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "jimi-hendrix-woodstock-anthem",
+"question": "Jimi Hendrix famously performed a distorted version of which song at Woodstock?",
+"options": ["Purple Haze", "The Star-Spangled Banner", "Hey Joe", "Voodoo Child"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "amy-winehouse-back-to-black-producer",
+"question": "Who was the primary producer of Amy Winehouse's landmark album 'Back to Black'?",
+"options": ["Mark Ronson", "Rick Rubin", "Danger Mouse", "Pharrell Williams"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "fleetwood-mac-rumours-year",
+"question": "In what year was Fleetwood Mac's 'Rumours' released?",
+"options": ["1975", "1976", "1977", "1978"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "first-instrument-played-by-louis-armstrong",
+"question": "What was the first instrument Louis Armstrong learned to play?",
+"options": ["Trumpet", "Trombone", "Cornet", "Clarinet"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "led-zeppelin-stairway-to-heaven-album",
+"question": "On which Led Zeppelin album does 'Stairway to Heaven' appear?",
+"options": ["Led Zeppelin II", "Led Zeppelin III", "Led Zeppelin IV", "Physical Graffiti"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "madonna-like-a-virgin-performance-mtv",
+"question": "At which award show did Madonna famously perform 'Like a Virgin' in a wedding dress?",
+"options": ["The Grammys", "The 1984 VMAs", "The 1985 AMAs", "The Brit Awards"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "beethoven-symphony-ode-to-joy",
+"question": "Which Beethoven symphony features the 'Ode to Joy' in its final movement?",
+"options": ["Symphony No. 5", "Symphony No. 7", "Symphony No. 9", "Symphony No. 3"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "rolling-stones-original-leader",
+"question": "Who was the founder and original leader of the Rolling Stones?",
+"options": ["Mick Jagger", "Keith Richards", "Brian Jones", "Charlie Watts"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "eminem-alter-ego-name",
+"question": "What is the name of Eminem's famous mischievous alter ego?",
+"options": ["Slim Shady", "Stan", "Marshall Mathers", "The Rap God"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "aretha-franklin-queen-of-soul",
+"question": "Aretha Franklin is widely known as the Queen of what genre?",
+"options": ["Jazz", "Gospel", "Soul", "R&B"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "highest-selling-female-artist-all-time",
+"question": "According to Guinness World Records, who is the best-selling female recording artist of all time?",
+"options": ["Mariah Carey", "Whitney Houston", "Madonna", "Celine Dion"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "prince-purple-rain-instrument",
+"question": "What was the name of the custom-built guitar Prince played in the 'Purple Rain' era?",
+"options": ["The Cloud Guitar", "The Love Symbol", "The Telecaster", "The Strat"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "radiohead-ok-computer-year",
+"question": "In which year did Radiohead release the critically acclaimed album 'OK Computer'?",
+"options": ["1995", "1997", "1999", "2001"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "frank-sinatra-nickname",
+"question": "What was Frank Sinatra's famous nickname?",
+"options": ["The King", "The Duke", "Ol' Blue Eyes", "The Velvet Fog"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "woodwind-instrument-no-reed",
+"question": "Which of these woodwind instruments does not use a reed to produce sound?",
+"options": ["Clarinet", "Oboe", "Flute", "Saxophone"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "taylor-swift-first-single",
+"question": "What was the title of Taylor Swift's debut single released in 2006?",
+"options": ["Love Story", "Tim McGraw", "Our Song", "Teardrops on My Guitar"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "bob-dylan-real-name",
+"question": "What is Bob Dylan's birth name?",
+"options": ["Robert Zimmerman", "Bobby Smith", "Robert Plant", "Dylan Thomas"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "abb-waterloo-eurovision-year",
+"question": "In what year did ABBA win the Eurovision Song Contest with 'Waterloo'?",
+"options": ["1972", "1974", "1976", "1978"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "green-day-american-idiot-genre",
+"question": "Green Day's 'American Idiot' is classified as what type of musical work?",
+"options": ["Concept Album", "Rock Opera", "Greatest Hits", "Live Recording"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "elvis-presley-home-name",
+"question": "What is the name of Elvis Presley's famous estate in Memphis?",
+"options": ["Neverland", "Paisley Park", "Graceland", "The Manor"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "violin-string-count",
+"question": "How many strings are typically on a standard violin?",
+"options": ["3", "4", "5", "6"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "amy-winehouse-27-club",
+"question": "Amy Winehouse is a member of the '27 Club'; which other legendary guitarist died at that same age?",
+"options": ["Eric Clapton", "Jimi Hendrix", "Jimmy Page", "Keith Richards"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "coldplay-lead-singer",
+"question": "Who is the lead singer of the British band Coldplay?",
+"options": ["Thom Yorke", "Chris Martin", "Matt Bellamy", "Richard Ashcroft"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "jazz-scat-singing-pioneer",
+"question": "Which female jazz singer was known as the 'First Lady of Song' and a master of scat singing?",
+"options": ["Billie Holiday", "Nina Simone", "Ella Fitzgerald", "Etta James"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "daft-punk-nationality",
+"question": "The electronic music duo Daft Punk originated from which country?",
+"options": ["Germany", "Sweden", "France", "Netherlands"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "guitar-low-e-string-frequency",
+"question": "In standard tuning, what is the note of the thickest string on a guitar?",
+"options": ["A", "D", "E", "G"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "whitney-houston-i-will-always-love-you-original",
+"question": "Who originally wrote and recorded 'I Will Always Love You' before Whitney Houston?",
+"options": ["Dolly Parton", "Linda Ronstadt", "Patti LaBelle", "Aretha Franklin"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "eagles-hotel-california-year",
+"question": "In what year was the hit single 'Hotel California' released by the Eagles?",
+"options": ["1974", "1975", "1976", "1977"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "cello-tuning-strings",
+"question": "Which of these is the correct tuning for the four strings of a cello, from lowest to highest?",
+"options": ["E-A-D-G", "G-D-A-E", "C-G-D-A", "A-D-G-C"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "u2-lead-guitarist-nickname",
+"question": "What is the stage name of U2's lead guitarist, David Howell Evans?",
+"options": ["Bono", "The Edge", "Slash", "Flea"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "guns-n-roses-debut-album",
+"question": "What was the name of Guns N' Roses' 1987 debut studio album?",
+"options": ["Use Your Illusion I", "Appetite for Destruction", "The Spaghetti Incident?", "G N' R Lies"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "john-lennon-imagine-producer",
+"question": "Which controversial producer worked with John Lennon on the 'Imagine' album?",
+"options": ["Phil Spector", "George Martin", "Brian Eno", "Butch Vig"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "lady-gaga-birth-name",
+"question": "What is Lady Gaga's real name?",
+"options": ["Stefani Germanotta", "Robyn Fenty", "Katheryn Hudson", "Onika Maraj"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "fleetwood-mac-original-genre",
+"question": "Before becoming a pop-rock powerhouse, Fleetwood Mac began as a band in which genre?",
+"options": ["Folk", "British Blues", "Psychedelic Rock", "Country"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "kendrick-lamar-pulitzer",
+"question": "Which Kendrick Lamar album was the first hip-hop album to win a Pulitzer Prize for Music?",
+"options": ["Good Kid, M.A.A.D City", "To Pimp a Butterfly", "DAMN.", "Mr. Morale & the Big Steppers"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "stevie-wonder-album-songs-in-the-key-of-life",
+"question": "In which decade did Stevie Wonder release 'Songs in the Key of Life'?",
+"options": ["1960s", "1970s", "1980s", "1990s"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "woodwind-double-reed",
+"question": "Which of these woodwind instruments uses a double reed?",
+"options": ["Clarinet", "Saxophone", "Bassoon", "Recorder"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "red-hot-chili-peppers-bassist",
+"question": "What is the stage name of the bassist for the Red Hot Chili Peppers?",
+"options": ["Sting", "Flea", "Bootsy", "Thunder Thumbs"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "billie-eilish-ocean-eyes-producer",
+"question": "Who is Billie Eilish's brother and primary musical collaborator/producer?",
+"options": ["Finneas", "Jack Antonoff", "Benny Blanco", "Pharrell"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "classical-era-composer-deafness",
+"question": "Which famous composer continued to write music even after becoming completely deaf?",
+"options": ["Bach", "Handel", "Beethoven", "Haydn"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "marvin-gaye-whats-going-on-label",
+"question": "Which iconic record label released Marvin Gaye's 'What's Going On'?",
+"options": ["Atlantic", "Motown", "Stax", "Chess"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "pink-floyd-original-frontman",
+"question": "Who was the primary songwriter and frontman of Pink Floyd during their debut album 'The Piper at the Gates of Dawn'?",
+"options": ["Roger Waters", "David Gilmour", "Syd Barrett", "Richard Wright"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "amy-winehouse-rehab-producer",
+"question": "Which English producer is credited with the '60s soul sound of Amy Winehouse's 'Rehab'?",
+"options": ["Mark Ronson", "Phil Spector", "Paul Epworth", "Calvin Harris"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "brass-instrument-no-valves",
+"question": "Which of these brass instruments traditionally uses a slide rather than valves to change pitch?",
+"options": ["Trumpet", "French Horn", "Trombone", "Tuba"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "fleetwood-mac-go-your-own-way-writer",
+"question": "Which member of Fleetwood Mac wrote the hit song 'Go Your Own Way' about their breakup with a bandmate?",
+"options": ["Mick Fleetwood", "Lindsey Buckingham", "Stevie Nicks", "Christine McVie"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "acdc-lead-singer-death",
+"question": "Who was the lead singer of AC/DC before Brian Johnson joined the band in 1980?",
+"options": ["Bon Scott", "Angus Young", "Dave Evans", "Malcolm Young"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "prince-paisley-park-location",
+"question": "In which US state is Prince's famous Paisley Park studio complex located?",
+"options": ["California", "New York", "Minnesota", "Illinois"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "first-rap-grammy-winner",
+"question": "Which duo won the first-ever Grammy Award for Best Rap Performance in 1989?",
+"options": ["Run-D.M.C.", "DJ Jazzy Jeff & The Fresh Prince", "Public Enemy", "N.W.A"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "beatles-abbey-road-crossing",
+"question": "On the cover of the 'Abbey Road' album, which member of The Beatles is barefoot?",
+"options": ["John Lennon", "Ringo Starr", "Paul McCartney", "George Harrison"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "david-bowie-real-name",
+"question": "What was David Bowie's legal birth name?",
+"options": ["David Jones", "David Smith", "David Wright", "David Taylor"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "radiohead-creep-album",
+"question": "On which debut album does Radiohead's breakout hit 'Creep' appear?",
+"options": ["The Bends", "Pablo Honey", "OK Computer", "Kid A"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "metallica-original-bassist",
+"question": "Who was the bassist for Metallica who tragically died in a bus accident in 1986?",
+"options": ["Jason Newsted", "Robert Trujillo", "Cliff Burton", "Ron McGovney"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "bob-dylan-nobel-prize",
+"question": "In 2016, Bob Dylan became the first musician to win which prestigious award?",
+"options": ["Pulitzer Prize", "Nobel Prize in Literature", "Academy Award", "Man Booker Prize"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "simon-and-garfunkel-breakup-album",
+"question": "What was the final studio album released by Simon & Garfunkel before their split in 1970?",
+"options": ["Bookends", "Bridge over Troubled Water", "Parsley, Sage, Rosemary and Thyme", "Sounds of Silence"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "rolling-stones-brown-sugar-album",
+"question": "Which Rolling Stones album features a working zipper on its original vinyl cover designed by Andy Warhol?",
+"options": ["Let It Bleed", "Sticky Fingers", "Exile on Main St.", "Beggars Banquet"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "madonna-vogue-inspiration",
+"question": "Madonna's hit song 'Vogue' was inspired by a dance style from which underground scene?",
+"options": ["Disco", "Harlem Ballroom", "Punk Rock", "Seattle Grunge"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "u2-joshua-tree-year",
+"question": "In which year was U2's 'The Joshua Tree' released?",
+"options": ["1985", "1986", "1987", "1988"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "queen-of-jazz-nickname",
+"question": "Which singer was famously nicknamed 'The Queen of Jazz'?",
+"options": ["Billie Holiday", "Ella Fitzgerald", "Sarah Vaughan", "Dinah Washington"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "outkast-andre-3000-real-name",
+"question": "What is the real last name of Andre 3000 from the duo Outkast?",
+"options": ["Benjamin", "Patton", "Brown", "Smith"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "led-zeppelin-drummer",
+"question": "Who was the legendary drummer of Led Zeppelin?",
+"options": ["John Bonham", "Keith Moon", "Ginger Baker", "Neil Peart"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "woodwind-oboe-reed-type",
+"question": "Which type of reed does an oboe use?",
+"options": ["Single reed", "Double reed", "Triple reed", "Synthetic reed"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "amy-winehouse-valerie-original-band",
+"question": "The song 'Valerie', famously covered by Mark Ronson and Amy Winehouse, was originally by which band?",
+"options": ["The Zutons", "The Kooks", "Arctic Monkeys", "Franz Ferdinand"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "nirvana-nevermind-baby-name",
+"question": "What is the name of the baby pictured on the cover of Nirvana's 'Nevermind' album?",
+"options": ["Spencer Elden", "Frances Bean", "Sean Dowdell", "River Jude"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "johny-cash-folsom-prison-year",
+"question": "In what year did Johnny Cash record his famous live album at Folsom State Prison?",
+"options": ["1965", "1968", "1970", "1972"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "beatles-strawberry-fields-location",
+"question": "The Beatles' 'Strawberry Fields Forever' was inspired by a real place in which city?",
+"options": ["London", "Liverpool", "Manchester", "Birmingham"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "oasis-lead-songwriter",
+"question": "Which Gallagher brother was the primary songwriter for the band Oasis?",
+"options": ["Liam Gallagher", "Noel Gallagher", "Paul Gallagher", "Peggy Gallagher"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "eminem-lose-yourself-movie",
+"question": "Eminem's 'Lose Yourself' was the first rap song to win an Oscar, for which movie?",
+"options": ["8 Mile", "Get Rich or Die Tryin'", "Hustle & Flow", "Southpaw"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "pink-floyd-comfortably-numb-solo",
+"question": "Which Pink Floyd member is responsible for the iconic guitar solos in 'Comfortably Numb'?",
+"options": ["Roger Waters", "Nick Mason", "David Gilmour", "Richard Wright"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "lady-gaga-poker-face-album",
+"question": "On which debut album did Lady Gaga's 'Poker Face' appear?",
+"options": ["The Fame", "The Fame Monster", "Born This Way", "Artpop"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "woodwind-clarinet-reed-count",
+"question": "How many reeds does a standard clarinet use?",
+"options": ["Zero", "One", "Two", "Three"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "fleetwood-mac-the-chain-writer",
+"question": "Which song is the only one on 'Rumours' credited to all five members of Fleetwood Mac?",
+"options": ["Dreams", "Don't Stop", "The Chain", "Gold Dust Woman"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "beastie-boys-original-genre",
+"question": "The Beastie Boys originally started as a band in which genre before moving to Hip Hop?",
+"options": ["Punk Rock", "Jazz", "Disco", "Heavy Metal"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "dr-dre-the-chronic-year",
+"question": "In which year did Dr. Dre release his solo debut album 'The Chronic'?",
+"options": ["1990", "1992", "1994", "1996"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "rolling-stones-sympathy-for-the-devil-album",
+"question": "Which album contains the Rolling Stones track 'Sympathy for the Devil'?",
+"options": ["Let It Bleed", "Beggars Banquet", "Aftermath", "Out of Our Heads"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "marvin-gaye-death-cause",
+"question": "Tragically, Marvin Gaye was shot and killed by whom in 1984?",
+"options": ["A crazed fan", "His father", "His brother", "A mugger"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "radiohead-in-rainbows-release",
+"question": "Radiohead famously released which album using a 'pay-what-you-want' model in 2007?",
+"options": ["Amnesiac", "Hail to the Thief", "In Rainbows", "The King of Limbs"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "elton-john-real-name",
+"question": "What is the real name of Elton John?",
+"options": ["Reginald Dwight", "David Jones", "Steven Tallarico", "Farrokh Bulsara"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "queen-bohemian-rhapsody-length",
+"question": "Approximately how long is the studio version of Queen's 'Bohemian Rhapsody'?",
+"options": ["3 minutes", "6 minutes", "9 minutes", "12 minutes"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "steely-dan-name-origin",
+"question": "The band Steely Dan named themselves after a device found in which novel?",
+"options": ["Naked Lunch", "On the Road", "The Catcher in the Rye", "1984"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "u2-sunday-bloody-sunday-event",
+"question": "The U2 song 'Sunday Bloody Sunday' describes an incident in which city?",
+"options": ["Dublin", "Belfast", "Derry", "London"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "prince-1999-original-year",
+"question": "In which year did Prince actually release the album '1999'?",
+"options": ["1982", "1984", "1986", "1999"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "bad-bunny-nationality",
+"question": "Which country is the global superstar Bad Bunny originally from?",
+"options": ["Colombia", "Mexico", "Puerto Rico", "Dominican Republic"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "the-weeknd-real-name",
+"question": "What is the real name of the Canadian artist known as The Weeknd?",
+"options": ["Abel Tesfaye", "Aubrey Graham", "Jacques Webster", "Christopher Wood"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "billie-eilish-debut-album-title",
+"question": "What was the title of Billie Eilish's 2019 debut studio album?",
+"options": ["Happier Than Ever", "Don't Smile at Me", "When We All Fall Asleep, Where Do We Go?", "Hit Me Hard and Soft"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "drake-hometown-city",
+"question": "In which city was the rapper Drake born and raised?",
+"options": ["New York", "Toronto", "Atlanta", "Chicago"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "sza-sos-album-year",
+"question": "In which year did SZA release her record-breaking second studio album, 'SOS'?",
+"options": ["2020", "2021", "2022", "2023"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "post-malone-birth-state",
+"question": "Although he is closely associated with Texas, in which US state was Post Malone born?",
+"options": ["New York", "California", "Florida", "Ohio"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "dua-lipa-future-nostalgia-genre",
+"question": "Dua Lipa's 'Future Nostalgia' album was heavily influenced by which 1970s and 80s genre?",
+"options": ["Grunge", "Disco", "Country", "Folk"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "kendrick-lamar-mr-morale-last-name",
+"question": "What is Kendrick Lamar's legal last name?",
+"options": ["Duckworth", "Carter", "Cole", "Graham"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "doja-cat-planet-her-hit",
+"question": "Which viral hit from Doja Cat's 'Planet Her' album features SZA?",
+"options": ["Say So", "Need to Know", "Kiss Me More", "Woman"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "lil-nas-x-old-town-road-sample",
+"question": "Which rock band did Lil Nas X sample for the beat of 'Old Town Road'?",
+"options": ["Nirvana", "Nine Inch Nails", "Radiohead", "The Rolling Stones"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "ariana-grande-thank-u-next-inspiration",
+"question": "The music video for Ariana Grande's 'thank u, next' pays homage to which 2004 teen movie?",
+"options": ["Mean Girls", "Clueless", "Bring It On", "13 Going on 30"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "travis-scott-astroworld-location",
+"question": "Travis Scott's album 'ASTROWORLD' is named after a defunct theme park in which city?",
+"options": ["Houston", "Dallas", "Atlanta", "Miami"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "cardi-b-invasion-of-privacy-grammy",
+"question": "Cardi B was the first solo female artist to win the Grammy for Best Rap Album for which project?",
+"options": ["Gangsta Bitch Music, Vol. 1", "Invasion of Privacy", "Hustle Loyalty Respect", "The Pinkprint"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "olivia-rodrigo-drivers-license-debut",
+"question": "Which Disney Channel show did Olivia Rodrigo star in before releasing 'drivers license'?",
+"options": ["Bizaardvark", "Austin & Ally", "Jessie", "Liv and Maddie"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "jack-harlow-first-billboard-number-one",
+"question": "What was Jack Harlow's first solo song to reach number one on the Billboard Hot 100?",
+"options": ["Whats Poppin", "Industry Baby", "First Class", "Lovin On Me"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "bts-meaning-english",
+"question": "What is the English translation of the K-pop group BTS's full name, Bangtan Sonyeondan?",
+"options": ["Beyond The Scene", "Bulletproof Boy Scouts", "Born To Sing", "Best Teenage Stars"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "megan-thee-stallion-hometown",
+"question": "In which city was Megan Thee Stallion born and raised?",
+"options": ["Atlanta", "San Antonio", "Houston", "New Orleans"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "harry-styles-as-it-was-album",
+"question": "The hit single 'As It Was' is the lead track from which Harry Styles album?",
+"options": ["Harry Styles", "Fine Line", "Harry's House", "Pink Moon"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "ice-spice-breakout-single",
+"question": "Which 2022 single served as the breakout hit for Bronx rapper Ice Spice?",
+"options": ["Munch (Feelin' U)", "Bikini Bottom", "Princess Diana", "In Ha Mood"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "tyler-the-creator-igor-grammy",
+"question": "Which Tyler, the Creator album won the Grammy for Best Rap Album in 2020 despite being largely sung?",
+"options": ["Flower Boy", "IGOR", "Call Me If You Get Lost", "Cherry Bomb"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "taylor-swift-eras-tour-movie",
+"question": "Which 2023 concert film became the highest-grossing concert film of all time?",
+"options": ["Renaissance: A Film by Beyoncé", "The Eras Tour", "Never Say Never", "Happier Than Ever"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "miley-cyrus-flowers-grammy",
+"question": "Miley Cyrus won her first-ever Grammy Award in 2024 for which song?",
+"options": ["Wrecking Ball", "Party in the U.S.A.", "Flowers", "Used To Be Young"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "tate-mcrae-greedy-nationality",
+"question": "The 'Greedy' singer Tate McRae is from which country?",
+"options": ["USA", "United Kingdom", "Canada", "Australia"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "sabrina-carpenter-espresso-hit",
+"question": "Which artist released the 2024 summer hit 'Espresso'?",
+"options": ["Olivia Rodrigo", "Sabrina Carpenter", "Madison Beer", "Gracie Abrams"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "chappell-roan-rise-and-fall-album",
+"question": "What is the full title of Chappell Roan's 2023 debut album?",
+"options": ["Red Wine Supernova", "The Rise and Fall of a Midwest Princess", "Pink Pony Club", "Casual"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "billie-eilish-barbie-song",
+"question": "Which Billie Eilish song from the 'Barbie' soundtrack won the Oscar for Best Original Song?",
+"options": ["Dance the Night", "I'm Just Ken", "What Was I Made For?", "Speed Drive"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "charli-xcx-brat-color",
+"question": "The 2024 album 'Brat' by Charli XCX features a cover that is primarily what color?",
+"options": ["Neon Pink", "Lime Green", "Electric Blue", "Safety Orange"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "lorde-hometown-city",
+"question": "In which city was the 'Royals' singer Lorde born?",
+"options": ["Sydney", "London", "Auckland", "Wellington"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "troye-sivan-something-to-give-each-other-single",
+"question": "Which 2023 Troye Sivan single became a viral hit known for its high-energy choreography?",
+"options": ["Rush", "Bloom", "My My My!", "One of Your Girls"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "renee-rapp-mean-girls-role",
+"question": "Which character did Reneé Rapp play in both the Broadway musical and the 2024 film version of 'Mean Girls'?",
+"options": ["Cady Heron", "Regina George", "Karen Shetty", "Gretchen Wieners"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "tems-nationality",
+"question": "The singer and songwriter Tems, known for 'Free Mind,' is from which country?",
+"options": ["Ghana", "Nigeria", "South Africa", "Kenya"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "rosalia-motomami-genre",
+"question": "The 2022 album 'MOTOMAMI' was released by which Spanish singer?",
+"options": ["Shakira", "Karol G", "Rosalía", "Becky G"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "central-cee-sprinter-partner",
+"question": "Which artist collaborated with Central Cee on the 2023 hit 'Sprinter'?",
+"options": ["Stormzy", "Dave", "Drake", "Skepta"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "victoria-monet-jaguar-grammy",
+"question": "Victoria Monét won Best New Artist at the 2024 Grammys; she is also a famous songwriter for which artist?",
+"options": ["Ariana Grande", "Rihanna", "Beyoncé", "Taylor Swift"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "benson-boone-beautiful-things",
+"question": "Which artist's breakout 2024 ballad is titled 'Beautiful Things'?",
+"options": ["Noah Kahan", "Stephen Sanchez", "Benson Boone", "Teddy Swims"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "easy"
+},
+{
+"slug": "lana-del-rey-did-you-know-album",
+"question": "What is the long title of Lana Del Rey's 2023 album often abbreviated as 'Ocean Blvd'?",
+"options": ["Did you know that there's a tunnel under Ocean Blvd", "Blue Banisters", "Chemtrails over the Country Club", "Norman F***ing Rockwell!"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "halsey-real-name",
+"question": "What is the real name of the pop singer Halsey?",
+"options": ["Ashley Frangipane", "Elizabeth Grant", "Stefani Ward", "Amala Dlamini"],
+"correctAnswer": 0,
+"category": "Music",
+"difficulty": "hard"
+},
+{
+"slug": "lisa-blackpink-solo-single",
+"question": "What was the title of the 2024 solo single released by BLACKPINK's LISA under her own label, LLOUD?",
+"options": ["LALISA", "MONEY", "Rockstar", "New Woman"],
+"correctAnswer": 2,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "karol-g-manana-sera-bonito-grammy",
+"question": "Karol G made history in 2024 as the first female artist to win Best Música Urbana Album for which project?",
+"options": ["KG0516", "Mañana Será Bonito", "Ocean", "Unstoppable"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "medium"
+},
+{
+"slug": "peso-pluma-nationality",
+"question": "The 'Corridos Tumbados' star Peso Pluma is from which country?",
+"options": ["Spain", "Mexico", "Colombia", "Argentina"],
+"correctAnswer": 1,
+"category": "Music",
+"difficulty": "easy"
+}
+]
+

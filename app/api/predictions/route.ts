@@ -10,6 +10,7 @@ export async function GET(request: Request) {
       pageSize: searchParams.get("pageSize") ?? 100,
       search: searchParams.get("search") ?? "",
       category: searchParams.get("category") ?? "",
+      broadCategory: searchParams.get("broadCategory") ?? "",
       sort: searchParams.get("sort") ?? "closing-soon",
     });
 
