@@ -3,7 +3,7 @@ import { ActivityTimeline } from "@/components/activity/ActivityTimeline";
 
 export default function ActivityPage() {
   return (
-    <PageShell title="Activity" description="Recent answers, picks, and outcomes.">
+    <PageShell title="Activity" description="Your prediction picks and notification history.">
       <ActivityTimeline />
     </PageShell>
   );

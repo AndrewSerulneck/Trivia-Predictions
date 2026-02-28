@@ -13,6 +13,12 @@ function setCookie(name: string, value: string): void {
   document.cookie = `${safeName}=${safeValue}; Max-Age=${COOKIE_MAX_AGE_SECONDS}; Path=/; SameSite=Lax`;
 }
 
+function clearCookie(name: string): void {
+  if (typeof document === "undefined") return;
+  const safeName = encodeURIComponent(name);
+  document.cookie = `${safeName}=; Max-Age=0; Path=/; SameSite=Lax`;
+}
+
 export function saveVenueId(venueId: string): void {
   localStorage.setItem(STORAGE_KEYS.venueId, venueId);
   setCookie("tp_venue_id", venueId);
@@ -37,4 +43,12 @@ export function saveUserId(userId: string): void {
 
 export function getUserId(): string | null {
   return localStorage.getItem(STORAGE_KEYS.userId);
+}
+
+export function clearVenueSession(): void {
+  localStorage.removeItem(STORAGE_KEYS.venueId);
+  localStorage.removeItem(STORAGE_KEYS.username);
+  localStorage.removeItem(STORAGE_KEYS.userId);
+  clearCookie("tp_venue_id");
+  clearCookie("tp_user_id");
 }

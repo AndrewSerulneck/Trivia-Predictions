@@ -2,6 +2,10 @@ import type { Prediction } from "@/types";
 
 const GAMMA_API_URL = process.env.POLYMARKET_API_URL ?? "https://gamma-api.polymarket.com/markets";
 const DEFAULT_SCAN_LIMIT = Number.parseInt(process.env.POLYMARKET_SCAN_LIMIT ?? "1000", 10);
+const DEFAULT_SCAN_PAGE_SIZE = Number.parseInt(process.env.POLYMARKET_SCAN_PAGE_SIZE ?? "500", 10);
+const MAX_SCAN_PAGES = Number.parseInt(process.env.POLYMARKET_SCAN_MAX_PAGES ?? "60", 10);
+const MAX_MARKETS_PER_SCAN = Number.parseInt(process.env.POLYMARKET_SCAN_MAX_MARKETS ?? "20000", 10);
+const ACTIVE_MARKETS_CACHE_TTL_MS = Number.parseInt(process.env.POLYMARKET_ACTIVE_CACHE_TTL_MS ?? "30000", 10);
 const CATEGORY_STOP_WORDS = new Set(["and", "or", "of", "the", "in", "on", "to", "for", "vs", "v"]);
 const CATEGORY_ACRONYMS = new Map([
   ["nba", "NBA"],
@@ -84,6 +88,9 @@ const BROAD_CATEGORIES = [
 ] as const;
 
 const BROAD_CATEGORY_SET = new Set(BROAD_CATEGORIES);
+
+let activeMarketsCache: { expiresAt: number; items: Prediction[] } | null = null;
+let activeMarketsInFlight: Promise<Prediction[]> | null = null;
 
 function includesAny(text: string, keywords: string[]): boolean {
   return keywords.some((keyword) => text.includes(keyword));
@@ -191,6 +198,13 @@ function normalizeSort(input: unknown): PredictionSort {
 function normalizePageSize(input: unknown): number {
   const value = normalizePage(input, 100);
   return Math.max(1, Math.min(100, value));
+}
+
+function normalizePositiveInt(input: number, fallback: number): number {
+  if (!Number.isFinite(input) || input <= 0) {
+    return fallback;
+  }
+  return Math.floor(input);
 }
 
 function coercePercent(value: unknown): number | null {
@@ -411,6 +425,24 @@ function compareBySort(a: Prediction, b: Prediction, sort: PredictionSort): numb
   return +new Date(a.closesAt) - +new Date(b.closesAt);
 }
 
+function hashString(value: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function compareBySeededRandom(a: Prediction, b: Prediction, seed: string): number {
+  const left = hashString(`${seed}:${a.id}`);
+  const right = hashString(`${seed}:${b.id}`);
+  if (left !== right) {
+    return left - right;
+  }
+  return a.id.localeCompare(b.id);
+}
+
 async function fetchGammaMarkets(query: URLSearchParams): Promise<GammaMarket[]> {
   const headers: HeadersInit = {};
   if (process.env.POLYMARKET_API_KEY) {
@@ -435,6 +467,96 @@ async function fetchGammaMarkets(query: URLSearchParams): Promise<GammaMarket[]>
   return data as GammaMarket[];
 }
 
+async function fetchAllGammaMarkets(baseQuery: URLSearchParams, limit?: number): Promise<GammaMarket[]> {
+  const pageSize = Math.min(500, normalizePositiveInt(DEFAULT_SCAN_PAGE_SIZE, 500));
+  const maxPages = normalizePositiveInt(MAX_SCAN_PAGES, 60);
+  const maxMarkets = normalizePositiveInt(MAX_MARKETS_PER_SCAN, 20000);
+  const requestedLimit = Number.isFinite(limit) && (limit ?? 0) > 0 ? Math.floor(limit as number) : Number.POSITIVE_INFINITY;
+  const cap = Math.min(maxMarkets, requestedLimit);
+
+  const allMarkets: GammaMarket[] = [];
+  const seenIds = new Set<string>();
+  let offset = 0;
+
+  for (let page = 0; page < maxPages; page += 1) {
+    const remaining = Number.isFinite(cap) ? cap - allMarkets.length : pageSize;
+    if (remaining <= 0) {
+      break;
+    }
+
+    const requestLimit = Math.max(1, Math.min(pageSize, remaining));
+    const query = new URLSearchParams(baseQuery);
+    query.set("limit", String(requestLimit));
+    query.set("offset", String(offset));
+
+    const chunk = await fetchGammaMarkets(query);
+    if (chunk.length === 0) {
+      break;
+    }
+
+    let added = 0;
+    for (const market of chunk) {
+      const key = String(market.id ?? "").trim();
+      if (key && seenIds.has(key)) {
+        continue;
+      }
+      if (key) {
+        seenIds.add(key);
+      }
+      allMarkets.push(market);
+      added += 1;
+    }
+
+    if (added === 0) {
+      break;
+    }
+    offset += chunk.length;
+
+    if (chunk.length < requestLimit) {
+      break;
+    }
+  }
+
+  return allMarkets;
+}
+
+async function loadActiveNormalizedMarkets(): Promise<Prediction[]> {
+  const query = new URLSearchParams({
+    active: "true",
+    closed: "false",
+  });
+
+  const gammaMarkets = await fetchAllGammaMarkets(query);
+  return gammaMarkets
+    .map((item) => normalizeMarket(item))
+    .filter((item): item is Prediction => Boolean(item));
+}
+
+async function getActiveNormalizedMarkets(): Promise<Prediction[]> {
+  const now = Date.now();
+  if (activeMarketsCache && now < activeMarketsCache.expiresAt) {
+    return activeMarketsCache.items;
+  }
+
+  if (activeMarketsInFlight) {
+    return activeMarketsInFlight;
+  }
+
+  activeMarketsInFlight = loadActiveNormalizedMarkets()
+    .then((items) => {
+      activeMarketsCache = {
+        items,
+        expiresAt: Date.now() + Math.max(1_000, ACTIVE_MARKETS_CACHE_TTL_MS),
+      };
+      return items;
+    })
+    .finally(() => {
+      activeMarketsInFlight = null;
+    });
+
+  return activeMarketsInFlight;
+}
+
 export async function listPredictionMarkets(params: PredictionListParams = {}): Promise<PredictionListResult> {
   const page = normalizePage(params.page, 1);
   const pageSize = normalizePageSize(params.pageSize);
@@ -443,16 +565,7 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
   const broadCategory = String(params.broadCategory ?? "").trim().toLowerCase();
   const sort = normalizeSort(params.sort);
 
-  const query = new URLSearchParams({
-    active: "true",
-    closed: "false",
-    limit: String(Number.isFinite(DEFAULT_SCAN_LIMIT) ? Math.max(DEFAULT_SCAN_LIMIT, 100) : 1000),
-  });
-
-  const gammaMarkets = await fetchGammaMarkets(query);
-  const normalized = gammaMarkets
-    .map((item) => normalizeMarket(item))
-    .filter((item): item is Prediction => Boolean(item));
+  const normalized = await getActiveNormalizedMarkets();
   const now = Date.now();
   const trendingThreshold = getTrendingVolumeThreshold(normalized);
   const broadByMarketId = new Map<string, Set<string>>();
@@ -487,7 +600,7 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
     .slice(0, 12)
     .map(([name]) => name);
 
-  let filtered = normalized;
+  let filtered = [...normalized];
   if (search) {
     filtered = filtered.filter((market) => {
       const inQuestion = market.question.toLowerCase().includes(search);
@@ -510,7 +623,13 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
     filtered = filtered.filter((market) => broadByMarketId.get(market.id)?.has(broadCategory));
   }
 
-  filtered = filtered.sort((a, b) => compareBySort(a, b, sort));
+  const shouldRandomizeDefaultView = !search && !category && !broadCategory && sort === "closing-soon";
+  if (shouldRandomizeDefaultView) {
+    const seed = new Date().toISOString().slice(0, 10);
+    filtered = filtered.sort((a, b) => compareBySeededRandom(a, b, seed));
+  } else {
+    filtered = filtered.sort((a, b) => compareBySort(a, b, sort));
+  }
 
   const totalItems = filtered.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));

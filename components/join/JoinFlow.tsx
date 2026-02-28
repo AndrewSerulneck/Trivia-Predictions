@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageShell } from "@/components/ui/PageShell";
@@ -33,6 +33,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [distanceMeters, setDistanceMeters] = useState<number | null>(null);
   const [locationVerified, setLocationVerified] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [locationNotice, setLocationNotice] = useState("");
+  const autoVerificationAttemptedRef = useRef(false);
+  const redirectStartedRef = useRef(false);
 
   useEffect(() => {
     const load = async () => {
@@ -41,6 +44,13 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setExistingUser(null);
       setLocationVerified(geofenceBypassed);
       setDistanceMeters(null);
+      setLocationNotice(
+        geofenceBypassed
+          ? "Location verification bypassed for local testing."
+          : "Verifying your location..."
+      );
+      autoVerificationAttemptedRef.current = false;
+      redirectStartedRef.current = false;
 
       try {
         const venues = await listVenues();
@@ -96,7 +106,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     );
   }, [venue, username, locationVerified, geofenceBypassed, existingUser]);
 
-  const verifyLocation = async () => {
+  const verifyLocation = useCallback(async () => {
     if (!venue) return;
 
     setLocationLoading(true);
@@ -112,27 +122,61 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
       if (distance <= venue.radius) {
         setLocationVerified(true);
+        setLocationNotice("Location verified successfully.");
       } else {
         setLocationVerified(false);
+        setLocationNotice("");
         setErrorMessage(
           `You are ${Math.round(distance)}m away. You must be within ${venue.radius}m of ${venue.name} to join.`
         );
       }
     } catch (error) {
       setLocationVerified(false);
+      setLocationNotice("");
       setErrorMessage(error instanceof Error ? error.message : "Unable to verify location.");
     } finally {
       setLocationLoading(false);
     }
-  };
+  }, [venue]);
 
-  const continueToGame = () => {
+  const continueToGame = useCallback(() => {
     if (!venue || !existingUser) return;
     saveVenueId(venue.id);
     saveUsername(existingUser.username);
     saveUserId(existingUser.id);
     router.push(`/venue/${venue.id}`);
-  };
+  }, [existingUser, router, venue]);
+
+  useEffect(() => {
+    if (!venue || status !== "ready" || !isSupabaseConfigured) {
+      return;
+    }
+    if (geofenceBypassed) {
+      setLocationVerified(true);
+      return;
+    }
+    if (autoVerificationAttemptedRef.current) {
+      return;
+    }
+    autoVerificationAttemptedRef.current = true;
+    void verifyLocation();
+  }, [venue, status, geofenceBypassed, verifyLocation]);
+
+  useEffect(() => {
+    if (!existingUser || !locationVerified || redirectStartedRef.current) {
+      return;
+    }
+
+    redirectStartedRef.current = true;
+    setLocationNotice("Location verified successfully. Taking you to your venue...");
+    const timeoutId = window.setTimeout(() => {
+      continueToGame();
+    }, 900);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [existingUser, locationVerified, continueToGame]);
 
   const createProfile = async () => {
     if (!venue) return;
@@ -222,30 +266,35 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               {distanceMeters !== null && (
                 <p className="text-slate-600">Your distance: {Math.round(distanceMeters)}m</p>
               )}
+              {locationLoading && (
+                <p className="text-slate-600">Checking your location...</p>
+              )}
+              {locationNotice && (
+                <p className="text-emerald-700">{locationNotice}</p>
+              )}
             </div>
 
-            <button
-              type="button"
-              onClick={verifyLocation}
-              disabled={locationLoading || status === "loading"}
-              className="rounded-md bg-slate-900 px-4 py-2 font-medium text-white disabled:opacity-60"
-            >
-              {locationLoading ? "Checking location..." : "Verify I am at this venue"}
-            </button>
+            {!locationVerified && !geofenceBypassed && !locationLoading && (
+              <button
+                type="button"
+                onClick={verifyLocation}
+                disabled={status === "loading"}
+                className="rounded-md bg-slate-900 px-4 py-2 font-medium text-white disabled:opacity-60"
+              >
+                Retry location check
+              </button>
+            )}
 
             {existingUser ? (
               <div className="space-y-3 rounded-md border border-emerald-300 bg-emerald-50 p-3">
                 <p>
                   Welcome back <strong>{existingUser.username}</strong>. You already have a profile at this venue.
                 </p>
-                <button
-                  type="button"
-                  onClick={continueToGame}
-                  disabled={!locationVerified && !geofenceBypassed}
-                  className="rounded-md bg-emerald-700 px-4 py-2 font-medium text-white disabled:opacity-60"
-                >
-                  Continue to Venue
-                </button>
+                <p className="text-emerald-800">
+                  {locationVerified || geofenceBypassed
+                    ? "Continuing to your venue..."
+                    : "Waiting for location verification before continuing."}
+                </p>
               </div>
             ) : (
               <div className="space-y-2">

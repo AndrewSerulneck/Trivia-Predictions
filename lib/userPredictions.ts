@@ -28,6 +28,12 @@ export type PredictionQuota = {
   isAdminBypass: boolean;
 };
 
+export type UserPredictionHistoryParams = {
+  status?: UserPrediction["status"] | "all";
+  limit?: number;
+  offset?: number;
+};
+
 const PICK_LIMIT_PER_HOUR = 10;
 const WINDOW_MS = 60 * 60 * 1000;
 
@@ -197,24 +203,46 @@ export async function submitPredictionPick(params: {
 }
 
 export async function getUserPredictions(userId: string): Promise<UserPrediction[]> {
+  const { items } = await listUserPredictions(userId, { status: "all", limit: 50, offset: 0 });
+  return items;
+}
+
+export async function listUserPredictions(
+  userId: string,
+  params: UserPredictionHistoryParams = {}
+): Promise<{ items: UserPrediction[]; totalItems: number }> {
   if (!userId) {
-    return [];
+    return { items: [], totalItems: 0 };
   }
 
   if (!supabaseAdmin) {
-    return [];
+    return { items: [], totalItems: 0 };
   }
 
-  const { data, error } = await supabaseAdmin
+  const normalizedLimit = Math.max(1, Math.min(100, Number(params.limit ?? 25)));
+  const normalizedOffset = Math.max(0, Number(params.offset ?? 0));
+  const status = params.status ?? "all";
+
+  let query = supabaseAdmin
     .from("user_predictions")
-    .select("id, user_id, prediction_id, outcome_id, outcome_title, points, status, created_at, resolved_at")
+    .select("id, user_id, prediction_id, outcome_id, outcome_title, points, status, created_at, resolved_at", {
+      count: "exact",
+    })
     .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(50);
+    .order("created_at", { ascending: false });
+
+  if (status !== "all") {
+    query = query.eq("status", status);
+  }
+
+  const { data, error, count } = await query.range(normalizedOffset, normalizedOffset + normalizedLimit - 1);
 
   if (error || !data) {
-    return [];
+    return { items: [], totalItems: 0 };
   }
 
-  return data.map((row) => mapRow(row as UserPredictionRow));
+  return {
+    items: data.map((row) => mapRow(row as UserPredictionRow)),
+    totalItems: Math.max(0, count ?? 0),
+  };
 }

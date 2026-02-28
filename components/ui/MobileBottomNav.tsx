@@ -12,6 +12,11 @@ const NAV_ITEMS = [
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const hideOnPath = pathname === "/" || pathname === "/join";
+
+  if (hideOnPath) {
+    return null;
+  }
 
   return (
     <nav

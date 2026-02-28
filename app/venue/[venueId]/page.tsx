@@ -19,10 +19,7 @@ export default async function VenuePage({
   const entries = await getLeaderboardForVenue(venue.id);
 
   return (
-    <PageShell
-      title={venue.name}
-      description="Venue hub: leaderboard, trivia, and predictions."
-    >
+    <PageShell title={venue.name}>
       <div className="space-y-4">
         <VenueHubClient venue={venue} initialEntries={entries} />
         <SlotAd slot="leaderboard-sidebar" venueId={venue.id} />

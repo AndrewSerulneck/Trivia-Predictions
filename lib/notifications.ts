@@ -25,24 +25,57 @@ export async function getUserNotifications(userId: string): Promise<{
   unreadCount: number;
   items: Notification[];
 }> {
+  const result = await listUserNotifications(userId, { limit: 50, offset: 0, unreadOnly: false });
+  return {
+    unreadCount: result.unreadCount,
+    items: result.items,
+  };
+}
+
+export async function listUserNotifications(
+  userId: string,
+  params: { limit?: number; offset?: number; unreadOnly?: boolean } = {}
+): Promise<{
+  unreadCount: number;
+  items: Notification[];
+  totalItems: number;
+}> {
   if (!userId || !supabaseAdmin) {
-    return { unreadCount: 0, items: [] };
+    return { unreadCount: 0, items: [], totalItems: 0 };
   }
 
-  const { data, error } = await supabaseAdmin
+  const limit = Math.max(1, Math.min(100, Number(params.limit ?? 50)));
+  const offset = Math.max(0, Number(params.offset ?? 0));
+  const unreadOnly = Boolean(params.unreadOnly);
+
+  let query = supabaseAdmin
     .from("notifications")
-    .select("id, user_id, message, type, read, created_at")
+    .select("id, user_id, message, type, read, created_at", { count: "exact" })
     .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(50);
+    .order("created_at", { ascending: false });
+
+  if (unreadOnly) {
+    query = query.eq("read", false);
+  }
+
+  const { data, error, count } = await query.range(offset, offset + limit - 1);
 
   if (error || !data) {
-    return { unreadCount: 0, items: [] };
+    return { unreadCount: 0, items: [], totalItems: 0 };
   }
 
+  const { count: unreadCountRaw } = await supabaseAdmin
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("read", false);
+
   const items = data.map((row) => mapNotificationRow(row as NotificationRow));
-  const unreadCount = items.filter((item) => !item.read).length;
-  return { unreadCount, items };
+  return {
+    unreadCount: Math.max(0, unreadCountRaw ?? 0),
+    items,
+    totalItems: Math.max(0, count ?? 0),
+  };
 }
 
 export async function markNotificationsRead(params: {

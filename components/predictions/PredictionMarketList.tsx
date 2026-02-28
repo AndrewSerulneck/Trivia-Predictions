@@ -375,44 +375,74 @@ export function PredictionMarketList() {
         <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">{errorMessage}</div>
       ) : null}
 
-      {loading ? <p className="text-sm text-slate-600">Loading Polymarket markets...</p> : null}
-
-      <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
-        {markets.map((market) => (
-          <article key={market.id} className="rounded-lg border border-slate-200 p-3">
-            <h2 className="font-medium">{market.question}</h2>
-            <p className="mt-1 text-xs text-slate-500">
-              {market.category ? `${market.category} · ` : ""}Closes: {new Date(market.closesAt).toLocaleString()}
-            </p>
-            <ul className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
-              {market.outcomes.map((outcome) => (
-                <li
-                  key={outcome.id}
-                  className="flex items-center justify-between gap-3 rounded-md border border-slate-100 bg-slate-50 p-2 text-sm"
-                >
-                  <span>{outcome.title}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">
-                      {formatProbability(outcome.probability)} · {calculatePoints(outcome.probability)} pts
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        void submitPick(market.id, outcome.id);
-                      }}
-                      disabled={Boolean(pendingByMarket[market.id])}
-                      className="rounded-md bg-blue-700 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60"
+      {loading ? (
+        <section className="space-y-3">
+          <div className="flex items-center gap-2 text-sm text-slate-600">
+            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
+            Loading live prediction markets...
+          </div>
+          <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={`prediction-skeleton-${index}`} className="rounded-lg border border-slate-200 p-3">
+                <div className="h-4 w-5/6 animate-pulse rounded bg-slate-200" />
+                <div className="mt-2 h-3 w-2/3 animate-pulse rounded bg-slate-100" />
+                <div className="mt-4 space-y-2">
+                  <div className="h-10 animate-pulse rounded-md bg-slate-100" />
+                  <div className="h-10 animate-pulse rounded-md bg-slate-100" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
+          {markets.map((market, index) => (
+            <div key={market.id} className="contents">
+              <article className="rounded-lg border border-slate-200 p-3">
+                <h2 className="font-medium">{market.question}</h2>
+                <p className="mt-1 text-xs text-slate-500">
+                  {market.category ? `${market.category} · ` : ""}Closes: {new Date(market.closesAt).toLocaleString()}
+                </p>
+                <ul className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
+                  {market.outcomes.map((outcome) => (
+                    <li
+                      key={outcome.id}
+                      className="flex items-center justify-between gap-3 rounded-md border border-slate-100 bg-slate-50 p-2 text-sm"
                     >
-                      Pick
-                    </button>
+                      <span>{outcome.title}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">
+                          {formatProbability(outcome.probability)} · {calculatePoints(outcome.probability)} pts
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void submitPick(market.id, outcome.id);
+                          }}
+                          disabled={Boolean(pendingByMarket[market.id])}
+                          className="rounded-md bg-blue-700 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60"
+                        >
+                          Pick
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                {messages[market.id] ? <p className="mt-2 text-xs text-slate-600">{messages[market.id]}</p> : null}
+              </article>
+
+              {(index + 1) % 10 === 0 ? (
+                <div className="min-[480px]:col-span-2">
+                  <div className="flex min-h-[260px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-100/70 p-4 text-center">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Ad Placeholder</p>
+                    <p className="mt-1 text-sm font-medium text-slate-700">Banner Advertisement Slot</p>
                   </div>
-                </li>
-              ))}
-            </ul>
-            {messages[market.id] ? <p className="mt-2 text-xs text-slate-600">{messages[market.id]}</p> : null}
-          </article>
-        ))}
-      </div>
+                </div>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      )}
 
       <section className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
         <button
