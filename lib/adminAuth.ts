@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { ADMIN_SESSION_COOKIE, getCookieValue, validateAdminSessionToken } from "@/lib/adminSession";
 
 type AdminAuthResult =
   | { ok: true; authUserId: string }
@@ -13,7 +14,41 @@ function getBearerToken(request: Request): string | null {
   return token || null;
 }
 
+function getConfiguredAdminCredentials(): { username: string; password: string } | null {
+  const configuredUsername = process.env.ADMIN_LOGIN_USERNAME?.trim();
+  const configuredPassword = process.env.ADMIN_LOGIN_PASSWORD?.trim();
+  if (!configuredUsername || !configuredPassword) {
+    return null;
+  }
+  return { username: configuredUsername, password: configuredPassword };
+}
+
+function isConfiguredAdminCredentialAuth(request: Request): boolean {
+  const configured = getConfiguredAdminCredentials();
+  if (!configured) {
+    return false;
+  }
+  const username = (request.headers.get("x-admin-username") ?? "").trim();
+  const password = request.headers.get("x-admin-password") ?? "";
+  return username === configured.username && password === configured.password;
+}
+
 export async function requireAdminAuth(request: Request): Promise<AdminAuthResult> {
+  const configured = getConfiguredAdminCredentials();
+
+  // Allow an active signed admin session cookie.
+  if (configured) {
+    const adminSession = getCookieValue(request, ADMIN_SESSION_COOKIE);
+    if (adminSession && validateAdminSessionToken(adminSession, configured.username)) {
+      return { ok: true, authUserId: "admin-session-cookie" };
+    }
+  }
+
+  // Allow explicit admin credential login without requiring a venue user profile.
+  if (isConfiguredAdminCredentialAuth(request)) {
+    return { ok: true, authUserId: "admin-credential-login" };
+  }
+
   if (!supabaseAdmin) {
     return { ok: false, status: 500, error: "Supabase admin client is not configured." };
   }

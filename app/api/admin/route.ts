@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   createAdminAdvertisement,
+  createAdminVenue,
   autoSettleResolvedPredictionMarkets,
   createAdminTriviaQuestion,
   deleteAdminAdvertisement,
@@ -96,6 +97,13 @@ export async function POST(request: Request) {
           endDate?: string;
         }
       | {
+          resource: "venues";
+          name: string;
+          address: string;
+          radius?: number;
+          venueId?: string;
+        }
+      | {
           resource: "ads-track";
           adId: string;
           eventType: "impression" | "click";
@@ -138,6 +146,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, item });
     }
 
+    if (body.resource === "venues") {
+      const item = await createAdminVenue({
+        name: body.name,
+        address: body.address,
+        radius: body.radius,
+        venueId: body.venueId,
+      });
+      return NextResponse.json({ ok: true, item });
+    }
+
     if (body.resource === "ads-track") {
       const adId = body.adId?.trim();
       if (!adId) {
@@ -167,7 +185,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, result });
     }
 
-    return NextResponse.json({ ok: false, error: "Unknown resource." }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: "Unknown resource. Use trivia, ads, venues, ads-track, predictions-settle, or predictions-auto-settle." },
+      { status: 400 }
+    );
   } catch (error) {
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Failed to create admin resource." },

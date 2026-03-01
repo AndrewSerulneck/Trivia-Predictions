@@ -19,10 +19,64 @@ import type { User, Venue } from "@/types";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
 
+type VenueVisual = {
+  logoText: string;
+  icon: string;
+};
+
+const DEFAULT_ICONS = ["🏟️", "🍻", "🎯", "🎲", "🏀", "🎤", "🏈", "🍔", "🎵", "🎮"];
+
+function parseBooleanEnv(value: string | undefined): boolean {
+  if (!value) return false;
+  let normalized = value.trim();
+  for (let i = 0; i < 2; i += 1) {
+    if (
+      (normalized.startsWith('""') && normalized.endsWith('""')) ||
+      (normalized.startsWith("''") && normalized.endsWith("''"))
+    ) {
+      normalized = normalized.slice(2, -2).trim();
+      continue;
+    }
+    if (
+      (normalized.startsWith('"') && normalized.endsWith('"')) ||
+      (normalized.startsWith("'") && normalized.endsWith("'"))
+    ) {
+      normalized = normalized.slice(1, -1).trim();
+      continue;
+    }
+    break;
+  }
+  const lowered = normalized.toLowerCase();
+  return lowered === "true" || lowered === "1" || lowered === "yes" || lowered === "on";
+}
+
+function getVenueVisual(venue: Venue, index: number): VenueVisual {
+  const knownVisuals: Record<string, VenueVisual> = {
+    "venue-downtown": { logoText: "DS", icon: "🏟️" },
+    "venue-uptown": { logoText: "UT", icon: "🍻" },
+    "venue-riverside": { logoText: "RG", icon: "🌊" },
+  };
+
+  const known = knownVisuals[venue.id];
+  if (known) return known;
+
+  const words = venue.name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word[0]?.toUpperCase() ?? "")
+    .filter(Boolean);
+  const logoText = (words[0] ?? "") + (words[1] ?? words[0] ?? "V");
+  const icon = DEFAULT_ICONS[index % DEFAULT_ICONS.length] ?? "📍";
+
+  return { logoText, icon };
+}
+
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const router = useRouter();
   const venueParam = initialVenueId.trim();
-  const geofenceBypassed = process.env.NEXT_PUBLIC_DISABLE_GEOFENCE === "true";
+  // Always bypass geofencing in local development.
+  const geofenceBypassed =
+    process.env.NODE_ENV !== "production" || parseBooleanEnv(process.env.NEXT_PUBLIC_DISABLE_GEOFENCE);
 
   const [status, setStatus] = useState<Status>("loading");
   const [errorMessage, setErrorMessage] = useState("");
@@ -193,6 +247,13 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     setErrorMessage("");
 
     try {
+      // Ensure fallback demo venues exist server-side before user profile insert.
+      await fetch("/api/join/ensure-venue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ venueId: venue.id }),
+      });
+
       const available = await checkUsernameAtVenue(username, venue.id);
       if (!available) {
         setStatus("ready");
@@ -237,17 +298,35 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           <div className="space-y-2">
             <h2 className="font-medium">Available test venues</h2>
             <ul className="space-y-2">
-              {venueList.map((item) => (
+              {venueList.map((item, index) => {
+                const visual = getVenueVisual(item, index);
+                return (
                 <li key={item.id}>
                   <Link
                     href={`/?v=${item.id}`}
-                    className="inline-flex rounded-md bg-slate-100 px-3 py-2 text-slate-700 hover:bg-slate-200"
+                    className="flex w-full items-center justify-between rounded-none border border-slate-300 bg-slate-100 px-3 py-3 text-slate-700 hover:bg-slate-200"
                   >
-                    Join {item.name}
+                    <span className="flex items-center gap-3">
+                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-none border border-slate-400 bg-white font-semibold text-slate-800">
+                        {visual.logoText}
+                      </span>
+                      <span className="font-medium">Join {item.name}</span>
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-none border border-slate-400 bg-white text-lg"
+                    >
+                      {visual.icon}
+                    </span>
                   </Link>
                 </li>
-              ))}
+                );
+              })}
             </ul>
+            <div className="rounded-none border border-dashed border-slate-400 bg-slate-50 p-4 text-center text-slate-600">
+              <p className="text-xs uppercase tracking-wide text-slate-500">Advertisement</p>
+              <p className="mt-1 font-medium">[ Placeholder Banner Ad - 728 x 90 ]</p>
+            </div>
           </div>
         )}
 

@@ -50,11 +50,39 @@ type AdminVenueUser = {
   isAdmin: boolean;
   createdAt: string;
 };
+type AdminCredentials = {
+  username: string;
+  password: string;
+};
+type AdminSection =
+  | "ad-debug"
+  | "prediction-settlement"
+  | "venue-users"
+  | "venue-create"
+  | "trivia-create"
+  | "trivia-list"
+  | "ads-create"
+  | "ads-list";
+
+const ADMIN_SECTION_OPTIONS: Array<{ id: AdminSection; label: string }> = [
+  { id: "venue-users", label: "Venue User Management" },
+  { id: "venue-create", label: "Create Venue" },
+  { id: "trivia-create", label: "Create Trivia Question" },
+  { id: "trivia-list", label: "Trivia Questions" },
+  { id: "ads-create", label: "Create Advertisement" },
+  { id: "ads-list", label: "Manage Advertisements" },
+  { id: "prediction-settlement", label: "Prediction Settlement" },
+  { id: "ad-debug", label: "Ad Debug Snapshot" },
+];
 
 export function AdminConsole({ venues }: { venues: Venue[] }) {
   const [state, setState] = useState<LoadState>("loading");
   const [errorMessage, setErrorMessage] = useState("");
   const [accessToken, setAccessToken] = useState("");
+  const [adminCredentials, setAdminCredentials] = useState<AdminCredentials | null>(null);
+  const [authInitialized, setAuthInitialized] = useState(false);
+  const [activeSection, setActiveSection] = useState<AdminSection>("venue-users");
+  const [availableVenues, setAvailableVenues] = useState<Venue[]>(venues);
   const [adsWindowHours, setAdsWindowHours] = useState(24);
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [ads, setAds] = useState<Advertisement[]>([]);
@@ -110,6 +138,12 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
   const [editActive, setEditActive] = useState(true);
   const [editStartDate, setEditStartDate] = useState("");
   const [editEndDate, setEditEndDate] = useState("");
+  const [newVenueName, setNewVenueName] = useState("");
+  const [newVenueAddress, setNewVenueAddress] = useState("");
+  const [newVenueRadius, setNewVenueRadius] = useState(100);
+  const [newVenueId, setNewVenueId] = useState("");
+  const [creatingVenue, setCreatingVenue] = useState(false);
+  const [venueCreateMessage, setVenueCreateMessage] = useState("");
 
   const parsedOptions = useMemo(
     () => optionsText.split(",").map((item) => item.trim()).filter(Boolean),
@@ -120,19 +154,37 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
     [editOptionsText]
   );
 
+  useEffect(() => {
+    setAvailableVenues(venues);
+  }, [venues]);
+
+  useEffect(() => {
+    if (availableVenues.length === 0) {
+      if (selectedVenueUserId) {
+        setSelectedVenueUserId("");
+      }
+      return;
+    }
+    if (!availableVenues.some((venue) => venue.id === selectedVenueUserId)) {
+      setSelectedVenueUserId(availableVenues[0].id);
+    }
+  }, [availableVenues, selectedVenueUserId]);
+
   const adminFetch = useCallback(async (input: RequestInfo | URL, init?: RequestInit) => {
-    if (!accessToken) {
-      throw new Error("No auth session available. Reload and try again.");
+    const headers = new Headers(init?.headers);
+    if (accessToken) {
+      headers.set("Authorization", `Bearer ${accessToken}`);
+    }
+    if (adminCredentials) {
+      headers.set("x-admin-username", adminCredentials.username);
+      headers.set("x-admin-password", adminCredentials.password);
     }
 
     return fetch(input, {
       ...init,
-      headers: {
-        ...(init?.headers ?? {}),
-        Authorization: `Bearer ${accessToken}`,
-      },
+      headers,
     });
-  }, [accessToken]);
+  }, [accessToken, adminCredentials]);
 
   const loadAll = useCallback(async () => {
     setState("loading");
@@ -225,14 +277,15 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
         }
 
         const token = data.session?.access_token ?? "";
-        if (!token) {
-          throw new Error("No auth session token was returned.");
-        }
-
         setAccessToken(token);
       } catch (error) {
-        setState("error");
-        setErrorMessage(error instanceof Error ? error.message : "Failed to initialize admin session.");
+        // Admin credential login can still proceed even if anonymous auth is unavailable.
+        setAccessToken("");
+        setErrorMessage(
+          error instanceof Error ? `${error.message} You can still use Admin Login.` : "You can still use Admin Login."
+        );
+      } finally {
+        setAuthInitialized(true);
       }
     };
 
@@ -240,18 +293,18 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
   }, []);
 
   useEffect(() => {
-    if (!accessToken) {
+    if (!authInitialized) {
       return;
     }
     void loadAll();
-  }, [accessToken, loadAll]);
+  }, [authInitialized, accessToken, adminCredentials, loadAll]);
 
   useEffect(() => {
-    if (!accessToken) {
+    if (!authInitialized) {
       return;
     }
     void loadVenueUsers();
-  }, [accessToken, loadVenueUsers]);
+  }, [authInitialized, accessToken, adminCredentials, loadVenueUsers]);
 
   const createTrivia = async () => {
     setErrorMessage("");
@@ -319,6 +372,53 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       await loadAll();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Failed to create ad.");
+    }
+  };
+
+  const createVenue = async () => {
+    if (!newVenueName.trim() || !newVenueAddress.trim()) {
+      setErrorMessage("Venue name and address are required.");
+      return;
+    }
+
+    setErrorMessage("");
+    setVenueCreateMessage("");
+    setCreatingVenue(true);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resource: "venues",
+          name: newVenueName.trim(),
+          address: newVenueAddress.trim(),
+          radius: newVenueRadius,
+          venueId: newVenueId.trim() || undefined,
+        }),
+      });
+      const payload = (await response.json()) as { ok: boolean; error?: string; item?: Venue };
+      if (!payload.ok || !payload.item) {
+        throw new Error(payload.error ?? "Failed to create venue.");
+      }
+
+      setAvailableVenues((prev) =>
+        [...prev.filter((venue) => venue.id !== payload.item!.id), payload.item!].sort((a, b) =>
+          a.name.localeCompare(b.name)
+        )
+      );
+      setSelectedVenueUserId(payload.item.id);
+      setVenueCreateMessage(
+        `Venue created: ${payload.item.name} (${payload.item.id}) at ${payload.item.latitude.toFixed(6)}, ${payload.item.longitude.toFixed(6)}. Address: ${payload.item.address ?? "n/a"}.`
+      );
+      setNewVenueName("");
+      setNewVenueAddress("");
+      setNewVenueId("");
+      setNewVenueRadius(100);
+      setActiveSection("venue-users");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Failed to create venue.");
+    } finally {
+      setCreatingVenue(false);
     }
   };
 
@@ -540,10 +640,6 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
   };
 
   const bootstrapAdminAccess = async () => {
-    if (!accessToken) {
-      setErrorMessage("No auth session available. Reload and try again.");
-      return;
-    }
     if (!adminLoginUsername.trim() || !adminLoginPassword) {
       setErrorMessage("Enter admin username and password.");
       return;
@@ -557,21 +653,22 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           username: adminLoginUsername.trim(),
           password: adminLoginPassword,
         }),
       });
-      const payload = (await response.json()) as { ok: boolean; error?: string; promotedProfiles?: number };
+      const payload = (await response.json()) as { ok: boolean; error?: string };
       if (!payload.ok) {
         throw new Error(payload.error ?? "Failed to bootstrap admin access.");
       }
 
-      setAdminLoginMessage(
-        `Admin access granted for ${payload.promotedProfiles ?? 0} profile(s). Reloading admin data...`
-      );
+      setAdminCredentials({
+        username: adminLoginUsername.trim(),
+        password: adminLoginPassword,
+      });
+      setAdminLoginMessage("Admin login successful. Loading admin data...");
       setAdminLoginPassword("");
       await Promise.all([loadAll(), loadVenueUsers()]);
     } catch (error) {
@@ -581,15 +678,50 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
     }
   };
 
-  const shouldShowBootstrap = errorMessage.toLowerCase().includes("admin privileges required");
+  const logoutAdminAccess = async () => {
+    setErrorMessage("");
+    setAdminLoginMessage("");
+    try {
+      await fetch("/api/admin/logout", { method: "POST" });
+    } catch {
+      // Even if the request fails, clear local credential state.
+    } finally {
+      setAdminCredentials(null);
+      setAdminLoginPassword("");
+      setState("loading");
+      void Promise.all([loadAll(), loadVenueUsers()]);
+    }
+  };
+
+  const shouldShowBootstrap =
+    !adminCredentials &&
+    (state === "error" ||
+      errorMessage.toLowerCase().includes("admin privileges required") ||
+      errorMessage.toLowerCase().includes("admin login required") ||
+      errorMessage.toLowerCase().includes("missing bearer token"));
+  const showLogout = !shouldShowBootstrap && (Boolean(adminCredentials) || state === "idle");
 
   return (
     <div className="space-y-6">
+      {showLogout ? (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => {
+              void logoutAdminAccess();
+            }}
+            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100"
+          >
+            Log Out
+          </button>
+        </div>
+      ) : null}
+
       {shouldShowBootstrap ? (
         <section className="space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-3">
           <h2 className="text-base font-semibold text-amber-900">Admin Login</h2>
           <p className="text-sm text-amber-800">
-            This account is authenticated but not marked as admin yet. Log in as admin to promote this account.
+            Sign in with configured admin credentials to access admin tools. A venue profile is not required.
           </p>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <input
@@ -628,6 +760,29 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       )}
       {state === "loading" && <p className="text-sm text-slate-600">Loading admin data...</p>}
 
+      {!shouldShowBootstrap ? (
+        <section className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <h2 className="text-base font-semibold">Admin Tools</h2>
+          <div className="flex flex-wrap gap-2">
+            {ADMIN_SECTION_OPTIONS.map((section) => (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => setActiveSection(section.id)}
+                className={`rounded-md border px-3 py-2 text-xs font-medium ${
+                  activeSection === section.id
+                    ? "border-slate-900 bg-slate-900 text-white"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                {section.label}
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {!shouldShowBootstrap && activeSection === "ad-debug" ? (
       <section className="space-y-3 rounded-lg border border-slate-200 p-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-base font-semibold">Ad Debug Snapshot</h2>
@@ -784,7 +939,9 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
           </div>
         )}
       </section>
+      ) : null}
 
+      {!shouldShowBootstrap && activeSection === "prediction-settlement" ? (
       <section className="space-y-3 rounded-lg border border-slate-200 p-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-base font-semibold">Pending Prediction Settlement</h2>
@@ -853,7 +1010,9 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
           </ul>
         )}
       </section>
+      ) : null}
 
+      {!shouldShowBootstrap && activeSection === "venue-users" ? (
       <section className="space-y-3 rounded-lg border border-slate-200 p-3">
         <h2 className="text-base font-semibold">Venue User Management</h2>
         <div className="max-w-sm">
@@ -862,7 +1021,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
             onChange={(event) => setSelectedVenueUserId(event.target.value)}
             className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           >
-            {venues.map((venue) => (
+            {availableVenues.map((venue) => (
               <option key={venue.id} value={venue.id}>
                 {venue.name}
               </option>
@@ -938,7 +1097,60 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
           </ul>
         )}
       </section>
+      ) : null}
 
+      {!shouldShowBootstrap && activeSection === "venue-create" ? (
+      <section className="space-y-3 rounded-lg border border-slate-200 p-3">
+        <h2 className="text-base font-semibold">Create Venue</h2>
+        <p className="text-xs text-slate-600">
+          Enter a real-world address. We geocode it to coordinates and create a venue that users can join immediately.
+        </p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <input
+            value={newVenueName}
+            onChange={(event) => setNewVenueName(event.target.value)}
+            placeholder="Venue name (e.g. Downtown Sports Bar)"
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+          <input
+            value={newVenueId}
+            onChange={(event) => setNewVenueId(event.target.value)}
+            placeholder="Optional custom id (e.g. venue-downtown)"
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <input
+          value={newVenueAddress}
+          onChange={(event) => setNewVenueAddress(event.target.value)}
+          placeholder="Street address, city, state (or full address)"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+        />
+        <div className="max-w-xs">
+          <label className="mb-1 block text-xs font-medium text-slate-700">Geofence radius (meters)</label>
+          <input
+            type="number"
+            min={25}
+            max={2000}
+            value={newVenueRadius}
+            onChange={(event) => setNewVenueRadius(Number(event.target.value))}
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            void createVenue();
+          }}
+          disabled={creatingVenue}
+          className="w-full rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-60 sm:w-auto"
+        >
+          {creatingVenue ? "Creating Venue..." : "Create Venue"}
+        </button>
+        {venueCreateMessage ? <p className="text-xs text-emerald-700">{venueCreateMessage}</p> : null}
+      </section>
+      ) : null}
+
+      {!shouldShowBootstrap && activeSection === "trivia-create" ? (
       <section className="space-y-3 rounded-lg border border-slate-200 p-3">
         <h2 className="text-base font-semibold">Create Trivia Question</h2>
         <input
@@ -986,7 +1198,9 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
           Create Question
         </button>
       </section>
+      ) : null}
 
+      {!shouldShowBootstrap && activeSection === "ads-create" ? (
       <section className="space-y-3 rounded-lg border border-slate-200 p-3">
         <h2 className="text-base font-semibold">Create Advertisement</h2>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -1007,7 +1221,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
             className="rounded-md border border-slate-300 px-3 py-2 text-sm"
           >
             <option value="">Global (all venues)</option>
-            {venues.map((venue) => (
+            {availableVenues.map((venue) => (
               <option key={venue.id} value={venue.id}>
                 {venue.name}
               </option>
@@ -1088,7 +1302,9 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
           Create Advertisement
         </button>
       </section>
+      ) : null}
 
+      {!shouldShowBootstrap && activeSection === "trivia-list" ? (
       <section className="space-y-2 rounded-lg border border-slate-200 p-3">
         <h2 className="text-base font-semibold">Trivia Questions ({questions.length})</h2>
         <ul className="space-y-2">
@@ -1175,7 +1391,9 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
           ))}
         </ul>
       </section>
+      ) : null}
 
+      {!shouldShowBootstrap && activeSection === "ads-list" ? (
       <section className="space-y-2 rounded-lg border border-slate-200 p-3">
         <h2 className="text-base font-semibold">Advertisements ({ads.length})</h2>
         <ul className="space-y-2">
@@ -1201,7 +1419,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
                       className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                     >
                       <option value="">Global (all venues)</option>
-                      {venues.map((venue) => (
+                      {availableVenues.map((venue) => (
                         <option key={venue.id} value={venue.id}>
                           {venue.name}
                         </option>
@@ -1340,6 +1558,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
           ))}
         </ul>
       </section>
+      ) : null}
     </div>
   );
 }

@@ -11,6 +11,7 @@ export type PredictionStatus = "pending" | "won" | "lost" | "push" | "canceled";
 export interface Venue {
   id: string;
   name: string;
+  address?: string;
   latitude: number;
   longitude: number;
   radius: number;

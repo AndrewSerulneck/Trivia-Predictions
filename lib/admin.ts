@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getPredictionMarketById, listResolvedPredictionOutcomes } from "@/lib/polymarket";
-import type { AdSlot, Advertisement, TriviaQuestion } from "@/types";
+import type { AdSlot, Advertisement, TriviaQuestion, Venue } from "@/types";
 
 type TriviaQuestionRow = {
   id: string;
@@ -54,6 +54,15 @@ type AdminUserRow = {
   created_at: string;
 };
 
+type VenueRow = {
+  id: string;
+  name: string;
+  address: string | null;
+  latitude: number;
+  longitude: number;
+  radius: number;
+};
+
 function mapTriviaRow(row: TriviaQuestionRow): TriviaQuestion {
   return {
     id: row.id,
@@ -82,6 +91,48 @@ function mapAdRow(row: AdvertisementRow): Advertisement {
     impressions: row.impressions,
     clicks: row.clicks,
   };
+}
+
+function mapVenueRow(row: VenueRow): Venue {
+  return {
+    id: row.id,
+    name: row.name,
+    address: row.address ?? undefined,
+    latitude: Number(row.latitude),
+    longitude: Number(row.longitude),
+    radius: Number(row.radius),
+  };
+}
+
+function normalizeVenueId(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+async function geocodeVenueAddress(address: string): Promise<{ latitude: number; longitude: number }> {
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(address)}`;
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": "Trivia-Predictions-Admin/1.0",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to geocode venue address.");
+  }
+
+  const payload = (await response.json()) as Array<{ lat?: string; lon?: string }>;
+  const first = payload[0];
+  const latitude = Number(first?.lat);
+  const longitude = Number(first?.lon);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    throw new Error("Unable to resolve that address. Try a more specific address.");
+  }
+
+  return { latitude, longitude };
 }
 
 function assertAdminConfigured() {
@@ -519,6 +570,70 @@ export async function listAdminUsersByVenue(venueId: string, limit = 200): Promi
     isAdmin: row.is_admin,
     createdAt: row.created_at,
   }));
+}
+
+export async function createAdminVenue(input: {
+  name: string;
+  address: string;
+  radius?: number;
+  venueId?: string;
+}): Promise<Venue> {
+  assertAdminConfigured();
+
+  const name = input.name.trim();
+  const address = input.address.trim();
+  if (!name) {
+    throw new Error("Venue name is required.");
+  }
+  if (!address) {
+    throw new Error("Venue address is required.");
+  }
+
+  const radius = Number.isFinite(input.radius) ? Math.round(Number(input.radius)) : 100;
+  if (radius < 25 || radius > 2000) {
+    throw new Error("Radius must be between 25m and 2000m.");
+  }
+
+  const { latitude, longitude } = await geocodeVenueAddress(address);
+
+  const baseVenueId = normalizeVenueId(input.venueId?.trim() || name);
+  if (!baseVenueId) {
+    throw new Error("Venue id could not be generated. Add letters or numbers.");
+  }
+
+  let nextVenueId = baseVenueId.startsWith("venue-") ? baseVenueId : `venue-${baseVenueId}`;
+  let suffix = 2;
+  while (true) {
+    const { data, error } = await supabaseAdmin!.from("venues").select("id").eq("id", nextVenueId).maybeSingle();
+    if (error) {
+      throw new Error(error.message ?? "Failed to validate venue id uniqueness.");
+    }
+    if (!data) break;
+    nextVenueId = `${baseVenueId}-${suffix}`;
+    if (!nextVenueId.startsWith("venue-")) {
+      nextVenueId = `venue-${nextVenueId}`;
+    }
+    suffix += 1;
+  }
+
+  const { data, error } = await supabaseAdmin!
+    .from("venues")
+    .insert({
+      id: nextVenueId,
+      name,
+      address,
+      latitude,
+      longitude,
+      radius,
+    })
+    .select("id, name, address, latitude, longitude, radius")
+    .single<VenueRow>();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Failed to create venue.");
+  }
+
+  return mapVenueRow(data);
 }
 
 export async function updateAdminUser(params: {
