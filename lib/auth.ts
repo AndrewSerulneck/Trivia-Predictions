@@ -118,6 +118,32 @@ export async function createUserProfile(params: {
   }
 
   const authUserId = await ensureAnonymousSession();
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token ?? "";
+
+  if (accessToken) {
+    const response = await fetch("/api/join/profile", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        username,
+        venueId: params.venueId,
+      }),
+    });
+
+    const payload = (await response.json().catch(() => ({}))) as {
+      ok?: boolean;
+      error?: string;
+      user?: User;
+    };
+    if (!response.ok || !payload.ok || !payload.user) {
+      throw new Error(payload.error ?? "Failed to create profile.");
+    }
+    return payload.user;
+  }
 
   const { data, error } = await supabase
     .from("users")

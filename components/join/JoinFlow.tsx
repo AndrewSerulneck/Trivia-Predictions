@@ -26,6 +26,15 @@ type VenueVisual = {
 
 const DEFAULT_ICONS = ["🏟️", "🍻", "🎯", "🎲", "🏀", "🎤", "🏈", "🍔", "🎵", "🎮"];
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === "object" && error && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message) return message;
+  }
+  return fallback;
+}
+
 function parseBooleanEnv(value: string | undefined): boolean {
   if (!value) return false;
   let normalized = value.trim();
@@ -143,7 +152,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         setStatus("ready");
       } catch (error) {
         setStatus("error");
-        setErrorMessage(error instanceof Error ? error.message : "Failed to initialize join flow.");
+        setErrorMessage(getErrorMessage(error, "Failed to initialize join flow."));
       }
     };
 
@@ -187,7 +196,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     } catch (error) {
       setLocationVerified(false);
       setLocationNotice("");
-      setErrorMessage(error instanceof Error ? error.message : "Unable to verify location.");
+      setErrorMessage(getErrorMessage(error, "Unable to verify location."));
     } finally {
       setLocationLoading(false);
     }
@@ -272,7 +281,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       router.push(`/venue/${venue.id}`);
     } catch (error) {
       setStatus("ready");
-      setErrorMessage(error instanceof Error ? error.message : "Failed to create profile.");
+      setErrorMessage(getErrorMessage(error, "Failed to create profile."));
     }
   };
 

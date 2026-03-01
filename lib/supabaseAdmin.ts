@@ -25,7 +25,16 @@ function normalizeEnvValue(value: string | undefined): string {
   return normalized;
 }
 
-const supabaseUrl = normalizeEnvValue(process.env.NEXT_PUBLIC_SUPABASE_URL);
+function normalizeSupabaseUrl(value: string): string {
+  if (!value) return value;
+  const trimmed = value.trim();
+  if (trimmed.includes(".supabase.com")) {
+    return trimmed.replace(".supabase.com", ".supabase.co");
+  }
+  return trimmed;
+}
+
+const supabaseUrl = normalizeSupabaseUrl(normalizeEnvValue(process.env.NEXT_PUBLIC_SUPABASE_URL));
 const serviceRoleKey = normalizeEnvValue(process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 function isValidHttpUrl(value: string | undefined): value is string {
