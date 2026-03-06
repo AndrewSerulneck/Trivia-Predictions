@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageShell } from "@/components/ui/PageShell";
+import { BackButton } from "@/components/navigation/BackButton";
 import {
   checkUsernameAtVenue,
   createUserProfile,
@@ -16,15 +17,12 @@ import { saveUserId, saveUsername, saveVenueId } from "@/lib/storage";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { getVenueById, listVenues } from "@/lib/venues";
 import type { User, Venue } from "@/types";
+import { getVenueDisplayName, getVenueVisual as getVenueVisualFromConfig } from "@/lib/venueDisplay";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
 
-type VenueVisual = {
-  logoText: string;
-  icon: string;
-};
-
-const DEFAULT_ICONS = ["🏟️", "🍻", "🎯", "🎲", "🏀", "🎤", "🏈", "🍔", "🎵", "🎮"];
+const JOIN_BUTTON_POP_CLASS =
+  "transition-all duration-150 active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message) return error.message;
@@ -59,33 +57,14 @@ function parseBooleanEnv(value: string | undefined): boolean {
   return lowered === "true" || lowered === "1" || lowered === "yes" || lowered === "on";
 }
 
-function getVenueVisual(venue: Venue, index: number): VenueVisual {
-  const knownVisuals: Record<string, VenueVisual> = {
-    "venue-downtown": { logoText: "DS", icon: "🏟️" },
-    "venue-uptown": { logoText: "UT", icon: "🍻" },
-    "venue-riverside": { logoText: "RG", icon: "🌊" },
-  };
-
-  const known = knownVisuals[venue.id];
-  if (known) return known;
-
-  const words = venue.name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((word) => word[0]?.toUpperCase() ?? "")
-    .filter(Boolean);
-  const logoText = (words[0] ?? "") + (words[1] ?? words[0] ?? "V");
-  const icon = DEFAULT_ICONS[index % DEFAULT_ICONS.length] ?? "📍";
-
-  return { logoText, icon };
-}
+const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig(venue, index);
 
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const router = useRouter();
   const venueParam = initialVenueId.trim();
-  // Always bypass geofencing in local development.
-  const geofenceBypassed =
+  const geofenceBypassedInDev =
     process.env.NODE_ENV !== "production" || parseBooleanEnv(process.env.NEXT_PUBLIC_DISABLE_GEOFENCE);
+  const [adminSessionActive, setAdminSessionActive] = useState(false);
 
   const [status, setStatus] = useState<Status>("loading");
   const [errorMessage, setErrorMessage] = useState("");
@@ -100,6 +79,34 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const autoVerificationAttemptedRef = useRef(false);
   const redirectStartedRef = useRef(false);
 
+  const geofenceBypassed = geofenceBypassedInDev || adminSessionActive;
+
+  const detectAdminSession = useCallback(async () => {
+    try {
+      const response = await fetch("/api/admin?resource=session", {
+        cache: "no-store",
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      const active = await detectAdminSession();
+      if (!cancelled) {
+        setAdminSessionActive(active);
+      }
+    };
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [detectAdminSession]);
+
   useEffect(() => {
     const load = async () => {
       setStatus("loading");
@@ -109,7 +116,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setDistanceMeters(null);
       setLocationNotice(
         geofenceBypassed
-          ? "Location verification bypassed for local testing."
+          ? adminSessionActive
+            ? "Admin session detected. Geofence checks are disabled."
+            : "Location verification bypassed for local testing."
           : "Verifying your location..."
       );
       autoVerificationAttemptedRef.current = false;
@@ -157,7 +166,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     };
 
     void load();
-  }, [venueParam, geofenceBypassed]);
+  }, [adminSessionActive, geofenceBypassed, geofenceBypassedInDev, venueParam]);
 
   const canCreate = useMemo(() => {
     return Boolean(
@@ -190,7 +199,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         setLocationVerified(false);
         setLocationNotice("");
         setErrorMessage(
-          `You are ${Math.round(distance)}m away. You must be within ${venue.radius}m of ${venue.name} to join.`
+          `You are ${Math.round(distance)}m away. You must be within ${venue.radius}m of ${getVenueDisplayName(
+            venue
+          )} to join.`
         );
       }
     } catch (error) {
@@ -209,6 +220,14 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     saveUserId(existingUser.id);
     router.push(`/venue/${venue.id}`);
   }, [existingUser, router, venue]);
+
+  const openAdminDashboard = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.location.assign("/admin");
+      return;
+    }
+    router.push("/admin");
+  }, [router]);
 
   useEffect(() => {
     if (!venue || status !== "ready" || !isSupabaseConfigured) {
@@ -291,6 +310,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       description="Create or continue your venue-specific profile to play trivia and predictions."
     >
       <div className="space-y-4 text-sm">
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={openAdminDashboard}
+            className={`${JOIN_BUTTON_POP_CLASS} inline-flex min-h-[42px] cursor-pointer items-center rounded-full bg-gradient-to-r from-slate-900 to-slate-700 px-4 py-2 font-medium text-white`}
+          >
+            Admin Dashboard
+          </button>
+        </div>
+
         {!venueParam && (
           <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-800">
             No venue selected. Use a QR link like <code>/?v=venue-downtown</code> or pick one below.
@@ -313,17 +342,18 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                 <li key={item.id}>
                   <Link
                     href={`/?v=${item.id}`}
-                    className="flex w-full items-center justify-between rounded-none border border-slate-300 bg-slate-100 px-3 py-3 text-slate-700 hover:bg-slate-200"
+                    role="button"
+                    className={`flex w-full items-center justify-between rounded-xl border border-slate-200 bg-gradient-to-r from-white to-slate-100 px-4 py-3 text-slate-700 shadow-sm transition-all ${JOIN_BUTTON_POP_CLASS} hover:from-blue-50 hover:to-cyan-50`}
                   >
                     <span className="flex items-center gap-3">
-                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-none border border-slate-400 bg-white font-semibold text-slate-800">
+                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white font-semibold text-slate-800">
                         {visual.logoText}
                       </span>
-                      <span className="font-medium">Join {item.name}</span>
+                      <span className="font-medium">Join {getVenueDisplayName(item)}</span>
                     </span>
                     <span
                       aria-hidden="true"
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-none border border-slate-400 bg-white text-lg"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-lg"
                     >
                       {visual.icon}
                     </span>
@@ -341,14 +371,17 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
         {venue && (
           <div className="space-y-4">
+            <BackButton label="Choose different venue" href="/" />
             <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-              <p className="font-medium">{venue.name}</p>
+              <p className="font-medium">{getVenueDisplayName(venue)}</p>
               <p className="text-slate-600">
                 Geofence: within {venue.radius}m. (Adjustable later in the venues table.)
               </p>
               {geofenceBypassed && (
                 <p className="text-amber-700">
-                  Geofence bypass is enabled for local testing (`NEXT_PUBLIC_DISABLE_GEOFENCE=true`).
+                  {adminSessionActive
+                    ? "Admin session active. Geofence checks are disabled."
+                    : "Geofence bypass is enabled for local testing (`NEXT_PUBLIC_DISABLE_GEOFENCE=true`)."}
                 </p>
               )}
               {distanceMeters !== null && (
@@ -367,7 +400,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                 type="button"
                 onClick={verifyLocation}
                 disabled={status === "loading"}
-                className="rounded-md bg-slate-900 px-4 py-2 font-medium text-white disabled:opacity-60"
+                className={`${JOIN_BUTTON_POP_CLASS} inline-flex min-h-[42px] items-center rounded-full bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2 font-medium text-white disabled:opacity-60`}
               >
                 Retry location check
               </button>
@@ -401,7 +434,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                   type="button"
                   onClick={createProfile}
                   disabled={!canCreate || status === "saving"}
-                  className="rounded-md bg-blue-700 px-4 py-2 font-medium text-white disabled:opacity-60"
+                  className={`${JOIN_BUTTON_POP_CLASS} inline-flex min-h-[42px] items-center rounded-full bg-gradient-to-r from-blue-700 to-cyan-600 px-4 py-2 font-medium text-white disabled:opacity-60`}
                 >
                   {status === "saving" ? "Creating profile..." : "Create Profile and Continue"}
                 </button>

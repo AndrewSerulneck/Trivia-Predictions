@@ -9,3 +9,105 @@
 body {
   @apply bg-slate-50 text-slate-900 antialiased;
 }
+
+button:not(:disabled),
+a[role="button"] {
+  @apply transition-all duration-150;
+}
+
+button:not(:disabled):active,
+a[role="button"]:active {
+  transform: scale(0.965);
+}
+
+@keyframes tp-pop {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.tp-pop-in {
+  animation: tp-pop 0.28s ease-out;
+}
+
+.btn-glow-blue {
+  box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4);
+}
+
+@keyframes tp-rain {
+  0% {
+    transform: translateY(-16px) translateX(0) rotate(0deg);
+    opacity: 0.95;
+    scale: 0.9;
+  }
+  20% {
+    opacity: 1;
+    scale: 1.05;
+  }
+  100% {
+    transform: translateY(140vh) translateX(var(--rain-drift, 0px)) rotate(38deg);
+    opacity: 0.02;
+    scale: 1.15;
+  }
+}
+
+.animate-tp-rain {
+  animation: tp-rain linear forwards;
+}
+
+@keyframes tp-firework {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.25);
+    filter: drop-shadow(0 0 8px rgba(15, 23, 42, 0.18));
+  }
+  20% {
+    transform: translate3d(0, 0, 0) scale(1.9) rotate(18deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 22px rgba(15, 23, 42, 0.3));
+  }
+  55% {
+    opacity: 0.95;
+    transform: translate3d(calc(var(--burst-x) * 0.65), calc(var(--burst-y) * 0.65), 0) scale(2.2) rotate(-12deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--burst-x), var(--burst-y), 0) scale(0.35);
+    filter: drop-shadow(0 0 8px rgba(15, 23, 42, 0.12));
+  }
+}
+
+.animate-tp-firework {
+  animation-name: tp-firework;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+@keyframes tp-points-flow {
+  0% {
+    opacity: 0.95;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--flow-x), var(--flow-y), 0) scale(0.15);
+  }
+}
+
+.animate-tp-points-flow {
+  animation-name: tp-points-flow;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}

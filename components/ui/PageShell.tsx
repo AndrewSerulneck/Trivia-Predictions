@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { UserStatusHeader } from "@/components/ui/UserStatusHeader";
 
 type PageShellProps = {
@@ -6,14 +5,6 @@ type PageShellProps = {
   description?: string;
   children?: React.ReactNode;
 };
-
-const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/trivia", label: "Trivia" },
-  { href: "/predictions", label: "Predictions" },
-  { href: "/activity", label: "Activity" },
-  { href: "/leaderboard", label: "Leaderboard" },
-];
 
 export function PageShell({ title, description, children }: PageShellProps) {
   return (
@@ -27,18 +18,6 @@ export function PageShell({ title, description, children }: PageShellProps) {
           <UserStatusHeader />
         </div>
       </header>
-
-      <nav className="hidden flex-wrap gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:flex">
-        {NAV_LINKS.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className="rounded-md bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
-          >
-            {link.label}
-          </Link>
-        ))}
-      </nav>
 
       <main className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         {children}

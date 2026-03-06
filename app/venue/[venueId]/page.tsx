@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import { PageShell } from "@/components/ui/PageShell";
-import { SlotAd } from "@/components/ui/SlotAd";
 import { VenueHubClient } from "@/components/venue/VenueHubClient";
 import { getLeaderboardForVenue } from "@/lib/leaderboard";
 import { getVenueById } from "@/lib/venues";
+import { SlotAd } from "@/components/ui/SlotAd";
+import { getVenueDisplayName } from "@/lib/venueDisplay";
 
 export default async function VenuePage({
   params,
@@ -17,12 +18,15 @@ export default async function VenuePage({
   }
 
   const entries = await getLeaderboardForVenue(venue.id);
+  const venueDisplayName = getVenueDisplayName(venue);
 
   return (
-    <PageShell title={venue.name}>
+    <PageShell title={venueDisplayName}>
       <div className="space-y-4">
         <VenueHubClient venue={venue} initialEntries={entries} />
-        <SlotAd slot="leaderboard-sidebar" venueId={venue.id} />
+        <section className="space-y-2">
+          <SlotAd slot="leaderboard-sidebar" venueId={venue.id} showPlaceholder />
+        </section>
       </div>
     </PageShell>
   );

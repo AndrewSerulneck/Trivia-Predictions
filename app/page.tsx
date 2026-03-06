@@ -6,5 +6,9 @@ export default async function HomePage({
   searchParams: Promise<{ v?: string }>;
 }) {
   const params = await searchParams;
-  return <JoinFlow initialVenueId={params.v ?? ""} />;
+  return (
+    <div className="space-y-4">
+      <JoinFlow initialVenueId={params.v ?? ""} />
+    </div>
+  );
 }

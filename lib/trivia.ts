@@ -172,7 +172,10 @@ export async function getTriviaQuestions(limit = 10, userId?: string): Promise<T
   return pickBalancedRandomQuestions(unseen, safeLimit);
 }
 
-export async function getTriviaQuota(userId: string): Promise<TriviaQuota> {
+export async function getTriviaQuota(
+  userId: string,
+  options: { forceAdminBypass?: boolean } = {}
+): Promise<TriviaQuota> {
   const emptyQuota: TriviaQuota = {
     limit: TRIVIA_LIMIT_PER_HOUR,
     questionsUsed: 0,
@@ -183,6 +186,13 @@ export async function getTriviaQuota(userId: string): Promise<TriviaQuota> {
 
   if (!userId || !supabaseAdmin) {
     return emptyQuota;
+  }
+
+  if (options.forceAdminBypass) {
+    return {
+      ...emptyQuota,
+      isAdminBypass: true,
+    };
   }
 
   const { data: userData } = await supabaseAdmin
@@ -256,6 +266,7 @@ export async function submitTriviaAnswer(params: {
   questionId: string;
   answer: number;
   timeElapsed: number;
+  forceAdminBypass?: boolean;
 }): Promise<{ isCorrect: boolean; correctAnswer: number; saved: boolean; alreadyAnswered?: boolean }> {
   const question = await getQuestionById(params.questionId);
   if (!question) {
@@ -267,7 +278,7 @@ export async function submitTriviaAnswer(params: {
   let saved = false;
 
   if (supabaseAdmin && params.userId) {
-    const quota = await getTriviaQuota(params.userId);
+    const quota = await getTriviaQuota(params.userId, { forceAdminBypass: params.forceAdminBypass });
     if (!quota.isAdminBypass && quota.questionsRemaining <= 0) {
       const minutes = Math.ceil(quota.windowSecondsRemaining / 60);
       throw new Error(`Hourly trivia limit reached (10). Try again in about ${minutes} minute(s).`);

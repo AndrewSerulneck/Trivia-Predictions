@@ -32,6 +32,7 @@ export type PredictionListParams = {
   search?: string;
   category?: string;
   broadCategory?: string;
+  excludeSensitive?: boolean | string;
   sort?: PredictionSort | string;
 };
 
@@ -73,6 +74,7 @@ const BROAD_CATEGORIES = [
   "breaking",
   "new",
   "politics",
+  "religion",
   "sports",
   "crypto",
   "finance",
@@ -88,12 +90,42 @@ const BROAD_CATEGORIES = [
 ] as const;
 
 const BROAD_CATEGORY_SET = new Set(BROAD_CATEGORIES);
+const EXCLUDED_BROAD_CATEGORIES = new Set(["politics", "geopolitics", "religion"]);
 
 let activeMarketsCache: { expiresAt: number; items: Prediction[] } | null = null;
 let activeMarketsInFlight: Promise<Prediction[]> | null = null;
 
 function includesAny(text: string, keywords: string[]): boolean {
   return keywords.some((keyword) => text.includes(keyword));
+}
+
+function normalizeBoolean(input: unknown, fallback = false): boolean {
+  if (typeof input === "boolean") {
+    return input;
+  }
+
+  const value = String(input ?? "").trim().toLowerCase();
+  if (!value) {
+    return fallback;
+  }
+
+  if (value === "1" || value === "true" || value === "yes" || value === "on") {
+    return true;
+  }
+  if (value === "0" || value === "false" || value === "no" || value === "off") {
+    return false;
+  }
+
+  return fallback;
+}
+
+function isSensitiveMarket(broadCategories: Set<string>): boolean {
+  for (const category of EXCLUDED_BROAD_CATEGORIES) {
+    if (broadCategories.has(category)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function getTrendingVolumeThreshold(markets: Prediction[]): number {
@@ -153,6 +185,9 @@ function classifyBroadCategories(
   }
   if (includesAny(haystack, ["geopolitic", "war", "military", "nato", "sanction", "ukraine", "russia", "china", "taiwan", "israel", "gaza", "iran"])) {
     broad.add("geopolitics");
+  }
+  if (includesAny(haystack, ["religion", "church", "pastor", "preacher", "prayer", "christian", "christianity", "muslim", "islam", "catholic", "temple", "synagogue"])) {
+    broad.add("religion");
   }
   if (includesAny(haystack, ["earnings", "eps", "revenue", "guidance", "quarter", "q1", "q2", "q3", "q4"])) {
     broad.add("earnings");
@@ -563,6 +598,7 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
   const search = String(params.search ?? "").trim().toLowerCase();
   const category = String(params.category ?? "").trim();
   const broadCategory = String(params.broadCategory ?? "").trim().toLowerCase();
+  const excludeSensitive = normalizeBoolean(params.excludeSensitive, true);
   const sort = normalizeSort(params.sort);
 
   const normalized = await getActiveNormalizedMarkets();
@@ -573,8 +609,16 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
     broadByMarketId.set(market.id, classifyBroadCategories(market, { now, trendingThreshold }));
   }
 
+  const filteredMarkets = [...normalized].filter((market) => {
+    const broadCategories = broadByMarketId.get(market.id);
+    if (!excludeSensitive || !broadCategories) {
+      return true;
+    }
+    return !isSensitiveMarket(broadCategories);
+  });
+
   const categories = Array.from(new Set(
-    normalized.flatMap((item) => {
+    filteredMarkets.flatMap((item) => {
       const values = [item.category ?? "Uncategorized", ...(item.tags ?? [])]
         .map((value) => String(value ?? "").trim())
         .filter(Boolean);
@@ -584,7 +628,7 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
     .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
 
   const categoryScores = new Map<string, number>();
-  for (const market of normalized) {
+  for (const market of filteredMarkets) {
     const marketCategories = new Set(
       [market.category ?? "Uncategorized", ...(market.tags ?? [])]
         .map((value) => String(value ?? "").trim())
@@ -600,7 +644,7 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
     .slice(0, 12)
     .map(([name]) => name);
 
-  let filtered = [...normalized];
+  let filtered = [...filteredMarkets];
   if (search) {
     filtered = filtered.filter((market) => {
       const inQuestion = market.question.toLowerCase().includes(search);

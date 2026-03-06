@@ -17,11 +17,58 @@ type SummaryPayload = {
 export function UserStatusHeader() {
   const [username, setUsername] = useState("");
   const [points, setPoints] = useState<number | null>(null);
+  const [displayedPoints, setDisplayedPoints] = useState(0);
   const [pointsPop, setPointsPop] = useState(false);
   const [pointsGain, setPointsGain] = useState<number | null>(null);
+
   const priorPointsRef = useRef<number | null>(null);
+  const displayedPointsRef = useRef(0);
+  const pointsTickerRef = useRef<number | null>(null);
   const gainHideTimerRef = useRef<number | null>(null);
   const popHideTimerRef = useRef<number | null>(null);
+
+  const animatePointsTo = useCallback((targetPoints: number) => {
+    const safeTarget = Math.max(0, Math.round(targetPoints));
+    const startPoints = displayedPointsRef.current;
+
+    if (safeTarget <= startPoints) {
+      setDisplayedPoints(safeTarget);
+      displayedPointsRef.current = safeTarget;
+      return;
+    }
+
+    if (pointsTickerRef.current) {
+      window.clearInterval(pointsTickerRef.current);
+    }
+
+    const delta = safeTarget - startPoints;
+    const frameCount = 18;
+    const step = Math.max(1, Math.ceil(delta / frameCount));
+    let running = startPoints;
+
+    pointsTickerRef.current = window.setInterval(() => {
+      running = Math.min(safeTarget, running + step);
+      setDisplayedPoints(running);
+      displayedPointsRef.current = running;
+
+      if (running >= safeTarget) {
+        if (pointsTickerRef.current) {
+          window.clearInterval(pointsTickerRef.current);
+          pointsTickerRef.current = null;
+        }
+      }
+    }, 28);
+  }, []);
+
+  const setPointsAndAnimate = useCallback(
+    (nextPoints: number) => {
+      const rounded = Math.max(0, Math.round(nextPoints));
+      setPoints(rounded);
+      animatePointsTo(rounded);
+      priorPointsRef.current = rounded;
+    },
+    [animatePointsTo]
+  );
 
   const animateGain = useCallback((delta: number) => {
     if (delta <= 0) {
@@ -54,6 +101,8 @@ export function UserStatusHeader() {
       setUsername("");
       setPoints(null);
       priorPointsRef.current = null;
+      displayedPointsRef.current = 0;
+      setDisplayedPoints(0);
       return;
     }
 
@@ -72,13 +121,13 @@ export function UserStatusHeader() {
     }
 
     setUsername(payload.profile.username);
-    setPoints(payload.profile.points);
+    setPointsAndAnimate(payload.profile.points);
 
     if (priorPointsRef.current !== null && payload.profile.points > priorPointsRef.current) {
       animateGain(payload.profile.points - priorPointsRef.current);
     }
     priorPointsRef.current = payload.profile.points;
-  }, [animateGain]);
+  }, [animateGain, setPointsAndAnimate]);
 
   useEffect(() => {
     void loadSummary();
@@ -91,6 +140,8 @@ export function UserStatusHeader() {
       const custom = event as CustomEvent<{ delta?: number }>;
       const delta = Number(custom.detail?.delta ?? 0);
       if (Number.isFinite(delta) && delta > 0) {
+        const next = (points ?? 0) + delta;
+        setPointsAndAnimate(next);
         animateGain(delta);
       }
       void loadSummary();
@@ -101,6 +152,9 @@ export function UserStatusHeader() {
     return () => {
       window.clearInterval(interval);
       window.removeEventListener("tp:points-updated", onPointsUpdated);
+      if (pointsTickerRef.current) {
+        window.clearInterval(pointsTickerRef.current);
+      }
       if (gainHideTimerRef.current) {
         window.clearTimeout(gainHideTimerRef.current);
       }
@@ -108,7 +162,7 @@ export function UserStatusHeader() {
         window.clearTimeout(popHideTimerRef.current);
       }
     };
-  }, [animateGain, loadSummary]);
+  }, [animateGain, loadSummary, setPointsAndAnimate]);
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
@@ -119,8 +173,9 @@ export function UserStatusHeader() {
         className={`rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-transform duration-200 ${
           pointsPop ? "scale-110" : "scale-100"
         }`}
+        id="tp-points-pill"
       >
-        Points: {points ?? 0}
+        Points: {points ?? displayedPoints}
       </div>
       {pointsGain ? (
         <div className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-bold text-emerald-700 animate-bounce">

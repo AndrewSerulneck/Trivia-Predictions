@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { calculatePoints, formatProbability } from "@/lib/predictions";
 import { getUserId, getVenueId } from "@/lib/storage";
@@ -18,6 +18,7 @@ type PredictionListPayload = {
   categories?: string[];
   trendingCategories?: string[];
   broadCategories?: string[];
+  excludeSensitive?: boolean;
   error?: string;
 };
 
@@ -48,6 +49,69 @@ function formatBroadCategoryLabel(value: string): string {
     .join(" ");
 }
 
+const BROWSER_MENU_ICON_BY_CATEGORY: Record<string, string> = {
+  all: "🧭",
+  trending: "⚡",
+  breaking: "🚨",
+  new: "🆕",
+  politics: "🏛️",
+  sports: "⚽",
+  crypto: "🪙",
+  finance: "📈",
+  geopolitics: "🌍",
+  religion: "✝️",
+  earnings: "💼",
+  tech: "🧠",
+  culture: "🎭",
+  world: "🗺️",
+  economy: "📊",
+  "climate & science": "🌤️",
+  mentions: "🗣️",
+  elections: "🗳️",
+};
+
+function getCategoryIcon(category: string): string {
+  const normalized = category.toLowerCase();
+  return BROWSER_MENU_ICON_BY_CATEGORY[normalized] ?? (normalized.includes("sport") ? "🏟️" : "🏷️");
+}
+
+const HIDDEN_BROAD_CATEGORIES = new Set(["politics", "religion", "geopolitics", "elections"]);
+const BUTTON_POP_CLASS =
+  "transition-all duration-150 transform active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
+
+function isSelectableBroadCategory(category: string): boolean {
+  const normalized = category.toLowerCase();
+  return !HIDDEN_BROAD_CATEGORIES.has(normalized);
+}
+
+type RewardToken = {
+  id: string;
+  label: string;
+};
+
+function useRewards() {
+  const [rewards, setRewards] = useState<RewardToken[]>([]);
+
+  const addReward = (label: string) => {
+    const reward: RewardToken = {
+      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      label,
+    };
+
+    setRewards((prev) => [...prev.slice(-1), reward]);
+    window.setTimeout(() => {
+      setRewards((prev) => prev.filter((item) => item.id !== reward.id));
+    }, 1100);
+  };
+
+  return { rewards, addReward };
+}
+
+function triggerHaptic(pattern: number | number[] = 12) {
+  if (typeof navigator === "undefined" || !("vibrate" in navigator)) return;
+  navigator.vibrate(pattern);
+}
+
 export function PredictionMarketList() {
   const router = useRouter();
   const [messages, setMessages] = useState<SubmitState>({});
@@ -61,17 +125,26 @@ export function PredictionMarketList() {
   const [broadCategories, setBroadCategories] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
+  const hasInitializedRef = useRef(false);
 
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [broadCategory, setBroadCategory] = useState("");
+  const [excludeSensitive, setExcludeSensitive] = useState(true);
   const [sort, setSort] = useState<SortKey>("closing-soon");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const { rewards, addReward } = useRewards();
 
-  const hasFilters = useMemo(() => Boolean(search || category || broadCategory), [search, category, broadCategory]);
+  const hasFilters = useMemo(() => Boolean(search || category || broadCategory || !excludeSensitive), [
+    search,
+    category,
+    broadCategory,
+    excludeSensitive,
+  ]);
 
   useEffect(() => {
     const nextUserId = getUserId();
@@ -111,6 +184,9 @@ export function PredictionMarketList() {
 
   useEffect(() => {
     const controller = new AbortController();
+    if (!hasInitializedRef.current) {
+      setIsInitializing(true);
+    }
 
     const load = async () => {
       setLoading(true);
@@ -123,6 +199,7 @@ export function PredictionMarketList() {
           search,
           category,
           broadCategory,
+          excludeSensitive: excludeSensitive ? "true" : "false",
           sort,
         });
         const response = await fetch(`/api/predictions?${query.toString()}`, {
@@ -152,6 +229,10 @@ export function PredictionMarketList() {
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);
+          if (!hasInitializedRef.current) {
+            hasInitializedRef.current = true;
+            setIsInitializing(false);
+          }
         }
       }
     };
@@ -159,18 +240,50 @@ export function PredictionMarketList() {
     void load();
 
     return () => controller.abort();
-  }, [page, search, category, broadCategory, sort]);
+  }, [page, search, category, broadCategory, sort, excludeSensitive]);
+
+  if (isInitializing) {
+    return (
+      <div className="space-y-6 rounded-lg border border-slate-200 bg-white p-6">
+        <div className="relative mx-auto h-20 w-20">
+          <div className="absolute inset-0 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
+          <div className="absolute inset-2 flex items-center justify-center rounded-full bg-slate-900 text-sm font-black tracking-wider text-white">
+            HC
+          </div>
+        </div>
+        <div className="space-y-2 text-center">
+          <p className="text-lg font-semibold text-slate-900">Hightop Challenge</p>
+          <p className="text-sm text-slate-600">Loading live prediction markets...</p>
+        </div>
+        <div className="space-y-2">
+          <p className="text-xs uppercase tracking-wide text-slate-500">Crunching markets from venue...</p>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+            <div className="h-full w-1/3 animate-pulse rounded-full bg-slate-900" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const submitPick = async (predictionId: string, outcomeId: string) => {
     if (!userId) {
       setMessages((prev) => ({ ...prev, [predictionId]: "Join a venue first to place picks." }));
+      triggerHaptic([20, 20]);
       return;
     }
 
     setPendingByMarket((prev) => ({ ...prev, [predictionId]: true }));
     setMessages((prev) => ({ ...prev, [predictionId]: "" }));
+    triggerHaptic(10);
 
     try {
+      const selectedOutcome = markets
+        .find((market) => market.id === predictionId)
+        ?.outcomes.find((outcome) => outcome.id === outcomeId);
+      if (!selectedOutcome) {
+        throw new Error("Unable to identify selected option.");
+      }
+
       const response = await fetch("/api/predictions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -183,7 +296,14 @@ export function PredictionMarketList() {
       }
 
       setMessages((prev) => ({ ...prev, [predictionId]: "Pick placed successfully." }));
-      window.dispatchEvent(new CustomEvent("tp:points-updated", { detail: { source: "prediction-pick" } }));
+      const points = calculatePoints(selectedOutcome.probability);
+      addReward(`+${points} picks`);
+      triggerHaptic([25, 40, 25]);
+      window.dispatchEvent(
+        new CustomEvent("tp:points-updated", {
+          detail: { source: "prediction-pick", delta: points },
+        })
+      );
       if (userId) {
         const response = await fetch(`/api/predictions/quota?userId=${encodeURIComponent(userId)}`, {
           cache: "no-store",
@@ -205,6 +325,18 @@ export function PredictionMarketList() {
 
   return (
     <div className="space-y-4">
+      {rewards.length > 0 ? (
+        <div className="pointer-events-none -mt-1 flex flex-wrap justify-center gap-2">
+          {rewards.map((reward) => (
+            <div
+              key={reward.id}
+              className="tp-pop-in rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-3 py-1 text-xs font-bold text-white shadow-lg"
+            >
+              🎉 {reward.label}
+            </div>
+          ))}
+        </div>
+      ) : null}
       {quota && !quota.isAdminBypass ? (
         <div className="space-y-1 rounded-md border border-slate-200 bg-slate-50 p-3">
           <div className="flex items-center justify-between text-xs font-medium text-slate-700">
@@ -239,15 +371,18 @@ export function PredictionMarketList() {
                   setCategory("");
                   setPage(1);
                 }}
-                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                  category === "" && broadCategory === ""
-                    ? "border-slate-900 bg-slate-900 text-white"
-                    : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
-                }`}
-              >
-                All
-              </button>
-              {broadCategories.map((item) => (
+                className={`inline-flex min-h-[48px] items-center gap-2 rounded-full border px-6 py-2.5 text-sm font-semibold ${BUTTON_POP_CLASS} ${
+                    category === "" && broadCategory === ""
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+                  }`}
+                >
+                  <span aria-hidden="true" className="text-base">
+                    {getCategoryIcon("all")}
+                  </span>
+                  All
+                </button>
+              {broadCategories.filter(isSelectableBroadCategory).map((item) => (
                 <button
                   key={`broad-${item}`}
                   type="button"
@@ -256,12 +391,15 @@ export function PredictionMarketList() {
                     setCategory("");
                     setPage(1);
                   }}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                  className={`inline-flex min-h-[48px] items-center gap-2 rounded-full border px-6 py-2.5 text-sm font-semibold ${BUTTON_POP_CLASS} ${
                     broadCategory === item
                       ? "border-slate-900 bg-slate-900 text-white"
                       : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
                   }`}
                 >
+                  <span aria-hidden="true" className="text-base">
+                    {getCategoryIcon(item)}
+                  </span>
                   {formatBroadCategoryLabel(item)}
                 </button>
               ))}
@@ -276,7 +414,7 @@ export function PredictionMarketList() {
               {trendingCategories.length === 0 ? (
                 <span className="text-xs text-slate-500">No trending data yet.</span>
               ) : (
-                trendingCategories.map((item) => (
+                trendingCategories.filter(isSelectableBroadCategory).map((item) => (
                   <button
                     key={`trend-${item}`}
                     type="button"
@@ -285,12 +423,15 @@ export function PredictionMarketList() {
                       setCategory(item);
                       setPage(1);
                     }}
-                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                    className={`inline-flex min-h-[48px] items-center gap-2 rounded-full border px-6 py-2.5 text-sm font-semibold ${BUTTON_POP_CLASS} ${
                       category === item
                         ? "border-blue-700 bg-blue-700 text-white"
                         : "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300"
                     }`}
                   >
+                    <span aria-hidden="true" className="text-base">
+                      {getCategoryIcon(item)}
+                    </span>
                     {item}
                   </button>
                 ))
@@ -317,7 +458,7 @@ export function PredictionMarketList() {
             className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
           >
             <option value="">All Categories</option>
-            {categories.map((item) => (
+            {categories.filter(isSelectableBroadCategory).map((item) => (
               <option key={item} value={item}>
                 {item}
               </option>
@@ -337,14 +478,27 @@ export function PredictionMarketList() {
               </option>
             ))}
           </select>
+          <label className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm">
+            <input
+              type="checkbox"
+              checked={excludeSensitive}
+              onChange={(event) => {
+                setExcludeSensitive(event.target.checked);
+                setPage(1);
+              }}
+              className="h-4 w-4"
+            />
+            <span>Hide sensitive categories</span>
+          </label>
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onMouseDown={() => triggerHaptic()}
               onClick={() => {
                 setSearch(searchInput.trim());
                 setPage(1);
               }}
-              className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white"
+              className={`${BUTTON_POP_CLASS} rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white`}
             >
               Apply
             </button>
@@ -356,9 +510,10 @@ export function PredictionMarketList() {
                 setCategory("");
                 setBroadCategory("");
                 setSort("closing-soon");
+                setExcludeSensitive(true);
                 setPage(1);
               }}
-              className="rounded-md bg-slate-200 px-3 py-2 text-sm font-medium text-slate-700"
+              className={`${BUTTON_POP_CLASS} rounded-md bg-slate-200 px-3 py-2 text-sm font-medium text-slate-700`}
             >
               Reset
             </button>
@@ -417,10 +572,11 @@ export function PredictionMarketList() {
                         <button
                           type="button"
                           onClick={() => {
+                            triggerHaptic();
                             void submitPick(market.id, outcome.id);
                           }}
                           disabled={Boolean(pendingByMarket[market.id])}
-                          className="rounded-md bg-blue-700 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60"
+                          className={`${BUTTON_POP_CLASS} rounded-md bg-gradient-to-r from-blue-700 to-cyan-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60`}
                         >
                           Pick
                         </button>
@@ -449,7 +605,7 @@ export function PredictionMarketList() {
           type="button"
           onClick={() => setPage((prev) => Math.max(1, prev - 1))}
           disabled={page <= 1}
-          className="rounded-md bg-slate-900 px-3 py-1.5 font-medium text-white disabled:opacity-50"
+          className={`${BUTTON_POP_CLASS} rounded-md bg-slate-900 px-3 py-1.5 font-medium text-white disabled:opacity-50`}
         >
           Previous
         </button>
@@ -460,7 +616,7 @@ export function PredictionMarketList() {
           type="button"
           onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
           disabled={page >= totalPages}
-          className="rounded-md bg-slate-900 px-3 py-1.5 font-medium text-white disabled:opacity-50"
+          className={`${BUTTON_POP_CLASS} rounded-md bg-slate-900 px-3 py-1.5 font-medium text-white disabled:opacity-50`}
         >
           Next
         </button>

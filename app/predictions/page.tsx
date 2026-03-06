@@ -1,7 +1,7 @@
 import { PageShell } from "@/components/ui/PageShell";
 import { PredictionMarketList } from "@/components/predictions/PredictionMarketList";
-import { BackToVenueButton } from "@/components/predictions/BackToVenueButton";
 import { SlotAd } from "@/components/ui/SlotAd";
+import { BackButton } from "@/components/navigation/BackButton";
 
 export default async function PredictionsPage() {
   return (
@@ -10,7 +10,7 @@ export default async function PredictionsPage() {
       description="Browse live Polymarket markets, filter by category, and place picks."
     >
       <div className="space-y-4">
-        <BackToVenueButton />
+        <BackButton label="Back" />
         <SlotAd slot="inline-content" />
         <PredictionMarketList />
         <SlotAd slot="mid-content" />

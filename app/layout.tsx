@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { MobileBottomNav } from "@/components/ui/MobileBottomNav";
+import { LeftHamburgerNav } from "@/components/ui/LeftHamburgerNav";
 import { SlotAd } from "@/components/ui/SlotAd";
 import "./globals.css";
 
@@ -13,22 +13,16 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>
-        <div className="mx-auto min-h-screen max-w-6xl space-y-4 px-4 pb-32 pt-6 sm:px-6 sm:pb-6">
+      <body className="bg-slate-50 touch-manipulation">
+        <LeftHamburgerNav />
+        <div className="relative mx-auto min-h-screen min-w-[320px] max-w-md space-y-4 overflow-hidden px-3 pb-6 pt-6 md:max-w-md">
+          <div className="pointer-events-none absolute -top-20 -right-12 h-48 w-48 rounded-full bg-cyan-300/30 blur-3xl" />
+          <div className="pointer-events-none absolute top-28 -left-16 h-40 w-40 rounded-full bg-blue-300/20 blur-3xl" />
+
           <SlotAd slot="header" />
-
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
-            <div>{children}</div>
-            <aside className="hidden lg:block">
-              <div className="sticky top-4">
-                <SlotAd slot="sidebar" />
-              </div>
-            </aside>
-          </div>
-
+          {children}
           <SlotAd slot="footer" />
         </div>
-        <MobileBottomNav />
       </body>
     </html>
   );

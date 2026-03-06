@@ -57,10 +57,25 @@ type AdminUserRow = {
 type VenueRow = {
   id: string;
   name: string;
+  display_name: string | null;
+  logo_text: string | null;
+  icon_emoji: string | null;
   address: string | null;
   latitude: number;
   longitude: number;
   radius: number;
+};
+
+type GoogleGeocodePayload = {
+  status: string;
+  results?: Array<{
+    geometry?: {
+      location?: {
+        lat?: number;
+        lng?: number;
+      };
+    };
+  }>;
 };
 
 function mapTriviaRow(row: TriviaQuestionRow): TriviaQuestion {
@@ -97,6 +112,9 @@ function mapVenueRow(row: VenueRow): Venue {
   return {
     id: row.id,
     name: row.name,
+    displayName: row.display_name ?? undefined,
+    logoText: row.logo_text ?? undefined,
+    iconEmoji: row.icon_emoji ?? undefined,
     address: row.address ?? undefined,
     latitude: Number(row.latitude),
     longitude: Number(row.longitude),
@@ -113,6 +131,27 @@ function normalizeVenueId(value: string): string {
 }
 
 async function geocodeVenueAddress(address: string): Promise<{ latitude: number; longitude: number }> {
+  const googleApiKey = process.env.GOOGLE_MAPS_API_KEY?.trim();
+  if (googleApiKey) {
+    const geocodeResponse = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${googleApiKey}`
+    );
+    if (geocodeResponse.ok) {
+      const geocodePayload = (await geocodeResponse.json()) as GoogleGeocodePayload;
+      const geocodeLocation = geocodePayload.results?.[0]?.geometry?.location;
+      const googleLatitude = Number(geocodeLocation?.lat);
+      const googleLongitude = Number(geocodeLocation?.lng);
+      if (Number.isFinite(googleLatitude) && Number.isFinite(googleLongitude)) {
+        return { latitude: googleLatitude, longitude: googleLongitude };
+      }
+      if (geocodePayload.status !== "OK" && geocodePayload.status !== "ZERO_RESULTS") {
+        throw new Error(
+          geocodePayload.status ? `Google geocode failed with status: ${geocodePayload.status}.` : "Google geocode request failed."
+        );
+      }
+    }
+  }
+
   const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(address)}`;
   const response = await fetch(url, {
     headers: {
@@ -577,6 +616,11 @@ export async function createAdminVenue(input: {
   address: string;
   radius?: number;
   venueId?: string;
+  latitude?: number;
+  longitude?: number;
+  displayName?: string;
+  logoText?: string;
+  iconEmoji?: string;
 }): Promise<Venue> {
   assertAdminConfigured();
 
@@ -594,7 +638,25 @@ export async function createAdminVenue(input: {
     throw new Error("Radius must be between 25m and 2000m.");
   }
 
-  const { latitude, longitude } = await geocodeVenueAddress(address);
+  const hasLatitude = Number.isFinite(input.latitude);
+  const hasLongitude = Number.isFinite(input.longitude);
+  const latitude = hasLatitude ? Number(input.latitude) : Number.NaN;
+  const longitude = hasLongitude ? Number(input.longitude) : Number.NaN;
+
+  let resolvedLatitude = latitude;
+  let resolvedLongitude = longitude;
+  if (!Number.isFinite(resolvedLatitude) || !Number.isFinite(resolvedLongitude)) {
+    ({ latitude: resolvedLatitude, longitude: resolvedLongitude } = await geocodeVenueAddress(address));
+  }
+
+  if (
+    resolvedLatitude < -90 ||
+    resolvedLatitude > 90 ||
+    resolvedLongitude < -180 ||
+    resolvedLongitude > 180
+  ) {
+    throw new Error("Venue coordinates are outside valid bounds.");
+  }
 
   const baseVenueId = normalizeVenueId(input.venueId?.trim() || name);
   if (!baseVenueId) {
@@ -621,16 +683,92 @@ export async function createAdminVenue(input: {
     .insert({
       id: nextVenueId,
       name,
+      display_name: input.displayName?.trim() || name,
+      logo_text: input.logoText?.trim() || null,
+      icon_emoji: input.iconEmoji?.trim() || null,
       address,
-      latitude,
-      longitude,
+      latitude: resolvedLatitude,
+      longitude: resolvedLongitude,
       radius,
     })
-    .select("id, name, address, latitude, longitude, radius")
+    .select("id, name, display_name, logo_text, icon_emoji, address, latitude, longitude, radius")
     .single<VenueRow>();
 
   if (error || !data) {
     throw new Error(error?.message ?? "Failed to create venue.");
+  }
+
+  return mapVenueRow(data);
+}
+
+export async function updateAdminVenue(input: {
+  id: string;
+  name: string;
+  displayName?: string;
+  logoText?: string;
+  iconEmoji?: string;
+  address: string;
+  radius: number;
+  latitude?: number;
+  longitude?: number;
+}): Promise<Venue> {
+  assertAdminConfigured();
+
+  const id = input.id.trim();
+  if (!id) {
+    throw new Error("Venue id is required.");
+  }
+
+  const name = input.name.trim();
+  const address = input.address.trim();
+  if (!name) {
+    throw new Error("Venue name is required.");
+  }
+  if (!address) {
+    throw new Error("Venue address is required.");
+  }
+
+  const radius = Number.isFinite(input.radius) ? Math.round(input.radius) : Number.NaN;
+  if (!Number.isFinite(radius) || radius < 25 || radius > 2000) {
+    throw new Error("Radius must be between 25m and 2000m.");
+  }
+
+  const hasLatitude = Number.isFinite(input.latitude);
+  const hasLongitude = Number.isFinite(input.longitude);
+  let resolvedLatitude = hasLatitude ? Number(input.latitude) : Number.NaN;
+  let resolvedLongitude = hasLongitude ? Number(input.longitude) : Number.NaN;
+
+  if (!Number.isFinite(resolvedLatitude) || !Number.isFinite(resolvedLongitude)) {
+    ({ latitude: resolvedLatitude, longitude: resolvedLongitude } = await geocodeVenueAddress(address));
+  }
+
+  if (
+    resolvedLatitude < -90 ||
+    resolvedLatitude > 90 ||
+    resolvedLongitude < -180 ||
+    resolvedLongitude > 180
+  ) {
+    throw new Error("Venue coordinates are outside valid bounds.");
+  }
+
+  const { data, error } = await supabaseAdmin!
+    .from("venues")
+    .update({
+      name,
+      display_name: input.displayName?.trim() || name,
+      logo_text: input.logoText?.trim() || null,
+      icon_emoji: input.iconEmoji?.trim() || null,
+      address,
+      latitude: resolvedLatitude,
+      longitude: resolvedLongitude,
+      radius,
+    })
+    .eq("id", id)
+    .select("id, name, display_name, logo_text, icon_emoji, address, latitude, longitude, radius")
+    .single<VenueRow>();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Failed to update venue.");
   }
 
   return mapVenueRow(data);

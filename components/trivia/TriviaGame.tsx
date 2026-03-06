@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getUserId } from "@/lib/storage";
 import { getVenueId } from "@/lib/storage";
@@ -33,9 +33,117 @@ type SubmitResponse = {
 
 const QUESTION_TIME_LIMIT_SECONDS = 10;
 const POINTS_PER_CORRECT = 10;
+const BUTTON_POP_CLASS =
+  "transition-all duration-150 transform active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
+const BACK_TO_VENUE_CLASS =
+  "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-blue-300 bg-gradient-to-r from-blue-700 to-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 active:scale-95 active:brightness-90";
+const CORRECT_EMOJIS = ["🎉", "🎊", "🎈", "✨", "🌈", "🥳", "💃", "🕺", "🎵", "🏆"];
+const INCORRECT_EMOJIS = [
+  "😢",
+  "😞",
+  "😔",
+  "😟",
+  "😕",
+  "😖",
+  "💔",
+  "🙈",
+  "😭",
+  "🫠",
+  "☔",
+  "😩",
+  "☹️",
+  "🥺",
+  "😥",
+];
+const CORRECT_POINT_PULSE_DURATION_MS = 900;
+const POINT_FLOW_DURATION_MS = 900;
+const RAIN_ITEM_COUNT = 14;
+const RAIN_SIZE_OPTIONS = ["text-4xl", "text-5xl", "text-6xl", "text-7xl"];
+const FIREWORK_ITEM_COUNT = RAIN_ITEM_COUNT;
+const FIREWORK_BURST_DURATION_MIN_MS = 1500;
+const FIREWORK_BURST_DURATION_MAX_MS = 2500;
+const CORRECT_FEEDBACK_FLASH_DURATION_MS = 1300;
+const INCORRECT_FEEDBACK_FLASH_DURATION_MS = 1300;
+const FIREWORK_HIDE_DELAY_MS = 2700;
+const RAIN_HIDE_DELAY_MS = 2700;
+
+function triggerHaptic(pattern: number | number[] = 12) {
+  if (typeof navigator === "undefined" || !("vibrate" in navigator)) return;
+  navigator.vibrate(pattern);
+}
+
+type FeedbackFlash = "correct" | "incorrect" | null;
+
+type RainToken = {
+  id: string;
+  emoji: string;
+  left: number;
+  drift: number;
+  delayMs: number;
+  sizeClass: string;
+  durationMs: number;
+};
+
+type FireworkToken = {
+  id: string;
+  emoji: string;
+  left: number;
+  top: number;
+  burstX: number;
+  burstY: number;
+  delayMs: number;
+  durationMs: number;
+  sizeClass: string;
+};
+
+type PointsFlowToken = {
+  id: string;
+  label: string;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  delayMs: number;
+  durationMs: number;
+};
+
+function randomInt(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randomEmoji(list: readonly string[]) {
+  return list[Math.floor(Math.random() * list.length)] ?? list[0] ?? "🎉";
+}
+
+function createRainToken(pool: readonly string[]): RainToken {
+  return {
+    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    emoji: randomEmoji(pool),
+    left: randomInt(0, 95),
+    drift: randomInt(-48, 48),
+    delayMs: randomInt(0, 250),
+    durationMs: randomInt(1500, 2500),
+    sizeClass: RAIN_SIZE_OPTIONS[randomInt(0, RAIN_SIZE_OPTIONS.length - 1)] ?? "text-5xl",
+  };
+}
+
+function createFireworkToken(pool: readonly string[]): FireworkToken {
+  return {
+    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    emoji: randomEmoji(pool),
+    left: randomInt(0, 95),
+    top: randomInt(8, 30),
+    burstX: randomInt(-48, 48),
+    burstY: randomInt(55, 115),
+    delayMs: randomInt(0, 180),
+    durationMs: randomInt(FIREWORK_BURST_DURATION_MIN_MS, FIREWORK_BURST_DURATION_MAX_MS),
+    sizeClass: RAIN_SIZE_OPTIONS[randomInt(0, RAIN_SIZE_OPTIONS.length - 1)] ?? "text-4xl",
+  };
+}
 
 export function TriviaGame({ questions: initialQuestions = [] }: { questions?: TriviaQuestion[] }) {
   const router = useRouter();
+  const gameRootRef = useRef<HTMLDivElement>(null);
   const [questions, setQuestions] = useState<TriviaQuestion[]>(initialQuestions);
   const [loadingQuestions, setLoadingQuestions] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -51,6 +159,19 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   const [isRoundStarted, setIsRoundStarted] = useState(false);
   const [secondsRemaining, setSecondsRemaining] = useState(QUESTION_TIME_LIMIT_SECONDS);
   const [roundTotalPoints, setRoundTotalPoints] = useState<number | null>(null);
+  const [roundStartPoints, setRoundStartPoints] = useState<number | null>(null);
+  const [rewardPulse, setRewardPulse] = useState("");
+  const [showRewardPulse, setShowRewardPulse] = useState(false);
+  const [feedbackFlash, setFeedbackFlash] = useState<FeedbackFlash>(null);
+  const [rainEmojis, setRainEmojis] = useState<RainToken[]>([]);
+  const [fireworks, setFireworks] = useState<FireworkToken[]>([]);
+  const [pointFlows, setPointFlows] = useState<PointsFlowToken[]>([]);
+
+  const flashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rainTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fireworkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flowTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [currentUserPoints, setCurrentUserPoints] = useState<number | null>(null);
 
   const question = questions[index] ?? null;
   const finished = index >= questions.length;
@@ -59,6 +180,21 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     return Math.round((correctAnswers / attempted) * 100);
   }, [attempted, correctAnswers]);
   const pointsWon = correctAnswers * POINTS_PER_CORRECT;
+  const estimatedRoundTotal = useMemo(() => {
+    if (roundTotalPoints !== null) {
+      return roundTotalPoints;
+    }
+    if (currentUserPoints === null) {
+      return null;
+    }
+    return currentUserPoints + pointsWon;
+  }, [currentUserPoints, pointsWon, roundTotalPoints]);
+  const roundDelta = useMemo(() => {
+    if (roundStartPoints === null || estimatedRoundTotal === null) {
+      return pointsWon;
+    }
+    return estimatedRoundTotal - roundStartPoints;
+  }, [estimatedRoundTotal, pointsWon, roundStartPoints]);
 
   const loadQuota = useCallback(async () => {
     const userId = getUserId() ?? "";
@@ -72,6 +208,116 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
       setQuota(payload.quota ?? null);
     }
   }, []);
+
+  const loadCurrentUserPoints = useCallback(async () => {
+    const userId = getUserId() ?? "";
+    const venueId = getVenueId() ?? "";
+    if (!userId || !venueId) {
+      setCurrentUserPoints(null);
+      return null;
+    }
+
+    const response = await fetch(`/api/leaderboard?venue=${encodeURIComponent(venueId)}`, { cache: "no-store" });
+    const payload = (await response.json()) as {
+      ok: boolean;
+      entries?: Array<{ userId: string; points: number }>;
+    };
+    if (!payload.ok) {
+      setCurrentUserPoints(null);
+      return null;
+    }
+
+    const currentUserEntry = (payload.entries ?? []).find((entry) => entry.userId === userId);
+    if (!currentUserEntry) {
+      setCurrentUserPoints(null);
+      return null;
+    }
+
+    setCurrentUserPoints(currentUserEntry.points);
+    setRoundStartPoints((previous) => previous ?? currentUserEntry.points);
+    return currentUserEntry.points;
+  }, []);
+
+  const triggerPointsFlow = useCallback((optionIndex: number) => {
+    if (typeof document === "undefined" || !gameRootRef.current) {
+      return;
+    }
+
+    const source = gameRootRef.current.querySelector<HTMLElement>(
+      `[data-answer-token="${question?.id}-${optionIndex}"]`
+    );
+    const destination = document.getElementById("tp-points-pill");
+    if (!source || !destination) {
+      return;
+    }
+
+    const sourceRect = source.getBoundingClientRect();
+    const destinationRect = destination.getBoundingClientRect();
+    const rootRect = gameRootRef.current.getBoundingClientRect();
+
+    const fromX = sourceRect.left - rootRect.left + sourceRect.width / 2;
+    const fromY = sourceRect.top - rootRect.top + sourceRect.height / 2;
+    const toX = destinationRect.left - rootRect.left + destinationRect.width / 2;
+    const toY = destinationRect.top - rootRect.top + destinationRect.height / 2;
+
+    const flow = Array.from({ length: 1 }, () => ({
+      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      label: "+10",
+      fromX,
+      fromY,
+      toX,
+      toY,
+      delayMs: randomInt(0, 20),
+      durationMs: POINT_FLOW_DURATION_MS,
+    }));
+
+    setPointFlows(flow);
+    if (flowTimeoutRef.current) {
+      window.clearTimeout(flowTimeoutRef.current);
+    }
+    flowTimeoutRef.current = window.setTimeout(() => {
+      setPointFlows([]);
+    }, POINT_FLOW_DURATION_MS + 150);
+  }, [question?.id]);
+
+  const triggerCelebration = useCallback(
+    (isCorrect: boolean) => {
+      setFeedbackFlash(isCorrect ? "correct" : "incorrect");
+      if (isCorrect) {
+        setFireworks(
+          Array.from({ length: FIREWORK_ITEM_COUNT }, () => createFireworkToken(CORRECT_EMOJIS))
+        );
+        setRainEmojis([]);
+      } else {
+        setRainEmojis(Array.from({ length: RAIN_ITEM_COUNT }, () => createRainToken(INCORRECT_EMOJIS)));
+        setFireworks([]);
+      }
+
+      if (flashTimeoutRef.current) {
+        window.clearTimeout(flashTimeoutRef.current);
+      }
+      if (fireworkTimeoutRef.current) {
+        window.clearTimeout(fireworkTimeoutRef.current);
+      }
+      if (rainTimeoutRef.current) {
+        window.clearTimeout(rainTimeoutRef.current);
+      }
+
+      flashTimeoutRef.current = window.setTimeout(() => {
+        setFeedbackFlash(null);
+      }, isCorrect ? CORRECT_FEEDBACK_FLASH_DURATION_MS : INCORRECT_FEEDBACK_FLASH_DURATION_MS);
+      if (isCorrect) {
+        fireworkTimeoutRef.current = window.setTimeout(() => {
+          setFireworks([]);
+        }, FIREWORK_HIDE_DELAY_MS);
+      } else {
+        rainTimeoutRef.current = window.setTimeout(() => {
+          setRainEmojis([]);
+        }, RAIN_HIDE_DELAY_MS);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     const loadQuestions = async () => {
@@ -91,7 +337,10 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         setFeedback("");
         setFeedbackKind(null);
         setRevealedCorrectAnswer(null);
+        setRoundStartPoints(null);
         await loadQuota();
+        const startingPoints = await loadCurrentUserPoints();
+        setRoundStartPoints(startingPoints);
       } catch (error) {
         setLoadError(error instanceof Error ? error.message : "Failed to load trivia.");
       } finally {
@@ -100,7 +349,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     };
 
     void loadQuestions();
-  }, [loadQuota, router]);
+  }, [loadQuota, loadCurrentUserPoints, router]);
 
   useEffect(() => {
     if (!isRoundStarted || finished || selectedAnswer !== null) {
@@ -110,91 +359,142 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     setSecondsRemaining(QUESTION_TIME_LIMIT_SECONDS);
   }, [isRoundStarted, index, finished, selectedAnswer]);
 
-  const chooseAnswer = useCallback(async (answerIndex: number) => {
-    if (!question || isSubmitting || selectedAnswer !== null) {
-      return;
-    }
+  const chooseAnswer = useCallback(
+    async (answerIndex: number) => {
+      const submittingUserId = getUserId() ?? "";
 
-    setSelectedAnswer(answerIndex);
-    setIsSubmitting(true);
-    setFeedback("");
-    setFeedbackKind(null);
-    setRevealedCorrectAnswer(null);
-
-    // Optimistic reveal for smoother UX while server save runs.
-    const localCorrectAnswer = question.correctAnswer;
-    const localWasCorrect = answerIndex === localCorrectAnswer;
-    setRevealedCorrectAnswer(localCorrectAnswer);
-    if (answerIndex < 0) {
-      setFeedback(`Time's up. Correct answer: ${question.options[localCorrectAnswer]}.`);
-      setFeedbackKind("timeout");
-    } else if (localWasCorrect) {
-      setFeedback("Correct! +10 points added to your profile.");
-      setFeedbackKind("correct");
-    } else {
-      setFeedback(`Incorrect. Correct answer: ${question.options[localCorrectAnswer]}.`);
-      setFeedbackKind("incorrect");
-    }
-
-    try {
-      const response = await fetch("/api/trivia", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: getUserId() ?? undefined,
-          questionId: question.id,
-          answer: answerIndex,
-          timeElapsed: 0,
-        }),
-      });
-
-      const payload = (await response.json()) as SubmitResponse;
-      if (!payload.ok || !payload.result) {
-        throw new Error(payload.error ?? "Failed to submit answer.");
-      }
-
-      if (payload.result.alreadyAnswered) {
-        setFeedback("You already answered this question earlier. Skipping scoring.");
-        setFeedbackKind(null);
-        setRevealedCorrectAnswer(payload.result.correctAnswer);
-        void loadQuota();
+      if (!question || isSubmitting || selectedAnswer !== null) {
         return;
       }
 
-      const wasCorrect = payload.result.isCorrect;
-      setAttempted((value) => value + 1);
-      if (wasCorrect) {
-        setCorrectAnswers((value) => value + 1);
-        if (payload.result.saved) {
-          window.dispatchEvent(
-            new CustomEvent("tp:points-updated", {
-              detail: { source: "trivia", delta: 10 },
-            })
-          );
-        }
+      setSelectedAnswer(answerIndex);
+      setIsSubmitting(true);
+      setFeedback("");
+      setFeedbackKind(null);
+      setRevealedCorrectAnswer(null);
+
+      const localCorrectAnswer = question.correctAnswer;
+      const localWasCorrect = answerIndex === localCorrectAnswer;
+      setRevealedCorrectAnswer(localCorrectAnswer);
+
+      if (answerIndex < 0) {
+        setFeedback(`Time's up. Correct answer: ${question.options[localCorrectAnswer]}.`);
+        setFeedbackKind("timeout");
+        setRewardPulse("⚡ Time out, keep going");
+        setShowRewardPulse(true);
+        triggerCelebration(false);
+      } else if (localWasCorrect) {
+        setFeedback("Correct! +10 points added to your profile.");
+        setFeedbackKind("correct");
+        setRewardPulse("🎉 Correct +10");
+        setShowRewardPulse(true);
+        triggerHaptic([20, 50, 20]);
+        triggerCelebration(true);
+      } else {
+        setFeedback(`Incorrect. Correct answer: ${question.options[localCorrectAnswer]}.`);
+        setFeedbackKind("incorrect");
+        triggerCelebration(false);
       }
 
-      if (payload.result.correctAnswer !== localCorrectAnswer) {
-        setRevealedCorrectAnswer(payload.result.correctAnswer);
-        if (answerIndex < 0) {
-          setFeedback(`Time's up. Correct answer: ${question.options[payload.result.correctAnswer]}.`);
-          setFeedbackKind("timeout");
-        } else if (wasCorrect) {
+      try {
+        const response = await fetch("/api/trivia", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: submittingUserId || undefined,
+            questionId: question.id,
+            answer: answerIndex,
+            timeElapsed: 0,
+          }),
+        });
+
+        const payload = (await response.json()) as SubmitResponse;
+        if (!payload.ok || !payload.result) {
+          throw new Error(payload.error ?? "Failed to submit answer.");
+        }
+
+        if (payload.result.alreadyAnswered) {
+          setFeedback("You already answered this question earlier. Skipping scoring.");
+          setFeedbackKind(null);
+          setRevealedCorrectAnswer(payload.result.correctAnswer);
+          void loadQuota();
+          void loadCurrentUserPoints();
+          return;
+        }
+
+        const wasCorrect = payload.result.isCorrect;
+        setAttempted((value) => value + 1);
+
+        if (payload.result.correctAnswer !== localCorrectAnswer) {
+          setRevealedCorrectAnswer(payload.result.correctAnswer);
+        }
+
+        if (wasCorrect) {
+          setRewardPulse(payload.result.saved ? "🔥 +10 points saved" : "🔥 +10 points recorded");
+          setShowRewardPulse(true);
+          triggerHaptic([35, 35, 35]);
           setFeedback("Correct! +10 points added to your profile.");
           setFeedbackKind("correct");
+          setCorrectAnswers((value) => value + 1);
+          triggerCelebration(true);
+          triggerPointsFlow(answerIndex);
+          if (submittingUserId) {
+            setCurrentUserPoints((value) => (value ?? 0) + POINTS_PER_CORRECT);
+            window.dispatchEvent(
+              new CustomEvent("tp:points-updated", {
+                detail: { source: "trivia", delta: POINTS_PER_CORRECT },
+              })
+            );
+          }
         } else {
           setFeedback(`Incorrect. Correct answer: ${question.options[payload.result.correctAnswer]}.`);
           setFeedbackKind("incorrect");
+          setRewardPulse("🙌 Nice try");
+          setShowRewardPulse(true);
+          triggerHaptic([35, 35]);
+          triggerCelebration(false);
         }
+
+        void loadQuota();
+        void loadCurrentUserPoints();
+      } catch (error) {
+        setFeedback(error instanceof Error ? error.message : "Could not submit answer.");
+        setFeedbackKind(null);
+      } finally {
+        setIsSubmitting(false);
       }
-      void loadQuota();
-    } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "Could not submit answer.");
-      setFeedbackKind(null);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [isSubmitting, loadQuota, question, selectedAnswer]);
+    },
+    [isSubmitting, loadQuota, loadCurrentUserPoints, question, selectedAnswer, triggerCelebration, triggerPointsFlow]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (flashTimeoutRef.current) {
+        window.clearTimeout(flashTimeoutRef.current);
+      }
+      if (rainTimeoutRef.current) {
+        window.clearTimeout(rainTimeoutRef.current);
+      }
+      if (fireworkTimeoutRef.current) {
+        window.clearTimeout(fireworkTimeoutRef.current);
+      }
+      if (flowTimeoutRef.current) {
+        window.clearTimeout(flowTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!showRewardPulse) return;
+
+    const timeout = window.setTimeout(() => {
+      setShowRewardPulse(false);
+      setRewardPulse("");
+    }, CORRECT_POINT_PULSE_DURATION_MS);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [showRewardPulse]);
 
   useEffect(() => {
     if (!isRoundStarted || finished || selectedAnswer !== null || isSubmitting) {
@@ -216,6 +516,10 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   }, [isRoundStarted, finished, selectedAnswer, isSubmitting, secondsRemaining, chooseAnswer]);
 
   const nextQuestion = () => {
+    setFeedbackFlash(null);
+    setRainEmojis([]);
+    setFireworks([]);
+    setPointFlows([]);
     setSelectedAnswer(null);
     setFeedback("");
     setFeedbackKind(null);
@@ -256,8 +560,17 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
   if (loadingQuestions) {
     return (
-      <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-        Loading trivia questions...
+      <div className="space-y-4 rounded-md border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
+        <div className="relative mx-auto h-20 w-20">
+          <div className="absolute inset-0 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
+          <div className="absolute inset-2 flex items-center justify-center rounded-full bg-slate-900 text-xs font-black tracking-[0.2em] text-white">
+            HC
+          </div>
+        </div>
+        <div className="text-center">
+          <p className="text-lg font-semibold text-slate-900">Hightop Challenge</p>
+          <p>Loading trivia questions...</p>
+        </div>
       </div>
     );
   }
@@ -272,19 +585,35 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
   if (finished) {
     const venueId = getVenueId() ?? "";
+    const totalAfterRound = roundTotalPoints ?? estimatedRoundTotal ?? currentUserPoints ?? 0;
+    const roundGain = Math.max(0, roundDelta);
     return (
-      <div className="space-y-3 rounded-md border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900">
-        <p className="font-semibold">Round complete</p>
-        <p>
-          Final score: {correctAnswers}/{attempted} ({accuracy}%)
-        </p>
-        <p>Points won this round: +{pointsWon}</p>
-        <p>
-          Total points after round:{" "}
-          {roundTotalPoints === null ? "Updating..." : roundTotalPoints}
-        </p>
+      <div className="rounded-xl border border-emerald-300 bg-gradient-to-br from-emerald-50 to-cyan-50 p-4">
+        <div className="rounded-lg border border-emerald-200 bg-white p-3 shadow-sm">
+          <p className="mb-2 text-sm font-semibold tracking-wide text-emerald-800">Round complete 🎉</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-lg bg-slate-50 p-3">
+              <p className="text-xs uppercase text-slate-500">Scoreboard</p>
+              <p className="text-lg font-bold text-slate-900">
+                {correctAnswers}/{attempted}
+              </p>
+              <p className="text-sm text-slate-600">{accuracy}% accuracy</p>
+            </div>
+            <div className="rounded-lg bg-slate-50 p-3">
+              <p className="text-xs uppercase text-slate-500">Round reward</p>
+              <p className="text-lg font-bold text-emerald-700">+{pointsWon} points</p>
+              <p className="text-xs text-emerald-700">Fireworks unlocked: {correctAnswers}</p>
+            </div>
+            <div className="rounded-lg bg-slate-50 p-3 sm:col-span-2">
+              <p className="text-xs uppercase text-slate-500">Total points</p>
+              <p className="text-xl font-bold text-slate-900">{totalAfterRound}</p>
+              <p className="text-sm text-slate-600">Round gain: +{roundGain}</p>
+            </div>
+          </div>
+        </div>
         <button
           type="button"
+          onMouseDown={() => triggerHaptic(14)}
           onClick={() => {
             if (venueId) {
               router.push(`/venue/${venueId}`);
@@ -292,9 +621,15 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
             }
             router.push("/");
           }}
-          className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white"
+          className={`${BUTTON_POP_CLASS} ${BACK_TO_VENUE_CLASS} mt-3`}
         >
-          Back to Venue Page
+          <span
+            aria-hidden="true"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs"
+          >
+            ←
+          </span>
+          Back to Venue Home Page
         </button>
       </div>
     );
@@ -315,11 +650,13 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         <p>You will have 10 seconds to answer each question once the round begins.</p>
         <button
           type="button"
+          onMouseDown={() => triggerHaptic(20)}
           onClick={() => {
             setIsRoundStarted(true);
             setSecondsRemaining(QUESTION_TIME_LIMIT_SECONDS);
+            setRoundStartPoints(currentUserPoints ?? null);
           }}
-          className="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white"
+          className={`${BUTTON_POP_CLASS} inline-flex min-h-[48px] w-full items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-blue-200`}
         >
           Yes, Start Trivia
         </button>
@@ -328,7 +665,76 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   }
 
   return (
-    <div className="space-y-4">
+    <div ref={gameRootRef} className="relative space-y-4 overflow-hidden">
+      {feedbackFlash ? (
+        <div
+          aria-hidden="true"
+          className={`pointer-events-none absolute inset-0 z-10 ${
+            feedbackFlash === "correct" ? "bg-emerald-500/35" : "bg-rose-500/35"
+          } transition-opacity duration-300`}
+        />
+      ) : null}
+
+      {rainEmojis.length > 0 ? (
+        <div className="pointer-events-none absolute inset-0 z-20">
+          {rainEmojis.map((item) => (
+            <span
+              key={item.id}
+              className={`absolute top-[-20px] animate-tp-rain ${item.sizeClass} font-black`}
+              style={{
+                left: `${item.left}%`,
+                animationDelay: `${item.delayMs}ms`,
+                animationDuration: `${item.durationMs}ms`,
+                ["--rain-drift" as string]: `${item.drift}px`,
+              }}
+            >
+              {item.emoji}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      {fireworks.length > 0 ? (
+        <div className="pointer-events-none absolute inset-0 z-30">
+          {fireworks.map((item) => (
+            <span
+              key={item.id}
+              className={`absolute top-[-20px] animate-tp-rain ${item.sizeClass} font-black text-emerald-500`}
+              style={{
+                left: `${item.left}%`,
+                top: `${item.top}%`,
+                animationDelay: `${item.delayMs}ms`,
+                animationDuration: `${item.durationMs}ms`,
+                ["--rain-drift" as string]: `${item.burstX}px`,
+              }}
+            >
+              {item.emoji}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      {pointFlows.length > 0 ? (
+        <div className="pointer-events-none absolute inset-0 z-40">
+          {pointFlows.map((item) => (
+            <span
+              key={item.id}
+              className="absolute text-2xl font-black text-emerald-600 animate-tp-points-flow"
+              style={{
+                left: `${item.fromX}px`,
+                top: `${item.fromY}px`,
+                animationDelay: `${item.delayMs}ms`,
+                animationDuration: `${item.durationMs}ms`,
+                ["--flow-x" as string]: `${item.toX - item.fromX}px`,
+                ["--flow-y" as string]: `${item.toY - item.fromY}px`,
+              }}
+            >
+              {item.label}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
       {quota ? (
         <div className="space-y-1 rounded-md border border-slate-200 bg-slate-50 p-3">
           <div className="flex items-center justify-between text-xs font-medium text-slate-700">
@@ -351,6 +757,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
           ) : null}
         </div>
       ) : null}
+
       <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
         <div className="flex items-center justify-between gap-3">
           <span>
@@ -360,15 +767,18 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         </div>
         <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-200">
           <div
-            className={`h-full rounded-full transition-all ${
-              secondsRemaining <= 3 ? "bg-rose-500" : "bg-blue-600"
-            }`}
+            className={`h-full rounded-full transition-all ${secondsRemaining <= 3 ? "bg-rose-500" : "bg-blue-600"}`}
             style={{ width: `${Math.max(0, (secondsRemaining / QUESTION_TIME_LIMIT_SECONDS) * 100)}%` }}
           />
         </div>
       </div>
 
       <div className="space-y-2">
+        {showRewardPulse ? (
+          <div className="tp-pop-in rounded-lg border border-blue-200 bg-blue-50 p-2 text-sm font-bold text-blue-700">
+            {rewardPulse}
+          </div>
+        ) : null}
         <h2 className="text-base font-semibold text-slate-900">{question.question}</h2>
         <div className="space-y-2">
           {question.options.map((option, optionIndex) => {
@@ -380,11 +790,13 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
               <button
                 key={`${question.id}-${optionIndex}`}
                 type="button"
+                data-answer-token={`${question.id}-${optionIndex}`}
+                onMouseDown={() => triggerHaptic()}
                 onClick={() => {
                   void chooseAnswer(optionIndex);
                 }}
                 disabled={selectedAnswer !== null || isSubmitting || secondsRemaining <= 0}
-                className={`w-full rounded-md border px-3 py-2 text-left text-sm transition ${
+                className={`${BUTTON_POP_CLASS} min-h-[52px] w-full rounded-md border px-3 py-2 text-left text-sm ${
                   isRevealedCorrect
                     ? "border-emerald-600 bg-emerald-600 text-white"
                     : isSelectedWrong
@@ -417,9 +829,10 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
       <button
         type="button"
+        onMouseDown={() => triggerHaptic(14)}
         onClick={nextQuestion}
         disabled={selectedAnswer === null || isSubmitting}
-        className="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        className={`${BUTTON_POP_CLASS} inline-flex min-h-[44px] min-w-[120px] items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-blue-200 disabled:opacity-60`}
       >
         Next Question
       </button>

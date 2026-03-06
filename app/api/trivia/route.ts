@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getTriviaQuestions, submitTriviaAnswer } from "@/lib/trivia";
+import { requireAdminAuth } from "@/lib/adminAuth";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -24,11 +25,14 @@ export async function POST(request: Request) {
       );
     }
 
+    const adminAuth = await requireAdminAuth(request);
+
     const result = await submitTriviaAnswer({
       userId: body.userId,
       questionId: body.questionId,
       answer: body.answer,
       timeElapsed: body.timeElapsed ?? 0,
+      forceAdminBypass: adminAuth.ok,
     });
 
     return NextResponse.json({ ok: true, result });

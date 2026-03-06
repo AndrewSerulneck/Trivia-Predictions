@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { DEFAULT_VENUE_BY_ID } from "@/lib/defaultVenues";
 
 type CreateProfileBody = {
   username?: string;
@@ -13,36 +14,6 @@ type UserRow = {
   venue_id: string;
   points: number;
   created_at: string;
-};
-
-const DEFAULT_VENUES: Record<
-  string,
-  { id: string; name: string; address: string; latitude: number; longitude: number; radius: number }
-> = {
-  "venue-downtown": {
-    id: "venue-downtown",
-    name: "Downtown Sports Bar",
-    address: "Downtown Manhattan, New York, NY",
-    latitude: 40.712776,
-    longitude: -74.005974,
-    radius: 100,
-  },
-  "venue-uptown": {
-    id: "venue-uptown",
-    name: "Uptown Taproom",
-    address: "Uptown Manhattan, New York, NY",
-    latitude: 40.73061,
-    longitude: -73.935242,
-    radius: 100,
-  },
-  "venue-riverside": {
-    id: "venue-riverside",
-    name: "Riverside Grill",
-    address: "Midtown West, New York, NY",
-    latitude: 40.758896,
-    longitude: -73.98513,
-    radius: 100,
-  },
 };
 
 function getBearerToken(request: Request): string | null {
@@ -81,22 +52,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Venue is required." }, { status: 400 });
   }
 
-  // Ensure default demo venues are present when selected from public links.
-  const defaultVenue = DEFAULT_VENUES[venueId];
+  // Ensure default demo venues are present when selected from public links,
+  // but never overwrite an existing venue profile customized by admin.
+  const defaultVenue = DEFAULT_VENUE_BY_ID[venueId];
   if (defaultVenue) {
-    const { error: upsertVenueError } = await supabaseAdmin.from("venues").upsert(
-      {
+    const { data: existingVenue, error: existingVenueError } = await supabaseAdmin
+      .from("venues")
+      .select("id")
+      .eq("id", defaultVenue.id)
+      .maybeSingle();
+
+    if (existingVenueError) {
+      return NextResponse.json({ ok: false, error: existingVenueError.message }, { status: 500 });
+    }
+
+    if (!existingVenue) {
+      const { error: insertVenueError } = await supabaseAdmin.from("venues").insert({
         id: defaultVenue.id,
         name: defaultVenue.name,
         address: defaultVenue.address,
         latitude: defaultVenue.latitude,
         longitude: defaultVenue.longitude,
         radius: defaultVenue.radius,
-      },
-      { onConflict: "id" }
-    );
-    if (upsertVenueError) {
-      return NextResponse.json({ ok: false, error: upsertVenueError.message }, { status: 500 });
+      });
+
+      if (insertVenueError) {
+        return NextResponse.json({ ok: false, error: insertVenueError.message }, { status: 500 });
+      }
     }
   }
 

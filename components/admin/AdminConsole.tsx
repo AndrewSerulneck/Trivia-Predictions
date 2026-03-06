@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { ensureAnonymousSession } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import type { AdSlot, Advertisement, TriviaQuestion, Venue } from "@/types";
+import { getVenueDisplayName } from "@/lib/venueDisplay";
 
 const AD_SLOTS: AdSlot[] = [
   "header",
@@ -13,6 +15,7 @@ const AD_SLOTS: AdSlot[] = [
   "leaderboard-sidebar",
   "footer",
 ];
+const ADDRESS_LOOKUP_DEBOUNCE_MS = 250;
 
 type LoadState = "idle" | "loading" | "error";
 type AdminAdsDebugSnapshot = {
@@ -54,10 +57,16 @@ type AdminCredentials = {
   username: string;
   password: string;
 };
+type AdminAddressSuggestion = {
+  label: string;
+  latitude: number;
+  longitude: number;
+};
 type AdminSection =
   | "ad-debug"
   | "prediction-settlement"
   | "venue-users"
+  | "venue-manage"
   | "venue-create"
   | "trivia-create"
   | "trivia-list"
@@ -66,6 +75,7 @@ type AdminSection =
 
 const ADMIN_SECTION_OPTIONS: Array<{ id: AdminSection; label: string }> = [
   { id: "venue-users", label: "Venue User Management" },
+  { id: "venue-manage", label: "Venue Profile Management" },
   { id: "venue-create", label: "Create Venue" },
   { id: "trivia-create", label: "Create Trivia Question" },
   { id: "trivia-list", label: "Trivia Questions" },
@@ -144,6 +154,27 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
   const [newVenueId, setNewVenueId] = useState("");
   const [creatingVenue, setCreatingVenue] = useState(false);
   const [venueCreateMessage, setVenueCreateMessage] = useState("");
+  const [selectedManagedVenueId, setSelectedManagedVenueId] = useState(() => venues[0]?.id ?? "");
+  const [editingVenueId, setEditingVenueId] = useState<string | null>(null);
+  const [editVenueName, setEditVenueName] = useState("");
+  const [editVenueDisplayName, setEditVenueDisplayName] = useState("");
+  const [editVenueLogoText, setEditVenueLogoText] = useState("");
+  const [editVenueIconEmoji, setEditVenueIconEmoji] = useState("");
+  const [editVenueAddress, setEditVenueAddress] = useState("");
+  const [editVenueLatitude, setEditVenueLatitude] = useState("");
+  const [editVenueLongitude, setEditVenueLongitude] = useState("");
+  const [editVenueRadius, setEditVenueRadius] = useState(100);
+  const [venueEditMessage, setVenueEditMessage] = useState("");
+  const [addressSuggestions, setAddressSuggestions] = useState<AdminAddressSuggestion[]>([]);
+  const [isAddressLookupLoading, setIsAddressLookupLoading] = useState(false);
+  const [selectedAddressSuggestion, setSelectedAddressSuggestion] = useState<AdminAddressSuggestion | null>(null);
+  const [editAddressSuggestions, setEditAddressSuggestions] = useState<AdminAddressSuggestion[]>([]);
+  const [isEditAddressLookupLoading, setIsEditAddressLookupLoading] = useState(false);
+  const addressSuggestionsCacheRef = useRef<Map<string, AdminAddressSuggestion[]>>(new Map());
+  const addressLookupDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const addressLookupRequestId = useRef(0);
+  const editAddressLookupDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const editAddressLookupRequestId = useRef(0);
 
   const parsedOptions = useMemo(
     () => optionsText.split(",").map((item) => item.trim()).filter(Boolean),
@@ -159,6 +190,17 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
   }, [venues]);
 
   useEffect(() => {
+    return () => {
+      if (addressLookupDebounceRef.current) {
+        clearTimeout(addressLookupDebounceRef.current);
+      }
+      if (editAddressLookupDebounceRef.current) {
+        clearTimeout(editAddressLookupDebounceRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (availableVenues.length === 0) {
       if (selectedVenueUserId) {
         setSelectedVenueUserId("");
@@ -169,6 +211,19 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       setSelectedVenueUserId(availableVenues[0].id);
     }
   }, [availableVenues, selectedVenueUserId]);
+
+  useEffect(() => {
+    if (availableVenues.length === 0) {
+      if (selectedManagedVenueId) {
+        setSelectedManagedVenueId("");
+      }
+      setEditingVenueId(null);
+      return;
+    }
+    if (!availableVenues.some((venue) => venue.id === selectedManagedVenueId)) {
+      setSelectedManagedVenueId(availableVenues[0].id);
+    }
+  }, [availableVenues, selectedManagedVenueId]);
 
   const adminFetch = useCallback(async (input: RequestInfo | URL, init?: RequestInit) => {
     const headers = new Headers(init?.headers);
@@ -185,6 +240,159 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       headers,
     });
   }, [accessToken, adminCredentials]);
+
+  const requestAddressSuggestions = useCallback(
+    async (query: string) => {
+      const safeQuery = query.trim().replace(/\s+/g, " ");
+      if (safeQuery.length < 3) {
+        return [] as AdminAddressSuggestion[];
+      }
+
+      const normalizedQuery = safeQuery.toLowerCase();
+      const cachedSuggestions = addressSuggestionsCacheRef.current.get(normalizedQuery);
+      if (cachedSuggestions) {
+        return cachedSuggestions;
+      }
+
+      const response = await adminFetch(
+        `/api/admin/places?q=${encodeURIComponent(safeQuery)}&limit=8&provider=google`,
+        { cache: "no-store" }
+      );
+      const payload = (await response.json()) as {
+        ok: boolean;
+        suggestions?: AdminAddressSuggestion[];
+        error?: string;
+      };
+      if (!payload.ok) {
+        throw new Error(payload.error ?? "Unable to load address suggestions.");
+      }
+      const suggestions = payload.suggestions ?? [];
+      addressSuggestionsCacheRef.current.set(normalizedQuery, suggestions);
+      return suggestions;
+    },
+    [adminFetch]
+  );
+
+  const loadAddressSuggestions = useCallback(
+    async (query: string) => {
+      const requestId = ++addressLookupRequestId.current;
+      setIsAddressLookupLoading(true);
+      try {
+        const suggestions = await requestAddressSuggestions(query);
+        if (requestId !== addressLookupRequestId.current) {
+          return;
+        }
+        setAddressSuggestions(suggestions);
+      } catch (error) {
+        if (requestId !== addressLookupRequestId.current) {
+          return;
+        }
+        setAddressSuggestions([]);
+        setErrorMessage(error instanceof Error ? error.message : "Unable to load address suggestions.");
+      } finally {
+        if (requestId === addressLookupRequestId.current) {
+          setIsAddressLookupLoading(false);
+        }
+      }
+    },
+    [requestAddressSuggestions]
+  );
+
+  const handleVenueAddressInput = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const nextValue = event.target.value;
+      const normalizedValue = nextValue.trim().replace(/\s+/g, " ");
+      setNewVenueAddress(nextValue);
+      setSelectedAddressSuggestion(null);
+      setAddressSuggestions([]);
+      setErrorMessage("");
+
+      if (addressLookupDebounceRef.current) {
+        clearTimeout(addressLookupDebounceRef.current);
+      }
+
+      if (normalizedValue.length < 3) {
+        setIsAddressLookupLoading(false);
+        setAddressSuggestions([]);
+        return;
+      }
+
+      addressLookupDebounceRef.current = setTimeout(() => {
+        void loadAddressSuggestions(normalizedValue);
+      }, ADDRESS_LOOKUP_DEBOUNCE_MS);
+    },
+    [loadAddressSuggestions]
+  );
+
+  const pickAddressSuggestion = (suggestion: AdminAddressSuggestion) => {
+    setNewVenueAddress(suggestion.label);
+    setSelectedAddressSuggestion(suggestion);
+    setAddressSuggestions([]);
+    setIsAddressLookupLoading(false);
+  };
+
+  const loadEditAddressSuggestions = useCallback(
+    async (query: string) => {
+      const requestId = ++editAddressLookupRequestId.current;
+      setIsEditAddressLookupLoading(true);
+      try {
+        const suggestions = await requestAddressSuggestions(query);
+        if (requestId !== editAddressLookupRequestId.current) {
+          return;
+        }
+        setEditAddressSuggestions(suggestions);
+        if (suggestions.length > 0) {
+          const topSuggestion = suggestions[0];
+          setEditVenueLatitude(topSuggestion.latitude.toString());
+          setEditVenueLongitude(topSuggestion.longitude.toString());
+        }
+      } catch (error) {
+        if (requestId !== editAddressLookupRequestId.current) {
+          return;
+        }
+        setEditAddressSuggestions([]);
+        setErrorMessage(error instanceof Error ? error.message : "Unable to load address suggestions.");
+      } finally {
+        if (requestId === editAddressLookupRequestId.current) {
+          setIsEditAddressLookupLoading(false);
+        }
+      }
+    },
+    [requestAddressSuggestions]
+  );
+
+  const handleEditVenueAddressInput = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const nextValue = event.target.value;
+      const normalizedValue = nextValue.trim().replace(/\s+/g, " ");
+      setEditVenueAddress(nextValue);
+      setEditAddressSuggestions([]);
+      setErrorMessage("");
+
+      if (editAddressLookupDebounceRef.current) {
+        clearTimeout(editAddressLookupDebounceRef.current);
+      }
+
+      if (normalizedValue.length < 3) {
+        setIsEditAddressLookupLoading(false);
+        setEditAddressSuggestions([]);
+        return;
+      }
+
+      editAddressLookupDebounceRef.current = setTimeout(() => {
+        void loadEditAddressSuggestions(normalizedValue);
+      }, ADDRESS_LOOKUP_DEBOUNCE_MS);
+    },
+    [loadEditAddressSuggestions]
+  );
+
+  const pickEditAddressSuggestion = (suggestion: AdminAddressSuggestion) => {
+    setEditVenueAddress(suggestion.label);
+    setEditVenueLatitude(suggestion.latitude.toString());
+    setEditVenueLongitude(suggestion.longitude.toString());
+    setEditAddressSuggestions([]);
+    setIsEditAddressLookupLoading(false);
+  };
 
   const loadAll = useCallback(async () => {
     setState("loading");
@@ -391,7 +599,10 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
         body: JSON.stringify({
           resource: "venues",
           name: newVenueName.trim(),
+          displayName: newVenueName.trim(),
           address: newVenueAddress.trim(),
+          latitude: selectedAddressSuggestion?.latitude,
+          longitude: selectedAddressSuggestion?.longitude,
           radius: newVenueRadius,
           venueId: newVenueId.trim() || undefined,
         }),
@@ -407,12 +618,15 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
         )
       );
       setSelectedVenueUserId(payload.item.id);
+      setSelectedManagedVenueId(payload.item.id);
       setVenueCreateMessage(
         `Venue created: ${payload.item.name} (${payload.item.id}) at ${payload.item.latitude.toFixed(6)}, ${payload.item.longitude.toFixed(6)}. Address: ${payload.item.address ?? "n/a"}.`
       );
       setNewVenueName("");
       setNewVenueAddress("");
       setNewVenueId("");
+      setSelectedAddressSuggestion(null);
+      setAddressSuggestions([]);
       setNewVenueRadius(100);
       setActiveSection("venue-users");
     } catch (error) {
@@ -518,6 +732,70 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       setErrorMessage(error instanceof Error ? error.message : "Failed to auto-settle predictions.");
     } finally {
       setAutoSettlingPredictions(false);
+    }
+  };
+
+  const beginEditVenue = (venue: Venue) => {
+    setEditingVenueId(venue.id);
+    setEditVenueName(venue.name);
+    setEditVenueDisplayName(venue.displayName ?? venue.name);
+    setEditVenueLogoText(venue.logoText ?? "");
+    setEditVenueIconEmoji(venue.iconEmoji ?? "");
+    setEditVenueAddress(venue.address ?? "");
+    setEditVenueLatitude(venue.latitude.toString());
+    setEditVenueLongitude(venue.longitude.toString());
+    setEditVenueRadius(venue.radius);
+    setEditAddressSuggestions([]);
+    setIsEditAddressLookupLoading(false);
+    setVenueEditMessage("");
+  };
+
+  const saveVenueEdit = async () => {
+    if (!editingVenueId) {
+      return;
+    }
+
+    setErrorMessage("");
+    setVenueEditMessage("");
+
+    const parsedLatitude = Number(editVenueLatitude);
+    const parsedLongitude = Number(editVenueLongitude);
+    const shouldSendCoordinates = Number.isFinite(parsedLatitude) && Number.isFinite(parsedLongitude);
+
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resource: "venues",
+          id: editingVenueId,
+          name: editVenueName.trim(),
+          displayName: editVenueDisplayName.trim() || editVenueName.trim(),
+          logoText: editVenueLogoText.trim() || undefined,
+          iconEmoji: editVenueIconEmoji.trim() || undefined,
+          address: editVenueAddress.trim(),
+          radius: editVenueRadius,
+          latitude: shouldSendCoordinates ? parsedLatitude : undefined,
+          longitude: shouldSendCoordinates ? parsedLongitude : undefined,
+        }),
+      });
+      const payload = (await response.json()) as { ok: boolean; error?: string; item?: Venue };
+      if (!payload.ok || !payload.item) {
+        throw new Error(payload.error ?? "Failed to update venue.");
+      }
+
+      setAvailableVenues((prev) =>
+        [...prev.filter((venue) => venue.id !== payload.item!.id), payload.item!].sort((a, b) =>
+          (a.displayName ?? a.name).localeCompare(b.displayName ?? b.name)
+        )
+      );
+      setSelectedVenueUserId(payload.item.id);
+      setSelectedManagedVenueId(payload.item.id);
+      setEditingVenueId(null);
+      setVenueEditMessage(`Venue updated: ${payload.item.id}`);
+      await loadVenueUsers();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Failed to update venue.");
     }
   };
 
@@ -689,7 +967,9 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       setAdminCredentials(null);
       setAdminLoginPassword("");
       setState("loading");
-      void Promise.all([loadAll(), loadVenueUsers()]);
+      if (typeof window !== "undefined") {
+        window.location.assign("/");
+      }
     }
   };
 
@@ -715,6 +995,51 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
             Log Out
           </button>
         </div>
+      ) : null}
+
+      {!shouldShowBootstrap ? (
+        <section className="space-y-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+          <h2 className="text-base font-semibold text-emerald-900">Open Site</h2>
+          <p className="text-xs text-emerald-800">Jump to the regular app and play/trivia directly.</p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <Link
+              href="/"
+              className="rounded-md bg-emerald-700 px-3 py-2 text-center text-sm font-medium text-white"
+            >
+              Home / Join
+            </Link>
+            <Link
+              href="/trivia"
+              className="rounded-md bg-emerald-700 px-3 py-2 text-center text-sm font-medium text-white"
+            >
+              Trivia
+            </Link>
+            <Link
+              href="/predictions"
+              className="rounded-md bg-emerald-700 px-3 py-2 text-center text-sm font-medium text-white"
+            >
+              Predictions
+            </Link>
+            <Link
+              href="/activity"
+              className="rounded-md bg-emerald-700 px-3 py-2 text-center text-sm font-medium text-white"
+            >
+              Activity
+            </Link>
+            <Link
+              href="/leaderboard"
+              className="rounded-md bg-emerald-700 px-3 py-2 text-center text-sm font-medium text-white"
+            >
+              Leaderboard
+            </Link>
+            <Link
+              href="/join"
+              className="rounded-md bg-slate-900 px-3 py-2 text-center text-sm font-medium text-white"
+            >
+              Back to Join
+            </Link>
+          </div>
+        </section>
       ) : null}
 
       {shouldShowBootstrap ? (
@@ -1023,7 +1348,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
           >
             {availableVenues.map((venue) => (
               <option key={venue.id} value={venue.id}>
-                {venue.name}
+                {getVenueDisplayName(venue)}
               </option>
             ))}
           </select>
@@ -1099,6 +1424,154 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       </section>
       ) : null}
 
+      {!shouldShowBootstrap && activeSection === "venue-manage" ? (
+      <section className="space-y-3 rounded-lg border border-slate-200 p-3">
+        <h2 className="text-base font-semibold">Venue Profile Management</h2>
+        <div className="max-w-sm">
+          <select
+            value={selectedManagedVenueId}
+            onChange={(event) => {
+              const nextId = event.target.value;
+              setSelectedManagedVenueId(nextId);
+              const venue = availableVenues.find((item) => item.id === nextId);
+              if (venue) {
+                beginEditVenue(venue);
+              }
+            }}
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          >
+            {availableVenues.map((venue) => (
+              <option key={venue.id} value={venue.id}>
+                {getVenueDisplayName(venue)}
+              </option>
+            ))}
+          </select>
+        </div>
+        {editingVenueId ? (
+          <div className="space-y-2 rounded-md border border-slate-200 p-3">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <input
+                value={editVenueName}
+                onChange={(event) => setEditVenueName(event.target.value)}
+                placeholder="Venue name"
+                className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+              <input
+                value={editVenueDisplayName}
+                onChange={(event) => setEditVenueDisplayName(event.target.value)}
+                placeholder="Display name (join card/title)"
+                className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <input
+                value={editVenueLogoText}
+                onChange={(event) => setEditVenueLogoText(event.target.value)}
+                placeholder="Logo initials (e.g. BG)"
+                className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+              <input
+                value={editVenueIconEmoji}
+                onChange={(event) => setEditVenueIconEmoji(event.target.value)}
+                placeholder="Icon emoji (e.g. 🍺)"
+                className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
+            <input
+              value={editVenueAddress}
+              onChange={handleEditVenueAddressInput}
+              placeholder="Venue address"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+            <div className="relative">
+              <p className="text-xs text-slate-500">
+                {isEditAddressLookupLoading
+                  ? "Searching addresses..."
+                  : "Coordinates auto-fill from the top address match as you type."}
+              </p>
+              {editAddressSuggestions.length > 0 ? (
+                <ul className="absolute z-20 mt-2 w-full rounded-md border border-slate-200 bg-white shadow">
+                  {editAddressSuggestions.map((suggestion) => (
+                    <li key={suggestion.label}>
+                      <button
+                        type="button"
+                        onMouseDown={() => pickEditAddressSuggestion(suggestion)}
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-slate-100"
+                      >
+                        {suggestion.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <input
+                type="number"
+                value={editVenueLatitude}
+                onChange={(event) => setEditVenueLatitude(event.target.value)}
+                placeholder="Latitude"
+                className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+              <input
+                type="number"
+                value={editVenueLongitude}
+                onChange={(event) => setEditVenueLongitude(event.target.value)}
+                placeholder="Longitude"
+                className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+              <input
+                type="number"
+                min={25}
+                max={2000}
+                value={editVenueRadius}
+                onChange={(event) => setEditVenueRadius(Number(event.target.value))}
+                placeholder="Radius (m)"
+                className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  void saveVenueEdit();
+                }}
+                className="rounded-md bg-emerald-700 px-3 py-2 text-sm font-medium text-white"
+              >
+                Save Venue
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const venue = availableVenues.find((item) => item.id === selectedManagedVenueId);
+                  if (venue) {
+                    beginEditVenue(venue);
+                  }
+                }}
+                className="rounded-md bg-slate-500 px-3 py-2 text-sm font-medium text-white"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              const venue = availableVenues.find((item) => item.id === selectedManagedVenueId);
+              if (venue) {
+                beginEditVenue(venue);
+              }
+            }}
+            className="rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-white"
+          >
+            Edit Selected Venue
+          </button>
+        )}
+        {venueEditMessage ? <p className="text-xs text-emerald-700">{venueEditMessage}</p> : null}
+      </section>
+      ) : null}
+
       {!shouldShowBootstrap && activeSection === "venue-create" ? (
       <section className="space-y-3 rounded-lg border border-slate-200 p-3">
         <h2 className="text-base font-semibold">Create Venue</h2>
@@ -1121,10 +1594,30 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
         </div>
         <input
           value={newVenueAddress}
-          onChange={(event) => setNewVenueAddress(event.target.value)}
+          onChange={handleVenueAddressInput}
           placeholder="Street address, city, state (or full address)"
           className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
         />
+        <div className="relative">
+          <p className="text-xs text-slate-500">
+            {isAddressLookupLoading ? "Searching addresses..." : "Start typing to see address options."}
+          </p>
+          {addressSuggestions.length > 0 ? (
+            <ul className="absolute z-20 mt-2 w-full rounded-md border border-slate-200 bg-white shadow">
+              {addressSuggestions.map((suggestion) => (
+                <li key={suggestion.label}>
+                  <button
+                    type="button"
+                    onMouseDown={() => pickAddressSuggestion(suggestion)}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-slate-100"
+                  >
+                    {suggestion.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
         <div className="max-w-xs">
           <label className="mb-1 block text-xs font-medium text-slate-700">Geofence radius (meters)</label>
           <input
@@ -1223,7 +1716,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
             <option value="">Global (all venues)</option>
             {availableVenues.map((venue) => (
               <option key={venue.id} value={venue.id}>
-                {venue.name}
+                {getVenueDisplayName(venue)}
               </option>
             ))}
           </select>
@@ -1421,7 +1914,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
                       <option value="">Global (all venues)</option>
                       {availableVenues.map((venue) => (
                         <option key={venue.id} value={venue.id}>
-                          {venue.name}
+                          {getVenueDisplayName(venue)}
                         </option>
                       ))}
                     </select>

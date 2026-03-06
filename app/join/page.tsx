@@ -1,4 +1,6 @@
-import { redirect } from "next/navigation";
+import { PageShell } from "@/components/ui/PageShell";
+import { JoinFlow } from "@/components/join/JoinFlow";
+import { BackButton } from "@/components/navigation/BackButton";
 
 export default async function JoinPage({
   searchParams,
@@ -6,6 +8,12 @@ export default async function JoinPage({
   searchParams: Promise<{ v?: string }>;
 }) {
   const params = await searchParams;
-  const target = params.v ? `/?v=${encodeURIComponent(params.v)}` : "/";
-  redirect(target);
+  return (
+    <PageShell title="Join" description="Select a venue and join the game.">
+      <div className="space-y-4">
+        <BackButton label="Back to Join Home" href="/" />
+        <JoinFlow initialVenueId={params.v ?? ""} />
+      </div>
+    </PageShell>
+  );
 }

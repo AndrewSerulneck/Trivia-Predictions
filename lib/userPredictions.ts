@@ -83,7 +83,10 @@ async function getUserRow(userId: string): Promise<UserRow | null> {
   return data;
 }
 
-export async function getPredictionQuota(userId: string): Promise<PredictionQuota> {
+export async function getPredictionQuota(
+  userId: string,
+  options: { forceAdminBypass?: boolean } = {}
+): Promise<PredictionQuota> {
   const emptyQuota: PredictionQuota = {
     limit: PICK_LIMIT_PER_HOUR,
     picksUsed: 0,
@@ -94,6 +97,14 @@ export async function getPredictionQuota(userId: string): Promise<PredictionQuot
 
   if (!userId || !supabaseAdmin) {
     return emptyQuota;
+  }
+
+  if (options.forceAdminBypass) {
+    return {
+      ...emptyQuota,
+      isAdminBypass: true,
+      picksRemaining: PICK_LIMIT_PER_HOUR,
+    };
   }
 
   const user = await getUserRow(userId);
@@ -145,6 +156,7 @@ export async function submitPredictionPick(params: {
   userId: string;
   predictionId: string;
   outcomeId: string;
+  forceAdminBypass?: boolean;
 }): Promise<UserPrediction> {
   if (!supabaseAdmin) {
     throw new Error("Supabase admin client is not configured.");
@@ -157,7 +169,7 @@ export async function submitPredictionPick(params: {
     throw new Error("userId, predictionId, and outcomeId are required.");
   }
 
-  const quota = await getPredictionQuota(userId);
+  const quota = await getPredictionQuota(userId, { forceAdminBypass: params.forceAdminBypass });
   if (!quota.isAdminBypass && quota.picksRemaining <= 0) {
     const minutes = Math.ceil(quota.windowSecondsRemaining / 60);
     throw new Error(`Hourly pick limit reached (10). Try again in about ${minutes} minute(s).`);

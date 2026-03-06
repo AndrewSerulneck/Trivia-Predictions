@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { listPredictionMarkets } from "@/lib/polymarket";
 import { getPredictionQuota, submitPredictionPick } from "@/lib/userPredictions";
+import { requireAdminAuth } from "@/lib/adminAuth";
 
 export async function GET(request: Request) {
   try {
@@ -11,6 +12,7 @@ export async function GET(request: Request) {
       search: searchParams.get("search") ?? "",
       category: searchParams.get("category") ?? "",
       broadCategory: searchParams.get("broadCategory") ?? "",
+      excludeSensitive: searchParams.get("excludeSensitive") ?? "true",
       sort: searchParams.get("sort") ?? "closing-soon",
     });
 
@@ -41,13 +43,16 @@ export async function POST(request: Request) {
       );
     }
 
+    const adminAuth = await requireAdminAuth(request);
+
     const pick = await submitPredictionPick({
       userId: body.userId,
       predictionId: body.predictionId,
       outcomeId: body.outcomeId,
+      forceAdminBypass: adminAuth.ok,
     });
 
-    const quota = await getPredictionQuota(body.userId);
+    const quota = await getPredictionQuota(body.userId, { forceAdminBypass: adminAuth.ok });
 
     return NextResponse.json({ ok: true, pick, quota });
   } catch (error) {

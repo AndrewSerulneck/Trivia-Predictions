@@ -11,6 +11,7 @@ import {
   listAdminAdvertisements,
   listAdminTriviaQuestions,
   resolvePendingPredictionMarket,
+  updateAdminVenue,
   updateAdminAdvertisement,
   updateAdminTriviaQuestion,
 } from "@/lib/admin";
@@ -48,6 +49,10 @@ export async function GET(request: Request) {
     if (resource === "predictions-pending") {
       const items = await listPendingPredictionSummaries();
       return NextResponse.json({ ok: true, items });
+    }
+
+    if (resource === "session") {
+      return NextResponse.json({ ok: true, isAdmin: true, scope: "join" });
     }
 
     return NextResponse.json(
@@ -102,6 +107,11 @@ export async function POST(request: Request) {
           address: string;
           radius?: number;
           venueId?: string;
+          latitude?: number;
+          longitude?: number;
+          displayName?: string;
+          logoText?: string;
+          iconEmoji?: string;
         }
       | {
           resource: "ads-track";
@@ -152,6 +162,11 @@ export async function POST(request: Request) {
         address: body.address,
         radius: body.radius,
         venueId: body.venueId,
+        latitude: body.latitude,
+        longitude: body.longitude,
+        displayName: body.displayName,
+        logoText: body.logoText,
+        iconEmoji: body.iconEmoji,
       });
       return NextResponse.json({ ok: true, item });
     }
@@ -265,6 +280,18 @@ export async function PATCH(request: Request) {
           active: boolean;
           startDate: string;
           endDate?: string;
+        }
+      | {
+          resource: "venues";
+          id: string;
+          name: string;
+          displayName?: string;
+          logoText?: string;
+          iconEmoji?: string;
+          address: string;
+          radius: number;
+          latitude?: number;
+          longitude?: number;
         };
 
     if (body.resource === "trivia") {
@@ -293,6 +320,21 @@ export async function PATCH(request: Request) {
         active: body.active,
         startDate: body.startDate,
         endDate: body.endDate,
+      });
+      return NextResponse.json({ ok: true, item });
+    }
+
+    if (body.resource === "venues") {
+      const item = await updateAdminVenue({
+        id: body.id,
+        name: body.name,
+        displayName: body.displayName,
+        logoText: body.logoText,
+        iconEmoji: body.iconEmoji,
+        address: body.address,
+        radius: body.radius,
+        latitude: body.latitude,
+        longitude: body.longitude,
       });
       return NextResponse.json({ ok: true, item });
     }

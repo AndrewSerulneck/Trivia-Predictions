@@ -1,36 +1,15 @@
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { defaultVenuesAsVenueModels } from "@/lib/defaultVenues";
 import type { Venue } from "@/types";
 
-const FALLBACK_VENUES: Venue[] = [
-  {
-    id: "venue-downtown",
-    name: "Downtown Sports Bar",
-    address: "Downtown Manhattan, New York, NY",
-    latitude: 40.712776,
-    longitude: -74.005974,
-    radius: 100,
-  },
-  {
-    id: "venue-uptown",
-    name: "Uptown Taproom",
-    address: "Uptown Manhattan, New York, NY",
-    latitude: 40.73061,
-    longitude: -73.935242,
-    radius: 100,
-  },
-  {
-    id: "venue-riverside",
-    name: "Riverside Grill",
-    address: "Midtown West, New York, NY",
-    latitude: 40.758896,
-    longitude: -73.98513,
-    radius: 100,
-  },
-];
+const FALLBACK_VENUES: Venue[] = defaultVenuesAsVenueModels();
 
 type VenueRow = {
   id: string;
   name: string;
+  display_name: string | null;
+  logo_text: string | null;
+  icon_emoji: string | null;
   address: string | null;
   latitude: number;
   longitude: number;
@@ -41,6 +20,9 @@ function mapVenueRow(row: VenueRow): Venue {
   return {
     id: row.id,
     name: row.name,
+    displayName: row.display_name ?? undefined,
+    logoText: row.logo_text ?? undefined,
+    iconEmoji: row.icon_emoji ?? undefined,
     address: row.address ?? undefined,
     latitude: Number(row.latitude),
     longitude: Number(row.longitude),
@@ -55,7 +37,7 @@ export async function listVenues(): Promise<Venue[]> {
 
   const { data, error } = await supabase
     .from("venues")
-    .select("id, name, address, latitude, longitude, radius")
+    .select("id, name, display_name, logo_text, icon_emoji, address, latitude, longitude, radius")
     .order("name", { ascending: true });
 
   if (error || !data || data.length === 0) {
@@ -74,7 +56,7 @@ export async function getVenueById(venueId: string): Promise<Venue | null> {
 
   const { data, error } = await supabase
     .from("venues")
-    .select("id, name, address, latitude, longitude, radius")
+    .select("id, name, display_name, logo_text, icon_emoji, address, latitude, longitude, radius")
     .eq("id", venueId)
     .maybeSingle<VenueRow>();
 
