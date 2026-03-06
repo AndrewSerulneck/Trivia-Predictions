@@ -167,10 +167,10 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   const [fireworks, setFireworks] = useState<FireworkToken[]>([]);
   const [pointFlows, setPointFlows] = useState<PointsFlowToken[]>([]);
 
-  const flashTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
-  const rainTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
-  const fireworkTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
-  const flowTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const flashTimeoutRef = useRef<number | null>(null);
+  const rainTimeoutRef = useRef<number | null>(null);
+  const fireworkTimeoutRef = useRef<number | null>(null);
+  const flowTimeoutRef = useRef<number | null>(null);
   const [currentUserPoints, setCurrentUserPoints] = useState<number | null>(null);
 
   const question = questions[index] ?? null;
