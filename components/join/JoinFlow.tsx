@@ -508,7 +508,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
             <div className="space-y-2">
               <label htmlFor="username" className="block font-medium">
-                Enter username
+                Enter username and PIN
               </label>
               <input
                 id="username"

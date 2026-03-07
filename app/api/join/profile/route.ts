@@ -20,6 +20,11 @@ type UserRow = {
   created_at: string;
 };
 
+type DbError = {
+  code?: string;
+  message?: string;
+};
+
 function normalizePin(pin: string): string {
   return pin.trim();
 }
@@ -37,6 +42,12 @@ function verifyPin(pin: string, salt: string, hash: string): boolean {
     return false;
   }
   return timingSafeEqual(computed, expected);
+}
+
+function isMissingPinColumnError(error: unknown): boolean {
+  const dbError = error as DbError | null;
+  const message = (dbError?.message ?? "").toLowerCase();
+  return dbError?.code === "42703" || message.includes("pin_salt") || message.includes("pin_hash");
 }
 
 export async function POST(request: Request) {
@@ -89,13 +100,29 @@ export async function POST(request: Request) {
     }
   }
 
-  const { data: existingByUsername, error: existingUsernameError } = await supabaseAdmin
+  let pinColumnsAvailable = true;
+  let existingByUsername: UserRow[] | null = null;
+  const withPinColumns = await supabaseAdmin
     .from("users")
     .select("id, auth_id, username, venue_id, points, pin_salt, pin_hash, created_at")
     .ilike("username", username)
     .limit(1);
-  if (existingUsernameError) {
-    return NextResponse.json({ ok: false, error: existingUsernameError.message }, { status: 500 });
+  if (withPinColumns.error) {
+    if (!isMissingPinColumnError(withPinColumns.error)) {
+      return NextResponse.json({ ok: false, error: withPinColumns.error.message }, { status: 500 });
+    }
+    pinColumnsAvailable = false;
+    const fallbackQuery = await supabaseAdmin
+      .from("users")
+      .select("id, auth_id, username, venue_id, points, created_at")
+      .ilike("username", username)
+      .limit(1);
+    if (fallbackQuery.error) {
+      return NextResponse.json({ ok: false, error: fallbackQuery.error.message }, { status: 500 });
+    }
+    existingByUsername = (fallbackQuery.data ?? []) as UserRow[];
+  } else {
+    existingByUsername = (withPinColumns.data ?? []) as UserRow[];
   }
   const existingUser = (existingByUsername?.[0] ?? null) as UserRow | null;
   if (existingUser) {
@@ -106,24 +133,26 @@ export async function POST(request: Request) {
       );
     }
 
-    const existingSalt = (existingUser.pin_salt ?? "").trim();
-    const existingHash = (existingUser.pin_hash ?? "").trim();
+    if (pinColumnsAvailable) {
+      const existingSalt = (existingUser.pin_salt ?? "").trim();
+      const existingHash = (existingUser.pin_hash ?? "").trim();
 
-    if (existingSalt && existingHash) {
-      const isValidPin = verifyPin(pin, existingSalt, existingHash);
-      if (!isValidPin) {
-        return NextResponse.json({ ok: false, error: "Incorrect PIN." }, { status: 401 });
-      }
-    } else {
-      const salt = randomBytes(16).toString("hex");
-      const hash = hashPin(pin, salt);
-      const { error: pinSetError } = await supabaseAdmin
-        .from("users")
-        .update({ pin_salt: salt, pin_hash: hash })
-        .eq("id", existingUser.id);
+      if (existingSalt && existingHash) {
+        const isValidPin = verifyPin(pin, existingSalt, existingHash);
+        if (!isValidPin) {
+          return NextResponse.json({ ok: false, error: "Incorrect PIN." }, { status: 401 });
+        }
+      } else {
+        const salt = randomBytes(16).toString("hex");
+        const hash = hashPin(pin, salt);
+        const { error: pinSetError } = await supabaseAdmin
+          .from("users")
+          .update({ pin_salt: salt, pin_hash: hash })
+          .eq("id", existingUser.id);
 
-      if (pinSetError) {
-        return NextResponse.json({ ok: false, error: pinSetError.message }, { status: 500 });
+        if (pinSetError) {
+          return NextResponse.json({ ok: false, error: pinSetError.message }, { status: 500 });
+        }
       }
     }
 
@@ -142,22 +171,36 @@ export async function POST(request: Request) {
 
   const salt = randomBytes(16).toString("hex");
   const hash = hashPin(pin, salt);
+  const insertPayload = pinColumnsAvailable
+    ? {
+        auth_id: null,
+        username,
+        venue_id: venueId,
+        points: 0,
+        pin_salt: salt,
+        pin_hash: hash,
+      }
+    : {
+        auth_id: null,
+        username,
+        venue_id: venueId,
+        points: 0,
+      };
 
   const { data, error } = await supabaseAdmin
     .from("users")
-    .insert({
-      auth_id: null,
-      username,
-      venue_id: venueId,
-      points: 0,
-      pin_salt: salt,
-      pin_hash: hash,
-    })
+    .insert(insertPayload)
     .select("id, auth_id, username, venue_id, points, created_at")
     .single<UserRow>();
 
   if (error || !data) {
     const code = (error as { code?: string } | null)?.code;
+    if (isMissingPinColumnError(error)) {
+      return NextResponse.json(
+        { ok: false, error: "PIN columns are missing in this environment. Run latest DB migrations and retry." },
+        { status: 500 }
+      );
+    }
     if (code === "23503") {
       return NextResponse.json(
         { ok: false, error: "Selected venue is unavailable right now. Refresh and choose again." },
