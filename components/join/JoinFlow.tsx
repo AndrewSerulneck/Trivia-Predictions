@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import jsQR from "jsqr";
 import { PageShell } from "@/components/ui/PageShell";
 import { BackButton } from "@/components/navigation/BackButton";
 import {
@@ -76,10 +77,12 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationNotice, setLocationNotice] = useState("");
   const [isScanningQr, setIsScanningQr] = useState(false);
+  const [scanNotice, setScanNotice] = useState("");
   const autoVerificationAttemptedRef = useRef(false);
   const scanVideoRef = useRef<HTMLVideoElement | null>(null);
   const scanStreamRef = useRef<MediaStream | null>(null);
   const scanRafRef = useRef<number | null>(null);
+  const scanCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const geofenceBypassed = geofenceBypassedInDev || adminSessionActive;
 
@@ -223,6 +226,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     if (scanVideoRef.current) {
       scanVideoRef.current.srcObject = null;
     }
+    scanCanvasRef.current = null;
   }, []);
 
   const routeFromQrPayload = useCallback(
@@ -262,6 +266,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     if (typeof window === "undefined" || typeof navigator === "undefined") {
       return;
     }
+    setScanNotice("");
     setIsScanningQr(true);
     stopScanLoop();
 
@@ -273,8 +278,15 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         audio: false,
       });
       scanStreamRef.current = stream;
-
+      let mountAttempts = 0;
+      while (!scanVideoRef.current && mountAttempts < 12) {
+        await new Promise<void>((resolve) => {
+          window.requestAnimationFrame(() => resolve());
+        });
+        mountAttempts += 1;
+      }
       if (!scanVideoRef.current) {
+        setScanNotice("Unable to initialize camera preview. Please try again.");
         setIsScanningQr(false);
         stopScanLoop();
         return;
@@ -287,16 +299,15 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         window as unknown as { BarcodeDetector?: new (options?: { formats?: string[] }) => { detect: (source: ImageBitmapSource) => Promise<Array<{ rawValue?: string }>> } }
       ).BarcodeDetector;
 
-      if (!BarcodeDetectorCtor) {
-        setIsScanningQr(false);
-        stopScanLoop();
-        return;
+      const detector = BarcodeDetectorCtor ? new BarcodeDetectorCtor({ formats: ["qr_code"] }) : null;
+      const useBarcodeDetector = Boolean(BarcodeDetectorCtor);
+      if (!useBarcodeDetector) {
+        setScanNotice("Using compatibility scan mode.");
       }
 
-      const detector = new BarcodeDetectorCtor({ formats: ["qr_code"] });
-
       const tick = async () => {
-        if (!scanVideoRef.current || scanVideoRef.current.readyState < 2) {
+        const video = scanVideoRef.current;
+        if (!video || video.readyState < 2) {
           scanRafRef.current = window.requestAnimationFrame(() => {
             void tick();
           });
@@ -304,8 +315,33 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         }
 
         try {
-          const codes = await detector.detect(scanVideoRef.current);
-          const rawValue = codes[0]?.rawValue?.trim() ?? "";
+          let rawValue = "";
+          if (useBarcodeDetector) {
+            const codes = await detector!.detect(video);
+            rawValue = codes[0]?.rawValue?.trim() ?? "";
+          } else {
+            const frameWidth = Math.max(1, Math.floor(video.videoWidth || 0));
+            const frameHeight = Math.max(1, Math.floor(video.videoHeight || 0));
+            if (frameWidth > 1 && frameHeight > 1) {
+              if (!scanCanvasRef.current) {
+                scanCanvasRef.current = document.createElement("canvas");
+              }
+              const canvas = scanCanvasRef.current;
+              if (canvas.width !== frameWidth || canvas.height !== frameHeight) {
+                canvas.width = frameWidth;
+                canvas.height = frameHeight;
+              }
+              const context = canvas.getContext("2d", { willReadFrequently: true });
+              if (context) {
+                context.drawImage(video, 0, 0, frameWidth, frameHeight);
+                const imageData = context.getImageData(0, 0, frameWidth, frameHeight);
+                const code = jsQR(imageData.data, frameWidth, frameHeight, {
+                  inversionAttempts: "attemptBoth",
+                });
+                rawValue = code?.data?.trim() ?? "";
+              }
+            }
+          }
           if (rawValue && routeFromQrPayload(rawValue)) {
             setIsScanningQr(false);
             stopScanLoop();
@@ -324,6 +360,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         void tick();
       });
     } catch {
+      setScanNotice("Camera unavailable. You can still join by selecting a venue below.");
       setIsScanningQr(false);
       stopScanLoop();
     }
@@ -427,12 +464,14 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                   type="button"
                   onClick={() => {
                     setIsScanningQr(false);
+                    setScanNotice("");
                     stopScanLoop();
                   }}
                   className={`${JOIN_BUTTON_POP_CLASS} rounded-2xl border-4 border-slate-900 bg-white px-4 py-2 text-base font-medium text-slate-900 shadow-[4px_4px_0_#0f172a]`}
                 >
                   Stop Scanning
                 </button>
+                {scanNotice ? <p className="px-1 text-sm font-medium text-slate-700">{scanNotice}</p> : null}
               </div>
             ) : null}
             <h2 className="text-xl font-medium text-slate-900">Available Venues:</h2>
