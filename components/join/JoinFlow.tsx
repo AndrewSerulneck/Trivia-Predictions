@@ -6,17 +6,16 @@ import { useRouter } from "next/navigation";
 import { PageShell } from "@/components/ui/PageShell";
 import { BackButton } from "@/components/navigation/BackButton";
 import {
-  checkUsernameAtVenue,
   createUserProfile,
   ensureAnonymousSession,
-  getUserForVenue,
+  validatePin,
   validateUsername,
 } from "@/lib/auth";
 import { calculateDistanceMeters, getCurrentLocation } from "@/lib/geolocation";
 import { saveUserId, saveUsername, saveVenueId } from "@/lib/storage";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { getVenueById, listVenues } from "@/lib/venues";
-import type { User, Venue } from "@/types";
+import type { Venue } from "@/types";
 import { getVenueDisplayName, getVenueVisual as getVenueVisualFromConfig } from "@/lib/venueDisplay";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
@@ -70,14 +69,17 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [venue, setVenue] = useState<Venue | null>(null);
   const [venueList, setVenueList] = useState<Venue[]>([]);
-  const [existingUser, setExistingUser] = useState<User | null>(null);
   const [username, setUsername] = useState("");
+  const [pin, setPin] = useState("");
   const [distanceMeters, setDistanceMeters] = useState<number | null>(null);
   const [locationVerified, setLocationVerified] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationNotice, setLocationNotice] = useState("");
+  const [isScanningQr, setIsScanningQr] = useState(false);
   const autoVerificationAttemptedRef = useRef(false);
-  const redirectStartedRef = useRef(false);
+  const scanVideoRef = useRef<HTMLVideoElement | null>(null);
+  const scanStreamRef = useRef<MediaStream | null>(null);
+  const scanRafRef = useRef<number | null>(null);
 
   const geofenceBypassed = geofenceBypassedInDev || adminSessionActive;
 
@@ -111,18 +113,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     const load = async () => {
       setStatus("loading");
       setErrorMessage("");
-      setExistingUser(null);
       setLocationVerified(geofenceBypassed);
       setDistanceMeters(null);
-      setLocationNotice(
-        geofenceBypassed
-          ? adminSessionActive
-            ? "Admin session detected. Geofence checks are disabled."
-            : "Location verification bypassed for local testing."
-          : "Verifying your location..."
-      );
+      setLocationNotice(geofenceBypassed ? "" : "Verifying your location...");
       autoVerificationAttemptedRef.current = false;
-      redirectStartedRef.current = false;
 
       try {
         const venues = await listVenues();
@@ -152,12 +146,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         }
 
         await ensureAnonymousSession();
-        const user = await getUserForVenue(venueData.id);
-        if (user) {
-          setExistingUser(user);
-          setUsername(user.username);
-        }
-
         setStatus("ready");
       } catch (error) {
         setStatus("error");
@@ -173,10 +161,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       isSupabaseConfigured &&
         venue &&
         validateUsername(username) &&
-        (locationVerified || geofenceBypassed) &&
-        !existingUser
+        validatePin(pin) &&
+        (locationVerified || geofenceBypassed)
     );
-  }, [venue, username, locationVerified, geofenceBypassed, existingUser]);
+  }, [venue, username, pin, locationVerified, geofenceBypassed]);
 
   const verifyLocation = useCallback(async () => {
     if (!venue) return;
@@ -213,14 +201,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     }
   }, [venue]);
 
-  const continueToGame = useCallback(() => {
-    if (!venue || !existingUser) return;
-    saveVenueId(venue.id);
-    saveUsername(existingUser.username);
-    saveUserId(existingUser.id);
-    router.push(`/venue/${venue.id}`);
-  }, [existingUser, router, venue]);
-
   const openAdminDashboard = useCallback(() => {
     if (typeof window !== "undefined") {
       window.location.assign("/admin");
@@ -228,6 +208,132 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     }
     router.push("/admin");
   }, [router]);
+
+  const stopScanLoop = useCallback(() => {
+    if (scanRafRef.current) {
+      window.cancelAnimationFrame(scanRafRef.current);
+      scanRafRef.current = null;
+    }
+    if (scanStreamRef.current) {
+      for (const track of scanStreamRef.current.getTracks()) {
+        track.stop();
+      }
+      scanStreamRef.current = null;
+    }
+    if (scanVideoRef.current) {
+      scanVideoRef.current.srcObject = null;
+    }
+  }, []);
+
+  const routeFromQrPayload = useCallback(
+    (value: string): boolean => {
+      const raw = value.trim();
+      if (!raw) {
+        return false;
+      }
+
+      if (/^venue-[a-z0-9-]+$/i.test(raw)) {
+        router.push(`/?v=${encodeURIComponent(raw)}`);
+        return true;
+      }
+
+      try {
+        const parsed = new URL(raw, window.location.origin);
+        const venueQuery = parsed.searchParams.get("v")?.trim();
+        if (venueQuery) {
+          router.push(`/?v=${encodeURIComponent(venueQuery)}`);
+          return true;
+        }
+        const venuePathMatch = parsed.pathname.match(/^\/venue\/([^/?#]+)/i);
+        if (venuePathMatch?.[1]) {
+          router.push(`/?v=${encodeURIComponent(venuePathMatch[1])}`);
+          return true;
+        }
+      } catch {
+        return false;
+      }
+
+      return false;
+    },
+    [router]
+  );
+
+  const startQrScan = useCallback(async () => {
+    if (typeof window === "undefined" || typeof navigator === "undefined") {
+      return;
+    }
+    setIsScanningQr(true);
+    stopScanLoop();
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: "environment" },
+        },
+        audio: false,
+      });
+      scanStreamRef.current = stream;
+
+      if (!scanVideoRef.current) {
+        setIsScanningQr(false);
+        stopScanLoop();
+        return;
+      }
+
+      scanVideoRef.current.srcObject = stream;
+      await scanVideoRef.current.play();
+
+      const BarcodeDetectorCtor = (
+        window as unknown as { BarcodeDetector?: new (options?: { formats?: string[] }) => { detect: (source: ImageBitmapSource) => Promise<Array<{ rawValue?: string }>> } }
+      ).BarcodeDetector;
+
+      if (!BarcodeDetectorCtor) {
+        setIsScanningQr(false);
+        stopScanLoop();
+        return;
+      }
+
+      const detector = new BarcodeDetectorCtor({ formats: ["qr_code"] });
+
+      const tick = async () => {
+        if (!scanVideoRef.current || scanVideoRef.current.readyState < 2) {
+          scanRafRef.current = window.requestAnimationFrame(() => {
+            void tick();
+          });
+          return;
+        }
+
+        try {
+          const codes = await detector.detect(scanVideoRef.current);
+          const rawValue = codes[0]?.rawValue?.trim() ?? "";
+          if (rawValue && routeFromQrPayload(rawValue)) {
+            setIsScanningQr(false);
+            stopScanLoop();
+            return;
+          }
+        } catch {
+          // Ignore transient decode misses and continue scanning.
+        }
+
+        scanRafRef.current = window.requestAnimationFrame(() => {
+          void tick();
+        });
+      };
+
+      scanRafRef.current = window.requestAnimationFrame(() => {
+        void tick();
+      });
+    } catch {
+      setIsScanningQr(false);
+      stopScanLoop();
+    }
+  }, [routeFromQrPayload, stopScanLoop]);
+
+  useEffect(() => {
+    return () => {
+      stopScanLoop();
+    };
+  }, [stopScanLoop]);
 
   useEffect(() => {
     if (!venue || status !== "ready" || !isSupabaseConfigured) {
@@ -244,26 +350,14 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     void verifyLocation();
   }, [venue, status, geofenceBypassed, verifyLocation]);
 
-  useEffect(() => {
-    if (!existingUser || !locationVerified || redirectStartedRef.current) {
-      return;
-    }
-
-    redirectStartedRef.current = true;
-    setLocationNotice("Location verified successfully. Taking you to your venue...");
-    const timeoutId = window.setTimeout(() => {
-      continueToGame();
-    }, 900);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [existingUser, locationVerified, continueToGame]);
-
   const createProfile = async () => {
     if (!venue) return;
     if (!validateUsername(username)) {
       setErrorMessage("Username is required.");
+      return;
+    }
+    if (!validatePin(pin)) {
+      setErrorMessage("PIN must be exactly 4 digits.");
       return;
     }
     if (!locationVerified && !geofenceBypassed) {
@@ -282,21 +376,15 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         body: JSON.stringify({ venueId: venue.id }),
       });
 
-      const available = await checkUsernameAtVenue(username, venue.id);
-      if (!available) {
-        setStatus("ready");
-        setErrorMessage("That username is already taken at this venue.");
-        return;
-      }
-
-      const created = await createUserProfile({
+      const user = await createUserProfile({
         username,
         venueId: venue.id,
+        pin,
       });
 
       saveVenueId(venue.id);
-      saveUsername(created.username);
-      saveUserId(created.id);
+      saveUsername(user.username);
+      saveUserId(user.id);
       router.push(`/venue/${venue.id}`);
     } catch (error) {
       setStatus("ready");
@@ -307,25 +395,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   return (
     <PageShell
       title="Join Venue"
-      description="Create or continue your venue-specific profile to play trivia and predictions."
+      description="Select a venue or scan QR code."
     >
       <div className="space-y-4 text-sm">
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={openAdminDashboard}
-            className={`${JOIN_BUTTON_POP_CLASS} inline-flex min-h-[42px] cursor-pointer items-center rounded-full bg-gradient-to-r from-slate-900 to-slate-700 px-4 py-2 font-medium text-white`}
-          >
-            Admin Dashboard
-          </button>
-        </div>
-
-        {!venueParam && (
-          <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-800">
-            No venue selected. Use a QR link like <code>/?v=venue-downtown</code> or pick one below.
-          </div>
-        )}
-
         {errorMessage && (
           <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-rose-700">
             {errorMessage}
@@ -333,8 +405,37 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         )}
 
         {!venue && venueList.length > 0 && (
-          <div className="space-y-2">
-            <h2 className="font-medium">Available test venues</h2>
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => {
+                void startQrScan();
+              }}
+              className={`${JOIN_BUTTON_POP_CLASS} inline-flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl border-4 border-slate-900 bg-cyan-300 px-5 py-2.5 text-lg font-medium text-slate-900 shadow-[5px_5px_0_#0f172a]`}
+            >
+              <span aria-hidden="true" className="text-2xl leading-none">
+                📷
+              </span>
+              Scan Venue QR Code
+            </button>
+            {isScanningQr ? (
+              <div className="space-y-2">
+                <div className="rounded-2xl border-4 border-slate-900 bg-white p-2 shadow-[4px_4px_0_#0f172a]">
+                  <video ref={scanVideoRef} autoPlay playsInline muted className="h-44 w-full rounded-xl bg-black object-cover" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsScanningQr(false);
+                    stopScanLoop();
+                  }}
+                  className={`${JOIN_BUTTON_POP_CLASS} rounded-2xl border-4 border-slate-900 bg-white px-4 py-2 text-base font-medium text-slate-900 shadow-[4px_4px_0_#0f172a]`}
+                >
+                  Stop Scanning
+                </button>
+              </div>
+            ) : null}
+            <h2 className="text-xl font-medium text-slate-900">Available Venues:</h2>
             <ul className="space-y-2">
               {venueList.map((item, index) => {
                 const visual = getVenueVisual(item, index);
@@ -343,17 +444,17 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                   <Link
                     href={`/?v=${item.id}`}
                     role="button"
-                    className={`flex w-full items-center justify-between rounded-xl border border-slate-200 bg-gradient-to-r from-white to-slate-100 px-4 py-3 text-slate-700 shadow-sm transition-all ${JOIN_BUTTON_POP_CLASS} hover:from-blue-50 hover:to-cyan-50`}
+                    className={`flex w-full items-center justify-between rounded-xl border border-slate-200 bg-gradient-to-r from-white to-slate-100 px-4 py-3 text-base text-slate-700 shadow-sm transition-all ${JOIN_BUTTON_POP_CLASS} hover:from-blue-50 hover:to-cyan-50`}
                   >
                     <span className="flex items-center gap-3">
-                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white font-semibold text-slate-800">
+                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white text-base font-medium text-slate-800">
                         {visual.logoText}
                       </span>
                       <span className="font-medium">Join {getVenueDisplayName(item)}</span>
                     </span>
                     <span
                       aria-hidden="true"
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-lg"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-xl"
                     >
                       {visual.icon}
                     </span>
@@ -366,6 +467,15 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               <p className="text-xs uppercase tracking-wide text-slate-500">Advertisement</p>
               <p className="mt-1 font-medium">[ Placeholder Banner Ad - 728 x 90 ]</p>
             </div>
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={openAdminDashboard}
+                className={`${JOIN_BUTTON_POP_CLASS} inline-flex min-h-[44px] w-full items-center justify-center rounded-2xl border-4 border-slate-900 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-[4px_4px_0_#0f172a]`}
+              >
+                Admin Dashboard
+              </button>
+            </div>
           </div>
         )}
 
@@ -374,16 +484,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             <BackButton label="Choose different venue" href="/" />
             <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
               <p className="font-medium">{getVenueDisplayName(venue)}</p>
-              <p className="text-slate-600">
-                Geofence: within {venue.radius}m. (Adjustable later in the venues table.)
-              </p>
-              {geofenceBypassed && (
-                <p className="text-amber-700">
-                  {adminSessionActive
-                    ? "Admin session active. Geofence checks are disabled."
-                    : "Geofence bypass is enabled for local testing (`NEXT_PUBLIC_DISABLE_GEOFENCE=true`)."}
-                </p>
-              )}
               {distanceMeters !== null && (
                 <p className="text-slate-600">Your distance: {Math.round(distanceMeters)}m</p>
               )}
@@ -406,40 +506,39 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               </button>
             )}
 
-            {existingUser ? (
-              <div className="space-y-3 rounded-md border border-emerald-300 bg-emerald-50 p-3">
-                <p>
-                  Welcome back <strong>{existingUser.username}</strong>. You already have a profile at this venue.
-                </p>
-                <p className="text-emerald-800">
-                  {locationVerified || geofenceBypassed
-                    ? "Continuing to your venue..."
-                    : "Waiting for location verification before continuing."}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <label htmlFor="username" className="block font-medium">
-                  Choose username (unique at this venue)
-                </label>
-                <input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
-                  placeholder="Your username"
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-slate-600"
-                />
-                <button
-                  type="button"
-                  onClick={createProfile}
-                  disabled={!canCreate || status === "saving"}
-                  className={`${JOIN_BUTTON_POP_CLASS} inline-flex min-h-[42px] items-center rounded-full bg-gradient-to-r from-blue-700 to-cyan-600 px-4 py-2 font-medium text-white disabled:opacity-60`}
-                >
-                  {status === "saving" ? "Creating profile..." : "Create Profile and Continue"}
-                </button>
-              </div>
-            )}
+            <div className="space-y-2">
+              <label htmlFor="username" className="block font-medium">
+                Enter username
+              </label>
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                placeholder="Your username"
+                className="w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-slate-600"
+              />
+              <input
+                id="pin"
+                type="tel"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={pin}
+                maxLength={4}
+                autoComplete="one-time-code"
+                onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 4))}
+                placeholder="4-digit PIN"
+                className="w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-slate-600"
+              />
+              <button
+                type="button"
+                onClick={createProfile}
+                disabled={!canCreate || status === "saving"}
+                className={`${JOIN_BUTTON_POP_CLASS} inline-flex min-h-[42px] items-center rounded-full bg-gradient-to-r from-blue-700 to-cyan-600 px-4 py-2 font-medium text-white disabled:opacity-60`}
+              >
+                {status === "saving" ? "Entering..." : "Enter Game"}
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -57,6 +57,7 @@ const INCORRECT_EMOJIS = [
 ];
 const CORRECT_POINT_PULSE_DURATION_MS = 900;
 const POINT_FLOW_DURATION_MS = 900;
+const POINT_FLOW_EMOJI_COUNT = 7;
 const RAIN_ITEM_COUNT = 14;
 const RAIN_SIZE_OPTIONS = ["text-4xl", "text-5xl", "text-6xl", "text-7xl"];
 const FIREWORK_ITEM_COUNT = RAIN_ITEM_COUNT;
@@ -105,6 +106,8 @@ type PointsFlowToken = {
   toY: number;
   delayMs: number;
   durationMs: number;
+  sizeClass?: string;
+  colorClass?: string;
 };
 
 function randomInt(min: number, max: number) {
@@ -260,16 +263,32 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     const toX = destinationRect.left - rootRect.left + destinationRect.width / 2;
     const toY = destinationRect.top - rootRect.top + destinationRect.height / 2;
 
-    const flow = Array.from({ length: 1 }, () => ({
-      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-      label: "+10",
-      fromX,
-      fromY,
-      toX,
-      toY,
-      delayMs: randomInt(0, 20),
-      durationMs: POINT_FLOW_DURATION_MS,
-    }));
+    const flow: PointsFlowToken[] = [
+      {
+        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        label: "+10",
+        fromX,
+        fromY,
+        toX,
+        toY,
+        delayMs: randomInt(0, 30),
+        durationMs: POINT_FLOW_DURATION_MS,
+        sizeClass: "text-2xl",
+        colorClass: "text-emerald-600",
+      },
+      ...Array.from({ length: POINT_FLOW_EMOJI_COUNT }, (_, idx) => ({
+        id: `${Date.now()}-${Math.random().toString(16).slice(2)}-${idx}`,
+        label: randomEmoji(CORRECT_EMOJIS),
+        fromX: fromX + randomInt(-18, 18),
+        fromY: fromY + randomInt(-12, 12),
+        toX,
+        toY,
+        delayMs: randomInt(20, 180),
+        durationMs: randomInt(700, 1150),
+        sizeClass: randomEmoji(["text-2xl", "text-3xl", "text-4xl"]),
+        colorClass: "text-emerald-500",
+      })),
+    ];
 
     setPointFlows(flow);
     if (flowTimeoutRef.current) {
@@ -284,9 +303,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     (isCorrect: boolean) => {
       setFeedbackFlash(isCorrect ? "correct" : "incorrect");
       if (isCorrect) {
-        setFireworks(
-          Array.from({ length: FIREWORK_ITEM_COUNT }, () => createFireworkToken(CORRECT_EMOJIS))
-        );
+        setFireworks([]);
         setRainEmojis([]);
       } else {
         setRainEmojis(Array.from({ length: RAIN_ITEM_COUNT }, () => createRainToken(INCORRECT_EMOJIS)));
@@ -376,25 +393,26 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
       const localCorrectAnswer = question.correctAnswer;
       const localWasCorrect = answerIndex === localCorrectAnswer;
       setRevealedCorrectAnswer(localCorrectAnswer);
+      const localOutcome: "correct" | "incorrect" | "timeout" =
+        answerIndex < 0 ? "timeout" : localWasCorrect ? "correct" : "incorrect";
 
       if (answerIndex < 0) {
         setFeedback(`Time's up. Correct answer: ${question.options[localCorrectAnswer]}.`);
         setFeedbackKind("timeout");
         setRewardPulse("⚡ Time out, keep going");
         setShowRewardPulse(true);
-        triggerCelebration(false);
       } else if (localWasCorrect) {
         setFeedback("Correct! +10 points added to your profile.");
         setFeedbackKind("correct");
         setRewardPulse("🎉 Correct +10");
         setShowRewardPulse(true);
         triggerHaptic([20, 50, 20]);
-        triggerCelebration(true);
       } else {
         setFeedback(`Incorrect. Correct answer: ${question.options[localCorrectAnswer]}.`);
         setFeedbackKind("incorrect");
-        triggerCelebration(false);
       }
+
+      triggerCelebration(localOutcome === "correct");
 
       try {
         const response = await fetch("/api/trivia", {
@@ -436,7 +454,6 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
           setFeedback("Correct! +10 points added to your profile.");
           setFeedbackKind("correct");
           setCorrectAnswers((value) => value + 1);
-          triggerCelebration(true);
           triggerPointsFlow(answerIndex);
           if (submittingUserId) {
             setCurrentUserPoints((value) => (value ?? 0) + POINTS_PER_CORRECT);
@@ -452,7 +469,10 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
           setRewardPulse("🙌 Nice try");
           setShowRewardPulse(true);
           triggerHaptic([35, 35]);
-          triggerCelebration(false);
+        }
+
+        if ((wasCorrect ? "correct" : "incorrect") !== localOutcome) {
+          triggerCelebration(wasCorrect);
         }
 
         void loadQuota();
@@ -665,7 +685,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   }
 
   return (
-    <div ref={gameRootRef} className="relative space-y-4 overflow-hidden">
+    <div ref={gameRootRef} className="relative flex h-full min-h-0 flex-col gap-4 overflow-hidden">
       {feedbackFlash ? (
         <div
           aria-hidden="true"
@@ -719,7 +739,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
           {pointFlows.map((item) => (
             <span
               key={item.id}
-              className="absolute text-2xl font-black text-emerald-600 animate-tp-points-flow"
+              className={`absolute ${item.sizeClass ?? "text-2xl"} ${item.colorClass ?? "text-emerald-600"} font-black drop-shadow-[0_2px_0_rgba(0,0,0,0.28)] animate-tp-points-flow`}
               style={{
                 left: `${item.fromX}px`,
                 top: `${item.fromY}px`,
@@ -736,7 +756,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
       ) : null}
 
       {quota ? (
-        <div className="space-y-1 rounded-md border border-slate-200 bg-slate-50 p-3">
+        <div className="space-y-1 rounded-2xl border-4 border-slate-900 bg-cyan-100 p-3 shadow-[5px_5px_0_#0f172a]">
           <div className="flex items-center justify-between text-xs font-medium text-slate-700">
             <span>Trivia Progress This Hour</span>
             {quota.isAdminBypass ? (
@@ -758,7 +778,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         </div>
       ) : null}
 
-      <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+      <div className="rounded-2xl border-4 border-slate-900 bg-yellow-100 p-3 text-sm font-semibold text-slate-700 shadow-[5px_5px_0_#0f172a]">
         <div className="flex items-center justify-between gap-3">
           <span>
             Question {index + 1} of {questions.length}
@@ -773,13 +793,13 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="min-h-0 flex-1 space-y-2 overflow-hidden">
         {showRewardPulse ? (
           <div className="tp-pop-in rounded-lg border border-blue-200 bg-blue-50 p-2 text-sm font-bold text-blue-700">
             {rewardPulse}
           </div>
         ) : null}
-        <h2 className="text-base font-semibold text-slate-900">{question.question}</h2>
+        <h2 className="text-lg font-black text-slate-900">{question.question}</h2>
         <div className="space-y-2">
           {question.options.map((option, optionIndex) => {
             const selected = selectedAnswer === optionIndex;
@@ -796,14 +816,14 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
                   void chooseAnswer(optionIndex);
                 }}
                 disabled={selectedAnswer !== null || isSubmitting || secondsRemaining <= 0}
-                className={`${BUTTON_POP_CLASS} min-h-[52px] w-full rounded-md border px-3 py-2 text-left text-sm ${
+                className={`${BUTTON_POP_CLASS} min-h-[52px] w-full rounded-2xl border-4 px-3 py-2 text-left text-sm font-bold shadow-[4px_4px_0_#0f172a] ${
                   isRevealedCorrect
-                    ? "border-emerald-600 bg-emerald-600 text-white"
+                    ? "border-slate-900 bg-emerald-500 text-white"
                     : isSelectedWrong
-                    ? "border-rose-600 bg-rose-600 text-white"
+                    ? "border-slate-900 bg-rose-500 text-white"
                     : selected
-                    ? "border-slate-900 bg-slate-900 text-white"
-                    : "border-slate-300 bg-white text-slate-800 hover:bg-slate-100"
+                    ? "border-slate-900 bg-pink-500 text-white"
+                    : "border-slate-900 bg-white text-slate-900 hover:bg-cyan-100"
                 } disabled:opacity-80`}
               >
                 {option}
@@ -815,12 +835,12 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
       {feedback && (
         <div
-          className={`rounded-md border p-3 text-sm ${
+          className={`rounded-2xl border-4 p-3 text-sm font-semibold shadow-[5px_5px_0_#0f172a] ${
             feedbackKind === "correct"
-              ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+              ? "border-slate-900 bg-emerald-200 text-emerald-900"
               : feedbackKind === "incorrect" || feedbackKind === "timeout"
-              ? "border-rose-300 bg-rose-50 text-rose-800"
-              : "border-slate-200 bg-slate-50 text-slate-700"
+              ? "border-slate-900 bg-rose-200 text-rose-900"
+              : "border-slate-900 bg-white text-slate-700"
           }`}
         >
           {feedback}
@@ -832,7 +852,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         onMouseDown={() => triggerHaptic(14)}
         onClick={nextQuestion}
         disabled={selectedAnswer === null || isSubmitting}
-        className={`${BUTTON_POP_CLASS} inline-flex min-h-[44px] min-w-[120px] items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-blue-200 disabled:opacity-60`}
+        className={`${BUTTON_POP_CLASS} inline-flex min-h-[44px] min-w-[120px] items-center justify-center rounded-2xl border-4 border-slate-900 bg-cyan-300 px-4 py-2 text-sm font-black text-slate-900 shadow-[5px_5px_0_#0f172a] disabled:opacity-60`}
       >
         Next Question
       </button>

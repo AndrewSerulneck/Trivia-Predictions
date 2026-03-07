@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { getUserId, getUsername, getVenueId } from "@/lib/storage";
@@ -15,6 +16,8 @@ type SummaryPayload = {
 };
 
 export function UserStatusHeader() {
+  const pathname = usePathname();
+  const isJoinRoute = pathname === "/" || pathname === "/join";
   const [username, setUsername] = useState("");
   const [points, setPoints] = useState<number | null>(null);
   const [displayedPoints, setDisplayedPoints] = useState(0);
@@ -130,6 +133,15 @@ export function UserStatusHeader() {
   }, [animateGain, setPointsAndAnimate]);
 
   useEffect(() => {
+    if (isJoinRoute) {
+      setUsername("");
+      setPoints(null);
+      setDisplayedPoints(0);
+      priorPointsRef.current = null;
+      displayedPointsRef.current = 0;
+      return;
+    }
+
     void loadSummary();
 
     const interval = window.setInterval(() => {
@@ -162,30 +174,37 @@ export function UserStatusHeader() {
         window.clearTimeout(popHideTimerRef.current);
       }
     };
-  }, [animateGain, loadSummary, setPointsAndAnimate]);
+  }, [animateGain, isJoinRoute, loadSummary, setPointsAndAnimate]);
+
+  if (isJoinRoute) {
+    return null;
+  }
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-2">
-      <div className="rounded-md bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700">
-        User: {username || "Guest"}
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="tp-bounce-hover flex items-center gap-2 rounded-2xl border-4 border-slate-900 bg-cyan-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-[4px_4px_0_#0f172a]">
+        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border-4 border-slate-900 bg-white text-[11px]">
+          {((username || "G").trim()[0] ?? "G").toUpperCase()}
+        </span>
+        <span>{username || "Guest"}</span>
       </div>
       <div
-        className={`rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-transform duration-200 ${
+        className={`tp-bounce-hover rounded-2xl border-4 border-slate-900 bg-yellow-200 px-3 py-2 text-sm font-medium text-slate-900 shadow-[4px_4px_0_#0f172a] transition-transform duration-200 ${
           pointsPop ? "scale-110" : "scale-100"
         }`}
         id="tp-points-pill"
       >
-        Points: {points ?? displayedPoints}
+        {(points ?? displayedPoints).toLocaleString()} PTS
       </div>
       {pointsGain ? (
-        <div className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-bold text-emerald-700 animate-bounce">
+        <div className="rounded-full border-4 border-slate-900 bg-pink-300 px-2 py-1 text-sm font-medium text-slate-900 shadow-[3px_3px_0_#0f172a] animate-bounce">
           +{pointsGain}
         </div>
       ) : null}
       <NotificationBell />
       <Link
         href="/admin"
-        className="px-1 text-[10px] font-medium text-slate-400 hover:text-slate-600"
+        className="rounded-xl border-4 border-slate-900 bg-white px-2 py-1 text-[10px] font-semibold text-slate-700 shadow-[3px_3px_0_#0f172a]"
         aria-label="Admin access"
       >
         Admin

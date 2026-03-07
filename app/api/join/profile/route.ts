@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
+import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { DEFAULT_VENUE_BY_ID } from "@/lib/defaultVenues";
 
 type CreateProfileBody = {
   username?: string;
   venueId?: string;
+  pin?: string;
 };
 
 type UserRow = {
@@ -13,16 +15,28 @@ type UserRow = {
   username: string;
   venue_id: string;
   points: number;
+  pin_salt?: string | null;
+  pin_hash?: string | null;
   created_at: string;
 };
 
-function getBearerToken(request: Request): string | null {
-  const header = request.headers.get("authorization") ?? "";
-  if (!header.toLowerCase().startsWith("bearer ")) {
-    return null;
+function normalizePin(pin: string): string {
+  return pin.trim();
+}
+
+function hashPin(pin: string, salt: string): string {
+  const derived = scryptSync(pin, salt, 64);
+  return derived.toString("hex");
+}
+
+function verifyPin(pin: string, salt: string, hash: string): boolean {
+  const computedHex = hashPin(pin, salt);
+  const computed = Buffer.from(computedHex, "hex");
+  const expected = Buffer.from(hash, "hex");
+  if (computed.length !== expected.length) {
+    return false;
   }
-  const token = header.slice(7).trim();
-  return token || null;
+  return timingSafeEqual(computed, expected);
 }
 
 export async function POST(request: Request) {
@@ -30,26 +44,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Supabase admin client is not configured." }, { status: 500 });
   }
 
-  const token = getBearerToken(request);
-  if (!token) {
-    return NextResponse.json({ ok: false, error: "Missing auth token." }, { status: 401 });
-  }
-
-  const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
-  const authUserId = authData.user?.id;
-  if (authError || !authUserId) {
-    return NextResponse.json({ ok: false, error: "Invalid auth token." }, { status: 401 });
-  }
-
   const body = (await request.json().catch(() => ({}))) as CreateProfileBody;
   const username = (body.username ?? "").trim();
   const venueId = (body.venueId ?? "").trim();
+  const pin = normalizePin(body.pin ?? "");
 
   if (!username) {
     return NextResponse.json({ ok: false, error: "Username is required." }, { status: 400 });
   }
   if (!venueId) {
     return NextResponse.json({ ok: false, error: "Venue is required." }, { status: 400 });
+  }
+  if (!/^\d{4}$/.test(pin)) {
+    return NextResponse.json({ ok: false, error: "PIN must be exactly 4 digits." }, { status: 400 });
   }
 
   // Ensure default demo venues are present when selected from public links,
@@ -84,24 +91,67 @@ export async function POST(request: Request) {
 
   const { data: existingByUsername, error: existingUsernameError } = await supabaseAdmin
     .from("users")
-    .select("id")
-    .eq("venue_id", venueId)
+    .select("id, auth_id, username, venue_id, points, pin_salt, pin_hash, created_at")
     .ilike("username", username)
     .limit(1);
   if (existingUsernameError) {
     return NextResponse.json({ ok: false, error: existingUsernameError.message }, { status: 500 });
   }
-  if ((existingByUsername?.length ?? 0) > 0) {
-    return NextResponse.json({ ok: false, error: "That username is already taken at this venue." }, { status: 409 });
+  const existingUser = (existingByUsername?.[0] ?? null) as UserRow | null;
+  if (existingUser) {
+    if (existingUser.venue_id !== venueId) {
+      return NextResponse.json(
+        { ok: false, error: "That username is already associated with a different venue." },
+        { status: 409 }
+      );
+    }
+
+    const existingSalt = (existingUser.pin_salt ?? "").trim();
+    const existingHash = (existingUser.pin_hash ?? "").trim();
+
+    if (existingSalt && existingHash) {
+      const isValidPin = verifyPin(pin, existingSalt, existingHash);
+      if (!isValidPin) {
+        return NextResponse.json({ ok: false, error: "Incorrect PIN." }, { status: 401 });
+      }
+    } else {
+      const salt = randomBytes(16).toString("hex");
+      const hash = hashPin(pin, salt);
+      const { error: pinSetError } = await supabaseAdmin
+        .from("users")
+        .update({ pin_salt: salt, pin_hash: hash })
+        .eq("id", existingUser.id);
+
+      if (pinSetError) {
+        return NextResponse.json({ ok: false, error: pinSetError.message }, { status: 500 });
+      }
+    }
+
+    return NextResponse.json({
+      ok: true,
+      user: {
+        id: existingUser.id,
+        authId: existingUser.auth_id ?? undefined,
+        username: existingUser.username,
+        venueId: existingUser.venue_id,
+        points: existingUser.points,
+        createdAt: existingUser.created_at,
+      },
+    });
   }
+
+  const salt = randomBytes(16).toString("hex");
+  const hash = hashPin(pin, salt);
 
   const { data, error } = await supabaseAdmin
     .from("users")
     .insert({
-      auth_id: authUserId,
+      auth_id: null,
       username,
       venue_id: venueId,
       points: 0,
+      pin_salt: salt,
+      pin_hash: hash,
     })
     .select("id, auth_id, username, venue_id, points, created_at")
     .single<UserRow>();
@@ -115,7 +165,7 @@ export async function POST(request: Request) {
       );
     }
     if (code === "23505") {
-      return NextResponse.json({ ok: false, error: "That username is already taken at this venue." }, { status: 409 });
+      return NextResponse.json({ ok: false, error: "That username is already taken." }, { status: 409 });
     }
     return NextResponse.json({ ok: false, error: error?.message ?? "Failed to create profile." }, { status: 500 });
   }

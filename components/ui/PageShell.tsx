@@ -8,18 +8,19 @@ type PageShellProps = {
 
 export function PageShell({ title, description, children }: PageShellProps) {
   return (
-    <div className="space-y-6">
-      <header className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h1 className="text-xl font-semibold">{title}</h1>
-            {description ? <p className="mt-1 text-sm text-slate-600">{description}</p> : null}
+    <div className="flex min-h-[100dvh] flex-col gap-4">
+      <header className="tp-hud-card sticky top-2 z-20 p-4">
+        <div className="flex flex-col gap-3">
+          <div className="text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-800">Hightop Challenge</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{title}</h1>
+            {description ? <p className="mt-1 text-sm font-medium text-slate-700">{description}</p> : null}
           </div>
           <UserStatusHeader />
         </div>
       </header>
 
-      <main className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <main className="tp-comic-card min-h-0 flex-1 overflow-hidden p-4">
         {children}
       </main>
     </div>

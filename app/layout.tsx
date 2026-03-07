@@ -13,11 +13,12 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className="bg-slate-50 touch-manipulation">
+      <body className="touch-manipulation">
         <LeftHamburgerNav />
         <div className="relative mx-auto min-h-screen min-w-[320px] max-w-md space-y-4 overflow-hidden px-3 pb-6 pt-6 md:max-w-md">
-          <div className="pointer-events-none absolute -top-20 -right-12 h-48 w-48 rounded-full bg-cyan-300/30 blur-3xl" />
-          <div className="pointer-events-none absolute top-28 -left-16 h-40 w-40 rounded-full bg-blue-300/20 blur-3xl" />
+          <div className="pointer-events-none absolute -top-20 -right-12 h-52 w-52 rounded-full bg-cyan-300/45 blur-3xl" />
+          <div className="pointer-events-none absolute top-24 -left-16 h-44 w-44 rounded-full bg-pink-300/35 blur-3xl" />
+          <div className="pointer-events-none absolute bottom-16 right-4 h-36 w-36 rounded-full bg-yellow-300/30 blur-3xl" />
 
           <SlotAd slot="header" />
           {children}

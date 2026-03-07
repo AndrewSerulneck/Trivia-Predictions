@@ -25,6 +25,10 @@ export function validateUsername(username: string): boolean {
   return username.trim().length > 0;
 }
 
+export function validatePin(pin: string): boolean {
+  return /^\d{4}$/.test(pin.trim());
+}
+
 export async function signInAnonymously(): Promise<void> {
   if (!supabase) {
     throw new Error("Supabase is not configured.");
@@ -64,106 +68,47 @@ export async function ensureAnonymousSession(): Promise<string> {
   return authUserId;
 }
 
-export async function getUserForVenue(venueId: string): Promise<User | null> {
-  if (!supabase) {
-    throw new Error("Supabase is not configured.");
-  }
-
-  const authUserId = await ensureAnonymousSession();
-  const { data, error } = await supabase
-    .from("users")
-    .select("id, auth_id, username, venue_id, points, created_at")
-    .eq("auth_id", authUserId)
-    .eq("venue_id", venueId)
-    .maybeSingle<UserProfileRow>();
-
-  if (error) {
-    throw error;
-  }
-
-  return data ? mapUserProfileRow(data) : null;
-}
-
-export async function checkUsernameAtVenue(username: string, venueId: string): Promise<boolean> {
-  if (!supabase) {
-    throw new Error("Supabase is not configured.");
-  }
-
-  const normalized = username.trim();
-  const { data, error } = await supabase
-    .from("users")
-    .select("id")
-    .eq("venue_id", venueId)
-    .ilike("username", normalized)
-    .limit(1);
-
-  if (error) {
-    throw error;
-  }
-
-  return (data?.length ?? 0) === 0;
-}
-
 export async function createUserProfile(params: {
   username: string;
   venueId: string;
+  pin: string;
 }): Promise<User> {
   if (!supabase) {
     throw new Error("Supabase is not configured.");
   }
 
   const username = params.username.trim();
+  const pin = params.pin.trim();
   if (!validateUsername(username)) {
     throw new Error("Username is required.");
   }
-
-  const authUserId = await ensureAnonymousSession();
-  const { data: sessionData } = await supabase.auth.getSession();
-  const accessToken = sessionData.session?.access_token ?? "";
-
-  if (accessToken) {
-    const response = await fetch("/api/join/profile", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        username,
-        venueId: params.venueId,
-      }),
-    });
-
-    const payload = (await response.json().catch(() => ({}))) as {
-      ok?: boolean;
-      error?: string;
-      user?: User;
-    };
-    if (!response.ok || !payload.ok || !payload.user) {
-      throw new Error(payload.error ?? "Failed to create profile.");
-    }
-    return payload.user;
+  if (!validatePin(pin)) {
+    throw new Error("PIN must be exactly 4 digits.");
   }
 
-  const { data, error } = await supabase
-    .from("users")
-    .insert({
-      auth_id: authUserId,
+  await ensureAnonymousSession();
+
+  const response = await fetch("/api/join/profile", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
       username,
-      venue_id: params.venueId,
-      points: 0,
-    })
-    .select("id, auth_id, username, venue_id, points, created_at")
-    .single<UserProfileRow>();
+      venueId: params.venueId,
+      pin,
+    }),
+  });
 
-  if (error) {
-    if ((error as { code?: string }).code === "23505") {
-      throw new Error("That username is already taken at this venue.");
-    }
-    throw error;
+  const payload = (await response.json().catch(() => ({}))) as {
+    ok?: boolean;
+    error?: string;
+    user?: User;
+  };
+  if (!response.ok || !payload.ok || !payload.user) {
+    throw new Error(payload.error ?? "Failed to enter game.");
   }
-
-  return mapUserProfileRow(data);
+  return payload.user;
 }
 
 export async function signOut(): Promise<void> {

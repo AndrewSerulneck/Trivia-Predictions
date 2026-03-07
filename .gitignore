@@ -13,3 +13,6 @@ pnpm-debug.log*
 .vercel
 
 supabase/.temp
+
+.env.local.bak
+.env.local.pre-clean.bak
