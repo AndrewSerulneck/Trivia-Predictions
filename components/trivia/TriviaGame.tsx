@@ -608,23 +608,23 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     const totalAfterRound = roundTotalPoints ?? estimatedRoundTotal ?? currentUserPoints ?? 0;
     const roundGain = Math.max(0, roundDelta);
     return (
-      <div className="rounded-xl border border-emerald-300 bg-gradient-to-br from-emerald-50 to-cyan-50 p-4">
-        <div className="rounded-lg border border-emerald-200 bg-white p-3 shadow-sm">
-          <p className="mb-2 text-sm font-semibold tracking-wide text-emerald-800">Round complete 🎉</p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-lg bg-slate-50 p-3">
+      <div className="flex h-full min-h-0 flex-col rounded-2xl border-4 border-slate-900 bg-gradient-to-br from-emerald-100 to-cyan-100 p-2 shadow-[5px_5px_0_#0f172a]">
+        <div className="flex min-h-0 flex-1 flex-col rounded-2xl border-4 border-slate-900 bg-white p-2 shadow-[4px_4px_0_#0f172a]">
+          <p className="mb-2 text-sm font-black tracking-wide text-emerald-800">Round complete 🎉</p>
+          <div className="grid min-h-0 flex-1 gap-2 sm:grid-cols-2">
+            <div className="rounded-2xl border-4 border-slate-900 bg-slate-50 p-2 shadow-[3px_3px_0_#0f172a]">
               <p className="text-xs uppercase text-slate-500">Scoreboard</p>
               <p className="text-lg font-bold text-slate-900">
                 {correctAnswers}/{attempted}
               </p>
               <p className="text-sm text-slate-600">{accuracy}% accuracy</p>
             </div>
-            <div className="rounded-lg bg-slate-50 p-3">
+            <div className="rounded-2xl border-4 border-slate-900 bg-slate-50 p-2 shadow-[3px_3px_0_#0f172a]">
               <p className="text-xs uppercase text-slate-500">Round reward</p>
               <p className="text-lg font-bold text-emerald-700">+{pointsWon} points</p>
               <p className="text-xs text-emerald-700">Fireworks unlocked: {correctAnswers}</p>
             </div>
-            <div className="rounded-lg bg-slate-50 p-3 sm:col-span-2">
+            <div className="rounded-2xl border-4 border-slate-900 bg-slate-50 p-2 shadow-[3px_3px_0_#0f172a] sm:col-span-2">
               <p className="text-xs uppercase text-slate-500">Total points</p>
               <p className="text-xl font-bold text-slate-900">{totalAfterRound}</p>
               <p className="text-sm text-slate-600">Round gain: +{roundGain}</p>
@@ -641,7 +641,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
             }
             router.push("/");
           }}
-          className={`${BUTTON_POP_CLASS} ${BACK_TO_VENUE_CLASS} mt-3`}
+          className={`${BUTTON_POP_CLASS} ${BACK_TO_VENUE_CLASS} mt-2 w-full`}
         >
           <span
             aria-hidden="true"
