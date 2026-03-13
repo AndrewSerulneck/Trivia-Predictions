@@ -33,38 +33,11 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
-function parseBooleanEnv(value: string | undefined): boolean {
-  if (!value) return false;
-  let normalized = value.trim();
-  for (let i = 0; i < 2; i += 1) {
-    if (
-      (normalized.startsWith('""') && normalized.endsWith('""')) ||
-      (normalized.startsWith("''") && normalized.endsWith("''"))
-    ) {
-      normalized = normalized.slice(2, -2).trim();
-      continue;
-    }
-    if (
-      (normalized.startsWith('"') && normalized.endsWith('"')) ||
-      (normalized.startsWith("'") && normalized.endsWith("'"))
-    ) {
-      normalized = normalized.slice(1, -1).trim();
-      continue;
-    }
-    break;
-  }
-  const lowered = normalized.toLowerCase();
-  return lowered === "true" || lowered === "1" || lowered === "yes" || lowered === "on";
-}
-
 const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig(venue, index);
 
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const router = useRouter();
   const venueParam = initialVenueId.trim();
-  const geofenceBypassedInDev =
-    process.env.NODE_ENV !== "production" || parseBooleanEnv(process.env.NEXT_PUBLIC_DISABLE_GEOFENCE);
-  const [adminSessionActive, setAdminSessionActive] = useState(false);
 
   const [status, setStatus] = useState<Status>("loading");
   const [errorMessage, setErrorMessage] = useState("");
@@ -84,48 +57,47 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const scanRafRef = useRef<number | null>(null);
   const scanCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const geofenceBypassed = geofenceBypassedInDev || adminSessionActive;
-
-  const detectAdminSession = useCallback(async () => {
-    try {
-      const response = await fetch("/api/admin?resource=session", {
-        cache: "no-store",
-      });
-      return response.ok;
-    } catch {
-      return false;
-    }
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    const run = async () => {
-      const active = await detectAdminSession();
-      if (!cancelled) {
-        setAdminSessionActive(active);
-      }
-    };
-    void run();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [detectAdminSession]);
-
   useEffect(() => {
     const load = async () => {
       setStatus("loading");
       setErrorMessage("");
-      setLocationVerified(geofenceBypassed);
+      setLocationVerified(false);
       setDistanceMeters(null);
-      setLocationNotice(geofenceBypassed ? "" : "Verifying your location...");
+      setLocationNotice("Verifying your location...");
       autoVerificationAttemptedRef.current = false;
 
       try {
         const venues = await listVenues();
-        setVenueList(venues);
 
         if (!venueParam) {
+          setLocationLoading(true);
+          try {
+            const current = await getCurrentLocation();
+            const nearbyVenues = venues.filter((item) => {
+              const distance = calculateDistanceMeters(current, {
+                latitude: item.latitude,
+                longitude: item.longitude,
+              });
+              return distance <= item.radius;
+            });
+            setVenueList(nearbyVenues);
+            if (nearbyVenues.length > 0) {
+              setLocationNotice(`Showing ${nearbyVenues.length} nearby venue(s) within range.`);
+            } else {
+              setLocationNotice("No nearby venues are within geofence range right now.");
+            }
+          } catch (error) {
+            setVenueList([]);
+            setLocationNotice("");
+            setErrorMessage(
+              getErrorMessage(
+                error,
+                "Location access is required to show nearby venues. Enable location services and retry."
+              )
+            );
+          } finally {
+            setLocationLoading(false);
+          }
           setVenue(null);
           setStatus("ready");
           return;
@@ -157,7 +129,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     };
 
     void load();
-  }, [adminSessionActive, geofenceBypassed, geofenceBypassedInDev, venueParam]);
+  }, [venueParam]);
 
   const canCreate = useMemo(() => {
     return Boolean(
@@ -165,9 +137,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         venue &&
         validateUsername(username) &&
         validatePin(pin) &&
-        (locationVerified || geofenceBypassed)
+        locationVerified
     );
-  }, [venue, username, pin, locationVerified, geofenceBypassed]);
+  }, [venue, username, pin, locationVerified]);
 
   const verifyLocation = useCallback(async () => {
     if (!venue) return;
@@ -376,16 +348,12 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     if (!venue || status !== "ready" || !isSupabaseConfigured) {
       return;
     }
-    if (geofenceBypassed) {
-      setLocationVerified(true);
-      return;
-    }
     if (autoVerificationAttemptedRef.current) {
       return;
     }
     autoVerificationAttemptedRef.current = true;
     void verifyLocation();
-  }, [venue, status, geofenceBypassed, verifyLocation]);
+  }, [venue, status, verifyLocation]);
 
   const createProfile = async () => {
     if (!venue) return;
@@ -397,9 +365,38 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setErrorMessage("PIN must be exactly 4 digits.");
       return;
     }
-    if (!locationVerified && !geofenceBypassed) {
+    if (!locationVerified) {
       setErrorMessage("Verify your location before creating a profile.");
       return;
+    }
+
+    setLocationLoading(true);
+    try {
+      const current = await getCurrentLocation();
+      const distance = calculateDistanceMeters(current, {
+        latitude: venue.latitude,
+        longitude: venue.longitude,
+      });
+      setDistanceMeters(distance);
+      if (distance > venue.radius) {
+        setLocationVerified(false);
+        setLocationNotice("");
+        setErrorMessage(
+          `You are ${Math.round(distance)}m away. You must be within ${venue.radius}m of ${getVenueDisplayName(
+            venue
+          )} to join.`
+        );
+        return;
+      }
+      setLocationVerified(true);
+      setLocationNotice("Location verified successfully.");
+    } catch (error) {
+      setLocationVerified(false);
+      setLocationNotice("");
+      setErrorMessage(getErrorMessage(error, "Unable to verify location."));
+      return;
+    } finally {
+      setLocationLoading(false);
     }
 
     setStatus("saving");
@@ -518,6 +515,28 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           </div>
         )}
 
+        {!venue && venueList.length === 0 && status === "ready" && (
+          <div className="space-y-3 rounded-2xl border-4 border-slate-900 bg-white p-4 text-sm text-slate-800 shadow-[5px_5px_0_#0f172a]">
+            <p className="font-semibold">Nearby venues only</p>
+            {locationLoading ? (
+              <p>Checking your location to find venues in range...</p>
+            ) : locationNotice ? (
+              <p>{locationNotice}</p>
+            ) : (
+              <p>No venue is currently in range from your location.</p>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                router.refresh();
+              }}
+              className={`${JOIN_BUTTON_POP_CLASS} inline-flex min-h-[42px] items-center rounded-full bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2 font-medium text-white`}
+            >
+              Retry nearby venue scan
+            </button>
+          </div>
+        )}
+
         {venue && (
           <div className="space-y-4">
             <BackButton label="Choose different venue" href="/" />
@@ -534,7 +553,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               )}
             </div>
 
-            {!locationVerified && !geofenceBypassed && !locationLoading && (
+            {!locationVerified && !locationLoading && (
               <button
                 type="button"
                 onClick={verifyLocation}
@@ -549,6 +568,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               <label htmlFor="username" className="block font-medium">
                 Enter username and PIN
               </label>
+              <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                <p>
+                  If this is your first time playing Hightop Challenge, simply enter a username and PIN to create a
+                  new profile.
+                </p>
+                <p className="mt-2">
+                  If have played Hightop Challenge before, simply enter the same username and PIN you enterred last
+                  time to continue playing.
+                </p>
+              </div>
               <input
                 id="username"
                 type="text"

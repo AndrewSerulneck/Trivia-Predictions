@@ -23,18 +23,16 @@ function isActive(pathname: string, href: string): boolean {
 export function LeftHamburgerNav() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const [joinedVenueId, setJoinedVenueId] = useState("");
+  const joinedVenueId = getVenueId() ?? "";
 
   useEffect(() => {
-    setJoinedVenueId(getVenueId() ?? "");
-    setIsOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    if (!joinedVenueId) {
+    const closeTimer = window.setTimeout(() => {
       setIsOpen(false);
-    }
-  }, [joinedVenueId]);
+    }, 0);
+    return () => {
+      window.clearTimeout(closeTimer);
+    };
+  }, [pathname, joinedVenueId]);
 
   useEffect(() => {
     if (typeof document === "undefined") {
@@ -48,8 +46,9 @@ export function LeftHamburgerNav() {
   }, [isOpen]);
 
   const isJoinPage = pathname === "/";
+  const isTriviaPage = pathname === "/trivia";
 
-  if (isJoinPage || !joinedVenueId) {
+  if (isJoinPage || isTriviaPage || !joinedVenueId) {
     return null;
   }
 

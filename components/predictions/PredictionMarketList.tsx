@@ -132,19 +132,13 @@ export function PredictionMarketList() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [broadCategory, setBroadCategory] = useState("");
-  const [excludeSensitive, setExcludeSensitive] = useState(true);
   const [sort, setSort] = useState<SortKey>("closing-soon");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const { rewards, addReward } = useRewards();
 
-  const hasFilters = useMemo(() => Boolean(search || category || broadCategory || !excludeSensitive), [
-    search,
-    category,
-    broadCategory,
-    excludeSensitive,
-  ]);
+  const hasFilters = useMemo(() => Boolean(search || category || broadCategory), [search, category, broadCategory]);
 
   useEffect(() => {
     const nextUserId = getUserId();
@@ -199,7 +193,7 @@ export function PredictionMarketList() {
           search,
           category,
           broadCategory,
-          excludeSensitive: excludeSensitive ? "true" : "false",
+          excludeSensitive: "true",
           sort,
         });
         const response = await fetch(`/api/predictions?${query.toString()}`, {
@@ -240,7 +234,7 @@ export function PredictionMarketList() {
     void load();
 
     return () => controller.abort();
-  }, [page, search, category, broadCategory, sort, excludeSensitive]);
+  }, [page, search, category, broadCategory, sort]);
 
   if (isInitializing) {
     return (
@@ -478,18 +472,6 @@ export function PredictionMarketList() {
               </option>
             ))}
           </select>
-          <label className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm">
-            <input
-              type="checkbox"
-              checked={excludeSensitive}
-              onChange={(event) => {
-                setExcludeSensitive(event.target.checked);
-                setPage(1);
-              }}
-              className="h-4 w-4"
-            />
-            <span>Hide sensitive categories</span>
-          </label>
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -510,7 +492,6 @@ export function PredictionMarketList() {
                 setCategory("");
                 setBroadCategory("");
                 setSort("closing-soon");
-                setExcludeSensitive(true);
                 setPage(1);
               }}
               className={`${BUTTON_POP_CLASS} rounded-md bg-slate-200 px-3 py-2 text-sm font-medium text-slate-700`}
@@ -587,11 +568,11 @@ export function PredictionMarketList() {
                 {messages[market.id] ? <p className="mt-2 text-xs text-slate-600">{messages[market.id]}</p> : null}
               </article>
 
-              {(index + 1) % 10 === 0 ? (
-                <div className="min-[480px]:col-span-2">
-                  <div className="flex min-h-[260px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-100/70 p-4 text-center">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Ad Placeholder</p>
-                    <p className="mt-1 text-sm font-medium text-slate-700">Banner Advertisement Slot</p>
+              {(index + 1) % 6 === 0 ? (
+                <div className="rounded-lg border border-slate-200 p-3">
+                  <div className="flex h-full min-h-[180px] flex-col items-center justify-center rounded-md border-2 border-dashed border-slate-300 bg-slate-100/70 p-4 text-center">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Advertisement</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-700">Banner Ad Placement</p>
                   </div>
                 </div>
               ) : null}

@@ -158,14 +158,20 @@ textarea {
 @keyframes tp-points-flow {
   0% {
     opacity: 0.95;
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1) rotate(var(--coin-rotate, 0deg));
   }
   20% {
     opacity: 1;
   }
+  84% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 0.92;
+  }
   100% {
     opacity: 0;
-    transform: translate3d(var(--flow-x), var(--flow-y), 0) scale(0.15);
+    transform: translate3d(var(--flow-x), var(--flow-y), 0) scale(0.15) rotate(var(--coin-rotate, 0deg));
   }
 }
 

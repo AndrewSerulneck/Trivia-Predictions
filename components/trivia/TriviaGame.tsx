@@ -37,7 +37,6 @@ const BUTTON_POP_CLASS =
   "transition-all duration-150 transform active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
 const BACK_TO_VENUE_CLASS =
   "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-blue-300 bg-gradient-to-r from-blue-700 to-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 active:scale-95 active:brightness-90";
-const CORRECT_EMOJIS = ["🎉", "🎊", "🎈", "✨", "🌈", "🥳", "💃", "🕺", "🎵", "🏆"];
 const INCORRECT_EMOJIS = [
   "😢",
   "😞",
@@ -56,8 +55,6 @@ const INCORRECT_EMOJIS = [
   "😥",
 ];
 const CORRECT_POINT_PULSE_DURATION_MS = 900;
-const POINT_FLOW_DURATION_MS = 900;
-const POINT_FLOW_EMOJI_COUNT = 7;
 const RAIN_ITEM_COUNT = 14;
 const RAIN_SIZE_OPTIONS = ["text-4xl", "text-5xl", "text-6xl", "text-7xl"];
 const FIREWORK_ITEM_COUNT = RAIN_ITEM_COUNT;
@@ -97,19 +94,6 @@ type FireworkToken = {
   sizeClass: string;
 };
 
-type PointsFlowToken = {
-  id: string;
-  label: string;
-  fromX: number;
-  fromY: number;
-  toX: number;
-  toY: number;
-  delayMs: number;
-  durationMs: number;
-  sizeClass?: string;
-  colorClass?: string;
-};
-
 function randomInt(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -118,11 +102,16 @@ function randomEmoji(list: readonly string[]) {
   return list[Math.floor(Math.random() * list.length)] ?? list[0] ?? "🎉";
 }
 
-function createRainToken(pool: readonly string[]): RainToken {
+function createRainToken(pool: readonly string[], index = 0, total = RAIN_ITEM_COUNT): RainToken {
+  const laneCount = Math.max(1, total);
+  const laneWidth = 100 / laneCount;
+  const laneLeft = laneWidth * index + laneWidth / 2;
+  const jitter = (Math.random() - 0.5) * Math.min(5.5, laneWidth * 0.85);
+  const boundedLeft = Math.max(3, Math.min(97, laneLeft + jitter));
   return {
     id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
     emoji: randomEmoji(pool),
-    left: randomInt(0, 95),
+    left: boundedLeft,
     drift: randomInt(-48, 48),
     delayMs: randomInt(0, 250),
     durationMs: randomInt(1500, 2500),
@@ -168,12 +157,10 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   const [feedbackFlash, setFeedbackFlash] = useState<FeedbackFlash>(null);
   const [rainEmojis, setRainEmojis] = useState<RainToken[]>([]);
   const [fireworks, setFireworks] = useState<FireworkToken[]>([]);
-  const [pointFlows, setPointFlows] = useState<PointsFlowToken[]>([]);
 
   const flashTimeoutRef = useRef<number | null>(null);
   const rainTimeoutRef = useRef<number | null>(null);
   const fireworkTimeoutRef = useRef<number | null>(null);
-  const flowTimeoutRef = useRef<number | null>(null);
   const [currentUserPoints, setCurrentUserPoints] = useState<number | null>(null);
 
   const question = questions[index] ?? null;
@@ -256,47 +243,22 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
     const sourceRect = source.getBoundingClientRect();
     const destinationRect = destination.getBoundingClientRect();
-    const rootRect = gameRootRef.current.getBoundingClientRect();
-
-    const fromX = sourceRect.left - rootRect.left + sourceRect.width / 2;
-    const fromY = sourceRect.top - rootRect.top + sourceRect.height / 2;
-    const toX = destinationRect.left - rootRect.left + destinationRect.width / 2;
-    const toY = destinationRect.top - rootRect.top + destinationRect.height / 2;
-
-    const flow: PointsFlowToken[] = [
-      {
-        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-        label: "+10",
-        fromX,
-        fromY,
-        toX,
-        toY,
-        delayMs: randomInt(0, 30),
-        durationMs: POINT_FLOW_DURATION_MS,
-        sizeClass: "text-2xl",
-        colorClass: "text-emerald-600",
-      },
-      ...Array.from({ length: POINT_FLOW_EMOJI_COUNT }, (_, idx) => ({
-        id: `${Date.now()}-${Math.random().toString(16).slice(2)}-${idx}`,
-        label: randomEmoji(CORRECT_EMOJIS),
-        fromX: fromX + randomInt(-18, 18),
-        fromY: fromY + randomInt(-12, 12),
-        toX,
-        toY,
-        delayMs: randomInt(20, 180),
-        durationMs: randomInt(700, 1150),
-        sizeClass: randomEmoji(["text-2xl", "text-3xl", "text-4xl"]),
-        colorClass: "text-emerald-500",
-      })),
-    ];
-
-    setPointFlows(flow);
-    if (flowTimeoutRef.current) {
-      window.clearTimeout(flowTimeoutRef.current);
-    }
-    flowTimeoutRef.current = window.setTimeout(() => {
-      setPointFlows([]);
-    }, POINT_FLOW_DURATION_MS + 150);
+    window.dispatchEvent(
+      new CustomEvent("tp:coin-flight", {
+        detail: {
+          sourceRect: {
+            left: sourceRect.left,
+            top: sourceRect.top,
+            width: sourceRect.width,
+            height: sourceRect.height,
+          },
+          sourceX: destinationRect.left + destinationRect.width / 2,
+          sourceY: destinationRect.top + destinationRect.height / 2,
+          delta: POINTS_PER_CORRECT,
+          coins: 10,
+        },
+      })
+    );
   }, [question?.id]);
 
   const triggerCelebration = useCallback(
@@ -306,7 +268,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         setFireworks([]);
         setRainEmojis([]);
       } else {
-        setRainEmojis(Array.from({ length: RAIN_ITEM_COUNT }, () => createRainToken(INCORRECT_EMOJIS)));
+        setRainEmojis(Array.from({ length: RAIN_ITEM_COUNT }, (_, index) => createRainToken(INCORRECT_EMOJIS, index)));
         setFireworks([]);
       }
 
@@ -498,9 +460,6 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
       if (fireworkTimeoutRef.current) {
         window.clearTimeout(fireworkTimeoutRef.current);
       }
-      if (flowTimeoutRef.current) {
-        window.clearTimeout(flowTimeoutRef.current);
-      }
     };
   }, []);
 
@@ -539,7 +498,6 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     setFeedbackFlash(null);
     setRainEmojis([]);
     setFireworks([]);
-    setPointFlows([]);
     setSelectedAnswer(null);
     setFeedback("");
     setFeedbackKind(null);
@@ -729,27 +687,6 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
               }}
             >
               {item.emoji}
-            </span>
-          ))}
-        </div>
-      ) : null}
-
-      {pointFlows.length > 0 ? (
-        <div className="pointer-events-none absolute inset-0 z-40">
-          {pointFlows.map((item) => (
-            <span
-              key={item.id}
-              className={`absolute ${item.sizeClass ?? "text-2xl"} ${item.colorClass ?? "text-emerald-600"} font-black drop-shadow-[0_2px_0_rgba(0,0,0,0.28)] animate-tp-points-flow`}
-              style={{
-                left: `${item.fromX}px`,
-                top: `${item.fromY}px`,
-                animationDelay: `${item.delayMs}ms`,
-                animationDuration: `${item.durationMs}ms`,
-                ["--flow-x" as string]: `${item.toX - item.fromX}px`,
-                ["--flow-y" as string]: `${item.toY - item.fromY}px`,
-              }}
-            >
-              {item.label}
             </span>
           ))}
         </div>

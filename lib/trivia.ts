@@ -153,23 +153,44 @@ export async function getTriviaQuestions(limit = 10, userId?: string): Promise<T
     );
   }
 
-  const queryLimit = Math.min(MAX_CANDIDATE_QUESTIONS, Math.max(safeLimit * 20, 200));
+  const queryLimit = Math.min(MAX_CANDIDATE_QUESTIONS, Math.max(safeLimit * 30, 300));
+
+  const { count: totalQuestionCount, error: countError } = await supabaseAdmin
+    .from("trivia_questions")
+    .select("id", { count: "exact", head: true });
+
+  if (countError) {
+    return pickBalancedRandomQuestions(FALLBACK_QUESTIONS, safeLimit);
+  }
+
+  const total = Math.max(0, totalQuestionCount ?? 0);
+  const maxOffset = Math.max(0, total - queryLimit);
+  const randomOffset = maxOffset > 0 ? Math.floor(Math.random() * (maxOffset + 1)) : 0;
+
   const { data, error } = await supabaseAdmin
     .from("trivia_questions")
     .select("id, question, options, correct_answer, category, difficulty")
-    .limit(queryLimit);
+    .range(randomOffset, randomOffset + queryLimit - 1);
 
   if (error || !data) {
     return pickBalancedRandomQuestions(FALLBACK_QUESTIONS, safeLimit);
   }
 
-  const mapped = data.map((row) => mapQuestionRow(row as TriviaQuestionRow));
+  const mapped = shuffleInPlace(data.map((row) => mapQuestionRow(row as TriviaQuestionRow)));
   if (!userId) {
     return pickBalancedRandomQuestions(mapped, safeLimit);
   }
 
   const unseen = mapped.filter((question) => !answeredQuestionIds.has(question.id));
-  return pickBalancedRandomQuestions(unseen, safeLimit);
+  if (unseen.length >= safeLimit) {
+    return pickBalancedRandomQuestions(unseen, safeLimit);
+  }
+
+  const seen = mapped.filter((question) => answeredQuestionIds.has(question.id));
+  const pickedUnseen = pickBalancedRandomQuestions(unseen, safeLimit);
+  const remaining = Math.max(0, safeLimit - pickedUnseen.length);
+  const pickedSeen = remaining > 0 ? pickBalancedRandomQuestions(seen, remaining) : [];
+  return shuffleInPlace([...pickedUnseen, ...pickedSeen]).slice(0, safeLimit);
 }
 
 export async function getTriviaQuota(

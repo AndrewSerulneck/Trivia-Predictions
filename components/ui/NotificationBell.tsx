@@ -11,6 +11,16 @@ type NotificationPayload = {
   error?: string;
 };
 
+function extractPointsFromMessage(message: string): number {
+  const match = message.match(/(?:earned|won)\s+([0-9][0-9,]*)\s+points?/i);
+  if (!match?.[1]) {
+    return 0;
+  }
+  const normalized = match[1].replace(/,/g, "");
+  const parsed = Number.parseInt(normalized, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const userIdRef = useRef("");
@@ -42,13 +52,25 @@ export function NotificationBell() {
     }
 
     if (hasLoadedOnceRef.current) {
-      const hasNewPointsNotification = newItems.some(
-        (item) => item.type === "success" && item.message.toLowerCase().includes("earned")
-      );
-      if (hasNewPointsNotification) {
+      const newPointsNotifications = newItems.filter((item) => {
+        if (item.type !== "success") return false;
+        const lower = item.message.toLowerCase();
+        return lower.includes("earned") || lower.includes("won");
+      });
+      const delta = newPointsNotifications.reduce((sum, item) => sum + extractPointsFromMessage(item.message), 0);
+      if (delta > 0) {
         window.dispatchEvent(
           new CustomEvent("tp:points-updated", {
-            detail: { source: "notifications" },
+            detail: { source: "notifications", delta },
+          })
+        );
+        window.dispatchEvent(
+          new CustomEvent("tp:coin-flight", {
+            detail: {
+              sourceElementId: "tp-notification-bell",
+              delta,
+              coins: Math.min(18, Math.max(6, Math.round(delta / 2))),
+            },
           })
         );
       }
@@ -97,6 +119,7 @@ export function NotificationBell() {
   return (
     <div className="relative">
       <button
+        id="tp-notification-bell"
         type="button"
         onClick={() => setOpen((value) => !value)}
         className="rounded-md bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200"
