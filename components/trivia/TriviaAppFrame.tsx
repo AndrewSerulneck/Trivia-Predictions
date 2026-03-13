@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { BackButton } from "@/components/navigation/BackButton";
+import { useRouter } from "next/navigation";
 import { TriviaGame } from "@/components/trivia/TriviaGame";
 import { UserStatusHeader } from "@/components/ui/UserStatusHeader";
 
 export function TriviaAppFrame() {
+  const router = useRouter();
+
   useEffect(() => {
     if (typeof document === "undefined") {
       return;
@@ -43,20 +45,35 @@ export function TriviaAppFrame() {
 
   return (
     <div className="fixed inset-0 z-[60] overflow-hidden px-2 py-2 touch-pan-y md:px-3 md:py-3">
-      <div className="mx-auto flex h-full w-full max-w-md flex-col gap-2 overflow-hidden">
-        <header className="tp-hud-card shrink-0 p-2">
-          <div className="space-y-1.5">
+      <div className="mx-auto flex h-full w-full max-w-md flex-col gap-1.5 overflow-hidden">
+        <header className="tp-hud-card shrink-0 p-1.5 sm:p-2">
+          <div className="space-y-1">
             <div className="text-center">
-              <p className="text-base font-black uppercase tracking-[0.12em] text-slate-900">Hightop Challenge</p>
-              <h1 className="text-3xl font-black tracking-tight text-slate-900">Trivia</h1>
+              <p className="text-[13px] font-black uppercase tracking-[0.08em] text-slate-900 sm:text-base">
+                Hightop Challenge
+              </p>
+              <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Trivia</h1>
             </div>
             <UserStatusHeader variant="trivia" />
           </div>
         </header>
 
-        <main className="tp-comic-card min-h-0 flex-1 overflow-hidden p-2">
-          <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
-            <BackButton label="Back" />
+        <main className="tp-comic-card min-h-0 flex-1 overflow-hidden p-1.5 sm:p-2">
+          <div className="flex h-full min-h-0 flex-col gap-1.5 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined" && window.history.length > 1) {
+                  router.back();
+                  return;
+                }
+                router.push("/");
+              }}
+              className="inline-flex min-h-[30px] items-center justify-center gap-1 rounded-xl border-2 border-slate-900 bg-emerald-500 px-3 py-1 text-xs font-semibold text-white shadow-[2px_2px_0_#0f172a] sm:min-h-[40px] sm:rounded-full sm:border-4 sm:px-4 sm:py-2 sm:text-sm sm:shadow-[4px_4px_0_#0f172a]"
+            >
+              <span aria-hidden="true">←</span>
+              Back
+            </button>
             <div className="min-h-0 flex-1 overflow-hidden">
               <TriviaGame />
             </div>

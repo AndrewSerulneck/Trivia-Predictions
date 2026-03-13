@@ -34,9 +34,9 @@ type CoinFlightDetail = {
   coins?: number;
 };
 
-function TreasureChestIcon() {
+function TreasureChestIcon({ className = "h-8 w-8" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className="h-8 w-8 drop-shadow-[0_1px_0_rgba(0,0,0,0.35)]">
+    <svg viewBox="0 0 64 64" aria-hidden="true" className={`${className} drop-shadow-[0_1px_0_rgba(0,0,0,0.35)]`}>
       <path d="M9 27h46l-6-13H15z" fill="#8b4513" stroke="#111827" strokeWidth="3" />
       <rect x="10" y="28" width="44" height="8" rx="3" fill="#7c3f00" stroke="#111827" strokeWidth="3" />
       <rect x="6" y="34" width="52" height="24" rx="5" fill="#a85500" stroke="#111827" strokeWidth="3" />
@@ -297,8 +297,10 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
     return null;
   }
 
+  const compact = variant === "trivia";
+
   return (
-    <div className="relative flex flex-wrap items-center justify-between gap-2">
+    <div className={`relative flex flex-wrap items-center justify-between ${compact ? "gap-1" : "gap-2"}`}>
       {coinFlights.length > 0 ? (
         <div className="pointer-events-none fixed inset-0 z-[120]">
           {coinFlights.map((item) => (
@@ -320,28 +322,42 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
           ))}
         </div>
       ) : null}
-      <div className="tp-bounce-hover flex items-center gap-2 rounded-2xl border-4 border-slate-900 bg-cyan-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-[4px_4px_0_#0f172a]">
-        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border-4 border-slate-900 bg-white text-[11px]">
+      <div
+        className={`flex items-center rounded-2xl border-slate-900 bg-cyan-300 font-medium text-slate-900 ${
+          compact
+            ? "gap-1 rounded-xl border-2 px-2 py-1 text-[11px] shadow-[2px_2px_0_#0f172a]"
+            : "tp-bounce-hover gap-2 border-4 px-3 py-2 text-sm shadow-[4px_4px_0_#0f172a]"
+        }`}
+      >
+        <span
+          className={`inline-flex items-center justify-center rounded-full border-slate-900 bg-white ${
+            compact ? "h-5 w-5 border-2 text-[10px]" : "h-7 w-7 border-4 text-[11px]"
+          }`}
+        >
           {((username || "G").trim()[0] ?? "G").toUpperCase()}
         </span>
         <span>{username || "Guest"}</span>
       </div>
       <div
-        className={`tp-bounce-hover flex items-center gap-2 rounded-2xl border-4 border-slate-900 bg-yellow-200 px-3 py-2 text-sm font-medium text-slate-900 shadow-[4px_4px_0_#0f172a] transition-transform duration-200 ${
-          pointsPop ? "scale-110" : "scale-100"
+        className={`flex items-center border-slate-900 bg-yellow-200 font-medium text-slate-900 transition-transform duration-200 ${
+          compact
+            ? "gap-1 rounded-xl border-2 px-2 py-1 text-[11px] shadow-[2px_2px_0_#0f172a]"
+            : `tp-bounce-hover gap-2 rounded-2xl border-4 px-3 py-2 text-sm shadow-[4px_4px_0_#0f172a] ${
+                pointsPop ? "scale-110" : "scale-100"
+              }`
         }`}
         id="tp-points-pill"
       >
         <span id="tp-treasure-chest" className="relative inline-flex items-center justify-center">
-          <TreasureChestIcon />
+          <TreasureChestIcon className={compact ? "h-6 w-6" : "h-8 w-8"} />
           <span
             id="tp-treasure-chest-target"
             aria-hidden="true"
             className="absolute left-1/2 top-[40%] h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0"
           />
         </span>
-        <span className="inline-flex items-center gap-1 font-black">
-          <GoldCoinIcon className="h-6 w-6" />
+        <span className={`inline-flex items-center gap-1 font-black ${compact ? "text-[11px]" : ""}`}>
+          <GoldCoinIcon className={compact ? "h-4 w-4" : "h-6 w-6"} />
           {(points ?? displayedPoints).toLocaleString()}
         </span>
       </div>

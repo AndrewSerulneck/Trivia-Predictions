@@ -17,12 +17,21 @@
 body {
   font-family: "Fredoka", "Quicksand", "Comic Sans MS", "Trebuchet MS", ui-rounded, sans-serif;
   @apply text-slate-900 antialiased;
+  overflow-x: hidden;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
   background:
     radial-gradient(circle at 12% 10%, rgba(39, 240, 255, 0.48), transparent 30%),
     radial-gradient(circle at 88% 12%, rgba(255, 71, 184, 0.36), transparent 30%),
     radial-gradient(circle at 78% 78%, rgba(255, 148, 77, 0.32), transparent 30%),
     radial-gradient(circle at 28% 84%, rgba(180, 255, 87, 0.28), transparent 30%),
     linear-gradient(180deg, #fffde8 0%, #fff7e2 100%);
+}
+
+html {
+  overflow-x: hidden;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
 }
 
 button:not(:disabled),
