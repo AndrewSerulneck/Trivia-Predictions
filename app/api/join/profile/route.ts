@@ -106,6 +106,7 @@ export async function POST(request: Request) {
     .from("users")
     .select("id, auth_id, username, venue_id, points, pin_salt, pin_hash, created_at")
     .ilike("username", username)
+    .eq("venue_id", venueId)
     .limit(1);
   if (withPinColumns.error) {
     if (!isMissingPinColumnError(withPinColumns.error)) {
@@ -116,6 +117,7 @@ export async function POST(request: Request) {
       .from("users")
       .select("id, auth_id, username, venue_id, points, created_at")
       .ilike("username", username)
+      .eq("venue_id", venueId)
       .limit(1);
     if (fallbackQuery.error) {
       return NextResponse.json({ ok: false, error: fallbackQuery.error.message }, { status: 500 });
@@ -126,13 +128,6 @@ export async function POST(request: Request) {
   }
   const existingUser = (existingByUsername?.[0] ?? null) as UserRow | null;
   if (existingUser) {
-    if (existingUser.venue_id !== venueId) {
-      return NextResponse.json(
-        { ok: false, error: "That username is already associated with a different venue." },
-        { status: 409 }
-      );
-    }
-
     if (pinColumnsAvailable) {
       const existingSalt = (existingUser.pin_salt ?? "").trim();
       const existingHash = (existingUser.pin_hash ?? "").trim();
