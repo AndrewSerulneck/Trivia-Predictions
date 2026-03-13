@@ -5,7 +5,7 @@
   "description": "A mobile website that allows users to compete with each other on trivia and predictions.",
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "next build --webpack",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
