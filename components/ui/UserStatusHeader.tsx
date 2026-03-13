@@ -325,13 +325,13 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
       <div
         className={`flex items-center rounded-2xl border-slate-900 bg-cyan-300 font-medium text-slate-900 ${
           compact
-            ? "gap-1 rounded-xl border-2 px-2 py-1 text-[11px] shadow-[2px_2px_0_#0f172a]"
+            ? "gap-1 rounded-xl border-2 px-2 py-1 text-xs shadow-[2px_2px_0_#0f172a]"
             : "tp-bounce-hover gap-2 border-4 px-3 py-2 text-sm shadow-[4px_4px_0_#0f172a]"
         }`}
       >
         <span
           className={`inline-flex items-center justify-center rounded-full border-slate-900 bg-white ${
-            compact ? "h-5 w-5 border-2 text-[10px]" : "h-7 w-7 border-4 text-[11px]"
+            compact ? "h-5 w-5 border-2 text-[11px]" : "h-7 w-7 border-4 text-[11px]"
           }`}
         >
           {((username || "G").trim()[0] ?? "G").toUpperCase()}
@@ -356,8 +356,8 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
             className="absolute left-1/2 top-[40%] h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0"
           />
         </span>
-        <span className={`inline-flex items-center gap-1 font-black ${compact ? "text-[11px]" : ""}`}>
-          <GoldCoinIcon className={compact ? "h-4 w-4" : "h-6 w-6"} />
+        <span className={`inline-flex items-center gap-1 font-black ${compact ? "text-xs" : ""}`}>
+          <GoldCoinIcon className={compact ? "h-5 w-5" : "h-6 w-6"} />
           {(points ?? displayedPoints).toLocaleString()}
         </span>
       </div>
