@@ -44,7 +44,7 @@ export function TriviaAppFrame() {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[60] overflow-hidden px-2 py-2 touch-pan-y md:px-3 md:py-3">
+    <div className="tp-trivia-compact fixed inset-0 z-[60] overflow-hidden px-2 py-2 touch-pan-y md:px-3 md:py-3">
       <div className="mx-auto flex h-full w-full max-w-md flex-col gap-1.5 overflow-hidden">
         <header className="tp-hud-card shrink-0 p-1.5 sm:p-2">
           <div className="space-y-1">

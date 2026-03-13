@@ -111,6 +111,26 @@ textarea {
   animation: tp-pop 0.28s ease-out;
 }
 
+.tp-trivia-compact .tp-hud-card,
+.tp-trivia-compact .tp-comic-card {
+  border-width: 2px;
+  border-radius: 16px;
+  box-shadow: 3px 3px 0 var(--tp-ink);
+}
+
+.tp-trivia-compact button:not(:disabled),
+.tp-trivia-compact a[role="button"] {
+  border-width: 2px;
+  border-radius: 12px;
+  box-shadow: 2px 2px 0 var(--tp-ink);
+}
+
+.tp-trivia-compact button:not(:disabled):active,
+.tp-trivia-compact a[role="button"]:active {
+  transform: translate(1px, 1px) scale(0.99);
+  box-shadow: 1px 1px 0 var(--tp-ink);
+}
+
 .btn-glow-blue {
   box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4);
 }
