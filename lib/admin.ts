@@ -738,6 +738,37 @@ export async function updateAdminVenue(input: {
   let resolvedLatitude = hasLatitude ? Number(input.latitude) : Number.NaN;
   let resolvedLongitude = hasLongitude ? Number(input.longitude) : Number.NaN;
 
+  const { data: existingVenue, error: existingVenueError } = await supabaseAdmin!
+    .from("venues")
+    .select("id, address, latitude, longitude")
+    .eq("id", id)
+    .maybeSingle<Pick<VenueRow, "id" | "address" | "latitude" | "longitude">>();
+  if (existingVenueError) {
+    throw new Error(existingVenueError.message ?? "Failed to load venue before update.");
+  }
+  if (!existingVenue) {
+    throw new Error("Venue not found.");
+  }
+
+  const existingAddress = (existingVenue.address ?? "").trim();
+  const addressChanged = existingAddress.toLowerCase() !== address.toLowerCase();
+  const existingLatitude = Number(existingVenue.latitude);
+  const existingLongitude = Number(existingVenue.longitude);
+  const coordsMatchExisting =
+    Number.isFinite(resolvedLatitude) &&
+    Number.isFinite(resolvedLongitude) &&
+    Number.isFinite(existingLatitude) &&
+    Number.isFinite(existingLongitude) &&
+    Math.abs(resolvedLatitude - existingLatitude) < 0.000001 &&
+    Math.abs(resolvedLongitude - existingLongitude) < 0.000001;
+
+  // If the address changed but submitted coordinates still match the old venue coordinates,
+  // treat them as stale and geocode the new address.
+  if (addressChanged && coordsMatchExisting) {
+    resolvedLatitude = Number.NaN;
+    resolvedLongitude = Number.NaN;
+  }
+
   if (!Number.isFinite(resolvedLatitude) || !Number.isFinite(resolvedLongitude)) {
     ({ latitude: resolvedLatitude, longitude: resolvedLongitude } = await geocodeVenueAddress(address));
   }

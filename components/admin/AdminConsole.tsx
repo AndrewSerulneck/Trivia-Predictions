@@ -366,6 +366,9 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       const nextValue = event.target.value;
       const normalizedValue = nextValue.trim().replace(/\s+/g, " ");
       setEditVenueAddress(nextValue);
+      // Avoid submitting stale coordinates from the previous address.
+      setEditVenueLatitude("");
+      setEditVenueLongitude("");
       setEditAddressSuggestions([]);
       setErrorMessage("");
 
