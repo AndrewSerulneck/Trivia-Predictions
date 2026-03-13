@@ -643,7 +643,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   }
 
   return (
-    <div ref={gameRootRef} className="relative flex h-full min-h-0 flex-col gap-2 overflow-hidden">
+    <div ref={gameRootRef} className="relative flex h-full min-h-0 flex-col gap-2 overflow-x-hidden overflow-y-hidden px-0.5">
       {feedbackFlash ? (
         <div
           aria-hidden="true"
@@ -693,7 +693,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
       ) : null}
 
       {quota ? (
-        <div className="space-y-1 rounded-2xl border-4 border-slate-900 bg-cyan-100 p-2 shadow-[5px_5px_0_#0f172a]">
+        <div className="space-y-1 rounded-2xl border-4 border-slate-900 bg-cyan-100 p-2 shadow-[3px_3px_0_#0f172a] sm:shadow-[5px_5px_0_#0f172a]">
           <div className="flex items-center justify-between text-xs font-medium text-slate-700">
             <span>Trivia Progress This Hour</span>
             {quota.isAdminBypass ? (
@@ -715,7 +715,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         </div>
       ) : null}
 
-      <div className="rounded-2xl border-4 border-slate-900 bg-yellow-100 p-2 text-sm font-semibold text-slate-700 shadow-[5px_5px_0_#0f172a]">
+      <div className="rounded-2xl border-4 border-slate-900 bg-yellow-100 p-2 text-xs font-semibold text-slate-700 shadow-[3px_3px_0_#0f172a] sm:text-sm sm:shadow-[5px_5px_0_#0f172a]">
         <div className="flex items-center justify-between gap-3">
           <span>
             Question {index + 1} of {questions.length}
@@ -730,14 +730,16 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         </div>
       </div>
 
-      <div className="min-h-0 flex flex-1 flex-col gap-2 overflow-hidden">
+      <div className="min-h-0 flex flex-1 flex-col gap-3 overflow-hidden">
         {showRewardPulse ? (
-          <div className="tp-pop-in rounded-lg border border-blue-200 bg-blue-50 p-2 text-sm font-bold text-blue-700">
+          <div className="tp-pop-in rounded-lg border border-blue-200 bg-blue-50 p-2 text-xs font-bold text-blue-700 sm:text-sm">
             {rewardPulse}
           </div>
         ) : null}
-        <h2 className="line-clamp-3 text-lg font-black leading-tight text-slate-900">{question.question}</h2>
-        <div className="grid min-h-0 flex-1 auto-rows-fr gap-2 overflow-hidden">
+        <h2 className="line-clamp-2 px-0.5 text-base font-black leading-snug text-slate-900 sm:line-clamp-3 sm:text-lg">
+          {question.question}
+        </h2>
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-2.5 content-start">
           {question.options.map((option, optionIndex) => {
             const selected = selectedAnswer === optionIndex;
             const isRevealedCorrect = revealedCorrectAnswer === optionIndex;
@@ -753,7 +755,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
                   void chooseAnswer(optionIndex);
                 }}
                 disabled={selectedAnswer !== null || isSubmitting || secondsRemaining <= 0}
-                className={`${BUTTON_POP_CLASS} h-full min-h-[46px] w-full rounded-2xl border-4 px-3 py-2 text-left text-sm font-bold leading-tight shadow-[4px_4px_0_#0f172a] ${
+                className={`${BUTTON_POP_CLASS} min-h-[48px] w-full rounded-2xl border-4 px-3 py-2.5 text-left text-sm font-bold leading-snug shadow-[3px_3px_0_#0f172a] sm:shadow-[4px_4px_0_#0f172a] ${
                   isRevealedCorrect
                     ? "border-slate-900 bg-emerald-500 text-white"
                     : isSelectedWrong
@@ -770,10 +772,10 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         </div>
       </div>
 
-      <div className="mt-auto space-y-2">
+      <div className="mt-auto space-y-3 pt-1">
         {feedback ? (
           <div
-            className={`rounded-2xl border-4 p-2 text-sm font-semibold leading-tight shadow-[5px_5px_0_#0f172a] ${
+            className={`rounded-2xl border-4 p-2 text-xs font-semibold leading-snug shadow-[3px_3px_0_#0f172a] sm:text-sm sm:shadow-[5px_5px_0_#0f172a] ${
               feedbackKind === "correct"
                 ? "border-slate-900 bg-emerald-200 text-emerald-900"
                 : feedbackKind === "incorrect" || feedbackKind === "timeout"
@@ -790,7 +792,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
           onMouseDown={() => triggerHaptic(14)}
           onClick={nextQuestion}
           disabled={selectedAnswer === null || isSubmitting}
-          className={`${BUTTON_POP_CLASS} inline-flex min-h-[44px] w-full items-center justify-center rounded-2xl border-4 border-slate-900 bg-cyan-300 px-4 py-2 text-sm font-black text-slate-900 shadow-[5px_5px_0_#0f172a] disabled:opacity-60`}
+          className={`${BUTTON_POP_CLASS} inline-flex min-h-[46px] w-full items-center justify-center rounded-2xl border-4 border-slate-900 bg-cyan-300 px-4 py-2.5 text-sm font-black text-slate-900 shadow-[3px_3px_0_#0f172a] sm:shadow-[5px_5px_0_#0f172a] disabled:opacity-60`}
         >
           Next Question
         </button>
