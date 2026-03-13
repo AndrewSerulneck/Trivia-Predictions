@@ -17,7 +17,7 @@ type UserPredictionRow = {
 
 type UserRow = {
   id: string;
-  is_admin: boolean;
+  username: string;
 };
 
 export type PredictionQuota = {
@@ -72,7 +72,7 @@ async function getUserRow(userId: string): Promise<UserRow | null> {
 
   const { data, error } = await supabaseAdmin
     .from("users")
-    .select("id, is_admin")
+    .select("id, username")
     .eq("id", userId)
     .maybeSingle<UserRow>();
 
@@ -112,22 +112,35 @@ export async function getPredictionQuota(
     return emptyQuota;
   }
 
-  if (user.is_admin) {
-    return {
-      ...emptyQuota,
-      picksRemaining: PICK_LIMIT_PER_HOUR,
-      isAdminBypass: true,
-    };
+  const cutoffIso = new Date(Date.now() - WINDOW_MS).toISOString();
+  const userIdsForQuota = [userId];
+  if (user.username) {
+    const { data: usernameMatches } = await supabaseAdmin
+      .from("users")
+      .select("id")
+      .eq("username", user.username)
+      .limit(200);
+    for (const row of usernameMatches ?? []) {
+      const candidateId = (row as { id?: string }).id;
+      if (candidateId && !userIdsForQuota.includes(candidateId)) {
+        userIdsForQuota.push(candidateId);
+      }
+    }
   }
 
-  const cutoffIso = new Date(Date.now() - WINDOW_MS).toISOString();
-  const { data, error } = await supabaseAdmin
+  let quotaQuery = supabaseAdmin
     .from("user_predictions")
     .select("created_at")
-    .eq("user_id", userId)
     .gte("created_at", cutoffIso)
     .order("created_at", { ascending: true })
     .limit(PICK_LIMIT_PER_HOUR + 1);
+  if (userIdsForQuota.length === 1) {
+    quotaQuery = quotaQuery.eq("user_id", userIdsForQuota[0]);
+  } else {
+    quotaQuery = quotaQuery.in("user_id", userIdsForQuota);
+  }
+
+  const { data, error } = await quotaQuery;
 
   if (error || !data) {
     return emptyQuota;
@@ -171,8 +184,10 @@ export async function submitPredictionPick(params: {
 
   const quota = await getPredictionQuota(userId, { forceAdminBypass: params.forceAdminBypass });
   if (!quota.isAdminBypass && quota.picksRemaining <= 0) {
-    const minutes = Math.ceil(quota.windowSecondsRemaining / 60);
-    throw new Error(`Hourly pick limit reached (10). Try again in about ${minutes} minute(s).`);
+    const minutes = Math.floor(quota.windowSecondsRemaining / 60);
+    const seconds = quota.windowSecondsRemaining % 60;
+    const countdown = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    throw new Error(`Hourly pick limit reached (10). Try again in ${countdown}.`);
   }
 
   const { data: existing } = await supabaseAdmin

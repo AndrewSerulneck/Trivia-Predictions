@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { calculatePoints, formatProbability } from "@/lib/predictions";
 import { getUserId, getVenueId } from "@/lib/storage";
 import type { Prediction } from "@/types";
 
 type SubmitState = Record<string, string>;
+type PopupState = Record<string, string>;
 
 type PredictionListPayload = {
   ok: boolean;
@@ -112,12 +113,21 @@ function triggerHaptic(pattern: number | number[] = 12) {
   navigator.vibrate(pattern);
 }
 
+function formatCountdown(seconds: number): string {
+  const safeSeconds = Math.max(0, Math.floor(seconds));
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainingSeconds = safeSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+}
+
 export function PredictionMarketList() {
   const router = useRouter();
   const [messages, setMessages] = useState<SubmitState>({});
+  const [limitPopups, setLimitPopups] = useState<PopupState>({});
   const [pendingByMarket, setPendingByMarket] = useState<Record<string, boolean>>({});
   const [userId, setUserId] = useState<string | null>(null);
   const [quota, setQuota] = useState<PredictionQuota | null>(null);
+  const [quotaSecondsRemaining, setQuotaSecondsRemaining] = useState(0);
 
   const [markets, setMarkets] = useState<Prediction[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -139,6 +149,21 @@ export function PredictionMarketList() {
   const { rewards, addReward } = useRewards();
 
   const hasFilters = useMemo(() => Boolean(search || category || broadCategory), [search, category, broadCategory]);
+  const predictionsQuotaLocked = Boolean(quota && !quota.isAdminBypass && quota.picksRemaining <= 0);
+
+  const loadQuota = useCallback(async () => {
+    if (!userId) {
+      setQuota(null);
+      return;
+    }
+    const response = await fetch(`/api/predictions/quota?userId=${encodeURIComponent(userId)}`, {
+      cache: "no-store",
+    });
+    const payload = (await response.json()) as { ok: boolean; quota?: PredictionQuota | null };
+    if (payload.ok) {
+      setQuota(payload.quota ?? null);
+    }
+  }, [userId]);
 
   useEffect(() => {
     const nextUserId = getUserId();
@@ -156,16 +181,6 @@ export function PredictionMarketList() {
       return;
     }
 
-    const loadQuota = async () => {
-      const response = await fetch(`/api/predictions/quota?userId=${encodeURIComponent(userId)}`, {
-        cache: "no-store",
-      });
-      const payload = (await response.json()) as { ok: boolean; quota?: PredictionQuota | null };
-      if (payload.ok) {
-        setQuota(payload.quota ?? null);
-      }
-    };
-
     void loadQuota();
     const interval = window.setInterval(() => {
       void loadQuota();
@@ -174,7 +189,38 @@ export function PredictionMarketList() {
     return () => {
       window.clearInterval(interval);
     };
-  }, [userId]);
+  }, [loadQuota, userId]);
+
+  useEffect(() => {
+    if (!predictionsQuotaLocked) {
+      setQuotaSecondsRemaining(0);
+      return;
+    }
+
+    setQuotaSecondsRemaining(Math.max(0, Math.floor(quota?.windowSecondsRemaining ?? 0)));
+  }, [predictionsQuotaLocked, quota?.windowSecondsRemaining]);
+
+  useEffect(() => {
+    if (!predictionsQuotaLocked || quotaSecondsRemaining <= 0) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setQuotaSecondsRemaining((value) => Math.max(0, value - 1));
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [predictionsQuotaLocked, quotaSecondsRemaining]);
+
+  useEffect(() => {
+    if (!predictionsQuotaLocked || quotaSecondsRemaining > 0) {
+      return;
+    }
+
+    void loadQuota();
+  }, [loadQuota, predictionsQuotaLocked, quotaSecondsRemaining]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -265,6 +311,23 @@ export function PredictionMarketList() {
       triggerHaptic([20, 20]);
       return;
     }
+    if (predictionsQuotaLocked) {
+      const message = `Hourly prediction limit reached. You can pick again in ${formatCountdown(quotaSecondsRemaining)}.`;
+      setMessages((prev) => ({
+        ...prev,
+        [predictionId]: message,
+      }));
+      setLimitPopups((prev) => ({ ...prev, [predictionId]: message }));
+      window.setTimeout(() => {
+        setLimitPopups((prev) => {
+          const next = { ...prev };
+          delete next[predictionId];
+          return next;
+        });
+      }, 2200);
+      triggerHaptic([20, 20]);
+      return;
+    }
 
     setPendingByMarket((prev) => ({ ...prev, [predictionId]: true }));
     setMessages((prev) => ({ ...prev, [predictionId]: "" }));
@@ -298,15 +361,7 @@ export function PredictionMarketList() {
           detail: { source: "prediction-pick", delta: points },
         })
       );
-      if (userId) {
-        const response = await fetch(`/api/predictions/quota?userId=${encodeURIComponent(userId)}`, {
-          cache: "no-store",
-        });
-        const quotaPayload = (await response.json()) as { ok: boolean; quota?: PredictionQuota | null };
-        if (quotaPayload.ok) {
-          setQuota(quotaPayload.quota ?? null);
-        }
-      }
+      await loadQuota();
     } catch (error) {
       setMessages((prev) => ({
         ...prev,
@@ -345,6 +400,11 @@ export function PredictionMarketList() {
               style={{ width: `${Math.min(100, (quota.picksUsed / quota.limit) * 100)}%` }}
             />
           </div>
+          {predictionsQuotaLocked ? (
+            <p className="text-xs font-semibold text-rose-700">
+              Limit reached. Picks unlock in {formatCountdown(quotaSecondsRemaining)}.
+            </p>
+          ) : null}
         </div>
       ) : null}
       {!userId && (
@@ -534,7 +594,7 @@ export function PredictionMarketList() {
         <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
           {markets.map((market, index) => (
             <div key={market.id} className="contents">
-              <article className="rounded-lg border border-slate-200 p-3">
+              <article className="relative rounded-lg border border-slate-200 p-3">
                 <h2 className="font-medium">{market.question}</h2>
                 <p className="mt-1 text-xs text-slate-500">
                   {market.category ? `${market.category} · ` : ""}Closes: {new Date(market.closesAt).toLocaleString()}
@@ -565,6 +625,11 @@ export function PredictionMarketList() {
                     </li>
                   ))}
                 </ul>
+                {limitPopups[market.id] ? (
+                  <div className="pointer-events-none absolute right-3 top-3 z-20 max-w-[240px] rounded-md border border-rose-300 bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-800 shadow-sm">
+                    {limitPopups[market.id]}
+                  </div>
+                ) : null}
                 {messages[market.id] ? <p className="mt-2 text-xs text-slate-600">{messages[market.id]}</p> : null}
               </article>
 

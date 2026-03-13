@@ -70,6 +70,13 @@ function triggerHaptic(pattern: number | number[] = 12) {
   navigator.vibrate(pattern);
 }
 
+function formatCountdown(seconds: number): string {
+  const safeSeconds = Math.max(0, Math.floor(seconds));
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainingSeconds = safeSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+}
+
 type FeedbackFlash = "correct" | "incorrect" | null;
 
 type RainToken = {
@@ -157,6 +164,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   const [feedbackFlash, setFeedbackFlash] = useState<FeedbackFlash>(null);
   const [rainEmojis, setRainEmojis] = useState<RainToken[]>([]);
   const [fireworks, setFireworks] = useState<FireworkToken[]>([]);
+  const [quotaSecondsRemaining, setQuotaSecondsRemaining] = useState(0);
 
   const flashTimeoutRef = useRef<number | null>(null);
   const rainTimeoutRef = useRef<number | null>(null);
@@ -185,6 +193,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     }
     return estimatedRoundTotal - roundStartPoints;
   }, [estimatedRoundTotal, pointsWon, roundStartPoints]);
+  const triviaQuotaLocked = Boolean(quota && !quota.isAdminBypass && quota.questionsRemaining <= 0);
 
   const loadQuota = useCallback(async () => {
     const userId = getUserId() ?? "";
@@ -338,9 +347,46 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     setSecondsRemaining(QUESTION_TIME_LIMIT_SECONDS);
   }, [isRoundStarted, index, finished, selectedAnswer]);
 
+  useEffect(() => {
+    if (!triviaQuotaLocked) {
+      setQuotaSecondsRemaining(0);
+      return;
+    }
+
+    setQuotaSecondsRemaining(Math.max(0, Math.floor(quota?.windowSecondsRemaining ?? 0)));
+  }, [quota?.windowSecondsRemaining, triviaQuotaLocked]);
+
+  useEffect(() => {
+    if (!triviaQuotaLocked || quotaSecondsRemaining <= 0) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setQuotaSecondsRemaining((value) => Math.max(0, value - 1));
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [triviaQuotaLocked, quotaSecondsRemaining]);
+
+  useEffect(() => {
+    if (!triviaQuotaLocked || quotaSecondsRemaining > 0) {
+      return;
+    }
+
+    void loadQuota();
+  }, [triviaQuotaLocked, quotaSecondsRemaining, loadQuota]);
+
   const chooseAnswer = useCallback(
     async (answerIndex: number) => {
       const submittingUserId = getUserId() ?? "";
+
+      if (triviaQuotaLocked) {
+        setFeedback(`Hourly trivia limit reached. You can play again in ${formatCountdown(quotaSecondsRemaining)}.`);
+        setFeedbackKind(null);
+        return;
+      }
 
       if (!question || isSubmitting || selectedAnswer !== null) {
         return;
@@ -446,7 +492,17 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         setIsSubmitting(false);
       }
     },
-    [isSubmitting, loadQuota, loadCurrentUserPoints, question, selectedAnswer, triggerCelebration, triggerPointsFlow]
+    [
+      isSubmitting,
+      loadQuota,
+      loadCurrentUserPoints,
+      question,
+      quotaSecondsRemaining,
+      selectedAnswer,
+      triggerCelebration,
+      triggerPointsFlow,
+      triviaQuotaLocked,
+    ]
   );
 
   useEffect(() => {
@@ -476,7 +532,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   }, [showRewardPulse]);
 
   useEffect(() => {
-    if (!isRoundStarted || finished || selectedAnswer !== null || isSubmitting) {
+    if (!isRoundStarted || finished || selectedAnswer !== null || isSubmitting || triviaQuotaLocked) {
       return;
     }
 
@@ -492,9 +548,15 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     return () => {
       window.clearTimeout(timer);
     };
-  }, [isRoundStarted, finished, selectedAnswer, isSubmitting, secondsRemaining, chooseAnswer]);
+  }, [isRoundStarted, finished, selectedAnswer, isSubmitting, secondsRemaining, chooseAnswer, triviaQuotaLocked]);
 
   const nextQuestion = () => {
+    if (triviaQuotaLocked) {
+      setFeedback(`Hourly trivia limit reached. You can play again in ${formatCountdown(quotaSecondsRemaining)}.`);
+      setFeedbackKind(null);
+      return;
+    }
+
     setFeedbackFlash(null);
     setRainEmojis([]);
     setFireworks([]);
@@ -625,7 +687,14 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     return (
       <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 sm:space-y-3 sm:p-4 sm:text-sm">
         <p className="font-semibold text-slate-900">Ready to start trivia?</p>
-        <p>You will have 10 seconds to answer each question once the round begins.</p>
+        {triviaQuotaLocked ? (
+          <p>
+            Hourly trivia limit reached. You can start another round in{" "}
+            <span className="font-bold">{formatCountdown(quotaSecondsRemaining)}</span>.
+          </p>
+        ) : (
+          <p>You will have 10 seconds to answer each question once the round begins.</p>
+        )}
         <button
           type="button"
           onMouseDown={() => triggerHaptic(20)}
@@ -634,9 +703,10 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
             setSecondsRemaining(QUESTION_TIME_LIMIT_SECONDS);
             setRoundStartPoints(currentUserPoints ?? null);
           }}
+          disabled={triviaQuotaLocked}
           className={`${BUTTON_POP_CLASS} inline-flex min-h-[38px] w-full items-center justify-center rounded-md bg-blue-700 px-3 py-1.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 sm:min-h-[48px] sm:px-4 sm:py-2 sm:text-sm`}
         >
-          Yes, Start Trivia
+          {triviaQuotaLocked ? `Locked ${formatCountdown(quotaSecondsRemaining)}` : "Yes, Start Trivia"}
         </button>
       </div>
     );
@@ -712,6 +782,11 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
               />
             </div>
           ) : null}
+          {triviaQuotaLocked ? (
+            <p className="text-xs font-semibold text-rose-700">
+              Limit reached. Next round unlocks in {formatCountdown(quotaSecondsRemaining)}.
+            </p>
+          ) : null}
         </div>
       ) : null}
 
@@ -754,7 +829,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
                 onClick={() => {
                   void chooseAnswer(optionIndex);
                 }}
-                disabled={selectedAnswer !== null || isSubmitting || secondsRemaining <= 0}
+                disabled={selectedAnswer !== null || isSubmitting || secondsRemaining <= 0 || triviaQuotaLocked}
                 className={`${BUTTON_POP_CLASS} h-full min-h-0 w-full rounded-xl border-2 px-2 py-1 text-left text-[13px] font-bold leading-tight shadow-[2px_2px_0_#0f172a] sm:min-h-[46px] sm:rounded-2xl sm:border-4 sm:px-3 sm:py-2 sm:text-sm sm:leading-snug sm:shadow-[4px_4px_0_#0f172a] ${
                   isRevealedCorrect
                     ? "border-slate-900 bg-emerald-500 text-white"
@@ -791,7 +866,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
           type="button"
           onMouseDown={() => triggerHaptic(14)}
           onClick={nextQuestion}
-          disabled={selectedAnswer === null || isSubmitting}
+          disabled={selectedAnswer === null || isSubmitting || triviaQuotaLocked}
           className={`${BUTTON_POP_CLASS} inline-flex min-h-[30px] w-full items-center justify-center rounded-xl border-2 border-slate-900 bg-cyan-300 px-3 py-1 text-sm font-black text-slate-900 shadow-[2px_2px_0_#0f172a] sm:min-h-[46px] sm:rounded-2xl sm:border-4 sm:px-4 sm:py-2.5 sm:text-sm sm:shadow-[5px_5px_0_#0f172a] disabled:opacity-60`}
         >
           Next Question
