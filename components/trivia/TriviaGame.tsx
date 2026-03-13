@@ -383,7 +383,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
       const submittingUserId = getUserId() ?? "";
 
       if (triviaQuotaLocked) {
-        setFeedback(`Hourly trivia limit reached. You can play again in ${formatCountdown(quotaSecondsRemaining)}.`);
+        setFeedback(`Trivia limit reached. You can play again in ${formatCountdown(quotaSecondsRemaining)}.`);
         setFeedbackKind(null);
         return;
       }
@@ -552,7 +552,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
   const nextQuestion = () => {
     if (triviaQuotaLocked) {
-      setFeedback(`Hourly trivia limit reached. You can play again in ${formatCountdown(quotaSecondsRemaining)}.`);
+      setFeedback(`Trivia limit reached. You can play again in ${formatCountdown(quotaSecondsRemaining)}.`);
       setFeedbackKind(null);
       return;
     }
@@ -689,7 +689,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         <p className="font-semibold text-slate-900">Ready to start trivia?</p>
         {triviaQuotaLocked ? (
           <p>
-            Hourly trivia limit reached. You can start another round in{" "}
+            Trivia limit reached. You can start another round in{" "}
             <span className="font-bold">{formatCountdown(quotaSecondsRemaining)}</span>.
           </p>
         ) : (
@@ -765,7 +765,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
       {quota ? (
         <div className="space-y-1 rounded-xl border-2 border-slate-900 bg-cyan-100 p-1 shadow-[2px_2px_0_#0f172a] sm:rounded-2xl sm:border-4 sm:p-2 sm:shadow-[5px_5px_0_#0f172a]">
           <div className="flex items-center justify-between text-xs font-medium text-slate-700 sm:text-xs">
-            <span>Trivia Progress This Hour</span>
+            <span>Trivia Progress This Window</span>
             {quota.isAdminBypass ? (
               <span>Unlimited (Admin)</span>
             ) : (

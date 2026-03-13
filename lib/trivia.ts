@@ -22,8 +22,8 @@ type UserRow = {
 };
 
 const MAX_CANDIDATE_QUESTIONS = 2000;
-const TRIVIA_LIMIT_PER_HOUR = 10;
-const WINDOW_MS = 60 * 60 * 1000;
+const TRIVIA_LIMIT_PER_WINDOW = 60;
+const WINDOW_MS = 20 * 60 * 1000;
 
 export type TriviaQuota = {
   limit: number;
@@ -198,9 +198,9 @@ export async function getTriviaQuota(
   options: { forceAdminBypass?: boolean } = {}
 ): Promise<TriviaQuota> {
   const emptyQuota: TriviaQuota = {
-    limit: TRIVIA_LIMIT_PER_HOUR,
+    limit: TRIVIA_LIMIT_PER_WINDOW,
     questionsUsed: 0,
-    questionsRemaining: TRIVIA_LIMIT_PER_HOUR,
+    questionsRemaining: TRIVIA_LIMIT_PER_WINDOW,
     windowSecondsRemaining: 0,
     isAdminBypass: false,
   };
@@ -243,7 +243,7 @@ export async function getTriviaQuota(
     .select("answered_at")
     .gte("answered_at", cutoffIso)
     .order("answered_at", { ascending: true })
-    .limit(TRIVIA_LIMIT_PER_HOUR + 1);
+    .limit(TRIVIA_LIMIT_PER_WINDOW + 1);
   if (userIdsForQuota.length === 1) {
     answersQuery = answersQuery.eq("user_id", userIdsForQuota[0]);
   } else {
@@ -256,7 +256,7 @@ export async function getTriviaQuota(
   }
 
   const questionsUsed = data.length;
-  const questionsRemaining = Math.max(0, TRIVIA_LIMIT_PER_HOUR - questionsUsed);
+  const questionsRemaining = Math.max(0, TRIVIA_LIMIT_PER_WINDOW - questionsUsed);
   let windowSecondsRemaining = 0;
   if (questionsRemaining === 0 && data[0]?.answered_at) {
     const oldestIncluded = new Date(data[0].answered_at).getTime();
@@ -265,7 +265,7 @@ export async function getTriviaQuota(
   }
 
   return {
-    limit: TRIVIA_LIMIT_PER_HOUR,
+    limit: TRIVIA_LIMIT_PER_WINDOW,
     questionsUsed,
     questionsRemaining,
     windowSecondsRemaining,
@@ -317,7 +317,7 @@ export async function submitTriviaAnswer(params: {
       const minutes = Math.floor(quota.windowSecondsRemaining / 60);
       const seconds = quota.windowSecondsRemaining % 60;
       const countdown = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-      throw new Error(`Hourly trivia limit reached (10). Try again in ${countdown}.`);
+      throw new Error(`Trivia limit reached (60). Try again in ${countdown}.`);
     }
 
     const { data: existingAnswer, error: existingAnswerError } = await supabaseAdmin

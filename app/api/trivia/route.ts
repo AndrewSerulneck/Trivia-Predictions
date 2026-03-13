@@ -5,7 +5,7 @@ import { requireAdminAuth } from "@/lib/adminAuth";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get("userId")?.trim() || undefined;
-  const questions = await getTriviaQuestions(10, userId);
+  const questions = await getTriviaQuestions(20, userId);
   return NextResponse.json({ ok: true, questions });
 }
 

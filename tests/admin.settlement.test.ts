@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   rpc: vi.fn(),
   from: vi.fn(),
+  getPredictionMarketById: vi.fn(),
 }));
 
 vi.mock("@/lib/supabaseAdmin", () => ({
@@ -12,12 +13,19 @@ vi.mock("@/lib/supabaseAdmin", () => ({
   },
 }));
 
+vi.mock("@/lib/polymarket", () => ({
+  getPredictionMarketById: mocks.getPredictionMarketById,
+  listResolvedPredictionOutcomes: vi.fn(),
+}));
+
 import { resolvePendingPredictionMarket } from "@/lib/admin";
 
 describe("resolvePendingPredictionMarket", () => {
   beforeEach(() => {
     mocks.rpc.mockReset();
     mocks.from.mockReset();
+    mocks.getPredictionMarketById.mockReset();
+    mocks.getPredictionMarketById.mockResolvedValue(null);
   });
 
   it("uses RPC settlement result when function exists", async () => {
@@ -35,6 +43,7 @@ describe("resolvePendingPredictionMarket", () => {
       p_prediction_id: "market-1",
       p_winning_outcome_id: "outcome-a",
       p_settle_as_canceled: false,
+      p_market_question: null,
     });
     expect(result).toEqual({
       affectedPicks: 3,

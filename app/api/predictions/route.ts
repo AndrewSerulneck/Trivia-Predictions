@@ -12,7 +12,7 @@ export async function GET(request: Request) {
       search: searchParams.get("search") ?? "",
       category: searchParams.get("category") ?? "",
       broadCategory: searchParams.get("broadCategory") ?? "",
-      excludeSensitive: searchParams.get("excludeSensitive") ?? "true",
+      excludeSensitive: searchParams.get("excludeSensitive") ?? "false",
       sort: searchParams.get("sort") ?? "closing-soon",
     });
 

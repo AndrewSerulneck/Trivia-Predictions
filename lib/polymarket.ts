@@ -598,7 +598,7 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
   const search = String(params.search ?? "").trim().toLowerCase();
   const category = String(params.category ?? "").trim();
   const broadCategory = String(params.broadCategory ?? "").trim().toLowerCase();
-  const excludeSensitive = normalizeBoolean(params.excludeSensitive, true);
+  const excludeSensitive = normalizeBoolean(params.excludeSensitive, false);
   const sort = normalizeSort(params.sort);
 
   const normalized = await getActiveNormalizedMarkets();
