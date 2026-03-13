@@ -13,9 +13,9 @@ export const DEFAULT_VENUE_SEEDS: DefaultVenueSeed[] = [
   {
     id: "venue-downtown",
     name: "Brunswick Grove",
-    address: "Downtown Manhattan, New York, NY",
-    latitude: 40.712776,
-    longitude: -74.005974,
+    address: "327 Milltown Rd, East Brunswick, NJ",
+    latitude: 40.4376405,
+    longitude: -74.4264871,
     radius: 100,
   },
   {
