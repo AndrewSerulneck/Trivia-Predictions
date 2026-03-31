@@ -615,7 +615,6 @@ export async function createAdminVenue(input: {
   name: string;
   address: string;
   radius?: number;
-  venueId?: string;
   latitude?: number;
   longitude?: number;
   displayName?: string;
@@ -658,7 +657,7 @@ export async function createAdminVenue(input: {
     throw new Error("Venue coordinates are outside valid bounds.");
   }
 
-  const baseVenueId = normalizeVenueId(input.venueId?.trim() || name);
+  const baseVenueId = normalizeVenueId(name);
   if (!baseVenueId) {
     throw new Error("Venue id could not be generated. Add letters or numbers.");
   }

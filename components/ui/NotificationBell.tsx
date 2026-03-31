@@ -139,7 +139,7 @@ export function NotificationBell() {
               onClick={() => {
                 void markRead();
               }}
-              className="text-xs font-medium text-slate-600 hover:text-slate-900"
+              className="shrink-0 rounded-md bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200"
             >
               Mark all read
             </button>

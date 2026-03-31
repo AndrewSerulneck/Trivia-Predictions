@@ -106,7 +106,6 @@ export async function POST(request: Request) {
           name: string;
           address: string;
           radius?: number;
-          venueId?: string;
           latitude?: number;
           longitude?: number;
           displayName?: string;
@@ -161,7 +160,6 @@ export async function POST(request: Request) {
         name: body.name,
         address: body.address,
         radius: body.radius,
-        venueId: body.venueId,
         latitude: body.latitude,
         longitude: body.longitude,
         displayName: body.displayName,

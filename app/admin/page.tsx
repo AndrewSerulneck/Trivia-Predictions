@@ -7,8 +7,10 @@ export default async function AdminPage() {
 
   return (
     <PageShell
-      title="Admin"
-      description="Venue controls, trivia management, and ad slot management."
+      title="Admin Dashboard"
+      description="Admin tools for venues, trivia, ads, and settlement."
+      showBranding={false}
+      showUserStatus={false}
     >
       <AdminConsole venues={venues} />
     </PageShell>

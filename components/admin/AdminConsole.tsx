@@ -1,7 +1,6 @@
 "use client";
 
 import { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { ensureAnonymousSession } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import type { AdSlot, Advertisement, TriviaQuestion, Venue } from "@/types";
@@ -151,7 +150,6 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
   const [newVenueName, setNewVenueName] = useState("");
   const [newVenueAddress, setNewVenueAddress] = useState("");
   const [newVenueRadius, setNewVenueRadius] = useState(100);
-  const [newVenueId, setNewVenueId] = useState("");
   const [creatingVenue, setCreatingVenue] = useState(false);
   const [venueCreateMessage, setVenueCreateMessage] = useState("");
   const [selectedManagedVenueId, setSelectedManagedVenueId] = useState(() => venues[0]?.id ?? "");
@@ -607,7 +605,6 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
           latitude: selectedAddressSuggestion?.latitude,
           longitude: selectedAddressSuggestion?.longitude,
           radius: newVenueRadius,
-          venueId: newVenueId.trim() || undefined,
         }),
       });
       const payload = (await response.json()) as { ok: boolean; error?: string; item?: Venue };
@@ -627,7 +624,6 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       );
       setNewVenueName("");
       setNewVenueAddress("");
-      setNewVenueId("");
       setSelectedAddressSuggestion(null);
       setAddressSuggestions([]);
       setNewVenueRadius(100);
@@ -985,7 +981,10 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
   const showLogout = !shouldShowBootstrap && (Boolean(adminCredentials) || state === "idle");
 
   return (
-    <div className="space-y-6">
+    <div
+      className="admin-console space-y-6"
+      style={{ fontFamily: '"Segoe UI", "Helvetica Neue", Arial, sans-serif' }}
+    >
       {showLogout ? (
         <div className="flex justify-end">
           <button
@@ -1000,71 +999,26 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
         </div>
       ) : null}
 
-      {!shouldShowBootstrap ? (
-        <section className="space-y-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-          <h2 className="text-base font-semibold text-emerald-900">Open Site</h2>
-          <p className="text-xs text-emerald-800">Jump to the regular app and play/trivia directly.</p>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            <Link
-              href="/"
-              className="rounded-md bg-emerald-700 px-3 py-2 text-center text-sm font-medium text-white"
-            >
-              Home / Join
-            </Link>
-            <Link
-              href="/trivia"
-              className="rounded-md bg-emerald-700 px-3 py-2 text-center text-sm font-medium text-white"
-            >
-              Trivia
-            </Link>
-            <Link
-              href="/predictions"
-              className="rounded-md bg-emerald-700 px-3 py-2 text-center text-sm font-medium text-white"
-            >
-              Predictions
-            </Link>
-            <Link
-              href="/activity"
-              className="rounded-md bg-emerald-700 px-3 py-2 text-center text-sm font-medium text-white"
-            >
-              Activity
-            </Link>
-            <Link
-              href="/leaderboard"
-              className="rounded-md bg-emerald-700 px-3 py-2 text-center text-sm font-medium text-white"
-            >
-              Leaderboard
-            </Link>
-            <Link
-              href="/join"
-              className="rounded-md bg-slate-900 px-3 py-2 text-center text-sm font-medium text-white"
-            >
-              Back to Join
-            </Link>
-          </div>
-        </section>
-      ) : null}
-
       {shouldShowBootstrap ? (
         <section className="space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-3">
           <h2 className="text-base font-semibold text-amber-900">Admin Login</h2>
           <p className="text-sm text-amber-800">
             Sign in with configured admin credentials to access admin tools. A venue profile is not required.
           </p>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <input
               type="text"
               value={adminLoginUsername}
               onChange={(event) => setAdminLoginUsername(event.target.value)}
               placeholder="Admin username"
-              className="w-full rounded-md border border-amber-300 px-3 py-2 text-sm"
+              className="w-full rounded-md border border-amber-300 px-3 py-2.5 text-sm"
             />
             <input
               type="password"
               value={adminLoginPassword}
               onChange={(event) => setAdminLoginPassword(event.target.value)}
               placeholder="Admin password"
-              className="w-full rounded-md border border-amber-300 px-3 py-2 text-sm"
+              className="w-full rounded-md border border-amber-300 px-3 py-2.5 text-sm"
             />
             <button
               type="button"
@@ -1072,7 +1026,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
                 void bootstrapAdminAccess();
               }}
               disabled={bootstrappingAdmin}
-              className="rounded-md bg-amber-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+              className="sm:col-span-2 rounded-md bg-amber-700 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-60"
             >
               {bootstrappingAdmin ? "Logging in..." : "Admin Login"}
             </button>
@@ -1090,14 +1044,14 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
 
       {!shouldShowBootstrap ? (
         <section className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-          <h2 className="text-base font-semibold">Admin Tools</h2>
+          <h2 className="text-lg font-semibold">Admin Tools</h2>
           <div className="flex flex-wrap gap-2">
             {ADMIN_SECTION_OPTIONS.map((section) => (
               <button
                 key={section.id}
                 type="button"
                 onClick={() => setActiveSection(section.id)}
-                className={`rounded-md border px-3 py-2 text-xs font-medium ${
+                className={`rounded-md border px-4 py-3 text-sm font-semibold ${
                   activeSection === section.id
                     ? "border-slate-900 bg-slate-900 text-white"
                     : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
@@ -1581,17 +1535,11 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
         <p className="text-xs text-slate-600">
           Enter a real-world address. We geocode it to coordinates and create a venue that users can join immediately.
         </p>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-2">
           <input
             value={newVenueName}
             onChange={(event) => setNewVenueName(event.target.value)}
             placeholder="Venue name (e.g. Downtown Sports Bar)"
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-          />
-          <input
-            value={newVenueId}
-            onChange={(event) => setNewVenueId(event.target.value)}
-            placeholder="Optional custom id (e.g. venue-downtown)"
             className="rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
         </div>

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { listPredictionMarkets } from "@/lib/polymarket";
 import { getPredictionQuota, submitPredictionPick } from "@/lib/userPredictions";
-import { requireAdminAuth } from "@/lib/adminAuth";
 
 export async function GET(request: Request) {
   try {
@@ -43,16 +42,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const adminAuth = await requireAdminAuth(request);
-
     const pick = await submitPredictionPick({
       userId: body.userId,
       predictionId: body.predictionId,
       outcomeId: body.outcomeId,
-      forceAdminBypass: adminAuth.ok,
     });
 
-    const quota = await getPredictionQuota(body.userId, { forceAdminBypass: adminAuth.ok });
+    const quota = await getPredictionQuota(body.userId);
 
     return NextResponse.json({ ok: true, pick, quota });
   } catch (error) {
