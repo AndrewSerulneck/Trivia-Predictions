@@ -1,7 +1,9 @@
 "use client";
 
 import { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ensureAnonymousSession } from "@/lib/auth";
+import { ADMIN_SECTION_OPTIONS, type AdminSection } from "@/components/admin/adminSections";
 import { supabase } from "@/lib/supabase";
 import type { AdSlot, Advertisement, TriviaQuestion, Venue } from "@/types";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
@@ -61,36 +63,20 @@ type AdminAddressSuggestion = {
   latitude: number;
   longitude: number;
 };
-type AdminSection =
-  | "ad-debug"
-  | "prediction-settlement"
-  | "venue-users"
-  | "venue-manage"
-  | "venue-create"
-  | "trivia-create"
-  | "trivia-list"
-  | "ads-create"
-  | "ads-list";
+type AdminConsoleProps = {
+  venues: Venue[];
+  mode?: "dashboard" | "section";
+  initialSection?: AdminSection;
+};
 
-const ADMIN_SECTION_OPTIONS: Array<{ id: AdminSection; label: string }> = [
-  { id: "venue-users", label: "Venue User Management" },
-  { id: "venue-manage", label: "Venue Profile Management" },
-  { id: "venue-create", label: "Create Venue" },
-  { id: "trivia-create", label: "Create Trivia Question" },
-  { id: "trivia-list", label: "Trivia Questions" },
-  { id: "ads-create", label: "Create Advertisement" },
-  { id: "ads-list", label: "Manage Advertisements" },
-  { id: "prediction-settlement", label: "Prediction Settlement" },
-  { id: "ad-debug", label: "Ad Debug Snapshot" },
-];
-
-export function AdminConsole({ venues }: { venues: Venue[] }) {
+export function AdminConsole({ venues, mode = "dashboard", initialSection }: AdminConsoleProps) {
+  const router = useRouter();
   const [state, setState] = useState<LoadState>("loading");
   const [errorMessage, setErrorMessage] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [adminCredentials, setAdminCredentials] = useState<AdminCredentials | null>(null);
   const [authInitialized, setAuthInitialized] = useState(false);
-  const [activeSection, setActiveSection] = useState<AdminSection>("venue-users");
+  const [activeSection, setActiveSection] = useState<AdminSection>(initialSection ?? "venue-users");
   const [availableVenues, setAvailableVenues] = useState<Venue[]>(venues);
   const [adsWindowHours, setAdsWindowHours] = useState(24);
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
@@ -514,6 +500,12 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
     }
     void loadVenueUsers();
   }, [authInitialized, accessToken, adminCredentials, loadVenueUsers]);
+
+  useEffect(() => {
+    if (initialSection) {
+      setActiveSection(initialSection);
+    }
+  }, [initialSection]);
 
   const createTrivia = async () => {
     setErrorMessage("");
@@ -979,6 +971,9 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       errorMessage.toLowerCase().includes("admin login required") ||
       errorMessage.toLowerCase().includes("missing bearer token"));
   const showLogout = !shouldShowBootstrap && (Boolean(adminCredentials) || state === "idle");
+  const isSectionMode = mode === "section";
+  const selectedSection = ADMIN_SECTION_OPTIONS.find((section) => section.id === activeSection) ?? null;
+  const shouldRenderSectionContent = !shouldShowBootstrap && isSectionMode;
 
   return (
     <div
@@ -1042,20 +1037,19 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       )}
       {state === "loading" && <p className="text-sm text-slate-600">Loading admin data...</p>}
 
-      {!shouldShowBootstrap ? (
+      {!shouldShowBootstrap && !isSectionMode ? (
         <section className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
           <h2 className="text-lg font-semibold">Admin Tools</h2>
-          <div className="flex flex-wrap gap-2">
+          <p className="text-sm text-slate-600">Tap a tool to open its page.</p>
+          <div className="grid grid-cols-2 gap-2">
             {ADMIN_SECTION_OPTIONS.map((section) => (
               <button
                 key={section.id}
                 type="button"
-                onClick={() => setActiveSection(section.id)}
-                className={`rounded-md border px-4 py-3 text-sm font-semibold ${
-                  activeSection === section.id
-                    ? "border-slate-900 bg-slate-900 text-white"
-                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                }`}
+                onClick={() => {
+                  router.push(`/admin/${section.slug}`);
+                }}
+                className="rounded-md border border-slate-300 bg-white px-3 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-100"
               >
                 {section.label}
               </button>
@@ -1064,7 +1058,22 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
         </section>
       ) : null}
 
-      {!shouldShowBootstrap && activeSection === "ad-debug" ? (
+      {!shouldShowBootstrap && isSectionMode ? (
+        <section className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <button
+            type="button"
+            onClick={() => {
+              router.push("/admin");
+            }}
+            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+          >
+            Back to Admin Dashboard
+          </button>
+          <h2 className="text-lg font-semibold">{selectedSection?.label ?? "Admin Tool"}</h2>
+        </section>
+      ) : null}
+
+      {shouldRenderSectionContent && activeSection === "ad-debug" ? (
       <section className="space-y-3 rounded-lg border border-slate-200 p-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-base font-semibold">Ad Debug Snapshot</h2>
@@ -1223,7 +1232,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       </section>
       ) : null}
 
-      {!shouldShowBootstrap && activeSection === "prediction-settlement" ? (
+      {shouldRenderSectionContent && activeSection === "prediction-settlement" ? (
       <section className="space-y-3 rounded-lg border border-slate-200 p-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-base font-semibold">Pending Prediction Settlement</h2>
@@ -1294,7 +1303,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       </section>
       ) : null}
 
-      {!shouldShowBootstrap && activeSection === "venue-users" ? (
+      {shouldRenderSectionContent && activeSection === "venue-users" ? (
       <section className="space-y-3 rounded-lg border border-slate-200 p-3">
         <h2 className="text-base font-semibold">Venue User Management</h2>
         <div className="max-w-sm">
@@ -1381,7 +1390,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       </section>
       ) : null}
 
-      {!shouldShowBootstrap && activeSection === "venue-manage" ? (
+      {shouldRenderSectionContent && activeSection === "venue-manage" ? (
       <section className="space-y-3 rounded-lg border border-slate-200 p-3">
         <h2 className="text-base font-semibold">Venue Profile Management</h2>
         <div className="max-w-sm">
@@ -1529,7 +1538,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       </section>
       ) : null}
 
-      {!shouldShowBootstrap && activeSection === "venue-create" ? (
+      {shouldRenderSectionContent && activeSection === "venue-create" ? (
       <section className="space-y-3 rounded-lg border border-slate-200 p-3">
         <h2 className="text-base font-semibold">Create Venue</h2>
         <p className="text-xs text-slate-600">
@@ -1594,7 +1603,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       </section>
       ) : null}
 
-      {!shouldShowBootstrap && activeSection === "trivia-create" ? (
+      {shouldRenderSectionContent && activeSection === "trivia-create" ? (
       <section className="space-y-3 rounded-lg border border-slate-200 p-3">
         <h2 className="text-base font-semibold">Create Trivia Question</h2>
         <input
@@ -1644,7 +1653,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       </section>
       ) : null}
 
-      {!shouldShowBootstrap && activeSection === "ads-create" ? (
+      {shouldRenderSectionContent && activeSection === "ads-create" ? (
       <section className="space-y-3 rounded-lg border border-slate-200 p-3">
         <h2 className="text-base font-semibold">Create Advertisement</h2>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -1748,7 +1757,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       </section>
       ) : null}
 
-      {!shouldShowBootstrap && activeSection === "trivia-list" ? (
+      {shouldRenderSectionContent && activeSection === "trivia-list" ? (
       <section className="space-y-2 rounded-lg border border-slate-200 p-3">
         <h2 className="text-base font-semibold">Trivia Questions ({questions.length})</h2>
         <ul className="space-y-2">
@@ -1837,7 +1846,7 @@ export function AdminConsole({ venues }: { venues: Venue[] }) {
       </section>
       ) : null}
 
-      {!shouldShowBootstrap && activeSection === "ads-list" ? (
+      {shouldRenderSectionContent && activeSection === "ads-list" ? (
       <section className="space-y-2 rounded-lg border border-slate-200 p-3">
         <h2 className="text-base font-semibold">Advertisements ({ads.length})</h2>
         <ul className="space-y-2">

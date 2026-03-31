@@ -8,11 +8,11 @@ export default async function AdminPage() {
   return (
     <PageShell
       title="Admin Dashboard"
-      description="Admin tools for venues, trivia, ads, and settlement."
+      description="Choose a tool to open its page."
       showBranding={false}
       showUserStatus={false}
     >
-      <AdminConsole venues={venues} />
+      <AdminConsole venues={venues} mode="dashboard" />
     </PageShell>
   );
 }
