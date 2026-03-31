@@ -1,22 +1,23 @@
 import { NextResponse } from "next/server";
+import { findMatchingAdminCredential, getConfiguredAdminCredentials } from "@/lib/adminCredentials";
 import { ADMIN_SESSION_COOKIE, createAdminSessionToken } from "@/lib/adminSession";
 
 export async function POST(request: Request) {
-  const configuredUsername = process.env.ADMIN_LOGIN_USERNAME?.trim();
-  const configuredPassword = process.env.ADMIN_LOGIN_PASSWORD?.trim();
-  if (!configuredUsername || !configuredPassword) {
+  const configuredCredentials = getConfiguredAdminCredentials();
+  if (configuredCredentials.length === 0) {
     return NextResponse.json(
-      { ok: false, error: "ADMIN_LOGIN_USERNAME and ADMIN_LOGIN_PASSWORD must be configured." },
+      { ok: false, error: "Admin login credentials are not configured." },
       { status: 500 }
     );
   }
 
   const { username, password } = (await request.json()) as { username?: string; password?: string };
-  if ((username ?? "").trim() !== configuredUsername || (password ?? "") !== configuredPassword) {
+  const matchedCredential = findMatchingAdminCredential({ username, password });
+  if (!matchedCredential) {
     return NextResponse.json({ ok: false, error: "Invalid admin login credentials." }, { status: 403 });
   }
 
-  const sessionToken = createAdminSessionToken(configuredUsername);
+  const sessionToken = createAdminSessionToken(matchedCredential.username);
   if (!sessionToken) {
     return NextResponse.json({ ok: false, error: "Failed to create admin session." }, { status: 500 });
   }

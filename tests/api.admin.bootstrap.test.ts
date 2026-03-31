@@ -49,4 +49,21 @@ describe("POST /api/admin/bootstrap", () => {
     expect(body.ok).toBe(true);
     expect(setCookie).toContain("admin_session=");
   });
+
+  it("supports the secondary admin login credentials", async () => {
+    const response = await POST(
+      new Request("http://localhost/api/admin/bootstrap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: "marc", password: "MeMarc25" }),
+      })
+    );
+
+    const body = (await response.json()) as { ok: boolean };
+    const setCookie = response.headers.get("set-cookie") ?? "";
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(setCookie).toContain("admin_session=");
+  });
 });

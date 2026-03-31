@@ -503,15 +503,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               <p className="text-xs uppercase tracking-wide text-slate-500">Advertisement</p>
               <p className="mt-1 font-medium">[ Placeholder Banner Ad - 728 x 90 ]</p>
             </div>
-            <div className="pt-1">
-              <button
-                type="button"
-                onClick={openAdminDashboard}
-                className={`${JOIN_BUTTON_POP_CLASS} inline-flex min-h-[44px] w-full items-center justify-center rounded-2xl border-4 border-slate-900 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-[4px_4px_0_#0f172a]`}
-              >
-                Admin Dashboard
-              </button>
-            </div>
           </div>
         )}
 
@@ -609,6 +600,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             </div>
           </div>
         )}
+
+        <div className="border-t border-slate-200 pt-3">
+          <button
+            type="button"
+            onClick={openAdminDashboard}
+            className={`${JOIN_BUTTON_POP_CLASS} inline-flex min-h-[44px] w-full items-center justify-center rounded-2xl border-4 border-slate-900 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-[4px_4px_0_#0f172a]`}
+          >
+            Admin Login
+          </button>
+        </div>
       </div>
     </PageShell>
   );
