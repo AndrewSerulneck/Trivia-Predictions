@@ -294,7 +294,7 @@ function normalizeSort(input: unknown): PredictionSort {
 
 function normalizePageSize(input: unknown): number {
   const value = normalizePage(input, 100);
-  return Math.max(1, Math.min(100, value));
+  return Math.max(1, Math.min(250, value));
 }
 
 function normalizePositiveInt(input: number, fallback: number): number {
@@ -742,6 +742,10 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
     .map(([name]) => name);
 
   let filtered = [...filteredMarkets];
+  if (broadCategory === "sports") {
+    filtered = filtered.filter((market) => Boolean(market.sport));
+  }
+
   if (sport) {
     filtered = filtered.filter((market) => (market.sport ?? "") === sport);
   }
@@ -785,13 +789,16 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
   const safePage = Math.min(page, totalPages);
   const start = (safePage - 1) * pageSize;
   const items = filtered.slice(start, start + pageSize);
-  const sports = Array.from(new Set(filteredMarkets.map((item) => item.sport).filter(Boolean) as string[]))
+  const sportsCatalogSource = broadCategory === "sports"
+    ? filteredMarkets.filter((item) => Boolean(item.sport))
+    : filteredMarkets;
+  const sports = Array.from(new Set(sportsCatalogSource.map((item) => item.sport).filter(Boolean) as string[]))
     .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
   const leaguesBySport: Record<string, string[]> = {};
   for (const sportName of sports) {
     leaguesBySport[sportName] = Array.from(
       new Set(
-        filteredMarkets
+        sportsCatalogSource
           .filter((item) => item.sport === sportName)
           .map((item) => item.league)
           .filter(Boolean) as string[]

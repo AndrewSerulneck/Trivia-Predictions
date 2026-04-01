@@ -40,6 +40,7 @@ type PredictionQuota = {
 
 type SortKey = "closing-soon" | "newest" | "volume" | "liquidity";
 type ViewMode = "grouped" | "all";
+const CLIENT_PAGE_SIZE = 24;
 
 const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
   { value: "closing-soon", label: "Closing Soon" },
@@ -125,11 +126,12 @@ export function PredictionMarketList() {
   const [quota, setQuota] = useState<PredictionQuota | null>(null);
   const [quotaSecondsRemaining, setQuotaSecondsRemaining] = useState(0);
 
-  const [markets, setMarkets] = useState<Prediction[]>([]);
+  const [allMarkets, setAllMarkets] = useState<Prediction[]>([]);
   const [sports, setSports] = useState<string[]>([]);
   const [leaguesBySport, setLeaguesBySport] = useState<Record<string, string[]>>({});
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const hasInitializedRef = useRef(false);
 
@@ -140,8 +142,8 @@ export function PredictionMarketList() {
   const [sort, setSort] = useState<SortKey>("closing-soon");
   const [viewMode, setViewMode] = useState<ViewMode>("grouped");
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
+  const [browseFiltersCollapsed, setBrowseFiltersCollapsed] = useState(false);
+  const [discoverCollapsed, setDiscoverCollapsed] = useState(true);
   const [recentPicks, setRecentPicks] = useState<UserPrediction[]>([]);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const { rewards, addReward } = useRewards();
@@ -152,9 +154,48 @@ export function PredictionMarketList() {
     () => (selectedSport ? leaguesBySport[selectedSport] ?? [] : []),
     [leaguesBySport, selectedSport]
   );
+  const filteredMarkets = useMemo(() => {
+    let next = allMarkets.filter((market) => Boolean(market.sport));
+    if (selectedSport) {
+      next = next.filter((market) => (market.sport ?? "") === selectedSport);
+    }
+    if (selectedLeague) {
+      next = next.filter((market) => (market.league ?? "") === selectedLeague);
+    }
+
+    const normalizedSearch = search.trim().toLowerCase();
+    if (normalizedSearch) {
+      next = next.filter((market) => {
+        const inQuestion = market.question.toLowerCase().includes(normalizedSearch);
+        const inOutcomes = market.outcomes.some((outcome) => outcome.title.toLowerCase().includes(normalizedSearch));
+        const inSport = (market.sport ?? "").toLowerCase().includes(normalizedSearch);
+        const inLeague = (market.league ?? "").toLowerCase().includes(normalizedSearch);
+        return inQuestion || inOutcomes || inSport || inLeague;
+      });
+    }
+
+    return [...next].sort((left, right) => {
+      if (sort === "newest") {
+        return +new Date(right.createdAt ?? right.closesAt) - +new Date(left.createdAt ?? left.closesAt);
+      }
+      if (sort === "volume") {
+        return (right.volume ?? 0) - (left.volume ?? 0) || +new Date(left.closesAt) - +new Date(right.closesAt);
+      }
+      if (sort === "liquidity") {
+        return (right.liquidity ?? 0) - (left.liquidity ?? 0) || +new Date(left.closesAt) - +new Date(right.closesAt);
+      }
+      return +new Date(left.closesAt) - +new Date(right.closesAt);
+    });
+  }, [allMarkets, search, selectedLeague, selectedSport, sort]);
+  const totalItems = filteredMarkets.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / CLIENT_PAGE_SIZE));
+  const markets = useMemo(() => {
+    const start = (page - 1) * CLIENT_PAGE_SIZE;
+    return filteredMarkets.slice(start, start + CLIENT_PAGE_SIZE);
+  }, [filteredMarkets, page]);
   const groupedMarketSections = useMemo(() => {
     const byLeague = new Map<string, Prediction[]>();
-    for (const market of markets) {
+    for (const market of filteredMarkets) {
       const label = market.league?.trim() || `Other ${market.sport?.trim() || "Sports"}`;
       const existing = byLeague.get(label) ?? [];
       existing.push(market);
@@ -173,7 +214,7 @@ export function PredictionMarketList() {
       id: toSectionId(label),
       markets: byLeague.get(label) ?? [],
     }));
-  }, [markets]);
+  }, [filteredMarkets]);
   const featuredMarkets = useMemo(() => {
     const score = (market: Prediction) => {
       const volume = Math.max(0, market.volume ?? market.liquidity ?? 0);
@@ -182,10 +223,10 @@ export function PredictionMarketList() {
       return volume + closingSoonBoost;
     };
 
-    return [...markets]
+    return [...filteredMarkets]
       .sort((a, b) => score(b) - score(a))
       .slice(0, 6);
-  }, [markets]);
+  }, [filteredMarkets]);
   const forYouMarkets = useMemo(() => {
     if (recentPicks.length === 0) return [];
 
@@ -193,7 +234,7 @@ export function PredictionMarketList() {
     const categoryScores = new Map<string, number>();
 
     for (const pick of recentPicks.slice(0, 30)) {
-      const matched = markets.find((market) => market.id === pick.predictionId);
+      const matched = allMarkets.find((market) => market.id === pick.predictionId);
       const matchedCategory = matched?.league?.trim() || matched?.sport?.trim();
       if (matchedCategory) {
         categoryScores.set(matchedCategory, (categoryScores.get(matchedCategory) ?? 0) + 1);
@@ -205,7 +246,7 @@ export function PredictionMarketList() {
       .slice(0, 3)
       .map(([categoryName]) => categoryName);
 
-    const pool = markets.filter((market) => !recentPickMarketIds.has(market.id));
+    const pool = filteredMarkets.filter((market) => !recentPickMarketIds.has(market.id));
     const categoryMatched = preferredCategories.length
       ? pool.filter((market) => preferredCategories.includes(market.league?.trim() || market.sport?.trim() || ""))
       : [];
@@ -223,7 +264,7 @@ export function PredictionMarketList() {
         return (b.volume ?? b.liquidity ?? 0) - (a.volume ?? a.liquidity ?? 0);
       })
       .slice(0, 6);
-  }, [recentPicks, markets]);
+  }, [allMarkets, recentPicks, filteredMarkets]);
 
   const loadQuota = useCallback(async () => {
     if (!userId) {
@@ -307,6 +348,10 @@ export function PredictionMarketList() {
   }, [leagueOptions, selectedLeague, selectedSport]);
 
   useEffect(() => {
+    setPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
+
+  useEffect(() => {
     if (!userId) {
       setQuota(null);
       return;
@@ -359,19 +404,20 @@ export function PredictionMarketList() {
       setIsInitializing(true);
     }
 
-    const load = async () => {
-      setLoading(true);
+    const load = async (isBackgroundRefresh: boolean) => {
+      if (!hasInitializedRef.current) {
+        setLoading(true);
+      } else if (isBackgroundRefresh) {
+        setIsRefreshing(true);
+      }
       setErrorMessage("");
 
       try {
         const query = new URLSearchParams({
-          page: String(page),
-          pageSize: "100",
-          search,
-          sport: selectedSport,
-          league: selectedLeague,
+          page: "1",
+          pageSize: "250",
           excludeSensitive: "false",
-          sort,
+          sort: "closing-soon",
         });
         const response = await fetch(`/api/predictions?${query.toString()}`, {
           cache: "no-store",
@@ -383,22 +429,23 @@ export function PredictionMarketList() {
           throw new Error(payload.error ?? "There is an error with Polymarket right now. Please try again.");
         }
 
-        setMarkets(payload.items ?? []);
+        setAllMarkets((payload.items ?? []).filter((market) => Boolean(market.sport)));
         setSports(payload.sports ?? []);
         setLeaguesBySport(payload.leaguesBySport ?? {});
-        setTotalItems(payload.totalItems ?? 0);
-        setTotalPages(Math.max(1, payload.totalPages ?? 1));
       } catch (error) {
         if (controller.signal.aborted) {
           return;
         }
-        setMarkets([]);
+        if (!hasInitializedRef.current) {
+          setAllMarkets([]);
+        }
         setErrorMessage(
           error instanceof Error ? error.message : "There is an error with Polymarket right now. Please try again."
         );
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);
+          setIsRefreshing(false);
           if (!hasInitializedRef.current) {
             hasInitializedRef.current = true;
             setIsInitializing(false);
@@ -407,10 +454,16 @@ export function PredictionMarketList() {
       }
     };
 
-    void load();
+    void load(false);
+    const refreshInterval = window.setInterval(() => {
+      void load(true);
+    }, 60000);
 
-    return () => controller.abort();
-  }, [page, search, selectedSport, selectedLeague, sort]);
+    return () => {
+      controller.abort();
+      window.clearInterval(refreshInterval);
+    };
+  }, []);
 
   if (isInitializing) {
     return (
@@ -588,10 +641,22 @@ export function PredictionMarketList() {
       )}
 
       <section className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Browse & Filters</p>
+          <button
+            type="button"
+            onClick={() => setBrowseFiltersCollapsed((value) => !value)}
+            className={`${BUTTON_POP_CLASS} rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700`}
+          >
+            {browseFiltersCollapsed ? "Expand" : "Collapse"}
+          </button>
+        </div>
+
+        {!browseFiltersCollapsed ? (
+          <div className="space-y-3">
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Sports</p>
-          <div className="overflow-x-auto pb-1">
-            <div className="flex w-max items-center gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               <button
                 type="button"
                 onClick={() => {
@@ -599,7 +664,7 @@ export function PredictionMarketList() {
                   setSelectedLeague("");
                   setPage(1);
                 }}
-                className={`inline-flex min-h-[48px] items-center gap-2 rounded-full border px-6 py-2.5 text-sm font-semibold ${BUTTON_POP_CLASS} ${
+                className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
                     selectedSport === ""
                       ? "border-slate-900 bg-slate-900 text-white"
                       : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
@@ -619,7 +684,7 @@ export function PredictionMarketList() {
                     setSelectedLeague("");
                     setPage(1);
                   }}
-                  className={`inline-flex min-h-[48px] items-center gap-2 rounded-full border px-6 py-2.5 text-sm font-semibold ${BUTTON_POP_CLASS} ${
+                  className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
                     selectedSport === item
                       ? "border-slate-900 bg-slate-900 text-white"
                       : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
@@ -631,14 +696,12 @@ export function PredictionMarketList() {
                   {item}
                 </button>
               ))}
-            </div>
           </div>
         </div>
 
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Leagues</p>
-          <div className="overflow-x-auto pb-1">
-            <div className="flex w-max items-center gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               {!selectedSport ? (
                 <span className="text-xs text-slate-500">Select a sport to browse leagues.</span>
               ) : leagueOptions.length === 0 ? (
@@ -652,7 +715,7 @@ export function PredictionMarketList() {
                       setSelectedLeague("");
                       setPage(1);
                     }}
-                    className={`inline-flex min-h-[48px] items-center gap-2 rounded-full border px-6 py-2.5 text-sm font-semibold ${BUTTON_POP_CLASS} ${
+                    className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
                       selectedLeague === ""
                         ? "border-blue-700 bg-blue-700 text-white"
                         : "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300"
@@ -671,7 +734,7 @@ export function PredictionMarketList() {
                         setSelectedLeague(item);
                         setPage(1);
                       }}
-                      className={`inline-flex min-h-[48px] items-center gap-2 rounded-full border px-6 py-2.5 text-sm font-semibold ${BUTTON_POP_CLASS} ${
+                      className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
                         selectedLeague === item
                           ? "border-blue-700 bg-blue-700 text-white"
                           : "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300"
@@ -685,7 +748,6 @@ export function PredictionMarketList() {
                   ))}
                 </>
               )}
-            </div>
           </div>
         </div>
 
@@ -743,6 +805,7 @@ export function PredictionMarketList() {
         <p className="text-xs text-slate-600">
           Showing {markets.length} of {totalItems} market{totalItems === 1 ? "" : "s"}
           {hasFilters ? " (filtered)" : ""}.
+          {isRefreshing ? " Refreshing live lines…" : ""}
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Layout</span>
@@ -785,69 +848,84 @@ export function PredictionMarketList() {
             </div>
           </div>
         ) : null}
+          </div>
+        ) : null}
       </section>
 
-      {featuredMarkets.length > 0 ? (
-        <section className="space-y-2 rounded-lg border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-3">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold text-amber-900">Featured Markets</h3>
-            <span className="text-xs font-semibold uppercase tracking-wide text-amber-700">Hot + Closing Soon</span>
-          </div>
-          <div className="overflow-x-auto pb-1">
-            <div className="flex w-max gap-2">
-              {featuredMarkets.map((market) => (
-                <button
-                  key={`featured-${market.id}`}
-                  type="button"
-                  onClick={() => {
-                    setSearchInput(market.question);
-                    setSearch(market.question);
-                    setPage(1);
-                  }}
-                  className={`${BUTTON_POP_CLASS} max-w-[260px] rounded-xl border border-amber-300 bg-white px-3 py-2 text-left hover:border-amber-400`}
-                >
-                  <p className="line-clamp-2 text-xs font-semibold text-slate-900">{market.question}</p>
-                  <p className="mt-1 text-[11px] text-slate-600">
-                    {[market.sport, market.league].filter(Boolean).join(" · ") || "Sports"} ·{" "}
-                    {new Date(market.closesAt).toLocaleDateString()}
-                  </p>
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-      ) : null}
+      <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-3">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Discover</p>
+          <button
+            type="button"
+            onClick={() => setDiscoverCollapsed((value) => !value)}
+            className={`${BUTTON_POP_CLASS} rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700`}
+          >
+            {discoverCollapsed ? "Expand" : "Collapse"}
+          </button>
+        </div>
 
-      {forYouMarkets.length > 0 ? (
-        <section className="space-y-2 rounded-lg border border-cyan-200 bg-gradient-to-r from-cyan-50 to-sky-50 p-3">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold text-cyan-900">For You</h3>
-            <span className="text-xs font-semibold uppercase tracking-wide text-cyan-700">Based On Recent Picks</span>
+        {!discoverCollapsed ? (
+          <div className="space-y-3">
+            {featuredMarkets.length > 0 ? (
+              <section className="space-y-2 rounded-lg border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-amber-900">Featured Markets</h3>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-amber-700">Hot + Closing Soon</span>
+                </div>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {featuredMarkets.map((market) => (
+                    <button
+                      key={`featured-${market.id}`}
+                      type="button"
+                      onClick={() => {
+                        setSearchInput(market.question);
+                        setSearch(market.question);
+                        setPage(1);
+                      }}
+                      className={`${BUTTON_POP_CLASS} rounded-xl border border-amber-300 bg-white px-3 py-2 text-left hover:border-amber-400`}
+                    >
+                      <p className="line-clamp-2 text-xs font-semibold text-slate-900">{market.question}</p>
+                      <p className="mt-1 text-[11px] text-slate-600">
+                        {[market.sport, market.league].filter(Boolean).join(" · ") || "Sports"} ·{" "}
+                        {new Date(market.closesAt).toLocaleDateString()}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            {forYouMarkets.length > 0 ? (
+              <section className="space-y-2 rounded-lg border border-cyan-200 bg-gradient-to-r from-cyan-50 to-sky-50 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-cyan-900">For You</h3>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-cyan-700">Based On Recent Picks</span>
+                </div>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {forYouMarkets.map((market) => (
+                    <button
+                      key={`for-you-${market.id}`}
+                      type="button"
+                      onClick={() => {
+                        setSearchInput(market.question);
+                        setSearch(market.question);
+                        setPage(1);
+                      }}
+                      className={`${BUTTON_POP_CLASS} rounded-xl border border-cyan-300 bg-white px-3 py-2 text-left hover:border-cyan-400`}
+                    >
+                      <p className="line-clamp-2 text-xs font-semibold text-slate-900">{market.question}</p>
+                      <p className="mt-1 text-[11px] text-slate-600">
+                        {[market.sport, market.league].filter(Boolean).join(" · ") || "Sports"} ·{" "}
+                        {new Date(market.closesAt).toLocaleDateString()}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ) : null}
           </div>
-          <div className="overflow-x-auto pb-1">
-            <div className="flex w-max gap-2">
-              {forYouMarkets.map((market) => (
-                <button
-                  key={`for-you-${market.id}`}
-                  type="button"
-                  onClick={() => {
-                    setSearchInput(market.question);
-                    setSearch(market.question);
-                    setPage(1);
-                  }}
-                  className={`${BUTTON_POP_CLASS} max-w-[260px] rounded-xl border border-cyan-300 bg-white px-3 py-2 text-left hover:border-cyan-400`}
-                >
-                  <p className="line-clamp-2 text-xs font-semibold text-slate-900">{market.question}</p>
-                  <p className="mt-1 text-[11px] text-slate-600">
-                    {[market.sport, market.league].filter(Boolean).join(" · ") || "Sports"} ·{" "}
-                    {new Date(market.closesAt).toLocaleDateString()}
-                  </p>
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-      ) : null}
+        ) : null}
+      </section>
 
       {errorMessage ? (
         <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">{errorMessage}</div>
