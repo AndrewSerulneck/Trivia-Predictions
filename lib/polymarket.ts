@@ -32,6 +32,8 @@ export type PredictionListParams = {
   search?: string;
   category?: string;
   broadCategory?: string;
+  sport?: string;
+  league?: string;
   excludeSensitive?: boolean | string;
   sort?: PredictionSort | string;
 };
@@ -45,7 +47,64 @@ export type PredictionListResult = {
   categories: string[];
   trendingCategories: string[];
   broadCategories: string[];
+  sports: string[];
+  leaguesBySport: Record<string, string[]>;
 };
+
+type LeagueDefinition = {
+  league: string;
+  sport: string;
+  keywords: string[];
+};
+
+const SPORT_KEYWORDS: Array<{ sport: string; keywords: string[] }> = [
+  { sport: "Football", keywords: ["nfl", "football", "super bowl", "ncaa football", "college football", "cfl", "ufl"] },
+  { sport: "Soccer", keywords: ["soccer", "football club", "fc ", "premier league", "la liga", "bundesliga", "serie a", "ligue 1", "mls", "uefa"] },
+  { sport: "Basketball", keywords: ["basketball", "nba", "wnba", "ncaa basketball", "march madness", "euroleague"] },
+  { sport: "Baseball", keywords: ["baseball", "mlb", "world series"] },
+  { sport: "Hockey", keywords: ["hockey", "nhl", "stanley cup"] },
+  { sport: "Lacrosse", keywords: ["lacrosse", "pll", "nll"] },
+  { sport: "Tennis", keywords: ["tennis", "atp", "wta", "grand slam", "wimbledon", "us open"] },
+  { sport: "Golf", keywords: ["golf", "pga", "liv golf", "masters", "ryder cup"] },
+  { sport: "MMA", keywords: ["mma", "ufc", "bellator"] },
+  { sport: "Motorsport", keywords: ["formula 1", "f1", "nascar", "indycar", "motogp"] },
+  { sport: "Cricket", keywords: ["cricket", "ipl", "test match", "odi"] },
+  { sport: "Rugby", keywords: ["rugby", "six nations", "super rugby"] },
+];
+
+const LEAGUE_DEFINITIONS: LeagueDefinition[] = [
+  { league: "NFL", sport: "Football", keywords: [" nfl ", "nfl ", " nfl", "national football league"] },
+  { league: "NCAA Football", sport: "Football", keywords: ["ncaa football", "college football", "cfb"] },
+  { league: "CFL", sport: "Football", keywords: [" cfl ", "canadian football league"] },
+  { league: "UFL", sport: "Football", keywords: [" ufl ", "united football league"] },
+  { league: "Premier League", sport: "Soccer", keywords: ["premier league", "epl"] },
+  { league: "La Liga", sport: "Soccer", keywords: ["la liga"] },
+  { league: "Bundesliga", sport: "Soccer", keywords: ["bundesliga"] },
+  { league: "Serie A", sport: "Soccer", keywords: ["serie a"] },
+  { league: "Ligue 1", sport: "Soccer", keywords: ["ligue 1"] },
+  { league: "MLS", sport: "Soccer", keywords: [" mls ", "major league soccer"] },
+  { league: "UEFA Champions League", sport: "Soccer", keywords: ["uefa champions league", "champions league", "ucl"] },
+  { league: "NWSL", sport: "Soccer", keywords: ["nwsl", "national women's soccer league"] },
+  { league: "NBA", sport: "Basketball", keywords: [" nba ", "national basketball association"] },
+  { league: "WNBA", sport: "Basketball", keywords: ["wnba"] },
+  { league: "NCAA Basketball", sport: "Basketball", keywords: ["ncaa basketball", "college basketball", "march madness"] },
+  { league: "EuroLeague", sport: "Basketball", keywords: ["euroleague"] },
+  { league: "MLB", sport: "Baseball", keywords: [" mlb ", "major league baseball"] },
+  { league: "NHL", sport: "Hockey", keywords: [" nhl ", "national hockey league"] },
+  { league: "PLL", sport: "Lacrosse", keywords: [" pll ", "premier lacrosse league"] },
+  { league: "NLL", sport: "Lacrosse", keywords: [" nll ", "national lacrosse league"] },
+  { league: "ATP Tour", sport: "Tennis", keywords: ["atp", "atp tour"] },
+  { league: "WTA Tour", sport: "Tennis", keywords: ["wta", "wta tour"] },
+  { league: "PGA Tour", sport: "Golf", keywords: ["pga tour", " pga "] },
+  { league: "LIV Golf", sport: "Golf", keywords: ["liv golf"] },
+  { league: "UFC", sport: "MMA", keywords: [" ufc ", "ultimate fighting championship"] },
+  { league: "Bellator", sport: "MMA", keywords: ["bellator"] },
+  { league: "Formula 1", sport: "Motorsport", keywords: ["formula 1", " f1 "] },
+  { league: "NASCAR", sport: "Motorsport", keywords: ["nascar"] },
+  { league: "IndyCar", sport: "Motorsport", keywords: ["indycar"] },
+  { league: "IPL", sport: "Cricket", keywords: [" ipl ", "indian premier league"] },
+  { league: "Six Nations", sport: "Rugby", keywords: ["six nations"] },
+];
 
 type GammaMarket = {
   id?: string | number;
@@ -175,6 +234,9 @@ function classifyBroadCategories(
     broad.add("politics");
   }
   if (includesAny(haystack, ["sport", "nba", "nfl", "mlb", "nhl", "soccer", "football", "basketball", "baseball", "tennis", "golf", "ufc", "f1"])) {
+    broad.add("sports");
+  }
+  if (market.sport) {
     broad.add("sports");
   }
   if (includesAny(haystack, ["crypto", "bitcoin", "btc", "ethereum", "eth", "solana", "token", "coin"])) {
@@ -387,6 +449,32 @@ function normalizeCategoryValue(value: unknown): string {
   return "";
 }
 
+function inferSportAndLeague(input: { question: string; category: string; tags: string[] }): {
+  sport?: string;
+  league?: string;
+} {
+  const haystack = ` ${[input.question, input.category, ...input.tags].join(" ").toLowerCase()} `;
+
+  for (const definition of LEAGUE_DEFINITIONS) {
+    if (includesAny(haystack, definition.keywords)) {
+      return {
+        sport: definition.sport,
+        league: definition.league,
+      };
+    }
+  }
+
+  for (const candidate of SPORT_KEYWORDS) {
+    if (includesAny(haystack, candidate.keywords)) {
+      return {
+        sport: candidate.sport,
+      };
+    }
+  }
+
+  return {};
+}
+
 function normalizeMarket(market: GammaMarket): Prediction | null {
   const marketId = String(market.id ?? "").trim();
   const question = String(market.question ?? market.title ?? "").trim();
@@ -430,6 +518,11 @@ function normalizeMarket(market: GammaMarket): Prediction | null {
     ...parseTags(market.events),
   ]));
   const category = normalizeCategoryValue(market.category);
+  const classification = inferSportAndLeague({
+    question,
+    category,
+    tags,
+  });
 
   return {
     id: marketId,
@@ -438,6 +531,8 @@ function normalizeMarket(market: GammaMarket): Prediction | null {
     closesAt: closeDate.toISOString(),
     outcomes,
     category: category || tags[0] || "Uncategorized",
+    sport: classification.sport,
+    league: classification.league,
     tags,
     createdAt: Number.isNaN(new Date(createdAt).getTime()) ? undefined : new Date(createdAt).toISOString(),
     volume: coerceNumber(market.volumeNum ?? market.volume),
@@ -598,6 +693,8 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
   const search = String(params.search ?? "").trim().toLowerCase();
   const category = String(params.category ?? "").trim();
   const broadCategory = String(params.broadCategory ?? "").trim().toLowerCase();
+  const sport = String(params.sport ?? "").trim();
+  const league = String(params.league ?? "").trim();
   const excludeSensitive = normalizeBoolean(params.excludeSensitive, false);
   const sort = normalizeSort(params.sort);
 
@@ -645,6 +742,14 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
     .map(([name]) => name);
 
   let filtered = [...filteredMarkets];
+  if (sport) {
+    filtered = filtered.filter((market) => (market.sport ?? "") === sport);
+  }
+
+  if (league) {
+    filtered = filtered.filter((market) => (market.league ?? "") === league);
+  }
+
   if (search) {
     filtered = filtered.filter((market) => {
       const inQuestion = market.question.toLowerCase().includes(search);
@@ -680,6 +785,19 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
   const safePage = Math.min(page, totalPages);
   const start = (safePage - 1) * pageSize;
   const items = filtered.slice(start, start + pageSize);
+  const sports = Array.from(new Set(filteredMarkets.map((item) => item.sport).filter(Boolean) as string[]))
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  const leaguesBySport: Record<string, string[]> = {};
+  for (const sportName of sports) {
+    leaguesBySport[sportName] = Array.from(
+      new Set(
+        filteredMarkets
+          .filter((item) => item.sport === sportName)
+          .map((item) => item.league)
+          .filter(Boolean) as string[]
+      )
+    ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  }
 
   return {
     items,
@@ -690,6 +808,8 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
     categories,
     trendingCategories,
     broadCategories: [...BROAD_CATEGORIES],
+    sports,
+    leaguesBySport,
   };
 }
 

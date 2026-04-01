@@ -19,6 +19,8 @@ type PredictionListPayload = {
   categories?: string[];
   trendingCategories?: string[];
   broadCategories?: string[];
+  sports?: string[];
+  leaguesBySport?: Record<string, string[]>;
   excludeSensitive?: boolean;
   error?: string;
 };
@@ -46,51 +48,28 @@ const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
   { value: "liquidity", label: "Highest Liquidity" },
 ];
 
-function formatBroadCategoryLabel(value: string): string {
-  return value
-    .split(" ")
-    .map((part) => {
-      if (part === "&") return "&";
-      return part.charAt(0).toUpperCase() + part.slice(1);
-    })
-    .join(" ");
-}
-
-const BROWSER_MENU_ICON_BY_CATEGORY: Record<string, string> = {
-  all: "🧭",
-  trending: "⚡",
-  breaking: "🚨",
-  new: "🆕",
-  politics: "🏛️",
-  sports: "⚽",
-  crypto: "🪙",
-  finance: "📈",
-  geopolitics: "🌍",
-  religion: "✝️",
-  earnings: "💼",
-  tech: "🧠",
-  culture: "🎭",
-  world: "🗺️",
-  economy: "📊",
-  "climate & science": "🌤️",
-  mentions: "🗣️",
-  elections: "🗳️",
+const SPORT_ICON_BY_NAME: Record<string, string> = {
+  Football: "🏈",
+  Soccer: "⚽",
+  Basketball: "🏀",
+  Baseball: "⚾",
+  Hockey: "🏒",
+  Lacrosse: "🥍",
+  Tennis: "🎾",
+  Golf: "⛳",
+  MMA: "🥊",
+  Motorsport: "🏎️",
+  Cricket: "🏏",
+  Rugby: "🏉",
 };
 
-function getCategoryIcon(category: string): string {
-  const normalized = category.toLowerCase();
-  return BROWSER_MENU_ICON_BY_CATEGORY[normalized] ?? (normalized.includes("sport") ? "🏟️" : "🏷️");
+function getSportIcon(sport: string): string {
+  return SPORT_ICON_BY_NAME[sport] ?? "🏟️";
 }
 
-const HIDDEN_BROAD_CATEGORIES = new Set<string>();
 const BUTTON_POP_CLASS =
   "transition-all duration-150 transform active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
 const COLLAPSED_SECTIONS_STORAGE_KEY = "tp:predictions:collapsed-sections:v1";
-
-function isSelectableBroadCategory(category: string): boolean {
-  const normalized = category.toLowerCase();
-  return !HIDDEN_BROAD_CATEGORIES.has(normalized);
-}
 
 function toSectionId(label: string): string {
   return `prediction-section-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "uncategorized"}`;
@@ -147,9 +126,8 @@ export function PredictionMarketList() {
   const [quotaSecondsRemaining, setQuotaSecondsRemaining] = useState(0);
 
   const [markets, setMarkets] = useState<Prediction[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [trendingCategories, setTrendingCategories] = useState<string[]>([]);
-  const [broadCategories, setBroadCategories] = useState<string[]>([]);
+  const [sports, setSports] = useState<string[]>([]);
+  const [leaguesBySport, setLeaguesBySport] = useState<Record<string, string[]>>({});
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
@@ -157,8 +135,8 @@ export function PredictionMarketList() {
 
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
-  const [broadCategory, setBroadCategory] = useState("");
+  const [selectedSport, setSelectedSport] = useState("");
+  const [selectedLeague, setSelectedLeague] = useState("");
   const [sort, setSort] = useState<SortKey>("closing-soon");
   const [viewMode, setViewMode] = useState<ViewMode>("grouped");
   const [page, setPage] = useState(1);
@@ -168,32 +146,34 @@ export function PredictionMarketList() {
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const { rewards, addReward } = useRewards();
 
-  const hasFilters = useMemo(() => Boolean(search || category || broadCategory), [search, category, broadCategory]);
+  const hasFilters = useMemo(() => Boolean(search || selectedSport || selectedLeague), [search, selectedSport, selectedLeague]);
   const predictionsQuotaLocked = Boolean(quota && !quota.isAdminBypass && quota.picksRemaining <= 0);
+  const leagueOptions = useMemo(
+    () => (selectedSport ? leaguesBySport[selectedSport] ?? [] : []),
+    [leaguesBySport, selectedSport]
+  );
   const groupedMarketSections = useMemo(() => {
-    const byCategory = new Map<string, Prediction[]>();
+    const byLeague = new Map<string, Prediction[]>();
     for (const market of markets) {
-      const label = market.category?.trim() || "Uncategorized";
-      const existing = byCategory.get(label) ?? [];
+      const label = market.league?.trim() || `Other ${market.sport?.trim() || "Sports"}`;
+      const existing = byLeague.get(label) ?? [];
       existing.push(market);
-      byCategory.set(label, existing);
+      byLeague.set(label, existing);
     }
 
-    const preferredOrder = trendingCategories.filter((item) => byCategory.has(item));
-    const fallbackOrder = [...byCategory.keys()]
-      .filter((item) => !preferredOrder.includes(item))
+    const fallbackOrder = [...byLeague.keys()]
       .sort((a, b) => {
-        const countDiff = (byCategory.get(b)?.length ?? 0) - (byCategory.get(a)?.length ?? 0);
+        const countDiff = (byLeague.get(b)?.length ?? 0) - (byLeague.get(a)?.length ?? 0);
         if (countDiff !== 0) return countDiff;
         return a.localeCompare(b, undefined, { sensitivity: "base" });
       });
 
-    return [...preferredOrder, ...fallbackOrder].map((label) => ({
+    return fallbackOrder.map((label) => ({
       label,
       id: toSectionId(label),
-      markets: byCategory.get(label) ?? [],
+      markets: byLeague.get(label) ?? [],
     }));
-  }, [markets, trendingCategories]);
+  }, [markets]);
   const featuredMarkets = useMemo(() => {
     const score = (market: Prediction) => {
       const volume = Math.max(0, market.volume ?? market.liquidity ?? 0);
@@ -214,7 +194,7 @@ export function PredictionMarketList() {
 
     for (const pick of recentPicks.slice(0, 30)) {
       const matched = markets.find((market) => market.id === pick.predictionId);
-      const matchedCategory = matched?.category?.trim();
+      const matchedCategory = matched?.league?.trim() || matched?.sport?.trim();
       if (matchedCategory) {
         categoryScores.set(matchedCategory, (categoryScores.get(matchedCategory) ?? 0) + 1);
       }
@@ -227,10 +207,9 @@ export function PredictionMarketList() {
 
     const pool = markets.filter((market) => !recentPickMarketIds.has(market.id));
     const categoryMatched = preferredCategories.length
-      ? pool.filter((market) => preferredCategories.includes(market.category?.trim() || ""))
+      ? pool.filter((market) => preferredCategories.includes(market.league?.trim() || market.sport?.trim() || ""))
       : [];
-    const fallbackTrending = pool.filter((market) => trendingCategories.includes(market.category?.trim() || ""));
-    const source = categoryMatched.length > 0 ? categoryMatched : fallbackTrending;
+    const source = categoryMatched.length > 0 ? categoryMatched : pool;
     const unique = new Map<string, Prediction>();
     for (const market of source.length > 0 ? source : pool) {
       unique.set(market.id, market);
@@ -244,7 +223,7 @@ export function PredictionMarketList() {
         return (b.volume ?? b.liquidity ?? 0) - (a.volume ?? a.liquidity ?? 0);
       })
       .slice(0, 6);
-  }, [recentPicks, markets, trendingCategories]);
+  }, [recentPicks, markets]);
 
   const loadQuota = useCallback(async () => {
     if (!userId) {
@@ -317,6 +296,17 @@ export function PredictionMarketList() {
   }, [collapsedSections]);
 
   useEffect(() => {
+    if (!selectedSport && selectedLeague) {
+      setSelectedLeague("");
+      return;
+    }
+
+    if (selectedSport && selectedLeague && !leagueOptions.includes(selectedLeague)) {
+      setSelectedLeague("");
+    }
+  }, [leagueOptions, selectedLeague, selectedSport]);
+
+  useEffect(() => {
     if (!userId) {
       setQuota(null);
       return;
@@ -378,8 +368,8 @@ export function PredictionMarketList() {
           page: String(page),
           pageSize: "100",
           search,
-          category,
-          broadCategory,
+          sport: selectedSport,
+          league: selectedLeague,
           excludeSensitive: "false",
           sort,
         });
@@ -394,9 +384,8 @@ export function PredictionMarketList() {
         }
 
         setMarkets(payload.items ?? []);
-        setCategories(payload.categories ?? []);
-        setTrendingCategories(payload.trendingCategories ?? []);
-        setBroadCategories(payload.broadCategories ?? []);
+        setSports(payload.sports ?? []);
+        setLeaguesBySport(payload.leaguesBySport ?? {});
         setTotalItems(payload.totalItems ?? 0);
         setTotalPages(Math.max(1, payload.totalPages ?? 1));
       } catch (error) {
@@ -421,7 +410,7 @@ export function PredictionMarketList() {
     void load();
 
     return () => controller.abort();
-  }, [page, search, category, broadCategory, sort]);
+  }, [page, search, selectedSport, selectedLeague, sort]);
 
   if (isInitializing) {
     return (
@@ -518,7 +507,9 @@ export function PredictionMarketList() {
     <article key={market.id} className="relative rounded-lg border border-slate-200 p-3">
       <h2 className="font-medium">{market.question}</h2>
       <p className="mt-1 text-xs text-slate-500">
-        {market.category ? `${market.category} · ` : ""}Closes: {new Date(market.closesAt).toLocaleString()}
+        {[market.sport, market.league].filter(Boolean).join(" · ")}
+        {[market.sport, market.league].some(Boolean) ? " · " : ""}
+        Closes: {new Date(market.closesAt).toLocaleString()}
       </p>
       <ul className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
         {market.outcomes.map((outcome) => (
@@ -598,46 +589,46 @@ export function PredictionMarketList() {
 
       <section className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Browse Categories</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Sports</p>
           <div className="overflow-x-auto pb-1">
             <div className="flex w-max items-center gap-2">
               <button
                 type="button"
                 onClick={() => {
-                  setBroadCategory("");
-                  setCategory("");
+                  setSelectedSport("");
+                  setSelectedLeague("");
                   setPage(1);
                 }}
                 className={`inline-flex min-h-[48px] items-center gap-2 rounded-full border px-6 py-2.5 text-sm font-semibold ${BUTTON_POP_CLASS} ${
-                    category === "" && broadCategory === ""
+                    selectedSport === ""
                       ? "border-slate-900 bg-slate-900 text-white"
                       : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
                   }`}
-                >
-                  <span aria-hidden="true" className="text-base">
-                    {getCategoryIcon("all")}
-                  </span>
-                  All
+              >
+                <span aria-hidden="true" className="text-base">
+                    🏟️
+                </span>
+                  All Sports
                 </button>
-              {broadCategories.filter(isSelectableBroadCategory).map((item) => (
+              {sports.map((item) => (
                 <button
-                  key={`broad-${item}`}
+                  key={`sport-${item}`}
                   type="button"
                   onClick={() => {
-                    setBroadCategory(item);
-                    setCategory("");
+                    setSelectedSport(item);
+                    setSelectedLeague("");
                     setPage(1);
                   }}
                   className={`inline-flex min-h-[48px] items-center gap-2 rounded-full border px-6 py-2.5 text-sm font-semibold ${BUTTON_POP_CLASS} ${
-                    broadCategory === item
+                    selectedSport === item
                       ? "border-slate-900 bg-slate-900 text-white"
                       : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
                   }`}
                 >
                   <span aria-hidden="true" className="text-base">
-                    {getCategoryIcon(item)}
+                    {getSportIcon(item)}
                   </span>
-                  {formatBroadCategoryLabel(item)}
+                  {item}
                 </button>
               ))}
             </div>
@@ -645,39 +636,60 @@ export function PredictionMarketList() {
         </div>
 
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Trending Categories</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Leagues</p>
           <div className="overflow-x-auto pb-1">
             <div className="flex w-max items-center gap-2">
-              {trendingCategories.length === 0 ? (
-                <span className="text-xs text-slate-500">No trending data yet.</span>
+              {!selectedSport ? (
+                <span className="text-xs text-slate-500">Select a sport to browse leagues.</span>
+              ) : leagueOptions.length === 0 ? (
+                <span className="text-xs text-slate-500">No leagues found for this sport right now.</span>
               ) : (
-                trendingCategories.filter(isSelectableBroadCategory).map((item) => (
+                <>
                   <button
-                    key={`trend-${item}`}
+                    key={`league-all-${selectedSport}`}
                     type="button"
                     onClick={() => {
-                      setBroadCategory("");
-                      setCategory(item);
+                      setSelectedLeague("");
                       setPage(1);
                     }}
                     className={`inline-flex min-h-[48px] items-center gap-2 rounded-full border px-6 py-2.5 text-sm font-semibold ${BUTTON_POP_CLASS} ${
-                      category === item
+                      selectedLeague === ""
                         ? "border-blue-700 bg-blue-700 text-white"
                         : "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300"
                     }`}
                   >
                     <span aria-hidden="true" className="text-base">
-                      {getCategoryIcon(item)}
+                      {getSportIcon(selectedSport)}
                     </span>
-                    {item}
+                    All {selectedSport} Leagues
                   </button>
-                ))
+                  {leagueOptions.map((item) => (
+                    <button
+                      key={`league-${item}`}
+                      type="button"
+                      onClick={() => {
+                        setSelectedLeague(item);
+                        setPage(1);
+                      }}
+                      className={`inline-flex min-h-[48px] items-center gap-2 rounded-full border px-6 py-2.5 text-sm font-semibold ${BUTTON_POP_CLASS} ${
+                        selectedLeague === item
+                          ? "border-blue-700 bg-blue-700 text-white"
+                          : "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300"
+                      }`}
+                    >
+                      <span aria-hidden="true" className="text-base">
+                        🏆
+                      </span>
+                      {item}
+                    </button>
+                  ))}
+                </>
               )}
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
           <input
             type="text"
             value={searchInput}
@@ -685,22 +697,6 @@ export function PredictionMarketList() {
             placeholder="Search markets"
             className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
           />
-          <select
-            value={category}
-            onChange={(event) => {
-              setBroadCategory("");
-              setCategory(event.target.value);
-              setPage(1);
-            }}
-            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-          >
-            <option value="">All Categories</option>
-            {categories.filter(isSelectableBroadCategory).map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
           <select
             value={sort}
             onChange={(event) => {
@@ -732,8 +728,8 @@ export function PredictionMarketList() {
               onClick={() => {
                 setSearchInput("");
                 setSearch("");
-                setCategory("");
-                setBroadCategory("");
+                setSelectedSport("");
+                setSelectedLeague("");
                 setSort("closing-soon");
                 setPage(1);
               }}
@@ -759,7 +755,7 @@ export function PredictionMarketList() {
                 : "border border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300"
             }`}
           >
-            Grouped by Category
+            Grouped by League
           </button>
           <button
             type="button"
@@ -812,7 +808,8 @@ export function PredictionMarketList() {
                 >
                   <p className="line-clamp-2 text-xs font-semibold text-slate-900">{market.question}</p>
                   <p className="mt-1 text-[11px] text-slate-600">
-                    {market.category || "Uncategorized"} · {new Date(market.closesAt).toLocaleDateString()}
+                    {[market.sport, market.league].filter(Boolean).join(" · ") || "Sports"} ·{" "}
+                    {new Date(market.closesAt).toLocaleDateString()}
                   </p>
                 </button>
               ))}
@@ -842,7 +839,8 @@ export function PredictionMarketList() {
                 >
                   <p className="line-clamp-2 text-xs font-semibold text-slate-900">{market.question}</p>
                   <p className="mt-1 text-[11px] text-slate-600">
-                    {market.category || "Uncategorized"} · {new Date(market.closesAt).toLocaleDateString()}
+                    {[market.sport, market.league].filter(Boolean).join(" · ") || "Sports"} ·{" "}
+                    {new Date(market.closesAt).toLocaleDateString()}
                   </p>
                 </button>
               ))}
@@ -881,7 +879,7 @@ export function PredictionMarketList() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="inline-flex items-center gap-2">
                   <span className="text-base" aria-hidden="true">
-                    {getCategoryIcon(section.label)}
+                    {getSportIcon(markets.find((market) => market.league === section.label)?.sport || selectedSport || "Sports")}
                   </span>
                   <h3 className="text-sm font-semibold text-slate-900">{section.label}</h3>
                   <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-700">
@@ -904,13 +902,14 @@ export function PredictionMarketList() {
                   <button
                     type="button"
                     onClick={() => {
-                      setCategory(section.label);
-                      setBroadCategory("");
+                      const sectionSport = markets.find((market) => market.league === section.label)?.sport ?? "";
+                      setSelectedSport(sectionSport);
+                      setSelectedLeague(section.label);
                       setPage(1);
                     }}
                     className={`${BUTTON_POP_CLASS} rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-400`}
                   >
-                    Filter To This Category
+                    Filter To This League
                   </button>
                 </div>
               </div>

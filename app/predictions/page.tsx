@@ -7,7 +7,7 @@ export default async function PredictionsPage() {
   return (
     <PageShell
       title="Predictions"
-      description="Browse live Polymarket markets, filter by category, and place picks."
+      description="Browse live sports markets, choose a sport, then drill into leagues to place picks."
     >
       <div className="space-y-4">
         <BackButton label="Back" />

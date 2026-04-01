@@ -10,7 +10,9 @@ export async function GET(request: Request) {
       pageSize: searchParams.get("pageSize") ?? 100,
       search: searchParams.get("search") ?? "",
       category: searchParams.get("category") ?? "",
-      broadCategory: searchParams.get("broadCategory") ?? "",
+      broadCategory: "sports",
+      sport: searchParams.get("sport") ?? "",
+      league: searchParams.get("league") ?? "",
       excludeSensitive: searchParams.get("excludeSensitive") ?? "false",
       sort: searchParams.get("sort") ?? "closing-soon",
     });

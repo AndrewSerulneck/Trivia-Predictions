@@ -61,6 +61,8 @@ export interface Prediction {
   closesAt: string;
   outcomes: PredictionOutcome[];
   category?: string;
+  sport?: string;
+  league?: string;
   tags?: string[];
   createdAt?: string;
   volume?: number;
