@@ -417,8 +417,17 @@ export function PredictionMarketList() {
           page: "1",
           pageSize: "250",
           excludeSensitive: "false",
-          sort: "closing-soon",
+          sort,
         });
+        if (selectedSport) {
+          query.set("sport", selectedSport);
+        }
+        if (selectedLeague) {
+          query.set("league", selectedLeague);
+        }
+        if (search) {
+          query.set("search", search);
+        }
         const response = await fetch(`/api/predictions?${query.toString()}`, {
           cache: "no-store",
           signal: controller.signal,
@@ -463,7 +472,7 @@ export function PredictionMarketList() {
       controller.abort();
       window.clearInterval(refreshInterval);
     };
-  }, []);
+  }, [search, selectedLeague, selectedSport, sort]);
 
   if (isInitializing) {
     return (
