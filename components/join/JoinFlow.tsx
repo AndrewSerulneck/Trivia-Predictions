@@ -12,7 +12,7 @@ import {
   validatePin,
   validateUsername,
 } from "@/lib/auth";
-import { calculateDistanceMeters, getBestCurrentLocation } from "@/lib/geolocation";
+import { calculateDistanceMeters, getCurrentLocation } from "@/lib/geolocation";
 import { saveUserId, saveUsername, saveVenueId } from "@/lib/storage";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { getVenueById, listVenues } from "@/lib/venues";
@@ -20,9 +20,6 @@ import type { Venue } from "@/types";
 import { getVenueDisplayName, getVenueVisual as getVenueVisualFromConfig } from "@/lib/venueDisplay";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
-const GEOFENCE_MIN_RADIUS_METERS = 150;
-const GEOFENCE_BASE_BUFFER_METERS = 125;
-const GEOFENCE_MAX_ACCURACY_BUFFER_METERS = 1500;
 
 const JOIN_BUTTON_POP_CLASS =
   "transition-all duration-150 active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
@@ -37,13 +34,6 @@ function getErrorMessage(error: unknown, fallback: string): string {
 }
 
 const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig(venue, index);
-
-function getEffectiveGeofenceRadiusMeters(radiusMeters: number, accuracyMeters?: number): number {
-  const normalizedRadius = Math.max(GEOFENCE_MIN_RADIUS_METERS, Math.max(0, radiusMeters));
-  const normalizedAccuracy = Number.isFinite(accuracyMeters) ? Math.max(0, accuracyMeters ?? 0) : 0;
-  const accuracyBuffer = Math.min(GEOFENCE_MAX_ACCURACY_BUFFER_METERS, Math.round(normalizedAccuracy * 1.5));
-  return normalizedRadius + GEOFENCE_BASE_BUFFER_METERS + accuracyBuffer;
-}
 
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const router = useRouter();
@@ -82,27 +72,17 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         if (!venueParam) {
           setLocationLoading(true);
           try {
-            const current = await getBestCurrentLocation({
-              forceFresh: true,
-              sampleDurationMs: 8000,
-              timeoutMs: 16000,
-              desiredAccuracyMeters: 120,
-            });
-            const venuesWithDistance = venues.map((item) => {
+            const current = await getCurrentLocation();
+            const nearbyVenues = venues.filter((item) => {
               const distance = calculateDistanceMeters(current, {
                 latitude: item.latitude,
                 longitude: item.longitude,
               });
-              return { venue: item, distance };
+              return distance <= item.radius;
             });
-
-            const inRange = venuesWithDistance
-              .filter(({ venue, distance }) => distance <= getEffectiveGeofenceRadiusMeters(venue.radius, current.accuracy))
-              .sort((a, b) => a.distance - b.distance);
-            setVenueList(inRange.map(({ venue }) => venue));
-
-            if (inRange.length > 0) {
-              setLocationNotice(`Showing ${inRange.length} nearby venue(s) within range.`);
+            setVenueList(nearbyVenues);
+            if (nearbyVenues.length > 0) {
+              setLocationNotice(`Showing ${nearbyVenues.length} nearby venue(s) within range.`);
             } else {
               setLocationNotice("No nearby venues are within geofence range right now.");
             }
@@ -168,27 +148,23 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     setErrorMessage("");
 
     try {
-      const current = await getBestCurrentLocation({
-        forceFresh: true,
-        sampleDurationMs: 9000,
-        timeoutMs: 18000,
-        desiredAccuracyMeters: 100,
-      });
+      const current = await getCurrentLocation();
       const distance = calculateDistanceMeters(current, {
         latitude: venue.latitude,
         longitude: venue.longitude,
       });
       setDistanceMeters(distance);
-      const effectiveRadius = getEffectiveGeofenceRadiusMeters(venue.radius, current.accuracy);
 
-      if (distance <= effectiveRadius) {
+      if (distance <= venue.radius) {
         setLocationVerified(true);
         setLocationNotice("Location verified successfully.");
       } else {
         setLocationVerified(false);
         setLocationNotice("");
         setErrorMessage(
-          `You are ${Math.round(distance)}m away. Required range is ${Math.round(effectiveRadius)}m (venue radius ${venue.radius}m).`
+          `You are ${Math.round(distance)}m away. You must be within ${venue.radius}m of ${getVenueDisplayName(
+            venue
+          )} to join.`
         );
       }
     } catch (error) {
@@ -396,23 +372,19 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
     setLocationLoading(true);
     try {
-      const current = await getBestCurrentLocation({
-        forceFresh: true,
-        sampleDurationMs: 9000,
-        timeoutMs: 18000,
-        desiredAccuracyMeters: 100,
-      });
+      const current = await getCurrentLocation();
       const distance = calculateDistanceMeters(current, {
         latitude: venue.latitude,
         longitude: venue.longitude,
       });
       setDistanceMeters(distance);
-      const effectiveRadius = getEffectiveGeofenceRadiusMeters(venue.radius, current.accuracy);
-      if (distance > effectiveRadius) {
+      if (distance > venue.radius) {
         setLocationVerified(false);
         setLocationNotice("");
         setErrorMessage(
-          `You are ${Math.round(distance)}m away. Required range is ${Math.round(effectiveRadius)}m (venue radius ${venue.radius}m).`
+          `You are ${Math.round(distance)}m away. You must be within ${venue.radius}m of ${getVenueDisplayName(
+            venue
+          )} to join.`
         );
         return;
       }
