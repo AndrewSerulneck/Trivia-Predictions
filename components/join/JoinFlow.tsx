@@ -81,28 +81,44 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           setLocationLoading(true);
           try {
             const current = await getCurrentLocation();
-            const nearbyVenues = venues.filter((item) => {
+            const venuesWithDistance = venues.map((item) => {
               const distance = calculateDistanceMeters(current, {
                 latitude: item.latitude,
                 longitude: item.longitude,
               });
-              return distance <= getEffectiveGeofenceRadiusMeters(item.radius, current.accuracy);
+              return { venue: item, distance };
             });
-            setVenueList(nearbyVenues);
-            if (nearbyVenues.length > 0) {
-              setLocationNotice(`Showing ${nearbyVenues.length} nearby venue(s) within range.`);
+
+            const inRange = venuesWithDistance
+              .filter(({ venue, distance }) => distance <= getEffectiveGeofenceRadiusMeters(venue.radius, current.accuracy))
+              .sort((a, b) => a.distance - b.distance);
+
+            const outOfRange = venuesWithDistance
+              .filter(({ venue, distance }) => distance > getEffectiveGeofenceRadiusMeters(venue.radius, current.accuracy))
+              .sort((a, b) => a.distance - b.distance);
+
+            // Always show venues so users can select one; final geofence check still runs before joining.
+            setVenueList([...inRange, ...outOfRange].map(({ venue }) => venue));
+
+            if (inRange.length > 0) {
+              setLocationNotice(
+                `Showing ${inRange.length} venue(s) in range first, followed by the nearest out-of-range venues.`
+              );
             } else {
-              setLocationNotice("No nearby venues are within geofence range right now.");
+              setLocationNotice(
+                "No venues are currently within geofence range. Showing nearest venues so you can still select one."
+              );
             }
           } catch (error) {
-            setVenueList([]);
-            setLocationNotice("");
-            setErrorMessage(
-              getErrorMessage(
-                error,
-                "Location access is required to show nearby venues. Enable location services and retry."
+            void error;
+            // If location is unavailable/denied, still show all venues so join flow remains usable.
+            setVenueList(
+              [...venues].sort((a, b) =>
+                getVenueDisplayName(a).localeCompare(getVenueDisplayName(b), undefined, { sensitivity: "base" })
               )
             );
+            setLocationNotice("Location unavailable. Showing all venues alphabetically.");
+            setErrorMessage("");
           } finally {
             setLocationLoading(false);
           }
