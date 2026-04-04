@@ -23,7 +23,6 @@ type Status = "idle" | "loading" | "ready" | "saving" | "error";
 const GEOFENCE_MIN_RADIUS_METERS = 150;
 const GEOFENCE_BASE_BUFFER_METERS = 125;
 const GEOFENCE_MAX_ACCURACY_BUFFER_METERS = 1500;
-const REQUIRED_LOCATION_ACCURACY_METERS = 350;
 
 const JOIN_BUTTON_POP_CLASS =
   "transition-all duration-150 active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
@@ -175,14 +174,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         timeoutMs: 18000,
         desiredAccuracyMeters: 100,
       });
-      if ((current.accuracy ?? Number.POSITIVE_INFINITY) > REQUIRED_LOCATION_ACCURACY_METERS) {
-        setLocationVerified(false);
-        setLocationNotice("");
-        setErrorMessage(
-          `Location accuracy is too low (±${Math.round(current.accuracy ?? 0)}m). Enable Precise Location and retry.`
-        );
-        return;
-      }
       const distance = calculateDistanceMeters(current, {
         latitude: venue.latitude,
         longitude: venue.longitude,
@@ -411,14 +402,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         timeoutMs: 18000,
         desiredAccuracyMeters: 100,
       });
-      if ((current.accuracy ?? Number.POSITIVE_INFINITY) > REQUIRED_LOCATION_ACCURACY_METERS) {
-        setLocationVerified(false);
-        setLocationNotice("");
-        setErrorMessage(
-          `Location accuracy is too low (±${Math.round(current.accuracy ?? 0)}m). Enable Precise Location and retry.`
-        );
-        return;
-      }
       const distance = calculateDistanceMeters(current, {
         latitude: venue.latitude,
         longitude: venue.longitude,
