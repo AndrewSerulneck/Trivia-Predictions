@@ -20,8 +20,9 @@ import type { Venue } from "@/types";
 import { getVenueDisplayName, getVenueVisual as getVenueVisualFromConfig } from "@/lib/venueDisplay";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
-const GEOFENCE_BASE_BUFFER_METERS = 75;
-const GEOFENCE_MAX_ACCURACY_BUFFER_METERS = 500;
+const GEOFENCE_MIN_RADIUS_METERS = 150;
+const GEOFENCE_BASE_BUFFER_METERS = 125;
+const GEOFENCE_MAX_ACCURACY_BUFFER_METERS = 1500;
 
 const JOIN_BUTTON_POP_CLASS =
   "transition-all duration-150 active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
@@ -38,9 +39,10 @@ function getErrorMessage(error: unknown, fallback: string): string {
 const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig(venue, index);
 
 function getEffectiveGeofenceRadiusMeters(radiusMeters: number, accuracyMeters?: number): number {
+  const normalizedRadius = Math.max(GEOFENCE_MIN_RADIUS_METERS, Math.max(0, radiusMeters));
   const normalizedAccuracy = Number.isFinite(accuracyMeters) ? Math.max(0, accuracyMeters ?? 0) : 0;
-  const accuracyBuffer = Math.min(GEOFENCE_MAX_ACCURACY_BUFFER_METERS, normalizedAccuracy);
-  return radiusMeters + GEOFENCE_BASE_BUFFER_METERS + accuracyBuffer;
+  const accuracyBuffer = Math.min(GEOFENCE_MAX_ACCURACY_BUFFER_METERS, Math.round(normalizedAccuracy * 1.5));
+  return normalizedRadius + GEOFENCE_BASE_BUFFER_METERS + accuracyBuffer;
 }
 
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
@@ -80,7 +82,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         if (!venueParam) {
           setLocationLoading(true);
           try {
-            const current = await getCurrentLocation();
+            const current = await getCurrentLocation({ forceFresh: true });
             const venuesWithDistance = venues.map((item) => {
               const distance = calculateDistanceMeters(current, {
                 latitude: item.latitude,
