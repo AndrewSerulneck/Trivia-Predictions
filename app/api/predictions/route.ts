@@ -1,6 +1,22 @@
 import { NextResponse } from "next/server";
 import { listPredictionMarkets } from "@/lib/polymarket";
 import { getPredictionQuota, submitPredictionPick } from "@/lib/userPredictions";
+import type { Prediction } from "@/types";
+
+type ClientPrediction = Pick<Prediction, "id" | "question" | "source" | "closesAt" | "outcomes" | "sport" | "league" | "isClosed">;
+
+function toClientPrediction(market: Prediction): ClientPrediction {
+  return {
+    id: market.id,
+    question: market.question,
+    source: market.source,
+    closesAt: market.closesAt,
+    outcomes: market.outcomes,
+    sport: market.sport,
+    league: market.league,
+    isClosed: market.isClosed,
+  };
+}
 
 export async function GET(request: Request) {
   try {
@@ -17,7 +33,11 @@ export async function GET(request: Request) {
       sort: searchParams.get("sort") ?? "closing-soon",
     });
 
-    return NextResponse.json({ ok: true, ...result });
+    return NextResponse.json({
+      ok: true,
+      ...result,
+      items: (result.items ?? []).map(toClientPrediction),
+    });
   } catch (error) {
     return NextResponse.json(
       {

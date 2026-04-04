@@ -185,15 +185,13 @@ export function PredictionMarketList() {
     }));
   }, [filteredMarkets]);
   const featuredMarkets = useMemo(() => {
-    const score = (market: Prediction) => {
-      const volume = Math.max(0, market.volume ?? market.liquidity ?? 0);
-      const hours = getHoursUntilClose(market.closesAt);
-      const closingSoonBoost = Number.isFinite(hours) ? Math.max(0, 24 - Math.max(0, hours)) * 1500 : 0;
-      return volume + closingSoonBoost;
-    };
-
     return [...filteredMarkets]
-      .sort((a, b) => score(b) - score(a))
+      .sort((a, b) => {
+        const aHours = Math.abs(getHoursUntilClose(a.closesAt));
+        const bHours = Math.abs(getHoursUntilClose(b.closesAt));
+        if (aHours !== bHours) return aHours - bHours;
+        return a.question.localeCompare(b.question, undefined, { sensitivity: "base" });
+      })
       .slice(0, 6);
   }, [filteredMarkets]);
   const forYouMarkets = useMemo(() => {
@@ -230,7 +228,7 @@ export function PredictionMarketList() {
         const aHours = Math.abs(getHoursUntilClose(a.closesAt));
         const bHours = Math.abs(getHoursUntilClose(b.closesAt));
         if (aHours !== bHours) return aHours - bHours;
-        return (b.volume ?? b.liquidity ?? 0) - (a.volume ?? a.liquidity ?? 0);
+        return a.question.localeCompare(b.question, undefined, { sensitivity: "base" });
       })
       .slice(0, 6);
   }, [allMarkets, recentPicks, filteredMarkets]);
