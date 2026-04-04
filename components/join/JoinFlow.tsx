@@ -12,7 +12,7 @@ import {
   validatePin,
   validateUsername,
 } from "@/lib/auth";
-import { calculateDistanceMeters, getCurrentLocation } from "@/lib/geolocation";
+import { calculateDistanceMeters, getBestCurrentLocation } from "@/lib/geolocation";
 import { saveUserId, saveUsername, saveVenueId } from "@/lib/storage";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { getVenueById, listVenues } from "@/lib/venues";
@@ -20,6 +20,7 @@ import type { Venue } from "@/types";
 import { getVenueDisplayName, getVenueVisual as getVenueVisualFromConfig } from "@/lib/venueDisplay";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
+const DISABLE_GEOFENCE_FOR_TESTING = true;
 
 const JOIN_BUTTON_POP_CLASS =
   "transition-all duration-150 active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
@@ -34,6 +35,16 @@ function getErrorMessage(error: unknown, fallback: string): string {
 }
 
 const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig(venue, index);
+
+const GEOFENCE_BASE_SLACK_METERS = 35;
+const GEOFENCE_MAX_ACCURACY_SLACK_METERS = 250;
+
+function getGeofenceThresholdMeters(venueRadius: number, accuracy?: number): number {
+  const normalizedRadius = Math.max(0, venueRadius);
+  const measuredAccuracy = Number.isFinite(accuracy) ? Math.max(0, accuracy ?? 0) : 100;
+  const accuracySlack = Math.min(GEOFENCE_MAX_ACCURACY_SLACK_METERS, measuredAccuracy);
+  return normalizedRadius + GEOFENCE_BASE_SLACK_METERS + accuracySlack;
+}
 
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const router = useRouter();
@@ -70,15 +81,29 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         const venues = await listVenues();
 
         if (!venueParam) {
+          if (DISABLE_GEOFENCE_FOR_TESTING) {
+            setVenueList(venues);
+            setLocationVerified(true);
+            setLocationNotice("Testing mode: location checks are disabled.");
+            setVenue(null);
+            setLocationLoading(false);
+            setStatus("ready");
+            return;
+          }
+
           setLocationLoading(true);
           try {
-            const current = await getCurrentLocation();
+            const current = await getBestCurrentLocation({
+              sampleDurationMs: 10000,
+              timeoutMs: 20000,
+              desiredAccuracyMeters: 75,
+            });
             const nearbyVenues = venues.filter((item) => {
               const distance = calculateDistanceMeters(current, {
                 latitude: item.latitude,
                 longitude: item.longitude,
               });
-              return distance <= item.radius;
+              return distance <= getGeofenceThresholdMeters(item.radius, current.accuracy);
             });
             setVenueList(nearbyVenues);
             if (nearbyVenues.length > 0) {
@@ -143,28 +168,38 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
   const verifyLocation = useCallback(async () => {
     if (!venue) return;
+    if (DISABLE_GEOFENCE_FOR_TESTING) {
+      setLocationVerified(true);
+      setLocationNotice("Testing mode: location checks are disabled.");
+      setErrorMessage("");
+      setLocationLoading(false);
+      return;
+    }
 
     setLocationLoading(true);
     setErrorMessage("");
 
     try {
-      const current = await getCurrentLocation();
+      const current = await getBestCurrentLocation({
+        sampleDurationMs: 11000,
+        timeoutMs: 22000,
+        desiredAccuracyMeters: 60,
+      });
       const distance = calculateDistanceMeters(current, {
         latitude: venue.latitude,
         longitude: venue.longitude,
       });
       setDistanceMeters(distance);
+      const allowedDistance = getGeofenceThresholdMeters(venue.radius, current.accuracy);
 
-      if (distance <= venue.radius) {
+      if (distance <= allowedDistance) {
         setLocationVerified(true);
         setLocationNotice("Location verified successfully.");
       } else {
         setLocationVerified(false);
         setLocationNotice("");
         setErrorMessage(
-          `You are ${Math.round(distance)}m away. You must be within ${venue.radius}m of ${getVenueDisplayName(
-            venue
-          )} to join.`
+          `You are ${Math.round(distance)}m away. Required range is ${Math.round(allowedDistance)}m based on current GPS accuracy.`
         );
       }
     } catch (error) {
@@ -365,38 +400,46 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setErrorMessage("PIN must be exactly 4 digits.");
       return;
     }
-    if (!locationVerified) {
+    if (!DISABLE_GEOFENCE_FOR_TESTING && !locationVerified) {
       setErrorMessage("Verify your location before creating a profile.");
       return;
     }
 
-    setLocationLoading(true);
-    try {
-      const current = await getCurrentLocation();
-      const distance = calculateDistanceMeters(current, {
-        latitude: venue.latitude,
-        longitude: venue.longitude,
-      });
-      setDistanceMeters(distance);
-      if (distance > venue.radius) {
+    if (!DISABLE_GEOFENCE_FOR_TESTING) {
+      setLocationLoading(true);
+      try {
+        const current = await getBestCurrentLocation({
+          sampleDurationMs: 11000,
+          timeoutMs: 22000,
+          desiredAccuracyMeters: 60,
+        });
+        const distance = calculateDistanceMeters(current, {
+          latitude: venue.latitude,
+          longitude: venue.longitude,
+        });
+        setDistanceMeters(distance);
+        const allowedDistance = getGeofenceThresholdMeters(venue.radius, current.accuracy);
+        if (distance > allowedDistance) {
+          setLocationVerified(false);
+          setLocationNotice("");
+          setErrorMessage(
+            `You are ${Math.round(distance)}m away. Required range is ${Math.round(allowedDistance)}m based on current GPS accuracy.`
+          );
+          return;
+        }
+        setLocationVerified(true);
+        setLocationNotice("Location verified successfully.");
+      } catch (error) {
         setLocationVerified(false);
         setLocationNotice("");
-        setErrorMessage(
-          `You are ${Math.round(distance)}m away. You must be within ${venue.radius}m of ${getVenueDisplayName(
-            venue
-          )} to join.`
-        );
+        setErrorMessage(getErrorMessage(error, "Unable to verify location."));
         return;
+      } finally {
+        setLocationLoading(false);
       }
+    } else {
       setLocationVerified(true);
-      setLocationNotice("Location verified successfully.");
-    } catch (error) {
-      setLocationVerified(false);
-      setLocationNotice("");
-      setErrorMessage(getErrorMessage(error, "Unable to verify location."));
-      return;
-    } finally {
-      setLocationLoading(false);
+      setLocationNotice("Testing mode: location checks are disabled.");
     }
 
     setStatus("saving");
