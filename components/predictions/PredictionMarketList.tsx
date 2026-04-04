@@ -40,7 +40,7 @@ type PredictionQuota = {
 
 type SortKey = "closing-soon" | "newest" | "volume" | "liquidity";
 type ViewMode = "grouped" | "all";
-const CLIENT_PAGE_SIZE = 24;
+const FETCH_PAGE_SIZE = 50;
 
 const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
   { value: "closing-soon", label: "Closing Soon" },
@@ -129,70 +129,39 @@ export function PredictionMarketList() {
   const [allMarkets, setAllMarkets] = useState<Prediction[]>([]);
   const [sports, setSports] = useState<string[]>([]);
   const [leaguesBySport, setLeaguesBySport] = useState<Record<string, string[]>>({});
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [nextPage, setNextPage] = useState(2);
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const hasInitializedRef = useRef(false);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedSport, setSelectedSport] = useState("");
   const [selectedLeague, setSelectedLeague] = useState("");
   const [sort, setSort] = useState<SortKey>("closing-soon");
   const [viewMode, setViewMode] = useState<ViewMode>("grouped");
-  const [page, setPage] = useState(1);
   const [browseFiltersCollapsed, setBrowseFiltersCollapsed] = useState(false);
   const [discoverCollapsed, setDiscoverCollapsed] = useState(true);
   const [recentPicks, setRecentPicks] = useState<UserPrediction[]>([]);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const { rewards, addReward } = useRewards();
 
-  const hasFilters = useMemo(() => Boolean(search || selectedSport || selectedLeague), [search, selectedSport, selectedLeague]);
+  const hasFilters = useMemo(
+    () => Boolean(searchQuery || selectedSport || selectedLeague),
+    [searchQuery, selectedSport, selectedLeague]
+  );
   const predictionsQuotaLocked = Boolean(quota && !quota.isAdminBypass && quota.picksRemaining <= 0);
   const leagueOptions = useMemo(
     () => (selectedSport ? leaguesBySport[selectedSport] ?? [] : []),
     [leaguesBySport, selectedSport]
   );
-  const filteredMarkets = useMemo(() => {
-    let next = allMarkets.filter((market) => Boolean(market.sport));
-    if (selectedSport) {
-      next = next.filter((market) => (market.sport ?? "") === selectedSport);
-    }
-    if (selectedLeague) {
-      next = next.filter((market) => (market.league ?? "") === selectedLeague);
-    }
-
-    const normalizedSearch = search.trim().toLowerCase();
-    if (normalizedSearch) {
-      next = next.filter((market) => {
-        const inQuestion = market.question.toLowerCase().includes(normalizedSearch);
-        const inOutcomes = market.outcomes.some((outcome) => outcome.title.toLowerCase().includes(normalizedSearch));
-        const inSport = (market.sport ?? "").toLowerCase().includes(normalizedSearch);
-        const inLeague = (market.league ?? "").toLowerCase().includes(normalizedSearch);
-        return inQuestion || inOutcomes || inSport || inLeague;
-      });
-    }
-
-    return [...next].sort((left, right) => {
-      if (sort === "newest") {
-        return +new Date(right.createdAt ?? right.closesAt) - +new Date(left.createdAt ?? left.closesAt);
-      }
-      if (sort === "volume") {
-        return (right.volume ?? 0) - (left.volume ?? 0) || +new Date(left.closesAt) - +new Date(right.closesAt);
-      }
-      if (sort === "liquidity") {
-        return (right.liquidity ?? 0) - (left.liquidity ?? 0) || +new Date(left.closesAt) - +new Date(right.closesAt);
-      }
-      return +new Date(left.closesAt) - +new Date(right.closesAt);
-    });
-  }, [allMarkets, search, selectedLeague, selectedSport, sort]);
-  const totalItems = filteredMarkets.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / CLIENT_PAGE_SIZE));
-  const markets = useMemo(() => {
-    const start = (page - 1) * CLIENT_PAGE_SIZE;
-    return filteredMarkets.slice(start, start + CLIENT_PAGE_SIZE);
-  }, [filteredMarkets, page]);
+  const filteredMarkets = useMemo(() => allMarkets.filter((market) => Boolean(market.sport)), [allMarkets]);
+  const markets = filteredMarkets;
   const groupedMarketSections = useMemo(() => {
     const byLeague = new Map<string, Prediction[]>();
     for (const market of filteredMarkets) {
@@ -348,10 +317,6 @@ export function PredictionMarketList() {
   }, [leagueOptions, selectedLeague, selectedSport]);
 
   useEffect(() => {
-    setPage((current) => Math.min(current, totalPages));
-  }, [totalPages]);
-
-  useEffect(() => {
     if (!userId) {
       setQuota(null);
       return;
@@ -399,23 +364,41 @@ export function PredictionMarketList() {
   }, [loadQuota, predictionsQuotaLocked, quotaSecondsRemaining]);
 
   useEffect(() => {
+    if (!hasInitializedRef.current || typeof window === "undefined") {
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [searchQuery, selectedLeague, selectedSport, sort]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setSearchQuery(searchInput.trim());
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [searchInput]);
+
+  useEffect(() => {
     const controller = new AbortController();
     if (!hasInitializedRef.current) {
       setIsInitializing(true);
     }
 
-    const load = async (isBackgroundRefresh: boolean) => {
-      if (!hasInitializedRef.current) {
-        setLoading(true);
-      } else if (isBackgroundRefresh) {
-        setIsRefreshing(true);
-      }
+    const loadFirstPage = async () => {
+      setLoading(true);
+      setIsLoadingMore(false);
       setErrorMessage("");
+      setAllMarkets([]);
+      setTotalItems(0);
+      setTotalPages(1);
+      setNextPage(2);
 
       try {
         const query = new URLSearchParams({
           page: "1",
-          pageSize: "250",
+          pageSize: String(FETCH_PAGE_SIZE),
           excludeSensitive: "false",
           sort,
         });
@@ -425,8 +408,8 @@ export function PredictionMarketList() {
         if (selectedLeague) {
           query.set("league", selectedLeague);
         }
-        if (search) {
-          query.set("search", search);
+        if (searchQuery) {
+          query.set("search", searchQuery);
         }
         const response = await fetch(`/api/predictions?${query.toString()}`, {
           cache: "no-store",
@@ -441,20 +424,20 @@ export function PredictionMarketList() {
         setAllMarkets((payload.items ?? []).filter((market) => Boolean(market.sport)));
         setSports(payload.sports ?? []);
         setLeaguesBySport(payload.leaguesBySport ?? {});
+        setTotalItems(payload.totalItems ?? 0);
+        setTotalPages(Math.max(1, payload.totalPages ?? 1));
+        setNextPage((payload.page ?? 1) + 1);
       } catch (error) {
         if (controller.signal.aborted) {
           return;
         }
-        if (!hasInitializedRef.current) {
-          setAllMarkets([]);
-        }
+        setAllMarkets([]);
         setErrorMessage(
           error instanceof Error ? error.message : "There is an error with Polymarket right now. Please try again."
         );
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);
-          setIsRefreshing(false);
           if (!hasInitializedRef.current) {
             hasInitializedRef.current = true;
             setIsInitializing(false);
@@ -463,16 +446,95 @@ export function PredictionMarketList() {
       }
     };
 
-    void load(false);
-    const refreshInterval = window.setInterval(() => {
-      void load(true);
-    }, 60000);
+    void loadFirstPage();
 
     return () => {
       controller.abort();
-      window.clearInterval(refreshInterval);
     };
-  }, [search, selectedLeague, selectedSport, sort]);
+  }, [searchQuery, selectedLeague, selectedSport, sort]);
+
+  const hasMorePages = nextPage <= totalPages;
+
+  const loadMoreMarkets = useCallback(async () => {
+    if (loading || isLoadingMore || !hasMorePages) {
+      return;
+    }
+
+    const pageToLoad = nextPage;
+    setIsLoadingMore(true);
+    setErrorMessage("");
+
+    try {
+      const query = new URLSearchParams({
+        page: String(pageToLoad),
+        pageSize: String(FETCH_PAGE_SIZE),
+        excludeSensitive: "false",
+        sort,
+      });
+      if (selectedSport) {
+        query.set("sport", selectedSport);
+      }
+      if (selectedLeague) {
+        query.set("league", selectedLeague);
+      }
+      if (searchQuery) {
+        query.set("search", searchQuery);
+      }
+
+      const response = await fetch(`/api/predictions?${query.toString()}`, {
+        cache: "no-store",
+      });
+      const payload = (await response.json()) as PredictionListPayload;
+      if (!payload.ok) {
+        throw new Error(payload.error ?? "There is an error with Polymarket right now. Please try again.");
+      }
+
+      const incoming = (payload.items ?? []).filter((market) => Boolean(market.sport));
+      setAllMarkets((prev) => {
+        const byId = new Set(prev.map((market) => market.id));
+        const merged = [...prev];
+        for (const market of incoming) {
+          if (!byId.has(market.id)) {
+            byId.add(market.id);
+            merged.push(market);
+          }
+        }
+        return merged;
+      });
+      setTotalItems(payload.totalItems ?? totalItems);
+      setTotalPages(Math.max(1, payload.totalPages ?? totalPages));
+      setNextPage(pageToLoad + 1);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "There is an error with Polymarket right now. Please try again."
+      );
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [hasMorePages, isLoadingMore, loading, nextPage, searchQuery, selectedLeague, selectedSport, sort, totalItems, totalPages]);
+
+  useEffect(() => {
+    const sentinel = loadMoreRef.current;
+    if (!sentinel || !hasMorePages || loading) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            void loadMoreMarkets();
+          }
+        }
+      },
+      { root: null, rootMargin: "200px 0px", threshold: 0.1 }
+    );
+
+    observer.observe(sentinel);
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMorePages, loadMoreMarkets, loading]);
 
   if (isInitializing) {
     return (
@@ -526,7 +588,7 @@ export function PredictionMarketList() {
     triggerHaptic(10);
 
     try {
-      const selectedOutcome = markets
+      const selectedOutcome = allMarkets
         .find((market) => market.id === predictionId)
         ?.outcomes.find((outcome) => outcome.id === outcomeId);
       if (!selectedOutcome) {
@@ -671,7 +733,6 @@ export function PredictionMarketList() {
                 onClick={() => {
                   setSelectedSport("");
                   setSelectedLeague("");
-                  setPage(1);
                 }}
                 className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
                     selectedSport === ""
@@ -691,7 +752,6 @@ export function PredictionMarketList() {
                   onClick={() => {
                     setSelectedSport(item);
                     setSelectedLeague("");
-                    setPage(1);
                   }}
                   className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
                     selectedSport === item
@@ -722,7 +782,6 @@ export function PredictionMarketList() {
                     type="button"
                     onClick={() => {
                       setSelectedLeague("");
-                      setPage(1);
                     }}
                     className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
                       selectedLeague === ""
@@ -741,7 +800,6 @@ export function PredictionMarketList() {
                       type="button"
                       onClick={() => {
                         setSelectedLeague(item);
-                        setPage(1);
                       }}
                       className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
                         selectedLeague === item
@@ -772,7 +830,6 @@ export function PredictionMarketList() {
             value={sort}
             onChange={(event) => {
               setSort(event.target.value as SortKey);
-              setPage(1);
             }}
             className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
           >
@@ -787,8 +844,7 @@ export function PredictionMarketList() {
               type="button"
               onMouseDown={() => triggerHaptic()}
               onClick={() => {
-                setSearch(searchInput.trim());
-                setPage(1);
+                setSearchInput((value) => value.trim());
               }}
               className={`${BUTTON_POP_CLASS} rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white`}
             >
@@ -798,11 +854,9 @@ export function PredictionMarketList() {
               type="button"
               onClick={() => {
                 setSearchInput("");
-                setSearch("");
                 setSelectedSport("");
                 setSelectedLeague("");
                 setSort("closing-soon");
-                setPage(1);
               }}
               className={`${BUTTON_POP_CLASS} rounded-md bg-slate-200 px-3 py-2 text-sm font-medium text-slate-700`}
             >
@@ -812,9 +866,10 @@ export function PredictionMarketList() {
         </div>
 
         <p className="text-xs text-slate-600">
-          Showing {markets.length} of {totalItems} market{totalItems === 1 ? "" : "s"}
+          {loading
+            ? "Loading markets..."
+            : `Showing ${markets.length} of ${totalItems} market${totalItems === 1 ? "" : "s"}`}
           {hasFilters ? " (filtered)" : ""}.
-          {isRefreshing ? " Refreshing live lines…" : ""}
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Layout</span>
@@ -888,8 +943,6 @@ export function PredictionMarketList() {
                       type="button"
                       onClick={() => {
                         setSearchInput(market.question);
-                        setSearch(market.question);
-                        setPage(1);
                       }}
                       className={`${BUTTON_POP_CLASS} rounded-xl border border-amber-300 bg-white px-3 py-2 text-left hover:border-amber-400`}
                     >
@@ -917,8 +970,6 @@ export function PredictionMarketList() {
                       type="button"
                       onClick={() => {
                         setSearchInput(market.question);
-                        setSearch(market.question);
-                        setPage(1);
                       }}
                       className={`${BUTTON_POP_CLASS} rounded-xl border border-cyan-300 bg-white px-3 py-2 text-left hover:border-cyan-400`}
                     >
@@ -992,7 +1043,6 @@ export function PredictionMarketList() {
                       const sectionSport = markets.find((market) => market.league === section.label)?.sport ?? "";
                       setSelectedSport(sectionSport);
                       setSelectedLeague(section.label);
-                      setPage(1);
                     }}
                     className={`${BUTTON_POP_CLASS} rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-400`}
                   >
@@ -1029,26 +1079,18 @@ export function PredictionMarketList() {
         </div>
       )}
 
-      <section className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
-        <button
-          type="button"
-          onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-          disabled={page <= 1}
-          className={`${BUTTON_POP_CLASS} rounded-md bg-slate-900 px-3 py-1.5 font-medium text-white disabled:opacity-50`}
-        >
-          Previous
-        </button>
-        <p>
-          Page {page} of {totalPages}
-        </p>
-        <button
-          type="button"
-          onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-          disabled={page >= totalPages}
-          className={`${BUTTON_POP_CLASS} rounded-md bg-slate-900 px-3 py-1.5 font-medium text-white disabled:opacity-50`}
-        >
-          Next
-        </button>
+      <section className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
+        {isLoadingMore ? (
+          <div className="flex items-center gap-2 text-slate-600">
+            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
+            Loading more markets...
+          </div>
+        ) : hasMorePages ? (
+          <p className="text-slate-600">Scroll down to load more markets.</p>
+        ) : (
+          <p className="text-slate-600">You&apos;ve reached the end of the market list.</p>
+        )}
+        <div ref={loadMoreRef} className="h-1 w-full" aria-hidden="true" />
       </section>
     </div>
   );

@@ -1,6 +1,7 @@
 export type Coordinates = {
   latitude: number;
   longitude: number;
+  accuracy?: number;
 };
 
 export async function getCurrentLocation(): Promise<Coordinates> {
@@ -15,6 +16,7 @@ export async function getCurrentLocation(): Promise<Coordinates> {
         resolve({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
         }),
       (error) => reject(error),
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }

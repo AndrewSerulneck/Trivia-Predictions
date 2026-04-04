@@ -20,6 +20,8 @@ import type { Venue } from "@/types";
 import { getVenueDisplayName, getVenueVisual as getVenueVisualFromConfig } from "@/lib/venueDisplay";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
+const GEOFENCE_BASE_BUFFER_METERS = 30;
+const GEOFENCE_MAX_ACCURACY_BUFFER_METERS = 250;
 
 const JOIN_BUTTON_POP_CLASS =
   "transition-all duration-150 active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
@@ -34,6 +36,12 @@ function getErrorMessage(error: unknown, fallback: string): string {
 }
 
 const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig(venue, index);
+
+function getEffectiveGeofenceRadiusMeters(radiusMeters: number, accuracyMeters?: number): number {
+  const normalizedAccuracy = Number.isFinite(accuracyMeters) ? Math.max(0, accuracyMeters ?? 0) : 0;
+  const accuracyBuffer = Math.min(GEOFENCE_MAX_ACCURACY_BUFFER_METERS, normalizedAccuracy);
+  return radiusMeters + GEOFENCE_BASE_BUFFER_METERS + accuracyBuffer;
+}
 
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const router = useRouter();
@@ -78,7 +86,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                 latitude: item.latitude,
                 longitude: item.longitude,
               });
-              return distance <= item.radius;
+              return distance <= getEffectiveGeofenceRadiusMeters(item.radius, current.accuracy);
             });
             setVenueList(nearbyVenues);
             if (nearbyVenues.length > 0) {
@@ -155,7 +163,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       });
       setDistanceMeters(distance);
 
-      if (distance <= venue.radius) {
+      if (distance <= getEffectiveGeofenceRadiusMeters(venue.radius, current.accuracy)) {
         setLocationVerified(true);
         setLocationNotice("Location verified successfully.");
       } else {
@@ -378,7 +386,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         longitude: venue.longitude,
       });
       setDistanceMeters(distance);
-      if (distance > venue.radius) {
+      if (distance > getEffectiveGeofenceRadiusMeters(venue.radius, current.accuracy)) {
         setLocationVerified(false);
         setLocationNotice("");
         setErrorMessage(
