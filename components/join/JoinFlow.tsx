@@ -20,8 +20,8 @@ import type { Venue } from "@/types";
 import { getVenueDisplayName, getVenueVisual as getVenueVisualFromConfig } from "@/lib/venueDisplay";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
-const GEOFENCE_BASE_BUFFER_METERS = 30;
-const GEOFENCE_MAX_ACCURACY_BUFFER_METERS = 250;
+const GEOFENCE_BASE_BUFFER_METERS = 75;
+const GEOFENCE_MAX_ACCURACY_BUFFER_METERS = 500;
 
 const JOIN_BUTTON_POP_CLASS =
   "transition-all duration-150 active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
@@ -92,33 +92,22 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             const inRange = venuesWithDistance
               .filter(({ venue, distance }) => distance <= getEffectiveGeofenceRadiusMeters(venue.radius, current.accuracy))
               .sort((a, b) => a.distance - b.distance);
-
-            const outOfRange = venuesWithDistance
-              .filter(({ venue, distance }) => distance > getEffectiveGeofenceRadiusMeters(venue.radius, current.accuracy))
-              .sort((a, b) => a.distance - b.distance);
-
-            // Always show venues so users can select one; final geofence check still runs before joining.
-            setVenueList([...inRange, ...outOfRange].map(({ venue }) => venue));
+            setVenueList(inRange.map(({ venue }) => venue));
 
             if (inRange.length > 0) {
-              setLocationNotice(
-                `Showing ${inRange.length} venue(s) in range first, followed by the nearest out-of-range venues.`
-              );
+              setLocationNotice(`Showing ${inRange.length} nearby venue(s) within range.`);
             } else {
-              setLocationNotice(
-                "No venues are currently within geofence range. Showing nearest venues so you can still select one."
-              );
+              setLocationNotice("No nearby venues are within geofence range right now.");
             }
           } catch (error) {
-            void error;
-            // If location is unavailable/denied, still show all venues so join flow remains usable.
-            setVenueList(
-              [...venues].sort((a, b) =>
-                getVenueDisplayName(a).localeCompare(getVenueDisplayName(b), undefined, { sensitivity: "base" })
+            setVenueList([]);
+            setLocationNotice("");
+            setErrorMessage(
+              getErrorMessage(
+                error,
+                "Location access is required to show nearby venues. Enable location services and retry."
               )
             );
-            setLocationNotice("Location unavailable. Showing all venues alphabetically.");
-            setErrorMessage("");
           } finally {
             setLocationLoading(false);
           }
@@ -172,23 +161,22 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     setErrorMessage("");
 
     try {
-      const current = await getCurrentLocation();
+      const current = await getCurrentLocation({ forceFresh: true });
       const distance = calculateDistanceMeters(current, {
         latitude: venue.latitude,
         longitude: venue.longitude,
       });
       setDistanceMeters(distance);
+      const effectiveRadius = getEffectiveGeofenceRadiusMeters(venue.radius, current.accuracy);
 
-      if (distance <= getEffectiveGeofenceRadiusMeters(venue.radius, current.accuracy)) {
+      if (distance <= effectiveRadius) {
         setLocationVerified(true);
         setLocationNotice("Location verified successfully.");
       } else {
         setLocationVerified(false);
         setLocationNotice("");
         setErrorMessage(
-          `You are ${Math.round(distance)}m away. You must be within ${venue.radius}m of ${getVenueDisplayName(
-            venue
-          )} to join.`
+          `You are ${Math.round(distance)}m away. Required range is ${Math.round(effectiveRadius)}m (venue radius ${venue.radius}m).`
         );
       }
     } catch (error) {
@@ -396,19 +384,18 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
     setLocationLoading(true);
     try {
-      const current = await getCurrentLocation();
+      const current = await getCurrentLocation({ forceFresh: true });
       const distance = calculateDistanceMeters(current, {
         latitude: venue.latitude,
         longitude: venue.longitude,
       });
       setDistanceMeters(distance);
-      if (distance > getEffectiveGeofenceRadiusMeters(venue.radius, current.accuracy)) {
+      const effectiveRadius = getEffectiveGeofenceRadiusMeters(venue.radius, current.accuracy);
+      if (distance > effectiveRadius) {
         setLocationVerified(false);
         setLocationNotice("");
         setErrorMessage(
-          `You are ${Math.round(distance)}m away. You must be within ${venue.radius}m of ${getVenueDisplayName(
-            venue
-          )} to join.`
+          `You are ${Math.round(distance)}m away. Required range is ${Math.round(effectiveRadius)}m (venue radius ${venue.radius}m).`
         );
         return;
       }

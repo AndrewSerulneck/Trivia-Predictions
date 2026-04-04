@@ -4,7 +4,12 @@ export type Coordinates = {
   accuracy?: number;
 };
 
-export async function getCurrentLocation(): Promise<Coordinates> {
+export type CurrentLocationOptions = {
+  forceFresh?: boolean;
+};
+
+export async function getCurrentLocation(options: CurrentLocationOptions = {}): Promise<Coordinates> {
+  const forceFresh = Boolean(options.forceFresh);
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error("Geolocation is not supported in this browser."));
@@ -19,7 +24,11 @@ export async function getCurrentLocation(): Promise<Coordinates> {
           accuracy: position.coords.accuracy,
         }),
       (error) => reject(error),
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+      {
+        enableHighAccuracy: true,
+        timeout: forceFresh ? 15000 : 8000,
+        maximumAge: forceFresh ? 0 : 30000,
+      }
     );
   });
 }
