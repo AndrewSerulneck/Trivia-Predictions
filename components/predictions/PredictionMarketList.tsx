@@ -40,6 +40,7 @@ type PredictionQuota = {
 
 type SortKey = "closing-soon" | "newest" | "volume" | "liquidity";
 type ViewMode = "grouped" | "all";
+type CloseWindowKey = "all" | "today" | "this-week" | "this-month" | "this-year";
 const FETCH_PAGE_SIZE = 50;
 
 const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
@@ -47,6 +48,13 @@ const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
   { value: "newest", label: "Newest" },
   { value: "volume", label: "Highest Volume" },
   { value: "liquidity", label: "Highest Liquidity" },
+];
+const CLOSE_WINDOW_OPTIONS: Array<{ value: CloseWindowKey; label: string }> = [
+  { value: "all", label: "All" },
+  { value: "today", label: "Today" },
+  { value: "this-week", label: "This Week" },
+  { value: "this-month", label: "This Month" },
+  { value: "this-year", label: "This Year" },
 ];
 
 const SPORT_ICON_BY_NAME: Record<string, string> = {
@@ -117,6 +125,42 @@ function getHoursUntilClose(closesAt: string): number {
   return (closeTs - Date.now()) / (1000 * 60 * 60);
 }
 
+function marketMatchesCloseWindow(market: Prediction, closeWindow: CloseWindowKey): boolean {
+  if (closeWindow === "all") {
+    return true;
+  }
+
+  const closesAtDate = new Date(market.closesAt);
+  if (Number.isNaN(closesAtDate.getTime())) {
+    return false;
+  }
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (closesAtDate < startOfToday) {
+    return false;
+  }
+
+  if (closeWindow === "today") {
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    return closesAtDate < endOfToday;
+  }
+
+  if (closeWindow === "this-week") {
+    const daysUntilEndOfWeek = 7 - now.getDay();
+    const endOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilEndOfWeek);
+    return closesAtDate < endOfWeek;
+  }
+
+  if (closeWindow === "this-month") {
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    return closesAtDate < endOfMonth;
+  }
+
+  const endOfYear = new Date(now.getFullYear() + 1, 0, 1);
+  return closesAtDate < endOfYear;
+}
+
 export function PredictionMarketList() {
   const router = useRouter();
   const [messages, setMessages] = useState<SubmitState>({});
@@ -141,6 +185,7 @@ export function PredictionMarketList() {
 
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCloseWindow, setSelectedCloseWindow] = useState<CloseWindowKey>("all");
   const [selectedSport, setSelectedSport] = useState("");
   const [selectedLeague, setSelectedLeague] = useState("");
   const [sort, setSort] = useState<SortKey>("closing-soon");
@@ -152,15 +197,19 @@ export function PredictionMarketList() {
   const { rewards, addReward } = useRewards();
 
   const hasFilters = useMemo(
-    () => Boolean(searchQuery || selectedSport || selectedLeague),
-    [searchQuery, selectedSport, selectedLeague]
+    () => Boolean(searchQuery || selectedSport || selectedLeague || selectedCloseWindow !== "all"),
+    [searchQuery, selectedCloseWindow, selectedSport, selectedLeague]
   );
   const predictionsQuotaLocked = Boolean(quota && !quota.isAdminBypass && quota.picksRemaining <= 0);
   const leagueOptions = useMemo(
     () => (selectedSport ? leaguesBySport[selectedSport] ?? [] : []),
     [leaguesBySport, selectedSport]
   );
-  const filteredMarkets = useMemo(() => allMarkets.filter((market) => Boolean(market.sport)), [allMarkets]);
+  const filteredMarkets = useMemo(
+    () =>
+      allMarkets.filter((market) => Boolean(market.sport) && marketMatchesCloseWindow(market, selectedCloseWindow)),
+    [allMarkets, selectedCloseWindow]
+  );
   const markets = filteredMarkets;
   const groupedMarketSections = useMemo(() => {
     const byLeague = new Map<string, Prediction[]>();
@@ -366,7 +415,7 @@ export function PredictionMarketList() {
       return;
     }
     window.scrollTo({ top: 0, behavior: "auto" });
-  }, [searchQuery, selectedLeague, selectedSport, sort]);
+  }, [searchQuery, selectedCloseWindow, selectedLeague, selectedSport, sort]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -723,145 +772,170 @@ export function PredictionMarketList() {
 
         {!browseFiltersCollapsed ? (
           <div className="space-y-3">
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Sports</p>
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedSport("");
-                  setSelectedLeague("");
-                }}
-                className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
-                    selectedSport === ""
-                      ? "border-slate-900 bg-slate-900 text-white"
-                      : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
-                  }`}
-              >
-                <span aria-hidden="true" className="text-base">
-                    🏟️
-                </span>
-                  All Sports
-                </button>
-              {sports.map((item) => (
-                <button
-                  key={`sport-${item}`}
-                  type="button"
-                  onClick={() => {
-                    setSelectedSport(item);
-                    setSelectedLeague("");
-                  }}
-                  className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
-                    selectedSport === item
-                      ? "border-slate-900 bg-slate-900 text-white"
-                      : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
-                  }`}
-                >
-                  <span aria-hidden="true" className="text-base">
-                    {getSportIcon(item)}
-                  </span>
-                  {item}
-                </button>
-              ))}
-          </div>
-        </div>
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">When Markets Close</p>
+              <div className="-mx-1 overflow-x-auto px-1 pb-1">
+                <div className="flex min-w-max items-center gap-2">
+                  {CLOSE_WINDOW_OPTIONS.map((option) => (
+                    <button
+                      key={`close-window-${option.value}`}
+                      type="button"
+                      onClick={() => setSelectedCloseWindow(option.value)}
+                      className={`inline-flex min-h-[36px] shrink-0 items-center justify-center rounded-full border px-4 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
+                        selectedCloseWindow === option.value
+                          ? "border-slate-900 bg-slate-900 text-white"
+                          : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
 
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Leagues</p>
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Sports</p>
+              <div className="-mx-1 overflow-x-auto px-1 pb-1">
+                <div className="flex min-w-max items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedSport("");
+                      setSelectedLeague("");
+                    }}
+                    className={`inline-flex min-h-[36px] shrink-0 items-center justify-center gap-1 rounded-full border px-4 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
+                      selectedSport === ""
+                        ? "border-slate-900 bg-slate-900 text-white"
+                        : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+                    }`}
+                  >
+                    <span aria-hidden="true" className="text-base">
+                      🏟️
+                    </span>
+                    All Sports
+                  </button>
+                  {sports.map((item) => (
+                    <button
+                      key={`sport-${item}`}
+                      type="button"
+                      onClick={() => {
+                        setSelectedSport(item);
+                        setSelectedLeague("");
+                      }}
+                      className={`inline-flex min-h-[36px] shrink-0 items-center justify-center gap-1 rounded-full border px-4 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
+                        selectedSport === item
+                          ? "border-slate-900 bg-slate-900 text-white"
+                          : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+                      }`}
+                    >
+                      <span aria-hidden="true" className="text-base">
+                        {getSportIcon(item)}
+                      </span>
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Leagues</p>
               {!selectedSport ? (
                 <span className="text-xs text-slate-500">Select a sport to browse leagues.</span>
               ) : leagueOptions.length === 0 ? (
                 <span className="text-xs text-slate-500">No leagues found for this sport right now.</span>
               ) : (
-                <>
-                  <button
-                    key={`league-all-${selectedSport}`}
-                    type="button"
-                    onClick={() => {
-                      setSelectedLeague("");
-                    }}
-                    className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
-                      selectedLeague === ""
-                        ? "border-blue-700 bg-blue-700 text-white"
-                        : "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300"
-                    }`}
-                  >
-                    <span aria-hidden="true" className="text-base">
-                      {getSportIcon(selectedSport)}
-                    </span>
-                    All {selectedSport} Leagues
-                  </button>
-                  {leagueOptions.map((item) => (
+                <div className="-mx-1 overflow-x-auto px-1 pb-1">
+                  <div className="flex min-w-max items-center gap-2">
                     <button
-                      key={`league-${item}`}
+                      key={`league-all-${selectedSport}`}
                       type="button"
                       onClick={() => {
-                        setSelectedLeague(item);
+                        setSelectedLeague("");
                       }}
-                      className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
-                        selectedLeague === item
+                      className={`inline-flex min-h-[36px] shrink-0 items-center justify-center gap-1 rounded-full border px-4 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
+                        selectedLeague === ""
                           ? "border-blue-700 bg-blue-700 text-white"
                           : "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300"
                       }`}
                     >
                       <span aria-hidden="true" className="text-base">
-                        🏆
+                        {getSportIcon(selectedSport)}
                       </span>
-                      {item}
+                      All {selectedSport} Leagues
                     </button>
-                  ))}
-                </>
+                    {leagueOptions.map((item) => (
+                      <button
+                        key={`league-${item}`}
+                        type="button"
+                        onClick={() => {
+                          setSelectedLeague(item);
+                        }}
+                        className={`inline-flex min-h-[36px] shrink-0 items-center justify-center gap-1 rounded-full border px-4 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
+                          selectedLeague === item
+                            ? "border-blue-700 bg-blue-700 text-white"
+                            : "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300"
+                        }`}
+                      >
+                        <span aria-hidden="true" className="text-base">
+                          🏆
+                        </span>
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
-          </div>
-        </div>
+            </div>
 
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="Search markets"
-            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-          />
-          <select
-            value={sort}
-            onChange={(event) => {
-              setSort(event.target.value as SortKey);
-            }}
-            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-          >
-            {SORT_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onMouseDown={() => triggerHaptic()}
-              onClick={() => {
-                setSearchInput((value) => value.trim());
-              }}
-              className={`${BUTTON_POP_CLASS} rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white`}
-            >
-              Apply
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setSearchInput("");
-                setSelectedSport("");
-                setSelectedLeague("");
-                setSort("closing-soon");
-              }}
-              className={`${BUTTON_POP_CLASS} rounded-md bg-slate-200 px-3 py-2 text-sm font-medium text-slate-700`}
-            >
-              Reset
-            </button>
-          </div>
-        </div>
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                placeholder="Search markets"
+                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              />
+              <select
+                value={sort}
+                onChange={(event) => {
+                  setSort(event.target.value as SortKey);
+                }}
+                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onMouseDown={() => triggerHaptic()}
+                  onClick={() => {
+                    setSearchInput((value) => value.trim());
+                  }}
+                  className={`${BUTTON_POP_CLASS} rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white`}
+                >
+                  Apply
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchInput("");
+                    setSelectedCloseWindow("all");
+                    setSelectedSport("");
+                    setSelectedLeague("");
+                    setSort("closing-soon");
+                  }}
+                  className={`${BUTTON_POP_CLASS} rounded-md bg-slate-200 px-3 py-2 text-sm font-medium text-slate-700`}
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
 
         <p className="text-xs text-slate-600">
           {loading

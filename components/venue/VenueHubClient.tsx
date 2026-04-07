@@ -95,7 +95,7 @@ export function VenueHubClient({
           <span aria-hidden="true" className="text-4xl leading-none">
             🔮
           </span>
-          Make Predictions!
+          Make Sports Predictions
         </Link>
       </section>
 
