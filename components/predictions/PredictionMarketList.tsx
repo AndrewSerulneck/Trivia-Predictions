@@ -56,6 +56,20 @@ const CLOSE_WINDOW_OPTIONS: Array<{ value: CloseWindowKey; label: string }> = [
   { value: "this-month", label: "This Month" },
   { value: "this-year", label: "This Year" },
 ];
+const IN_SEASON_MONTHS_BY_SPORT: Record<string, number[] | "all"> = {
+  Football: [7, 8, 9, 10, 11, 0, 1],
+  Basketball: [9, 10, 11, 0, 1, 2, 3, 4, 5],
+  Baseball: [2, 3, 4, 5, 6, 7, 8, 9],
+  Hockey: [9, 10, 11, 0, 1, 2, 3, 4, 5],
+  Soccer: "all",
+  Lacrosse: [11, 0, 1, 2, 3, 4, 5, 6, 7],
+  Tennis: "all",
+  Golf: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  MMA: "all",
+  Motorsport: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  Cricket: "all",
+  Rugby: "all",
+};
 
 const SPORT_ICON_BY_NAME: Record<string, string> = {
   Football: "🏈",
@@ -74,6 +88,14 @@ const SPORT_ICON_BY_NAME: Record<string, string> = {
 
 function getSportIcon(sport: string): string {
   return SPORT_ICON_BY_NAME[sport] ?? "🏟️";
+}
+
+function isSportInSeason(sport: string, now: Date): boolean {
+  const seasonMonths = IN_SEASON_MONTHS_BY_SPORT[sport];
+  if (!seasonMonths || seasonMonths === "all") {
+    return true;
+  }
+  return seasonMonths.includes(now.getMonth());
 }
 
 const BUTTON_POP_CLASS =
@@ -207,10 +229,33 @@ export function PredictionMarketList() {
   );
   const filteredMarkets = useMemo(
     () =>
-      allMarkets.filter((market) => Boolean(market.sport) && marketMatchesCloseWindow(market, selectedCloseWindow)),
-    [allMarkets, selectedCloseWindow]
+      allMarkets.filter((market) => {
+        if (!market.sport || !marketMatchesCloseWindow(market, selectedCloseWindow)) {
+          return false;
+        }
+        if (selectedSport && market.sport !== selectedSport) {
+          return false;
+        }
+        if (selectedLeague && market.league !== selectedLeague) {
+          return false;
+        }
+        return true;
+      }),
+    [allMarkets, selectedCloseWindow, selectedLeague, selectedSport]
   );
   const markets = filteredMarkets;
+  const showOutOfSeasonMessage = useMemo(() => {
+    if (!selectedSport || loading || Boolean(errorMessage)) {
+      return false;
+    }
+    if (selectedLeague || searchQuery || selectedCloseWindow !== "all") {
+      return false;
+    }
+    if (markets.length > 0) {
+      return false;
+    }
+    return !isSportInSeason(selectedSport, new Date());
+  }, [errorMessage, loading, markets.length, searchQuery, selectedCloseWindow, selectedLeague, selectedSport]);
   const groupedMarketSections = useMemo(() => {
     const byLeague = new Map<string, Prediction[]>();
     for (const market of filteredMarkets) {
@@ -1061,6 +1106,11 @@ export function PredictionMarketList() {
 
       {errorMessage ? (
         <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">{errorMessage}</div>
+      ) : null}
+      {showOutOfSeasonMessage ? (
+        <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-900">
+          No markets available.
+        </div>
       ) : null}
 
       {loading ? (
