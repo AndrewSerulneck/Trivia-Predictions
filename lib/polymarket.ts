@@ -455,6 +455,10 @@ function parseOddsPredictionId(predictionId: string): { sportKey: string; eventI
   return { sportKey, eventId };
 }
 
+function formatOddsApiDate(date: Date): string {
+  return date.toISOString().replace(/\.\d{3}Z$/, "Z");
+}
+
 function impliedProbabilityFromAmericanOdds(odds: number): number | null {
   if (!Number.isFinite(odds) || odds === 0) {
     return null;
@@ -595,8 +599,8 @@ async function loadOddsMarkets(): Promise<Prediction[]> {
       regions: "us",
       markets: "h2h",
       oddsFormat: "american",
-      commenceTimeFrom: from.toISOString(),
-      commenceTimeTo: to.toISOString(),
+      commenceTimeFrom: formatOddsApiDate(from),
+      commenceTimeTo: formatOddsApiDate(to),
     });
 
     const payload = await fetchOddsJson(`/sports/${sportConfig.key}/odds`, query);
@@ -1105,11 +1109,7 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
   const sportsCatalogSource = broadCategory === "sports"
     ? filteredMarkets.filter((item) => Boolean(item.sport))
     : filteredMarkets;
-  const supportedSports = SPORT_KEYWORDS.map((item) => item.sport);
-  const sports = Array.from(new Set([
-    ...supportedSports,
-    ...(sportsCatalogSource.map((item) => item.sport).filter(Boolean) as string[]),
-  ]))
+  const sports = Array.from(new Set(sportsCatalogSource.map((item) => item.sport).filter(Boolean) as string[]))
     .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
   const leaguesBySport: Record<string, string[]> = {};
   for (const sportName of sports) {
