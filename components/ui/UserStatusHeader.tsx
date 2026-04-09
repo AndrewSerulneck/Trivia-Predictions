@@ -326,12 +326,12 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
         className={`flex items-center rounded-2xl border-slate-900 bg-[#f7d7b0] font-medium text-slate-900 ${
           compact
             ? "h-10 min-w-[9.5rem] gap-1 rounded-xl border-2 px-2 py-1 text-xs shadow-[2px_2px_0_#0f172a]"
-            : "tp-bounce-hover h-[4.15rem] min-w-[12.5rem] gap-2 border-4 px-3 py-2 text-sm shadow-[4px_4px_0_#0f172a]"
+            : "tp-bounce-hover h-[4.15rem] min-w-[12.5rem] justify-center gap-2 border-4 px-3 py-2 text-sm shadow-[4px_4px_0_#0f172a]"
           }`}
       >
         <span
-          className={`inline-flex items-center justify-center rounded-full border-slate-900 bg-white ${
-            compact ? "h-8 w-8 border-2 text-base" : "h-12 w-12 border-4 text-xl"
+          className={`inline-flex shrink-0 items-center justify-center rounded-full border-slate-900 bg-white ${
+            compact ? "h-7 w-7 border-2 text-sm" : "h-10 w-10 border-4 text-lg"
           }`}
         >
           {((username || "G").trim()[0] ?? "G").toUpperCase()}
@@ -342,14 +342,14 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
         className={`flex items-center border-slate-900 bg-[#f2bb66] font-medium text-slate-900 transition-transform duration-200 ${
           compact
             ? "h-10 min-w-[9.5rem] gap-1 rounded-xl border-2 px-2 py-1 text-[11px] shadow-[2px_2px_0_#0f172a]"
-            : `tp-bounce-hover h-[4.15rem] min-w-[12.5rem] gap-2 rounded-2xl border-4 px-3 py-2 text-sm shadow-[4px_4px_0_#0f172a] ${
+            : `tp-bounce-hover h-[4.15rem] min-w-[12.5rem] justify-center gap-2 rounded-2xl border-4 px-3 py-2 text-sm shadow-[4px_4px_0_#0f172a] ${
                 pointsPop ? "scale-110" : "scale-100"
               }`
         }`}
         id="tp-points-pill"
       >
-        <span id="tp-treasure-chest" className="relative inline-flex items-center justify-center">
-          <TreasureChestIcon className={compact ? "h-8 w-8" : "h-16 w-16"} />
+        <span id="tp-treasure-chest" className="relative inline-flex shrink-0 items-center justify-center">
+          <TreasureChestIcon className={compact ? "h-6 w-6" : "h-12 w-12"} />
           <span
             id="tp-treasure-chest-target"
             aria-hidden="true"
