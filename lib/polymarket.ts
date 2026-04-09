@@ -526,25 +526,39 @@ function normalizeOddsEvent(event: OddsEvent, fallbackSport?: OddsSportConfig): 
     ? Number(((homeProbability / totalProbability) * 100).toFixed(1))
     : homeProbability;
   const normalizedAwayProbability = Number((100 - normalizedHomeProbability).toFixed(1));
+  const homeIsFavorite = normalizedHomeProbability >= normalizedAwayProbability;
+  const favoriteTeam = homeIsFavorite ? homeTeam : awayTeam;
+  const underdogTeam = homeIsFavorite ? awayTeam : homeTeam;
+  const favoriteOutcome = homeIsFavorite
+    ? {
+        id: toOddsOutcomeId(eventId, "home"),
+        title: homeTeam,
+        probability: normalizedHomeProbability,
+      }
+    : {
+        id: toOddsOutcomeId(eventId, "away"),
+        title: awayTeam,
+        probability: normalizedAwayProbability,
+      };
+  const underdogOutcome = homeIsFavorite
+    ? {
+        id: toOddsOutcomeId(eventId, "away"),
+        title: awayTeam,
+        probability: normalizedAwayProbability,
+      }
+    : {
+        id: toOddsOutcomeId(eventId, "home"),
+        title: homeTeam,
+        probability: normalizedHomeProbability,
+      };
 
   const mappedSport = ODDS_SPORT_BY_KEY.get(sportKey) ?? fallbackSport;
   return {
     id: toOddsPredictionId(sportKey, eventId),
-    question: `Who will win the ${awayTeam} vs ${homeTeam} game?`,
+    question: `Will ${favoriteTeam} beat ${underdogTeam}?`,
     source: "odds-api",
     closesAt: closesAtDate.toISOString(),
-    outcomes: [
-      {
-        id: toOddsOutcomeId(eventId, "home"),
-        title: homeTeam,
-        probability: normalizedHomeProbability,
-      },
-      {
-        id: toOddsOutcomeId(eventId, "away"),
-        title: awayTeam,
-        probability: normalizedAwayProbability,
-      },
-    ],
+    outcomes: [favoriteOutcome, underdogOutcome],
     category: mappedSport?.league ?? "Game Winner",
     sport: mappedSport?.sport,
     league: mappedSport?.league,
