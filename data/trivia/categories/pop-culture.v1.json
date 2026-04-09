@@ -798,5 +798,1208 @@
 "correctAnswer": 1,
 "category": "Pop Culture",
 "difficulty": "medium"
-}
+},
+{
+"slug": "barbie-movie-director-2023",
+"question": "Who directed the 2023 'Barbie' movie which became the highest-grossing film directed by a solo female director?",
+"options": ["Sofia Coppola", "Greta Gerwig", "Emerald Fennell", "Patty Jenkins"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "succession-hbo-final-season-year",
+"question": "In which year did the critically acclaimed HBO series 'Succession' air its series finale?",
+"options": ["2022", "2023", "2024", "2025"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "taylor-swift-eras-tour-start-city",
+"question": "Taylor Swift's record-breaking 'Eras Tour' began in March 2023 in which U.S. city?",
+"options": ["Las Vegas, NV", "Arlington, TX", "Glendale, AZ", "Tampa, FL"],
+"correctAnswer": 2,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "pedro-pascal-last-of-us-character",
+"question": "Pedro Pascal stars as which character in the HBO adaptation of the video game 'The Last of Us'?",
+"options": ["Joel Miller", "Tommy Miller", "Bill", "David"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "rihanna-super-bowl-pregnancy-reveal",
+"question": "Rihanna revealed her second pregnancy during her halftime performance at which Super Bowl?",
+"options": ["Super Bowl LVI", "Super Bowl LVII", "Super Bowl LVIII", "Super Bowl LIX"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "oppenheimer-lead-actor-oscar",
+"question": "Which actor won the Academy Award for Best Actor for his portrayal of J. Robert Oppenheimer?",
+"options": ["Robert Downey Jr.", "Matt Damon", "Cillian Murphy", "Emily Blunt"],
+"correctAnswer": 2,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "the-bear-fx-main-setting",
+"question": "The FX/Hulu series 'The Bear' is primarily set in which American city?",
+"options": ["New York City", "Chicago", "Philadelphia", "Detroit"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "beef-netflix-limited-series-star",
+"question": "Which comedian and actress starred alongside Steven Yeun in the 2023 Netflix series 'Beef'?",
+"options": ["Awkwafina", "Ali Wong", "Margaret Cho", "Constance Wu"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "spider-man-across-the-spider-verse-protagonist",
+"question": "What is the name of the main Spider-Man protagonist in 'Across the Spider-Verse'?",
+"options": ["Peter Parker", "Miguel O'Hara", "Miles Morales", "Ben Reilly"],
+"correctAnswer": 2,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "white-lotus-season-2-location",
+"question": "The second season of the HBO anthology series 'The White Lotus' took place in which region of Italy?",
+"options": ["Tuscany", "Sicily", "Lombardy", "Campania"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "everything-everywhere-best-picture-win",
+"question": "Which film won the Academy Award for Best Picture in 2023?",
+"options": ["Top Gun: Maverick", "The Fabelmans", "Everything Everywhere All at Once", "Avatar: The Way of Water"],
+"correctAnswer": 2,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "harry-styles-as-it-was-album",
+"question": "The hit single 'As It Was' appears on which 2022 Harry Styles album?",
+"options": ["Fine Line", "Harry's House", "Styles", "Watermelon Sugar"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "wednesday-netflix-lead-actress",
+"question": "Who plays the lead role of Wednesday Addams in the hit Netflix series 'Wednesday'?",
+"options": ["Christina Ricci", "Jenna Ortega", "Sadie Sink", "Millie Bobby Brown"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "vanderpump-rules-scandoval-year",
+"question": "In which year did the viral 'Scandoval' cheating scandal break on the show 'Vanderpump Rules'?",
+"options": ["2021", "2022", "2023", "2024"],
+"correctAnswer": 2,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "beyonce-renaissance-world-tour-opener",
+"question": "Beyoncé's 2023 'Renaissance World Tour' began in which European city?",
+"options": ["London", "Paris", "Stockholm", "Berlin"],
+"correctAnswer": 2,
+"category": "Pop Culture",
+"difficulty": "hard"
+},
+{
+"slug": "squid-game-netflix-creator",
+"question": "Who is the creator and director of the South Korean survival drama 'Squid Game'?",
+"options": ["Bong Joon-ho", "Hwang Dong-hyuk", "Park Chan-wook", "Lee Jung-jae"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "hard"
+},
+{
+"slug": "marvel-mcu-phase-5-first-film",
+"question": "Which 2023 film officially kicked off Phase 5 of the Marvel Cinematic Universe?",
+"options": ["Guardians of the Galaxy Vol. 3", "The Marvels", "Ant-Man and the Wasp: Quantumania", "Black Panther: Wakanda Forever"],
+"correctAnswer": 2,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "euphoria-zendaya-emmy-record",
+"question": "Zendaya made history as the youngest two-time lead acting Emmy winner for her role in which series?",
+"options": ["Euphoria", "Spider-Man", "Dune", "The White Lotus"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "stranger-things-eddie-munson-song",
+"question": "In 'Stranger Things' Season 4, which Metallica song does Eddie Munson play in the Upside Down?",
+"options": ["Enter Sandman", "Master of Puppets", "One", "Nothing Else Matters"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "selena-gomez-rare-beauty-launch-year",
+"question": "In which year did Selena Gomez officially launch her makeup brand, Rare Beauty?",
+"options": ["2018", "2019", "2020", "2021"],
+"correctAnswer": 2,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "glass-onion-detective-name",
+"question": "Daniel Craig reprises his role as which detective in the 2022 film 'Glass Onion'?",
+"options": ["Hercule Poirot", "Benoit Blanc", "Sherlock Holmes", "Arthur Hastings"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "bad-bunny-un-verano-sin-ti-grammy",
+"question": "Bad Bunny's 'Un Verano Sin Ti' was the first Spanish-language album nominated for which Grammy category?",
+"options": ["Best New Artist", "Record of the Year", "Album of the Year", "Song of the Year"],
+"correctAnswer": 2,
+"category": "Pop Culture",
+"difficulty": "hard"
+},
+{
+"slug": "elon-musk-twitter-acquisition-year",
+"question": "In late 2022, Elon Musk officially completed his acquisition of which social media platform?",
+"options": ["Instagram", "Twitter (now X)", "TikTok", "Facebook"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "abbott-elementary-creator-star",
+"question": "Who is the creator and lead actress of the mockumentary sitcom 'Abbott Elementary'?",
+"options": ["Issa Rae", "Mindy Kaling", "Quinta Brunson", "Maya Rudolph"],
+"correctAnswer": 2,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "yellowstone-kevin-costner-departure",
+"question": "In 2023, it was announced that which lead actor would be leaving the series 'Yellowstone'?",
+"options": ["Luke Grimes", "Cole Hauser", "Kevin Costner", "Wes Bentley"],
+"correctAnswer": 2,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "twisters-tyler-owens-actor",
+"question": "In the 2024 film 'Twisters', which actor plays the 'Tornado Wrangler' Tyler Owens?",
+"options": ["Glen Powell", "Austin Butler", "Miles Teller", "Jacob Elordi"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "miley-cyrus-flowers-grammy-2024",
+"question": "Miley Cyrus won her first-ever Grammy Award in 2024 for which hit song?",
+"options": ["Wrecking Ball", "Party in the U.S.A.", "Midnight Sky", "Flowers"],
+"correctAnswer": 3,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "fallout-prime-video-ghoul-actor",
+"question": "Which actor plays 'The Ghoul' in the 2024 Amazon Prime Video series 'Fallout'?",
+"options": ["Walton Goggins", "Kyle MacLachlan", "Aaron Moten", "Michael Emerson"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "inside-out-2-anxiety-voice",
+"question": "In the 2024 sequel 'Inside Out 2', which actress provides the voice for the new emotion, Anxiety?",
+"options": ["Maya Hawke", "Ayo Edebiri", "Adèle Exarchopoulos", "Amy Poehler"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "joker-folie-a-deux-harley-quinn",
+"question": "Who portrays Harley Quinn alongside Joaquin Phoenix in the 2024 film 'Joker: Folie à Deux'?",
+"options": ["Margot Robbie", "Lady Gaga", "Zazie Beetz", "Florence Pugh"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "shogun-hulu-lead-actor-hiroyuki",
+"question": "Which veteran actor stars as Lord Yoshii Toranaga in the 2024 series 'Shōgun'?",
+"options": ["Ken Watanabe", "Hiroyuki Sanada", "Tadanobu Asano", "Benedict Wong"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "brat-summer-album-artist",
+"question": "Which artist sparked the 'Brat Summer' trend with the release of her 2024 album 'Brat'?",
+"options": ["Charli XCX", "Lorde", "Dua Lipa", "Troye Sivan"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "house-of-the-dragon-s2-greens-vs-blacks",
+"question": "In 'House of the Dragon' Season 2, which character leads the 'Black' faction claiming the Iron Throne?",
+"options": ["Alicent Hightower", "Rhaenyra Targaryen", "Helaena Targaryen", "Mysaria"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "deadpool-wolverine-record-gross",
+"question": "Which 2024 Marvel film became the highest-grossing R-rated movie of all time?",
+"options": ["Logan", "Oppenheimer", "Deadpool & Wolverine", "Joker"],
+"correctAnswer": 2,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "presumed-innocent-apple-lead",
+"question": "Jake Gyllenhaal plays Rusty Sabich in which 2024 Apple TV+ legal thriller series?",
+"options": ["The Crowded Room", "Presumed Innocent", "Dark Matter", "Defending Jacob"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "bridgerton-s3-penelope-colin-nickname",
+"question": "What is the fan-given 'ship' name for the Season 3 lead couple Penelope and Colin in 'Bridgerton'?",
+"options": ["Saphne", "Kanthony", "Polin", "Benophie"],
+"correctAnswer": 2,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "longlegs-movie-star-2024",
+"question": "Which actor plays the terrifying serial killer in the 2024 horror film 'Longlegs'?",
+"options": ["Nicolas Cage", "Maika Monroe", "Willem Dafoe", "Bill Skarsgård"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "met-gala-2024-theme-garden",
+"question": "What was the theme for the 2024 Met Gala?",
+"options": ["In America: A Lexicon of Fashion", "Sleeping Beauties: Reawakening Fashion", "The Garden of Time", "Camp: Notes on Fashion"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "hard"
+},
+{
+"slug": "baby-reindeer-martha-actress",
+"question": "Which actress received critical acclaim for her role as the stalker Martha in the 2024 series 'Baby Reindeer'?",
+"options": ["Jessica Gunning", "Olivia Colman", "Jodie Comer", "Claire Foy"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "hard"
+},
+{
+"slug": "gladiator-2-director",
+"question": "Who returned to direct the 2024 sequel 'Gladiator II'?",
+"options": ["Steven Spielberg", "Ridley Scott", "James Cameron", "Christopher Nolan"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "challengers-movie-zendaya-character",
+"question": "In the 2024 film 'Challengers', Zendaya plays a former tennis prodigy named what?",
+"options": ["Tashi Donaldson", "Patrick Zweig", "Art Donaldson", "Anne Miller"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "sabrina-carpenter-short-and-sweet-release",
+"question": "What is the title of Sabrina Carpenter's 2024 studio album featuring the singles 'Espresso' and 'Please Please Please'?",
+"options": ["Short n' Sweet", "Skin", "Fruitcake", "Emails I Can't Send"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "wicked-movie-part-1-release",
+"question": "In which month of 2024 was the first part of the 'Wicked' film adaptation released?",
+"options": ["October", "November", "December", "September"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "it-ends-with-us-director-star",
+"question": "Who directed and starred as Ryle Kincaid in the 2024 film 'It Ends with Us'?",
+"options": ["Justin Baldoni", "Ryan Reynolds", "Brandon Sklenar", "Blake Lively"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "squid-game-2-gi-hun-actor",
+"question": "Lee Jung-jae returns as which player number in the 2024 second season of 'Squid Game'?",
+"options": ["001", "218", "456", "067"],
+"correctAnswer": 2,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "vanderpump-rules-valley- Jax- Brittany",
+"question": "What is the name of the 2024 'Vanderpump Rules' spinoff featuring Jax Taylor and Brittany Cartwright?",
+"options": ["The Valley", "Sur Rules", "Jax & Brittany in Kentucky", "Hollywood Hills"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "the-white-lotus-s3-country",
+"question": "The third season of 'The White Lotus' is set in which country?",
+"options": ["Japan", "Thailand", "Greece", "Mexico"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "nosferatu-2024-count-orlok-actor",
+"question": "Which actor plays Count Orlok in Robert Eggers' 2024 remake of 'Nosferatu'?",
+"options": ["Bill Skarsgård", "Nicholas Hoult", "Willem Dafoe", "Aaron Taylor-Johnson"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "hard"
+},
+{
+"slug": "taylor-swift-eras-tour-film-streaming",
+"question": "Which streaming platform secured the exclusive rights to 'Taylor Swift: The Eras Tour (Taylor’s Version)' in 2024?",
+"options": ["Netflix", "Disney+", "Max", "Prime Video"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "shrek-5-release-year-announcement",
+"question": "In July 2024, DreamWorks officially announced 'Shrek 5' would be released in what year?",
+"options": ["2025", "2026", "2027", "2028"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "miley-cyrus-grammy-2024-first",
+"question": "Miley Cyrus won her first-ever Grammy Award in 2024 for which hit song?",
+"options": ["Wrecking Ball", "Flowers", "Midnight Sky", "Party in the U.S.A."],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "fallout-prime-video-ghoul-actor",
+"question": "Which actor plays 'The Ghoul' in the 2024 Amazon Prime Video series 'Fallout'?",
+"options": ["Walton Goggins", "Kyle MacLachlan", "Aaron Moten", "Michael Emerson"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "inside-out-2-highest-grossing-animated",
+"question": "In 2024, which film became the highest-grossing animated movie of all time, surpassing 'Frozen II'?",
+"options": ["The Super Mario Bros. Movie", "Inside Out 2", "Despicable Me 4", "Kung Fu Panda 4"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "shogun-hulu-emmy-record",
+"question": "Which 2024 series broke the record for the most Emmy wins by a single season of television in history?",
+"options": ["The Bear", "Shōgun", "Baby Reindeer", "Succession"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "brat-summer-artist",
+"question": "The viral 'Brat Summer' trend of 2024 was sparked by the album 'Brat' by which artist?",
+"options": ["Charli XCX", "Lorde", "Dua Lipa", "Troye Sivan"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "joker-folie-a-deux-co-star",
+"question": "Who stars alongside Joaquin Phoenix as Lee Quinzel (Harley Quinn) in the 2024 film 'Joker: Folie à Deux'?",
+"options": ["Margot Robbie", "Lady Gaga", "Zendaya", "Florence Pugh"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "the-bear-season-3-cameo-chef",
+"question": "Which real-life world-renowned chef makes a prominent cameo during the 'Ever' funeral dinner in 'The Bear' Season 3?",
+"options": ["Gordon Ramsay", "Thomas Keller", "Bobby Flay", "Wolfgang Puck"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "hard"
+},
+{
+"slug": "sabrina-carpenter-espresso-lyric",
+"question": "In her 2024 hit 'Espresso', Sabrina Carpenter sings, 'I'm working late, 'cause I'm a...' what?",
+"options": ["Dreamer", "Singer", "Winner", "Coffee-drinker"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "gladiator-2-lead-actor",
+"question": "Who plays the lead role of Lucius Verus in the 2024 sequel 'Gladiator II'?",
+"options": ["Paul Mescal", "Austin Butler", "Barry Keoghan", "Timothée Chalamet"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "wicked-movie-part-1-glinda",
+"question": "Which singer and actress plays Glinda the Good Witch in the 2024 'Wicked' movie adaptation?",
+"options": ["Cynthia Erivo", "Ariana Grande", "Sabrina Carpenter", "Dove Cameron"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "house-of-the-dragon-s2-battle",
+"question": "The major dragon battle in 'House of the Dragon' Season 2 (2024) took place at which location?",
+"options": ["Harrenhal", "Rook's Rest", "Dragonstone", "King's Landing"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "hard"
+},
+{
+"slug": "it-ends-with-us-star-controversy",
+"question": "Which actress starred as Lily Bloom in the 2024 adaptation of Colleen Hoover's 'It Ends With Us'?",
+"options": ["Blake Lively", "Sydney Sweeney", "Dakota Johnson", "Florence Pugh"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "bridgerton-season-3-lead",
+"question": "Which 'Bridgerton' sibling was the primary focus of the show's third season in 2024?",
+"options": ["Benedict", "Colin", "Eloise", "Francesca"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "kendrick-lamar-super-bowl-2025",
+"question": "In September 2024, it was announced that which artist would headline the 2025 Super Bowl Halftime Show?",
+"options": ["Drake", "Kendrick Lamar", "Lil Wayne", "Taylor Swift"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "baby-reindeer-creator-star",
+"question": "Who created and starred in the viral 2024 Netflix limited series 'Baby Reindeer'?",
+"options": ["Richard Gadd", "Andrew Scott", "Jessica Gunning", "Paul Mescal"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "challengers-movie-director",
+"question": "Which director was behind the 2024 tennis-themed romantic drama 'Challengers'?",
+"options": ["Luca Guadagnino", "Greta Gerwig", "Christopher Nolan", "Denis Villeneuve"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "the-white-lotus-season-3-setting",
+"question": "The third season of 'The White Lotus' (filmed in 2024) is set in which country?",
+"options": ["Japan", "Thailand", "Greece", "Mexico"],
+"correctAnswer": 1,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "chappell-roan-breakout-year",
+"question": "Which artist saw a massive surge in popularity in 2024 following her performance at Coachella and the success of the song 'Good Luck, Babe!'?",
+"options": ["Chappell Roan", "Olivia Rodrigo", "Tate McRae", "Gracie Abrams"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "deadpool-wolverine-cameo-gambit",
+"question": "Which actor finally got to play the character Gambit in a long-awaited cameo in 'Deadpool & Wolverine' (2024)?",
+"options": ["Channing Tatum", "Henry Cavill", "Wesley Snipes", "Chris Evans"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "moana-2-release-year",
+"question": "In a surprise announcement, Disney revealed that 'Moana 2' would be released in theaters in which year?",
+"options": ["2024", "2025", "2026", "2027"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "the-traitors-us-host",
+"question": "Who is the host of the popular reality competition series 'The Traitors' (US version)?",
+"options": ["Alan Cumming", "Jeff Probst", "Phil Keoghan", "Andy Cohen"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "easy"
+},
+{
+"slug": "nosferatu-2024-director",
+"question": "Who directed the 2024 gothic horror remake of 'Nosferatu'?",
+"options": ["Robert Eggers", "Ari Aster", "Jordan Peele", "Guillermo del Toro"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "met-gala-2024-theme",
+"question": "The theme for the 2024 Met Gala was 'Sleeping Beauties: Reawakening...' what?",
+"options": ["Fashion", "Nature", "History", "Dreams"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "hard"
+},
+{
+"slug": "presumed-innocent-apple-star",
+"question": "Jake Gyllenhaal stars as Rusty Sabich in the 2024 Apple TV+ remake of which legal thriller?",
+"options": ["Presumed Innocent", "A Few Good Men", "The Firm", "The Lincoln Lawyer"],
+"correctAnswer": 0,
+"category": "Pop Culture",
+"difficulty": "medium"
+},
+{
+"slug": "squid-game-season-2-premiere",
+"question": "Netflix scheduled the premiere of 'Squid Game' Season 2 for which month of 2024?",
+"options": ["October", "November", "December", "September"],
+"correctAnswer": 2,
+"category": "Pop Culture",
+"difficulty": "medium"
+}, 
+{
+    "slug": "oppenheimer-best-supporting-actor-2024",
+    "question": "Which actor won his first Oscar for Best Supporting Actor for his role in 'Oppenheimer'?",
+    "options": ["Robert Downey Jr.", "Matt Damon", "Cillian Murphy", "Josh Hartnett"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+},
+  {
+    "slug": "the-bear-jamie-lee-curtis-character",
+    "question": "Jamie Lee Curtis won an Emmy for her guest role in 'The Bear' playing the Berzatto family matriarch named what?",
+    "options": ["Donna", "Sugar", "Francie", "Michelle"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "dune-2-water-of-life-source",
+    "question": "In 'Dune: Part Two', the 'Water of Life' is a liquid extracted from what?",
+    "options": ["A desert spring", "A young sandworm", "A spice harvester", "The Moon of Arrakis"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "vanderpump-rules-tom-sandoval-band",
+    "question": "What is the name of Tom Sandoval's cover band that featured heavily in recent seasons of 'Vanderpump Rules'?",
+    "options": ["The Most Extras", "The Tom Toms", "Vanderpump Beats", "The Valley Boys"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "succession-roman-roy-actor",
+    "question": "Which actor won both a Golden Globe and an Emmy in 2024 for his final performance as Roman Roy?",
+    "options": ["Jeremy Strong", "Kieran Culkin", "Matthew Macfadyen", "Nicholas Braun"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "barbie-oscar-best-original-song",
+    "question": "Which song from the 'Barbie' movie won the Academy Award for Best Original Song in 2024?",
+    "options": ["I'm Just Ken", "What Was I Made For?", "Dance the Night", "Pink"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-last-of-us-s2-abby-actress",
+    "question": "Which actress was cast to play the pivotal role of Abby in Season 2 of HBO's 'The Last of Us'?",
+    "options": ["Kaitlyn Dever", "Florence Pugh", "Bella Ramsey", "Hailee Steinfeld"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "taylor-swift-super-bowl-suite-guest",
+    "question": "Which rapper and friend of Taylor Swift went viral for sitting in her suite at Super Bowl LVIII?",
+    "options": ["Ice Spice", "Nicki Minaj", "Megan Thee Stallion", "Latto"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "civil-war-movie-2024-director",
+    "question": "Who directed the 2024 A24 dystopian film 'Civil War'?",
+    "options": ["Alex Garland", "Ari Aster", "Robert Eggers", "Christopher Nolan"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-golden-bachelorette-lead-2024",
+    "question": "Who was named the first-ever 'Golden Bachelorette' in the ABC spinoff's 2024 debut?",
+    "options": ["Joan Vassos", "Leslie Fhima", "Faith Martin", "Ellen Goltzer"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "fiona-harvey-baby-reindeer-real-martha",
+    "question": "What is the name of the woman who publicly identified herself as the real-life inspiration for Martha in 'Baby Reindeer'?",
+    "options": ["Fiona Harvey", "Martha Scott", "Jane Doe", "Gail Reindeer"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "bad-bunny-snl-host-2023",
+    "question": "Bad Bunny served as both host and musical guest on 'Saturday Night Live' in 2023, featuring a viral cameo from which actor?",
+    "options": ["Pedro Pascal", "Benicio del Toro", "Oscar Isaac", "Lin-Manuel Miranda"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "agatha-all-along-mcu-lead",
+    "question": "Kathryn Hahn reprises her role as Agatha Harkness in which 2024 Marvel series?",
+    "options": ["WandaVision", "Coven of Chaos", "Agatha All Along", "Darkhold"],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "cowboy-carter-beyonce-genre",
+    "question": "Beyoncé explored which musical genre with her 2024 album 'Cowboy Carter'?",
+    "options": ["Jazz", "Country", "Rock", "Classical"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "love-is-blind-s6-chelsea-lookalike",
+    "question": "In 'Love Is Blind' Season 6, which celebrity did contestant Chelsea Blackwell famously claim she looked like?",
+    "options": ["Megan Fox", "Adele", "Carrie Underwood", "Katy Perry"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "drake-kendrick-diss-track-a-minor",
+    "question": "In Kendrick Lamar's 'Not Like Us', he makes a play on words regarding the name of Drake's record label and which musical key?",
+    "options": ["C Major", "A Minor", "G Flat", "D Sharp"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "knives-out-3-official-title",
+    "question": "What is the official title of the third 'Knives Out' film announced for 2025/2026?",
+    "options": ["Wake Up Dead Man", "The Last Cut", "Benoit's End", "A Sharp Exit"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "sydney-sweeney-horror-2024",
+    "question": "Sydney Sweeney stars as a nun in which 2024 psychological horror film?",
+    "options": ["Immaculate", "The Nun II", "The First Omen", "Late Night with the Devil"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "travis-kelce-grotesquerie-fx",
+    "question": "Travis Kelce made his scripted acting debut in which 2024 Ryan Murphy horror series?",
+    "options": ["American Horror Story", "Grotesquerie", "Monsters", "The Watcher"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "one-piece-netflix-renewal-s2",
+    "question": "Which character's appearance was teased for Season 2 of Netflix's live-action 'One Piece'?",
+    "options": ["Tony Tony Chopper", "Brook", "Franky", "Jimbei"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "jennifer-lopez-ben-affleck-divorce-year",
+    "question": "In August 2024, Jennifer Lopez officially filed for divorce from Ben Affleck on the anniversary of which event?",
+    "options": ["Their first date", "Their wedding ceremony", "The release of Gigli", "Ben's birthday"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "gladiator-2-denzel-washington-character",
+    "question": "Denzel Washington plays a wealthy arms dealer and power player in 'Gladiator II' named what?",
+    "options": ["Macrinus", "Geta", "Caracalla", "Lucilla"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "arian-grande-eternal-sunshine-inspiration",
+    "question": "Ariana Grande's 2024 album 'Eternal Sunshine' was partly inspired by which Jim Carrey film?",
+    "options": ["The Truman Show", "Eternal Sunshine of the Spotless Mind", "The Mask", "Liar Liar"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "twisters-daisy-edgar-jones-character",
+    "question": "Daisy Edgar-Jones stars in 'Twisters' as Kate Carter, a former storm chaser who now studies what?",
+    "options": ["Earthquakes", "Tornado patterns", "Cloud seeding", "Ocean currents"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "mcu-dr-doom-actor-reveal",
+    "question": "At San Diego Comic-Con 2024, it was revealed that which actor would return to the MCU to play Doctor Doom?",
+    "options": ["Robert Downey Jr.", "Chris Evans", "Tom Hiddleston", "Mads Mikkelsen"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tv-history-first-drama-1928",
+    "question": "What was the title of the first-ever television drama, broadcast in 1928 from Schenectady, New York?",
+    "options": ["The Queen's Messenger", "Faraway Hill", "The Goldbergs", "The Lone Ranger"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "tv-history-laugh-track-origin",
+    "question": "Which 1950 sitcom was the first to use a pre-recorded laugh track, a technique developed by Charles Douglass?",
+    "options": ["I Love Lucy", "The Hank McCune Show", "The Honeymooners", "The Jack Benny Program"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "tv-history-married-couple-bed",
+    "question": "Which 1940s sitcom was the first to show a married couple sharing the same bed on screen?",
+    "options": ["Mary Kay and Johnny", "I Love Lucy", "The Adventures of Ozzie and Harriet", "The Dick Van Dyke Show"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-rerun-invention-lucy",
+    "question": "Which show 'invented' the television rerun to allow its lead actress time to recover after giving birth?",
+    "options": ["The Goldbergs", "I Love Lucy", "The Donna Reed Show", "Bewitched"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-most-watched-finale",
+    "question": "Which television series finale, titled 'Goodbye, Farewell and Amen,' remains the most-watched scripted episode in TV history?",
+    "options": ["Cheers", "Seinfeld", "M*A*S*H", "Friends"],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tv-history-simpsons-debut-show",
+    "question": "Before getting their own series, The Simpsons first appeared as a series of shorts on which variety show?",
+    "options": ["Saturday Night Live", "The Tracey Ullman Show", "In Living Color", "The Carol Burnett Show"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tv-history-first-sports-baseball",
+    "question": "In 1939, NBC broadcast the first-ever televised baseball game between which two college teams?",
+    "options": ["Princeton vs. Columbia", "Harvard vs. Yale", "NYU vs. Fordham", "Army vs. Navy"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "tv-history-forgotten-fourth-network",
+    "question": "Alongside NBC, ABC, and CBS, what was the name of the 'forgotten' fourth major US television network that folded in 1956?",
+    "options": ["Mutual", "DuMont", "RKO", "Metromedia"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-first-human-face",
+    "question": "In 1925, which Scottish inventor demonstrated the first televised image of a recognizable human face?",
+    "options": ["Philo Farnsworth", "John Logie Baird", "Vladimir Zworykin", "Guglielmo Marconi"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-first-morning-news-today",
+    "question": "When NBC's 'Today' premiered in 1952, host Dave Garroway was famously joined by a chimpanzee sidekick named what?",
+    "options": ["J. Fred Muggs", "Bubbles", "Ham", "Lancelot Link"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-soap-opera-first",
+    "question": "What was the name of the first-ever network soap opera, which premiered on the DuMont network in 1946?",
+    "options": ["Faraway Hill", "Guiding Light", "Search for Tomorrow", "General Hospital"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "tv-history-seinfeld-george-missing",
+    "question": "In the entire nine-season run of 'Seinfeld,' which character is the only one of the main four to be missing from an episode?",
+    "options": ["Elaine Benes", "Cosmo Kramer", "George Costanza", "Jerry Seinfeld"],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-moonlighting-bruce-willis",
+    "question": "Which 1980s detective series is credited with launching the career of Bruce Willis?",
+    "options": ["Miami Vice", "Moonlighting", "Magnum, P.I.", "Remington Steele"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tv-history-twilight-zone-creator",
+    "question": "Who was the creator and primary narrator of the iconic 1960s anthology series 'The Twilight Zone'?",
+    "options": ["Alfred Hitchcock", "Rod Serling", "Gene Roddenberry", "Ray Bradbury"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tv-history-first-tv-movie",
+    "question": "The 1964 film 'See How They Run' is widely considered to be the first of what television format?",
+    "options": ["Made-for-TV movie", "Miniseries", "Sitcom", "Police procedural"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-all-in-the-family-basis",
+    "question": "The groundbreaking sitcom 'All in the Family' was based on which British comedy series?",
+    "options": ["Till Death Us Do Part", "Steptoe and Son", "Fawlty Towers", "The Office"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "tv-history-first-wardrobe-malfunction",
+    "question": "The first live 'wardrobe malfunction' in TV history occurred in 1950 to which talk show hostess?",
+    "options": ["Lucille Ball", "Faye Emerson", "Dinah Shore", "Martha Raye"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "tv-history-mork-and-mindy-spinoff",
+    "question": "The character Mork (played by Robin Williams) first appeared on which other sitcom before getting his own spinoff?",
+    "options": ["Laverne & Shirley", "Happy Days", "The Odd Couple", "Taxi"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tv-history-lassie-first-dog",
+    "question": "A male collie named Pal was the first dog to play which legendary female canine character?",
+    "options": ["Lassie", "Benji", "Lady", "Saskia"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tv-history-first-color-series",
+    "question": "What was the first network TV series to be broadcast solely in color (with no black-and-white episodes)?",
+    "options": ["The Marriage", "Bonanza", "The Flintstones", "Star Trek"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "tv-history-breaking-bad-walter-white",
+    "question": "At the start of 'Breaking Bad,' what subject does Walter White teach at a high school?",
+    "options": ["Physics", "Chemistry", "Biology", "Mathematics"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tv-history-mash-alan-alda-predecessor",
+    "question": "In the TV series 'M*A*S*H', Alan Alda played Hawkeye Pierce, a role played in the original film by which actor?",
+    "options": ["Donald Sutherland", "Elliott Gould", "Tom Skerritt", "Robert Duvall"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-oprah-run-years",
+    "question": "For how many years did 'The Oprah Winfrey Show' run in national syndication?",
+    "options": ["15", "20", "25", "30"],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-first-incumbent-president",
+    "question": "Who was the first incumbent U.S. President to appear on television when he spoke at the 1939 World's Fair?",
+    "options": ["Herbert Hoover", "Franklin D. Roosevelt", "Harry S. Truman", "Dwight D. Eisenhower"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-bewitched-nose-wiggle",
+    "question": "Samantha Stephens on 'Bewitched' was famous for casting spells by wiggling which part of her face?",
+    "options": ["Her ears", "Her eyebrows", "Her nose", "Her chin"],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+
+  {
+    "slug": "tv-history-first-interracial-kiss",
+    "question": "Which 1968 'Star Trek' episode featured the first televised interracial kiss between Captain Kirk and Lieutenant Uhura?",
+    "options": ["The City on the Edge of Forever", "Plato's Stepchildren", "Space Seed", "Mirror, Mirror"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-roots-miniseries-record",
+    "question": "In 1977, which groundbreaking miniseries based on Alex Haley's novel became a cultural phenomenon with a record-breaking finale?",
+    "options": ["Rich Man, Poor Man", "Roots", "The Thorn Birds", "Shōgun"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tv-history-first-animated-prime-time",
+    "question": "What was the first animated series to air in prime time, debuting on ABC in 1960?",
+    "options": ["The Jetsons", "The Flintstones", "Top Cat", "Jonny Quest"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-who-shot-jr-show",
+    "question": "The 1980 cliffhanger 'Who Shot J.R.?' was the central mystery of which long-running prime-time soap opera?",
+    "options": ["Dynasty", "Knots Landing", "Dallas", "Falcon Crest"],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tv-history-first-mtv-video",
+    "question": "When MTV launched in 1981, what was the first music video ever played on the network?",
+    "options": ["Thriller", "Video Killed the Radio Star", "Take On Me", "You Better Run"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tv-history-sesame-street-debut",
+    "question": "In which year did 'Sesame Street' first premiere on public television?",
+    "options": ["1965", "1967", "1969", "1971"],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-golden-girls-spin-off",
+    "question": "After 'The Golden Girls' ended, three of the lead characters starred in a short-lived spin-off set in a hotel called what?",
+    "options": ["The Golden Palace", "Empty Nest", "Check In", "Miami Nights"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-first-late-night-host-tonight",
+    "question": "Who was the original host of 'The Tonight Show' when it premiered on NBC in 1954?",
+    "options": ["Jack Paar", "Steve Allen", "Johnny Carson", "Dick Cavett"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "tv-history-mary-tyler-moore-newsroom",
+    "question": "On 'The Mary Tyler Moore Show', Mary Richards worked as an associate producer at which fictional TV station?",
+    "options": ["WJM-TV", "KACL", "WNYX", "WKRP"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-first-reality-show-modern",
+    "question": "Which 1973 PBS documentary series is often cited as the first 'modern' reality TV show?",
+    "options": ["An American Family", "Cops", "The Real World", "The 7 Up Series"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "tv-history-happy-days-jump-the-shark",
+    "question": "The phrase 'jump the shark' originated from an episode of 'Happy Days' where which character literally jumped over a shark on water skis?",
+    "options": ["Richie Cunningham", "The Fonz", "Potsie", "Ralph Malph"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tv-history-cheers-sam-malone-sport",
+    "question": "In the sitcom 'Cheers', bartender Sam Malone was a former relief pitcher for which Major League Baseball team?",
+    "options": ["New York Yankees", "Boston Red Sox", "Chicago Cubs", "Detroit Tigers"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-gunsmoke-run-length",
+    "question": "Which Western series held the record for the most episodes of a scripted prime-time drama (635) for over 40 years?",
+    "options": ["Bonanza", "The Virginian", "Gunsmoke", "Rawhide"],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-saturday-night-live-first-host",
+    "question": "Who was the guest host for the very first episode of 'Saturday Night Live' in 1975?",
+    "options": ["George Carlin", "Steve Martin", "Richard Pryor", "Chevy Chase"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "tv-history-lost-plane-flight-number",
+    "question": "In the series 'Lost', what was the flight number of the Oceanic Airlines plane that crashed on the island?",
+    "options": ["Flight 108", "Flight 815", "Flight 42", "Flight 23"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-the-wire-setting-city",
+    "question": "The critically acclaimed HBO drama 'The Wire' is set in which U.S. city?",
+    "options": ["Philadelphia", "Baltimore", "Washington D.C.", "Newark"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tv-history-first-presidential-debate",
+    "question": "The first-ever televised U.S. presidential debate took place in 1960 between which two candidates?",
+    "options": ["Eisenhower and Stevenson", "Kennedy and Nixon", "Johnson and Goldwater", "Nixon and Humphrey"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tv-history-columbo-first-name",
+    "question": "Though rarely mentioned in the show, what first name appeared on Lieutenant Columbo's badge in several episodes?",
+    "options": ["Frank", "Philip", "Arthur", "Joseph"],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "tv-history-friends-original-title",
+    "question": "Which of the following was an early working title for the sitcom 'Friends'?",
+    "options": ["Across the Hall", "Insomnia Café", "Coffee House", "The Six of Us"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "tv-history-the-sopranos-tony-profession",
+    "question": "What does Tony Soprano tell people his legitimate profession is?",
+    "options": ["Construction Mogul", "Waste Management Consultant", "Restaurant Owner", "Import/Export Merchant"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tv-history-twin-peaks-dead-girl",
+    "question": "The central mystery of 'Twin Peaks' begins with the discovery of whose body 'wrapped in plastic'?",
+    "options": ["Donna Hayward", "Audrey Horne", "Laura Palmer", "Shelly Johnson"],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tv-history-first-transgender-series-regular",
+    "question": "Which actress became the first transgender person to be a series regular on a scripted show in 'Dirty Sexy Money'?",
+    "options": ["Laverne Cox", "Candis Cayne", "Hunter Schafer", "MJ Rodriguez"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "tv-history-dr-who-first-doctor",
+    "question": "Which actor played the First Doctor when 'Doctor Who' premiered on the BBC in 1963?",
+    "options": ["Patrick Troughton", "William Hartnell", "Jon Pertwee", "Tom Baker"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-hill-street-blues-innovation",
+    "question": "Which 1980s police drama is credited with pioneering the 'ensemble' cast and multi-episode story arcs?",
+    "options": ["Dragnet", "Hill Street Blues", "Cagney & Lacey", "The Rookies"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tv-history-first-flush-toilet",
+    "question": "Which sitcom was the first to show—and hear—a toilet flushing on screen?",
+    "options": ["Leave It to Beaver", "All in the Family", "The Jeffersons", "Maude"],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  }
 ]
+
+

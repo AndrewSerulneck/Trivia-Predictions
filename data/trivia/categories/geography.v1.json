@@ -798,5 +798,1005 @@
 "correctAnswer": 2,
 "category": "Geography",
 "difficulty": "easy"
+},
+{
+"slug": "geography-largest-country-area",
+"question": "Which country is the largest in the world by total land area?",
+"options": ["Canada", "China", "United States", "Russia"],
+"correctAnswer": 3,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-african-nation-never-colonized",
+"question": "Which of these African nations is often cited as never having been formally colonized by a European power?",
+"options": ["Nigeria", "Ethiopia", "Kenya", "Ghana"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-driest-place-earth",
+"question": "The Atacama Desert, known as the driest non-polar place on Earth, is primarily located in which country?",
+"options": ["Peru", "Chile", "Bolivia", "Argentina"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-istanbul-two-continents",
+"question": "The city of Istanbul, Turkey, is uniquely situated on which two continents?",
+"options": ["Europe and Africa", "Asia and Africa", "Europe and Asia", "Europe and Australia"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-smallest-country-world",
+"question": "Which is the smallest independent state in the world, both by area and population?",
+"options": ["Monaco", "San Marino", "Vatican City", "Liechtenstein"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-longest-river-world",
+"question": "Which river is generally considered the longest in the world?",
+"options": ["Amazon", "Nile", "Yangtze", "Mississippi"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-mount-everest-border",
+"question": "Mount Everest stands on the border between which two countries?",
+"options": ["India and China", "Nepal and India", "Nepal and China", "Bhutan and Nepal"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-country-most-islands",
+"question": "Which country has the highest number of islands in the world (over 220,000)?",
+"options": ["Indonesia", "Philippines", "Sweden", "Norway"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-dead-sea-lowest-point",
+"question": "The Dead Sea, the lowest point on land, borders Israel and which other country?",
+"options": ["Egypt", "Jordan", "Syria", "Lebanon"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-australia-largest-city",
+"question": "What is the most populous city in Australia?",
+"options": ["Canberra", "Melbourne", "Sydney", "Perth"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-canadian-province-french",
+"question": "Which Canadian province is the only one where French is the sole official language?",
+"options": ["Ontario", "New Brunswick", "Quebec", "Nova Scotia"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-lake-baikal-depth",
+"question": "Located in Russia, which lake is the deepest and oldest freshwater lake in the world?",
+"options": ["Lake Superior", "Lake Victoria", "Lake Baikal", "Lake Tanganyika"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-equator-passes-through-country",
+"question": "Through which of these South American countries does the Equator pass?",
+"options": ["Argentina", "Ecuador", "Peru", "Chile"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-great-barrier-reef-coast",
+"question": "The Great Barrier Reef is located off the coast of which Australian state?",
+"options": ["New South Wales", "Victoria", "Queensland", "Western Australia"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-japan-largest-island",
+"question": "What is the name of Japan's largest and most populous island?",
+"options": ["Hokkaido", "Kyushu", "Shikoku", "Honshu"],
+"correctAnswer": 3,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-angel-falls-country",
+"question": "Angel Falls, the world's highest uninterrupted waterfall, is located in which country?",
+"options": ["Brazil", "Venezuela", "Colombia", "Guyana"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-scandinavian-countries",
+"question": "Which of these is NOT traditionally considered one of the three Scandinavian countries?",
+"options": ["Norway", "Sweden", "Denmark", "Finland"],
+"correctAnswer": 3,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-caspian-sea-classification",
+"question": "Despite its name, the Caspian Sea is technically classified as the world's largest what?",
+"options": ["Ocean", "Lake", "Gulf", "Lagoon"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-vietnam-neighboring-countries",
+"question": "Which of the following countries does NOT share a land border with Vietnam?",
+"options": ["China", "Laos", "Cambodia", "Thailand"],
+"correctAnswer": 3,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-netherlands-capital",
+"question": "While the seat of government is in The Hague, what is the official capital city of the Netherlands?",
+"options": ["Rotterdam", "Utrecht", "Amsterdam", "Eindhoven"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-summit-furthest-from-center",
+"question": "Due to the Earth's equatorial bulge, which mountain peak is actually the furthest from the Earth's center?",
+"options": ["Mount Everest", "K2", "Mount Kilimanjaro", "Mount Chimborazo"],
+"correctAnswer": 3,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-madagascar-separation",
+"question": "Which body of water separates Madagascar from the mainland of Southeast Africa?",
+"options": ["Red Sea", "Mozambique Channel", "Gulf of Aden", "Persian Gulf"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-country-most-time-zones",
+"question": "Which country (including its overseas territories) spans the most time zones in the world?",
+"options": ["Russia", "USA", "France", "China"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-us-state-most-coastline",
+"question": "Which U.S. state has the longest coastline?",
+"options": ["Florida", "California", "Alaska", "Texas"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-swiss-capital",
+"question": "What is the 'federal city' and de facto capital of Switzerland?",
+"options": ["Zurich", "Geneva", "Bern", "Basel"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-lowest-lake-africa",
+"question": "Which saline lake in Djibouti is the lowest point in Africa?",
+"options": ["Lake Victoria", "Lake Assal", "Lake Turkana", "Lake Chad"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-brazil-official-language",
+"question": "What is the official language of Brazil?",
+"options": ["Spanish", "Portuguese", "French", "Italian"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-mount-kilimanjaro-country",
+"question": "In which country is Mount Kilimanjaro, the highest mountain in Africa, located?",
+"options": ["Kenya", "Tanzania", "Ethiopia", "Uganda"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-country-borders-most-nations",
+"question": "Which two countries are tied for bordering the most other nations (14)?",
+"options": ["Russia and China", "Brazil and Russia", "China and India", "Germany and France"],
+"correctAnswer": 0,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-smallest-ocean-world",
+"question": "Which is the smallest and shallowest of the world's five major oceans?",
+"options": ["Indian Ocean", "Southern Ocean", "Arctic Ocean", "Atlantic Ocean"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-european-country-thousands-lakes",
+"question": "Which country is known as the 'Land of a Thousand Lakes' (though it has over 180,000)?",
+"options": ["Norway", "Finland", "Sweden", "Iceland"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-largest-desert-world",
+"question": "What is the largest desert in the world?",
+"options": ["Sahara", "Gobi", "Antarctic Desert", "Arabian Desert"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-panama-canal-oceans",
+"question": "The Panama Canal connects the Atlantic Ocean with which other ocean?",
+"options": ["Indian Ocean", "Pacific Ocean", "Arctic Ocean", "Southern Ocean"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-capital-of-canada",
+"question": "What is the capital city of Canada?",
+"options": ["Toronto", "Vancouver", "Montreal", "Ottawa"],
+"correctAnswer": 3,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-southernmost-city-world",
+"question": "Which Argentine city is commonly regarded as the southernmost city in the world?",
+"options": ["Punta Arenas", "Ushuaia", "Puerto Williams", "Rio Gallegos"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-iceland-tectonic-plates",
+"question": "Iceland sits on the boundary of which two tectonic plates?",
+"options": ["African and Eurasian", "North American and Eurasian", "Pacific and North American", "Nazca and South American"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-largest-monolith-australia",
+"question": "What is the name of the massive sandstone monolith in central Australia, also known as Ayers Rock?",
+"options": ["Uluru", "Kata Tjuta", "Mount Augustus", "Wave Rock"],
+"correctAnswer": 0,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-river-through-london",
+"question": "Which river flows through the heart of London?",
+"options": ["River Seine", "River Danube", "River Thames", "River Rhine"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-only-country-continent",
+"question": "Which is the only country in the world that is also considered an entire continent?",
+"options": ["Russia", "Antarctica", "Australia", "Greenland"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-indonesia-island-most-populous",
+"question": "On which Indonesian island is the capital city, Jakarta, located?",
+"options": ["Sumatra", "Java", "Borneo", "Sulawesi"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-mountain-range-italy-spine",
+"question": "What is the name of the mountain range that forms the 'spine' of the Italian Peninsula?",
+"options": ["Alps", "Pyrenees", "Apennines", "Balkans"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-highest-lake-navigable",
+"question": "Lake Titicaca, the world's highest commercially navigable lake, sits on the border of Peru and which other country?",
+"options": ["Chile", "Bolivia", "Ecuador", "Colombia"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-largest-island-mediterranean",
+"question": "Which is the largest island in the Mediterranean Sea?",
+"options": ["Sardinia", "Cyprus", "Sicily", "Crete"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-vatican-city-enclaved",
+"question": "Vatican City is an enclaved sovereign city-state located entirely within which city?",
+"options": ["Florence", "Milan", "Rome", "Naples"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-river-crosses-equator-twice",
+"question": "Which African river is the only one in the world to cross the equator twice?",
+"options": ["Nile", "Congo", "Zambezi", "Niger"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-central-american-no-caribbean-coast",
+"question": "Which Central American country is the only one without a coastline on the Caribbean Sea?",
+"options": ["Belize", "El Salvador", "Nicaragua", "Costa Rica"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-european-country-low-lying",
+"question": "Which country is famous for having about 26% of its area located below sea level?",
+"options": ["Belgium", "Denmark", "Netherlands", "Germany"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-largest-bay-world",
+"question": "Which bay in northeastern Canada is the largest bay in the world by surface area?",
+"options": ["Bay of Bengal", "Hudson Bay", "Baffin Bay", "Bay of Biscay"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-city-of-canals-italy",
+"question": "Which Italian city is famous for its intricate system of canals and lack of roads?",
+"options": ["Venice", "Verona", "Genoa", "Palermo"],
+"correctAnswer": 0,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-himalayas-translation",
+"question": "In Sanskrit, the name 'Himalaya' translates to what?",
+"options": ["High Peaks", "Abode of Snow", "Touch the Sky", "King of Mountains"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-largest-island-world",
+"question": "Which is the largest island in the world that is not a continent?",
+"options": ["Australia", "Greenland", "New Guinea", "Borneo"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-highest-capital-city",
+"question": "At an altitude of 3,640 meters, which city is the highest administrative capital in the world?",
+"options": ["Quito", "Bogotá", "La Paz", "Addis Ababa"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-country-shares-borneo",
+"question": "Which of the following countries does NOT occupy part of the island of Borneo?",
+"options": ["Malaysia", "Brunei", "Indonesia", "Philippines"],
+"correctAnswer": 3,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-straight-of-gibraltar-continents",
+"question": "The Strait of Gibraltar connects the Atlantic Ocean to the Mediterranean Sea and separates which two continents?",
+"options": ["Europe and Africa", "Europe and Asia", "Africa and Asia", "South America and Antarctica"],
+"correctAnswer": 0,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-lake-superior-volume",
+"question": "Which of the Great Lakes of North America has the largest surface area?",
+"options": ["Lake Michigan", "Lake Huron", "Lake Erie", "Lake Superior"],
+"correctAnswer": 3,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-only-country-with-all-vowels",
+"question": "Which African country's name contains all five English vowels exactly once?",
+"options": ["Ethiopia", "Mozambique", "Nigeria", "Democratic Republic of Congo"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-smallest-us-state-area",
+"question": "Which U.S. state is the smallest by land area?",
+"options": ["Delaware", "Rhode Island", "Connecticut", "Vermont"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-mighty-mekong-delta",
+"question": "The Mekong River empties into the sea in which country?",
+"options": ["Thailand", "Vietnam", "Cambodia", "Laos"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-dead-sea-israel-neighbor",
+"question": "The Dead Sea borders Israel, the West Bank, and which other country?",
+"options": ["Egypt", "Jordan", "Lebanon", "Saudi Arabia"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-k2-mountain-range",
+"question": "K2, the world's second-highest mountain, is part of which mountain range?",
+"options": ["Himalayas", "Karakoram", "Andes", "Hindu Kush"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-country-inside-south-africa",
+"question": "Which independent kingdom is entirely enclaved within the borders of South Africa?",
+"options": ["Eswatini", "Lesotho", "Namibia", "Botswana"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-yellow-river-country",
+"question": "The Yellow River (Huang He) is the second-longest river in which country?",
+"options": ["India", "Vietnam", "China", "Japan"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-largest-archipelago-country",
+"question": "Which country is the world's largest archipelago state by number of islands?",
+"options": ["Philippines", "Indonesia", "Japan", "Maldives"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-victoria-falls-river",
+"question": "Victoria Falls is located on which African river?",
+"options": ["Nile", "Congo", "Zambezi", "Limpopo"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-iceland-capital",
+"question": "What is the northernmost capital city of a sovereign state?",
+"options": ["Oslo", "Helsinki", "Reykjavík", "Nuuk"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-prime-meridian-city",
+"question": "The Prime Meridian passes through which London borough?",
+"options": ["Chelsea", "Greenwich", "Westminster", "Camden"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-south-america-largest-city",
+"question": "By metropolitan population, what is the largest city in South America?",
+"options": ["Rio de Janeiro", "Buenos Aires", "São Paulo", "Lima"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-sahara-desert-countries",
+"question": "The Sahara Desert touches how many African countries?",
+"options": ["5", "8", "11", "15"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-land-of-fire-and-ice",
+"question": "Which country is famously nicknamed the 'Land of Fire and Ice'?",
+"options": ["New Zealand", "Iceland", "Norway", "Chile"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-pyrenees-border",
+"question": "The Pyrenees mountain range forms the natural border between which two countries?",
+"options": ["France and Italy", "France and Spain", "Spain and Portugal", "Switzerland and Austria"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-caspian-sea-borders",
+"question": "Which of these countries does NOT border the Caspian Sea?",
+"options": ["Azerbaijan", "Kazakhstan", "Uzbekistan", "Iran"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-central-american-largest-lake",
+"question": "Which country contains the largest lake in Central America?",
+"options": ["Guatemala", "Nicaragua", "Panama", "Costa Rica"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-us-state-four-corners",
+"question": "Which of the following is NOT one of the 'Four Corners' states in the U.S.?",
+"options": ["Utah", "Colorado", "Nevada", "Arizona"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-gulf-of-mexico-border",
+"question": "Besides the U.S. and Mexico, which island nation borders the Gulf of Mexico?",
+"options": ["Bahamas", "Cuba", "Jamaica", "Haiti"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-mt-fuji-island",
+"question": "On which Japanese island is Mount Fuji located?",
+"options": ["Hokkaido", "Shikoku", "Honshu", "Kyushu"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-largest-lake-africa",
+"question": "Which of the following is the largest lake in Africa by surface area?",
+"options": ["Lake Tanganyika", "Lake Malawi", "Lake Victoria", "Lake Turkana"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-matterhorn-border",
+"question": "The iconic Matterhorn mountain is located on the border between which two countries?",
+"options": ["France and Italy", "Switzerland and Italy", "Switzerland and France", "Austria and Germany"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-smallest-country-mainland-africa",
+"question": "What is the smallest country on the mainland of the African continent?",
+"options": ["Seychelles", "Gambia", "Djibouti", "Eswatini"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-city-of-seven-hills",
+"question": "Which European capital city is historically known as the 'City of Seven Hills'?",
+"options": ["Athens", "Paris", "Rome", "Lisbon"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-great-bear-lake-country",
+"question": "In which country is the Great Bear Lake located?",
+"options": ["Russia", "Canada", "USA", "Norway"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-only-vowel-less-country",
+"question": "Which of the following is the only country name in English that contains no vowels (excluding 'y')?",
+"options": ["Cyprus", "Egypt", "Kyrgyzstan", "Syria"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-dead-sea-neighbor",
+"question": "The Dead Sea is bordered by Israel, Jordan, and which other territory?",
+"options": ["Lebanon", "West Bank", "Egypt", "Syria"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-largest-peninsula-world",
+"question": "Which is the largest peninsula in the world?",
+"options": ["Indochina", "Arabian Peninsula", "Iberian Peninsula", "Scandinavian Peninsula"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-mount-etna-island",
+"question": "Mount Etna, one of the world's most active volcanoes, is located on which Italian island?",
+"options": ["Sardinia", "Capri", "Sicily", "Elba"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-country-three-capitals",
+"question": "Which country is unique for having three official capital cities: Pretoria, Cape Town, and Bloemfontein?",
+"options": ["Nigeria", "South Africa", "Bolivia", "Malaysia"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-largest-landlocked-country",
+"question": "Which country is the largest landlocked nation in the world by area?",
+"options": ["Mongolia", "Kazakhstan", "Chad", "Bolivia"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-river-danube-capital",
+"question": "The River Danube flows through more capital cities than any other river; how many does it pass through?",
+"options": ["2", "3", "4", "5"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-most-mountainous-country-europe",
+"question": "By percentage of land covered by mountains, which is the most mountainous country in Europe?",
+"options": ["Switzerland", "Austria", "Norway", "Andorra"],
+"correctAnswer": 3,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-angel-falls-river",
+"question": "Angel Falls, the world's highest waterfall, drops from a table-top mountain in which national park?",
+"options": ["Canaima", "Iguazu", "Serengeti", "Banff"],
+"correctAnswer": 0,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-world-most-populous-island",
+"question": "Which island is the most populous in the world?",
+"options": ["Great Britain", "Honshu", "Java", "Manhattan"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-lowest-point-north-america",
+"question": "What is the lowest point in North America, located in California's Death Valley?",
+"options": ["Badwater Basin", "Salton Sea", "Laguna del Carbon", "Dead Sea"],
+"correctAnswer": 0,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-canary-islands-country",
+"question": "The Canary Islands are an archipelago belonging to which country?",
+"options": ["Portugal", "Spain", "Morocco", "France"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-straight-of-magellan-country",
+"question": "The Strait of Magellan is located almost entirely within the territorial waters of which country?",
+"options": ["Argentina", "Chile", "Peru", "Brazil"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-largest-freshwater-lake-volume",
+"question": "While Lake Superior has the most surface area, which lake contains the largest volume of fresh water (20% of Earth's total)?",
+"options": ["Lake Baikal", "Lake Victoria", "Lake Michigan", "Lake Tanganyika"],
+"correctAnswer": 0,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-country-borders-belgium",
+"question": "Which of the following countries does NOT share a border with Belgium?",
+"options": ["France", "Netherlands", "Switzerland", "Luxembourg"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-atacama-desert-continent",
+"question": "On which continent is the Atacama Desert located?",
+"options": ["Africa", "Asia", "South America", "Australia"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-blue-nile-white-nile-meet",
+"question": "In which city do the Blue Nile and White Nile rivers meet to form the Nile River?",
+"options": ["Cairo", "Khartoum", "Addis Ababa", "Juba"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-great-dividing-range-country",
+"question": "The Great Dividing Range is a major mountain range located in which country?",
+"options": ["Canada", "Australia", "New Zealand", "South Africa"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-central-american-no-pacific-coast",
+"question": "Which Central American country is the only one without a coastline on the Pacific Ocean?",
+"options": ["Honduras", "Belize", "Panama", "Guatemala"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-gobi-desert-countries",
+"question": "The Gobi Desert spans across parts of which two countries?",
+"options": ["China and India", "China and Mongolia", "Russia and Kazakhstan", "Mongolia and Russia"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-most-populous-country-2023",
+"question": "As of 2023, which country officially surpassed China to become the world's most populous nation?",
+"options": ["USA", "Indonesia", "India", "Brazil"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-land-of-rising-sun",
+"question": "Which country is famously known by the nickname 'The Land of the Rising Sun'?",
+"options": ["South Korea", "China", "Japan", "Thailand"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-largest-country-africa-area",
+"question": "Which is the largest country in Africa by total land area?",
+"options": ["Algeria", "Nigeria", "Egypt", "Sudan"],
+"correctAnswer": 0,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-mount-olympus-country",
+"question": "Mount Olympus, the highest mountain in its country and mythical home of the gods, is located where?",
+"options": ["Italy", "Greece", "Turkey", "Cyprus"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-strait-of-hormuz-connection",
+"question": "The Strait of Hormuz is a strategically vital waterway linking the Persian Gulf with which body of water?",
+"options": ["Red Sea", "Gulf of Oman", "Caspian Sea", "Dead Sea"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-largest-city-europe-population",
+"question": "Which city is the most populous in Europe (counting the city proper, excluding metro areas)?",
+"options": ["London", "Berlin", "Istanbul", "Moscow"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-only-landlocked-country-southeast-asia",
+"question": "Which is the only landlocked country in Southeast Asia?",
+"options": ["Cambodia", "Laos", "Vietnam", "Myanmar"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-balkan-peninsula-largest-country",
+"question": "Which of these countries is the largest by area on the Balkan Peninsula?",
+"options": ["Greece", "Bulgaria", "Romania", "Serbia"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-equator-prime-meridian-meet",
+"question": "The Equator and the Prime Meridian meet at a point in the Atlantic Ocean known as 'Null Island,' located in which gulf?",
+"options": ["Gulf of Mexico", "Gulf of Guinea", "Gulf of Aden", "Persian Gulf"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-country-most-lakes-total",
+"question": "Which country contains more than half of the world's natural lakes?",
+"options": ["Russia", "Canada", "USA", "Brazil"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-tallest-volcano-earth",
+"question": "Mauna Kea is technically the tallest mountain on Earth when measured from its base on the ocean floor; in which US state is it located?",
+"options": ["California", "Alaska", "Hawaii", "Washington"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-longest-mountain-range-world",
+"question": "Which is the longest continental mountain range in the world?",
+"options": ["Rockies", "Himalayas", "Andes", "Alps"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-lake-geneva-border",
+"question": "Lake Geneva is shared between Switzerland and which other country?",
+"options": ["Italy", "Germany", "Austria", "France"],
+"correctAnswer": 3,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-city-built-on-islands-mexico",
+"question": "Which modern-day capital city was originally built on an island in Lake Texcoco by the Aztecs?",
+"options": ["Lima", "Mexico City", "Bogotá", "Santiago"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-smallest-continent-land-area",
+"question": "Which is the smallest continent in the world by land area?",
+"options": ["Europe", "Antarctica", "Australia", "South America"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-river-rhine-source-country",
+"question": "In which country does the River Rhine originate?",
+"options": ["Germany", "Switzerland", "Austria", "Netherlands"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-greenland-territory-of",
+"question": "Greenland is an autonomous territory belonging to which European country?",
+"options": ["Norway", "Iceland", "Denmark", "United Kingdom"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-largest-country-south-america",
+"question": "Which country is the largest in South America by both area and population?",
+"options": ["Argentina", "Colombia", "Peru", "Brazil"],
+"correctAnswer": 3,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-baltic-states-list",
+"question": "Which of the following is NOT one of the three Baltic states?",
+"options": ["Estonia", "Latvia", "Lithuania", "Belarus"],
+"correctAnswer": 3,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-dead-sea-lowest-point-salt",
+"question": "The Dead Sea is famous for being so salty that people can easily float in it; what is its approximate salt concentration compared to the ocean?",
+"options": ["2 times", "5 times", "10 times", "25 times"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "hard"
+},
+{
+"slug": "geography-kalahari-desert-location",
+"question": "The Kalahari Desert is primarily located in which part of Africa?",
+"options": ["North", "East", "Southern", "West"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-australia-capital-city",
+"question": "What is the capital city of Australia, purpose-built to resolve the rivalry between Sydney and Melbourne?",
+"options": ["Brisbane", "Canberra", "Adelaide", "Perth"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-largest-island-in-caribbean",
+"question": "Which is the largest island in the Caribbean Sea?",
+"options": ["Hispaniola", "Jamaica", "Cuba", "Puerto Rico"],
+"correctAnswer": 2,
+"category": "Geography",
+"difficulty": "easy"
+},
+{
+"slug": "geography-river-ganges-holy-city",
+"question": "The Ganges River is considered sacred in Hinduism; which city is famous for its 'ghats' leading down to the river?",
+"options": ["Mumbai", "Varanasi", "New Delhi", "Kolkata"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
+},
+{
+"slug": "geography-mount-cook-highest-peak",
+"question": "Aoraki (Mount Cook) is the highest peak in which country?",
+"options": ["Australia", "New Zealand", "Canada", "Norway"],
+"correctAnswer": 1,
+"category": "Geography",
+"difficulty": "medium"
 }
 ]

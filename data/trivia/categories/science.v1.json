@@ -878,5 +878,1005 @@
 "correctAnswer": 1,
 "category": "Science",
 "difficulty": "easy"
+},
+{
+"slug": "hottest-planet-solar-system",
+"question": "Which planet is the hottest in our solar system, with surface temperatures high enough to melt lead?",
+"options": ["Mercury", "Venus", "Mars", "Jupiter"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "chemical-symbol-for-gold",
+"question": "What is the chemical symbol for the element Gold?",
+"options": ["Gd", "Ag", "Au", "Fe"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "human-body-largest-organ",
+"question": "What is the largest organ in the human body?",
+"options": ["Liver", "Brain", "Skin", "Lungs"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "powerhouse-of-the-cell",
+"question": "Which organelle is often referred to as the 'powerhouse' of the cell?",
+"options": ["Nucleus", "Ribosome", "Mitochondria", "Golgi Apparatus"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "speed-of-light-vacuum",
+"question": "Approximately how fast does light travel in a vacuum?",
+"options": ["300,000 km/s", "150,000 km/s", "1,000,000 km/s", "30,000 km/s"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "absolute-zero-celsius",
+"question": "What is the temperature of absolute zero in degrees Celsius?",
+"options": ["0°C", "-100°C", "-273.15°C", "-459.67°C"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "dna-structure-shape",
+"question": "What is the name for the twisted ladder shape of a DNA molecule?",
+"options": ["Single Helix", "Double Helix", "Triple Coil", "Beta Sheet"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "noble-gas-atomic-number-2",
+"question": "Which noble gas has the atomic number 2?",
+"options": ["Neon", "Argon", "Helium", "Krypton"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "hardest-natural-substance",
+"question": "What is the hardest known natural substance on Earth?",
+"options": ["Steel", "Quartz", "Diamond", "Corundum"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "atmosphere-most-abundant-gas",
+"question": "Which gas makes up approximately 78% of the Earth's atmosphere?",
+"options": ["Oxygen", "Carbon Dioxide", "Nitrogen", "Argon"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "earth-internal-layers-order",
+"question": "Moving from the outside to the inside, what is the correct order of Earth's layers?",
+"options": ["Crust, Mantle, Core", "Mantle, Crust, Core", "Core, Mantle, Crust", "Crust, Core, Mantle"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "noble-prize-marie-curie",
+"question": "Marie Curie was the first person to win two Nobel Prizes in which two different scientific fields?",
+"options": ["Physics and Chemistry", "Physics and Biology", "Chemistry and Medicine", "Physics and Mathematics"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "sound-travel-speed-medium",
+"question": "Through which of these mediums does sound travel the fastest?",
+"options": ["Air", "Water", "Steel", "Vacuum"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "periodic-table-liquid-metal",
+"question": "Which metal is the only one that is liquid at standard room temperature?",
+"options": ["Gallium", "Mercury", "Bromine", "Cesium"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "human-skeleton-bone-count",
+"question": "How many bones are in the average adult human body?",
+"options": ["186", "206", "256", "306"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "photosynthesis-byproduct",
+"question": "What gas do plants release as a byproduct of photosynthesis?",
+"options": ["Carbon Dioxide", "Nitrogen", "Oxygen", "Methane"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "planets-great-red-spot",
+"question": "Which planet is famous for its 'Great Red Spot,' a persistent high-pressure storm?",
+"options": ["Saturn", "Mars", "Jupiter", "Neptune"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "blood-type-universal-donor",
+"question": "Which blood type is considered the universal donor?",
+"options": ["A positive", "B negative", "AB positive", "O negative"],
+"correctAnswer": 3,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "ph-scale-neutral-value",
+"question": "What is the pH level of pure water?",
+"options": ["1", "5", "7", "14"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "theory-of-relativity-physicist",
+"question": "Which physicist is responsible for the Special and General Theories of Relativity?",
+"options": ["Isaac Newton", "Albert Einstein", "Niels Bohr", "Stephen Hawking"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "ear-smallest-bone",
+"question": "What is the name of the smallest bone in the human body, located in the ear?",
+"options": ["Malleus", "Incus", "Stapes", "Cochlea"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "chemistry-avogadro-number",
+"question": "Avogadro's number represents the number of units in one what?",
+"options": ["Gram", "Mole", "Liter", "Isotope"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "geology-igneous-rock-formation",
+"question": "How is igneous rock formed?",
+"options": ["Compaction of sediment", "Cooling of magma or lava", "Heat and pressure on existing rock", "Erosion by water"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "biology-primatologist-chimpanzees",
+"question": "Which scientist is world-renowned for her long-term study of wild chimpanzees in Tanzania?",
+"options": ["Dian Fossey", "Jane Goodall", "Rachel Carson", "Birutė Galdikas"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "physics-newtons-first-law",
+"question": "Newton's First Law of Motion is also known as the Law of what?",
+"options": ["Gravity", "Inertia", "Reaction", "Acceleration"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "jupiter-moons-count",
+"question": "Which moon of Jupiter is the most volcanically active body in the solar system?",
+"options": ["Europa", "Ganymede", "Io", "Callisto"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "chemistry-table-salt",
+"question": "What is the chemical name for common table salt?",
+"options": ["Sodium Chloride", "Potassium Chloride", "Sodium Bicarbonate", "Calcium Carbonate"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "physics-light-refraction",
+"question": "What is the term for the bending of light as it passes from one medium to another?",
+"options": ["Reflection", "Refraction", "Diffraction", "Dispersion"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "biology-atp-full-name",
+"question": "What does the abbreviation ATP stand for in biochemistry?",
+"options": ["Adenosine Triphosphate", "Amino Trinitrate Phosphate", "Adenine Type Protein", "Ammonium Tertiary Phosphate"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "space-nebula-definition",
+"question": "What is a nebula in space?",
+"options": ["A dying star", "A giant cloud of dust and gas", "A type of black hole", "A small rocky planet"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "geology-mohs-scale-talc",
+"question": "What is the softest mineral on the Mohs scale?",
+"options": ["Gypsum", "Talc", "Calcite", "Fluorite"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "physics-quantum-unit",
+"question": "What is the smallest discrete unit of a phenomenon, such as light, in quantum theory?",
+"options": ["Atom", "Molecule", "Quantum", "Electron"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "biology-longest-cell",
+"question": "Which type of cell in the human body can be over a meter long?",
+"options": ["Muscle cell", "Red blood cell", "Neuron", "Skin cell"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "chemistry-atomic-mass-unit",
+"question": "Which element's isotope is used as the standard for defining the atomic mass unit?",
+"options": ["Hydrogen-1", "Oxygen-16", "Carbon-12", "Helium-4"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "space-andromeda-galaxy",
+"question": "What is the name of the nearest major galaxy to the Milky Way?",
+"options": ["Andromeda", "Sombrero", "Whirlpool", "Triangulum"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "biology-enzyme-definition",
+"question": "What type of biological molecule acts as a catalyst to speed up chemical reactions?",
+"options": ["Lipid", "Carbohydrate", "Enzyme", "Vitamin"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "physics-unit-of-force",
+"question": "What is the SI unit of force?",
+"options": ["Joule", "Watt", "Newton", "Pascal"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "chemistry-dry-ice-composition",
+"question": "Dry ice is the solid form of which gas?",
+"options": ["Nitrogen", "Oxygen", "Carbon Dioxide", "Helium"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "biology-double-circulation",
+"question": "How many chambers are in the human heart?",
+"options": ["2", "3", "4", "5"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "space-saturn-density",
+"question": "Which planet in our solar system has a density so low it could float in water?",
+"options": ["Jupiter", "Uranus", "Neptune", "Saturn"],
+"correctAnswer": 3,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "geology-pangea-supercontinent",
+"question": "What was the name of the supercontinent that existed about 300 million years ago?",
+"options": ["Gondwana", "Laurasia", "Pangea", "Rodinia"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "physics-thermodynamics-entropy",
+"question": "The Second Law of Thermodynamics states that what property of an isolated system always increases over time?",
+"options": ["Energy", "Entropy", "Mass", "Temperature"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "biology-insulin-production",
+"question": "Which organ in the human body produces insulin?",
+"options": ["Liver", "Pancreas", "Gallbladder", "Spleen"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "chemistry-rare-earth-metals",
+"question": "Which group of 15 metallic elements has atomic numbers 57 through 71?",
+"options": ["Actinides", "Lanthanides", "Alkali Metals", "Halogens"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "physics-escape-velocity-earth",
+"question": "Approximately what is the escape velocity required to leave Earth's gravity?",
+"options": ["5 km/s", "8 km/s", "11.2 km/s", "25 km/s"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "biology-mycology-study",
+"question": "Mycology is the branch of biology concerned with the study of what?",
+"options": ["Muscles", "Fungi", "Mice", "Algae"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "chemistry-ph-litmus-color",
+"question": "What color does blue litmus paper turn when exposed to an acid?",
+"options": ["Green", "Yellow", "Red", "Purple"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "space-venus-rotation",
+"question": "In which direction does Venus rotate on its axis compared to most other planets?",
+"options": ["Clockwise (Retrograde)", "Counter-clockwise", "North to South", "It does not rotate"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "biology-homo-sapiens-translation",
+"question": "What does the Latin name 'Homo sapiens' translate to in English?",
+"options": ["Upright Man", "Wise Man", "Strong Man", "Working Man"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "physics-convection-heat-transfer",
+"question": "What is the process of heat transfer through the movement of liquids or gases?",
+"options": ["Radiation", "Conduction", "Convection", "Induction"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "chemistry-periodic-table-k",
+"question": "Which element is represented by the chemical symbol 'K'?",
+"options": ["Krypton", "Potassium", "Keratin", "Kalium"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "biology-dna-nitrogenous-bases",
+"question": "Which of these is NOT one of the four nitrogenous bases found in DNA?",
+"options": ["Adenine", "Uracil", "Guanine", "Cytosine"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "physics-unit-of-electrical-resistance",
+"question": "What is the SI unit of electrical resistance?",
+"options": ["Volt", "Ampere", "Ohm", "Watt"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "space-sun-core-process",
+"question": "What is the primary process that powers the Sun and other stars?",
+"options": ["Nuclear Fission", "Chemical Combustion", "Nuclear Fusion", "Gravitational Collapse"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "biology-human-teeth-types",
+"question": "Which type of human teeth are designed for grinding and crushing food?",
+"options": ["Incisors", "Canines", "Molars", "Premolars"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "chemistry-atomic-nucleus-discovery",
+"question": "Which scientist discovered the atomic nucleus through the Gold Foil Experiment?",
+"options": ["J.J. Thomson", "Ernest Rutherford", "Niels Bohr", "James Chadwick"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "geology-tsunami-cause",
+"question": "What is the most common cause of a tsunami?",
+"options": ["Underwater Volcanic Eruptions", "Underwater Earthquakes", "Surface Winds", "Lunar Gravity"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "physics-terminal-velocity",
+"question": "What occurs when the force of air resistance equals the force of gravity on a falling object?",
+"options": ["Zero Gravity", "Acceleration", "Terminal Velocity", "Vacuum"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "biology-chlorophyll-color",
+"question": "Chlorophyll absorbs red and blue light, but reflects which color, giving plants their hue?",
+"options": ["Yellow", "Orange", "Green", "Blue"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "space-asteroid-belt-location",
+"question": "The main asteroid belt is located between the orbits of which two planets?",
+"options": ["Earth and Mars", "Mars and Jupiter", "Jupiter and Saturn", "Venus and Earth"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "chemistry-noble-gases-reactivity",
+"question": "Why are noble gases generally unreactive?",
+"options": ["They have no electrons", "They have a full outer electron shell", "They are too heavy", "They only exist as solids"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "physics-light-particle-name",
+"question": "What is the name for a discrete packet or 'particle' of light?",
+"options": ["Proton", "Neutron", "Photon", "Electron"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "biology-mitosis-stages",
+"question": "In which stage of mitosis do the chromosomes line up in the middle of the cell?",
+"options": ["Prophase", "Metaphase", "Anaphase", "Telophase"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "geology-continental-drift-theory",
+"question": "Which scientist proposed the theory of Continental Drift in 1912?",
+"options": ["Charles Darwin", "Alfred Wegener", "Harry Hess", "James Hutton"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "chemistry-ph-alkaline-range",
+"question": "A substance with a pH of 12 would be considered what?",
+"options": ["Highly Acidic", "Slightly Acidic", "Neutral", "Highly Alkaline"],
+"correctAnswer": 3,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "physics-sound-frequency-unit",
+"question": "What unit is used to measure the frequency of sound?",
+"options": ["Decibels", "Hertz", "Watts", "Newtons"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "space-voyager-1-message",
+"question": "What is attached to Voyager 1 and 2 that contains sounds and images of Earth?",
+"options": ["The Golden Record", "The Silver Plaque", "The Earth Disc", "The Star Map"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "biology-vestigial-structure",
+"question": "What is the term for a structure that has lost its original function through evolution, like the human appendix?",
+"options": ["Homologous", "Analogous", "Vestigial", "Atrophied"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "chemistry-atomic-mass-sum",
+"question": "The mass number of an atom is determined by adding the number of protons and what?",
+"options": ["Electrons", "Neutrons", "Positrons", "Photons"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "physics-conduction-definition",
+"question": "What is the transfer of heat through direct contact between materials?",
+"options": ["Convection", "Radiation", "Conduction", "Insulation"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "space-first-human-space",
+"question": "Who was the first human to travel into outer space in 1961?",
+"options": ["Neil Armstrong", "Buzz Aldrin", "Yuri Gagarin", "John Glenn"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "biology-taxonomy-levels",
+"question": "In biological taxonomy, which level comes immediately below 'Family'?",
+"options": ["Order", "Genus", "Species", "Class"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "geology-earthquake-magnitude-scale",
+"question": "Which logarithmic scale is most commonly used by scientists to describe the total energy released by an earthquake?",
+"options": ["Richter Scale", "Mercalli Scale", "Moment Magnitude Scale", "Beaufort Scale"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "chemistry-halogens-group",
+"question": "Fluorine, Chlorine, Bromine, and Iodine belong to which group on the periodic table?",
+"options": ["Noble Gases", "Alkali Metals", "Halogens", "Chalcogens"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "physics-electromagnetic-spectrum-highest-energy",
+"question": "Which type of electromagnetic radiation has the shortest wavelength and highest energy?",
+"options": ["Radio Waves", "Ultraviolet", "X-rays", "Gamma Rays"],
+"correctAnswer": 3,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "biology-atp-synthase-location",
+"question": "In which part of the mitochondria is the enzyme ATP synthase located?",
+"options": ["Outer membrane", "Intermembrane space", "Inner membrane (cristae)", "Matrix"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "chemistry-sublimation-definition",
+"question": "What is the term for a substance changing directly from a solid to a gas without becoming a liquid?",
+"options": ["Evaporation", "Deposition", "Sublimation", "Condensation"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "physics-hadrons-quarks-count",
+"question": "How many quarks make up a single proton?",
+"options": ["Two", "Three", "Four", "Six"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "space-kuiper-belt-object",
+"question": "Which of these is a prominent icy object located in the Kuiper Belt?",
+"options": ["Ceres", "Pluto", "Vesta", "Pallas"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "biology-organism-classification-domain",
+"question": "What is the highest (broadest) rank in the hierarchical biological classification of life?",
+"options": ["Kingdom", "Phylum", "Domain", "Order"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "chemistry-allotrope-carbon-soft",
+"question": "Which allotrope of carbon is used as a lubricant and in pencil leads?",
+"options": ["Diamond", "Graphite", "Fullerene", "Graphene"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "physics-coulomb-law-charge",
+"question": "Coulomb's Law describes the force between two what?",
+"options": ["Magnets", "Masses", "Electrical Charges", "Photons"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "geology-stale-stalactite-difference",
+"question": "Which mineral formations grow upwards from the floor of a cave?",
+"options": ["Stalactites", "Stalagmites", "Columns", "Helictites"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "biology-ribosome-function",
+"question": "What is the primary function of ribosomes within a cell?",
+"options": ["Lipid synthesis", "Energy production", "Protein synthesis", "Waste disposal"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "chemistry-electronegativity-highest-element",
+"question": "Which element has the highest electronegativity on the Pauling scale?",
+"options": ["Oxygen", "Fluorine", "Chlorine", "Nitrogen"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "physics-kinetic-energy-formula",
+"question": "Kinetic energy is the energy an object possesses due to its what?",
+"options": ["Position", "Mass", "Motion", "Temperature"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "space-sun-outermost-layer",
+"question": "What is the name of the outermost layer of the Sun's atmosphere, visible during a total solar eclipse?",
+"options": ["Photosphere", "Chromosphere", "Core", "Corona"],
+"correctAnswer": 3,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "biology-phloem-transport",
+"question": "In vascular plants, which tissue is responsible for transporting sugars from the leaves to the rest of the plant?",
+"options": ["Xylem", "Phloem", "Cambium", "Pith"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "chemistry-isotope-neutron-difference",
+"question": "Isotopes of the same element have a different number of what?",
+"options": ["Protons", "Electrons", "Neutrons", "Positrons"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "physics-uncertainty-principle-physicist",
+"question": "Which physicist formulated the 'Uncertainty Principle' in 1927?",
+"options": ["Erwin Schrödinger", "Werner Heisenberg", "Max Planck", "Richard Feynman"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "geology-earth-crust-most-abundant-element",
+"question": "What is the most abundant element in the Earth's crust by mass?",
+"options": ["Silicon", "Iron", "Oxygen", "Aluminum"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "biology-symbiosis-mutualism",
+"question": "What is the term for a symbiotic relationship where both species benefit?",
+"options": ["Commensalism", "Parasitism", "Mutualism", "Competition"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "chemistry-exothermic-reaction",
+"question": "A chemical reaction that releases energy in the form of heat is called what?",
+"options": ["Endothermic", "Exothermic", "Isothermal", "Adiabatic"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "physics-speed-of-sound-air",
+"question": "At sea level and 20°C, approximately what is the speed of sound in air?",
+"options": ["143 m/s", "343 m/s", "543 m/s", "743 m/s"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "space-hubble-constant-purpose",
+"question": "The Hubble Constant is a unit used to describe the rate of what?",
+"options": ["Star formation", "Planetary rotation", "Expansion of the universe", "Black hole decay"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "biology-central-nervous-system-parts",
+"question": "The central nervous system consists of the brain and which other structure?",
+"options": ["Spinal Cord", "Peripheral Nerves", "Autonomic System", "Cerebellum"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "chemistry-bronsted-lowry-acid",
+"question": "According to the Brønsted-Lowry theory, an acid is a substance that can donate what?",
+"options": ["An electron pair", "A hydroxide ion", "A proton (hydrogen ion)", "A neutron"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "physics-ohm-law-equation",
+"question": "According to Ohm's Law, Voltage (V) equals Current (I) multiplied by what?",
+"options": ["Capacitance", "Resistance", "Inductance", "Power"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "geology-lithosphere-composition",
+"question": "The Earth's lithosphere is composed of the crust and which other part?",
+"options": ["Inner Core", "Outer Core", "Upper Mantle", "Asthenosphere"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "biology-mendel-genetics-plant",
+"question": "Gregor Mendel used which type of plant to discover the fundamental laws of inheritance?",
+"options": ["Corn", "Fruit Flies", "Pea Plants", "Snapdragons"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "biology-atp-synthase-location",
+"question": "In which part of the mitochondria is the enzyme ATP synthase located?",
+"options": ["Outer membrane", "Intermembrane space", "Inner membrane (cristae)", "Matrix"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "chemistry-sublimation-definition",
+"question": "What is the term for a substance changing directly from a solid to a gas without becoming a liquid?",
+"options": ["Evaporation", "Deposition", "Sublimation", "Condensation"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "physics-hadrons-quarks-count",
+"question": "How many quarks make up a single proton?",
+"options": ["Two", "Three", "Four", "Six"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "space-kuiper-belt-object",
+"question": "Which of these is a prominent icy object located in the Kuiper Belt?",
+"options": ["Ceres", "Pluto", "Vesta", "Pallas"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "biology-organism-classification-domain",
+"question": "What is the highest (broadest) rank in the hierarchical biological classification of life?",
+"options": ["Kingdom", "Phylum", "Domain", "Order"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "chemistry-allotrope-carbon-soft",
+"question": "Which allotrope of carbon is used as a lubricant and in pencil leads?",
+"options": ["Diamond", "Graphite", "Fullerene", "Graphene"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "physics-coulomb-law-charge",
+"question": "Coulomb's Law describes the force between two what?",
+"options": ["Magnets", "Masses", "Electrical Charges", "Photons"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "geology-stale-stalactite-difference",
+"question": "Which mineral formations grow upwards from the floor of a cave?",
+"options": ["Stalactites", "Stalagmites", "Columns", "Helictites"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "biology-ribosome-function",
+"question": "What is the primary function of ribosomes within a cell?",
+"options": ["Lipid synthesis", "Energy production", "Protein synthesis", "Waste disposal"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "chemistry-electronegativity-highest-element",
+"question": "Which element has the highest electronegativity on the Pauling scale?",
+"options": ["Oxygen", "Fluorine", "Chlorine", "Nitrogen"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "physics-kinetic-energy-formula",
+"question": "Kinetic energy is the energy an object possesses due to its what?",
+"options": ["Position", "Mass", "Motion", "Temperature"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "space-sun-outermost-layer",
+"question": "What is the name of the outermost layer of the Sun's atmosphere, visible during a total solar eclipse?",
+"options": ["Photosphere", "Chromosphere", "Core", "Corona"],
+"correctAnswer": 3,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "biology-phloem-transport",
+"question": "In vascular plants, which tissue is responsible for transporting sugars from the leaves to the rest of the plant?",
+"options": ["Xylem", "Phloem", "Cambium", "Pith"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "chemistry-isotope-neutron-difference",
+"question": "Isotopes of the same element have a different number of what?",
+"options": ["Protons", "Electrons", "Neutrons", "Positrons"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "physics-uncertainty-principle-physicist",
+"question": "Which physicist formulated the 'Uncertainty Principle' in 1927?",
+"options": ["Erwin Schrödinger", "Werner Heisenberg", "Max Planck", "Richard Feynman"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "geology-earth-crust-most-abundant-element",
+"question": "What is the most abundant element in the Earth's crust by mass?",
+"options": ["Silicon", "Iron", "Oxygen", "Aluminum"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "biology-symbiosis-mutualism",
+"question": "What is the term for a symbiotic relationship where both species benefit?",
+"options": ["Commensalism", "Parasitism", "Mutualism", "Competition"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "chemistry-exothermic-reaction",
+"question": "A chemical reaction that releases energy in the form of heat is called what?",
+"options": ["Endothermic", "Exothermic", "Isothermal", "Adiabatic"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "physics-speed-of-sound-air",
+"question": "At sea level and 20°C, approximately what is the speed of sound in air?",
+"options": ["143 m/s", "343 m/s", "543 m/s", "743 m/s"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "space-hubble-constant-purpose",
+"question": "The Hubble Constant is a unit used to describe the rate of what?",
+"options": ["Star formation", "Planetary rotation", "Expansion of the universe", "Black hole decay"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "biology-central-nervous-system-parts",
+"question": "The central nervous system consists of the brain and which other structure?",
+"options": ["Spinal Cord", "Peripheral Nerves", "Autonomic System", "Cerebellum"],
+"correctAnswer": 0,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "chemistry-bronsted-lowry-acid",
+"question": "According to the Brønsted-Lowry theory, an acid is a substance that can donate what?",
+"options": ["An electron pair", "A hydroxide ion", "A proton (hydrogen ion)", "A neutron"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "hard"
+},
+{
+"slug": "physics-ohm-law-equation",
+"question": "According to Ohm's Law, Voltage (V) equals Current (I) multiplied by what?",
+"options": ["Capacitance", "Resistance", "Inductance", "Power"],
+"correctAnswer": 1,
+"category": "Science",
+"difficulty": "easy"
+},
+{
+"slug": "geology-lithosphere-composition",
+"question": "The Earth's lithosphere is composed of the crust and which other part?",
+"options": ["Inner Core", "Outer Core", "Upper Mantle", "Asthenosphere"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "medium"
+},
+{
+"slug": "biology-mendel-genetics-plant",
+"question": "Gregor Mendel used which type of plant to discover the fundamental laws of inheritance?",
+"options": ["Corn", "Fruit Flies", "Pea Plants", "Snapdragons"],
+"correctAnswer": 2,
+"category": "Science",
+"difficulty": "easy"
 }
 ]

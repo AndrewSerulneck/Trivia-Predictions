@@ -958,5 +958,405 @@
 "correctAnswer": 1,
 "category": "History",
 "difficulty": "easy"
-}
+},
+{
+"slug": "history-magna-carta-signing-year",
+"question": "In what year was the Magna Carta signed by King John at Runnymede?",
+"options": ["1066", "1215", "1492", "1776"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "history-french-revolution-bastille",
+"question": "The storming of which prison in 1789 is considered the start of the French Revolution?",
+"options": ["The Conciergerie", "The Bastille", "Château d'If", "The Tower"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "history-first-woman-noble-prize",
+"question": "Who was the first woman to win a Nobel Prize, awarded in 1903 for Physics?",
+"options": ["Marie Curie", "Ada Lovelace", "Rosalind Franklin", "Florence Nightingale"],
+"correctAnswer": 0,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "history-ancient-egypt-rosetta-stone",
+"question": "The Rosetta Stone was the key to deciphering which ancient writing system?",
+"options": ["Cuneiform", "Sanskrit", "Hieroglyphics", "Phoenician"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "history-black-death-century",
+"question": "The Black Death plague ravaged Europe primarily during which century?",
+"options": ["12th Century", "13th Century", "14th Century", "15th Century"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "history-usa-louisiana-purchase-country",
+"question": "From which country did the United States purchase the Louisiana Territory in 1803?",
+"options": ["Spain", "Great Britain", "France", "Russia"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "history-roman-empire-first-emperor",
+"question": "Who is considered the first official Emperor of the Roman Empire?",
+"options": ["Julius Caesar", "Augustus", "Nero", "Caligula"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "history-fall-of-berlin-wall",
+"question": "In which year did the Berlin Wall fall, signaling the end of the Cold War?",
+"options": ["1987", "1989", "1991", "1993"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "history-world-war-i-assassination",
+"question": "The assassination of which Archduke sparked the beginning of World War I?",
+"options": ["Franz Ferdinand", "Maximilian I", "Rudolf", "Otto von Bismarck"],
+"correctAnswer": 0,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "history-aztec-empire-conqueror",
+"question": "Which Spanish conquistador led the expedition that caused the fall of the Aztec Empire?",
+"options": ["Francisco Pizarro", "Hernán Cortés", "Juan Ponce de León", "Vasco Núñez de Balboa"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "history-invention-printing-press",
+"question": "Who is credited with inventing the movable-type printing press in Europe around 1440?",
+"options": ["Leonardo da Vinci", "Johannes Gutenberg", "Isaac Newton", "Galileo Galilei"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "history-apartheid-end-south-africa",
+"question": "Who became the first black president of South Africa in 1994 after the end of apartheid?",
+"options": ["Desmond Tutu", "Nelson Mandela", "F.W. de Klerk", "Thabo Mbeki"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "history-ancient-greece-alexander-tutor",
+"question": "Which famous philosopher was the personal tutor to Alexander the Great?",
+"options": ["Socrates", "Plato", "Aristotle", "Epicurus"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "history-usa-civil-war-start-fort",
+"question": "The first shots of the American Civil War were fired at which fort in 1861?",
+"options": ["Fort McHenry", "Fort Sumter", "Fort Knox", "Fort Ticonderoga"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "history-titanic-sinking-year",
+"question": "The RMS Titanic sank on its maiden voyage in which year?",
+"options": ["1908", "1912", "1915", "1920"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "history-soviet-union-first-leader",
+"question": "Who was the primary leader and founder of the Russian Communist Party (Bolsheviks)?",
+"options": ["Joseph Stalin", "Leon Trotsky", "Vladimir Lenin", "Mikhail Gorbachev"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "history-industrial-revolution-steam-engine",
+"question": "Which inventor significantly improved the steam engine, fueling the Industrial Revolution?",
+"options": ["James Watt", "Eli Whitney", "Robert Fulton", "George Stephenson"],
+"correctAnswer": 0,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "history-england-war-of-the-roses",
+"question": "The War of the Roses was fought between which two royal houses of England?",
+"options": ["Tudor and Stuart", "Lancaster and York", "Windsor and Hanover", "Plantagenet and Valois"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "history-independence-india-year",
+"question": "In which year did India gain independence from British rule?",
+"options": ["1945", "1947", "1950", "1952"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "history-mayflower-landing-year",
+"question": "The Pilgrims landed at Plymouth Rock aboard the Mayflower in which year?",
+"options": ["1492", "1588", "1620", "1776"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "easy"
+},
+{
+"slug": "history-ancient-rome-crossing-rubicon",
+"question": "Which Roman general famously 'crossed the Rubicon' in 49 BC?",
+"options": ["Mark Antony", "Pompey the Great", "Julius Caesar", "Scipio Africanus"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "history-world-war-ii-dday-date",
+"question": "The D-Day invasion of Normandy took place on June 6 of which year?",
+"options": ["1942", "1943", "1944", "1945"],
+"correctAnswer": 2,
+"category": "History",
+"difficulty": "medium"
+},
+{
+"slug": "history-ottoman-empire-fall-of-constantinople",
+"question": "The Ottoman Empire captured Constantinople in 1453, ending which empire?",
+"options": ["Holy Roman Empire", "Byzantine Empire", "Persian Empire", "Mongol Empire"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "history-viking-first-raid-england",
+"question": "The Viking Age is often dated to have begun with the raid on which English monastery in 793?",
+"options": ["Lindisfarne", "Iona", "Whitby", "Jarrow"],
+"correctAnswer": 0,
+"category": "History",
+"difficulty": "hard"
+},
+{
+"slug": "history-us-constitution-ratification-year",
+"question": "While the Declaration of Independence was 1776, in what year was the U.S. Constitution ratified?",
+"options": ["1783", "1788", "1791", "1800"],
+"correctAnswer": 1,
+"category": "History",
+"difficulty": "hard"
+},
+{
+    "slug": "history-invention-of-the-wheel-civilization",
+    "question": "Which ancient Mesopotamian civilization is credited with the first known use of the wheel for transportation around 3500 BCE?",
+    "options": ["Sumerians", "Egyptians", "Indus Valley", "Phoenicians"],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "history-code-of-hammurabi-city",
+    "question": "The 'Code of Hammurabi,' one of the earliest and most complete written legal codes, was created in which ancient city-state?",
+    "options": ["Sparta", "Babylon", "Thebes", "Persepolis"],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "history-elizabeth-i-nickname",
+    "question": "Which Queen of England was known as 'The Virgin Queen' and oversaw the defeat of the Spanish Armada?",
+    "options": ["Mary I", "Victoria", "Elizabeth I", "Anne"],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "history-great-wall-china-dynasty",
+    "question": "The construction of the Great Wall of China began during which dynasty to protect against northern invasions?",
+    "options": ["Han Dynasty", "Qin Dynasty", "Ming Dynasty", "Tang Dynasty"],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "history-declaration-independence-author",
+    "question": "Who was the primary author of the United States Declaration of Independence?",
+    "options": ["Benjamin Franklin", "Thomas Jefferson", "John Adams", "George Washington"],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "history-silk-road-goods",
+    "question": "What was the name of the ancient network of trade routes that connected the East and West, allowing for the exchange of goods and culture?",
+    "options": ["The Silk Road", "The Amber Road", "The Spice Route", "The Royal Road"],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "history-battle-of-waterloo-napoleon",
+    "question": "Which battle in 1815 marked the final defeat of French Emperor Napoleon Bonaparte?",
+    "options": ["Battle of Austerlitz", "Battle of Leipzig", "Battle of Waterloo", "Battle of Trafalgar"],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "history-genghis-khan-empire",
+    "question": "Who was the leader of the Mongol Empire which became the largest contiguous land empire in history?",
+    "options": ["Kublai Khan", "Genghis Khan", "Attila the Hun", "Tamerlane"],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "history-19th-amendment-right",
+    "question": "The 19th Amendment to the U.S. Constitution, ratified in 1920, granted what right?",
+    "options": ["Abolition of slavery", "Right to bear arms", "Women's right to vote", "Freedom of speech"],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "history-constantinople-byzantine-capital",
+    "question": "Which city served as the capital of the Byzantine Empire for over a thousand years before falling in 1453?",
+    "options": ["Rome", "Constantinople", "Alexandria", "Antioch"],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "history-manhattan-project-purpose",
+    "question": "What was the name of the secret project that developed the first atomic bomb during World War II?",
+    "options": ["Operation Overlord", "The Manhattan Project", "Project Apollo", "Operation Barbarossa"],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "history-mlk-speech-march-on-washington",
+    "question": "Which civil rights leader delivered the 'I Have a Dream' speech during the March on Washington in 1963?",
+    "options": ["Malcolm X", "Martin Luther King Jr.", "Rosa Parks", "John Lewis"],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "history-treaty-of-versailles-palace",
+    "question": "Which treaty ended World War I and imposed heavy reparations on Germany?",
+    "options": ["Treaty of Ghent", "Treaty of Paris", "Treaty of Versailles", "Treaty of Tordesillas"],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "history-pax-romana-empire",
+    "question": "The 'Pax Romana' refers to a long period of relative peace and stability in which empire?",
+    "options": ["British Empire", "Roman Empire", "Persian Empire", "Mughal Empire"],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "history-french-revolution-monarch",
+    "question": "Which French King was executed by guillotine during the French Revolution in 1793?",
+    "options": ["Louis XIV", "Louis XV", "Louis XVI", "Louis XVIII"],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "history-cold-war-cuban-missile-crisis-year",
+    "question": "In what year did the Cuban Missile Crisis occur, bringing the U.S. and USSR to the brink of nuclear war?",
+    "options": ["1959", "1961", "1962", "1965"],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "history-ancient-egypt-youngest-pharaoh",
+    "question": "Which young Pharaoh's nearly intact tomb was discovered by Howard Carter in 1922?",
+    "options": ["Ramesses II", "Tutankhamun", "Akhenaten", "Thutmose III"],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "history-invention-of-telephone",
+    "question": "Who is credited with the invention of the first practical telephone in 1876?",
+    "options": ["Thomas Edison", "Nikola Tesla", "Alexander Graham Bell", "Guglielmo Marconi"],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "history-battle-of-hastings-conqueror",
+    "question": "William the Conqueror invaded England and won which decisive battle in 1066?",
+    "options": ["Battle of Agincourt", "Battle of Bosworth", "Battle of Hastings", "Battle of York"],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "history-pearl-harbor-date",
+    "question": "On which 'date which will live in infamy' did Japan attack Pearl Harbor?",
+    "options": ["December 7, 1941", "June 6, 1944", "November 11, 1918", "August 6, 1945"],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "history-mahatma-gandhi-salt-march",
+    "question": "Mahatma Gandhi led which non-violent protest in 1930 against the British salt monopoly in India?",
+    "options": ["The Salt March", "The Quit India Movement", "The Hunger Strike", "The Dandi Protest"],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "history-soviet-union-dissolution-year",
+    "question": "In what year did the Soviet Union officially dissolve?",
+    "options": ["1989", "1990", "1991", "1992"],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "history-invention-of-the-lightbulb",
+    "question": "Which American inventor held over 1,000 patents, including the phonograph and a practical incandescent light bulb?",
+    "options": ["Benjamin Franklin", "Thomas Edison", "Eli Whitney", "Henry Ford"],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "history-panama-canal-completion-year",
+    "question": "The Panama Canal, connecting the Atlantic and Pacific Oceans, was officially opened in which year?",
+    "options": ["1904", "1914", "1924", "1934"],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "history-space-race-first-human",
+    "question": "Who was the first human to travel into space and orbit the Earth in 1961?",
+    "options": ["Neil Armstrong", "Yuri Gagarin", "Buzz Aldrin", "John Glenn"],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  }
 ]
