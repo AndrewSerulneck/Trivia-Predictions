@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SlotAd } from "@/components/ui/SlotAd";
+import { PopupAds } from "@/components/ui/PopupAds";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,6 +23,7 @@ export default async function RootLayout({
           {children}
           <SlotAd slot="footer" />
         </div>
+        <PopupAds />
       </body>
     </html>
   );

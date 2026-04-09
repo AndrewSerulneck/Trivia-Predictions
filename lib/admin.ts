@@ -485,6 +485,8 @@ export async function getAdminAdsDebugSnapshot(windowHours = 24): Promise<AdminA
     "mid-content",
     "leaderboard-sidebar",
     "footer",
+    "popup-on-entry",
+    "popup-on-scroll",
   ];
 
   const isActiveNow = (ad: Advertisement) => {

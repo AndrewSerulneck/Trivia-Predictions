@@ -39,9 +39,8 @@ type PredictionQuota = {
 };
 
 type SortKey = "closing-soon" | "newest" | "volume" | "liquidity";
-type ViewMode = "grouped" | "all";
 type CloseWindowKey = "all" | "today" | "this-week" | "this-month" | "this-year";
-const FETCH_PAGE_SIZE = 50;
+const FETCH_PAGE_SIZE = 24;
 
 const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
   { value: "closing-soon", label: "Closing Soon" },
@@ -147,6 +146,57 @@ function getHoursUntilClose(closesAt: string): number {
   return (closeTs - Date.now()) / (1000 * 60 * 60);
 }
 
+function stableHash(input: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index);
+    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+  }
+  return Math.abs(hash >>> 0);
+}
+
+function diversifyMarketsBySport(markets: Prediction[]): Prediction[] {
+  const bySport = new Map<string, Prediction[]>();
+  for (const market of markets) {
+    const sportKey = market.sport?.trim() || "Unknown";
+    const group = bySport.get(sportKey) ?? [];
+    group.push(market);
+    bySport.set(sportKey, group);
+  }
+
+  const daySeed = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+  const keys = [...bySport.keys()].sort((a, b) => {
+    const aScore = stableHash(`${a}:${daySeed}`);
+    const bScore = stableHash(`${b}:${daySeed}`);
+    return aScore - bScore || a.localeCompare(b, undefined, { sensitivity: "base" });
+  });
+
+  for (const [sportKey, group] of bySport.entries()) {
+    group.sort((a, b) => {
+      const closeDiff = +new Date(a.closesAt) - +new Date(b.closesAt);
+      if (closeDiff !== 0) return closeDiff;
+      return stableHash(`${a.id}:${sportKey}`) - stableHash(`${b.id}:${sportKey}`);
+    });
+  }
+
+  const mixed: Prediction[] = [];
+  let consumed = false;
+  let round = 0;
+  while (!consumed) {
+    consumed = true;
+    for (const sportKey of keys) {
+      const group = bySport.get(sportKey) ?? [];
+      if (round < group.length) {
+        mixed.push(group[round]);
+        consumed = false;
+      }
+    }
+    round += 1;
+  }
+
+  return mixed;
+}
+
 function marketMatchesCloseWindow(market: Prediction, closeWindow: CloseWindowKey): boolean {
   if (closeWindow === "all") {
     return true;
@@ -211,9 +261,7 @@ export function PredictionMarketList() {
   const [selectedSport, setSelectedSport] = useState("");
   const [selectedLeague, setSelectedLeague] = useState("");
   const [sort, setSort] = useState<SortKey>("closing-soon");
-  const [viewMode, setViewMode] = useState<ViewMode>("grouped");
   const [browseFiltersCollapsed, setBrowseFiltersCollapsed] = useState(false);
-  const [discoverCollapsed, setDiscoverCollapsed] = useState(true);
   const [recentPicks, setRecentPicks] = useState<UserPrediction[]>([]);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const { rewards, addReward } = useRewards();
@@ -230,10 +278,10 @@ export function PredictionMarketList() {
   const filteredMarkets = useMemo(
     () =>
       allMarkets.filter((market) => {
-        if (!market.sport || !marketMatchesCloseWindow(market, selectedCloseWindow)) {
+        if (!marketMatchesCloseWindow(market, selectedCloseWindow)) {
           return false;
         }
-        if (selectedSport && market.sport !== selectedSport) {
+        if (selectedSport && market.sport?.trim() !== selectedSport) {
           return false;
         }
         if (selectedLeague && market.league !== selectedLeague) {
@@ -243,7 +291,10 @@ export function PredictionMarketList() {
       }),
     [allMarkets, selectedCloseWindow, selectedLeague, selectedSport]
   );
-  const markets = filteredMarkets;
+  const markets = useMemo(
+    () => (selectedSport ? filteredMarkets : diversifyMarketsBySport(filteredMarkets)),
+    [filteredMarkets, selectedSport]
+  );
   const showOutOfSeasonMessage = useMemo(() => {
     if (!selectedSport || loading || Boolean(errorMessage)) {
       return false;
@@ -258,15 +309,19 @@ export function PredictionMarketList() {
   }, [errorMessage, loading, markets.length, searchQuery, selectedCloseWindow, selectedLeague, selectedSport]);
   const groupedMarketSections = useMemo(() => {
     const byLeague = new Map<string, Prediction[]>();
-    for (const market of filteredMarkets) {
+    for (const market of markets) {
       const label = market.league?.trim() || "Additional Markets";
       const existing = byLeague.get(label) ?? [];
       existing.push(market);
       byLeague.set(label, existing);
     }
 
+    const daySeed = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
     const fallbackOrder = [...byLeague.keys()]
       .sort((a, b) => {
+        if (!selectedSport) {
+          return stableHash(`${a}:${daySeed}`) - stableHash(`${b}:${daySeed}`);
+        }
         const countDiff = (byLeague.get(b)?.length ?? 0) - (byLeague.get(a)?.length ?? 0);
         if (countDiff !== 0) return countDiff;
         return a.localeCompare(b, undefined, { sensitivity: "base" });
@@ -277,7 +332,7 @@ export function PredictionMarketList() {
       id: toSectionId(label),
       markets: byLeague.get(label) ?? [],
     }));
-  }, [filteredMarkets]);
+  }, [markets, selectedSport]);
   const featuredMarkets = useMemo(() => {
     return [...filteredMarkets]
       .sort((a, b) => {
@@ -982,126 +1037,73 @@ export function PredictionMarketList() {
               </div>
             </div>
 
-        <p className="text-xs text-slate-600">
-          {loading
-            ? "Loading markets..."
-            : `Showing ${markets.length} of ${totalItems} market${totalItems === 1 ? "" : "s"}`}
-          {hasFilters ? " (filtered)" : ""}.
-        </p>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Layout</span>
-          <button
-            type="button"
-            onClick={() => setViewMode("grouped")}
-            className={`${BUTTON_POP_CLASS} rounded-full px-3 py-1.5 text-xs font-semibold ${
-              viewMode === "grouped"
-                ? "bg-blue-700 text-white"
-                : "border border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300"
-            }`}
-          >
-            Grouped by League
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("all")}
-            className={`${BUTTON_POP_CLASS} rounded-full px-3 py-1.5 text-xs font-semibold ${
-              viewMode === "all"
-                ? "bg-slate-900 text-white"
-                : "border border-slate-300 bg-white text-slate-700 hover:border-slate-400"
-            }`}
-          >
-            All Markets
-          </button>
-        </div>
-        {viewMode === "grouped" && groupedMarketSections.length > 0 ? (
-          <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Jump To Section</p>
-            <div className="flex flex-wrap gap-2">
-              {groupedMarketSections.slice(0, 12).map((section) => (
-                <a
-                  key={section.id}
-                  href={`#${section.id}`}
-                  className={`${BUTTON_POP_CLASS} rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-400`}
-                >
-                  {section.label} ({section.markets.length})
-                </a>
-              ))}
-            </div>
-          </div>
-        ) : null}
+            <p className="text-xs text-slate-600">
+              {loading
+                ? "Loading markets..."
+                : `Showing ${markets.length} of ${totalItems} market${totalItems === 1 ? "" : "s"}`}
+              {hasFilters ? " (filtered)" : ""}.
+            </p>
           </div>
         ) : null}
       </section>
 
       <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Discover</p>
-          <button
-            type="button"
-            onClick={() => setDiscoverCollapsed((value) => !value)}
-            className={`${BUTTON_POP_CLASS} rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700`}
-          >
-            {discoverCollapsed ? "Expand" : "Collapse"}
-          </button>
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Hot + Closing Soon</p>
+        <div className="space-y-3">
+          {featuredMarkets.length > 0 ? (
+            <section className="space-y-2 rounded-lg border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold text-amber-900">Featured Markets</h3>
+                <span className="text-xs font-semibold uppercase tracking-wide text-amber-700">Hot + Closing Soon</span>
+              </div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {featuredMarkets.map((market) => (
+                  <button
+                    key={`featured-${market.id}`}
+                    type="button"
+                    onClick={() => {
+                      setSearchInput(market.question);
+                    }}
+                    className={`${BUTTON_POP_CLASS} rounded-xl border border-amber-300 bg-white px-3 py-2 text-left hover:border-amber-400`}
+                  >
+                    <p className="line-clamp-2 text-xs font-semibold text-slate-900">{market.question}</p>
+                    <p className="mt-1 text-[11px] text-slate-600">
+                      {[market.sport, market.league].filter(Boolean).join(" · ") || "Sports"} ·{" "}
+                      {new Date(market.closesAt).toLocaleDateString()}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {forYouMarkets.length > 0 ? (
+            <section className="space-y-2 rounded-lg border border-cyan-200 bg-gradient-to-r from-cyan-50 to-sky-50 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold text-cyan-900">For You</h3>
+                <span className="text-xs font-semibold uppercase tracking-wide text-cyan-700">Based On Recent Picks</span>
+              </div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {forYouMarkets.map((market) => (
+                  <button
+                    key={`for-you-${market.id}`}
+                    type="button"
+                    onClick={() => {
+                      setSearchInput(market.question);
+                    }}
+                    className={`${BUTTON_POP_CLASS} rounded-xl border border-cyan-300 bg-white px-3 py-2 text-left hover:border-cyan-400`}
+                  >
+                    <p className="line-clamp-2 text-xs font-semibold text-slate-900">{market.question}</p>
+                    <p className="mt-1 text-[11px] text-slate-600">
+                      {[market.sport, market.league].filter(Boolean).join(" · ") || "Sports"} ·{" "}
+                      {new Date(market.closesAt).toLocaleDateString()}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </section>
+          ) : null}
         </div>
-
-        {!discoverCollapsed ? (
-          <div className="space-y-3">
-            {featuredMarkets.length > 0 ? (
-              <section className="space-y-2 rounded-lg border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-sm font-semibold text-amber-900">Featured Markets</h3>
-                  <span className="text-xs font-semibold uppercase tracking-wide text-amber-700">Hot + Closing Soon</span>
-                </div>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {featuredMarkets.map((market) => (
-                    <button
-                      key={`featured-${market.id}`}
-                      type="button"
-                      onClick={() => {
-                        setSearchInput(market.question);
-                      }}
-                      className={`${BUTTON_POP_CLASS} rounded-xl border border-amber-300 bg-white px-3 py-2 text-left hover:border-amber-400`}
-                    >
-                      <p className="line-clamp-2 text-xs font-semibold text-slate-900">{market.question}</p>
-                      <p className="mt-1 text-[11px] text-slate-600">
-                        {[market.sport, market.league].filter(Boolean).join(" · ") || "Sports"} ·{" "}
-                        {new Date(market.closesAt).toLocaleDateString()}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              </section>
-            ) : null}
-
-            {forYouMarkets.length > 0 ? (
-              <section className="space-y-2 rounded-lg border border-cyan-200 bg-gradient-to-r from-cyan-50 to-sky-50 p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-sm font-semibold text-cyan-900">For You</h3>
-                  <span className="text-xs font-semibold uppercase tracking-wide text-cyan-700">Based On Recent Picks</span>
-                </div>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {forYouMarkets.map((market) => (
-                    <button
-                      key={`for-you-${market.id}`}
-                      type="button"
-                      onClick={() => {
-                        setSearchInput(market.question);
-                      }}
-                      className={`${BUTTON_POP_CLASS} rounded-xl border border-cyan-300 bg-white px-3 py-2 text-left hover:border-cyan-400`}
-                    >
-                      <p className="line-clamp-2 text-xs font-semibold text-slate-900">{market.question}</p>
-                      <p className="mt-1 text-[11px] text-slate-600">
-                        {[market.sport, market.league].filter(Boolean).join(" · ") || "Sports"} ·{" "}
-                        {new Date(market.closesAt).toLocaleDateString()}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              </section>
-            ) : null}
-          </div>
-        ) : null}
       </section>
 
       {errorMessage ? (
@@ -1113,7 +1115,7 @@ export function PredictionMarketList() {
         </div>
       ) : null}
 
-	      {loading ? (
+      {loading ? (
         <section className="space-y-3">
           <div className="flex items-center gap-2 text-sm text-slate-600">
             <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
@@ -1136,7 +1138,7 @@ export function PredictionMarketList() {
         <section className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
           No markets available.
         </section>
-      ) : viewMode === "grouped" ? (
+      ) : (
         <div className="space-y-5">
           {groupedMarketSections.map((section) => (
             <section key={section.id} id={section.id} className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
@@ -1184,23 +1186,6 @@ export function PredictionMarketList() {
                 </div>
               )}
             </section>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-3">
-          {markets.map((market, index) => (
-            <div key={market.id} className="contents">
-              {renderMarketCard(market)}
-
-              {(index + 1) % 6 === 0 ? (
-                <div className="rounded-lg border border-slate-200 p-3">
-                  <div className="flex h-full min-h-[180px] flex-col items-center justify-center rounded-md border-2 border-dashed border-slate-300 bg-slate-100/70 p-4 text-center">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Advertisement</p>
-                    <p className="mt-1 text-sm font-semibold text-slate-700">Banner Ad Placement</p>
-                  </div>
-                </div>
-              ) : null}
-            </div>
           ))}
         </div>
       )}

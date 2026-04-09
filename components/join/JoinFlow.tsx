@@ -58,6 +58,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [locationVerified, setLocationVerified] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationNotice, setLocationNotice] = useState("");
+  const [lastLocationVerifiedAt, setLastLocationVerifiedAt] = useState<number | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [isScanningQr, setIsScanningQr] = useState(false);
   const [scanNotice, setScanNotice] = useState("");
   const autoVerificationAttemptedRef = useRef(false);
@@ -71,6 +73,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setStatus("loading");
       setErrorMessage("");
       setLocationVerified(false);
+      setLastLocationVerifiedAt(null);
       setDistanceMeters(null);
       setLocationNotice("Verifying your location...");
       autoVerificationAttemptedRef.current = false;
@@ -92,9 +95,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           setLocationLoading(true);
           try {
             const current = await getBestCurrentLocation({
-              sampleDurationMs: 10000,
-              timeoutMs: 20000,
-              desiredAccuracyMeters: 75,
+              sampleDurationMs: 6500,
+              timeoutMs: 13000,
+              desiredAccuracyMeters: 120,
             });
             const nearbyVenues = venues.filter((item) => {
               const distance = calculateDistanceMeters(current, {
@@ -160,14 +163,17 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         venue &&
         validateUsername(username) &&
         validatePin(pin) &&
-        locationVerified
+        locationVerified &&
+        !locationLoading &&
+        !isTransitioning
     );
-  }, [venue, username, pin, locationVerified]);
+  }, [isTransitioning, locationLoading, locationVerified, venue, username, pin]);
 
   const verifyLocation = useCallback(async () => {
     if (!venue) return;
     if (DISABLE_GEOFENCE_FOR_TESTING) {
       setLocationVerified(true);
+      setLastLocationVerifiedAt(Date.now());
       setLocationNotice("Testing mode: location checks are disabled.");
       setErrorMessage("");
       setLocationLoading(false);
@@ -179,9 +185,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
     try {
       const current = await getBestCurrentLocation({
-        sampleDurationMs: 11000,
-        timeoutMs: 22000,
-        desiredAccuracyMeters: 60,
+        sampleDurationMs: 7000,
+        timeoutMs: 14000,
+        desiredAccuracyMeters: 120,
       });
       const distance = calculateDistanceMeters(current, {
         latitude: venue.latitude,
@@ -192,9 +198,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
       if (distance <= allowedDistance) {
         setLocationVerified(true);
+        setLastLocationVerifiedAt(Date.now());
         setLocationNotice("Location verified successfully.");
       } else {
         setLocationVerified(false);
+        setLastLocationVerifiedAt(null);
         setLocationNotice("");
         setErrorMessage(
           `You are ${Math.round(distance)}m away. Required range is ${Math.round(allowedDistance)}m.`
@@ -202,6 +210,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       }
     } catch (error) {
       setLocationVerified(false);
+      setLastLocationVerifiedAt(null);
       setLocationNotice("");
       setErrorMessage(getErrorMessage(error, "Unable to verify location."));
     } finally {
@@ -388,8 +397,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     void verifyLocation();
   }, [venue, status, verifyLocation]);
 
+  useEffect(() => {
+    if (!venue) {
+      return;
+    }
+    router.prefetch(`/venue/${venue.id}`);
+  }, [router, venue]);
+
   const createProfile = async () => {
     if (!venue) return;
+    setErrorMessage("");
     if (!validateUsername(username)) {
       setErrorMessage("Username is required.");
       return;
@@ -404,12 +421,21 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     }
 
     if (!DISABLE_GEOFENCE_FOR_TESTING) {
+      const verificationFreshForMs = 2 * 60 * 1000;
+      const shouldRecheckLocation =
+        !locationVerified ||
+        !lastLocationVerifiedAt ||
+        Date.now() - lastLocationVerifiedAt > verificationFreshForMs;
+
+      if (!shouldRecheckLocation) {
+        setLocationNotice("Location verified. Entering venue...");
+      } else {
       setLocationLoading(true);
       try {
         const current = await getBestCurrentLocation({
-          sampleDurationMs: 11000,
-          timeoutMs: 22000,
-          desiredAccuracyMeters: 60,
+          sampleDurationMs: 7000,
+          timeoutMs: 14000,
+          desiredAccuracyMeters: 120,
         });
         const distance = calculateDistanceMeters(current, {
           latitude: venue.latitude,
@@ -419,6 +445,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         const allowedDistance = getGeofenceThresholdMeters(venue.radius, current.accuracy);
         if (distance > allowedDistance) {
           setLocationVerified(false);
+          setLastLocationVerifiedAt(null);
           setLocationNotice("");
           setErrorMessage(
             `You are ${Math.round(distance)}m away. Required range is ${Math.round(allowedDistance)}m.`
@@ -426,22 +453,27 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           return;
         }
         setLocationVerified(true);
+        setLastLocationVerifiedAt(Date.now());
         setLocationNotice("Location verified successfully.");
       } catch (error) {
         setLocationVerified(false);
+        setLastLocationVerifiedAt(null);
         setLocationNotice("");
         setErrorMessage(getErrorMessage(error, "Unable to verify location."));
         return;
       } finally {
         setLocationLoading(false);
       }
+      }
     } else {
       setLocationVerified(true);
+      setLastLocationVerifiedAt(Date.now());
       setLocationNotice("Testing mode: location checks are disabled.");
     }
 
+    setIsTransitioning(true);
     setStatus("saving");
-    setErrorMessage("");
+    setLocationNotice("Joining venue...");
 
     try {
       // Ensure fallback demo venues exist server-side before user profile insert.
@@ -462,6 +494,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       saveUserId(user.id);
       router.push(`/venue/${venue.id}`);
     } catch (error) {
+      setIsTransitioning(false);
       setStatus("ready");
       setErrorMessage(getErrorMessage(error, "Failed to create profile."));
     }
@@ -633,10 +666,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               <button
                 type="button"
                 onClick={createProfile}
-                disabled={!canCreate || status === "saving"}
+                disabled={!canCreate || status === "saving" || isTransitioning}
                 className={`${JOIN_BUTTON_POP_CLASS} inline-flex min-h-[42px] items-center rounded-full bg-gradient-to-r from-blue-700 to-cyan-600 px-4 py-2 font-medium text-white disabled:opacity-60`}
               >
-                {status === "saving" ? "Entering..." : "Enter Game"}
+                {status === "saving" || isTransitioning ? "Entering venue..." : "Enter Game"}
               </button>
             </div>
           </div>

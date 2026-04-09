@@ -4,7 +4,9 @@ export type AdSlot =
   | "sidebar"
   | "mid-content"
   | "leaderboard-sidebar"
-  | "footer";
+  | "footer"
+  | "popup-on-entry"
+  | "popup-on-scroll";
 
 export type PredictionStatus = "pending" | "won" | "lost" | "push" | "canceled";
 

@@ -15,6 +15,8 @@ const AD_SLOTS: AdSlot[] = [
   "mid-content",
   "leaderboard-sidebar",
   "footer",
+  "popup-on-entry",
+  "popup-on-scroll",
 ];
 const ADDRESS_LOOKUP_DEBOUNCE_MS = 250;
 

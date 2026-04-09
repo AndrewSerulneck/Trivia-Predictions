@@ -178,7 +178,7 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
       fromY = detail.sourceY;
     }
 
-    const requestedCoins = Math.max(4, Math.min(18, detail?.coins ?? Math.round((detail?.delta ?? 10) / 2) + 4));
+    const requestedCoins = Math.max(5, Math.min(12, detail?.coins ?? Math.round((detail?.delta ?? 10) / 2) + 5));
     const createdAt = Date.now();
     const burst: CoinFlightToken[] = Array.from({ length: requestedCoins }, (_, index) => {
       return {
@@ -187,8 +187,8 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
         fromY: fromY + Math.round((Math.random() - 0.5) * 18),
         toX: toX + Math.round((Math.random() - 0.5) * 20),
         toY: toY + Math.round((Math.random() - 0.5) * 14),
-        delayMs: Math.round(Math.random() * 170),
-        durationMs: 860 + Math.round(Math.random() * 260),
+        delayMs: Math.round(Math.random() * 140),
+        durationMs: 1180 + Math.round(Math.random() * 420),
         rotateDeg: Math.round(Math.random() * 360),
       };
     });
@@ -317,7 +317,7 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
                 ["--coin-rotate" as string]: `${item.rotateDeg}deg`,
               }}
             >
-              <GoldCoinIcon className="h-16 w-16" />
+              <GoldCoinIcon className="h-20 w-20" />
             </span>
           ))}
         </div>
@@ -331,7 +331,7 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
       >
         <span
           className={`inline-flex items-center justify-center rounded-full border-slate-900 bg-white ${
-            compact ? "h-5 w-5 border-2 text-[11px]" : "h-7 w-7 border-4 text-[11px]"
+            compact ? "h-8 w-8 border-2 text-base" : "h-12 w-12 border-4 text-xl"
           }`}
         >
           {((username || "G").trim()[0] ?? "G").toUpperCase()}
@@ -349,15 +349,15 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
         id="tp-points-pill"
       >
         <span id="tp-treasure-chest" className="relative inline-flex items-center justify-center">
-          <TreasureChestIcon className={compact ? "h-6 w-6" : "h-8 w-8"} />
+          <TreasureChestIcon className={compact ? "h-8 w-8" : "h-16 w-16"} />
           <span
             id="tp-treasure-chest-target"
             aria-hidden="true"
-            className="absolute left-1/2 top-[40%] h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0"
+            className="absolute left-1/2 top-[44%] h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0"
           />
         </span>
         <span className={`inline-flex items-center gap-1 font-black ${compact ? "text-xs" : ""}`}>
-          <GoldCoinIcon className={compact ? "h-5 w-5" : "h-6 w-6"} />
+          <GoldCoinIcon className={compact ? "h-6 w-6" : "h-10 w-10"} />
           {(points ?? displayedPoints).toLocaleString()}
         </span>
       </div>

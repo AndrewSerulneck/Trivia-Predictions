@@ -236,25 +236,36 @@ a[role="button"][class*="text-[11px]"] {
 @keyframes tp-points-flow {
   0% {
     opacity: 0.95;
-    transform: translate3d(0, 0, 0) scale(1) rotate(var(--coin-rotate, 0deg));
+    transform: translate3d(0, 0, 0) scale(0.88) rotate(var(--coin-rotate, 0deg));
   }
-  20% {
+  16% {
     opacity: 1;
+    transform: translate3d(calc(var(--flow-x) * 0.16), calc(var(--flow-y) * 0.14), 0) scale(1.08)
+      rotate(calc(var(--coin-rotate, 0deg) + 35deg));
+  }
+  38% {
+    opacity: 1;
+    transform: translate3d(calc(var(--flow-x) * 0.4), calc(var(--flow-y) * 0.36), 0) scale(1.02)
+      rotate(calc(var(--coin-rotate, 0deg) + 95deg));
+  }
+  72% {
+    opacity: 0.98;
+    transform: translate3d(calc(var(--flow-x) * 0.78), calc(var(--flow-y) * 0.78), 0) scale(0.92)
+      rotate(calc(var(--coin-rotate, 0deg) + 180deg));
   }
   84% {
-    opacity: 1;
-  }
-  95% {
     opacity: 0.92;
   }
   100% {
     opacity: 0;
-    transform: translate3d(var(--flow-x), var(--flow-y), 0) scale(0.15) rotate(var(--coin-rotate, 0deg));
+    transform: translate3d(var(--flow-x), var(--flow-y), 0) scale(0.48)
+      rotate(calc(var(--coin-rotate, 0deg) + 245deg));
   }
 }
 
 .animate-tp-points-flow {
   animation-name: tp-points-flow;
-  animation-timing-function: linear;
+  animation-timing-function: cubic-bezier(0.16, 0.84, 0.2, 1);
   animation-fill-mode: forwards;
+  will-change: transform, opacity;
 }
