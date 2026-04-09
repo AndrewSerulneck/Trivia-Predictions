@@ -210,24 +210,10 @@ type OddsSportConfig = {
   league: string;
 };
 
-type OddsSportCatalogItem = {
-  key?: string;
-  title?: string;
-  active?: boolean;
-  has_outrights?: boolean;
-};
-
 const DEFAULT_ODDS_SPORTS: OddsSportConfig[] = [
-  { key: "americanfootball_nfl", sport: "Football", league: "NFL" },
-  { key: "americanfootball_ncaaf", sport: "Football", league: "NCAA Football" },
   { key: "basketball_nba", sport: "Basketball", league: "NBA" },
-  { key: "basketball_ncaab", sport: "Basketball", league: "NCAA Basketball" },
   { key: "baseball_mlb", sport: "Baseball", league: "MLB" },
   { key: "icehockey_nhl", sport: "Hockey", league: "NHL" },
-  { key: "soccer_usa_mls", sport: "Soccer", league: "MLS" },
-  { key: "mma_mixed_martial_arts", sport: "MMA", league: "UFC / MMA" },
-  { key: "tennis_atp_singles", sport: "Tennis", league: "ATP Tour" },
-  { key: "tennis_wta_singles", sport: "Tennis", league: "WTA Tour" },
 ];
 
 const ODDS_SPORT_BY_KEY = new Map(DEFAULT_ODDS_SPORTS.map((item) => [item.key, item]));
@@ -479,55 +465,8 @@ function impliedProbabilityFromAmericanOdds(odds: number): number | null {
   return Number(((100 / (odds + 100)) * 100).toFixed(1));
 }
 
-function inferOddsSportConfigFromCatalog(item: OddsSportCatalogItem): OddsSportConfig | null {
-  const key = String(item.key ?? "").trim();
-  if (!key) {
-    return null;
-  }
-
-  const title = formatCategoryLabel(String(item.title ?? key));
-  const known = ODDS_SPORT_BY_KEY.get(key);
-  if (known) {
-    return known;
-  }
-
-  const inferred = inferSportAndLeague({
-    question: title,
-    category: title,
-    tags: [key.replace(/_/g, " ")],
-  });
-
-  const fallbackLeague = title || formatCategoryLabel(key.replace(/_/g, " "));
-  const fallbackSport = inferred.sport ?? fallbackLeague.split(" ").slice(0, 2).join(" ");
-
-  return {
-    key,
-    sport: fallbackSport || "Sports",
-    league: inferred.league ?? fallbackLeague,
-  };
-}
-
-async function getConfiguredOddsSports(): Promise<OddsSportConfig[]> {
+function getConfiguredOddsSports(): OddsSportConfig[] {
   if (!ODDS_API_SPORT_KEYS) {
-    try {
-      const catalogQuery = new URLSearchParams({ apiKey: ODDS_API_KEY });
-      const payload = await fetchOddsJson("/sports", catalogQuery);
-      if (!Array.isArray(payload)) {
-        return DEFAULT_ODDS_SPORTS;
-      }
-
-      const discovered = (payload as OddsSportCatalogItem[])
-        .filter((item) => item.active !== false)
-        .map((item) => inferOddsSportConfigFromCatalog(item))
-        .filter((item): item is OddsSportConfig => Boolean(item));
-
-      if (discovered.length > 0) {
-        return discovered;
-      }
-    } catch {
-      // Fallback handled below.
-    }
-
     return DEFAULT_ODDS_SPORTS;
   }
 
@@ -583,25 +522,27 @@ function normalizeOddsEvent(event: OddsEvent, fallbackSport?: OddsSportConfig): 
   }
 
   const totalProbability = homeProbability + awayProbability;
-  const yesProbability = totalProbability > 0 ? Number(((homeProbability / totalProbability) * 100).toFixed(1)) : homeProbability;
-  const noProbability = Number((100 - yesProbability).toFixed(1));
+  const normalizedHomeProbability = totalProbability > 0
+    ? Number(((homeProbability / totalProbability) * 100).toFixed(1))
+    : homeProbability;
+  const normalizedAwayProbability = Number((100 - normalizedHomeProbability).toFixed(1));
 
   const mappedSport = ODDS_SPORT_BY_KEY.get(sportKey) ?? fallbackSport;
   return {
     id: toOddsPredictionId(sportKey, eventId),
-    question: `Will ${homeTeam} beat ${awayTeam}?`,
+    question: `Who will win the ${awayTeam} vs ${homeTeam} game?`,
     source: "odds-api",
     closesAt: closesAtDate.toISOString(),
     outcomes: [
       {
         id: toOddsOutcomeId(eventId, "home"),
-        title: "Yes",
-        probability: yesProbability,
+        title: homeTeam,
+        probability: normalizedHomeProbability,
       },
       {
         id: toOddsOutcomeId(eventId, "away"),
-        title: "No",
-        probability: noProbability,
+        title: awayTeam,
+        probability: normalizedAwayProbability,
       },
     ],
     category: mappedSport?.league ?? "Game Winner",
@@ -632,7 +573,7 @@ async function loadOddsMarkets(): Promise<Prediction[]> {
   const lookaheadHours = Math.max(1, normalizePositiveInt(ODDS_API_LOOKAHEAD_HOURS, 168));
   const from = new Date();
   const to = new Date(Date.now() + lookaheadHours * 60 * 60 * 1000);
-  const sports = await getConfiguredOddsSports();
+  const sports = getConfiguredOddsSports();
 
   const requests = sports.map(async (sportConfig) => {
     const query = new URLSearchParams({
