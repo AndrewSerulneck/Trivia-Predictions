@@ -210,6 +210,12 @@ type OddsSportConfig = {
   league: string;
 };
 
+type OddsSportCatalogItem = {
+  key?: string;
+  title?: string;
+  active?: boolean;
+};
+
 const DEFAULT_ODDS_SPORTS: OddsSportConfig[] = [
   { key: "basketball_nba", sport: "Basketball", league: "NBA" },
   { key: "baseball_mlb", sport: "Baseball", league: "MLB" },
@@ -485,6 +491,38 @@ function getConfiguredOddsSports(): OddsSportConfig[] {
   return selected.map((key) => ODDS_SPORT_BY_KEY.get(key) ?? { key, sport: formatCategoryLabel(key), league: formatCategoryLabel(key) });
 }
 
+async function getActiveSoccerOddsSports(): Promise<OddsSportConfig[]> {
+  if (!ODDS_API_KEY) {
+    return [];
+  }
+
+  try {
+    const query = new URLSearchParams({ apiKey: ODDS_API_KEY });
+    const payload = await fetchOddsJson("/sports", query);
+    if (!Array.isArray(payload)) {
+      return [];
+    }
+
+    const soccerKeys = (payload as OddsSportCatalogItem[])
+      .filter((item) => item.active !== false)
+      .map((item) => ({
+        key: String(item.key ?? "").trim(),
+        title: String(item.title ?? "").trim(),
+      }))
+      .filter((item) => item.key.startsWith("soccer_"));
+
+    const mapped: OddsSportConfig[] = soccerKeys.map((item) => ({
+      key: item.key,
+      sport: "Soccer",
+      league: item.title ? formatCategoryLabel(item.title) : formatCategoryLabel(item.key),
+    }));
+
+    return mapped;
+  } catch {
+    return [];
+  }
+}
+
 function normalizeOddsEvent(event: OddsEvent, fallbackSport?: OddsSportConfig): Prediction | null {
   const eventId = String(event.id ?? "").trim();
   const sportKey = String(event.sport_key ?? fallbackSport?.key ?? "").trim();
@@ -591,7 +629,13 @@ async function loadOddsMarkets(): Promise<Prediction[]> {
   const lookaheadHours = Math.max(1, normalizePositiveInt(ODDS_API_LOOKAHEAD_HOURS, 168));
   const from = new Date();
   const to = new Date(Date.now() + lookaheadHours * 60 * 60 * 1000);
-  const sports = getConfiguredOddsSports();
+  const baseSports = getConfiguredOddsSports();
+  const autoSoccerSports = ODDS_API_SPORT_KEYS ? [] : await getActiveSoccerOddsSports();
+  const sports = Array.from(
+    new Map(
+      [...baseSports, ...autoSoccerSports].map((item) => [item.key, item])
+    ).values()
+  );
 
   const requests = sports.map(async (sportConfig) => {
     const query = new URLSearchParams({
