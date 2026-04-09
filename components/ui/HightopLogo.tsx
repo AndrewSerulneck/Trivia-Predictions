@@ -4,8 +4,8 @@ type HightopLogoProps = {
 };
 
 const SIZE_CLASSES: Record<NonNullable<HightopLogoProps["size"]>, string> = {
-  sm: "h-12 w-[14.5rem]",
-  md: "h-16 w-[20.5rem]",
+  sm: "h-12 w-12",
+  md: "h-14 w-14",
 };
 
 export function HightopLogo({ size = "md", className = "" }: HightopLogoProps) {
@@ -13,14 +13,13 @@ export function HightopLogo({ size = "md", className = "" }: HightopLogoProps) {
     <figure
       role="img"
       aria-label="Hightop Challenge"
-      className={`relative max-w-full overflow-hidden ${SIZE_CLASSES[size]} ${className}`.trim()}
+      className={`relative max-w-full ${SIZE_CLASSES[size]} ${className}`.trim()}
     >
-      {/* The exported SVG has substantial canvas padding, so we scale/crop to keep the oval logo prominent. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/brand/hightop-logo.svg"
         alt="Hightop Challenge"
-        className="h-full w-full scale-[1.28] object-cover object-center"
+        className="h-full w-full object-contain object-center"
         draggable={false}
       />
       <span className="sr-only">Hightop Challenge</span>
