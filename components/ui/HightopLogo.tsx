@@ -1,11 +1,12 @@
 type HightopLogoProps = {
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "xl";
   className?: string;
 };
 
 const SIZE_CLASSES: Record<NonNullable<HightopLogoProps["size"]>, string> = {
   sm: "h-12 w-12",
   md: "h-14 w-14",
+  xl: "h-24 w-24",
 };
 
 export function HightopLogo({ size = "md", className = "" }: HightopLogoProps) {

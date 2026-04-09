@@ -21,12 +21,12 @@ type PopupState = {
 
 const PLACEHOLDER_BY_TRIGGER: Record<PopupTrigger, { title: string; subtitle: string }> = {
   "popup-on-entry": {
-    title: "Welcome Offer",
-    subtitle: "Placeholder promo that appears when guests land on a page.",
+    title: "Placeholder Advertisement",
+    subtitle: "Ad creative coming soon.",
   },
   "popup-on-scroll": {
-    title: "Limited Time Promo",
-    subtitle: "Placeholder promo triggered during scrolling.",
+    title: "Placeholder Advertisement",
+    subtitle: "Ad creative coming soon.",
   },
 };
 
@@ -159,8 +159,8 @@ export function PopupAds() {
   const placeholder = PLACEHOLDER_BY_TRIGGER[popup.trigger];
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-[90] flex items-end justify-center p-3 sm:items-center">
-      <div className="pointer-events-auto w-full max-w-md overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.28)]">
+    <div className="pointer-events-none fixed inset-0 z-[90] flex items-end justify-center bg-slate-900/30 p-2">
+      <div className="pointer-events-auto h-[82dvh] w-full max-w-md overflow-hidden rounded-t-2xl border border-slate-300 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.28)]">
         <div className="flex items-center justify-between border-b border-amber-200 bg-gradient-to-r from-amber-100 via-orange-100 to-red-100 px-3 py-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-700">Sponsored</p>
           <button
@@ -178,7 +178,7 @@ export function PopupAds() {
             href={`/api/ads/click?id=${encodeURIComponent(popup.ad.id)}`}
             target="_blank"
             rel="noreferrer noopener"
-            className="block p-3"
+            className="block h-[calc(82dvh-49px)] p-3"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -186,20 +186,14 @@ export function PopupAds() {
               alt={popup.ad.altText}
               width={popup.ad.width}
               height={popup.ad.height}
-              className="h-auto w-full rounded-lg border border-slate-200 object-cover"
+              className="h-full w-full rounded-lg border border-slate-200 object-cover"
             />
           </a>
         ) : (
-          <div className="p-3">
-            <div className="rounded-xl border border-dashed border-amber-300 bg-gradient-to-br from-[#f8e6d5] via-[#f2d4b5] to-[#e7b08b] p-4 text-center">
-              <p className="text-sm font-black text-slate-900">{placeholder.title}</p>
-              <p className="mt-1 text-xs text-slate-700">{placeholder.subtitle}</p>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/brand/hightop-coaster.svg"
-                alt="Placeholder promotional coaster"
-                className="mx-auto mt-3 h-24 w-24 rounded-lg border border-slate-200 object-cover"
-              />
+          <div className="flex h-[calc(82dvh-49px)] items-center justify-center p-3">
+            <div className="w-full rounded-xl border border-dashed border-amber-300 bg-gradient-to-br from-[#f8e6d5] via-[#f2d4b5] to-[#e7b08b] p-6 text-center">
+              <p className="text-lg font-black text-slate-900">{placeholder.title}</p>
+              <p className="mt-2 text-sm text-slate-700">{placeholder.subtitle}</p>
             </div>
           </div>
         )}

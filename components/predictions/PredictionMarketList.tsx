@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { calculatePoints, formatProbability } from "@/lib/predictions";
 import { getUserId, getVenueId } from "@/lib/storage";
+import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import type { Prediction, UserPrediction } from "@/types";
 
 type SubmitState = Record<string, string>;
@@ -27,7 +28,14 @@ type PredictionListPayload = {
 
 type UserPicksPayload = {
   ok: boolean;
-  items?: UserPrediction[];
+  items?: Array<
+    UserPrediction & {
+      marketQuestion?: string | null;
+      marketClosesAt?: string | null;
+      marketSport?: string | null;
+      marketLeague?: string | null;
+    }
+  >;
 };
 
 type PredictionQuota = {
@@ -65,9 +73,12 @@ const IN_SEASON_MONTHS_BY_SPORT: Record<string, number[] | "all"> = {
   Tennis: "all",
   Golf: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
   MMA: "all",
+  Boxing: "all",
   Motorsport: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
   Cricket: "all",
   Rugby: "all",
+  Esports: "all",
+  "Horse Racing": [3, 4, 5, 6, 7, 8, 9, 10],
 };
 
 const SPORT_ICON_BY_NAME: Record<string, string> = {
@@ -80,9 +91,12 @@ const SPORT_ICON_BY_NAME: Record<string, string> = {
   Tennis: "🎾",
   Golf: "⛳",
   MMA: "🥊",
+  Boxing: "🥊",
   Motorsport: "🏎️",
   Cricket: "🏏",
   Rugby: "🏉",
+  Esports: "🎮",
+  "Horse Racing": "🏇",
 };
 
 function getSportIcon(sport: string): string {
@@ -109,24 +123,6 @@ type RewardToken = {
   id: string;
   label: string;
 };
-
-function useRewards() {
-  const [rewards, setRewards] = useState<RewardToken[]>([]);
-
-  const addReward = (label: string) => {
-    const reward: RewardToken = {
-      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-      label,
-    };
-
-    setRewards((prev) => [...prev.slice(-1), reward]);
-    window.setTimeout(() => {
-      setRewards((prev) => prev.filter((item) => item.id !== reward.id));
-    }, 1100);
-  };
-
-  return { rewards, addReward };
-}
 
 function triggerHaptic(pattern: number | number[] = 12) {
   if (typeof navigator === "undefined" || !("vibrate" in navigator)) return;
@@ -263,8 +259,17 @@ export function PredictionMarketList() {
   const [sort, setSort] = useState<SortKey>("closing-soon");
   const [browseFiltersCollapsed, setBrowseFiltersCollapsed] = useState(false);
   const [recentPicks, setRecentPicks] = useState<UserPrediction[]>([]);
+  const [pendingPicks, setPendingPicks] = useState<
+    Array<
+      UserPrediction & {
+        marketQuestion?: string | null;
+        marketClosesAt?: string | null;
+        marketSport?: string | null;
+        marketLeague?: string | null;
+      }
+    >
+  >([]);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
-  const { rewards, addReward } = useRewards();
 
   const hasFilters = useMemo(
     () => Boolean(searchQuery || selectedSport || selectedLeague || selectedCloseWindow !== "all"),
@@ -414,6 +419,25 @@ export function PredictionMarketList() {
       setRecentPicks([]);
     }
   }, [userId]);
+  const loadPendingPicks = useCallback(async () => {
+    if (!userId) {
+      setPendingPicks([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/picks?userId=${encodeURIComponent(userId)}&status=pending&pageSize=20&page=1&includeMarkets=true`,
+        { cache: "no-store" }
+      );
+      const payload = (await response.json()) as UserPicksPayload;
+      if (payload.ok) {
+        setPendingPicks(payload.items ?? []);
+      }
+    } catch {
+      setPendingPicks([]);
+    }
+  }, [userId]);
 
   useEffect(() => {
     const nextUserId = getUserId();
@@ -446,6 +470,14 @@ export function PredictionMarketList() {
     }
     void loadRecentPicks();
   }, [loadRecentPicks, userId]);
+
+  useEffect(() => {
+    if (!userId) {
+      setPendingPicks([]);
+      return;
+    }
+    void loadPendingPicks();
+  }, [loadPendingPicks, userId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -754,16 +786,10 @@ export function PredictionMarketList() {
       }
 
       setMessages((prev) => ({ ...prev, [predictionId]: "Pick placed successfully." }));
-      const points = calculatePoints(selectedOutcome.probability);
-      addReward(`+${points} picks`);
       triggerHaptic([25, 40, 25]);
-      window.dispatchEvent(
-        new CustomEvent("tp:points-updated", {
-          detail: { source: "prediction-pick", delta: points },
-        })
-      );
       await loadQuota();
       await loadRecentPicks();
+      await loadPendingPicks();
     } catch (error) {
       setMessages((prev) => ({
         ...prev,
@@ -819,18 +845,6 @@ export function PredictionMarketList() {
 
   return (
     <div className="space-y-4">
-      {rewards.length > 0 ? (
-        <div className="pointer-events-none -mt-1 flex flex-wrap justify-center gap-2">
-          {rewards.map((reward) => (
-            <div
-              key={reward.id}
-              className="tp-pop-in rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-3 py-1 text-xs font-bold text-white shadow-lg"
-            >
-              🎉 {reward.label}
-            </div>
-          ))}
-        </div>
-      ) : null}
       {quota && !quota.isAdminBypass ? (
         <div className="space-y-1 rounded-md border border-slate-200 bg-slate-50 p-3">
           <div className="flex items-center justify-between text-xs font-medium text-slate-700">
@@ -857,6 +871,35 @@ export function PredictionMarketList() {
           You are not joined to a venue in this browser yet. Use Home to join a venue first.
         </div>
       )}
+      <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-3">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Your Pending Predictions</p>
+          <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-700">
+            {pendingPicks.length}
+          </span>
+        </div>
+        {pendingPicks.length === 0 ? (
+          <p className="text-sm text-slate-600">No pending predictions right now.</p>
+        ) : (
+          <ul className="space-y-2">
+            {pendingPicks.map((pick) => (
+              <li key={pick.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <p className="text-sm font-semibold text-slate-900">{pick.marketQuestion ?? `Market ${pick.predictionId}`}</p>
+                <p className="mt-1 text-xs text-slate-600">
+                  Pick: {pick.outcomeTitle}
+                  {(pick.marketSport || pick.marketLeague) ? " · " : ""}
+                  {[pick.marketSport, pick.marketLeague].filter(Boolean).join(" · ")}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  {pick.marketClosesAt
+                    ? `Resolves after: ${new Date(pick.marketClosesAt).toLocaleString()}`
+                    : `Placed: ${new Date(pick.createdAt).toLocaleString()}`}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
         <div className="flex items-center justify-between gap-2">
@@ -1140,52 +1183,55 @@ export function PredictionMarketList() {
         </section>
       ) : (
         <div className="space-y-5">
-          {groupedMarketSections.map((section) => (
-            <section key={section.id} id={section.id} className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="inline-flex items-center gap-2">
-                  <span className="text-base" aria-hidden="true">
-                    {getSportIcon(markets.find((market) => market.league === section.label)?.sport || selectedSport || "Sports")}
-                  </span>
-                  <h3 className="text-sm font-semibold text-slate-900">{section.label}</h3>
-                  <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-700">
-                    {section.markets.length}
-                  </span>
+          {groupedMarketSections.map((section, index) => (
+            <div key={section.id} className="space-y-4">
+              <section id={section.id} className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="inline-flex items-center gap-2">
+                    <span className="text-base" aria-hidden="true">
+                      {getSportIcon(markets.find((market) => market.league === section.label)?.sport || selectedSport || "Sports")}
+                    </span>
+                    <h3 className="text-sm font-semibold text-slate-900">{section.label}</h3>
+                    <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-700">
+                      {section.markets.length}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCollapsedSections((prev) => ({
+                          ...prev,
+                          [section.id]: !prev[section.id],
+                        }));
+                      }}
+                      className={`${BUTTON_POP_CLASS} rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-400`}
+                    >
+                      {collapsedSections[section.id] ? "Expand" : "Collapse"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const sectionSport = markets.find((market) => market.league === section.label)?.sport ?? "";
+                        setSelectedSport(sectionSport);
+                        setSelectedLeague(section.label);
+                      }}
+                      className={`${BUTTON_POP_CLASS} rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-400`}
+                    >
+                      Filter To This League
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCollapsedSections((prev) => ({
-                        ...prev,
-                        [section.id]: !prev[section.id],
-                      }));
-                    }}
-                    className={`${BUTTON_POP_CLASS} rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-400`}
-                  >
-                    {collapsedSections[section.id] ? "Expand" : "Collapse"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const sectionSport = markets.find((market) => market.league === section.label)?.sport ?? "";
-                      setSelectedSport(sectionSport);
-                      setSelectedLeague(section.label);
-                    }}
-                    className={`${BUTTON_POP_CLASS} rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-400`}
-                  >
-                    Filter To This League
-                  </button>
-                </div>
-              </div>
-              {collapsedSections[section.id] ? (
-                <p className="text-xs text-slate-500">Section collapsed.</p>
-              ) : (
-                <div className="grid grid-cols-1 gap-3">
-                  {section.markets.map((market) => renderMarketCard(market))}
-                </div>
-              )}
-            </section>
+                {collapsedSections[section.id] ? (
+                  <p className="text-xs text-slate-500">Section collapsed.</p>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3">
+                    {section.markets.map((market) => renderMarketCard(market))}
+                  </div>
+                )}
+              </section>
+              {(index + 1) % 2 === 0 ? <InlineSlotAdClient slot="leaderboard-sidebar" showPlaceholder /> : null}
+            </div>
           ))}
         </div>
       )}

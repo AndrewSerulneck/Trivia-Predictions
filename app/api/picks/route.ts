@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { listUserPredictions } from "@/lib/userPredictions";
+import { getPredictionMarketById } from "@/lib/polymarket";
 import type { PredictionStatus } from "@/types";
 
 type StatusFilter = PredictionStatus | "all";
@@ -19,10 +20,16 @@ function normalizePositiveInt(value: string | null, fallback: number): number {
   return parsed;
 }
 
+function normalizeBoolean(value: string | null): boolean {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  return normalized === "1" || normalized === "true" || normalized === "yes";
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const userId = (searchParams.get("userId") ?? "").trim();
   const status = normalizeStatus((searchParams.get("status") ?? "all").trim().toLowerCase());
+  const includeMarkets = normalizeBoolean(searchParams.get("includeMarkets"));
   const pageSize = Math.max(1, Math.min(50, normalizePositiveInt(searchParams.get("pageSize"), 25)));
   const page = Math.max(1, normalizePositiveInt(searchParams.get("page"), 1));
   const offset = (page - 1) * pageSize;
@@ -44,11 +51,26 @@ export async function GET(request: Request) {
     limit: pageSize,
     offset,
   });
+
+  const enrichedItems = includeMarkets
+    ? await Promise.all(
+        items.map(async (item) => {
+          const market = await getPredictionMarketById(item.predictionId);
+          return {
+            ...item,
+            marketQuestion: market?.question ?? null,
+            marketClosesAt: market?.closesAt ?? null,
+            marketSport: market?.sport ?? null,
+            marketLeague: market?.league ?? null,
+          };
+        })
+      )
+    : items;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
   return NextResponse.json({
     ok: true,
-    items,
+    items: enrichedItems,
     page: Math.min(page, totalPages),
     pageSize,
     totalItems,

@@ -101,9 +101,12 @@ const SPORT_KEYWORDS: Array<{ sport: string; keywords: string[] }> = [
   { sport: "Tennis", keywords: ["tennis", "atp", "wta", "grand slam", "wimbledon", "us open"] },
   { sport: "Golf", keywords: ["golf", "pga", "liv golf", "masters", "ryder cup"] },
   { sport: "MMA", keywords: ["mma", "ufc", "bellator"] },
+  { sport: "Boxing", keywords: ["boxing", "boxer", "heavyweight", "title bout"] },
   { sport: "Motorsport", keywords: ["formula 1", "f1", "nascar", "indycar", "motogp"] },
   { sport: "Cricket", keywords: ["cricket", "ipl", "test match", "odi"] },
   { sport: "Rugby", keywords: ["rugby", "six nations", "super rugby"] },
+  { sport: "Esports", keywords: ["esports", "e-sports", "valorant", "league of legends", "dota"] },
+  { sport: "Horse Racing", keywords: ["horse racing", "kentucky derby", "belmont stakes", "preakness"] },
 ];
 
 const LEAGUE_DEFINITIONS: LeagueDefinition[] = [
@@ -129,15 +132,19 @@ const LEAGUE_DEFINITIONS: LeagueDefinition[] = [
   { league: "NLL", sport: "Lacrosse", keywords: [" nll ", "national lacrosse league"] },
   { league: "ATP Tour", sport: "Tennis", keywords: ["atp", "atp tour"] },
   { league: "WTA Tour", sport: "Tennis", keywords: ["wta", "wta tour"] },
+  { league: "Grand Slam", sport: "Tennis", keywords: ["grand slam", "wimbledon", "french open", "australian open", "us open"] },
   { league: "PGA Tour", sport: "Golf", keywords: ["pga tour", " pga "] },
   { league: "LIV Golf", sport: "Golf", keywords: ["liv golf"] },
   { league: "UFC", sport: "MMA", keywords: [" ufc ", "ultimate fighting championship"] },
   { league: "Bellator", sport: "MMA", keywords: ["bellator"] },
+  { league: "Boxing", sport: "Boxing", keywords: ["boxing", "title bout"] },
   { league: "Formula 1", sport: "Motorsport", keywords: ["formula 1", " f1 "] },
   { league: "NASCAR", sport: "Motorsport", keywords: ["nascar"] },
   { league: "IndyCar", sport: "Motorsport", keywords: ["indycar"] },
   { league: "IPL", sport: "Cricket", keywords: [" ipl ", "indian premier league"] },
   { league: "Six Nations", sport: "Rugby", keywords: ["six nations"] },
+  { league: "Esports", sport: "Esports", keywords: ["esports", "e-sports", "valorant", "league of legends", "dota"] },
+  { league: "Triple Crown", sport: "Horse Racing", keywords: ["kentucky derby", "belmont stakes", "preakness"] },
 ];
 
 type GammaMarket = {
@@ -826,7 +833,11 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
   const sportsCatalogSource = broadCategory === "sports"
     ? filteredMarkets.filter((item) => Boolean(item.sport))
     : filteredMarkets;
-  const sports = Array.from(new Set(sportsCatalogSource.map((item) => item.sport).filter(Boolean) as string[]))
+  const supportedSports = SPORT_KEYWORDS.map((item) => item.sport);
+  const sports = Array.from(new Set([
+    ...supportedSports,
+    ...(sportsCatalogSource.map((item) => item.sport).filter(Boolean) as string[]),
+  ]))
     .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
   const leaguesBySport: Record<string, string[]> = {};
   for (const sportName of sports) {

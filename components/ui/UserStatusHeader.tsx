@@ -61,9 +61,10 @@ function GoldCoinIcon({ className = "h-5 w-5" }: { className?: string }) {
 
 type UserStatusHeaderProps = {
   variant?: "default" | "trivia";
+  showAlerts?: boolean;
 };
 
-export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps) {
+export function UserStatusHeader({ variant = "default", showAlerts = true }: UserStatusHeaderProps) {
   const pathname = usePathname();
   const isJoinRoute = pathname === "/" || pathname === "/join";
   const [username, setUsername] = useState("");
@@ -300,7 +301,7 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
   const compact = variant === "trivia";
 
   return (
-    <div className={`relative flex w-full items-center ${compact ? "flex-wrap justify-between gap-1" : "justify-center"}`}>
+    <div className={`relative flex w-full items-center ${compact ? "flex-wrap justify-between gap-1" : "justify-between gap-2"}`}>
       {coinFlights.length > 0 ? (
         <div className="pointer-events-none fixed inset-0 z-[120]">
           {coinFlights.map((item) => (
@@ -322,7 +323,7 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
           ))}
         </div>
       ) : null}
-      <div className={`flex items-center ${compact ? "w-full justify-between gap-1" : "justify-center gap-2"}`}>
+      <div className={`flex items-center ${compact ? "w-full justify-between gap-1" : "min-w-0 gap-2"}`}>
         <div
           className={`flex items-center rounded-2xl border-slate-900 bg-[#f7d7b0] font-medium text-slate-900 ${
             compact
@@ -368,8 +369,8 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
           +{pointsGain} coins
         </div>
       ) : null}
-      {variant !== "trivia" ? (
-        <div className="absolute right-0 top-1/2 -translate-y-1/2">
+      {variant !== "trivia" && showAlerts ? (
+        <div className="shrink-0">
           <NotificationBell />
         </div>
       ) : null}

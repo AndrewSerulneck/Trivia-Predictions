@@ -1,5 +1,6 @@
 import { UserStatusHeader } from "@/components/ui/UserStatusHeader";
 import { HightopLogo } from "@/components/ui/HightopLogo";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 
 type PageShellProps = {
   title: string;
@@ -20,13 +21,20 @@ export function PageShell({
     <div className="flex min-h-[100dvh] flex-col gap-4">
       <header className="tp-hud-card sticky top-2 z-20 p-4">
         <div className="flex flex-col gap-3">
+          {showUserStatus ? (
+            <div className="flex justify-end">
+              <div className="max-w-full">
+                <NotificationBell />
+              </div>
+            </div>
+          ) : null}
           <div className="text-center">
-            {showBranding ? <HightopLogo size="md" className="mx-auto mb-1 drop-shadow-[0_6px_14px_rgba(31,42,54,0.25)]" /> : null}
+            {showBranding ? <HightopLogo size="xl" className="mx-auto mb-1 drop-shadow-[0_6px_14px_rgba(31,42,54,0.25)]" /> : null}
             {showBranding ? <p className="text-sm font-black uppercase tracking-[0.18em] text-slate-900">Hightop Challenge</p> : null}
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{title}</h1>
             {description ? <p className="mt-1 text-sm font-medium text-slate-700">{description}</p> : null}
           </div>
-          {showUserStatus ? <UserStatusHeader /> : null}
+          {showUserStatus ? <UserStatusHeader showAlerts={false} /> : null}
         </div>
       </header>
 
