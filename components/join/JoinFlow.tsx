@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import jsQR from "jsqr";
 import { PageShell } from "@/components/ui/PageShell";
 import { BackButton } from "@/components/navigation/BackButton";
-import { BrandBadge } from "@/components/ui/BrandBadge";
 import {
   createUserProfile,
   ensureAnonymousSession,
@@ -37,7 +36,7 @@ function getErrorMessage(error: unknown, fallback: string): string {
 
 const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig(venue, index);
 
-const ACCESS_DISTANCE_METERS = 1000;
+const ACCESS_DISTANCE_METERS = 200;
 
 function getGeofenceThresholdMeters(venueRadius: number, accuracy?: number): number {
   void venueRadius;
@@ -474,10 +473,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       description="Select a venue or scan QR code."
     >
       <div className="space-y-4 text-sm">
-        <section className="rounded-2xl border border-amber-200 bg-gradient-to-r from-[#fff3dc] via-[#ffe4c7] to-[#ffd7c2] p-3 text-center shadow-sm">
-          <BrandBadge size="md" className="mx-auto mb-2" />
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#7a2f2c]">Scan To Join The Challenge</p>
-        </section>
         {errorMessage && (
           <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-rose-700">
             {errorMessage}
