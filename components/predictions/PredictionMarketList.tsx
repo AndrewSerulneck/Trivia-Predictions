@@ -152,35 +152,35 @@ function marketMatchesCloseWindow(market: Prediction, closeWindow: CloseWindowKe
     return true;
   }
 
-  const closesAtDate = new Date(market.closesAt);
-  if (Number.isNaN(closesAtDate.getTime())) {
+  const closeTs = +new Date(market.closesAt);
+  if (!Number.isFinite(closeTs)) {
     return false;
   }
 
   const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  if (closesAtDate < startOfToday) {
+  const nowTs = now.getTime();
+  if (closeTs < nowTs) {
     return false;
   }
 
+  const closesAtDate = new Date(closeTs);
   if (closeWindow === "today") {
     const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
     return closesAtDate < endOfToday;
   }
 
   if (closeWindow === "this-week") {
-    const daysUntilEndOfWeek = 7 - now.getDay();
-    const endOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilEndOfWeek);
-    return closesAtDate < endOfWeek;
+    const endOfWindow = new Date(nowTs + 7 * 24 * 60 * 60 * 1000);
+    return closesAtDate <= endOfWindow;
   }
 
   if (closeWindow === "this-month") {
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    return closesAtDate < endOfMonth;
+    const endOfWindow = new Date(nowTs + 30 * 24 * 60 * 60 * 1000);
+    return closesAtDate <= endOfWindow;
   }
 
-  const endOfYear = new Date(now.getFullYear() + 1, 0, 1);
-  return closesAtDate < endOfYear;
+  const endOfWindow = new Date(nowTs + 365 * 24 * 60 * 60 * 1000);
+  return closesAtDate <= endOfWindow;
 }
 
 export function PredictionMarketList() {
@@ -233,11 +233,6 @@ export function PredictionMarketList() {
         if (!market.sport || !marketMatchesCloseWindow(market, selectedCloseWindow)) {
           return false;
         }
-        // Hide loosely-classified markets that do not map to a known league
-        // to avoid "Other <Sport>" buckets with unrelated items.
-        if (!market.league?.trim()) {
-          return false;
-        }
         if (selectedSport && market.sport !== selectedSport) {
           return false;
         }
@@ -264,7 +259,7 @@ export function PredictionMarketList() {
   const groupedMarketSections = useMemo(() => {
     const byLeague = new Map<string, Prediction[]>();
     for (const market of filteredMarkets) {
-      const label = market.league?.trim() || `Other ${market.sport?.trim() || "Sports"}`;
+      const label = market.league?.trim() || "Additional Markets";
       const existing = byLeague.get(label) ?? [];
       existing.push(market);
       byLeague.set(label, existing);
@@ -725,36 +720,36 @@ export function PredictionMarketList() {
   };
 
   const renderMarketCard = (market: Prediction) => (
-    <article key={market.id} className="relative rounded-lg border border-slate-200 p-3">
+    <article key={market.id} className="relative rounded-xl border border-slate-200 bg-white/90 p-4 shadow-sm">
       <h2 className="font-medium">{market.question}</h2>
       <p className="mt-1 text-xs text-slate-500">
         {[market.sport, market.league].filter(Boolean).join(" · ")}
         {[market.sport, market.league].some(Boolean) ? " · " : ""}
         Closes: {new Date(market.closesAt).toLocaleString()}
       </p>
-      <ul className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
+      <ul className="mt-3 space-y-2">
         {market.outcomes.map((outcome) => (
           <li
             key={outcome.id}
-            className="flex items-center justify-between gap-3 rounded-md border border-slate-100 bg-slate-50 p-2 text-sm"
+            className="rounded-md border border-slate-100 bg-slate-50 p-2 text-sm"
           >
-            <span>{outcome.title}</span>
-            <div className="flex items-center gap-2">
-              <span className="font-medium">
+            <div className="flex items-start justify-between gap-2">
+              <span className="min-w-0 flex-1">{outcome.title}</span>
+              <span className="shrink-0 font-medium text-slate-700">
                 {formatProbability(outcome.probability)} · {calculatePoints(outcome.probability)} pts
               </span>
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic();
-                  void submitPick(market.id, outcome.id);
-                }}
-                disabled={Boolean(pendingByMarket[market.id])}
-                className={`${BUTTON_POP_CLASS} rounded-md bg-gradient-to-r from-blue-700 to-cyan-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60`}
-              >
-                Pick
-              </button>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic();
+                void submitPick(market.id, outcome.id);
+              }}
+              disabled={Boolean(pendingByMarket[market.id])}
+              className={`tp-clean-button ${BUTTON_POP_CLASS} mt-2 inline-flex w-full items-center justify-center rounded-md bg-gradient-to-r from-blue-700 to-cyan-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60`}
+            >
+              Pick
+            </button>
           </li>
         ))}
       </ul>
@@ -1118,13 +1113,13 @@ export function PredictionMarketList() {
         </div>
       ) : null}
 
-      {loading ? (
+	      {loading ? (
         <section className="space-y-3">
           <div className="flex items-center gap-2 text-sm text-slate-600">
             <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
             Loading live prediction markets...
           </div>
-          <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3">
             {Array.from({ length: 6 }).map((_, index) => (
               <div key={`prediction-skeleton-${index}`} className="rounded-lg border border-slate-200 p-3">
                 <div className="h-4 w-5/6 animate-pulse rounded bg-slate-200" />
@@ -1136,6 +1131,10 @@ export function PredictionMarketList() {
               </div>
             ))}
           </div>
+        </section>
+      ) : markets.length === 0 ? (
+        <section className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+          No markets available.
         </section>
       ) : viewMode === "grouped" ? (
         <div className="space-y-5">
@@ -1180,7 +1179,7 @@ export function PredictionMarketList() {
               {collapsedSections[section.id] ? (
                 <p className="text-xs text-slate-500">Section collapsed.</p>
               ) : (
-                <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3">
                   {section.markets.map((market) => renderMarketCard(market))}
                 </div>
               )}
@@ -1188,7 +1187,7 @@ export function PredictionMarketList() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3">
           {markets.map((market, index) => (
             <div key={market.id} className="contents">
               {renderMarketCard(market)}

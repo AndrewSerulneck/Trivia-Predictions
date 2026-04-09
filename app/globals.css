@@ -6,12 +6,12 @@
 
 :root {
   color-scheme: light;
-  --tp-ink: #1c2b3a;
-  --tp-cream: #f9f1e6;
-  --tp-gold: #f2bb66;
-  --tp-orange: #e9784e;
-  --tp-red: #a93d3a;
-  --tp-umber: #6a2d2d;
+  --tp-ink: #1f2a36;
+  --tp-cream: #f7ede0;
+  --tp-gold: #d89a4f;
+  --tp-orange: #c96b40;
+  --tp-red: #a64534;
+  --tp-umber: #853626;
 }
 
 body {
@@ -21,10 +21,10 @@ body {
   text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
   background:
-    radial-gradient(circle at 15% 14%, rgba(242, 187, 102, 0.36), transparent 33%),
-    radial-gradient(circle at 88% 12%, rgba(233, 120, 78, 0.34), transparent 32%),
-    radial-gradient(circle at 80% 80%, rgba(169, 61, 58, 0.24), transparent 30%),
-    linear-gradient(180deg, #fff7ea 0%, #fde9d0 52%, #f8ddc5 100%);
+    radial-gradient(circle at 16% 12%, rgba(214, 130, 62, 0.32), transparent 34%),
+    radial-gradient(circle at 88% 18%, rgba(166, 69, 52, 0.28), transparent 34%),
+    radial-gradient(circle at 72% 80%, rgba(133, 54, 38, 0.2), transparent 30%),
+    linear-gradient(180deg, #fdf4e8 0%, #f7e3cf 55%, #f0d2bb 100%);
 }
 
 html {
@@ -47,6 +47,17 @@ button:not(:disabled):active,
 a[role="button"]:active {
   transform: translate(2px, 2px) scale(0.98);
   box-shadow: 2px 2px 0 var(--tp-ink);
+}
+
+.tp-clean-button {
+  border: 1px solid rgba(28, 43, 58, 0.26) !important;
+  box-shadow: none !important;
+  border-radius: 10px !important;
+}
+
+.tp-clean-button:active {
+  transform: translateY(1px) !important;
+  box-shadow: none !important;
 }
 
 input,
@@ -72,10 +83,10 @@ textarea::placeholder {
   border-radius: 26px;
   box-shadow: 8px 8px 0 var(--tp-ink);
   background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(253, 245, 234, 0.88)),
-    radial-gradient(circle at 85% 14%, rgba(242, 187, 102, 0.2), transparent 44%),
-    radial-gradient(circle at 12% 88%, rgba(233, 120, 78, 0.18), transparent 40%),
-    #fffaf3;
+    linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(251, 241, 228, 0.9)),
+    radial-gradient(circle at 85% 14%, rgba(216, 154, 79, 0.19), transparent 44%),
+    radial-gradient(circle at 12% 88%, rgba(166, 69, 52, 0.14), transparent 40%),
+    #fff9f0;
 }
 
 .tp-hud-card {
@@ -83,7 +94,7 @@ textarea::placeholder {
   border-radius: 28px;
   box-shadow: 8px 8px 0 var(--tp-ink);
   background:
-    linear-gradient(135deg, var(--tp-cream), #ffdcb9 32%, #f0a064 68%, #bf5040),
+    linear-gradient(135deg, var(--tp-cream), #f2d2b1 32%, #d98a56 66%, #a64534),
     radial-gradient(circle at 84% 16%, rgba(255, 255, 255, 0.36), transparent 38%);
 }
 

@@ -1,4 +1,5 @@
 import { UserStatusHeader } from "@/components/ui/UserStatusHeader";
+import { HightopLogo } from "@/components/ui/HightopLogo";
 
 type PageShellProps = {
   title: string;
@@ -20,9 +21,8 @@ export function PageShell({
       <header className="tp-hud-card sticky top-2 z-20 p-4">
         <div className="flex flex-col gap-3">
           <div className="text-center">
-            {showBranding ? (
-              <p className="text-base font-black uppercase tracking-[0.2em] text-slate-900">Hightop Challenge</p>
-            ) : null}
+            {showBranding ? <HightopLogo size="md" className="mx-auto mb-2" /> : null}
+            {showBranding ? <p className="text-sm font-black uppercase tracking-[0.18em] text-slate-900">Hightop Challenge</p> : null}
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{title}</h1>
             {description ? <p className="mt-1 text-sm font-medium text-slate-700">{description}</p> : null}
           </div>

@@ -23,6 +23,7 @@ function extractPointsFromMessage(message: string): number {
 
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const userIdRef = useRef("");
   const knownNotificationIdsRef = useRef<Set<string>>(new Set());
   const hasLoadedOnceRef = useRef(false);
@@ -103,6 +104,31 @@ export function NotificationBell() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const onPointerDown = (event: MouseEvent) => {
+      const root = rootRef.current;
+      const target = event.target as Node | null;
+      if (root && target && !root.contains(target)) {
+        setOpen(false);
+      }
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    window.addEventListener("mousedown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("mousedown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
   const markRead = async (notificationId?: string) => {
     const userId = userIdRef.current;
     if (!userId) return;
@@ -117,42 +143,54 @@ export function NotificationBell() {
   };
 
   return (
-    <div className="relative">
+    <div ref={rootRef} className="relative">
       <button
         id="tp-notification-bell"
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="rounded-md bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200"
+        className="tp-clean-button inline-flex items-center gap-2 rounded-md bg-gradient-to-r from-[#f9f1e6] to-[#f5ddbf] px-3 py-1.5 text-sm font-semibold text-[#1c2b3a] hover:from-[#fff6ea] hover:to-[#f9e3c8]"
+        aria-haspopup="menu"
+        aria-expanded={open}
       >
-        Notifications
+        <span aria-hidden="true">🔔</span>
+        Alerts
         {unreadCount > 0 ? (
           <span className="ml-2 rounded-full bg-rose-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
         ) : null}
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-20 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-sm font-semibold">Notifications</p>
+        <div className="absolute right-0 z-20 mt-2 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-[#d8c4aa] bg-gradient-to-b from-[#fffaf4] to-white shadow-[0_16px_34px_rgba(28,43,58,0.2)]">
+          <div className="flex items-center justify-between border-b border-[#eadbcc] bg-[#fdf3e7] px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-[#1c2b3a]">Notifications</p>
+              <p className="text-[11px] text-[#6b7280]">Recent account and game updates</p>
+            </div>
             <button
               type="button"
               onClick={() => {
                 void markRead();
               }}
-              className="shrink-0 rounded-md bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200"
+              className="tp-clean-button shrink-0 rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-[#1c2b3a] hover:bg-[#fff8ef]"
             >
               Mark all read
             </button>
           </div>
           {items.length === 0 ? (
-            <p className="text-sm text-slate-600">No notifications yet.</p>
+            <div className="space-y-1 px-4 py-6 text-center">
+              <p className="text-2xl" aria-hidden="true">
+                🔕
+              </p>
+              <p className="text-sm font-semibold text-[#1c2b3a]">You&apos;re all caught up</p>
+              <p className="text-xs text-slate-600">No notifications yet. We&apos;ll post updates here.</p>
+            </div>
           ) : (
-            <ul className="max-h-80 space-y-2 overflow-y-auto">
+            <ul className="max-h-80 space-y-2 overflow-y-auto p-3">
               {items.map((item) => (
                 <li
                   key={item.id}
-                  className={`rounded-md border p-2 text-xs ${
-                    item.read ? "border-slate-200 bg-white text-slate-600" : "border-blue-200 bg-blue-50 text-slate-800"
+                  className={`rounded-lg border p-3 text-xs shadow-sm ${
+                    item.read ? "border-[#eadbcc] bg-white text-slate-600" : "border-[#d5e4f3] bg-[#f3f8ff] text-slate-800"
                   }`}
                 >
                   <p>{item.message}</p>
@@ -164,7 +202,7 @@ export function NotificationBell() {
                         onClick={() => {
                           void markRead(item.id);
                         }}
-                        className="font-medium text-blue-700 hover:text-blue-900"
+                        className="tp-clean-button rounded-md bg-white px-2 py-1 font-semibold text-blue-700 hover:text-blue-900"
                       >
                         Mark read
                       </button>

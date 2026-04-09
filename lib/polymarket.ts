@@ -690,7 +690,7 @@ async function loadActiveNormalizedMarkets(): Promise<Prediction[]> {
     closed: "false",
   });
 
-  const gammaMarkets = await fetchAllGammaMarkets(query);
+  const gammaMarkets = await fetchAllGammaMarkets(query, normalizePositiveInt(DEFAULT_SCAN_LIMIT, 1000));
   return gammaMarkets
     .map((item) => normalizeMarket(item))
     .filter((item): item is Prediction => Boolean(item));
