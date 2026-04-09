@@ -536,23 +536,23 @@ function normalizeOddsEvent(event: OddsEvent, fallbackSport?: OddsSportConfig): 
   const favoriteOutcome = homeIsFavorite
     ? {
         id: toOddsOutcomeId(eventId, "home"),
-        title: homeTeam,
+        title: "Yes",
         probability: normalizedHomeProbability,
       }
     : {
         id: toOddsOutcomeId(eventId, "away"),
-        title: awayTeam,
+        title: "Yes",
         probability: normalizedAwayProbability,
       };
   const underdogOutcome = homeIsFavorite
     ? {
         id: toOddsOutcomeId(eventId, "away"),
-        title: awayTeam,
+        title: "No",
         probability: normalizedAwayProbability,
       }
     : {
         id: toOddsOutcomeId(eventId, "home"),
-        title: homeTeam,
+        title: "No",
         probability: normalizedHomeProbability,
       };
 
