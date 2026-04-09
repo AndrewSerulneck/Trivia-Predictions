@@ -59,7 +59,7 @@ export interface PredictionOutcome {
 export interface Prediction {
   id: string;
   question: string;
-  source: "mock" | "polymarket";
+  source: "mock" | "polymarket" | "odds-api";
   closesAt: string;
   outcomes: PredictionOutcome[];
   category?: string;

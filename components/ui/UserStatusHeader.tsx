@@ -301,7 +301,7 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
   const compact = variant === "trivia";
 
   return (
-    <div className={`relative flex w-full items-center ${compact ? "flex-wrap justify-between gap-1" : "justify-between gap-2"}`}>
+    <div className={`relative flex w-full items-center ${compact ? "flex-wrap justify-between gap-1" : "justify-center"}`}>
       {coinFlights.length > 0 ? (
         <div className="pointer-events-none fixed inset-0 z-[120]">
           {coinFlights.map((item) => (
@@ -323,7 +323,7 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
           ))}
         </div>
       ) : null}
-      <div className={`flex items-center ${compact ? "w-full justify-between gap-1" : "min-w-0 gap-2"}`}>
+      <div className={`flex items-center ${compact ? "w-full justify-between gap-1" : "justify-center gap-2 pr-2"}`}>
         <div
           className={`flex items-center rounded-2xl border-slate-900 bg-[#f7d7b0] font-medium text-slate-900 ${
             compact

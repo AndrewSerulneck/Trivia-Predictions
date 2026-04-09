@@ -258,6 +258,7 @@ export function PredictionMarketList() {
   const [selectedLeague, setSelectedLeague] = useState("");
   const [sort, setSort] = useState<SortKey>("closing-soon");
   const [browseFiltersCollapsed, setBrowseFiltersCollapsed] = useState(false);
+  const [pendingPredictionsCollapsed, setPendingPredictionsCollapsed] = useState(false);
   const [recentPicks, setRecentPicks] = useState<UserPrediction[]>([]);
   const [pendingPicks, setPendingPicks] = useState<
     Array<
@@ -873,12 +874,23 @@ export function PredictionMarketList() {
       )}
       <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-3">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Your Pending Predictions</p>
-          <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-700">
-            {pendingPicks.length}
-          </span>
+          <div className="inline-flex items-center gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Your Pending Predictions</p>
+            <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-700">
+              {pendingPicks.length}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setPendingPredictionsCollapsed((value) => !value)}
+            className={`${BUTTON_POP_CLASS} rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:border-slate-400`}
+          >
+            {pendingPredictionsCollapsed ? "Expand" : "Collapse"}
+          </button>
         </div>
-        {pendingPicks.length === 0 ? (
+        {pendingPredictionsCollapsed ? (
+          <p className="text-sm text-slate-500">Section collapsed.</p>
+        ) : pendingPicks.length === 0 ? (
           <p className="text-sm text-slate-600">No pending predictions right now.</p>
         ) : (
           <ul className="space-y-2">

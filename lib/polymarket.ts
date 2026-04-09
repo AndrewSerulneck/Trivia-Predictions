@@ -194,6 +194,72 @@ const EXCLUDED_BROAD_CATEGORIES = new Set(["politics", "geopolitics", "religion"
 
 let activeMarketsCache: { expiresAt: number; items: Prediction[] } | null = null;
 let activeMarketsInFlight: Promise<Prediction[]> | null = null;
+let oddsMarketsCache: { expiresAt: number; items: Prediction[] } | null = null;
+let oddsMarketsInFlight: Promise<Prediction[]> | null = null;
+
+const ODDS_API_BASE_URL = process.env.ODDS_API_BASE_URL ?? "https://api.the-odds-api.com/v4";
+const ODDS_API_KEY = process.env.ODDS_API_KEY?.trim() ?? "";
+const ODDS_API_LOOKAHEAD_HOURS = Number.parseInt(process.env.ODDS_API_LOOKAHEAD_HOURS ?? "168", 10);
+const ODDS_API_SCORES_DAYS = Number.parseInt(process.env.ODDS_API_SCORES_DAYS ?? "14", 10);
+const ODDS_API_CACHE_TTL_MS = Number.parseInt(process.env.ODDS_API_CACHE_TTL_MS ?? "120000", 10);
+const ODDS_API_SPORT_KEYS = (process.env.ODDS_API_SPORT_KEYS ?? "").trim();
+
+type OddsSportConfig = {
+  key: string;
+  sport: string;
+  league: string;
+};
+
+type OddsSportCatalogItem = {
+  key?: string;
+  title?: string;
+  active?: boolean;
+  has_outrights?: boolean;
+};
+
+const DEFAULT_ODDS_SPORTS: OddsSportConfig[] = [
+  { key: "americanfootball_nfl", sport: "Football", league: "NFL" },
+  { key: "americanfootball_ncaaf", sport: "Football", league: "NCAA Football" },
+  { key: "basketball_nba", sport: "Basketball", league: "NBA" },
+  { key: "basketball_ncaab", sport: "Basketball", league: "NCAA Basketball" },
+  { key: "baseball_mlb", sport: "Baseball", league: "MLB" },
+  { key: "icehockey_nhl", sport: "Hockey", league: "NHL" },
+  { key: "soccer_usa_mls", sport: "Soccer", league: "MLS" },
+  { key: "mma_mixed_martial_arts", sport: "MMA", league: "UFC / MMA" },
+  { key: "tennis_atp_singles", sport: "Tennis", league: "ATP Tour" },
+  { key: "tennis_wta_singles", sport: "Tennis", league: "WTA Tour" },
+];
+
+const ODDS_SPORT_BY_KEY = new Map(DEFAULT_ODDS_SPORTS.map((item) => [item.key, item]));
+
+type OddsEvent = {
+  id?: string;
+  sport_key?: string;
+  commence_time?: string;
+  home_team?: string;
+  away_team?: string;
+  bookmakers?: Array<{
+    markets?: Array<{
+      key?: string;
+      outcomes?: Array<{
+        name?: string;
+        price?: number | string;
+      }>;
+    }>;
+  }>;
+};
+
+type OddsScoreEvent = {
+  id?: string;
+  sport_key?: string;
+  completed?: boolean;
+  home_team?: string;
+  away_team?: string;
+  scores?: Array<{
+    name?: string;
+    score?: number | string | null;
+  }>;
+};
 
 function includesAny(text: string, keywords: string[]): boolean {
   return keywords.some((keyword) => text.includes(keyword));
@@ -376,6 +442,256 @@ function coerceNumber(value: unknown): number | undefined {
     }
   }
   return undefined;
+}
+
+function normalizeTeamKey(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "").trim();
+}
+
+function toOddsPredictionId(sportKey: string, eventId: string): string {
+  return `odds:${sportKey}:${eventId}`;
+}
+
+function toOddsOutcomeId(eventId: string, side: "home" | "away"): string {
+  return `odds:${eventId}:${side}`;
+}
+
+function parseOddsPredictionId(predictionId: string): { sportKey: string; eventId: string } | null {
+  const parts = predictionId.split(":");
+  if (parts.length < 3 || parts[0] !== "odds") {
+    return null;
+  }
+  const sportKey = parts[1]?.trim();
+  const eventId = parts.slice(2).join(":").trim();
+  if (!sportKey || !eventId) {
+    return null;
+  }
+  return { sportKey, eventId };
+}
+
+function impliedProbabilityFromAmericanOdds(odds: number): number | null {
+  if (!Number.isFinite(odds) || odds === 0) {
+    return null;
+  }
+  if (odds < 0) {
+    return Number(((-odds / (-odds + 100)) * 100).toFixed(1));
+  }
+  return Number(((100 / (odds + 100)) * 100).toFixed(1));
+}
+
+function inferOddsSportConfigFromCatalog(item: OddsSportCatalogItem): OddsSportConfig | null {
+  const key = String(item.key ?? "").trim();
+  if (!key) {
+    return null;
+  }
+
+  const title = formatCategoryLabel(String(item.title ?? key));
+  const known = ODDS_SPORT_BY_KEY.get(key);
+  if (known) {
+    return known;
+  }
+
+  const inferred = inferSportAndLeague({
+    question: title,
+    category: title,
+    tags: [key.replace(/_/g, " ")],
+  });
+
+  const fallbackLeague = title || formatCategoryLabel(key.replace(/_/g, " "));
+  const fallbackSport = inferred.sport ?? fallbackLeague.split(" ").slice(0, 2).join(" ");
+
+  return {
+    key,
+    sport: fallbackSport || "Sports",
+    league: inferred.league ?? fallbackLeague,
+  };
+}
+
+async function getConfiguredOddsSports(): Promise<OddsSportConfig[]> {
+  if (!ODDS_API_SPORT_KEYS) {
+    try {
+      const catalogQuery = new URLSearchParams({ apiKey: ODDS_API_KEY });
+      const payload = await fetchOddsJson("/sports", catalogQuery);
+      if (!Array.isArray(payload)) {
+        return DEFAULT_ODDS_SPORTS;
+      }
+
+      const discovered = (payload as OddsSportCatalogItem[])
+        .filter((item) => item.active !== false)
+        .map((item) => inferOddsSportConfigFromCatalog(item))
+        .filter((item): item is OddsSportConfig => Boolean(item));
+
+      if (discovered.length > 0) {
+        return discovered;
+      }
+    } catch {
+      // Fallback handled below.
+    }
+
+    return DEFAULT_ODDS_SPORTS;
+  }
+
+  const selected = ODDS_API_SPORT_KEYS.split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (selected.length === 0) {
+    return DEFAULT_ODDS_SPORTS;
+  }
+
+  return selected.map((key) => ODDS_SPORT_BY_KEY.get(key) ?? { key, sport: formatCategoryLabel(key), league: formatCategoryLabel(key) });
+}
+
+function normalizeOddsEvent(event: OddsEvent, fallbackSport?: OddsSportConfig): Prediction | null {
+  const eventId = String(event.id ?? "").trim();
+  const sportKey = String(event.sport_key ?? fallbackSport?.key ?? "").trim();
+  const homeTeam = String(event.home_team ?? "").trim();
+  const awayTeam = String(event.away_team ?? "").trim();
+  const commenceTime = String(event.commence_time ?? "").trim();
+
+  if (!eventId || !sportKey || !homeTeam || !awayTeam || !commenceTime) {
+    return null;
+  }
+
+  const closesAtDate = new Date(commenceTime);
+  if (Number.isNaN(closesAtDate.getTime())) {
+    return null;
+  }
+
+  const bookmaker = event.bookmakers?.find((entry) => Array.isArray(entry.markets) && entry.markets.length > 0);
+  const h2h = bookmaker?.markets?.find((market) => market.key === "h2h");
+  if (!h2h?.outcomes || h2h.outcomes.length < 2) {
+    return null;
+  }
+
+  const normalizedByTeam = new Map<string, number>();
+  for (const outcome of h2h.outcomes) {
+    const name = String(outcome.name ?? "").trim();
+    const priceRaw = outcome.price;
+    const american = typeof priceRaw === "number" ? priceRaw : Number.parseFloat(String(priceRaw ?? ""));
+    const implied = impliedProbabilityFromAmericanOdds(american);
+    if (!name || implied === null) {
+      continue;
+    }
+    normalizedByTeam.set(normalizeTeamKey(name), implied);
+  }
+
+  const homeProbability = normalizedByTeam.get(normalizeTeamKey(homeTeam));
+  const awayProbability = normalizedByTeam.get(normalizeTeamKey(awayTeam));
+  if (homeProbability === undefined || awayProbability === undefined) {
+    return null;
+  }
+
+  const totalProbability = homeProbability + awayProbability;
+  const yesProbability = totalProbability > 0 ? Number(((homeProbability / totalProbability) * 100).toFixed(1)) : homeProbability;
+  const noProbability = Number((100 - yesProbability).toFixed(1));
+
+  const mappedSport = ODDS_SPORT_BY_KEY.get(sportKey) ?? fallbackSport;
+  return {
+    id: toOddsPredictionId(sportKey, eventId),
+    question: `Will ${homeTeam} beat ${awayTeam}?`,
+    source: "odds-api",
+    closesAt: closesAtDate.toISOString(),
+    outcomes: [
+      {
+        id: toOddsOutcomeId(eventId, "home"),
+        title: "Yes",
+        probability: yesProbability,
+      },
+      {
+        id: toOddsOutcomeId(eventId, "away"),
+        title: "No",
+        probability: noProbability,
+      },
+    ],
+    category: mappedSport?.league ?? "Game Winner",
+    sport: mappedSport?.sport,
+    league: mappedSport?.league,
+    tags: ["The Odds API", "Moneyline", "Game Winner", homeTeam, awayTeam],
+    createdAt: new Date().toISOString(),
+    isClosed: false,
+  };
+}
+
+async function fetchOddsJson(path: string, query: URLSearchParams): Promise<unknown> {
+  const response = await fetch(`${ODDS_API_BASE_URL}${path}?${query.toString()}`, {
+    method: "GET",
+    next: { revalidate: 30 },
+  });
+  if (!response.ok) {
+    throw new Error(`The Odds API request failed with status ${response.status}.`);
+  }
+  return response.json();
+}
+
+async function loadOddsMarkets(): Promise<Prediction[]> {
+  if (!ODDS_API_KEY) {
+    return [];
+  }
+
+  const lookaheadHours = Math.max(1, normalizePositiveInt(ODDS_API_LOOKAHEAD_HOURS, 168));
+  const from = new Date();
+  const to = new Date(Date.now() + lookaheadHours * 60 * 60 * 1000);
+  const sports = await getConfiguredOddsSports();
+
+  const requests = sports.map(async (sportConfig) => {
+    const query = new URLSearchParams({
+      apiKey: ODDS_API_KEY,
+      regions: "us",
+      markets: "h2h",
+      oddsFormat: "american",
+      commenceTimeFrom: from.toISOString(),
+      commenceTimeTo: to.toISOString(),
+    });
+
+    const payload = await fetchOddsJson(`/sports/${sportConfig.key}/odds`, query);
+    if (!Array.isArray(payload)) {
+      return [] as Prediction[];
+    }
+
+    return (payload as OddsEvent[])
+      .map((event) => normalizeOddsEvent(event, sportConfig))
+      .filter((market): market is Prediction => Boolean(market));
+  });
+
+  const settled = await Promise.allSettled(requests);
+  const merged: Prediction[] = [];
+  for (const result of settled) {
+    if (result.status === "fulfilled") {
+      merged.push(...result.value);
+    }
+  }
+
+  return merged;
+}
+
+async function getOddsMarkets(): Promise<Prediction[]> {
+  if (!ODDS_API_KEY) {
+    return [];
+  }
+
+  const now = Date.now();
+  if (oddsMarketsCache && now < oddsMarketsCache.expiresAt) {
+    return oddsMarketsCache.items;
+  }
+
+  if (oddsMarketsInFlight) {
+    return oddsMarketsInFlight;
+  }
+
+  oddsMarketsInFlight = loadOddsMarkets()
+    .then((items) => {
+      oddsMarketsCache = {
+        items,
+        expiresAt: Date.now() + Math.max(1_000, ODDS_API_CACHE_TTL_MS),
+      };
+      return items;
+    })
+    .finally(() => {
+      oddsMarketsInFlight = null;
+    });
+
+  return oddsMarketsInFlight;
 }
 
 function parseArrayField(value: unknown): unknown[] {
@@ -739,7 +1055,8 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
   const excludeSensitive = normalizeBoolean(params.excludeSensitive, false);
   const sort = normalizeSort(params.sort);
 
-  const normalized = await getActiveNormalizedMarkets();
+  const [polymarketItems, oddsItems] = await Promise.all([getActiveNormalizedMarkets(), getOddsMarkets()]);
+  const normalized = [...polymarketItems, ...oddsItems];
   const now = Date.now();
   const trendingThreshold = getTrendingVolumeThreshold(normalized);
   const broadByMarketId = new Map<string, Set<string>>();
@@ -892,9 +1209,117 @@ function inferResolvedOutcome(market: Prediction): ResolvedPredictionOutcome | n
   };
 }
 
+function coerceScore(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string") {
+    const parsed = Number.parseFloat(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  return null;
+}
+
+async function listResolvedOddsOutcomes(predictionIds: string[]): Promise<ResolvedPredictionOutcome[]> {
+  if (!ODDS_API_KEY || predictionIds.length === 0) {
+    return [];
+  }
+
+  const grouped = new Map<string, Set<string>>();
+  for (const predictionId of predictionIds) {
+    const parsed = parseOddsPredictionId(predictionId);
+    if (!parsed) {
+      continue;
+    }
+    const set = grouped.get(parsed.sportKey) ?? new Set<string>();
+    set.add(parsed.eventId);
+    grouped.set(parsed.sportKey, set);
+  }
+
+  if (grouped.size === 0) {
+    return [];
+  }
+
+  const daysFrom = String(Math.max(1, normalizePositiveInt(ODDS_API_SCORES_DAYS, 14)));
+  const settled: ResolvedPredictionOutcome[] = [];
+
+  for (const [sportKey, eventIds] of grouped.entries()) {
+    const query = new URLSearchParams({
+      apiKey: ODDS_API_KEY,
+      daysFrom,
+    });
+
+    let payload: unknown;
+    try {
+      payload = await fetchOddsJson(`/sports/${sportKey}/scores`, query);
+    } catch {
+      continue;
+    }
+
+    if (!Array.isArray(payload)) {
+      continue;
+    }
+
+    for (const raw of payload as OddsScoreEvent[]) {
+      const eventId = String(raw.id ?? "").trim();
+      if (!eventId || !eventIds.has(eventId) || !raw.completed) {
+        continue;
+      }
+
+      const homeTeam = String(raw.home_team ?? "").trim();
+      const awayTeam = String(raw.away_team ?? "").trim();
+      if (!homeTeam || !awayTeam) {
+        continue;
+      }
+
+      const scoreByTeam = new Map<string, number>();
+      for (const score of raw.scores ?? []) {
+        const name = String(score.name ?? "").trim();
+        const parsedScore = coerceScore(score.score);
+        if (!name || parsedScore === null) {
+          continue;
+        }
+        scoreByTeam.set(normalizeTeamKey(name), parsedScore);
+      }
+
+      const homeScore = scoreByTeam.get(normalizeTeamKey(homeTeam));
+      const awayScore = scoreByTeam.get(normalizeTeamKey(awayTeam));
+      if (homeScore === undefined || awayScore === undefined) {
+        continue;
+      }
+
+      const predictionId = toOddsPredictionId(sportKey, eventId);
+      if (homeScore === awayScore) {
+        settled.push({
+          predictionId,
+          settleAsCanceled: true,
+        });
+        continue;
+      }
+
+      settled.push({
+        predictionId,
+        winningOutcomeId: toOddsOutcomeId(eventId, homeScore > awayScore ? "home" : "away"),
+        settleAsCanceled: false,
+      });
+    }
+  }
+
+  return settled;
+}
+
 export async function listResolvedPredictionOutcomes(predictionIds: string[]): Promise<ResolvedPredictionOutcome[]> {
   if (predictionIds.length === 0) {
     return [];
+  }
+
+  const polymarketIds = predictionIds.filter((id) => !id.startsWith("odds:"));
+  const oddsIds = predictionIds.filter((id) => id.startsWith("odds:"));
+  const oddsResolved = await listResolvedOddsOutcomes(oddsIds);
+  if (polymarketIds.length === 0) {
+    return oddsResolved;
   }
 
   const query = new URLSearchParams({
@@ -904,7 +1329,7 @@ export async function listResolvedPredictionOutcomes(predictionIds: string[]): P
   });
 
   const gammaMarkets = await fetchGammaMarkets(query);
-  const byId = new Set(predictionIds);
+  const byId = new Set(polymarketIds);
 
   const resolved: ResolvedPredictionOutcome[] = [];
   for (const market of gammaMarkets) {
@@ -919,13 +1344,18 @@ export async function listResolvedPredictionOutcomes(predictionIds: string[]): P
     }
   }
 
-  return resolved;
+  return [...resolved, ...oddsResolved];
 }
 
 export async function getPredictionMarketById(predictionId: string): Promise<Prediction | null> {
   const trimmed = predictionId.trim();
   if (!trimmed) {
     return null;
+  }
+
+  if (trimmed.startsWith("odds:")) {
+    const oddsMarkets = await getOddsMarkets();
+    return oddsMarkets.find((item) => item.id === trimmed) ?? null;
   }
 
   const directQuery = new URLSearchParams({
