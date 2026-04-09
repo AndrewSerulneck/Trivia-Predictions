@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { TriviaGame } from "@/components/trivia/TriviaGame";
 import { UserStatusHeader } from "@/components/ui/UserStatusHeader";
+import { BrandBadge } from "@/components/ui/BrandBadge";
 
 export function TriviaAppFrame() {
   const router = useRouter();
@@ -49,6 +50,7 @@ export function TriviaAppFrame() {
         <header className="tp-hud-card shrink-0 p-1.5 sm:p-2">
           <div className="space-y-1">
             <div className="text-center">
+              <BrandBadge size="sm" className="mx-auto mb-1" />
               <p className="text-sm font-black uppercase tracking-[0.08em] text-slate-900 sm:text-base">
                 Hightop Challenge
               </p>

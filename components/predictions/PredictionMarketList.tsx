@@ -233,6 +233,11 @@ export function PredictionMarketList() {
         if (!market.sport || !marketMatchesCloseWindow(market, selectedCloseWindow)) {
           return false;
         }
+        // Hide loosely-classified markets that do not map to a known league
+        // to avoid "Other <Sport>" buckets with unrelated items.
+        if (!market.league?.trim()) {
+          return false;
+        }
         if (selectedSport && market.sport !== selectedSport) {
           return false;
         }

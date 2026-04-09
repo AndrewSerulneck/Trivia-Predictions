@@ -29,9 +29,9 @@ export function BackButton({ href = "/", label = "Back" }: BackButtonProps) {
       type="button"
       onMouseDown={triggerBackHaptic}
       onClick={handleBack}
-      className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-emerald-300 bg-gradient-to-r from-emerald-600 to-teal-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald-200 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 active:scale-95 active:brightness-90"
+      className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90"
     >
-      <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs">
+      <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">
         ←
       </span>
       {label}

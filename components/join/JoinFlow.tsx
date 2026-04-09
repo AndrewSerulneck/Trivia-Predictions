@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import jsQR from "jsqr";
 import { PageShell } from "@/components/ui/PageShell";
 import { BackButton } from "@/components/navigation/BackButton";
+import { BrandBadge } from "@/components/ui/BrandBadge";
 import {
   createUserProfile,
   ensureAnonymousSession,
@@ -20,7 +21,7 @@ import type { Venue } from "@/types";
 import { getVenueDisplayName, getVenueVisual as getVenueVisualFromConfig } from "@/lib/venueDisplay";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
-const DISABLE_GEOFENCE_FOR_TESTING = true;
+const DISABLE_GEOFENCE_FOR_TESTING = false;
 
 const JOIN_BUTTON_POP_CLASS =
   "transition-all duration-150 active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
@@ -36,14 +37,12 @@ function getErrorMessage(error: unknown, fallback: string): string {
 
 const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig(venue, index);
 
-const GEOFENCE_BASE_SLACK_METERS = 35;
-const GEOFENCE_MAX_ACCURACY_SLACK_METERS = 250;
+const ACCESS_DISTANCE_METERS = 1000;
 
 function getGeofenceThresholdMeters(venueRadius: number, accuracy?: number): number {
-  const normalizedRadius = Math.max(0, venueRadius);
-  const measuredAccuracy = Number.isFinite(accuracy) ? Math.max(0, accuracy ?? 0) : 100;
-  const accuracySlack = Math.min(GEOFENCE_MAX_ACCURACY_SLACK_METERS, measuredAccuracy);
-  return normalizedRadius + GEOFENCE_BASE_SLACK_METERS + accuracySlack;
+  void venueRadius;
+  void accuracy;
+  return ACCESS_DISTANCE_METERS;
 }
 
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
@@ -199,7 +198,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         setLocationVerified(false);
         setLocationNotice("");
         setErrorMessage(
-          `You are ${Math.round(distance)}m away. Required range is ${Math.round(allowedDistance)}m based on current GPS accuracy.`
+          `You are ${Math.round(distance)}m away. Required range is ${Math.round(allowedDistance)}m.`
         );
       }
     } catch (error) {
@@ -423,7 +422,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           setLocationVerified(false);
           setLocationNotice("");
           setErrorMessage(
-            `You are ${Math.round(distance)}m away. Required range is ${Math.round(allowedDistance)}m based on current GPS accuracy.`
+            `You are ${Math.round(distance)}m away. Required range is ${Math.round(allowedDistance)}m.`
           );
           return;
         }
@@ -475,6 +474,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       description="Select a venue or scan QR code."
     >
       <div className="space-y-4 text-sm">
+        <section className="rounded-2xl border border-amber-200 bg-gradient-to-r from-[#fff3dc] via-[#ffe4c7] to-[#ffd7c2] p-3 text-center shadow-sm">
+          <BrandBadge size="md" className="mx-auto mb-2" />
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#7a2f2c]">Scan To Join The Challenge</p>
+        </section>
         {errorMessage && (
           <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-rose-700">
             {errorMessage}

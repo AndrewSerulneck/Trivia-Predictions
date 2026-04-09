@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Bree+Serif&family=Nunito:wght@400;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -6,26 +6,25 @@
 
 :root {
   color-scheme: light;
-  --tp-ink: #0f172a;
-  --tp-cyan: #27f0ff;
-  --tp-yellow: #fff055;
-  --tp-pink: #ff47b8;
-  --tp-lime: #b4ff57;
-  --tp-orange: #ff944d;
+  --tp-ink: #1c2b3a;
+  --tp-cream: #f9f1e6;
+  --tp-gold: #f2bb66;
+  --tp-orange: #e9784e;
+  --tp-red: #a93d3a;
+  --tp-umber: #6a2d2d;
 }
 
 body {
-  font-family: "Fredoka", "Quicksand", "Comic Sans MS", "Trebuchet MS", ui-rounded, sans-serif;
+  font-family: "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   @apply text-slate-900 antialiased;
   overflow-x: hidden;
   text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
   background:
-    radial-gradient(circle at 12% 10%, rgba(39, 240, 255, 0.48), transparent 30%),
-    radial-gradient(circle at 88% 12%, rgba(255, 71, 184, 0.36), transparent 30%),
-    radial-gradient(circle at 78% 78%, rgba(255, 148, 77, 0.32), transparent 30%),
-    radial-gradient(circle at 28% 84%, rgba(180, 255, 87, 0.28), transparent 30%),
-    linear-gradient(180deg, #fffde8 0%, #fff7e2 100%);
+    radial-gradient(circle at 15% 14%, rgba(242, 187, 102, 0.36), transparent 33%),
+    radial-gradient(circle at 88% 12%, rgba(233, 120, 78, 0.34), transparent 32%),
+    radial-gradient(circle at 80% 80%, rgba(169, 61, 58, 0.24), transparent 30%),
+    linear-gradient(180deg, #fff7ea 0%, #fde9d0 52%, #f8ddc5 100%);
 }
 
 html {
@@ -73,10 +72,10 @@ textarea::placeholder {
   border-radius: 26px;
   box-shadow: 8px 8px 0 var(--tp-ink);
   background:
-    linear-gradient(155deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.84)),
-    radial-gradient(circle at 86% 14%, rgba(39, 240, 255, 0.22), transparent 44%),
-    radial-gradient(circle at 10% 88%, rgba(255, 71, 184, 0.18), transparent 42%),
-    #ffffff;
+    linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(253, 245, 234, 0.88)),
+    radial-gradient(circle at 85% 14%, rgba(242, 187, 102, 0.2), transparent 44%),
+    radial-gradient(circle at 12% 88%, rgba(233, 120, 78, 0.18), transparent 40%),
+    #fffaf3;
 }
 
 .tp-hud-card {
@@ -84,8 +83,17 @@ textarea::placeholder {
   border-radius: 28px;
   box-shadow: 8px 8px 0 var(--tp-ink);
   background:
-    linear-gradient(135deg, var(--tp-yellow), #ffffff 34%, var(--tp-cyan) 68%, var(--tp-pink)),
-    radial-gradient(circle at 84% 16%, rgba(255, 255, 255, 0.34), transparent 38%);
+    linear-gradient(135deg, var(--tp-cream), #ffdcb9 32%, #f0a064 68%, #bf5040),
+    radial-gradient(circle at 84% 16%, rgba(255, 255, 255, 0.36), transparent 38%);
+}
+
+h1,
+h2,
+h3,
+h4,
+.font-black,
+.font-semibold {
+  font-family: "Bree Serif", "Nunito", serif;
 }
 
 @keyframes tp-bounce-hover {

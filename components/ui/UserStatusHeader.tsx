@@ -323,11 +323,11 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
         </div>
       ) : null}
       <div
-        className={`flex items-center rounded-2xl border-slate-900 bg-cyan-300 font-medium text-slate-900 ${
+        className={`flex items-center rounded-2xl border-slate-900 bg-[#f7d7b0] font-medium text-slate-900 ${
           compact
             ? "gap-1 rounded-xl border-2 px-2 py-1 text-xs shadow-[2px_2px_0_#0f172a]"
             : "tp-bounce-hover gap-2 border-4 px-3 py-2 text-sm shadow-[4px_4px_0_#0f172a]"
-        }`}
+          }`}
       >
         <span
           className={`inline-flex items-center justify-center rounded-full border-slate-900 bg-white ${
@@ -339,7 +339,7 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
         <span>{username || "Guest"}</span>
       </div>
       <div
-        className={`flex items-center border-slate-900 bg-yellow-200 font-medium text-slate-900 transition-transform duration-200 ${
+        className={`flex items-center border-slate-900 bg-[#f2bb66] font-medium text-slate-900 transition-transform duration-200 ${
           compact
             ? "gap-1 rounded-xl border-2 px-2 py-1 text-[11px] shadow-[2px_2px_0_#0f172a]"
             : `tp-bounce-hover gap-2 rounded-2xl border-4 px-3 py-2 text-sm shadow-[4px_4px_0_#0f172a] ${
@@ -362,7 +362,7 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
         </span>
       </div>
       {variant !== "trivia" && pointsGain ? (
-        <div className="rounded-full border-4 border-slate-900 bg-pink-300 px-2 py-1 text-sm font-medium text-slate-900 shadow-[3px_3px_0_#0f172a] animate-bounce">
+        <div className="rounded-full border-4 border-slate-900 bg-[#e9784e] px-2 py-1 text-sm font-medium text-[#fff7ea] shadow-[3px_3px_0_#0f172a] animate-bounce">
           +{pointsGain} coins
         </div>
       ) : null}
