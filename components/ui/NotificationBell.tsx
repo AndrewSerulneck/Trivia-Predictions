@@ -24,6 +24,7 @@ function extractPointsFromMessage(message: string): number {
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; width: number } | null>(null);
   const userIdRef = useRef("");
   const knownNotificationIdsRef = useRef<Set<string>>(new Set());
   const hasLoadedOnceRef = useRef(false);
@@ -129,6 +130,30 @@ export function NotificationBell() {
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!open) {
+      setMenuPosition(null);
+      return;
+    }
+
+    const positionMenu = () => {
+      const anchorRect = rootRef.current?.getBoundingClientRect();
+      const menuWidth = Math.min(352, window.innerWidth - 16);
+      const preferredLeft = (anchorRect?.right ?? window.innerWidth - 8) - menuWidth;
+      const left = Math.max(8, Math.min(preferredLeft, window.innerWidth - menuWidth - 8));
+      const top = Math.max(8, (anchorRect?.bottom ?? 56) + 8);
+      setMenuPosition({ top, left, width: menuWidth });
+    };
+
+    positionMenu();
+    window.addEventListener("resize", positionMenu);
+    window.addEventListener("scroll", positionMenu, true);
+    return () => {
+      window.removeEventListener("resize", positionMenu);
+      window.removeEventListener("scroll", positionMenu, true);
+    };
+  }, [open]);
+
   const markRead = async (notificationId?: string) => {
     const userId = userIdRef.current;
     if (!userId) return;
@@ -160,7 +185,14 @@ export function NotificationBell() {
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-20 mt-2 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-[#d8c4aa] bg-gradient-to-b from-[#fffaf4] to-white shadow-[0_16px_34px_rgba(28,43,58,0.2)]">
+        <div
+          className="fixed z-30 overflow-hidden rounded-xl border border-[#d8c4aa] bg-gradient-to-b from-[#fffaf4] to-white shadow-[0_16px_34px_rgba(28,43,58,0.2)]"
+          style={
+            menuPosition
+              ? { top: `${menuPosition.top}px`, left: `${menuPosition.left}px`, width: `${menuPosition.width}px` }
+              : undefined
+          }
+        >
           <div className="flex items-center justify-between border-b border-[#eadbcc] bg-[#fdf3e7] px-4 py-3">
             <div>
               <p className="text-sm font-semibold text-[#1c2b3a]">Notifications</p>

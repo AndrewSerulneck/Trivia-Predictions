@@ -300,7 +300,7 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
   const compact = variant === "trivia";
 
   return (
-    <div className={`relative flex flex-wrap items-center justify-between ${compact ? "gap-1" : "gap-2"}`}>
+    <div className={`relative flex items-center justify-between ${compact ? "flex-wrap gap-1" : "flex-nowrap gap-2"}`}>
       {coinFlights.length > 0 ? (
         <div className="pointer-events-none fixed inset-0 z-[120]">
           {coinFlights.map((item) => (
@@ -325,8 +325,8 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
       <div
         className={`flex items-center rounded-2xl border-slate-900 bg-[#f7d7b0] font-medium text-slate-900 ${
           compact
-            ? "gap-1 rounded-xl border-2 px-2 py-1 text-xs shadow-[2px_2px_0_#0f172a]"
-            : "tp-bounce-hover gap-2 border-4 px-3 py-2 text-sm shadow-[4px_4px_0_#0f172a]"
+            ? "h-10 min-w-[9.5rem] gap-1 rounded-xl border-2 px-2 py-1 text-xs shadow-[2px_2px_0_#0f172a]"
+            : "tp-bounce-hover h-[4.15rem] min-w-[12.5rem] gap-2 border-4 px-3 py-2 text-sm shadow-[4px_4px_0_#0f172a]"
           }`}
       >
         <span
@@ -341,8 +341,8 @@ export function UserStatusHeader({ variant = "default" }: UserStatusHeaderProps)
       <div
         className={`flex items-center border-slate-900 bg-[#f2bb66] font-medium text-slate-900 transition-transform duration-200 ${
           compact
-            ? "gap-1 rounded-xl border-2 px-2 py-1 text-[11px] shadow-[2px_2px_0_#0f172a]"
-            : `tp-bounce-hover gap-2 rounded-2xl border-4 px-3 py-2 text-sm shadow-[4px_4px_0_#0f172a] ${
+            ? "h-10 min-w-[9.5rem] gap-1 rounded-xl border-2 px-2 py-1 text-[11px] shadow-[2px_2px_0_#0f172a]"
+            : `tp-bounce-hover h-[4.15rem] min-w-[12.5rem] gap-2 rounded-2xl border-4 px-3 py-2 text-sm shadow-[4px_4px_0_#0f172a] ${
                 pointsPop ? "scale-110" : "scale-100"
               }`
         }`}
