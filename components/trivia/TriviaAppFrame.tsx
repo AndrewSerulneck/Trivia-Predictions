@@ -50,7 +50,7 @@ export function TriviaAppFrame() {
         <header className="tp-hud-card shrink-0 p-1.5 sm:p-2">
           <div className="space-y-1">
             <div className="text-center">
-              <HightopLogo size="sm" className="mx-auto mb-1" />
+              <HightopLogo size="sm" className="mx-auto mb-0.5 drop-shadow-[0_4px_10px_rgba(31,42,54,0.25)]" />
               <p className="text-sm font-black uppercase tracking-[0.08em] text-slate-900 sm:text-base">
                 Hightop Challenge
               </p>
