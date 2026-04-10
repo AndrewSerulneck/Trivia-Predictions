@@ -5,7 +5,7 @@ export type Coordinates = {
   timestamp?: number;
 };
 
-export async function getCurrentLocation(): Promise<Coordinates> {
+function getCurrentPositionWithOptions(options: PositionOptions): Promise<Coordinates> {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error("Geolocation is not supported in this browser."));
@@ -21,9 +21,13 @@ export async function getCurrentLocation(): Promise<Coordinates> {
           timestamp: position.timestamp,
         }),
       (error) => reject(error),
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+      options
     );
   });
+}
+
+export async function getCurrentLocation(): Promise<Coordinates> {
+  return getCurrentPositionWithOptions({ enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 });
 }
 
 export type BestLocationOptions = {
@@ -89,7 +93,17 @@ export async function getBestCurrentLocation(options: BestLocationOptions = {}):
         return;
       }
 
-      reject(error instanceof Error ? error : new Error("Unable to determine location."));
+      void getCurrentPositionWithOptions({
+        enableHighAccuracy: false,
+        timeout: Math.max(6000, Math.min(timeoutMs, 14000)),
+        maximumAge: 120000,
+      })
+        .then((fallbackCoords) => {
+          resolve(fallbackCoords);
+        })
+        .catch(() => {
+          reject(error instanceof Error ? error : new Error("Unable to determine location."));
+        });
     };
 
     watchId = navigator.geolocation.watchPosition(

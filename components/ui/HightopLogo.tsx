@@ -6,7 +6,7 @@ type HightopLogoProps = {
 const SIZE_CLASSES: Record<NonNullable<HightopLogoProps["size"]>, string> = {
   sm: "h-12 w-12",
   md: "h-14 w-14",
-  xl: "h-48 w-48",
+  xl: "h-28 w-28",
 };
 
 export function HightopLogo({ size = "md", className = "" }: HightopLogoProps) {
@@ -21,6 +21,9 @@ export function HightopLogo({ size = "md", className = "" }: HightopLogoProps) {
         src="/brand/hightop-logo.svg"
         alt="Hightop Challenge"
         className="h-full w-full object-contain object-center"
+        loading="eager"
+        decoding="async"
+        fetchPriority="high"
         draggable={false}
       />
       <span className="sr-only">Hightop Challenge</span>
