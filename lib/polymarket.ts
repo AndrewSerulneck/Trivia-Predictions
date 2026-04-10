@@ -597,7 +597,7 @@ function normalizeOddsEvent(event: OddsEvent, fallbackSport?: OddsSportConfig): 
   const mappedSport = ODDS_SPORT_BY_KEY.get(sportKey) ?? fallbackSport;
   return {
     id: toOddsPredictionId(sportKey, eventId),
-    question: `Will ${favoriteTeam} beat ${underdogTeam}?`,
+    question: `Will the ${favoriteTeam} beat the ${underdogTeam}?`,
     source: "odds-api",
     closesAt: closesAtDate.toISOString(),
     outcomes: [favoriteOutcome, underdogOutcome],
