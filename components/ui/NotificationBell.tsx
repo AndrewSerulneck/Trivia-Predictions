@@ -22,6 +22,7 @@ function extractPointsFromMessage(message: string): number {
 }
 
 export function NotificationBell() {
+  const [hasUser, setHasUser] = useState(false);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; width: number } | null>(null);
@@ -86,6 +87,7 @@ export function NotificationBell() {
   useEffect(() => {
     const userId = getUserId() ?? "";
     userIdRef.current = userId;
+    setHasUser(Boolean(userId));
     if (!userId) {
       return;
     }
@@ -166,6 +168,10 @@ export function NotificationBell() {
 
     await loadNotifications(userId);
   };
+
+  if (!hasUser) {
+    return null;
+  }
 
   return (
     <div ref={rootRef} className="relative">

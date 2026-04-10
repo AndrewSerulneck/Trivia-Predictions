@@ -110,17 +110,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             const nearbyVenues = distanceByVenue
               .filter((item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, current.accuracy))
               .map((item) => item.venue);
-
-            const fallbackNearestVenues = distanceByVenue
-              .sort((a, b) => a.distance - b.distance)
-              .slice(0, Math.min(5, distanceByVenue.length))
-              .map((item) => item.venue);
-
-            setVenueList(nearbyVenues.length > 0 ? nearbyVenues : fallbackNearestVenues);
+            setVenueList(nearbyVenues);
             if (nearbyVenues.length > 0) {
               setLocationNotice(`Showing ${nearbyVenues.length} nearby venue(s) within range.`);
             } else {
-              setLocationNotice("No venues detected in strict range. Showing nearest venues instead.");
+              setLocationNotice("No nearby venues are within geofence range right now.");
             }
           } catch (error) {
             setVenueList([]);
@@ -514,6 +508,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     <PageShell
       title="Join Venue"
       description="Select a venue or scan QR code."
+      showAlerts={false}
     >
       <div className="space-y-4 text-sm">
         {errorMessage && (
