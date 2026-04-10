@@ -507,7 +507,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   return (
     <PageShell
       title="Join Venue"
-      description="Select a venue or scan QR code."
       showAlerts={false}
     >
       <div className="space-y-4 text-sm">
@@ -519,37 +518,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
         {!venue && venueList.length > 0 && (
           <div className="space-y-3">
-            <button
-              type="button"
-              onClick={() => {
-                void startQrScan();
-              }}
-              className={`${JOIN_BUTTON_POP_CLASS} inline-flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl border-4 border-slate-900 bg-cyan-300 px-5 py-2.5 text-lg font-medium text-slate-900 shadow-[5px_5px_0_#0f172a]`}
-            >
-              <span aria-hidden="true" className="text-2xl leading-none">
-                📷
-              </span>
-              Scan Venue QR Code
-            </button>
-            {isScanningQr ? (
-              <div className="space-y-2">
-                <div className="rounded-2xl border-4 border-slate-900 bg-white p-2 shadow-[4px_4px_0_#0f172a]">
-                  <video ref={scanVideoRef} autoPlay playsInline muted className="h-44 w-full rounded-xl bg-black object-cover" />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsScanningQr(false);
-                    setScanNotice("");
-                    stopScanLoop();
-                  }}
-                  className={`${JOIN_BUTTON_POP_CLASS} rounded-2xl border-4 border-slate-900 bg-white px-4 py-2 text-base font-medium text-slate-900 shadow-[4px_4px_0_#0f172a]`}
-                >
-                  Stop Scanning
-                </button>
-                {scanNotice ? <p className="px-1 text-sm font-medium text-slate-700">{scanNotice}</p> : null}
-              </div>
-            ) : null}
             <h2 className="text-xl font-medium text-slate-900">Available Venues:</h2>
             <ul className="space-y-2">
               {venueList.map((item, index) => {
@@ -578,9 +546,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                 );
               })}
             </ul>
-            <div className="rounded-none border border-dashed border-slate-400 bg-slate-50 p-4 text-center text-slate-600">
-              <p className="text-xs uppercase tracking-wide text-slate-500">Advertisement</p>
-              <p className="mt-1 font-medium">[ Placeholder Banner Ad - 728 x 90 ]</p>
+            <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-100/80 p-6 text-center">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Ad Placeholder</p>
+              <p className="mt-1 text-lg font-semibold text-slate-700">Banner Advertisement Slot</p>
+              <p className="mt-2 max-w-md text-sm text-slate-600">This is a placeholder for a venue banner ad.</p>
             </div>
           </div>
         )}

@@ -269,3 +269,18 @@ a[role="button"][class*="text-[11px]"] {
   animation-fill-mode: forwards;
   will-change: transform, opacity;
 }
+
+@keyframes tp-popup-sheet-up {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 48px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-tp-popup-sheet-up {
+  animation: tp-popup-sheet-up 340ms cubic-bezier(0.16, 0.84, 0.2, 1) both;
+}

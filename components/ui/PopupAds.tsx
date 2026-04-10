@@ -160,7 +160,7 @@ export function PopupAds() {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[90] flex items-end justify-center bg-slate-900/30 p-2">
-      <div className="pointer-events-auto h-[82dvh] w-full max-w-md overflow-hidden rounded-t-2xl border border-slate-300 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.28)]">
+      <div className="pointer-events-auto animate-tp-popup-sheet-up h-[82dvh] w-full max-w-md overflow-hidden rounded-t-2xl border border-slate-300 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.28)]">
         <div className="flex items-center justify-between border-b border-amber-200 bg-gradient-to-r from-amber-100 via-orange-100 to-red-100 px-3 py-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-700">Sponsored</p>
           <button
