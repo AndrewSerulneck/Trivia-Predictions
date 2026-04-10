@@ -6,6 +6,33 @@ const STORAGE_KEYS = {
 
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 
+function readLocalStorage(key: string): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalStorage(key: string, value: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Ignore browser storage failures (private mode / strict privacy settings).
+  }
+}
+
+function removeLocalStorage(key: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // Ignore browser storage failures.
+  }
+}
+
 function setCookie(name: string, value: string): void {
   if (typeof document === "undefined") return;
   const safeName = encodeURIComponent(name);
@@ -20,35 +47,35 @@ function clearCookie(name: string): void {
 }
 
 export function saveVenueId(venueId: string): void {
-  localStorage.setItem(STORAGE_KEYS.venueId, venueId);
+  writeLocalStorage(STORAGE_KEYS.venueId, venueId);
   setCookie("tp_venue_id", venueId);
 }
 
 export function getVenueId(): string | null {
-  return localStorage.getItem(STORAGE_KEYS.venueId);
+  return readLocalStorage(STORAGE_KEYS.venueId);
 }
 
 export function saveUsername(username: string): void {
-  localStorage.setItem(STORAGE_KEYS.username, username);
+  writeLocalStorage(STORAGE_KEYS.username, username);
 }
 
 export function getUsername(): string | null {
-  return localStorage.getItem(STORAGE_KEYS.username);
+  return readLocalStorage(STORAGE_KEYS.username);
 }
 
 export function saveUserId(userId: string): void {
-  localStorage.setItem(STORAGE_KEYS.userId, userId);
+  writeLocalStorage(STORAGE_KEYS.userId, userId);
   setCookie("tp_user_id", userId);
 }
 
 export function getUserId(): string | null {
-  return localStorage.getItem(STORAGE_KEYS.userId);
+  return readLocalStorage(STORAGE_KEYS.userId);
 }
 
 export function clearVenueSession(): void {
-  localStorage.removeItem(STORAGE_KEYS.venueId);
-  localStorage.removeItem(STORAGE_KEYS.username);
-  localStorage.removeItem(STORAGE_KEYS.userId);
+  removeLocalStorage(STORAGE_KEYS.venueId);
+  removeLocalStorage(STORAGE_KEYS.username);
+  removeLocalStorage(STORAGE_KEYS.userId);
   clearCookie("tp_venue_id");
   clearCookie("tp_user_id");
 }

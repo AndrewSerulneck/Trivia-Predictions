@@ -383,7 +383,13 @@ export function PredictionMarketList() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const raw = window.localStorage.getItem(COLLAPSED_SECTIONS_STORAGE_KEY);
+    let raw: string | null = null;
+    try {
+      raw = window.localStorage.getItem(COLLAPSED_SECTIONS_STORAGE_KEY);
+    } catch {
+      setCollapsedSections({});
+      return;
+    }
     if (!raw) return;
     try {
       const parsed = JSON.parse(raw) as Record<string, boolean>;
@@ -405,7 +411,11 @@ export function PredictionMarketList() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.localStorage.setItem(COLLAPSED_SECTIONS_STORAGE_KEY, JSON.stringify(collapsedSections));
+    try {
+      window.localStorage.setItem(COLLAPSED_SECTIONS_STORAGE_KEY, JSON.stringify(collapsedSections));
+    } catch {
+      // Ignore storage write failures so page rendering is never blocked.
+    }
   }, [collapsedSections]);
 
   useEffect(() => {
