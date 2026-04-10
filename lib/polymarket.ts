@@ -595,9 +595,12 @@ function normalizeOddsEvent(event: OddsEvent, fallbackSport?: OddsSportConfig): 
       };
 
   const mappedSport = ODDS_SPORT_BY_KEY.get(sportKey) ?? fallbackSport;
+  const isSoccer = mappedSport?.sport === "Soccer" || sportKey.startsWith("soccer_");
   return {
     id: toOddsPredictionId(sportKey, eventId),
-    question: `Will the ${favoriteTeam} beat the ${underdogTeam}?`,
+    question: isSoccer
+      ? `Will ${favoriteTeam} beat ${underdogTeam}?`
+      : `Will the ${favoriteTeam} beat the ${underdogTeam}?`,
     source: "odds-api",
     closesAt: closesAtDate.toISOString(),
     outcomes: [favoriteOutcome, underdogOutcome],
@@ -1397,9 +1400,12 @@ export async function getPredictionMarketById(predictionId: string): Promise<Pre
             const awayTeam = String(matched.away_team ?? "").trim();
             if (homeTeam && awayTeam) {
               const mappedSport = ODDS_SPORT_BY_KEY.get(parsed.sportKey);
+              const isSoccer = mappedSport?.sport === "Soccer" || parsed.sportKey.startsWith("soccer_");
               return {
                 id: trimmed,
-                question: `Will the ${homeTeam} beat the ${awayTeam}?`,
+                question: isSoccer
+                  ? `Will ${homeTeam} beat ${awayTeam}?`
+                  : `Will the ${homeTeam} beat the ${awayTeam}?`,
                 source: "odds-api",
                 closesAt: new Date().toISOString(),
                 outcomes: [
