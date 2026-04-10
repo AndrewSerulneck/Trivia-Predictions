@@ -71,6 +71,7 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
   const [points, setPoints] = useState<number | null>(null);
   const [displayedPoints, setDisplayedPoints] = useState(0);
   const [pointsPop, setPointsPop] = useState(false);
+  const [pointsFlash, setPointsFlash] = useState(false);
   const [pointsGain, setPointsGain] = useState<number | null>(null);
   const [coinFlights, setCoinFlights] = useState<CoinFlightToken[]>([]);
 
@@ -79,6 +80,7 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
   const pointsTickerRef = useRef<number | null>(null);
   const gainHideTimerRef = useRef<number | null>(null);
   const popHideTimerRef = useRef<number | null>(null);
+  const flashHideTimerRef = useRef<number | null>(null);
   const flightCleanupTimersRef = useRef<number[]>([]);
 
   const animatePointsTo = useCallback((targetPoints: number) => {
@@ -131,6 +133,7 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
 
     setPointsGain((current) => (current ?? 0) + delta);
     setPointsPop(true);
+    setPointsFlash(true);
 
     if (gainHideTimerRef.current) {
       window.clearTimeout(gainHideTimerRef.current);
@@ -145,6 +148,13 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
     popHideTimerRef.current = window.setTimeout(() => {
       setPointsPop(false);
     }, 280);
+
+    if (flashHideTimerRef.current) {
+      window.clearTimeout(flashHideTimerRef.current);
+    }
+    flashHideTimerRef.current = window.setTimeout(() => {
+      setPointsFlash(false);
+    }, 900);
   }, []);
 
   const launchCoinFlight = useCallback((detail?: CoinFlightDetail) => {
@@ -182,14 +192,15 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
     const requestedCoins = Math.max(5, Math.min(12, detail?.coins ?? Math.round((detail?.delta ?? 10) / 2) + 5));
     const createdAt = Date.now();
     const burst: CoinFlightToken[] = Array.from({ length: requestedCoins }, (_, index) => {
+      const staggerMs = index * 95 + Math.round(Math.random() * 24);
       return {
         id: `${createdAt}-${index}-${Math.random().toString(16).slice(2)}`,
         fromX: fromX + Math.round((Math.random() - 0.5) * 28),
         fromY: fromY + Math.round((Math.random() - 0.5) * 18),
         toX: toX + Math.round((Math.random() - 0.5) * 20),
         toY: toY + Math.round((Math.random() - 0.5) * 14),
-        delayMs: Math.round(Math.random() * 140),
-        durationMs: 1180 + Math.round(Math.random() * 420),
+        delayMs: staggerMs,
+        durationMs: 860 + Math.round(Math.random() * 180),
         rotateDeg: Math.round(Math.random() * 360),
       };
     });
@@ -287,6 +298,9 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
       if (popHideTimerRef.current) {
         window.clearTimeout(popHideTimerRef.current);
       }
+      if (flashHideTimerRef.current) {
+        window.clearTimeout(flashHideTimerRef.current);
+      }
       for (const timer of flightCleanupTimersRef.current) {
         window.clearTimeout(timer);
       }
@@ -318,7 +332,7 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
                 ["--coin-rotate" as string]: `${item.rotateDeg}deg`,
               }}
             >
-              <GoldCoinIcon className="h-20 w-20" />
+              <GoldCoinIcon className="h-16 w-16" />
             </span>
           ))}
         </div>
@@ -341,10 +355,14 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
           <span>{username || "Guest"}</span>
         </div>
         <div
-          className={`flex items-center border-slate-900 bg-[#f2bb66] font-medium text-slate-900 transition-transform duration-200 ${
+          className={`flex items-center border-slate-900 font-medium text-slate-900 transition-all duration-300 ${
             compact
-              ? "h-10 min-w-[9.5rem] gap-1 rounded-xl border-2 px-2 py-1 text-[11px] shadow-[2px_2px_0_#0f172a]"
+              ? `h-10 min-w-[9.5rem] gap-1 rounded-xl border-2 px-2 py-1 text-[11px] shadow-[2px_2px_0_#0f172a] ${
+                  pointsFlash ? "bg-emerald-300" : "bg-[#f2bb66]"
+                }`
               : `tp-bounce-hover h-[3.75rem] min-w-[11.25rem] justify-center gap-2 rounded-2xl border-4 px-2.5 py-1.5 text-sm shadow-[4px_4px_0_#0f172a] ${
+                  pointsFlash ? "bg-emerald-300 ring-2 ring-emerald-500/60" : "bg-[#f2bb66]"
+                } ${
                   pointsPop ? "scale-110" : "scale-100"
                 }`
             }`}

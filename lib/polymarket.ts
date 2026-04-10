@@ -1185,6 +1185,7 @@ export type ResolvedPredictionOutcome = {
   predictionId: string;
   winningOutcomeId?: string;
   settleAsCanceled: boolean;
+  cancellationReason?: "tie";
 };
 
 function inferResolvedOutcome(market: Prediction): ResolvedPredictionOutcome | null {
@@ -1294,6 +1295,7 @@ async function listResolvedOddsOutcomes(predictionIds: string[]): Promise<Resolv
         settled.push({
           predictionId,
           settleAsCanceled: true,
+          cancellationReason: "tie",
         });
         continue;
       }

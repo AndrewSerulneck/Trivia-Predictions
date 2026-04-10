@@ -914,6 +914,7 @@ export async function resolvePendingPredictionMarket(params: {
   predictionId: string;
   winningOutcomeId?: string;
   settleAsCanceled?: boolean;
+  cancellationReason?: "tie";
 }): Promise<{ affectedPicks: number; winners: number; losers: number; canceled: number }> {
   assertAdminConfigured();
 
@@ -934,6 +935,14 @@ export async function resolvePendingPredictionMarket(params: {
     marketQuestion = market?.question?.trim() ?? "";
   } catch {
     marketQuestion = "";
+  }
+
+  if (settleAsCanceled && params.cancellationReason === "tie") {
+    return resolvePendingPredictionMarketLegacy({
+      ...params,
+      marketQuestion,
+      cancellationReason: "tie",
+    });
   }
 
   const { data, error } = await supabaseAdmin!.rpc("settle_prediction_market", {
@@ -1024,6 +1033,7 @@ export async function autoSettleResolvedPredictionMarkets(): Promise<{
       predictionId: item.predictionId,
       winningOutcomeId: item.winningOutcomeId,
       settleAsCanceled: item.settleAsCanceled,
+      cancellationReason: item.cancellationReason,
     });
     settledMarkets += 1;
     affectedPicks += result.affectedPicks;
@@ -1047,6 +1057,7 @@ async function resolvePendingPredictionMarketLegacy(params: {
   winningOutcomeId?: string;
   settleAsCanceled?: boolean;
   marketQuestion?: string;
+  cancellationReason?: "tie";
 }): Promise<{ affectedPicks: number; winners: number; losers: number; canceled: number }> {
   assertAdminConfigured();
 
@@ -1068,6 +1079,7 @@ async function resolvePendingPredictionMarketLegacy(params: {
   }
 
   const asStatement = (question: string) => question.replace(/\?+$/, "").trim();
+  const cancellationReason = params.cancellationReason;
   const buildNotificationMessage = (status: PendingPredictionRow["status"], row: PendingPredictionRow): string => {
     const outcome = row.outcome_title.trim();
     const outcomeLower = outcome.toLowerCase();
@@ -1075,6 +1087,12 @@ async function resolvePendingPredictionMarketLegacy(params: {
     const isBinaryOutcome = outcomeLower === "yes" || outcomeLower === "no";
 
     if (status === "canceled") {
+      if (cancellationReason === "tie") {
+        if (eventText) {
+          return `${eventText} ended in a tie, so this prediction was canceled.`;
+        }
+        return "This game ended in a tie, so your prediction was canceled.";
+      }
       if (eventText) {
         return `${eventText} market was canceled.`;
       }
