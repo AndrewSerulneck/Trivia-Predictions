@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getUserId } from "@/lib/storage";
 import { getVenueId } from "@/lib/storage";
+import { readWarmTriviaCache } from "@/lib/warmupCache";
 import type { TriviaQuestion } from "@/types";
 
 type TriviaApiResponse = {
@@ -315,8 +316,32 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         router.replace("/");
         return;
       }
+
+      const warmSnapshot = readWarmTriviaCache(userId, venueId);
+      const hasWarmQuestions = Boolean(warmSnapshot?.questions && warmSnapshot.questions.length > 0);
       setLoadingQuestions(true);
       setLoadError("");
+
+      if (hasWarmQuestions && warmSnapshot) {
+        setQuestions(warmSnapshot.questions);
+        setIndex(0);
+        setSelectedAnswer(null);
+        setFeedback("");
+        setFeedbackKind(null);
+        setRevealedCorrectAnswer(null);
+        setRoundStartPoints(null);
+        if (warmSnapshot.quota) {
+          setQuota({
+            limit: warmSnapshot.quota.limit,
+            questionsUsed: warmSnapshot.quota.questionsUsed,
+            questionsRemaining: warmSnapshot.quota.questionsRemaining,
+            windowSecondsRemaining: warmSnapshot.quota.windowSecondsRemaining,
+            isAdminBypass: warmSnapshot.quota.isAdminBypass,
+          });
+        }
+        setLoadingQuestions(false);
+      }
+
       try {
         const items = await fetchTriviaQuestions(userId);
         setQuestions(items);
@@ -332,7 +357,9 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
       } catch (error) {
         setLoadError(error instanceof Error ? error.message : "Failed to load trivia.");
       } finally {
-        setLoadingQuestions(false);
+        if (!hasWarmQuestions) {
+          setLoadingQuestions(false);
+        }
       }
     };
 

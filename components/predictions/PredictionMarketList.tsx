@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { calculatePoints, formatProbability } from "@/lib/predictions";
 import { getUserId, getVenueId } from "@/lib/storage";
+import { readWarmPredictionsCache, writeWarmPredictionsCache } from "@/lib/warmupCache";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import type { Prediction, UserPrediction } from "@/types";
 
@@ -511,18 +512,42 @@ export function PredictionMarketList() {
 
   useEffect(() => {
     const controller = new AbortController();
+    const venueId = getVenueId() ?? "";
+    let seededFromWarmCache = false;
+
+    if (!hasInitializedRef.current && venueId) {
+      const warmSnapshot = readWarmPredictionsCache(venueId);
+      const warmItems = (warmSnapshot?.payload.items ?? [])
+        .map((market) => normalizeMarketPayload(market))
+        .filter((market): market is Prediction => Boolean(market))
+        .filter((market) => Boolean(market.sport));
+      if (warmItems.length > 0) {
+        seededFromWarmCache = true;
+        setAllMarkets(warmItems);
+        setSports(warmSnapshot?.payload.sports ?? []);
+        setLeaguesBySport(warmSnapshot?.payload.leaguesBySport ?? {});
+        setTotalItems(warmSnapshot?.payload.totalItems ?? warmItems.length);
+        setTotalPages(Math.max(1, warmSnapshot?.payload.totalPages ?? 1));
+        setNextPage((warmSnapshot?.payload.page ?? 1) + 1);
+        hasInitializedRef.current = true;
+        setIsInitializing(false);
+      }
+    }
+
     if (!hasInitializedRef.current) {
       setIsInitializing(true);
     }
 
     const loadFirstPage = async () => {
-      setLoading(true);
+      setLoading(!seededFromWarmCache);
       setIsLoadingMore(false);
       setErrorMessage("");
-      setAllMarkets([]);
-      setTotalItems(0);
-      setTotalPages(1);
-      setNextPage(2);
+      if (!seededFromWarmCache) {
+        setAllMarkets([]);
+        setTotalItems(0);
+        setTotalPages(1);
+        setNextPage(2);
+      }
 
       try {
         const query = new URLSearchParams({
@@ -556,11 +581,27 @@ export function PredictionMarketList() {
         setTotalItems(payload.totalItems ?? 0);
         setTotalPages(Math.max(1, payload.totalPages ?? 1));
         setNextPage((payload.page ?? 1) + 1);
+        if (venueId) {
+          writeWarmPredictionsCache({
+            venueId,
+            payload: {
+              items: payload.items ?? [],
+              page: payload.page,
+              pageSize: payload.pageSize,
+              totalItems: payload.totalItems,
+              totalPages: payload.totalPages,
+              sports: payload.sports,
+              leaguesBySport: payload.leaguesBySport,
+            },
+          });
+        }
       } catch (error) {
         if (controller.signal.aborted) {
           return;
         }
-        setAllMarkets([]);
+        if (!seededFromWarmCache) {
+          setAllMarkets([]);
+        }
         setErrorMessage(
           error instanceof Error ? error.message : "There is an error with Polymarket right now. Please try again."
         );
