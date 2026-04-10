@@ -60,6 +60,7 @@ Open `http://localhost:3000`.
 ## Supabase Keys (What they are)
 - `NEXT_PUBLIC_SUPABASE_URL`: your Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: public anonymous key for client-side auth/data access
+- `NEXT_PUBLIC_DISABLE_GEOFENCE`: set to `true` to disable location/geofence checks for testing; set back to `false` to re-enable instantly
 - `SUPABASE_SERVICE_ROLE_KEY`: required for server/admin APIs
 - `POLYMARKET_API_KEY`: optional bearer token if your Polymarket access requires it
 - `CRON_SECRET`: required to authorize cron settlement calls
