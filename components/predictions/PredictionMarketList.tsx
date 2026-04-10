@@ -703,6 +703,26 @@ export function PredictionMarketList() {
     };
   }, [hasMorePages, loadMoreMarkets, loading]);
 
+  const getPendingQuestion = useCallback(
+    (pick: UserPrediction & { marketQuestion?: string | null }) => {
+      if (typeof pick.marketQuestion === "string") {
+        const marketQuestion = pick.marketQuestion.trim();
+        if (marketQuestion) {
+          return marketQuestion;
+        }
+      }
+      const matched = allMarkets.find((market) => market.id === pick.predictionId);
+      if (typeof matched?.question === "string") {
+        const question = matched.question.trim();
+        if (question) {
+          return question;
+        }
+      }
+      return "Prediction market question unavailable";
+    },
+    [allMarkets]
+  );
+
   if (isInitializing) {
     return (
       <div className="space-y-6 rounded-lg border border-slate-200 bg-white p-6">
@@ -828,26 +848,6 @@ export function PredictionMarketList() {
       ) : null}
       {messages[market.id] ? <p className="mt-2 text-xs text-slate-600">{messages[market.id]}</p> : null}
     </article>
-  );
-
-  const getPendingQuestion = useCallback(
-    (pick: UserPrediction & { marketQuestion?: string | null }) => {
-      if (typeof pick.marketQuestion === "string") {
-        const marketQuestion = pick.marketQuestion.trim();
-        if (marketQuestion) {
-          return marketQuestion;
-        }
-      }
-      const matched = allMarkets.find((market) => market.id === pick.predictionId);
-      if (typeof matched?.question === "string") {
-        const question = matched.question.trim();
-        if (question) {
-          return question;
-        }
-      }
-      return "Prediction market question unavailable";
-    },
-    [allMarkets]
   );
 
   return (
