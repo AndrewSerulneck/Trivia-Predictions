@@ -22,8 +22,8 @@ type UserRow = {
 };
 
 const MAX_CANDIDATE_QUESTIONS = 2000;
-const TRIVIA_LIMIT_PER_WINDOW = 60;
-const WINDOW_MS = 20 * 60 * 1000;
+const TRIVIA_LIMIT_PER_WINDOW = 45;
+const WINDOW_MS = 60 * 60 * 1000;
 
 export type TriviaQuota = {
   limit: number;
@@ -127,7 +127,7 @@ function pickBalancedRandomQuestions(questions: TriviaQuestion[], limit: number)
   return selected;
 }
 
-export async function getTriviaQuestions(limit = 10, userId?: string): Promise<TriviaQuestion[]> {
+export async function getTriviaQuestions(limit = 15, userId?: string): Promise<TriviaQuestion[]> {
   if (!supabaseAdmin) {
     return pickBalancedRandomQuestions(FALLBACK_QUESTIONS, limit);
   }
@@ -317,7 +317,7 @@ export async function submitTriviaAnswer(params: {
       const minutes = Math.floor(quota.windowSecondsRemaining / 60);
       const seconds = quota.windowSecondsRemaining % 60;
       const countdown = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-      throw new Error(`Trivia limit reached (60). Try again in ${countdown}.`);
+      throw new Error(`Trivia limit reached (${TRIVIA_LIMIT_PER_WINDOW}). Try again in ${countdown}.`);
     }
 
     const { data: existingAnswer, error: existingAnswerError } = await supabaseAdmin

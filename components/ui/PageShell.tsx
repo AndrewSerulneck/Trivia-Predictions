@@ -32,15 +32,15 @@ export function PageShell({
           ) : null}
           <div className="text-center">
             {showBranding ? <HightopLogo size="xl" className="mx-auto mb-1 drop-shadow-[0_6px_14px_rgba(31,42,54,0.25)]" /> : null}
-            {showBranding ? <p className="text-sm font-black uppercase tracking-[0.18em] text-slate-900">Hightop Challenge</p> : null}
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{title}</h1>
-            {description ? <p className="mt-1 text-sm font-medium text-slate-700">{description}</p> : null}
+            {showBranding ? <p className="text-base font-black uppercase tracking-[0.18em] text-slate-900">Hightop Challenge</p> : null}
+            <h1 className="text-[1.75rem] font-semibold tracking-tight text-slate-900">{title}</h1>
+            {description ? <p className="mt-1 text-base font-medium text-slate-700">{description}</p> : null}
           </div>
           {showUserStatus ? <UserStatusHeader showAlerts={false} /> : null}
         </div>
       </header>
 
-      <main className="tp-comic-card min-h-0 flex-1 overflow-hidden p-4">
+      <main className="tp-comic-card min-h-0 flex-1 overflow-hidden p-4 text-base">
         {children}
       </main>
     </div>

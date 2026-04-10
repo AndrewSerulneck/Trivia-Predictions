@@ -27,6 +27,9 @@ export async function SlotAd({
         <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Ad Placeholder</p>
         <p className="mt-1 text-lg font-semibold text-slate-700">Banner Advertisement Slot</p>
         <p className="mt-2 max-w-md text-sm text-slate-600">This is a placeholder for a venue banner ad.</p>
+        <p className="mt-2 max-w-md text-sm text-slate-700">
+          To advertise on Hightop Challenge, please reach out to advertising@hightopchallenge.com.
+        </p>
       </div>
     );
   }

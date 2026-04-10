@@ -220,7 +220,9 @@ export function NotificationBell() {
                 🔕
               </p>
               <p className="text-sm font-semibold text-[#1c2b3a]">You&apos;re all caught up</p>
-              <p className="text-xs text-slate-600">No notifications yet. We&apos;ll post updates here.</p>
+              <p className="text-xs text-slate-600">
+                This is where we let you know if your predictions were correct.
+              </p>
             </div>
           ) : (
             <ul className="max-h-80 space-y-2 overflow-y-auto p-3">

@@ -31,7 +31,7 @@ type SubmitResponse = {
   error?: string;
 };
 
-const QUESTION_TIME_LIMIT_SECONDS = 10;
+const QUESTION_TIME_LIMIT_SECONDS = 15;
 const POINTS_PER_CORRECT = 10;
 const BUTTON_POP_CLASS =
   "transition-all duration-150 transform active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
@@ -685,15 +685,15 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
   if (!isRoundStarted) {
     return (
-      <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 sm:space-y-3 sm:p-4 sm:text-sm">
-        <p className="font-semibold text-slate-900">Ready to start trivia?</p>
+      <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-base text-slate-700 sm:space-y-3 sm:p-4">
+        <p className="text-lg font-semibold text-slate-900">Ready to start trivia?</p>
         {triviaQuotaLocked ? (
           <p>
             Trivia limit reached. You can start another round in{" "}
             <span className="font-bold">{formatCountdown(quotaSecondsRemaining)}</span>.
           </p>
         ) : (
-          <p>You will have 10 seconds to answer each question once the round begins.</p>
+          <p>You will have 15 seconds to answer each question once the round begins.</p>
         )}
         <button
           type="button"
@@ -704,7 +704,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
             setRoundStartPoints(currentUserPoints ?? null);
           }}
           disabled={triviaQuotaLocked}
-          className={`${BUTTON_POP_CLASS} inline-flex min-h-[38px] w-full items-center justify-center rounded-md bg-blue-700 px-3 py-1.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 sm:min-h-[48px] sm:px-4 sm:py-2 sm:text-sm`}
+          className={`${BUTTON_POP_CLASS} inline-flex min-h-[44px] w-full items-center justify-center rounded-md bg-blue-700 px-3 py-2 text-base font-semibold text-white shadow-sm shadow-blue-200 sm:min-h-[50px] sm:px-4 sm:py-2`}
         >
           {triviaQuotaLocked ? `Locked ${formatCountdown(quotaSecondsRemaining)}` : "Yes, Start Trivia"}
         </button>
@@ -713,7 +713,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   }
 
   return (
-    <div ref={gameRootRef} className="relative flex h-full min-h-0 flex-col gap-1.5 overflow-x-hidden overflow-y-hidden px-0.5">
+    <div ref={gameRootRef} className="relative flex h-full min-h-0 flex-col gap-2 overflow-x-hidden overflow-y-auto px-0.5 pb-1">
       {feedbackFlash ? (
         <div
           aria-hidden="true"
@@ -764,7 +764,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
       {quota ? (
         <div className="space-y-1 rounded-xl border-2 border-slate-900 bg-cyan-100 p-1 shadow-[2px_2px_0_#0f172a] sm:rounded-2xl sm:border-4 sm:p-2 sm:shadow-[5px_5px_0_#0f172a]">
-          <div className="flex items-center justify-between text-xs font-medium text-slate-700 sm:text-xs">
+          <div className="flex items-center justify-between text-sm font-medium text-slate-700">
             <span>Trivia Progress This Window</span>
             {quota.isAdminBypass ? (
               <span>Unlimited (Admin)</span>
@@ -783,14 +783,14 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
             </div>
           ) : null}
           {triviaQuotaLocked ? (
-            <p className="text-xs font-semibold text-rose-700">
+            <p className="text-sm font-semibold text-rose-700">
               Limit reached. Next round unlocks in {formatCountdown(quotaSecondsRemaining)}.
             </p>
           ) : null}
         </div>
       ) : null}
 
-      <div className="rounded-xl border-2 border-slate-900 bg-yellow-100 p-1 text-xs font-semibold text-slate-700 shadow-[2px_2px_0_#0f172a] sm:rounded-2xl sm:border-4 sm:p-2 sm:text-sm sm:shadow-[5px_5px_0_#0f172a]">
+      <div className="rounded-xl border-2 border-slate-900 bg-yellow-100 p-1.5 text-sm font-semibold text-slate-700 shadow-[2px_2px_0_#0f172a] sm:rounded-2xl sm:border-4 sm:p-2 sm:shadow-[5px_5px_0_#0f172a]">
         <div className="flex items-center justify-between gap-2 sm:gap-3">
           <span>
             Question {index + 1} of {questions.length}
@@ -805,16 +805,16 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         </div>
       </div>
 
-      <div className="min-h-0 flex flex-1 flex-col gap-1.5 overflow-hidden sm:gap-3">
+      <div className="min-h-0 flex flex-1 flex-col gap-2 overflow-y-auto sm:gap-3">
         {showRewardPulse ? (
-          <div className="tp-pop-in rounded-lg border border-blue-200 bg-blue-50 p-1 text-xs font-bold text-blue-700 sm:p-2 sm:text-sm">
+          <div className="tp-pop-in rounded-lg border border-blue-200 bg-blue-50 p-1.5 text-sm font-bold text-blue-700 sm:p-2">
             {rewardPulse}
           </div>
         ) : null}
-        <h2 className="line-clamp-2 px-0.5 text-sm font-black leading-snug text-slate-900 sm:line-clamp-3 sm:text-lg">
+        <h2 className="px-0.5 text-base font-black leading-snug text-slate-900 sm:text-xl">
           {question.question}
         </h2>
-        <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-4 gap-1.5 content-stretch sm:gap-3">
+        <div className="grid min-h-0 flex-1 grid-cols-1 content-start gap-2 overflow-y-auto pr-0.5 sm:gap-3">
           {question.options.map((option, optionIndex) => {
             const selected = selectedAnswer === optionIndex;
             const isRevealedCorrect = revealedCorrectAnswer === optionIndex;
@@ -830,7 +830,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
                   void chooseAnswer(optionIndex);
                 }}
                 disabled={selectedAnswer !== null || isSubmitting || secondsRemaining <= 0 || triviaQuotaLocked}
-                className={`${BUTTON_POP_CLASS} h-full min-h-0 w-full rounded-xl border-2 px-2 py-1 text-left text-[13px] font-bold leading-tight shadow-[2px_2px_0_#0f172a] sm:min-h-[46px] sm:rounded-2xl sm:border-4 sm:px-3 sm:py-2 sm:text-sm sm:leading-snug sm:shadow-[4px_4px_0_#0f172a] ${
+                className={`${BUTTON_POP_CLASS} min-h-[56px] w-full rounded-xl border-2 px-2.5 py-2 text-left text-[15px] font-bold leading-snug shadow-[2px_2px_0_#0f172a] sm:min-h-[64px] sm:rounded-2xl sm:border-4 sm:px-3 sm:py-2.5 sm:text-base sm:shadow-[4px_4px_0_#0f172a] ${
                   isRevealedCorrect
                     ? "border-slate-900 bg-emerald-500 text-white"
                     : isSelectedWrong
@@ -850,7 +850,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
       <div className="mt-auto space-y-1.5 pt-0.5 sm:space-y-2.5 sm:pt-1">
         {feedback ? (
           <div
-            className={`rounded-xl border-2 p-1 text-xs font-semibold leading-snug shadow-[2px_2px_0_#0f172a] sm:rounded-2xl sm:border-4 sm:p-2 sm:text-sm sm:shadow-[5px_5px_0_#0f172a] ${
+            className={`rounded-xl border-2 p-1.5 text-sm font-semibold leading-snug shadow-[2px_2px_0_#0f172a] sm:rounded-2xl sm:border-4 sm:p-2 sm:shadow-[5px_5px_0_#0f172a] ${
               feedbackKind === "correct"
                 ? "border-slate-900 bg-emerald-200 text-emerald-900"
                 : feedbackKind === "incorrect" || feedbackKind === "timeout"
@@ -867,7 +867,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
           onMouseDown={() => triggerHaptic(14)}
           onClick={nextQuestion}
           disabled={selectedAnswer === null || isSubmitting || triviaQuotaLocked}
-          className={`${BUTTON_POP_CLASS} inline-flex min-h-[30px] w-full items-center justify-center rounded-xl border-2 border-slate-900 bg-cyan-300 px-3 py-1 text-sm font-black text-slate-900 shadow-[2px_2px_0_#0f172a] sm:min-h-[46px] sm:rounded-2xl sm:border-4 sm:px-4 sm:py-2.5 sm:text-sm sm:shadow-[5px_5px_0_#0f172a] disabled:opacity-60`}
+          className={`${BUTTON_POP_CLASS} inline-flex min-h-[44px] w-full items-center justify-center rounded-xl border-2 border-slate-900 bg-cyan-300 px-3 py-2 text-base font-black text-slate-900 shadow-[2px_2px_0_#0f172a] sm:min-h-[50px] sm:rounded-2xl sm:border-4 sm:px-4 sm:py-2.5 sm:shadow-[5px_5px_0_#0f172a] disabled:opacity-60`}
         >
           Next Question
         </button>

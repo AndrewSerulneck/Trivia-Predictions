@@ -46,22 +46,13 @@ type PredictionQuota = {
   isAdminBypass: boolean;
 };
 
-type SortKey = "closing-soon" | "newest" | "volume" | "liquidity";
-type CloseWindowKey = "all" | "today" | "this-week" | "this-month" | "this-year";
+type CloseWindowKey = "today" | "this-week" | "this-month";
 const FETCH_PAGE_SIZE = 24;
 
-const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
-  { value: "closing-soon", label: "Closing Soon" },
-  { value: "newest", label: "Newest" },
-  { value: "volume", label: "Highest Volume" },
-  { value: "liquidity", label: "Highest Liquidity" },
-];
 const CLOSE_WINDOW_OPTIONS: Array<{ value: CloseWindowKey; label: string }> = [
-  { value: "all", label: "All" },
   { value: "today", label: "Today" },
   { value: "this-week", label: "This Week" },
   { value: "this-month", label: "This Month" },
-  { value: "this-year", label: "This Year" },
 ];
 const IN_SEASON_MONTHS_BY_SPORT: Record<string, number[] | "all"> = {
   Football: [7, 8, 9, 10, 11, 0, 1],
@@ -241,10 +232,6 @@ function diversifyMarketsBySport(markets: Prediction[]): Prediction[] {
 }
 
 function marketMatchesCloseWindow(market: Prediction, closeWindow: CloseWindowKey): boolean {
-  if (closeWindow === "all") {
-    return true;
-  }
-
   const closeTs = +new Date(market.closesAt);
   if (!Number.isFinite(closeTs)) {
     return false;
@@ -272,8 +259,7 @@ function marketMatchesCloseWindow(market: Prediction, closeWindow: CloseWindowKe
     return closesAtDate <= endOfWindow;
   }
 
-  const endOfWindow = new Date(nowTs + 365 * 24 * 60 * 60 * 1000);
-  return closesAtDate <= endOfWindow;
+  return false;
 }
 
 export function PredictionMarketList() {
@@ -298,12 +284,9 @@ export function PredictionMarketList() {
   const hasInitializedRef = useRef(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  const [searchInput, setSearchInput] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCloseWindow, setSelectedCloseWindow] = useState<CloseWindowKey>("all");
+  const [selectedCloseWindow, setSelectedCloseWindow] = useState<CloseWindowKey>("today");
   const [selectedSport, setSelectedSport] = useState("");
   const [selectedLeague, setSelectedLeague] = useState("");
-  const [sort, setSort] = useState<SortKey>("closing-soon");
   const [browseFiltersCollapsed, setBrowseFiltersCollapsed] = useState(false);
   const [pendingPredictionsCollapsed, setPendingPredictionsCollapsed] = useState(false);
   const [pendingPicks, setPendingPicks] = useState<
@@ -318,10 +301,6 @@ export function PredictionMarketList() {
   >([]);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
-  const hasFilters = useMemo(
-    () => Boolean(searchQuery || selectedSport || selectedLeague || selectedCloseWindow !== "all"),
-    [searchQuery, selectedCloseWindow, selectedSport, selectedLeague]
-  );
   const predictionsQuotaLocked = Boolean(quota && !quota.isAdminBypass && quota.picksRemaining <= 0);
   const leagueOptions = useMemo(
     () => (selectedSport ? leaguesBySport[selectedSport] ?? [] : []),
@@ -351,14 +330,14 @@ export function PredictionMarketList() {
     if (!selectedSport || loading || Boolean(errorMessage)) {
       return false;
     }
-    if (selectedLeague || searchQuery || selectedCloseWindow !== "all") {
+    if (selectedLeague) {
       return false;
     }
     if (markets.length > 0) {
       return false;
     }
     return !isSportInSeason(selectedSport, new Date());
-  }, [errorMessage, loading, markets.length, searchQuery, selectedCloseWindow, selectedLeague, selectedSport]);
+  }, [errorMessage, loading, markets.length, selectedCloseWindow, selectedLeague, selectedSport]);
   const groupedMarketSections = useMemo(() => {
     const byLeague = new Map<string, Prediction[]>();
     for (const market of markets) {
@@ -528,17 +507,7 @@ export function PredictionMarketList() {
       return;
     }
     window.scrollTo({ top: 0, behavior: "auto" });
-  }, [searchQuery, selectedCloseWindow, selectedLeague, selectedSport, sort]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setSearchQuery(searchInput.trim());
-    }, 250);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [searchInput]);
+  }, [selectedCloseWindow, selectedLeague, selectedSport]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -560,16 +529,12 @@ export function PredictionMarketList() {
           page: "1",
           pageSize: String(FETCH_PAGE_SIZE),
           excludeSensitive: "false",
-          sort,
         });
         if (selectedSport) {
           query.set("sport", selectedSport);
         }
         if (selectedLeague) {
           query.set("league", selectedLeague);
-        }
-        if (searchQuery) {
-          query.set("search", searchQuery);
         }
         const response = await fetch(`/api/predictions?${query.toString()}`, {
           cache: "no-store",
@@ -615,7 +580,7 @@ export function PredictionMarketList() {
     return () => {
       controller.abort();
     };
-  }, [searchQuery, selectedLeague, selectedSport, sort]);
+  }, [selectedLeague, selectedSport]);
 
   const hasMorePages = nextPage <= totalPages;
 
@@ -633,16 +598,12 @@ export function PredictionMarketList() {
         page: String(pageToLoad),
         pageSize: String(FETCH_PAGE_SIZE),
         excludeSensitive: "false",
-        sort,
       });
       if (selectedSport) {
         query.set("sport", selectedSport);
       }
       if (selectedLeague) {
         query.set("league", selectedLeague);
-      }
-      if (searchQuery) {
-        query.set("search", searchQuery);
       }
 
       const response = await fetch(`/api/predictions?${query.toString()}`, {
@@ -678,7 +639,7 @@ export function PredictionMarketList() {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [hasMorePages, isLoadingMore, loading, nextPage, searchQuery, selectedLeague, selectedSport, sort, totalItems, totalPages]);
+  }, [hasMorePages, isLoadingMore, loading, nextPage, selectedLeague, selectedSport, totalItems, totalPages]);
 
   useEffect(() => {
     const sentinel = loadMoreRef.current;
@@ -921,7 +882,7 @@ export function PredictionMarketList() {
 
       <section className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Browse & Filters</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Browse by Category</p>
           <button
             type="button"
             onClick={() => setBrowseFiltersCollapsed((value) => !value)}
@@ -1050,59 +1011,10 @@ export function PredictionMarketList() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-              <input
-                type="text"
-                value={searchInput}
-                onChange={(event) => setSearchInput(event.target.value)}
-                placeholder="Search markets"
-                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-              />
-              <select
-                value={sort}
-                onChange={(event) => {
-                  setSort(event.target.value as SortKey);
-                }}
-                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-              >
-                {SORT_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onMouseDown={() => triggerHaptic()}
-                  onClick={() => {
-                    setSearchInput((value) => value.trim());
-                  }}
-                  className={`${BUTTON_POP_CLASS} rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white`}
-                >
-                  Apply
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchInput("");
-                    setSelectedCloseWindow("all");
-                    setSelectedSport("");
-                    setSelectedLeague("");
-                    setSort("closing-soon");
-                  }}
-                  className={`${BUTTON_POP_CLASS} rounded-md bg-slate-200 px-3 py-2 text-sm font-medium text-slate-700`}
-                >
-                  Reset
-                </button>
-              </div>
-            </div>
-
             <p className="text-xs text-slate-600">
               {loading
                 ? "Loading markets..."
-                : `Showing ${markets.length} of ${totalItems} market${totalItems === 1 ? "" : "s"}`}
-              {hasFilters ? " (filtered)" : ""}.
+                : `Showing ${markets.length} of ${totalItems} market${totalItems === 1 ? "" : "s"}`}.
             </p>
           </div>
         ) : null}

@@ -45,13 +45,13 @@ export function TriviaAppFrame() {
   }, []);
 
   return (
-    <div className="tp-trivia-compact fixed inset-0 z-[60] overflow-hidden px-1.5 py-2 touch-pan-y md:px-3 md:py-3">
-      <div className="mx-auto flex h-full w-full max-w-[22.5rem] flex-col gap-1.5 overflow-hidden sm:max-w-md">
+    <div className="tp-trivia-compact fixed inset-0 z-[60] overflow-x-hidden overflow-y-auto px-1.5 py-2 touch-pan-y md:px-3 md:py-3">
+      <div className="mx-auto flex min-h-full w-full max-w-[22.5rem] flex-col gap-1.5 sm:max-w-md">
         <header className="tp-hud-card shrink-0 p-1.5 sm:p-2">
           <div className="space-y-1">
             <div className="text-center">
               <HightopLogo size="sm" className="mx-auto mb-0.5 drop-shadow-[0_4px_10px_rgba(31,42,54,0.25)]" />
-              <p className="text-sm font-black uppercase tracking-[0.08em] text-slate-900 sm:text-base">
+              <p className="text-base font-black uppercase tracking-[0.08em] text-slate-900 sm:text-lg">
                 Hightop Challenge
               </p>
               <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-3xl">Trivia</h1>
@@ -60,8 +60,8 @@ export function TriviaAppFrame() {
           </div>
         </header>
 
-        <main className="tp-comic-card min-h-0 flex-1 overflow-hidden p-1.5 sm:p-2">
-          <div className="flex h-full min-h-0 flex-col gap-1.5 overflow-hidden">
+        <main className="tp-comic-card min-h-0 flex-1 overflow-visible p-1.5 sm:p-2">
+          <div className="flex h-full min-h-0 flex-col gap-1.5 overflow-visible">
             <button
               type="button"
               onClick={() => {
@@ -71,7 +71,7 @@ export function TriviaAppFrame() {
                 }
                 router.push("/");
               }}
-              className="inline-flex min-h-[30px] items-center justify-center gap-1 rounded-xl border-2 border-slate-900 bg-emerald-500 px-3 py-1 text-sm font-semibold text-white shadow-[2px_2px_0_#0f172a] sm:min-h-[40px] sm:rounded-full sm:border-4 sm:px-4 sm:py-2 sm:text-sm sm:shadow-[4px_4px_0_#0f172a]"
+              className="inline-flex min-h-[40px] items-center justify-center gap-1 rounded-xl border-2 border-slate-900 bg-emerald-500 px-3 py-2 text-base font-semibold text-white shadow-[2px_2px_0_#0f172a] sm:min-h-[46px] sm:rounded-full sm:border-4 sm:px-4 sm:py-2 sm:shadow-[4px_4px_0_#0f172a]"
             >
               <span aria-hidden="true">←</span>
               Back

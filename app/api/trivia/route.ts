@@ -4,7 +4,7 @@ import { getTriviaQuestions, submitTriviaAnswer } from "@/lib/trivia";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get("userId")?.trim() || undefined;
-  const questions = await getTriviaQuestions(20, userId);
+  const questions = await getTriviaQuestions(15, userId);
   return NextResponse.json({ ok: true, questions });
 }
 
