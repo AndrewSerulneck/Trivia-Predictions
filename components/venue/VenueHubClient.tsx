@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
 import { clearVenueSession, getUserId, getVenueId } from "@/lib/storage";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
-import type { Venue } from "@/types";
+import type { LeaderboardEntry, Venue } from "@/types";
 
 export function VenueHubClient({
   venue,
+  initialEntries,
 }: {
   venue: Venue;
+  initialEntries: LeaderboardEntry[];
 }) {
   const router = useRouter();
   const [pendingDestination, setPendingDestination] = useState<"trivia" | "predictions" | null>(null);
@@ -113,7 +115,7 @@ export function VenueHubClient({
       <section className="space-y-2">
         <h2 className="text-lg font-semibold text-slate-900">{venueDisplayName} Leaderboard</h2>
         <p className="text-sm text-slate-600">Compete with players currently joined at this venue.</p>
-        <LeaderboardTable venueId={venue.id} />
+        <LeaderboardTable venueId={venue.id} initialEntries={initialEntries} />
       </section>
     </div>
   );
