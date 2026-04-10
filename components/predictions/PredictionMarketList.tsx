@@ -504,13 +504,6 @@ export function PredictionMarketList() {
   }, [loadQuota, predictionsQuotaLocked, quotaSecondsRemaining]);
 
   useEffect(() => {
-    if (!hasInitializedRef.current || typeof window === "undefined") {
-      return;
-    }
-    window.scrollTo({ top: 0, behavior: "auto" });
-  }, [selectedCloseWindow, selectedLeague, selectedSport]);
-
-  useEffect(() => {
     const controller = new AbortController();
     const venueId = getVenueId() ?? "";
     let seededFromWarmCache = false;
