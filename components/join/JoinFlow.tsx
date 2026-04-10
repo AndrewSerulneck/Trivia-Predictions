@@ -39,9 +39,10 @@ const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig
 const ACCESS_DISTANCE_METERS = 200;
 
 function getGeofenceThresholdMeters(venueRadius: number, accuracy?: number): number {
-  void venueRadius;
-  void accuracy;
-  return ACCESS_DISTANCE_METERS;
+  const normalizedVenueRadius = Number.isFinite(venueRadius) ? Math.max(0, Math.round(venueRadius)) : 0;
+  const baseRadius = Math.max(ACCESS_DISTANCE_METERS, normalizedVenueRadius);
+  const accuracyBuffer = Number.isFinite(accuracy) ? Math.min(220, Math.max(0, Math.round(Number(accuracy) * 0.6))) : 0;
+  return baseRadius + accuracyBuffer;
 }
 
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {

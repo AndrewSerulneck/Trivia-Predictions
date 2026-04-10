@@ -20,6 +20,12 @@ function isPublicPath(pathname: string): boolean {
   if (pathname === "/favicon.ico") {
     return true;
   }
+  if (pathname.startsWith("/brand/")) {
+    return true;
+  }
+  if (/\.[a-z0-9]+$/i.test(pathname)) {
+    return true;
+  }
   return false;
 }
 
@@ -41,5 +47,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)"],
 };
