@@ -12,7 +12,7 @@ import {
   validatePin,
   validateUsername,
 } from "@/lib/auth";
-import { calculateDistanceMeters, getBestCurrentLocation } from "@/lib/geolocation";
+import { calculateDistanceMeters, getBestCurrentLocation, getCurrentLocation } from "@/lib/geolocation";
 import { saveUserId, saveUsername, saveVenueId } from "@/lib/storage";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { getVenueById, listVenues } from "@/lib/venues";
@@ -95,11 +95,15 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
           setLocationLoading(true);
           try {
-            const current = await getBestCurrentLocation({
-              sampleDurationMs: 6500,
-              timeoutMs: 13000,
-              desiredAccuracyMeters: 120,
-            });
+            // Quick first-pass location for faster venue discovery UX.
+            let current = await getCurrentLocation();
+            if (!Number.isFinite(current.accuracy) || (current.accuracy ?? 9999) > 500) {
+              current = await getBestCurrentLocation({
+                sampleDurationMs: 2800,
+                timeoutMs: 5500,
+                desiredAccuracyMeters: 220,
+              });
+            }
             const distanceByVenue = venues.map((item) => {
               const distance = calculateDistanceMeters(current, {
                 latitude: item.latitude,
