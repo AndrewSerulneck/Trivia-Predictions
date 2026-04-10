@@ -1,9 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import jsQR from "jsqr";
 import { PageShell } from "@/components/ui/PageShell";
 import { BackButton } from "@/components/navigation/BackButton";
 import {
@@ -88,6 +86,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isScanningQr, setIsScanningQr] = useState(false);
   const [scanNotice, setScanNotice] = useState("");
+  const [isOptimisticallyEntering, setIsOptimisticallyEntering] = useState(false);
+  const [pendingVenueSelectionId, setPendingVenueSelectionId] = useState<string | null>(null);
   const autoVerificationAttemptedRef = useRef(false);
   const scanVideoRef = useRef<HTMLVideoElement | null>(null);
   const scanStreamRef = useRef<MediaStream | null>(null);
@@ -108,13 +108,14 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         const venues = await listVenues();
 
         if (!venueParam) {
+          setVenueList(venues);
+          setStatus("ready");
+
           if (DISABLE_GEOFENCE_FOR_TESTING) {
-            setVenueList(venues);
             setLocationVerified(true);
             setLocationNotice("Testing mode: location checks are disabled.");
             setVenue(null);
             setLocationLoading(false);
-            setStatus("ready");
             return;
           }
 
@@ -136,25 +137,27 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               });
               return { venue: item, distance };
             });
-            const nearbyVenues = distanceByVenue
-              .filter((item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, current.accuracy))
+            const sortedByDistance = [...distanceByVenue]
+              .sort((a, b) => a.distance - b.distance)
               .map((item) => item.venue);
-            setVenueList(nearbyVenues);
-            if (nearbyVenues.length > 0) {
-              setLocationNotice(`Showing ${nearbyVenues.length} nearby venue(s) within range.`);
+            const nearbyCount = distanceByVenue.filter(
+              (item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, current.accuracy)
+            ).length;
+            setVenueList(sortedByDistance);
+            if (nearbyCount > 0) {
+              setLocationNotice(`Found ${nearbyCount} nearby venue(s).`);
             } else {
-              setLocationNotice("No nearby venues are within geofence range right now.");
+              setLocationNotice("Showing all venues. You'll verify location after selecting one.");
             }
           } catch (error) {
-            setVenueList([]);
-            setLocationNotice("");
+            setVenueList(venues);
             if (isLocationPermissionDenied(error)) {
-              setErrorMessage("Sorry, you must share your location in order to play!");
+              setLocationNotice("Location permission is off. You can still choose a venue and verify afterward.");
             } else {
-              setErrorMessage(
+              setLocationNotice(
                 getErrorMessage(
                   error,
-                  "Location access is required to show nearby venues. Enable location services and retry."
+                  "Location check unavailable right now. You can still choose a venue and verify afterward."
                 )
               );
             }
@@ -162,7 +165,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             setLocationLoading(false);
           }
           setVenue(null);
-          setStatus("ready");
           return;
         }
 
@@ -174,16 +176,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         }
 
         setVenue(venueData);
+        setStatus("ready");
 
         if (!isSupabaseConfigured) {
-          setStatus("ready");
           setErrorMessage(
             "Supabase is not configured yet. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local."
           );
           return;
         }
 
-        await ensureAnonymousSession();
+        void ensureAnonymousSession();
 
         if (!DISABLE_GEOFENCE_FOR_TESTING) {
           setLocationLoading(true);
@@ -229,8 +231,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           setLastLocationVerifiedAt(Date.now());
           setLocationNotice("");
         }
-
-        setStatus("ready");
       } catch (error) {
         setStatus("error");
         setErrorMessage(getErrorMessage(error, "Failed to initialize join flow."));
@@ -352,6 +352,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       if (!useBarcodeDetector) {
         setScanNotice("Using compatibility scan mode.");
       }
+      let jsQrDecode: ((data: Uint8ClampedArray, width: number, height: number, options?: { inversionAttempts?: "attemptBoth" | "dontInvert" | "onlyInvert" }) => { data?: string } | null) | null = null;
 
       const tick = async () => {
         const video = scanVideoRef.current;
@@ -371,6 +372,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             const frameWidth = Math.max(1, Math.floor(video.videoWidth || 0));
             const frameHeight = Math.max(1, Math.floor(video.videoHeight || 0));
             if (frameWidth > 1 && frameHeight > 1) {
+              if (!jsQrDecode) {
+                const jsQrModule = await import("jsqr");
+                jsQrDecode = jsQrModule.default;
+              }
               if (!scanCanvasRef.current) {
                 scanCanvasRef.current = document.createElement("canvas");
               }
@@ -383,7 +388,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               if (context) {
                 context.drawImage(video, 0, 0, frameWidth, frameHeight);
                 const imageData = context.getImageData(0, 0, frameWidth, frameHeight);
-                const code = jsQR(imageData.data, frameWidth, frameHeight, {
+                const code = jsQrDecode?.(imageData.data, frameWidth, frameHeight, {
                   inversionAttempts: "attemptBoth",
                 });
                 rawValue = code?.data?.trim() ?? "";
@@ -446,12 +451,13 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     setLocationNotice("");
 
     setIsTransitioning(true);
+    setIsOptimisticallyEntering(true);
     setStatus("saving");
     setLocationNotice("Joining venue...");
 
     try {
       // Ensure fallback demo venues exist server-side before user profile insert.
-      await fetch("/api/join/ensure-venue", {
+      void fetch("/api/join/ensure-venue", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ venueId: venue.id }),
@@ -468,6 +474,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       saveUserId(user.id);
       router.push(`/venue/${venue.id}`);
     } catch (error) {
+      setIsOptimisticallyEntering(false);
       setIsTransitioning(false);
       setStatus("ready");
       setErrorMessage(getErrorMessage(error, "Failed to create profile."));
@@ -489,21 +496,33 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         {!venue && venueList.length > 0 && (
           <div className="space-y-3">
             <h2 className="text-xl font-medium text-slate-900">Available Venues:</h2>
+            {locationLoading ? (
+              <p className="text-sm text-slate-600">Finding nearby venues in the background...</p>
+            ) : locationNotice ? (
+              <p className="text-sm text-slate-600">{locationNotice}</p>
+            ) : null}
             <ul className="space-y-2">
               {venueList.map((item, index) => {
                 const visual = getVenueVisual(item, index);
                 return (
                 <li key={item.id}>
-                  <Link
-                    href={`/?v=${item.id}`}
-                    role="button"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPendingVenueSelectionId(item.id);
+                      router.push(`/?v=${encodeURIComponent(item.id)}`);
+                    }}
                     className={`flex w-full items-center justify-between rounded-xl border border-slate-200 bg-gradient-to-r from-white to-slate-100 px-4 py-3 text-base text-slate-700 shadow-sm transition-all ${JOIN_BUTTON_POP_CLASS} hover:from-blue-50 hover:to-cyan-50`}
                   >
                     <span className="flex items-center gap-3">
                       <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white text-base font-medium text-slate-800">
                         {visual.logoText}
                       </span>
-                      <span className="font-medium">Join {getVenueDisplayName(item)}</span>
+                      <span className="font-medium">
+                        {pendingVenueSelectionId === item.id
+                          ? `Opening ${getVenueDisplayName(item)}...`
+                          : `Join ${getVenueDisplayName(item)}`}
+                      </span>
                     </span>
                     <span
                       aria-hidden="true"
@@ -511,7 +530,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                     >
                       {visual.icon}
                     </span>
-                  </Link>
+                  </button>
                 </li>
                 );
               })}
@@ -521,6 +540,13 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               <p className="mt-1 text-lg font-semibold text-slate-700">Banner Advertisement Slot</p>
               <p className="mt-2 max-w-md text-sm text-slate-600">This is a placeholder for a venue banner ad.</p>
             </div>
+          </div>
+        )}
+
+        {!venue && venueList.length === 0 && status === "loading" && (
+          <div className="space-y-3 rounded-2xl border-4 border-slate-900 bg-white p-4 text-sm text-slate-800 shadow-[5px_5px_0_#0f172a]">
+            <p className="font-semibold">Loading venues...</p>
+            <p>Getting venues ready for you now.</p>
           </div>
         )}
 
@@ -593,6 +619,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               >
                 {status === "saving" || isTransitioning ? "Entering venue..." : "Enter Game"}
               </button>
+              {isOptimisticallyEntering ? (
+                <p className="text-sm text-slate-600">Taking you to your venue now...</p>
+              ) : null}
             </div>
           </div>
         )}

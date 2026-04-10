@@ -1,21 +1,19 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
 import { clearVenueSession, getUserId, getVenueId } from "@/lib/storage";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
-import type { LeaderboardEntry, Venue } from "@/types";
+import type { Venue } from "@/types";
 
 export function VenueHubClient({
   venue,
-  initialEntries,
 }: {
   venue: Venue;
-  initialEntries: LeaderboardEntry[];
 }) {
   const router = useRouter();
+  const [pendingDestination, setPendingDestination] = useState<"trivia" | "predictions" | null>(null);
 
   useEffect(() => {
     const storedUserId = getUserId() ?? "";
@@ -50,6 +48,17 @@ export function VenueHubClient({
   const ctaClass =
     "inline-flex min-h-[96px] w-full flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 px-3 py-4 text-center text-base font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95";
 
+  const goTo = (destination: "trivia" | "predictions") => {
+    triggerPulse();
+    setPendingDestination(destination);
+    router.push(destination === "trivia" ? "/trivia" : "/predictions");
+  };
+
+  useEffect(() => {
+    router.prefetch("/trivia");
+    router.prefetch("/predictions");
+  }, [router]);
+
   return (
     <div className="space-y-5">
       <div className="flex justify-start">
@@ -75,34 +84,36 @@ export function VenueHubClient({
       </div>
 
       <section className="grid grid-cols-2 gap-3">
-        <Link
+        <button
+          type="button"
           onMouseDown={triggerPulse}
-          href="/trivia"
-          role="button"
+          onClick={() => goTo("trivia")}
+          disabled={pendingDestination !== null}
           className={`${ctaClass} bg-gradient-to-br from-blue-600 to-cyan-500 text-white shadow-md shadow-blue-200 hover:from-blue-700 hover:to-cyan-600 active:scale-95`}
         >
           <span aria-hidden="true" className="text-4xl leading-none">
             🎯
           </span>
-          Play Trivia!
-        </Link>
-        <Link
+          {pendingDestination === "trivia" ? "Opening Trivia..." : "Play Trivia!"}
+        </button>
+        <button
+          type="button"
           onMouseDown={triggerPulse}
-          href="/predictions"
-          role="button"
+          onClick={() => goTo("predictions")}
+          disabled={pendingDestination !== null}
           className={`${ctaClass} bg-gradient-to-br from-slate-800 to-violet-700 text-white shadow-md shadow-violet-200 hover:from-slate-900 hover:to-violet-800 active:scale-95`}
         >
           <span aria-hidden="true" className="text-4xl leading-none">
             🔮
           </span>
-          Make Sports Predictions
-        </Link>
+          {pendingDestination === "predictions" ? "Opening Predictions..." : "Make Sports Predictions"}
+        </button>
       </section>
 
       <section className="space-y-2">
         <h2 className="text-lg font-semibold text-slate-900">{venueDisplayName} Leaderboard</h2>
         <p className="text-sm text-slate-600">Compete with players currently joined at this venue.</p>
-        <LeaderboardTable venueId={venue.id} initialEntries={initialEntries} />
+        <LeaderboardTable venueId={venue.id} />
       </section>
     </div>
   );

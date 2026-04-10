@@ -12,17 +12,19 @@ type LeaderboardPayload = {
 
 export function LeaderboardTable({
   venueId,
-  initialEntries,
+  initialEntries = [],
 }: {
   venueId: string;
-  initialEntries: LeaderboardEntry[];
+  initialEntries?: LeaderboardEntry[];
 }) {
   const [entries, setEntries] = useState<LeaderboardEntry[]>(initialEntries);
   const [errorMessage, setErrorMessage] = useState("");
   const [currentUserId, setCurrentUserId] = useState("");
+  const [isLoading, setIsLoading] = useState(initialEntries.length === 0);
 
   const load = useCallback(async () => {
     if (!venueId) return;
+    setIsLoading(true);
 
     try {
       const response = await fetch(`/api/leaderboard?venue=${encodeURIComponent(venueId)}`, {
@@ -36,6 +38,8 @@ export function LeaderboardTable({
       setErrorMessage("");
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Failed to load leaderboard.");
+    } finally {
+      setIsLoading(false);
     }
   }, [venueId]);
 
@@ -66,6 +70,14 @@ export function LeaderboardTable({
 
   if (errorMessage) {
     return <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">{errorMessage}</div>;
+  }
+
+  if (isLoading && entries.length === 0) {
+    return (
+      <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+        Loading leaderboard...
+      </div>
+    );
   }
 
   if (entries.length === 0) {
