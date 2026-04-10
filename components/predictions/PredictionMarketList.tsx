@@ -47,10 +47,11 @@ type PredictionQuota = {
   isAdminBypass: boolean;
 };
 
-type CloseWindowKey = "today" | "this-week" | "this-month";
+type CloseWindowKey = "all" | "today" | "this-week" | "this-month";
 const FETCH_PAGE_SIZE = 24;
 
 const CLOSE_WINDOW_OPTIONS: Array<{ value: CloseWindowKey; label: string }> = [
+  { value: "all", label: "All" },
   { value: "today", label: "Today" },
   { value: "this-week", label: "This Week" },
   { value: "this-month", label: "This Month" },
@@ -233,6 +234,10 @@ function diversifyMarketsBySport(markets: Prediction[]): Prediction[] {
 }
 
 function marketMatchesCloseWindow(market: Prediction, closeWindow: CloseWindowKey): boolean {
+  if (closeWindow === "all") {
+    return true;
+  }
+
   const closeTs = +new Date(market.closesAt);
   if (!Number.isFinite(closeTs)) {
     return false;
@@ -285,7 +290,7 @@ export function PredictionMarketList() {
   const hasInitializedRef = useRef(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  const [selectedCloseWindow, setSelectedCloseWindow] = useState<CloseWindowKey>("today");
+  const [selectedCloseWindow, setSelectedCloseWindow] = useState<CloseWindowKey>("all");
   const [selectedSport, setSelectedSport] = useState("");
   const [selectedLeague, setSelectedLeague] = useState("");
   const [browseFiltersCollapsed, setBrowseFiltersCollapsed] = useState(false);
