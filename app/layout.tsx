@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { SlotAd } from "@/components/ui/SlotAd";
 import { PopupAds } from "@/components/ui/PopupAds";
+import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,9 +19,9 @@ export default async function RootLayout({
           <div className="pointer-events-none absolute top-24 -left-16 h-44 w-44 rounded-full bg-red-300/30 blur-3xl" />
           <div className="pointer-events-none absolute bottom-16 right-4 h-36 w-36 rounded-full bg-amber-200/35 blur-3xl" />
 
-          <SlotAd slot="header" />
+          <InlineSlotAdClient slot="header" showPlaceholder />
           {children}
-          <SlotAd slot="footer" />
+          <InlineSlotAdClient slot="footer" showPlaceholder />
         </div>
         <PopupAds />
       </body>
