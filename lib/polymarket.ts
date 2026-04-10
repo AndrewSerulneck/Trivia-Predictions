@@ -1356,7 +1356,71 @@ export async function getPredictionMarketById(predictionId: string): Promise<Pre
 
   if (trimmed.startsWith("odds:")) {
     const oddsMarkets = await getOddsMarkets();
-    return oddsMarkets.find((item) => item.id === trimmed) ?? null;
+    const fromCache = oddsMarkets.find((item) => item.id === trimmed);
+    if (fromCache) {
+      return fromCache;
+    }
+
+    const parsed = parseOddsPredictionId(trimmed);
+    if (parsed && ODDS_API_KEY) {
+      try {
+        const eventQuery = new URLSearchParams({
+          apiKey: ODDS_API_KEY,
+          regions: "us",
+          markets: "h2h",
+          oddsFormat: "american",
+        });
+        const payload = await fetchOddsJson(
+          `/sports/${parsed.sportKey}/events/${parsed.eventId}/odds`,
+          eventQuery
+        );
+        if (payload && typeof payload === "object") {
+          const eventMarket = normalizeOddsEvent(payload as OddsEvent, ODDS_SPORT_BY_KEY.get(parsed.sportKey));
+          if (eventMarket) {
+            return eventMarket;
+          }
+        }
+      } catch {
+        // Fall back to scores lookup below.
+      }
+
+      try {
+        const scoresQuery = new URLSearchParams({
+          apiKey: ODDS_API_KEY,
+          daysFrom: String(Math.max(1, normalizePositiveInt(ODDS_API_SCORES_DAYS, 14))),
+        });
+        const scorePayload = await fetchOddsJson(`/sports/${parsed.sportKey}/scores`, scoresQuery);
+        if (Array.isArray(scorePayload)) {
+          const matched = (scorePayload as OddsScoreEvent[]).find((event) => String(event.id ?? "").trim() === parsed.eventId);
+          if (matched) {
+            const homeTeam = String(matched.home_team ?? "").trim();
+            const awayTeam = String(matched.away_team ?? "").trim();
+            if (homeTeam && awayTeam) {
+              const mappedSport = ODDS_SPORT_BY_KEY.get(parsed.sportKey);
+              return {
+                id: trimmed,
+                question: `Will the ${homeTeam} beat the ${awayTeam}?`,
+                source: "odds-api",
+                closesAt: new Date().toISOString(),
+                outcomes: [
+                  { id: toOddsOutcomeId(parsed.eventId, "home"), title: "Yes", probability: 50 },
+                  { id: toOddsOutcomeId(parsed.eventId, "away"), title: "No", probability: 50 },
+                ],
+                category: mappedSport?.league ?? "Game Winner",
+                sport: mappedSport?.sport,
+                league: mappedSport?.league,
+                tags: ["The Odds API", "Game Winner"],
+                createdAt: new Date().toISOString(),
+              };
+            }
+          }
+        }
+      } catch {
+        // Ignore final fallback failure.
+      }
+    }
+
+    return null;
   }
 
   const directQuery = new URLSearchParams({

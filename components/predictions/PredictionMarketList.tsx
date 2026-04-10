@@ -259,7 +259,6 @@ export function PredictionMarketList() {
   const [sort, setSort] = useState<SortKey>("closing-soon");
   const [browseFiltersCollapsed, setBrowseFiltersCollapsed] = useState(false);
   const [pendingPredictionsCollapsed, setPendingPredictionsCollapsed] = useState(false);
-  const [recentPicks, setRecentPicks] = useState<UserPrediction[]>([]);
   const [pendingPicks, setPendingPicks] = useState<
     Array<
       UserPrediction & {
@@ -339,55 +338,6 @@ export function PredictionMarketList() {
       markets: byLeague.get(label) ?? [],
     }));
   }, [markets, selectedSport]);
-  const featuredMarkets = useMemo(() => {
-    return [...filteredMarkets]
-      .sort((a, b) => {
-        const aHours = Math.abs(getHoursUntilClose(a.closesAt));
-        const bHours = Math.abs(getHoursUntilClose(b.closesAt));
-        if (aHours !== bHours) return aHours - bHours;
-        return a.question.localeCompare(b.question, undefined, { sensitivity: "base" });
-      })
-      .slice(0, 6);
-  }, [filteredMarkets]);
-  const forYouMarkets = useMemo(() => {
-    if (recentPicks.length === 0) return [];
-
-    const recentPickMarketIds = new Set(recentPicks.map((pick) => pick.predictionId));
-    const categoryScores = new Map<string, number>();
-
-    for (const pick of recentPicks.slice(0, 30)) {
-      const matched = allMarkets.find((market) => market.id === pick.predictionId);
-      const matchedCategory = matched?.league?.trim() || matched?.sport?.trim();
-      if (matchedCategory) {
-        categoryScores.set(matchedCategory, (categoryScores.get(matchedCategory) ?? 0) + 1);
-      }
-    }
-
-    const preferredCategories = [...categoryScores.entries()]
-      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], undefined, { sensitivity: "base" }))
-      .slice(0, 3)
-      .map(([categoryName]) => categoryName);
-
-    const pool = filteredMarkets.filter((market) => !recentPickMarketIds.has(market.id));
-    const categoryMatched = preferredCategories.length
-      ? pool.filter((market) => preferredCategories.includes(market.league?.trim() || market.sport?.trim() || ""))
-      : [];
-    const source = categoryMatched.length > 0 ? categoryMatched : pool;
-    const unique = new Map<string, Prediction>();
-    for (const market of source.length > 0 ? source : pool) {
-      unique.set(market.id, market);
-    }
-
-    return [...unique.values()]
-      .sort((a, b) => {
-        const aHours = Math.abs(getHoursUntilClose(a.closesAt));
-        const bHours = Math.abs(getHoursUntilClose(b.closesAt));
-        if (aHours !== bHours) return aHours - bHours;
-        return a.question.localeCompare(b.question, undefined, { sensitivity: "base" });
-      })
-      .slice(0, 6);
-  }, [allMarkets, recentPicks, filteredMarkets]);
-
   const loadQuota = useCallback(async () => {
     if (!userId) {
       setQuota(null);
@@ -399,25 +349,6 @@ export function PredictionMarketList() {
     const payload = (await response.json()) as { ok: boolean; quota?: PredictionQuota | null };
     if (payload.ok) {
       setQuota(payload.quota ?? null);
-    }
-  }, [userId]);
-  const loadRecentPicks = useCallback(async () => {
-    if (!userId) {
-      setRecentPicks([]);
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/picks?userId=${encodeURIComponent(userId)}&status=all&pageSize=50&page=1`, {
-        cache: "no-store",
-      });
-      const payload = (await response.json()) as UserPicksPayload;
-      if (payload.ok) {
-        setRecentPicks(payload.items ?? []);
-      }
-    } catch {
-      // Non-blocking personalization; ignore transient failures.
-      setRecentPicks([]);
     }
   }, [userId]);
   const loadPendingPicks = useCallback(async () => {
@@ -463,14 +394,6 @@ export function PredictionMarketList() {
       setCollapsedSections({});
     }
   }, []);
-
-  useEffect(() => {
-    if (!userId) {
-      setRecentPicks([]);
-      return;
-    }
-    void loadRecentPicks();
-  }, [loadRecentPicks, userId]);
 
   useEffect(() => {
     if (!userId) {
@@ -789,7 +712,6 @@ export function PredictionMarketList() {
       setMessages((prev) => ({ ...prev, [predictionId]: "Pick placed successfully." }));
       triggerHaptic([25, 40, 25]);
       await loadQuota();
-      await loadRecentPicks();
       await loadPendingPicks();
     } catch (error) {
       setMessages((prev) => ({
@@ -844,6 +766,20 @@ export function PredictionMarketList() {
     </article>
   );
 
+  const getPendingQuestion = useCallback(
+    (pick: UserPrediction & { marketQuestion?: string | null }) => {
+      if (pick.marketQuestion && pick.marketQuestion.trim()) {
+        return pick.marketQuestion.trim();
+      }
+      const matched = allMarkets.find((market) => market.id === pick.predictionId);
+      if (matched?.question?.trim()) {
+        return matched.question.trim();
+      }
+      return "Prediction market question unavailable";
+    },
+    [allMarkets]
+  );
+
   return (
     <div className="space-y-4">
       {quota && !quota.isAdminBypass ? (
@@ -896,7 +832,7 @@ export function PredictionMarketList() {
           <ul className="space-y-2">
             {pendingPicks.map((pick) => (
               <li key={pick.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm font-semibold text-slate-900">{pick.marketQuestion ?? `Market ${pick.predictionId}`}</p>
+                <p className="text-sm font-semibold text-slate-900">{getPendingQuestion(pick)}</p>
                 <p className="mt-1 text-xs text-slate-600">
                   Pick: {pick.outcomeTitle}
                   {(pick.marketSport || pick.marketLeague) ? " · " : ""}
@@ -1100,65 +1036,6 @@ export function PredictionMarketList() {
             </p>
           </div>
         ) : null}
-      </section>
-
-      <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Hot + Closing Soon</p>
-        <div className="space-y-3">
-          {featuredMarkets.length > 0 ? (
-            <section className="space-y-2 rounded-lg border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-3">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-amber-900">Featured Markets</h3>
-                <span className="text-xs font-semibold uppercase tracking-wide text-amber-700">Hot + Closing Soon</span>
-              </div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {featuredMarkets.map((market) => (
-                  <button
-                    key={`featured-${market.id}`}
-                    type="button"
-                    onClick={() => {
-                      setSearchInput(market.question);
-                    }}
-                    className={`${BUTTON_POP_CLASS} rounded-xl border border-amber-300 bg-white px-3 py-2 text-left hover:border-amber-400`}
-                  >
-                    <p className="line-clamp-2 text-xs font-semibold text-slate-900">{market.question}</p>
-                    <p className="mt-1 text-[11px] text-slate-600">
-                      {[market.sport, market.league].filter(Boolean).join(" · ") || "Sports"} ·{" "}
-                      {new Date(market.closesAt).toLocaleDateString()}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            </section>
-          ) : null}
-
-          {forYouMarkets.length > 0 ? (
-            <section className="space-y-2 rounded-lg border border-cyan-200 bg-gradient-to-r from-cyan-50 to-sky-50 p-3">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-cyan-900">For You</h3>
-                <span className="text-xs font-semibold uppercase tracking-wide text-cyan-700">Based On Recent Picks</span>
-              </div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {forYouMarkets.map((market) => (
-                  <button
-                    key={`for-you-${market.id}`}
-                    type="button"
-                    onClick={() => {
-                      setSearchInput(market.question);
-                    }}
-                    className={`${BUTTON_POP_CLASS} rounded-xl border border-cyan-300 bg-white px-3 py-2 text-left hover:border-cyan-400`}
-                  >
-                    <p className="line-clamp-2 text-xs font-semibold text-slate-900">{market.question}</p>
-                    <p className="mt-1 text-[11px] text-slate-600">
-                      {[market.sport, market.league].filter(Boolean).join(" · ") || "Sports"} ·{" "}
-                      {new Date(market.closesAt).toLocaleDateString()}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            </section>
-          ) : null}
-        </div>
       </section>
 
       {errorMessage ? (
