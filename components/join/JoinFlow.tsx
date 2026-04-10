@@ -41,7 +41,7 @@ const ACCESS_DISTANCE_METERS = 200;
 function getGeofenceThresholdMeters(venueRadius: number, accuracy?: number): number {
   const normalizedVenueRadius = Number.isFinite(venueRadius) ? Math.max(0, Math.round(venueRadius)) : 0;
   const baseRadius = Math.max(ACCESS_DISTANCE_METERS, normalizedVenueRadius);
-  const accuracyBuffer = Number.isFinite(accuracy) ? Math.min(220, Math.max(0, Math.round(Number(accuracy) * 0.6))) : 0;
+  const accuracyBuffer = Number.isFinite(accuracy) ? Math.min(5000, Math.max(120, Math.round(Number(accuracy) * 1.5))) : 320;
   return baseRadius + accuracyBuffer;
 }
 
@@ -100,18 +100,27 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               timeoutMs: 13000,
               desiredAccuracyMeters: 120,
             });
-            const nearbyVenues = venues.filter((item) => {
+            const distanceByVenue = venues.map((item) => {
               const distance = calculateDistanceMeters(current, {
                 latitude: item.latitude,
                 longitude: item.longitude,
               });
-              return distance <= getGeofenceThresholdMeters(item.radius, current.accuracy);
+              return { venue: item, distance };
             });
-            setVenueList(nearbyVenues);
+            const nearbyVenues = distanceByVenue
+              .filter((item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, current.accuracy))
+              .map((item) => item.venue);
+
+            const fallbackNearestVenues = distanceByVenue
+              .sort((a, b) => a.distance - b.distance)
+              .slice(0, Math.min(5, distanceByVenue.length))
+              .map((item) => item.venue);
+
+            setVenueList(nearbyVenues.length > 0 ? nearbyVenues : fallbackNearestVenues);
             if (nearbyVenues.length > 0) {
               setLocationNotice(`Showing ${nearbyVenues.length} nearby venue(s) within range.`);
             } else {
-              setLocationNotice("No nearby venues are within geofence range right now.");
+              setLocationNotice("No venues detected in strict range. Showing nearest venues instead.");
             }
           } catch (error) {
             setVenueList([]);

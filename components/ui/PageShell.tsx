@@ -7,6 +7,7 @@ type PageShellProps = {
   description?: string;
   showBranding?: boolean;
   showUserStatus?: boolean;
+  showAlerts?: boolean;
   children?: React.ReactNode;
 };
 
@@ -15,13 +16,14 @@ export function PageShell({
   description,
   showBranding = true,
   showUserStatus = true,
+  showAlerts = true,
   children,
 }: PageShellProps) {
   return (
     <div className="flex min-h-[100dvh] flex-col gap-4">
       <header className="tp-hud-card sticky top-2 z-20 p-4">
         <div className="flex flex-col gap-3">
-          {showUserStatus ? (
+          {showUserStatus && showAlerts ? (
             <div className="flex justify-end">
               <div className="max-w-full">
                 <NotificationBell />
