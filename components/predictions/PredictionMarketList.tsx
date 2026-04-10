@@ -124,6 +124,53 @@ type RewardToken = {
   label: string;
 };
 
+function asNonEmptyString(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
+function normalizeMarketPayload(market: Prediction): Prediction | null {
+  const id = asNonEmptyString(market.id);
+  const question = asNonEmptyString(market.question);
+  const closesAt = asNonEmptyString(market.closesAt);
+  if (!id || !question || !closesAt) {
+    return null;
+  }
+
+  const outcomes = Array.isArray(market.outcomes)
+    ? market.outcomes
+        .map((outcome, index) => {
+          const title = asNonEmptyString(outcome?.title);
+          const probability = Number(outcome?.probability);
+          if (!title || !Number.isFinite(probability)) {
+            return null;
+          }
+          return {
+            id: asNonEmptyString(outcome?.id) ?? `${id}-${index}`,
+            title,
+            probability: Math.max(0, Math.min(100, probability)),
+          };
+        })
+        .filter((outcome): outcome is NonNullable<typeof outcome> => Boolean(outcome))
+    : [];
+
+  if (outcomes.length < 2) {
+    return null;
+  }
+
+  return {
+    ...market,
+    id,
+    question,
+    closesAt,
+    outcomes,
+    sport: asNonEmptyString(market.sport ?? "") ?? undefined,
+    league: asNonEmptyString(market.league ?? "") ?? undefined,
+    category: asNonEmptyString(market.category ?? "") ?? undefined,
+  };
+}
+
 function triggerHaptic(pattern: number | number[] = 12) {
   if (typeof navigator === "undefined" || !("vibrate" in navigator)) return;
   navigator.vibrate(pattern);
@@ -534,7 +581,11 @@ export function PredictionMarketList() {
           throw new Error(payload.error ?? "There is an error with Polymarket right now. Please try again.");
         }
 
-        setAllMarkets((payload.items ?? []).filter((market) => Boolean(market.sport)));
+        const normalizedMarkets = (payload.items ?? [])
+          .map((market) => normalizeMarketPayload(market))
+          .filter((market): market is Prediction => Boolean(market))
+          .filter((market) => Boolean(market.sport));
+        setAllMarkets(normalizedMarkets);
         setSports(payload.sports ?? []);
         setLeaguesBySport(payload.leaguesBySport ?? {});
         setTotalItems(payload.totalItems ?? 0);
@@ -602,7 +653,10 @@ export function PredictionMarketList() {
         throw new Error(payload.error ?? "There is an error with Polymarket right now. Please try again.");
       }
 
-      const incoming = (payload.items ?? []).filter((market) => Boolean(market.sport));
+      const incoming = (payload.items ?? [])
+        .map((market) => normalizeMarketPayload(market))
+        .filter((market): market is Prediction => Boolean(market))
+        .filter((market) => Boolean(market.sport));
       setAllMarkets((prev) => {
         const byId = new Set(prev.map((market) => market.id));
         const merged = [...prev];
@@ -778,12 +832,18 @@ export function PredictionMarketList() {
 
   const getPendingQuestion = useCallback(
     (pick: UserPrediction & { marketQuestion?: string | null }) => {
-      if (pick.marketQuestion && pick.marketQuestion.trim()) {
-        return pick.marketQuestion.trim();
+      if (typeof pick.marketQuestion === "string") {
+        const marketQuestion = pick.marketQuestion.trim();
+        if (marketQuestion) {
+          return marketQuestion;
+        }
       }
       const matched = allMarkets.find((market) => market.id === pick.predictionId);
-      if (matched?.question?.trim()) {
-        return matched.question.trim();
+      if (typeof matched?.question === "string") {
+        const question = matched.question.trim();
+        if (question) {
+          return question;
+        }
       }
       return "Prediction market question unavailable";
     },
