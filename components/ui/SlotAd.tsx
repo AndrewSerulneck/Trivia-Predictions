@@ -11,7 +11,12 @@ export async function SlotAd({
   venueId?: string;
   showPlaceholder?: boolean;
 }) {
-  const ad = await getActiveAdForSlot(slot, venueId);
+  let ad = null;
+  try {
+    ad = await getActiveAdForSlot(slot, venueId);
+  } catch {
+    ad = null;
+  }
   if (!ad) {
     if (!showPlaceholder) {
       return null;

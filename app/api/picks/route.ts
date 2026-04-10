@@ -55,7 +55,12 @@ export async function GET(request: Request) {
   const enrichedItems = includeMarkets
     ? await Promise.all(
         items.map(async (item) => {
-          const market = await getPredictionMarketById(item.predictionId);
+          let market = null;
+          try {
+            market = await getPredictionMarketById(item.predictionId);
+          } catch {
+            market = null;
+          }
           return {
             ...item,
             marketQuestion: market?.question ?? null,
