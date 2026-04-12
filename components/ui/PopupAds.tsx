@@ -22,11 +22,11 @@ type PopupState = {
 const PLACEHOLDER_BY_TRIGGER: Record<PopupTrigger, { title: string; subtitle: string }> = {
   "popup-on-entry": {
     title: "Placeholder Advertisement",
-    subtitle: "To advertise on Hightop Challenge, please reach out to advertising@hightopchallenge.com.",
+    subtitle: "To advertise on Hightop Challenge, please reach out to adinfo@hightopchallenge.com.",
   },
   "popup-on-scroll": {
     title: "Placeholder Advertisement",
-    subtitle: "To advertise on Hightop Challenge, please reach out to advertising@hightopchallenge.com.",
+    subtitle: "To advertise on Hightop Challenge, please reach out to adinfo@hightopchallenge.com.",
   },
 };
 
