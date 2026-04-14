@@ -3,17 +3,20 @@ import { autoSettleResolvedPredictionMarkets } from "@/lib/admin";
 
 function isAuthorized(request: Request): boolean {
   const secret = process.env.CRON_SECRET?.trim();
-  if (!secret) {
-    return false;
+  if (secret) {
+    const bearer = request.headers.get("authorization") ?? "";
+    if (bearer.toLowerCase() === `bearer ${secret.toLowerCase()}`) {
+      return true;
+    }
+
+    const headerSecret = request.headers.get("x-cron-secret") ?? "";
+    return headerSecret === secret;
   }
 
-  const bearer = request.headers.get("authorization") ?? "";
-  if (bearer.toLowerCase() === `bearer ${secret.toLowerCase()}`) {
-    return true;
-  }
-
-  const headerSecret = request.headers.get("x-cron-secret") ?? "";
-  return headerSecret === secret;
+  // Fallback for Vercel Cron in environments where CRON_SECRET was not set yet.
+  // Vercel includes this header on cron invocations.
+  const vercelCronHeader = request.headers.get("x-vercel-cron")?.trim() ?? "";
+  return vercelCronHeader.length > 0;
 }
 
 export async function POST(request: Request) {

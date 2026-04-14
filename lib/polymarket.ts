@@ -1319,36 +1319,74 @@ export async function listResolvedPredictionOutcomes(predictionIds: string[]): P
     return [];
   }
 
-  const polymarketIds = predictionIds.filter((id) => !id.startsWith("odds:"));
+  const polymarketIds = Array.from(new Set(predictionIds.filter((id) => !id.startsWith("odds:"))));
   const oddsIds = predictionIds.filter((id) => id.startsWith("odds:"));
   const oddsResolved = await listResolvedOddsOutcomes(oddsIds);
   if (polymarketIds.length === 0) {
     return oddsResolved;
   }
 
-  const query = new URLSearchParams({
-    active: "false",
-    closed: "true",
-    limit: String(Number.isFinite(DEFAULT_SCAN_LIMIT) ? Math.max(DEFAULT_SCAN_LIMIT, 100) : 1000),
-  });
+  const resolvedById = new Map<string, ResolvedPredictionOutcome>();
+  const unresolvedPolymarketIds = new Set(polymarketIds);
+  const batchSize = 25;
 
-  const gammaMarkets = await fetchGammaMarkets(query);
-  const byId = new Set(polymarketIds);
+  // Resolve by direct market id first so we don't miss markets that fall
+  // outside the first page of closed markets.
+  for (let start = 0; start < polymarketIds.length; start += batchSize) {
+    const batch = polymarketIds.slice(start, start + batchSize);
+    const batchResults = await Promise.all(
+      batch.map(async (predictionId) => {
+        try {
+          const market = await getPredictionMarketById(predictionId);
+          if (!market) {
+            return null;
+          }
+          return inferResolvedOutcome(market);
+        } catch {
+          return null;
+        }
+      })
+    );
 
-  const resolved: ResolvedPredictionOutcome[] = [];
-  for (const market of gammaMarkets) {
-    const normalized = normalizeMarket(market);
-    if (!normalized || !byId.has(normalized.id)) {
-      continue;
-    }
-
-    const inferred = inferResolvedOutcome(normalized);
-    if (inferred) {
-      resolved.push(inferred);
+    for (const result of batchResults) {
+      if (!result) {
+        continue;
+      }
+      resolvedById.set(result.predictionId, result);
+      unresolvedPolymarketIds.delete(result.predictionId);
     }
   }
 
-  return [...resolved, ...oddsResolved];
+  // Fallback: scan closed markets once for any unresolved ids.
+  if (unresolvedPolymarketIds.size > 0) {
+    const query = new URLSearchParams({
+      active: "false",
+      closed: "true",
+      limit: String(Number.isFinite(DEFAULT_SCAN_LIMIT) ? Math.max(DEFAULT_SCAN_LIMIT, 100) : 1000),
+    });
+
+    try {
+      const gammaMarkets = await fetchGammaMarkets(query);
+      for (const market of gammaMarkets) {
+        const normalized = normalizeMarket(market);
+        if (!normalized || !unresolvedPolymarketIds.has(normalized.id)) {
+          continue;
+        }
+
+        const inferred = inferResolvedOutcome(normalized);
+        if (!inferred) {
+          continue;
+        }
+
+        resolvedById.set(inferred.predictionId, inferred);
+        unresolvedPolymarketIds.delete(inferred.predictionId);
+      }
+    } catch {
+      // Ignore fallback scan failures and return whatever we already resolved.
+    }
+  }
+
+  return [...resolvedById.values(), ...oddsResolved];
 }
 
 export async function getPredictionMarketById(predictionId: string): Promise<Prediction | null> {
