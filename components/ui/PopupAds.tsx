@@ -165,6 +165,45 @@ export function PopupAds() {
     };
   }, [closePopup, popup?.open]);
 
+  useEffect(() => {
+    if (!popup?.open || typeof window === "undefined") {
+      return;
+    }
+
+    const body = document.body;
+    const root = document.documentElement;
+    const previousBodyOverflow = body.style.overflow;
+    const previousBodyPosition = body.style.position;
+    const previousBodyTop = body.style.top;
+    const previousBodyWidth = body.style.width;
+    const previousBodyTouchAction = body.style.touchAction;
+    const previousBodyOverscrollBehavior = body.style.overscrollBehavior;
+    const previousRootOverflow = root.style.overflow;
+    const previousRootOverscrollBehavior = root.style.overscrollBehavior;
+    const scrollY = window.scrollY;
+
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    body.style.touchAction = "none";
+    body.style.overscrollBehavior = "none";
+    root.style.overflow = "hidden";
+    root.style.overscrollBehavior = "none";
+
+    return () => {
+      body.style.overflow = previousBodyOverflow;
+      body.style.position = previousBodyPosition;
+      body.style.top = previousBodyTop;
+      body.style.width = previousBodyWidth;
+      body.style.touchAction = previousBodyTouchAction;
+      body.style.overscrollBehavior = previousBodyOverscrollBehavior;
+      root.style.overflow = previousRootOverflow;
+      root.style.overscrollBehavior = previousRootOverscrollBehavior;
+      window.scrollTo(0, scrollY);
+    };
+  }, [popup?.open]);
+
   if (!popup?.open || !isPopupSlot(popup.trigger)) {
     return null;
   }
@@ -172,7 +211,15 @@ export function PopupAds() {
   const placeholder = PLACEHOLDER_BY_TRIGGER[popup.trigger];
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-[90] flex items-end justify-center bg-slate-900/30 p-1.5">
+    <div
+      className="pointer-events-auto fixed inset-0 z-[90] flex items-end justify-center bg-slate-900/30 p-1.5"
+      onWheelCapture={(event) => {
+        event.preventDefault();
+      }}
+      onTouchMoveCapture={(event) => {
+        event.preventDefault();
+      }}
+    >
       <div className="pointer-events-auto animate-tp-popup-sheet-up w-full max-w-md overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.28)]">
         <div className="flex items-center justify-between border-b border-amber-200 bg-gradient-to-r from-amber-100 via-orange-100 to-red-100 px-3 py-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-700">Sponsored</p>
