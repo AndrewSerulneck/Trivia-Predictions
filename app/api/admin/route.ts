@@ -92,6 +92,7 @@ export async function POST(request: Request) {
           slot: AdSlot;
           venueId?: string;
           advertiserName: string;
+          deliveryWeight?: number;
           imageUrl: string;
           clickUrl: string;
           altText: string;
@@ -143,6 +144,7 @@ export async function POST(request: Request) {
         slot: body.slot,
         venueId: body.venueId,
         advertiserName: body.advertiserName,
+        deliveryWeight: body.deliveryWeight,
         imageUrl: body.imageUrl,
         clickUrl: body.clickUrl,
         altText: body.altText,
@@ -270,6 +272,7 @@ export async function PATCH(request: Request) {
           slot: AdSlot;
           venueId?: string;
           advertiserName: string;
+          deliveryWeight?: number;
           imageUrl: string;
           clickUrl: string;
           altText: string;
@@ -310,6 +313,7 @@ export async function PATCH(request: Request) {
         slot: body.slot,
         venueId: body.venueId,
         advertiserName: body.advertiserName,
+        deliveryWeight: body.deliveryWeight,
         imageUrl: body.imageUrl,
         clickUrl: body.clickUrl,
         altText: body.altText,

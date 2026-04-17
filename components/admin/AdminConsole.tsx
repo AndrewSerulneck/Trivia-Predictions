@@ -154,6 +154,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [altText, setAltText] = useState("");
   const [width, setWidth] = useState(728);
   const [height, setHeight] = useState(90);
+  const [deliveryWeight, setDeliveryWeight] = useState(1);
   const [active, setActive] = useState(true);
   const [startDate, setStartDate] = useState(() => formatDateTimeLocal(new Date()));
   const [endDate, setEndDate] = useState("");
@@ -175,6 +176,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [editAltText, setEditAltText] = useState("");
   const [editWidth, setEditWidth] = useState(728);
   const [editHeight, setEditHeight] = useState(90);
+  const [editDeliveryWeight, setEditDeliveryWeight] = useState(1);
   const [editActive, setEditActive] = useState(true);
   const [editStartDate, setEditStartDate] = useState("");
   const [editEndDate, setEditEndDate] = useState("");
@@ -717,6 +719,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           altText,
           width,
           height,
+          deliveryWeight,
           active,
           startDate: new Date(startDate).toISOString(),
           endDate: endDate ? new Date(endDate).toISOString() : undefined,
@@ -734,6 +737,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       setAltText("");
       setWidth(728);
       setHeight(90);
+      setDeliveryWeight(1);
       setActive(true);
       setEndDate("");
       await loadAll();
@@ -1039,6 +1043,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     setEditAltText(item.altText);
     setEditWidth(item.width);
     setEditHeight(item.height);
+    setEditDeliveryWeight(item.deliveryWeight ?? 1);
     setEditActive(item.active);
     setEditStartDate(isoToDateTimeLocal(item.startDate));
     setEditEndDate(item.endDate ? isoToDateTimeLocal(item.endDate) : "");
@@ -1068,6 +1073,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           altText: editAltText,
           width: editWidth,
           height: editHeight,
+          deliveryWeight: editDeliveryWeight,
           active: editActive,
           startDate: new Date(editStartDate).toISOString(),
           endDate: editEndDate ? new Date(editEndDate).toISOString() : undefined,
@@ -1899,7 +1905,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           placeholder="Alt text"
           className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
         />
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <input
             type="number"
             min={1}
@@ -1916,7 +1922,17 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
             placeholder="Height"
             className="rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
+          <input
+            type="number"
+            min={1}
+            max={100}
+            value={deliveryWeight}
+            onChange={(event) => setDeliveryWeight(Number(event.target.value))}
+            placeholder="Delivery weight (1-100)"
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
         </div>
+        <p className="text-xs text-slate-500">Higher delivery weight means this ad is shown more often.</p>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <input
             type="datetime-local"
@@ -2107,7 +2123,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                     onChange={(event) => setEditAltText(event.target.value)}
                     className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                   />
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                     <input
                       type="number"
                       min={1}
@@ -2122,7 +2138,16 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                       onChange={(event) => setEditHeight(Number(event.target.value))}
                       className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                     />
+                    <input
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={editDeliveryWeight}
+                      onChange={(event) => setEditDeliveryWeight(Number(event.target.value))}
+                      className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                    />
                   </div>
+                  <p className="text-xs text-slate-500">Higher delivery weight means this ad is shown more often.</p>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <input
                       type="datetime-local"
@@ -2169,7 +2194,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                 <>
                   <p className="font-medium">{item.advertiserName}</p>
                   <p className="text-xs text-slate-600">
-                    {item.slot} | {item.width}x{item.height} | {item.active ? "active" : "inactive"} |{" "}
+                    {item.slot} | {item.width}x{item.height} | Weight {item.deliveryWeight ?? 1} | {item.active ? "active" : "inactive"} |{" "}
                     {item.venueId ?? "global"}
                   </p>
                   <p className="text-xs text-slate-500">

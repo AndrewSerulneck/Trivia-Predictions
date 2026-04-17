@@ -16,6 +16,7 @@ type AdvertisementRow = {
   slot: AdSlot;
   venue_id: string | null;
   advertiser_name: string;
+  delivery_weight: number | null;
   image_url: string;
   click_url: string;
   alt_text: string;
@@ -95,6 +96,7 @@ function mapAdRow(row: AdvertisementRow): Advertisement {
     slot: row.slot,
     venueId: row.venue_id ?? undefined,
     advertiserName: row.advertiser_name,
+    deliveryWeight: Number.isFinite(Number(row.delivery_weight)) ? Math.max(1, Number(row.delivery_weight)) : 1,
     imageUrl: row.image_url,
     clickUrl: row.click_url,
     altText: row.alt_text,
@@ -343,7 +345,7 @@ export async function listAdminAdvertisements(): Promise<Advertisement[]> {
   const { data, error } = await supabaseAdmin!
     .from("advertisements")
     .select(
-      "id, slot, venue_id, advertiser_name, image_url, click_url, alt_text, width, height, active, start_date, end_date, impressions, clicks"
+      "id, slot, venue_id, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, active, start_date, end_date, impressions, clicks"
     )
     .order("created_at", { ascending: false })
     .limit(100);
@@ -359,6 +361,7 @@ export async function createAdminAdvertisement(input: {
   slot: AdSlot;
   venueId?: string;
   advertiserName: string;
+  deliveryWeight?: number;
   imageUrl: string;
   clickUrl: string;
   altText: string;
@@ -390,11 +393,15 @@ export async function createAdminAdvertisement(input: {
   }
   const width = Number(input.width);
   const height = Number(input.height);
+  const deliveryWeight = Number.isFinite(input.deliveryWeight) ? Math.round(Number(input.deliveryWeight)) : 1;
   if (!Number.isFinite(width) || width < 1) {
     throw new Error("Width must be at least 1.");
   }
   if (!Number.isFinite(height) || height < 1) {
     throw new Error("Height must be at least 1.");
+  }
+  if (!Number.isFinite(deliveryWeight) || deliveryWeight < 1 || deliveryWeight > 100) {
+    throw new Error("Delivery weight must be between 1 and 100.");
   }
 
   const { data, error } = await supabaseAdmin!
@@ -403,6 +410,7 @@ export async function createAdminAdvertisement(input: {
       slot: input.slot,
       venue_id: input.venueId?.trim() || null,
       advertiser_name: input.advertiserName.trim(),
+      delivery_weight: deliveryWeight,
       image_url: input.imageUrl.trim(),
       click_url: input.clickUrl.trim(),
       alt_text: input.altText.trim(),
@@ -413,7 +421,7 @@ export async function createAdminAdvertisement(input: {
       end_date: input.endDate?.trim() || null,
     })
     .select(
-      "id, slot, venue_id, advertiser_name, image_url, click_url, alt_text, width, height, active, start_date, end_date, impressions, clicks"
+      "id, slot, venue_id, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, active, start_date, end_date, impressions, clicks"
     )
     .single<AdvertisementRow>();
 
@@ -429,6 +437,7 @@ export async function updateAdminAdvertisement(input: {
   slot: AdSlot;
   venueId?: string;
   advertiserName: string;
+  deliveryWeight?: number;
   imageUrl: string;
   clickUrl: string;
   altText: string;
@@ -464,11 +473,15 @@ export async function updateAdminAdvertisement(input: {
   }
   const width = Number(input.width);
   const height = Number(input.height);
+  const deliveryWeight = Number.isFinite(input.deliveryWeight) ? Math.round(Number(input.deliveryWeight)) : 1;
   if (!Number.isFinite(width) || width < 1) {
     throw new Error("Width must be at least 1.");
   }
   if (!Number.isFinite(height) || height < 1) {
     throw new Error("Height must be at least 1.");
+  }
+  if (!Number.isFinite(deliveryWeight) || deliveryWeight < 1 || deliveryWeight > 100) {
+    throw new Error("Delivery weight must be between 1 and 100.");
   }
 
   const { data, error } = await supabaseAdmin!
@@ -477,6 +490,7 @@ export async function updateAdminAdvertisement(input: {
       slot: input.slot,
       venue_id: input.venueId?.trim() || null,
       advertiser_name: input.advertiserName.trim(),
+      delivery_weight: deliveryWeight,
       image_url: input.imageUrl.trim(),
       click_url: input.clickUrl.trim(),
       alt_text: input.altText.trim(),
@@ -488,7 +502,7 @@ export async function updateAdminAdvertisement(input: {
     })
     .eq("id", id)
     .select(
-      "id, slot, venue_id, advertiser_name, image_url, click_url, alt_text, width, height, active, start_date, end_date, impressions, clicks"
+      "id, slot, venue_id, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, active, start_date, end_date, impressions, clicks"
     )
     .single<AdvertisementRow>();
 

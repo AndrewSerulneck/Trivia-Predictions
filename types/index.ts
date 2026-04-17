@@ -106,6 +106,7 @@ export interface Advertisement {
   slot: AdSlot;
   venueId?: string;
   advertiserName: string;
+  deliveryWeight: number;
   imageUrl: string;
   clickUrl: string;
   altText: string;

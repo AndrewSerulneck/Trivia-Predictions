@@ -10,6 +10,7 @@ type AdvertisementRow = {
   slot: AdSlot;
   venue_id: string | null;
   advertiser_name: string;
+  delivery_weight: number | null;
   image_url: string;
   click_url: string;
   alt_text: string;
@@ -28,6 +29,7 @@ function mapAdRow(row: AdvertisementRow): Advertisement {
     slot: row.slot,
     venueId: row.venue_id ?? undefined,
     advertiserName: row.advertiser_name,
+    deliveryWeight: Number.isFinite(Number(row.delivery_weight)) ? Math.max(1, Number(row.delivery_weight)) : 1,
     imageUrl: row.image_url,
     clickUrl: row.click_url,
     altText: row.alt_text,
@@ -41,6 +43,36 @@ function mapAdRow(row: AdvertisementRow): Advertisement {
   };
 }
 
+function chooseWeightedRandomAd(rows: AdvertisementRow[]): AdvertisementRow | null {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  let totalWeight = 0;
+  for (const row of rows) {
+    totalWeight += Number.isFinite(Number(row.delivery_weight))
+      ? Math.max(1, Number(row.delivery_weight))
+      : 1;
+  }
+
+  if (totalWeight <= 0) {
+    return rows[0];
+  }
+
+  let threshold = Math.random() * totalWeight;
+  for (const row of rows) {
+    const weight = Number.isFinite(Number(row.delivery_weight))
+      ? Math.max(1, Number(row.delivery_weight))
+      : 1;
+    threshold -= weight;
+    if (threshold <= 0) {
+      return row;
+    }
+  }
+
+  return rows[rows.length - 1];
+}
+
 async function getActiveAdQuery(slot: AdSlot, venueId?: string): Promise<Advertisement | null> {
   if (!supabaseAdmin) {
     return null;
@@ -51,24 +83,29 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string): Promise<Adverti
   let query = supabaseAdmin
     .from("advertisements")
     .select(
-      "id, slot, venue_id, advertiser_name, image_url, click_url, alt_text, width, height, active, start_date, end_date, impressions, clicks"
+      "id, slot, venue_id, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, active, start_date, end_date, impressions, clicks"
     )
     .eq("slot", slot)
     .eq("active", true)
     .lte("start_date", nowIso)
     .or(`end_date.is.null,end_date.gte.${nowIso}`)
     .order("start_date", { ascending: false })
-    .limit(1);
+    .limit(100);
 
   query = venueId ? query.eq("venue_id", venueId) : query.is("venue_id", null);
 
-  const { data, error } = await query.maybeSingle<AdvertisementRow>();
+  const { data, error } = await query.returns<AdvertisementRow[]>();
 
-  if (error || !data) {
+  if (error || !data || data.length === 0) {
     return null;
   }
 
-  return mapAdRow(data);
+  const pickedRow = chooseWeightedRandomAd(data);
+  if (!pickedRow) {
+    return null;
+  }
+
+  return mapAdRow(pickedRow);
 }
 
 export async function getActiveAdForSlot(slot: AdSlot, venueId?: string): Promise<Advertisement | null> {
@@ -90,7 +127,7 @@ export async function getAdById(id: string): Promise<Advertisement | null> {
   const { data, error } = await supabaseAdmin
     .from("advertisements")
     .select(
-      "id, slot, venue_id, advertiser_name, image_url, click_url, alt_text, width, height, active, start_date, end_date, impressions, clicks"
+      "id, slot, venue_id, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, active, start_date, end_date, impressions, clicks"
     )
     .eq("id", id)
     .maybeSingle<AdvertisementRow>();
