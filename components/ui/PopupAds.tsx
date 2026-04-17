@@ -34,6 +34,13 @@ function isPopupSlot(slot: AdSlot): slot is PopupTrigger {
   return slot === "popup-on-entry" || slot === "popup-on-scroll";
 }
 
+function isVenueRoute(pathname: string | null): boolean {
+  if (!pathname) {
+    return false;
+  }
+  return /^\/venue\/[^/]+/.test(pathname);
+}
+
 export function PopupAds() {
   const pathname = usePathname();
   const [popup, setPopup] = useState<PopupState | null>(null);
@@ -109,6 +116,10 @@ export function PopupAds() {
   const closePopup = useCallback(() => {
     if (popup) {
       dismissedByTriggerRef.current[popup.trigger] = true;
+      if (popup.trigger === "popup-on-entry") {
+        // Avoid showing a second popup immediately after dismissing entry popup.
+        dismissedByTriggerRef.current["popup-on-scroll"] = true;
+      }
     }
     popupOpenRef.current = false;
     popupOpeningRef.current = false;
@@ -126,7 +137,7 @@ export function PopupAds() {
       setPopup(null);
     }, 0);
 
-    if (!pathname || pathname.startsWith("/admin")) {
+    if (!isVenueRoute(pathname) || pathname.startsWith("/admin")) {
       return () => {
         window.clearTimeout(resetTimer);
       };
@@ -143,7 +154,7 @@ export function PopupAds() {
   }, [pathname, showPopup]);
 
   useEffect(() => {
-    if (!pathname || pathname.startsWith("/admin")) {
+    if (!isVenueRoute(pathname) || pathname.startsWith("/admin")) {
       return;
     }
 
