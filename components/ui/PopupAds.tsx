@@ -275,23 +275,21 @@ export function PopupAds() {
             rel="noreferrer noopener"
             className="block p-1.5"
           >
-            <div className="mx-auto flex h-[min(68svh,560px)] max-h-[calc(100svh-170px)] items-center justify-center">
-              <div className="aspect-[9/16] h-full overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={popup.ad.imageUrl}
-                  alt={popup.ad.altText}
-                  width={popup.ad.width}
-                  height={popup.ad.height}
-                  className="h-full w-full object-contain"
-                />
-              </div>
+            <div className="mx-auto flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={popup.ad.imageUrl}
+                alt={popup.ad.altText}
+                width={popup.ad.width}
+                height={popup.ad.height}
+                className="block max-h-[62svh] w-auto max-w-[86vw] rounded-lg border border-slate-200 bg-slate-100 object-contain"
+              />
             </div>
           </a>
         ) : (
           <div className="p-1.5">
-            <div className="mx-auto flex h-[min(68svh,560px)] max-h-[calc(100svh-170px)] items-center justify-center">
-              <div className="flex h-full aspect-[9/16] flex-col items-center justify-center rounded-xl border border-dashed border-amber-300 bg-gradient-to-br from-[#f8e6d5] via-[#f2d4b5] to-[#e7b08b] p-6 text-center">
+            <div className="mx-auto flex items-center justify-center">
+              <div className="flex min-h-[280px] max-h-[62svh] w-[86vw] max-w-[340px] flex-col items-center justify-center rounded-xl border border-dashed border-amber-300 bg-gradient-to-br from-[#f8e6d5] via-[#f2d4b5] to-[#e7b08b] p-6 text-center">
                 <p className="text-lg font-black text-slate-900">{placeholder.title}</p>
                 <p className="mt-2 text-sm text-slate-700">{placeholder.subtitle}</p>
               </div>
