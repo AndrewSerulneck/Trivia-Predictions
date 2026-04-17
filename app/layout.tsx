@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { PopupAds } from "@/components/ui/PopupAds";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import "./globals.css";
@@ -6,6 +6,14 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Hightop Challenge",
   description: "Venue-based trivia and prediction competitions.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({

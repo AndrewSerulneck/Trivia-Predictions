@@ -245,14 +245,21 @@ export function PopupAds() {
 
   const placeholder = PLACEHOLDER_BY_TRIGGER[popup.trigger];
   const adRatio = popup.ad && popup.ad.width > 0 && popup.ad.height > 0 ? popup.ad.width / popup.ad.height : 9 / 16;
+  const safeWidth = "calc(100vw - 28px)";
+  const safeHeight = "calc(100svh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 190px)";
+  const modalMaxHeight = "calc(100svh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 16px)";
   const frameStyle = {
-    width: `min(calc(100vw - 28px), calc((100svh - 150px) * ${adRatio}))`,
-    height: `min(calc(100svh - 150px), calc((100vw - 28px) / ${adRatio}))`,
+    width: `min(${safeWidth}, calc((${safeHeight}) * ${adRatio}))`,
+    height: `min(${safeHeight}, calc((${safeWidth}) / ${adRatio}))`,
   };
 
   return (
     <div
       className="pointer-events-auto fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/30 p-2"
+      style={{
+        paddingTop: "max(env(safe-area-inset-top, 0px), 8px)",
+        paddingBottom: "max(env(safe-area-inset-bottom, 0px), 8px)",
+      }}
       onWheelCapture={(event) => {
         event.preventDefault();
       }}
@@ -260,7 +267,10 @@ export function PopupAds() {
         event.preventDefault();
       }}
     >
-      <div className="pointer-events-auto animate-tp-popup-sheet-up w-fit max-w-[calc(100vw-12px)] overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.28)] max-h-[90svh]">
+      <div
+        className="pointer-events-auto animate-tp-popup-sheet-up w-fit max-w-[calc(100vw-12px)] overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.28)]"
+        style={{ maxHeight: modalMaxHeight }}
+      >
         <div className="flex items-center justify-between border-b border-amber-200 bg-gradient-to-r from-amber-100 via-orange-100 to-red-100 px-3 py-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-700">Sponsored</p>
           <button
