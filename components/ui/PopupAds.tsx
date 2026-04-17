@@ -247,7 +247,7 @@ export function PopupAds() {
         event.preventDefault();
       }}
     >
-      <div className="pointer-events-auto animate-tp-popup-sheet-up w-full max-w-md overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.28)] max-h-[calc(100svh-16px)]">
+      <div className="pointer-events-auto animate-tp-popup-sheet-up w-full max-w-md overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.28)] max-h-[90svh]">
         <div className="flex items-center justify-between border-b border-amber-200 bg-gradient-to-r from-amber-100 via-orange-100 to-red-100 px-3 py-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-700">Sponsored</p>
           <button
@@ -267,8 +267,8 @@ export function PopupAds() {
             rel="noreferrer noopener"
             className="block p-1.5"
           >
-            <div className="mx-auto w-[min(92vw,calc((100svh-150px)*9/16))] max-w-[360px]">
-              <div className="aspect-[9/16] overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+            <div className="mx-auto h-[min(68svh,560px)] max-h-[calc(100svh-170px)]">
+              <div className="aspect-[9/16] h-full overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={popup.ad.imageUrl}
@@ -282,9 +282,11 @@ export function PopupAds() {
           </a>
         ) : (
           <div className="p-1.5">
-            <div className="mx-auto w-[min(92vw,calc((100svh-150px)*9/16))] max-w-[360px] rounded-xl border border-dashed border-amber-300 bg-gradient-to-br from-[#f8e6d5] via-[#f2d4b5] to-[#e7b08b] p-6 text-center">
-              <p className="text-lg font-black text-slate-900">{placeholder.title}</p>
-              <p className="mt-2 text-sm text-slate-700">{placeholder.subtitle}</p>
+            <div className="mx-auto h-[min(68svh,560px)] max-h-[calc(100svh-170px)]">
+              <div className="flex h-full aspect-[9/16] flex-col items-center justify-center rounded-xl border border-dashed border-amber-300 bg-gradient-to-br from-[#f8e6d5] via-[#f2d4b5] to-[#e7b08b] p-6 text-center">
+                <p className="text-lg font-black text-slate-900">{placeholder.title}</p>
+                <p className="mt-2 text-sm text-slate-700">{placeholder.subtitle}</p>
+              </div>
             </div>
           </div>
         )}
