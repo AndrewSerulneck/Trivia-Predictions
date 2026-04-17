@@ -244,6 +244,11 @@ export function PopupAds() {
   }
 
   const placeholder = PLACEHOLDER_BY_TRIGGER[popup.trigger];
+  const adRatio = popup.ad && popup.ad.width > 0 && popup.ad.height > 0 ? popup.ad.width / popup.ad.height : 9 / 16;
+  const frameStyle = {
+    width: `min(calc(100vw - 28px), calc((100svh - 150px) * ${adRatio}))`,
+    height: `min(calc(100svh - 150px), calc((100vw - 28px) / ${adRatio}))`,
+  };
 
   return (
     <div
@@ -255,7 +260,7 @@ export function PopupAds() {
         event.preventDefault();
       }}
     >
-      <div className="pointer-events-auto animate-tp-popup-sheet-up w-[min(86vw,336px)] overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.28)] max-h-[90svh]">
+      <div className="pointer-events-auto animate-tp-popup-sheet-up w-fit max-w-[calc(100vw-12px)] overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.28)] max-h-[90svh]">
         <div className="flex items-center justify-between border-b border-amber-200 bg-gradient-to-r from-amber-100 via-orange-100 to-red-100 px-3 py-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-700">Sponsored</p>
           <button
@@ -282,14 +287,18 @@ export function PopupAds() {
                 alt={popup.ad.altText}
                 width={popup.ad.width}
                 height={popup.ad.height}
-                className="block max-h-[62svh] w-auto max-w-[80vw] rounded-lg border border-slate-200 bg-slate-100 object-contain"
+                style={frameStyle}
+                className="block rounded-lg border border-slate-200 bg-slate-100 object-contain"
               />
             </div>
           </a>
         ) : (
           <div className="p-0.5">
             <div className="mx-auto flex items-center justify-center">
-              <div className="flex min-h-[280px] max-h-[62svh] w-[80vw] max-w-[320px] flex-col items-center justify-center rounded-xl border border-dashed border-amber-300 bg-gradient-to-br from-[#f8e6d5] via-[#f2d4b5] to-[#e7b08b] p-6 text-center">
+              <div
+                style={frameStyle}
+                className="flex min-h-[220px] flex-col items-center justify-center rounded-xl border border-dashed border-amber-300 bg-gradient-to-br from-[#f8e6d5] via-[#f2d4b5] to-[#e7b08b] p-6 text-center"
+              >
                 <p className="text-lg font-black text-slate-900">{placeholder.title}</p>
                 <p className="mt-2 text-sm text-slate-700">{placeholder.subtitle}</p>
               </div>
