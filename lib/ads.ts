@@ -48,7 +48,7 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string): Promise<Adverti
 
   const nowIso = new Date().toISOString();
 
-  const { data, error } = await supabaseAdmin
+  let query = supabaseAdmin
     .from("advertisements")
     .select(
       "id, slot, venue_id, advertiser_name, image_url, click_url, alt_text, width, height, active, start_date, end_date, impressions, clicks"
@@ -57,10 +57,12 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string): Promise<Adverti
     .eq("active", true)
     .lte("start_date", nowIso)
     .or(`end_date.is.null,end_date.gte.${nowIso}`)
-    .match(venueId ? { venue_id: venueId } : { venue_id: null })
     .order("start_date", { ascending: false })
-    .limit(1)
-    .maybeSingle<AdvertisementRow>();
+    .limit(1);
+
+  query = venueId ? query.eq("venue_id", venueId) : query.is("venue_id", null);
+
+  const { data, error } = await query.maybeSingle<AdvertisementRow>();
 
   if (error || !data) {
     return null;

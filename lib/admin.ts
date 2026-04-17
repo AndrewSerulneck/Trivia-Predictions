@@ -130,6 +130,15 @@ function normalizeVenueId(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+function isValidHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 async function geocodeVenueAddress(address: string): Promise<{ latitude: number; longitude: number }> {
   const googleApiKey = process.env.GOOGLE_MAPS_API_KEY?.trim();
   if (googleApiKey) {
@@ -367,11 +376,25 @@ export async function createAdminAdvertisement(input: {
   if (!input.imageUrl.trim()) {
     throw new Error("Image URL is required.");
   }
+  if (!isValidHttpUrl(input.imageUrl.trim())) {
+    throw new Error("Image URL must be a valid http(s) URL.");
+  }
   if (!input.clickUrl.trim()) {
     throw new Error("Click URL is required.");
   }
+  if (!isValidHttpUrl(input.clickUrl.trim())) {
+    throw new Error("Click URL must be a valid http(s) URL.");
+  }
   if (!input.altText.trim()) {
     throw new Error("Alt text is required.");
+  }
+  const width = Number(input.width);
+  const height = Number(input.height);
+  if (!Number.isFinite(width) || width < 1) {
+    throw new Error("Width must be at least 1.");
+  }
+  if (!Number.isFinite(height) || height < 1) {
+    throw new Error("Height must be at least 1.");
   }
 
   const { data, error } = await supabaseAdmin!
@@ -383,8 +406,8 @@ export async function createAdminAdvertisement(input: {
       image_url: input.imageUrl.trim(),
       click_url: input.clickUrl.trim(),
       alt_text: input.altText.trim(),
-      width: input.width,
-      height: input.height,
+      width,
+      height,
       active: input.active,
       start_date: input.startDate,
       end_date: input.endDate?.trim() || null,
@@ -427,11 +450,25 @@ export async function updateAdminAdvertisement(input: {
   if (!input.imageUrl.trim()) {
     throw new Error("Image URL is required.");
   }
+  if (!isValidHttpUrl(input.imageUrl.trim())) {
+    throw new Error("Image URL must be a valid http(s) URL.");
+  }
   if (!input.clickUrl.trim()) {
     throw new Error("Click URL is required.");
   }
+  if (!isValidHttpUrl(input.clickUrl.trim())) {
+    throw new Error("Click URL must be a valid http(s) URL.");
+  }
   if (!input.altText.trim()) {
     throw new Error("Alt text is required.");
+  }
+  const width = Number(input.width);
+  const height = Number(input.height);
+  if (!Number.isFinite(width) || width < 1) {
+    throw new Error("Width must be at least 1.");
+  }
+  if (!Number.isFinite(height) || height < 1) {
+    throw new Error("Height must be at least 1.");
   }
 
   const { data, error } = await supabaseAdmin!
@@ -443,8 +480,8 @@ export async function updateAdminAdvertisement(input: {
       image_url: input.imageUrl.trim(),
       click_url: input.clickUrl.trim(),
       alt_text: input.altText.trim(),
-      width: input.width,
-      height: input.height,
+      width,
+      height,
       active: input.active,
       start_date: input.startDate,
       end_date: input.endDate?.trim() || null,

@@ -19,6 +19,43 @@ const AD_SLOTS: AdSlot[] = [
   "popup-on-scroll",
 ];
 const ADDRESS_LOOKUP_DEBOUNCE_MS = 250;
+const MAX_AD_IMAGE_BYTES = 300 * 1024;
+const AD_STATIC_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+function formatDateTimeLocal(value: Date): string {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  const hours = String(value.getHours()).padStart(2, "0");
+  const minutes = String(value.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function isoToDateTimeLocal(isoValue: string): string {
+  const date = new Date(isoValue);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  return formatDateTimeLocal(date);
+}
+
+function getPopupImageFitMessage(width: number, height: number): string {
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    return "";
+  }
+
+  const targetRatio = 9 / 16;
+  const ratio = width / height;
+  const delta = Math.abs(ratio - targetRatio) / targetRatio;
+
+  if (delta <= 0.02) {
+    return "9:16 detected. Perfect popup fit.";
+  }
+  if (delta <= 0.08) {
+    return "Near 9:16. Popup will auto-fit with minimal padding.";
+  }
+  return "Not 9:16. Popup will still auto-fit, with extra padding.";
+}
 
 type LoadState = "idle" | "loading" | "error";
 type AdminAdsDebugSnapshot = {
@@ -110,12 +147,15 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [venueId, setVenueId] = useState("");
   const [advertiserName, setAdvertiserName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [adImageFile, setAdImageFile] = useState<File | null>(null);
+  const [adImageDetails, setAdImageDetails] = useState("");
+  const [isUploadingAdImage, setIsUploadingAdImage] = useState(false);
   const [clickUrl, setClickUrl] = useState("");
   const [altText, setAltText] = useState("");
   const [width, setWidth] = useState(728);
   const [height, setHeight] = useState(90);
   const [active, setActive] = useState(true);
-  const [startDate, setStartDate] = useState(() => new Date().toISOString().slice(0, 16));
+  const [startDate, setStartDate] = useState(() => formatDateTimeLocal(new Date()));
   const [endDate, setEndDate] = useState("");
 
   const [editQuestionText, setEditQuestionText] = useState("");
@@ -128,6 +168,9 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [editVenueId, setEditVenueId] = useState("");
   const [editAdvertiserName, setEditAdvertiserName] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
+  const [editAdImageFile, setEditAdImageFile] = useState<File | null>(null);
+  const [editAdImageDetails, setEditAdImageDetails] = useState("");
+  const [isUploadingEditAdImage, setIsUploadingEditAdImage] = useState(false);
   const [editClickUrl, setEditClickUrl] = useState("");
   const [editAltText, setEditAltText] = useState("");
   const [editWidth, setEditWidth] = useState(728);
@@ -383,6 +426,119 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     setIsEditAddressLookupLoading(false);
   };
 
+  const getImageDimensions = useCallback(
+    (file: File) =>
+      new Promise<{ width: number; height: number }>((resolve, reject) => {
+        const objectUrl = URL.createObjectURL(file);
+        const image = new Image();
+        image.onload = () => {
+          const resolvedWidth = image.naturalWidth || image.width;
+          const resolvedHeight = image.naturalHeight || image.height;
+          URL.revokeObjectURL(objectUrl);
+          if (!resolvedWidth || !resolvedHeight) {
+            reject(new Error("Unable to read image dimensions."));
+            return;
+          }
+          resolve({ width: resolvedWidth, height: resolvedHeight });
+        };
+        image.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error("Unable to load image preview."));
+        };
+        image.src = objectUrl;
+      }),
+    []
+  );
+
+  const uploadAdImageFile = useCallback(async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await adminFetch("/api/admin/ads/upload", {
+      method: "POST",
+      body: formData,
+    });
+    const payload = (await response.json()) as { ok: boolean; imageUrl?: string; error?: string };
+    if (!payload.ok || !payload.imageUrl) {
+      throw new Error(payload.error ?? "Failed to upload ad image.");
+    }
+
+    return payload.imageUrl;
+  }, [adminFetch]);
+
+  const handleAdImageSelection = useCallback(
+    async (event: ChangeEvent<HTMLInputElement>) => {
+      const selectedFile = event.target.files?.[0] ?? null;
+      setErrorMessage("");
+      setAdImageFile(null);
+      setAdImageDetails("");
+      setImageUrl("");
+
+      if (!selectedFile) {
+        return;
+      }
+
+      if (!AD_STATIC_IMAGE_MIME_TYPES.has(selectedFile.type)) {
+        setErrorMessage("Only static JPG, PNG, or WebP files are allowed.");
+        return;
+      }
+
+      if (selectedFile.size > MAX_AD_IMAGE_BYTES) {
+        setErrorMessage("Image must be under 300KB.");
+        return;
+      }
+
+      try {
+        const dimensions = await getImageDimensions(selectedFile);
+        setWidth(dimensions.width);
+        setHeight(dimensions.height);
+        setAdImageFile(selectedFile);
+        setAdImageDetails(
+          `${selectedFile.name} (${(selectedFile.size / 1024).toFixed(1)}KB) - ${dimensions.width}x${dimensions.height} - ${getPopupImageFitMessage(dimensions.width, dimensions.height)}`
+        );
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : "Unable to process selected image.");
+      }
+    },
+    [getImageDimensions]
+  );
+
+  const handleEditAdImageSelection = useCallback(
+    async (event: ChangeEvent<HTMLInputElement>) => {
+      const selectedFile = event.target.files?.[0] ?? null;
+      setErrorMessage("");
+      setEditAdImageFile(null);
+      setEditAdImageDetails("");
+
+      if (!selectedFile) {
+        return;
+      }
+
+      if (!AD_STATIC_IMAGE_MIME_TYPES.has(selectedFile.type)) {
+        setErrorMessage("Only static JPG, PNG, or WebP files are allowed.");
+        return;
+      }
+
+      if (selectedFile.size > MAX_AD_IMAGE_BYTES) {
+        setErrorMessage("Image must be under 300KB.");
+        return;
+      }
+
+      try {
+        const dimensions = await getImageDimensions(selectedFile);
+        setEditWidth(dimensions.width);
+        setEditHeight(dimensions.height);
+        setEditAdImageFile(selectedFile);
+        setEditAdImageDetails(
+          `${selectedFile.name} (${(selectedFile.size / 1024).toFixed(1)}KB) - ${dimensions.width}x${dimensions.height} - ${getPopupImageFitMessage(dimensions.width, dimensions.height)}`
+        );
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : "Unable to process selected image.");
+      }
+    },
+    [getImageDimensions]
+  );
+
   const loadAll = useCallback(async () => {
     setState("loading");
     setErrorMessage("");
@@ -541,7 +697,13 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
 
   const createAd = async () => {
     setErrorMessage("");
+    setIsUploadingAdImage(true);
     try {
+      if (!adImageFile) {
+        throw new Error("Upload a static ad image (JPG, PNG, or WebP) under 300KB.");
+      }
+      const uploadedImageUrl = await uploadAdImageFile(adImageFile);
+      setImageUrl(uploadedImageUrl);
       const response = await adminFetch("/api/admin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -550,7 +712,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           slot,
           venueId: venueId || undefined,
           advertiserName,
-          imageUrl,
+          imageUrl: uploadedImageUrl,
           clickUrl,
           altText,
           width,
@@ -566,6 +728,8 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       }
       setAdvertiserName("");
       setImageUrl("");
+      setAdImageFile(null);
+      setAdImageDetails("");
       setClickUrl("");
       setAltText("");
       setWidth(728);
@@ -575,6 +739,8 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       await loadAll();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Failed to create ad.");
+    } finally {
+      setIsUploadingAdImage(false);
     }
   };
 
@@ -867,19 +1033,27 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     setEditVenueId(item.venueId ?? "");
     setEditAdvertiserName(item.advertiserName);
     setEditImageUrl(item.imageUrl);
+    setEditAdImageFile(null);
+    setEditAdImageDetails("");
     setEditClickUrl(item.clickUrl);
     setEditAltText(item.altText);
     setEditWidth(item.width);
     setEditHeight(item.height);
     setEditActive(item.active);
-    setEditStartDate(item.startDate.slice(0, 16));
-    setEditEndDate(item.endDate ? item.endDate.slice(0, 16) : "");
+    setEditStartDate(isoToDateTimeLocal(item.startDate));
+    setEditEndDate(item.endDate ? isoToDateTimeLocal(item.endDate) : "");
   };
 
   const saveAdEdit = async () => {
     if (!editingAdId) return;
     setErrorMessage("");
+    setIsUploadingEditAdImage(true);
     try {
+      const nextImageUrl = editAdImageFile ? await uploadAdImageFile(editAdImageFile) : editImageUrl;
+      if (!nextImageUrl.trim()) {
+        throw new Error("Select an ad image or keep an existing image URL.");
+      }
+      setEditImageUrl(nextImageUrl);
       const response = await adminFetch("/api/admin", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -889,7 +1063,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           slot: editSlot,
           venueId: editVenueId || undefined,
           advertiserName: editAdvertiserName,
-          imageUrl: editImageUrl,
+          imageUrl: nextImageUrl,
           clickUrl: editClickUrl,
           altText: editAltText,
           width: editWidth,
@@ -904,9 +1078,13 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
         throw new Error(payload.error ?? "Failed to update ad.");
       }
       setEditingAdId(null);
+      setEditAdImageFile(null);
+      setEditAdImageDetails("");
       await loadAll();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Failed to update ad.");
+    } finally {
+      setIsUploadingEditAdImage(false);
     }
   };
 
@@ -1689,12 +1867,26 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           placeholder="Advertiser name"
           className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
         />
-        <input
-          value={imageUrl}
-          onChange={(event) => setImageUrl(event.target.value)}
-          placeholder="Image URL"
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-        />
+        <div className="space-y-1 rounded-md border border-slate-200 bg-slate-50 p-3">
+          <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">
+            Ad Image (Static Only)
+          </label>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={(event) => {
+              void handleAdImageSelection(event);
+            }}
+            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+          />
+          <p className="text-xs text-slate-500">
+            Allowed: JPG, PNG, WebP. Max size: 300KB. 9:16 is ideal, but other ratios now auto-fit.
+          </p>
+          {adImageDetails ? <p className="text-xs text-emerald-700">{adImageDetails}</p> : null}
+          {imageUrl ? (
+            <p className="break-all text-[11px] text-slate-500">Uploaded URL: {imageUrl}</p>
+          ) : null}
+        </div>
         <input
           value={clickUrl}
           onChange={(event) => setClickUrl(event.target.value)}
@@ -1752,9 +1944,10 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           onClick={() => {
             void createAd();
           }}
+          disabled={isUploadingAdImage}
           className="w-full rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white sm:w-auto"
         >
-          Create Advertisement
+          {isUploadingAdImage ? "Uploading..." : "Create Advertisement"}
         </button>
       </section>
       ) : null}
@@ -1886,11 +2079,24 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                     onChange={(event) => setEditAdvertiserName(event.target.value)}
                     className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                   />
-                  <input
-                    value={editImageUrl}
-                    onChange={(event) => setEditImageUrl(event.target.value)}
-                    className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-                  />
+                  <div className="space-y-1 rounded-md border border-slate-200 bg-slate-50 p-3">
+                    <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">
+                      Replace Ad Image (Optional)
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(event) => {
+                        void handleEditAdImageSelection(event);
+                      }}
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                    />
+                    <p className="text-xs text-slate-500">
+                      Allowed: JPG, PNG, WebP. Max size: 300KB. 9:16 is ideal, but other ratios now auto-fit.
+                    </p>
+                    {editAdImageDetails ? <p className="text-xs text-emerald-700">{editAdImageDetails}</p> : null}
+                    <p className="break-all text-[11px] text-slate-500">Current URL: {editImageUrl}</p>
+                  </div>
                   <input
                     value={editClickUrl}
                     onChange={(event) => setEditClickUrl(event.target.value)}
@@ -1945,9 +2151,10 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                       onClick={() => {
                         void saveAdEdit();
                       }}
+                      disabled={isUploadingEditAdImage}
                       className="rounded-md bg-emerald-700 px-3 py-2 text-sm font-medium text-white sm:py-1.5 sm:text-xs"
                     >
-                      Save
+                      {isUploadingEditAdImage ? "Uploading..." : "Save"}
                     </button>
                     <button
                       type="button"

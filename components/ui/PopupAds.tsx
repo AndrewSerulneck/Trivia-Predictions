@@ -40,6 +40,10 @@ export function PopupAds() {
   const scrollTriggeredRef = useRef<Record<string, boolean>>({});
 
   const dismissKeyPrefix = useMemo(() => `tp:popup-ad:dismissed:${pathname ?? ""}`, [pathname]);
+  const getDismissKey = useCallback(
+    (trigger: PopupTrigger, adId?: string) => `${dismissKeyPrefix}:${trigger}:${adId ?? "placeholder"}`,
+    [dismissKeyPrefix]
+  );
 
   const loadSlotAd = useCallback(async (slot: PopupTrigger) => {
     const venueId = typeof window !== "undefined" ? getVenueId() : "";
@@ -64,39 +68,47 @@ export function PopupAds() {
         return;
       }
 
-      const dismissKey = `${dismissKeyPrefix}:${trigger}`;
-      if (window.sessionStorage.getItem(dismissKey) === "1") {
-        return;
-      }
-
       try {
         const ad = await loadSlotAd(trigger);
+        const dismissKey = getDismissKey(trigger, ad?.id);
+        if (window.sessionStorage.getItem(dismissKey) === "1") {
+          return;
+        }
         setPopup({
           open: true,
           trigger,
           ad: ad ?? undefined,
         });
       } catch {
+        const dismissKey = getDismissKey(trigger);
+        if (window.sessionStorage.getItem(dismissKey) === "1") {
+          return;
+        }
         setPopup({
           open: true,
           trigger,
         });
       }
     },
-    [dismissKeyPrefix, loadSlotAd]
+    [getDismissKey, loadSlotAd]
   );
 
   const closePopup = useCallback(() => {
     if (typeof window !== "undefined" && popup) {
-      window.sessionStorage.setItem(`${dismissKeyPrefix}:${popup.trigger}`, "1");
+      window.sessionStorage.setItem(getDismissKey(popup.trigger, popup.ad?.id), "1");
     }
     setPopup((prev) => (prev ? { ...prev, open: false } : prev));
-  }, [dismissKeyPrefix, popup]);
+  }, [getDismissKey, popup]);
 
   useEffect(() => {
-    setPopup(null);
+    const resetTimer = window.setTimeout(() => {
+      setPopup(null);
+    }, 0);
+
     if (!pathname || pathname.startsWith("/admin")) {
-      return;
+      return () => {
+        window.clearTimeout(resetTimer);
+      };
     }
 
     const timer = window.setTimeout(() => {
@@ -104,6 +116,7 @@ export function PopupAds() {
     }, 450);
 
     return () => {
+      window.clearTimeout(resetTimer);
       window.clearTimeout(timer);
     };
   }, [pathname, showPopup]);
@@ -159,8 +172,8 @@ export function PopupAds() {
   const placeholder = PLACEHOLDER_BY_TRIGGER[popup.trigger];
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-[90] flex items-end justify-center bg-slate-900/30 p-2">
-      <div className="pointer-events-auto animate-tp-popup-sheet-up h-[82dvh] w-full max-w-md overflow-hidden rounded-t-2xl border border-slate-300 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.28)]">
+    <div className="pointer-events-none fixed inset-0 z-[90] flex items-end justify-center bg-slate-900/30 p-1.5">
+      <div className="pointer-events-auto animate-tp-popup-sheet-up w-full max-w-md overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.28)]">
         <div className="flex items-center justify-between border-b border-amber-200 bg-gradient-to-r from-amber-100 via-orange-100 to-red-100 px-3 py-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-700">Sponsored</p>
           <button
@@ -178,20 +191,24 @@ export function PopupAds() {
             href={`/api/ads/click?id=${encodeURIComponent(popup.ad.id)}`}
             target="_blank"
             rel="noreferrer noopener"
-            className="block h-[calc(82dvh-49px)] p-3"
+            className="block p-1.5"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={popup.ad.imageUrl}
-              alt={popup.ad.altText}
-              width={popup.ad.width}
-              height={popup.ad.height}
-              className="h-full w-full rounded-lg border border-slate-200 object-cover"
-            />
+            <div className="mx-auto w-[min(94vw,calc((100dvh-110px)*9/16))] max-w-[380px]">
+              <div className="aspect-[9/16] overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={popup.ad.imageUrl}
+                  alt={popup.ad.altText}
+                  width={popup.ad.width}
+                  height={popup.ad.height}
+                  className="h-full w-full object-contain"
+                />
+              </div>
+            </div>
           </a>
         ) : (
-          <div className="flex h-[calc(82dvh-49px)] items-center justify-center p-3">
-            <div className="w-full rounded-xl border border-dashed border-amber-300 bg-gradient-to-br from-[#f8e6d5] via-[#f2d4b5] to-[#e7b08b] p-6 text-center">
+          <div className="p-1.5">
+            <div className="mx-auto w-[min(94vw,calc((100dvh-110px)*9/16))] max-w-[380px] rounded-xl border border-dashed border-amber-300 bg-gradient-to-br from-[#f8e6d5] via-[#f2d4b5] to-[#e7b08b] p-6 text-center">
               <p className="text-lg font-black text-slate-900">{placeholder.title}</p>
               <p className="mt-2 text-sm text-slate-700">{placeholder.subtitle}</p>
             </div>
