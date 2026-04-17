@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { getVenueId } from "@/lib/storage";
 import type { Advertisement, AdSlot } from "@/types";
@@ -38,14 +38,12 @@ export function PopupAds() {
   const pathname = usePathname();
   const [popup, setPopup] = useState<PopupState | null>(null);
   const scrollTriggeredRef = useRef<Record<string, boolean>>({});
+  const dismissedByTriggerRef = useRef<Record<PopupTrigger, boolean>>({
+    "popup-on-entry": false,
+    "popup-on-scroll": false,
+  });
   const popupOpenRef = useRef(false);
   const popupOpeningRef = useRef(false);
-
-  const dismissKeyPrefix = useMemo(() => `tp:popup-ad:dismissed:${pathname ?? ""}`, [pathname]);
-  const getDismissKey = useCallback(
-    (trigger: PopupTrigger, adId?: string) => `${dismissKeyPrefix}:${trigger}:${adId ?? "placeholder"}`,
-    [dismissKeyPrefix]
-  );
 
   useEffect(() => {
     popupOpenRef.current = Boolean(popup?.open);
@@ -76,15 +74,14 @@ export function PopupAds() {
       if (popupOpenRef.current || popupOpeningRef.current) {
         return;
       }
+      if (dismissedByTriggerRef.current[trigger]) {
+        return;
+      }
       popupOpeningRef.current = true;
 
       try {
         const ad = await loadSlotAd(trigger);
         if (popupOpenRef.current) {
-          return;
-        }
-        const dismissKey = getDismissKey(trigger, ad?.id);
-        if (window.sessionStorage.getItem(dismissKey) === "1") {
           return;
         }
         popupOpenRef.current = true;
@@ -97,10 +94,6 @@ export function PopupAds() {
         if (popupOpenRef.current) {
           return;
         }
-        const dismissKey = getDismissKey(trigger);
-        if (window.sessionStorage.getItem(dismissKey) === "1") {
-          return;
-        }
         popupOpenRef.current = true;
         setPopup({
           open: true,
@@ -110,20 +103,24 @@ export function PopupAds() {
         popupOpeningRef.current = false;
       }
     },
-    [getDismissKey, loadSlotAd]
+    [loadSlotAd]
   );
 
   const closePopup = useCallback(() => {
-    if (typeof window !== "undefined" && popup) {
-      window.sessionStorage.setItem(getDismissKey(popup.trigger, popup.ad?.id), "1");
+    if (popup) {
+      dismissedByTriggerRef.current[popup.trigger] = true;
     }
     popupOpenRef.current = false;
     popupOpeningRef.current = false;
     setPopup((prev) => (prev ? { ...prev, open: false } : prev));
-  }, [getDismissKey, popup]);
+  }, [popup]);
 
   useEffect(() => {
     const resetTimer = window.setTimeout(() => {
+      dismissedByTriggerRef.current = {
+        "popup-on-entry": false,
+        "popup-on-scroll": false,
+      };
       popupOpenRef.current = false;
       popupOpeningRef.current = false;
       setPopup(null);
