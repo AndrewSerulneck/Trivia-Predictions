@@ -39,6 +39,7 @@ export function PopupAds() {
   const [popup, setPopup] = useState<PopupState | null>(null);
   const scrollTriggeredRef = useRef<Record<string, boolean>>({});
   const popupOpenRef = useRef(false);
+  const popupOpeningRef = useRef(false);
 
   const dismissKeyPrefix = useMemo(() => `tp:popup-ad:dismissed:${pathname ?? ""}`, [pathname]);
   const getDismissKey = useCallback(
@@ -72,9 +73,10 @@ export function PopupAds() {
       if (typeof window === "undefined") {
         return;
       }
-      if (popupOpenRef.current) {
+      if (popupOpenRef.current || popupOpeningRef.current) {
         return;
       }
+      popupOpeningRef.current = true;
 
       try {
         const ad = await loadSlotAd(trigger);
@@ -85,6 +87,7 @@ export function PopupAds() {
         if (window.sessionStorage.getItem(dismissKey) === "1") {
           return;
         }
+        popupOpenRef.current = true;
         setPopup({
           open: true,
           trigger,
@@ -98,10 +101,13 @@ export function PopupAds() {
         if (window.sessionStorage.getItem(dismissKey) === "1") {
           return;
         }
+        popupOpenRef.current = true;
         setPopup({
           open: true,
           trigger,
         });
+      } finally {
+        popupOpeningRef.current = false;
       }
     },
     [getDismissKey, loadSlotAd]
@@ -111,11 +117,15 @@ export function PopupAds() {
     if (typeof window !== "undefined" && popup) {
       window.sessionStorage.setItem(getDismissKey(popup.trigger, popup.ad?.id), "1");
     }
+    popupOpenRef.current = false;
+    popupOpeningRef.current = false;
     setPopup((prev) => (prev ? { ...prev, open: false } : prev));
   }, [getDismissKey, popup]);
 
   useEffect(() => {
     const resetTimer = window.setTimeout(() => {
+      popupOpenRef.current = false;
+      popupOpeningRef.current = false;
       setPopup(null);
     }, 0);
 
