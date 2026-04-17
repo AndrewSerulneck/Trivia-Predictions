@@ -38,12 +38,17 @@ export function PopupAds() {
   const pathname = usePathname();
   const [popup, setPopup] = useState<PopupState | null>(null);
   const scrollTriggeredRef = useRef<Record<string, boolean>>({});
+  const popupOpenRef = useRef(false);
 
   const dismissKeyPrefix = useMemo(() => `tp:popup-ad:dismissed:${pathname ?? ""}`, [pathname]);
   const getDismissKey = useCallback(
     (trigger: PopupTrigger, adId?: string) => `${dismissKeyPrefix}:${trigger}:${adId ?? "placeholder"}`,
     [dismissKeyPrefix]
   );
+
+  useEffect(() => {
+    popupOpenRef.current = Boolean(popup?.open);
+  }, [popup?.open]);
 
   const loadSlotAd = useCallback(async (slot: PopupTrigger) => {
     const venueId = typeof window !== "undefined" ? getVenueId() : "";
@@ -67,9 +72,15 @@ export function PopupAds() {
       if (typeof window === "undefined") {
         return;
       }
+      if (popupOpenRef.current) {
+        return;
+      }
 
       try {
         const ad = await loadSlotAd(trigger);
+        if (popupOpenRef.current) {
+          return;
+        }
         const dismissKey = getDismissKey(trigger, ad?.id);
         if (window.sessionStorage.getItem(dismissKey) === "1") {
           return;
@@ -80,6 +91,9 @@ export function PopupAds() {
           ad: ad ?? undefined,
         });
       } catch {
+        if (popupOpenRef.current) {
+          return;
+        }
         const dismissKey = getDismissKey(trigger);
         if (window.sessionStorage.getItem(dismissKey) === "1") {
           return;
@@ -130,6 +144,9 @@ export function PopupAds() {
     scrollTriggeredRef.current[key] = false;
 
     const onScroll = () => {
+      if (popupOpenRef.current) {
+        return;
+      }
       if (scrollTriggeredRef.current[key]) {
         return;
       }
