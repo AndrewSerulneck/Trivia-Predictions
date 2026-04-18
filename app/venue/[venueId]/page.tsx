@@ -3,8 +3,8 @@ import { PageShell } from "@/components/ui/PageShell";
 import { VenueHubClient } from "@/components/venue/VenueHubClient";
 import { getLeaderboardForVenue } from "@/lib/leaderboard";
 import { getVenueById } from "@/lib/venues";
-import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
+import { APP_PAGE_NAMES } from "@/lib/pageNames";
 
 export default async function VenuePage({
   params,
@@ -20,12 +20,9 @@ export default async function VenuePage({
   const venueDisplayName = getVenueDisplayName(venue);
 
   return (
-    <PageShell title={venueDisplayName}>
+    <PageShell title={APP_PAGE_NAMES.venue} description={venueDisplayName}>
       <div className="space-y-4">
         <VenueHubClient venue={venue} initialEntries={entries} />
-        <section className="space-y-2">
-          <InlineSlotAdClient slot="leaderboard-sidebar" venueId={venue.id} showPlaceholder />
-        </section>
       </div>
     </PageShell>
   );

@@ -5,6 +5,7 @@ export type AdTier = "popup" | "mobile-adhesion" | "other";
 type ActiveAdState = {
   tier: AdTier | null;
   ownerId: string | null;
+  landingPopupGate: boolean;
 };
 
 type WindowWithAdState = Window & {
@@ -21,11 +22,11 @@ function getPriority(tier: AdTier): number {
 
 function getWindowState(): ActiveAdState {
   if (typeof window === "undefined") {
-    return { tier: null, ownerId: null };
+    return { tier: null, ownerId: null, landingPopupGate: false };
   }
   const typedWindow = window as WindowWithAdState;
   if (!typedWindow.__tpActiveAdState) {
-    typedWindow.__tpActiveAdState = { tier: null, ownerId: null };
+    typedWindow.__tpActiveAdState = { tier: null, ownerId: null, landingPopupGate: false };
   }
   return typedWindow.__tpActiveAdState;
 }
@@ -91,4 +92,24 @@ export function subscribeAdTierChange(listener: () => void): () => void {
   return () => {
     window.removeEventListener(CHANGE_EVENT, listener);
   };
+}
+
+export function setLandingPopupGate(active: boolean): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const state = getWindowState();
+  const next = Boolean(active);
+  if (state.landingPopupGate === next) {
+    return;
+  }
+  state.landingPopupGate = next;
+  emitChange();
+}
+
+export function isLandingPopupGateActive(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  return Boolean(getWindowState().landingPopupGate);
 }

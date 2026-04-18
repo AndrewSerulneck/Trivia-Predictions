@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { getVenueId } from "@/lib/storage";
-import { releaseAdTier, requestAdTier } from "@/components/ui/adPriority";
-import type { Advertisement, AdSlot } from "@/types";
+import { releaseAdTier, requestAdTier, setLandingPopupGate } from "@/components/ui/adPriority";
+import type { Advertisement, AdPageKey } from "@/types";
 
-type PopupTrigger = "popup-on-entry" | "popup-on-scroll";
+type PopupTrigger = "popup-on-entry" | "popup-on-scroll" | "popup-round-end";
 
 type SlotResponse = {
   ok: boolean;
@@ -20,15 +20,23 @@ type PopupState = {
   ad: Advertisement;
 };
 
-function isPopupSlot(slot: AdSlot): slot is PopupTrigger {
-  return slot === "popup-on-entry" || slot === "popup-on-scroll";
-}
-
-function isVenueRoute(pathname: string | null): boolean {
-  if (!pathname) {
-    return false;
+function resolvePageKey(pathname: string | null): AdPageKey | null {
+  if (!pathname || pathname === "/" || pathname === "/join") {
+    return "join";
   }
-  return /^\/venue\/[^/]+/.test(pathname);
+  if (/^\/venue\/[^/]+/.test(pathname)) {
+    return "venue";
+  }
+  if (pathname.startsWith("/trivia")) {
+    return "trivia";
+  }
+  if (pathname.startsWith("/predictions")) {
+    return "sports-predictions";
+  }
+  if (pathname.startsWith("/bingo")) {
+    return "sports-bingo";
+  }
+  return null;
 }
 
 function readLastShownAt(trigger: PopupTrigger): number {
@@ -63,6 +71,7 @@ export function PopupAds() {
   const dismissedByTriggerRef = useRef<Record<PopupTrigger, boolean>>({
     "popup-on-entry": false,
     "popup-on-scroll": false,
+    "popup-round-end": false,
   });
   const popupOpenRef = useRef(false);
   const popupOpeningRef = useRef(false);
@@ -71,11 +80,21 @@ export function PopupAds() {
     popupOpenRef.current = Boolean(popup?.open);
   }, [popup?.open]);
 
-  const loadSlotAd = useCallback(async (slot: PopupTrigger) => {
+  const loadSlotAd = useCallback(async (slot: "popup-on-entry" | "popup-on-scroll", options: {
+    pageKey: AdPageKey;
+    displayTrigger: "on-load" | "on-scroll" | "round-end";
+    roundNumber?: number;
+  }) => {
     const venueId = typeof window !== "undefined" ? getVenueId() : "";
     const params = new URLSearchParams({ slot });
     if (venueId) {
       params.set("venueId", venueId);
+    }
+    params.set("pageKey", options.pageKey);
+    params.set("adType", "popup");
+    params.set("displayTrigger", options.displayTrigger);
+    if (Number.isFinite(options.roundNumber)) {
+      params.set("roundNumber", String(Math.round(Number(options.roundNumber))));
     }
 
     const response = await fetch(`/api/ads/slot?${params.toString()}`, {
@@ -89,22 +108,27 @@ export function PopupAds() {
   }, []);
 
   const showPopup = useCallback(
-    async (trigger: PopupTrigger) => {
+    async (trigger: PopupTrigger, options: {
+      pageKey: AdPageKey;
+      displayTrigger: "on-load" | "on-scroll" | "round-end";
+      roundNumber?: number;
+    }): Promise<boolean> => {
       if (typeof window === "undefined") {
-        return;
+        return false;
       }
       if (popupOpenRef.current || popupOpeningRef.current) {
-        return;
+        return false;
       }
       if (dismissedByTriggerRef.current[trigger]) {
-        return;
+        return false;
       }
       popupOpeningRef.current = true;
 
       try {
-        const ad = await loadSlotAd(trigger);
+        const slot = trigger === "popup-on-scroll" ? "popup-on-scroll" : "popup-on-entry";
+        const ad = await loadSlotAd(slot, options);
         if (!ad) {
-          return;
+          return false;
         }
 
         const cooldownSeconds = Number.isFinite(ad.popupCooldownSeconds)
@@ -113,16 +137,16 @@ export function PopupAds() {
         const now = Date.now();
         const lastShownAt = readLastShownAt(trigger);
         if (cooldownSeconds > 0 && lastShownAt > 0 && now - lastShownAt < cooldownSeconds * 1000) {
-          return;
+          return false;
         }
 
         if (popupOpenRef.current) {
-          return;
+          return false;
         }
 
         const hasPriority = requestAdTier("popup", popupOwnerId);
         if (!hasPriority) {
-          return;
+          return false;
         }
 
         writeLastShownAt(trigger, now);
@@ -132,8 +156,9 @@ export function PopupAds() {
           trigger,
           ad,
         });
+        return true;
       } catch {
-        return;
+        return false;
       } finally {
         popupOpeningRef.current = false;
       }
@@ -147,6 +172,7 @@ export function PopupAds() {
       if (popup.trigger === "popup-on-entry") {
         // Avoid showing a second popup immediately after dismissing entry popup.
         dismissedByTriggerRef.current["popup-on-scroll"] = true;
+        setLandingPopupGate(false);
       }
     }
     popupOpenRef.current = false;
@@ -160,31 +186,43 @@ export function PopupAds() {
       dismissedByTriggerRef.current = {
         "popup-on-entry": false,
         "popup-on-scroll": false,
+        "popup-round-end": false,
       };
       popupOpenRef.current = false;
       popupOpeningRef.current = false;
       releaseAdTier(popupOwnerId);
+      setLandingPopupGate(false);
       setPopup(null);
     }, 0);
 
-    if (!isVenueRoute(pathname) || pathname.startsWith("/admin")) {
+    const pageKey = resolvePageKey(pathname);
+    if (!pageKey || pathname.startsWith("/admin")) {
+      setLandingPopupGate(false);
       return () => {
         window.clearTimeout(resetTimer);
       };
     }
 
+    setLandingPopupGate(true);
     const timer = window.setTimeout(() => {
-      void showPopup("popup-on-entry");
+      void (async () => {
+        const opened = await showPopup("popup-on-entry", { pageKey, displayTrigger: "on-load" });
+        if (!opened) {
+          setLandingPopupGate(false);
+        }
+      })();
     }, 450);
 
     return () => {
       window.clearTimeout(resetTimer);
       window.clearTimeout(timer);
+      setLandingPopupGate(false);
     };
   }, [pathname, popupOwnerId, showPopup]);
 
   useEffect(() => {
-    if (!isVenueRoute(pathname) || pathname.startsWith("/admin")) {
+    const pageKey = resolvePageKey(pathname);
+    if (!pageKey || pathname.startsWith("/admin")) {
       return;
     }
 
@@ -203,13 +241,35 @@ export function PopupAds() {
       const threshold = doc.scrollHeight * 0.58;
       if (scrolled >= threshold) {
         scrollTriggeredRef.current[key] = true;
-        void showPopup("popup-on-scroll");
+        void showPopup("popup-on-scroll", { pageKey, displayTrigger: "on-scroll" });
       }
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", onScroll);
+    };
+  }, [pathname, showPopup]);
+
+  useEffect(() => {
+    const pageKey = resolvePageKey(pathname);
+    if (pageKey !== "trivia" || pathname?.startsWith("/admin")) {
+      return;
+    }
+
+    const onRoundComplete = (event: Event) => {
+      const detail = (event as CustomEvent<{ roundNumber?: number }>).detail;
+      const roundNumber = Number.isFinite(detail?.roundNumber) ? Math.round(Number(detail?.roundNumber)) : undefined;
+      void showPopup("popup-round-end", {
+        pageKey: "trivia",
+        displayTrigger: "round-end",
+        roundNumber,
+      });
+    };
+
+    window.addEventListener("tp:trivia-round-complete", onRoundComplete as EventListener);
+    return () => {
+      window.removeEventListener("tp:trivia-round-complete", onRoundComplete as EventListener);
     };
   }, [pathname, showPopup]);
 
@@ -275,7 +335,7 @@ export function PopupAds() {
     };
   }, [popupOwnerId]);
 
-  if (!popup?.open || !isPopupSlot(popup.trigger)) {
+  if (!popup?.open) {
     return null;
   }
 

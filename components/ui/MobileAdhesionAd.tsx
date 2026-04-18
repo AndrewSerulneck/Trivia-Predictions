@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AdBanner } from "@/components/ui/AdBanner";
-import { releaseAdTier, requestAdTier, subscribeAdTierChange } from "@/components/ui/adPriority";
+import { isLandingPopupGateActive, releaseAdTier, requestAdTier, subscribeAdTierChange } from "@/components/ui/adPriority";
 import { getVenueId } from "@/lib/storage";
-import type { Advertisement } from "@/types";
+import type { AdPageKey, Advertisement } from "@/types";
 
 type SlotResponse = {
   ok: boolean;
@@ -17,6 +17,25 @@ function isAdminRoute(pathname: string | null): boolean {
   return Boolean(pathname?.startsWith("/admin"));
 }
 
+function resolvePageKey(pathname: string | null): AdPageKey {
+  if (!pathname || pathname === "/" || pathname === "/join") {
+    return "join";
+  }
+  if (pathname.startsWith("/venue/")) {
+    return "venue";
+  }
+  if (pathname.startsWith("/trivia")) {
+    return "trivia";
+  }
+  if (pathname.startsWith("/predictions")) {
+    return "sports-predictions";
+  }
+  if (pathname.startsWith("/bingo")) {
+    return "sports-bingo";
+  }
+  return "global";
+}
+
 export function MobileAdhesionAd() {
   const pathname = usePathname();
   const ownerId = useId();
@@ -26,11 +45,14 @@ export function MobileAdhesionAd() {
   const [hasPriority, setHasPriority] = useState(false);
   const activeVenueRef = useRef<string>("");
 
-  const loadAd = useCallback(async (venueId: string) => {
+  const loadAd = useCallback(async (venueId: string, pageKey: AdPageKey) => {
     const params = new URLSearchParams({ slot: "mobile-adhesion" });
     if (venueId) {
       params.set("venueId", venueId);
     }
+    params.set("pageKey", pageKey);
+    params.set("adType", "banner");
+    params.set("displayTrigger", "on-load");
 
     try {
       const response = await fetch(`/api/ads/slot?${params.toString()}`, { cache: "no-store" });
@@ -58,13 +80,14 @@ export function MobileAdhesionAd() {
     }
 
     const venueId = getVenueId() ?? "";
+    const pageKey = resolvePageKey(pathname);
     if (ad && activeVenueRef.current === venueId) {
       return;
     }
 
     activeVenueRef.current = venueId;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- async fetch updates local ad state after network response.
-    void loadAd(venueId);
+    void loadAd(venueId, pageKey);
   }, [ad, loadAd, pathname]);
 
   useEffect(() => {
@@ -92,6 +115,11 @@ export function MobileAdhesionAd() {
     }
 
     const syncPriority = () => {
+      if (isLandingPopupGateActive()) {
+        releaseAdTier(ownerId);
+        setHasPriority(false);
+        return;
+      }
       const granted = requestAdTier("mobile-adhesion", ownerId);
       setHasPriority(granted);
     };

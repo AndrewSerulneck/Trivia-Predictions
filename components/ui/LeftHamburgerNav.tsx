@@ -4,11 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getVenueId } from "@/lib/storage";
+import { APP_PAGE_NAMES } from "@/lib/pageNames";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Home" },
-  { href: "/trivia", label: "Trivia" },
-  { href: "/predictions", label: "Predictions" },
+  { href: "/", label: APP_PAGE_NAMES.join },
+  { href: "/trivia", label: APP_PAGE_NAMES.trivia },
+  { href: "/predictions", label: APP_PAGE_NAMES.sportsPredictions },
   { href: "/activity", label: "Activity" },
   { href: "/leaderboard", label: "Leaderboard" },
 ];

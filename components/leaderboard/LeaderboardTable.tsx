@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getUserId } from "@/lib/storage";
+import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
+import { Fragment } from "react";
 import type { LeaderboardEntry } from "@/types";
 
 type LeaderboardPayload = {
@@ -105,21 +107,42 @@ export function LeaderboardTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white">
-            {entries.map((entry) => {
+            {entries.map((entry, index) => {
               const isCurrentUser = currentUserId && entry.userId === currentUserId;
+              const shouldRenderAdBreak = (index + 1) % 25 === 0;
+              const adBreakNumber = shouldRenderAdBreak ? (index + 1) / 25 : 0;
+              const sequenceIndex = shouldRenderAdBreak ? ((adBreakNumber - 1) % 4) + 1 : 1;
               return (
-                <tr key={entry.userId} className={isCurrentUser ? "bg-blue-50" : undefined}>
-                  <td className="px-3 py-2 font-semibold text-slate-700">#{entry.rank}</td>
-                  <td className="px-3 py-2">
-                    {entry.username}
-                    {isCurrentUser ? (
-                      <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700">
-                        You
-                      </span>
-                    ) : null}
-                  </td>
-                  <td className="px-3 py-2 font-medium">{entry.points}</td>
-                </tr>
+                <Fragment key={entry.userId}>
+                  <tr className={isCurrentUser ? "bg-blue-50" : undefined}>
+                    <td className="px-3 py-2 font-semibold text-slate-700">#{entry.rank}</td>
+                    <td className="px-3 py-2">
+                      {entry.username}
+                      {isCurrentUser ? (
+                        <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                          You
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className="px-3 py-2 font-medium">{entry.points}</td>
+                  </tr>
+                  {shouldRenderAdBreak ? (
+                    <tr className="bg-slate-50">
+                      <td colSpan={3} className="px-3 py-3">
+                        <InlineSlotAdClient
+                          slot="leaderboard-sidebar"
+                          venueId={venueId}
+                          pageKey="venue"
+                          adType="inline"
+                          displayTrigger="on-scroll"
+                          placementKey="venue-leaderboard-inline"
+                          sequenceIndex={sequenceIndex}
+                          showPlaceholder={false}
+                        />
+                      </td>
+                    </tr>
+                  ) : null}
+                </Fragment>
               );
             })}
           </tbody>

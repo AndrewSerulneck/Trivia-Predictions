@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { normalizeAdPlacementMeta } from "@/lib/adPlacements";
 import { getPredictionMarketById, listResolvedPredictionOutcomes } from "@/lib/polymarket";
-import type { AdSlot, Advertisement, TriviaQuestion, Venue } from "@/types";
+import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, Advertisement, TriviaQuestion, Venue } from "@/types";
 
 type TriviaQuestionRow = {
   id: string;
@@ -14,6 +15,12 @@ type TriviaQuestionRow = {
 type AdvertisementRow = {
   id: string;
   slot: AdSlot;
+  page_key: AdPageKey | null;
+  ad_type: AdType | null;
+  display_trigger: AdDisplayTrigger | null;
+  placement_key: string | null;
+  round_number: number | null;
+  sequence_index: number | null;
   venue_id: string | null;
   venue_ids: string[] | null;
   advertiser_name: string;
@@ -94,9 +101,25 @@ function mapTriviaRow(row: TriviaQuestionRow): TriviaQuestion {
 }
 
 function mapAdRow(row: AdvertisementRow): Advertisement {
+  const placementMeta = normalizeAdPlacementMeta({
+    slot: row.slot,
+    pageKey: row.page_key ?? undefined,
+    adType: row.ad_type ?? undefined,
+    displayTrigger: row.display_trigger ?? undefined,
+    placementKey: row.placement_key ?? undefined,
+    roundNumber: row.round_number ?? undefined,
+    sequenceIndex: row.sequence_index ?? undefined,
+  });
+
   return {
     id: row.id,
     slot: row.slot,
+    pageKey: placementMeta.pageKey,
+    adType: placementMeta.adType,
+    displayTrigger: placementMeta.displayTrigger,
+    placementKey: placementMeta.placementKey,
+    roundNumber: placementMeta.roundNumber,
+    sequenceIndex: placementMeta.sequenceIndex,
     venueId: row.venue_id ?? undefined,
     venueIds: Array.isArray(row.venue_ids) ? row.venue_ids : row.venue_id ? [row.venue_id] : undefined,
     advertiserName: row.advertiser_name,
@@ -370,7 +393,7 @@ export async function listAdminAdvertisements(): Promise<Advertisement[]> {
   const { data, error } = await supabaseAdmin!
     .from("advertisements")
     .select(
-      "id, slot, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
+      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .order("created_at", { ascending: false })
     .limit(100);
@@ -384,6 +407,12 @@ export async function listAdminAdvertisements(): Promise<Advertisement[]> {
 
 export async function createAdminAdvertisement(input: {
   slot: AdSlot;
+  pageKey?: AdPageKey;
+  adType?: AdType;
+  displayTrigger?: AdDisplayTrigger;
+  placementKey?: string;
+  roundNumber?: number;
+  sequenceIndex?: number;
   venueId?: string;
   venueIds?: string[];
   advertiserName: string;
@@ -421,6 +450,15 @@ export async function createAdminAdvertisement(input: {
   }
   const width = Number(input.width);
   const height = Number(input.height);
+  const placementMeta = normalizeAdPlacementMeta({
+    slot: input.slot,
+    pageKey: input.pageKey,
+    adType: input.adType,
+    displayTrigger: input.displayTrigger,
+    placementKey: input.placementKey,
+    roundNumber: input.roundNumber,
+    sequenceIndex: input.sequenceIndex,
+  });
   const dismissDelaySeconds = Number.isFinite(input.dismissDelaySeconds)
     ? Math.round(Number(input.dismissDelaySeconds))
     : 3;
@@ -448,11 +486,30 @@ export async function createAdminAdvertisement(input: {
   if (!Number.isFinite(deliveryWeight) || deliveryWeight < 1 || deliveryWeight > 100) {
     throw new Error("Delivery weight must be between 1 and 100.");
   }
+  if (placementMeta.pageKey === "global") {
+    throw new Error("Select a specific page for this advertisement.");
+  }
+  if (placementMeta.displayTrigger === "round-end" && placementMeta.pageKey !== "trivia") {
+    throw new Error("Round-end trigger is only supported on the Trivia page.");
+  }
+  if (
+    placementMeta.pageKey === "trivia" &&
+    placementMeta.displayTrigger === "round-end" &&
+    !placementMeta.roundNumber
+  ) {
+    throw new Error("Choose Round 1, Round 2, or Round 3 for Trivia round-end ads.");
+  }
 
   const { data, error } = await supabaseAdmin!
     .from("advertisements")
     .insert({
       slot: input.slot,
+      page_key: placementMeta.pageKey,
+      ad_type: placementMeta.adType,
+      display_trigger: placementMeta.displayTrigger,
+      placement_key: placementMeta.placementKey ?? null,
+      round_number: placementMeta.roundNumber ?? null,
+      sequence_index: placementMeta.sequenceIndex ?? null,
       venue_id: finalVenueIds.length === 1 ? finalVenueIds[0] : null,
       venue_ids: finalVenueIds.length > 0 ? finalVenueIds : null,
       advertiser_name: input.advertiserName.trim(),
@@ -469,7 +526,7 @@ export async function createAdminAdvertisement(input: {
       end_date: input.endDate?.trim() || null,
     })
     .select(
-      "id, slot, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
+      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .single<AdvertisementRow>();
 
@@ -483,6 +540,12 @@ export async function createAdminAdvertisement(input: {
 export async function updateAdminAdvertisement(input: {
   id: string;
   slot: AdSlot;
+  pageKey?: AdPageKey;
+  adType?: AdType;
+  displayTrigger?: AdDisplayTrigger;
+  placementKey?: string;
+  roundNumber?: number;
+  sequenceIndex?: number;
   venueId?: string;
   venueIds?: string[];
   advertiserName: string;
@@ -524,6 +587,15 @@ export async function updateAdminAdvertisement(input: {
   }
   const width = Number(input.width);
   const height = Number(input.height);
+  const placementMeta = normalizeAdPlacementMeta({
+    slot: input.slot,
+    pageKey: input.pageKey,
+    adType: input.adType,
+    displayTrigger: input.displayTrigger,
+    placementKey: input.placementKey,
+    roundNumber: input.roundNumber,
+    sequenceIndex: input.sequenceIndex,
+  });
   const dismissDelaySeconds = Number.isFinite(input.dismissDelaySeconds)
     ? Math.round(Number(input.dismissDelaySeconds))
     : 3;
@@ -551,11 +623,30 @@ export async function updateAdminAdvertisement(input: {
   if (!Number.isFinite(deliveryWeight) || deliveryWeight < 1 || deliveryWeight > 100) {
     throw new Error("Delivery weight must be between 1 and 100.");
   }
+  if (placementMeta.pageKey === "global") {
+    throw new Error("Select a specific page for this advertisement.");
+  }
+  if (placementMeta.displayTrigger === "round-end" && placementMeta.pageKey !== "trivia") {
+    throw new Error("Round-end trigger is only supported on the Trivia page.");
+  }
+  if (
+    placementMeta.pageKey === "trivia" &&
+    placementMeta.displayTrigger === "round-end" &&
+    !placementMeta.roundNumber
+  ) {
+    throw new Error("Choose Round 1, Round 2, or Round 3 for Trivia round-end ads.");
+  }
 
   const { data, error } = await supabaseAdmin!
     .from("advertisements")
     .update({
       slot: input.slot,
+      page_key: placementMeta.pageKey,
+      ad_type: placementMeta.adType,
+      display_trigger: placementMeta.displayTrigger,
+      placement_key: placementMeta.placementKey ?? null,
+      round_number: placementMeta.roundNumber ?? null,
+      sequence_index: placementMeta.sequenceIndex ?? null,
       venue_id: finalVenueIds.length === 1 ? finalVenueIds[0] : null,
       venue_ids: finalVenueIds.length > 0 ? finalVenueIds : null,
       advertiser_name: input.advertiserName.trim(),
@@ -573,7 +664,7 @@ export async function updateAdminAdvertisement(input: {
     })
     .eq("id", id)
     .select(
-      "id, slot, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
+      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .single<AdvertisementRow>();
 

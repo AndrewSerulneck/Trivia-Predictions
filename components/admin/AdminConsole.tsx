@@ -5,20 +5,57 @@ import { useRouter } from "next/navigation";
 import { ensureAnonymousSession } from "@/lib/auth";
 import { ADMIN_SECTION_OPTIONS, type AdminSection } from "@/components/admin/adminSections";
 import { supabase } from "@/lib/supabase";
-import type { AdSlot, Advertisement, TriviaQuestion, Venue } from "@/types";
+import { deriveSlotFromPlacement } from "@/lib/adPlacements";
+import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, Advertisement, TriviaQuestion, Venue } from "@/types";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
 
-const AD_SLOTS: AdSlot[] = [
-  "header",
-  "inline-content",
-  "sidebar",
-  "mid-content",
-  "leaderboard-sidebar",
-  "footer",
-  "mobile-adhesion",
-  "popup-on-entry",
-  "popup-on-scroll",
-];
+const AD_PAGE_KEYS: AdPageKey[] = ["join", "venue", "trivia", "sports-predictions", "sports-bingo"];
+const AD_PAGE_LABEL: Record<AdPageKey, string> = {
+  global: "Global",
+  join: "Join",
+  venue: "Venue",
+  trivia: "Trivia",
+  "sports-predictions": "Sports Predictions",
+  "sports-bingo": "Sports Bingo",
+};
+const AD_TYPE_LABEL: Record<AdType, string> = {
+  popup: "Pop Up",
+  banner: "Banner",
+  inline: "Inline",
+};
+const AD_TRIGGER_LABEL: Record<AdDisplayTrigger, string> = {
+  "on-load": "On Landing",
+  "on-scroll": "On Scroll",
+  "round-end": "Round End",
+};
+const FORM_SELECT_CLASS = "rounded-md border border-slate-300 px-3 py-2.5 text-base leading-6";
+const FORM_LABEL_CLASS = "block text-xs font-medium uppercase tracking-wide text-slate-600";
+const VENUE_INLINE_VARIANTS = [
+  { value: 1, label: "Inline Leaderboard 1 - 25" },
+  { value: 2, label: "Inline Leaderboard 26 - 50" },
+  { value: 3, label: "Inline Leaderboard 51 - 75" },
+  { value: 4, label: "Inline Leaderboard 76 - 100" },
+] as const;
+
+function getAdTypesForPage(pageKey: AdPageKey): AdType[] {
+  if (pageKey === "trivia") {
+    return ["popup", "banner"];
+  }
+  return ["popup", "banner", "inline"];
+}
+
+function getTriggersForPlacement(pageKey: AdPageKey, adType: AdType): AdDisplayTrigger[] {
+  if (pageKey === "trivia") {
+    return ["on-load", "round-end"];
+  }
+  if (pageKey === "sports-predictions") {
+    if (adType === "inline") {
+      return ["on-scroll"];
+    }
+    return ["on-load", "on-scroll"];
+  }
+  return ["on-load"];
+}
 const AD_SLOT_DEFAULT_SIZE: Record<AdSlot, { width: number; height: number }> = {
   header: { width: 728, height: 90 },
   "inline-content": { width: 300, height: 250 },
@@ -169,7 +206,13 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [category, setCategory] = useState("");
   const [difficulty, setDifficulty] = useState("");
 
-  const [slot, setSlot] = useState<AdSlot>("header");
+  const [pageKey, setPageKey] = useState<AdPageKey>("venue");
+  const [adType, setAdType] = useState<AdType>("popup");
+  const [displayTrigger, setDisplayTrigger] = useState<AdDisplayTrigger>("on-load");
+  const [placementKey, setPlacementKey] = useState("default");
+  const [roundNumber, setRoundNumber] = useState<number | "all">("all");
+  const [sequenceIndex, setSequenceIndex] = useState(1);
+  const [slot, setSlot] = useState<AdSlot>(() => deriveSlotFromPlacement({ adType: "popup", displayTrigger: "on-load" }));
   const [venueIds, setVenueIds] = useState<string[]>([]);
   const [advertiserName, setAdvertiserName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -193,7 +236,13 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [editCategory, setEditCategory] = useState("");
   const [editDifficulty, setEditDifficulty] = useState("");
 
-  const [editSlot, setEditSlot] = useState<AdSlot>("header");
+  const [editPageKey, setEditPageKey] = useState<AdPageKey>("venue");
+  const [editAdType, setEditAdType] = useState<AdType>("popup");
+  const [editDisplayTrigger, setEditDisplayTrigger] = useState<AdDisplayTrigger>("on-load");
+  const [editPlacementKey, setEditPlacementKey] = useState("default");
+  const [editRoundNumber, setEditRoundNumber] = useState<number | "all">("all");
+  const [editSequenceIndex, setEditSequenceIndex] = useState(1);
+  const [editSlot, setEditSlot] = useState<AdSlot>(() => deriveSlotFromPlacement({ adType: "popup", displayTrigger: "on-load" }));
   const [editVenueIds, setEditVenueIds] = useState<string[]>([]);
   const [editAdvertiserName, setEditAdvertiserName] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
@@ -245,6 +294,116 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     () => editOptionsText.split(",").map((item) => item.trim()).filter(Boolean),
     [editOptionsText]
   );
+
+  const availableAdTypes = useMemo(() => getAdTypesForPage(pageKey), [pageKey]);
+  const availableTriggers = useMemo(() => getTriggersForPlacement(pageKey, adType), [pageKey, adType]);
+  const availableEditAdTypes = useMemo(() => getAdTypesForPage(editPageKey), [editPageKey]);
+  const availableEditTriggers = useMemo(
+    () => getTriggersForPlacement(editPageKey, editAdType),
+    [editPageKey, editAdType]
+  );
+
+  useEffect(() => {
+    if (!availableAdTypes.includes(adType)) {
+      setAdType(availableAdTypes[0] ?? "popup");
+    }
+  }, [availableAdTypes, adType]);
+
+  useEffect(() => {
+    if (!availableTriggers.includes(displayTrigger)) {
+      setDisplayTrigger(availableTriggers[0] ?? "on-load");
+    }
+  }, [availableTriggers, displayTrigger]);
+
+  useEffect(() => {
+    if (!availableEditAdTypes.includes(editAdType)) {
+      setEditAdType(availableEditAdTypes[0] ?? "popup");
+    }
+  }, [availableEditAdTypes, editAdType]);
+
+  useEffect(() => {
+    if (!availableEditTriggers.includes(editDisplayTrigger)) {
+      setEditDisplayTrigger(availableEditTriggers[0] ?? "on-load");
+    }
+  }, [availableEditTriggers, editDisplayTrigger]);
+
+  useEffect(() => {
+    setSlot(deriveSlotFromPlacement({ adType, displayTrigger }));
+  }, [adType, displayTrigger]);
+
+  useEffect(() => {
+    setEditSlot(deriveSlotFromPlacement({ adType: editAdType, displayTrigger: editDisplayTrigger }));
+  }, [editAdType, editDisplayTrigger]);
+
+  useEffect(() => {
+    const recommended = getRecommendedSlotSize(slot);
+    setWidth(recommended.width);
+    setHeight(recommended.height);
+  }, [slot]);
+
+  useEffect(() => {
+    const recommended = getRecommendedSlotSize(editSlot);
+    setEditWidth(recommended.width);
+    setEditHeight(recommended.height);
+  }, [editSlot]);
+
+  useEffect(() => {
+    if (adType === "inline" && pageKey === "venue") {
+      setPlacementKey("venue-leaderboard-inline");
+      return;
+    }
+    if ((adType === "popup" || adType === "banner") && pageKey === "trivia" && displayTrigger === "round-end") {
+      setPlacementKey("trivia-round-end");
+      if (roundNumber === "all") {
+        setRoundNumber(1);
+      }
+      return;
+    }
+    if (adType === "inline" && pageKey === "sports-predictions") {
+      setPlacementKey("predictions-inline");
+      return;
+    }
+    if (adType === "popup" && pageKey === "sports-predictions" && displayTrigger === "on-scroll") {
+      setPlacementKey("predictions-popup-scroll");
+      return;
+    }
+    if (adType === "banner" && pageKey === "sports-predictions" && displayTrigger === "on-scroll") {
+      setPlacementKey("predictions-banner-scroll");
+      return;
+    }
+    if (!placementKey.trim()) {
+      setPlacementKey("default");
+    }
+  }, [adType, pageKey, displayTrigger, placementKey, roundNumber]);
+
+  useEffect(() => {
+    if (editAdType === "inline" && editPageKey === "venue") {
+      setEditPlacementKey("venue-leaderboard-inline");
+      return;
+    }
+    if ((editAdType === "popup" || editAdType === "banner") && editPageKey === "trivia" && editDisplayTrigger === "round-end") {
+      setEditPlacementKey("trivia-round-end");
+      if (editRoundNumber === "all") {
+        setEditRoundNumber(1);
+      }
+      return;
+    }
+    if (editAdType === "inline" && editPageKey === "sports-predictions") {
+      setEditPlacementKey("predictions-inline");
+      return;
+    }
+    if (editAdType === "popup" && editPageKey === "sports-predictions" && editDisplayTrigger === "on-scroll") {
+      setEditPlacementKey("predictions-popup-scroll");
+      return;
+    }
+    if (editAdType === "banner" && editPageKey === "sports-predictions" && editDisplayTrigger === "on-scroll") {
+      setEditPlacementKey("predictions-banner-scroll");
+      return;
+    }
+    if (!editPlacementKey.trim()) {
+      setEditPlacementKey("default");
+    }
+  }, [editAdType, editPageKey, editDisplayTrigger, editPlacementKey, editRoundNumber]);
 
   useEffect(() => {
     setAvailableVenues(venues);
@@ -736,12 +895,26 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       }
       const uploadedImageUrl = await uploadAdImageFile(adImageFile);
       setImageUrl(uploadedImageUrl);
+      const computedRoundNumber =
+        pageKey === "trivia" && displayTrigger === "round-end" && roundNumber !== "all" ? roundNumber : undefined;
+      const computedSequenceIndex =
+        adType === "inline" && pageKey === "venue"
+          ? sequenceIndex
+          : undefined;
+      const computedDismissDelaySeconds = adType === "inline" ? undefined : dismissDelaySeconds;
+      const computedPopupCooldownSeconds = adType === "inline" ? undefined : popupCooldownSeconds;
       const response = await adminFetch("/api/admin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           resource: "ads",
           slot,
+          pageKey,
+          adType,
+          displayTrigger,
+          placementKey: placementKey.trim() || undefined,
+          roundNumber: computedRoundNumber,
+          sequenceIndex: computedSequenceIndex,
           venueIds: venueIds.length > 0 ? venueIds : undefined,
           advertiserName,
           imageUrl: uploadedImageUrl,
@@ -750,8 +923,8 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           width,
           height,
           deliveryWeight,
-          dismissDelaySeconds,
-          popupCooldownSeconds,
+          dismissDelaySeconds: computedDismissDelaySeconds,
+          popupCooldownSeconds: computedPopupCooldownSeconds,
           active,
           startDate: new Date(startDate).toISOString(),
           endDate: endDate ? new Date(endDate).toISOString() : undefined,
@@ -773,6 +946,12 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       setDismissDelaySeconds(3);
       setPopupCooldownSeconds(180);
       setVenueIds([]);
+      setPageKey("venue");
+      setAdType("popup");
+      setDisplayTrigger("on-load");
+      setPlacementKey("default");
+      setRoundNumber("all");
+      setSequenceIndex(1);
       setActive(true);
       setEndDate("");
       await loadAll();
@@ -1068,6 +1247,12 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
 
   const beginEditAd = (item: Advertisement) => {
     setEditingAdId(item.id);
+    setEditPageKey(item.pageKey === "global" ? "join" : item.pageKey);
+    setEditAdType(item.adType);
+    setEditDisplayTrigger(item.displayTrigger);
+    setEditPlacementKey(item.placementKey ?? "default");
+    setEditRoundNumber(item.roundNumber ?? "all");
+    setEditSequenceIndex(item.sequenceIndex ?? 1);
     setEditSlot(item.slot);
     setEditVenueIds(item.venueIds && item.venueIds.length > 0 ? item.venueIds : item.venueId ? [item.venueId] : []);
     setEditAdvertiserName(item.advertiserName);
@@ -1096,6 +1281,16 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
         throw new Error("Select an ad image or keep an existing image URL.");
       }
       setEditImageUrl(nextImageUrl);
+      const computedEditRoundNumber =
+        editPageKey === "trivia" && editDisplayTrigger === "round-end" && editRoundNumber !== "all"
+          ? editRoundNumber
+          : undefined;
+      const computedEditSequenceIndex =
+        editAdType === "inline" && editPageKey === "venue"
+          ? editSequenceIndex
+          : undefined;
+      const computedEditDismissDelaySeconds = editAdType === "inline" ? undefined : editDismissDelaySeconds;
+      const computedEditPopupCooldownSeconds = editAdType === "inline" ? undefined : editPopupCooldownSeconds;
       const response = await adminFetch("/api/admin", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -1103,6 +1298,12 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           resource: "ads",
           id: editingAdId,
           slot: editSlot,
+          pageKey: editPageKey,
+          adType: editAdType,
+          displayTrigger: editDisplayTrigger,
+          placementKey: editPlacementKey.trim() || undefined,
+          roundNumber: computedEditRoundNumber,
+          sequenceIndex: computedEditSequenceIndex,
           venueIds: editVenueIds.length > 0 ? editVenueIds : undefined,
           advertiserName: editAdvertiserName,
           imageUrl: nextImageUrl,
@@ -1111,8 +1312,8 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           width: editWidth,
           height: editHeight,
           deliveryWeight: editDeliveryWeight,
-          dismissDelaySeconds: editDismissDelaySeconds,
-          popupCooldownSeconds: editPopupCooldownSeconds,
+          dismissDelaySeconds: computedEditDismissDelaySeconds,
+          popupCooldownSeconds: computedEditPopupCooldownSeconds,
           active: editActive,
           startDate: new Date(editStartDate).toISOString(),
           endDate: editEndDate ? new Date(editEndDate).toISOString() : undefined,
@@ -1881,24 +2082,92 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       {shouldRenderSectionContent && activeSection === "ads-create" ? (
       <section className="space-y-3 rounded-lg border border-slate-200 p-3">
         <h2 className="text-base font-semibold">Create Advertisement</h2>
+        <p className="text-sm text-slate-600">
+          Choose the page first, then ad type and trigger. Round-end only applies to Trivia.
+        </p>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <select
-            value={slot}
-            onChange={(event) => {
-              const nextSlot = event.target.value as AdSlot;
-              const recommended = getRecommendedSlotSize(nextSlot);
-              setSlot(nextSlot);
-              setWidth(recommended.width);
-              setHeight(recommended.height);
-            }}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-          >
-            {AD_SLOTS.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
+          <div className="space-y-1">
+            <label className={FORM_LABEL_CLASS}>Page</label>
+            <select
+              value={pageKey}
+              onChange={(event) => setPageKey(event.target.value as AdPageKey)}
+              className={FORM_SELECT_CLASS}
+            >
+              {AD_PAGE_KEYS.map((item) => (
+                <option key={item} value={item}>
+                  {AD_PAGE_LABEL[item]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className={FORM_LABEL_CLASS}>Ad Type</label>
+            <select
+              value={adType}
+              onChange={(event) => setAdType(event.target.value as AdType)}
+              className={FORM_SELECT_CLASS}
+            >
+              {availableAdTypes.map((item) => (
+                <option key={item} value={item}>
+                  {AD_TYPE_LABEL[item]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className={FORM_LABEL_CLASS}>When It Appears</label>
+            <select
+              value={displayTrigger}
+              onChange={(event) => setDisplayTrigger(event.target.value as AdDisplayTrigger)}
+              className={FORM_SELECT_CLASS}
+            >
+              {availableTriggers.map((item) => (
+                <option key={item} value={item}>
+                  {AD_TRIGGER_LABEL[item]}
+                </option>
+              ))}
+            </select>
+          </div>
+          {pageKey === "trivia" && displayTrigger === "round-end" ? (
+            <div className="space-y-1">
+              <label className={FORM_LABEL_CLASS}>Trivia Round</label>
+              <select
+                value={roundNumber}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setRoundNumber(value === "all" ? "all" : Number(value));
+                }}
+                className={FORM_SELECT_CLASS}
+              >
+                <option value="1">Round 1</option>
+                <option value="2">Round 2</option>
+                <option value="3">Round 3</option>
+              </select>
+            </div>
+          ) : null}
+          {pageKey === "venue" && adType === "inline" ? (
+            <div className="space-y-1">
+              <label className={FORM_LABEL_CLASS}>Inline Leaderboard Slot</label>
+              <select
+                value={sequenceIndex}
+                onChange={(event) => setSequenceIndex(Number(event.target.value))}
+                className={FORM_SELECT_CLASS}
+              >
+                {VENUE_INLINE_VARIANTS.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
+          <div className="rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Technical Slot (Auto)</p>
+            <p className="mt-1 font-semibold">{slot}</p>
+            <p className="mt-1 text-xs text-slate-600">
+              Auto-mapped from your page/type/trigger choices.
+            </p>
+          </div>
           <div className="rounded-md border border-slate-300 px-3 py-2 text-sm">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Venue targeting</p>
             <p className="mt-1 text-xs text-slate-600">
@@ -2000,30 +2269,34 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
             />
           </div>
-          <div className="space-y-1">
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Dismiss Delay (seconds)</label>
-            <input
-              type="number"
-              min={0}
-              max={300}
-              value={dismissDelaySeconds}
-              onChange={(event) => setDismissDelaySeconds(Number(event.target.value))}
-              placeholder="Time before users can tap X"
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-            />
-          </div>
-          <div className="space-y-1 sm:col-span-2">
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Popup Cooldown (seconds)</label>
-            <input
-              type="number"
-              min={0}
-              max={86400}
-              value={popupCooldownSeconds}
-              onChange={(event) => setPopupCooldownSeconds(Number(event.target.value))}
-              placeholder="Minimum wait before this popup trigger can appear again"
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-            />
-          </div>
+          {adType !== "inline" ? (
+            <div className="space-y-1">
+              <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Dismiss Delay (seconds)</label>
+              <input
+                type="number"
+                min={0}
+                max={300}
+                value={dismissDelaySeconds}
+                onChange={(event) => setDismissDelaySeconds(Number(event.target.value))}
+                placeholder="Time before users can tap X"
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
+          ) : null}
+          {adType !== "inline" ? (
+            <div className="space-y-1 sm:col-span-2">
+              <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Popup Cooldown (seconds)</label>
+              <input
+                type="number"
+                min={0}
+                max={86400}
+                value={popupCooldownSeconds}
+                onChange={(event) => setPopupCooldownSeconds(Number(event.target.value))}
+                placeholder="Minimum wait before this popup trigger can appear again"
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
+          ) : null}
         </div>
         <p className="text-xs text-slate-500">Higher delivery weight means this ad is shown more often.</p>
         <p className="text-xs text-slate-500">
@@ -2172,23 +2445,85 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
               {editingAdId === item.id ? (
                 <div className="space-y-2">
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <select
-                      value={editSlot}
-                      onChange={(event) => {
-                        const nextSlot = event.target.value as AdSlot;
-                        const recommended = getRecommendedSlotSize(nextSlot);
-                        setEditSlot(nextSlot);
-                        setEditWidth(recommended.width);
-                        setEditHeight(recommended.height);
-                      }}
-                      className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-                    >
-                      {AD_SLOTS.map((slotOption) => (
-                        <option key={slotOption} value={slotOption}>
-                          {slotOption}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="space-y-1">
+                      <label className={FORM_LABEL_CLASS}>Page</label>
+                      <select
+                        value={editPageKey}
+                        onChange={(event) => setEditPageKey(event.target.value as AdPageKey)}
+                        className={FORM_SELECT_CLASS}
+                      >
+                        {AD_PAGE_KEYS.map((item) => (
+                          <option key={item} value={item}>
+                            {AD_PAGE_LABEL[item]}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className={FORM_LABEL_CLASS}>Ad Type</label>
+                      <select
+                        value={editAdType}
+                        onChange={(event) => setEditAdType(event.target.value as AdType)}
+                        className={FORM_SELECT_CLASS}
+                      >
+                        {availableEditAdTypes.map((item) => (
+                          <option key={item} value={item}>
+                            {AD_TYPE_LABEL[item]}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className={FORM_LABEL_CLASS}>When It Appears</label>
+                      <select
+                        value={editDisplayTrigger}
+                        onChange={(event) => setEditDisplayTrigger(event.target.value as AdDisplayTrigger)}
+                        className={FORM_SELECT_CLASS}
+                      >
+                        {availableEditTriggers.map((item) => (
+                          <option key={item} value={item}>
+                            {AD_TRIGGER_LABEL[item]}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {editPageKey === "trivia" && editDisplayTrigger === "round-end" ? (
+                      <div className="space-y-1">
+                        <label className={FORM_LABEL_CLASS}>Trivia Round</label>
+                        <select
+                          value={editRoundNumber}
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            setEditRoundNumber(value === "all" ? "all" : Number(value));
+                          }}
+                          className={FORM_SELECT_CLASS}
+                        >
+                          <option value="1">Round 1</option>
+                          <option value="2">Round 2</option>
+                          <option value="3">Round 3</option>
+                        </select>
+                      </div>
+                    ) : null}
+                    {editPageKey === "venue" && editAdType === "inline" ? (
+                      <div className="space-y-1">
+                        <label className={FORM_LABEL_CLASS}>Inline Leaderboard Slot</label>
+                        <select
+                          value={editSequenceIndex}
+                          onChange={(event) => setEditSequenceIndex(Number(event.target.value))}
+                          className={FORM_SELECT_CLASS}
+                        >
+                          {VENUE_INLINE_VARIANTS.map((item) => (
+                            <option key={item.value} value={item.value}>
+                              {item.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : null}
+                    <div className="rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Technical Slot (Auto)</p>
+                      <p className="mt-1 font-semibold">{editSlot}</p>
+                    </div>
                     <div className="rounded-md border border-slate-300 px-2 py-1.5 text-sm">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Venue targeting</p>
                       <p className="mt-1 text-xs text-slate-600">
@@ -2284,28 +2619,32 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                         className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Dismiss Delay (seconds)</label>
-                      <input
-                        type="number"
-                        min={0}
-                        max={300}
-                        value={editDismissDelaySeconds}
-                        onChange={(event) => setEditDismissDelaySeconds(Number(event.target.value))}
-                        className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-                      />
-                    </div>
-                    <div className="space-y-1 sm:col-span-2">
-                      <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Popup Cooldown (seconds)</label>
-                      <input
-                        type="number"
-                        min={0}
-                        max={86400}
-                        value={editPopupCooldownSeconds}
-                        onChange={(event) => setEditPopupCooldownSeconds(Number(event.target.value))}
-                        className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-                      />
-                    </div>
+                    {editAdType !== "inline" ? (
+                      <div className="space-y-1">
+                        <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Dismiss Delay (seconds)</label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={300}
+                          value={editDismissDelaySeconds}
+                          onChange={(event) => setEditDismissDelaySeconds(Number(event.target.value))}
+                          className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                        />
+                      </div>
+                    ) : null}
+                    {editAdType !== "inline" ? (
+                      <div className="space-y-1 sm:col-span-2">
+                        <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Popup Cooldown (seconds)</label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={86400}
+                          value={editPopupCooldownSeconds}
+                          onChange={(event) => setEditPopupCooldownSeconds(Number(event.target.value))}
+                          className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                        />
+                      </div>
+                    ) : null}
                   </div>
                   <p className="text-xs text-slate-500">Higher delivery weight means this ad is shown more often.</p>
                   <p className="text-xs text-slate-500">
@@ -2367,11 +2706,21 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                 <>
                   <p className="font-medium">{item.advertiserName}</p>
                   <p className="text-xs text-slate-600">
-                    {item.slot} | {item.width}x{item.height} | Weight {item.deliveryWeight ?? 1} | {item.active ? "active" : "inactive"} |{" "}
+                    {AD_PAGE_LABEL[item.pageKey]} | {AD_TYPE_LABEL[item.adType]} | {AD_TRIGGER_LABEL[item.displayTrigger]} | {item.slot} | {item.width}x{item.height} | Weight {item.deliveryWeight ?? 1} | {item.active ? "active" : "inactive"} |{" "}
                     {(item.venueIds ?? (item.venueId ? [item.venueId] : [])).length > 0
                       ? `${(item.venueIds ?? (item.venueId ? [item.venueId] : [])).length} venue(s)`
                       : "global"}
                   </p>
+                  {item.adType === "inline" ? (
+                    <p className="text-xs text-slate-500">
+                      Inline variant: {item.sequenceIndex ?? 1} | Placement: {item.placementKey ?? "default"}
+                    </p>
+                  ) : null}
+                  {item.adType === "popup" && item.displayTrigger === "round-end" ? (
+                    <p className="text-xs text-slate-500">
+                      Trivia round: {item.roundNumber ?? "all"} | Placement: {item.placementKey ?? "default"}
+                    </p>
+                  ) : null}
                   <p className="text-xs text-slate-500">
                     Dismiss delay: {item.dismissDelaySeconds ?? 3}s | Popup cooldown: {item.popupCooldownSeconds ?? 180}s
                   </p>

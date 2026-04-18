@@ -166,6 +166,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   const [rainEmojis, setRainEmojis] = useState<RainToken[]>([]);
   const [fireworks, setFireworks] = useState<FireworkToken[]>([]);
   const [quotaSecondsRemaining, setQuotaSecondsRemaining] = useState(0);
+  const roundCompletionHandledRef = useRef(false);
 
   const flashTimeoutRef = useRef<number | null>(null);
   const rainTimeoutRef = useRef<number | null>(null);
@@ -597,7 +598,32 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
   useEffect(() => {
     if (!finished) {
+      roundCompletionHandledRef.current = false;
       return;
+    }
+
+    if (!roundCompletionHandledRef.current && typeof window !== "undefined") {
+      roundCompletionHandledRef.current = true;
+      const userId = getUserId() ?? "anon";
+      const venueId = getVenueId() ?? "global";
+      const storageKey = `tp:trivia-round-count:${venueId}:${userId}`;
+      let roundNumber = 1;
+      try {
+        const prior = Number.parseInt(window.sessionStorage.getItem(storageKey) ?? "0", 10);
+        const next = Math.max(0, Number.isFinite(prior) ? prior : 0) + 1;
+        window.sessionStorage.setItem(storageKey, String(next));
+        roundNumber = next;
+      } catch {
+        roundNumber = 1;
+      }
+
+      window.dispatchEvent(
+        new CustomEvent("tp:trivia-round-complete", {
+          detail: {
+            roundNumber: Math.min(3, Math.max(1, roundNumber)),
+          },
+        })
+      );
     }
 
     const userId = getUserId() ?? "";

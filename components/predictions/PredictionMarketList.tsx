@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { calculatePoints, formatProbability } from "@/lib/predictions";
 import { getUserId, getVenueId } from "@/lib/storage";
@@ -370,6 +370,13 @@ export function PredictionMarketList() {
       markets: byLeague.get(label) ?? [],
     }));
   }, [markets, selectedSport]);
+  const marketIndexById = useMemo(() => {
+    const indexById = new Map<string, number>();
+    markets.forEach((market, index) => {
+      indexById.set(market.id, index);
+    });
+    return indexById;
+  }, [markets]);
   const loadQuota = useCallback(async () => {
     if (!userId) {
       setQuota(null);
@@ -1093,7 +1100,11 @@ export function PredictionMarketList() {
         </section>
       ) : (
         <div className="space-y-5">
-          {groupedMarketSections.map((section, index) => (
+          {/*
+            Predictions inline ads now render every 10 markets globally.
+            The ad break index is sent as sequenceIndex so delivery can rotate across available ads.
+          */}
+          {groupedMarketSections.map((section) => (
             <div key={section.id} className="space-y-4">
               <section id={section.id} className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1136,11 +1147,31 @@ export function PredictionMarketList() {
                   <p className="text-xs text-slate-500">Section collapsed.</p>
                 ) : (
                   <div className="grid grid-cols-1 gap-3">
-                    {section.markets.map((market) => renderMarketCard(market))}
+                    {section.markets.map((market) => {
+                      const globalIndex = marketIndexById.get(market.id) ?? -1;
+                      const shouldRenderAdBreak = globalIndex >= 0 && (globalIndex + 1) % 10 === 0;
+                      const adBreakNumber = shouldRenderAdBreak ? (globalIndex + 1) / 10 : 0;
+                      return (
+                        <Fragment key={market.id}>
+                          {renderMarketCard(market)}
+                          {shouldRenderAdBreak ? (
+                            <InlineSlotAdClient
+                              slot="leaderboard-sidebar"
+                              venueId={getVenueId() ?? undefined}
+                              pageKey="sports-predictions"
+                              adType="inline"
+                              displayTrigger="on-scroll"
+                              placementKey="predictions-inline"
+                              sequenceIndex={adBreakNumber}
+                              showPlaceholder={false}
+                            />
+                          ) : null}
+                        </Fragment>
+                      );
+                    })}
                   </div>
                 )}
               </section>
-              {(index + 1) % 2 === 0 ? <InlineSlotAdClient slot="leaderboard-sidebar" showPlaceholder /> : null}
             </div>
           ))}
         </div>

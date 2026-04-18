@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useState } from "react";
 import { AdBanner } from "@/components/ui/AdBanner";
-import { releaseAdTier, requestAdTier, subscribeAdTierChange } from "@/components/ui/adPriority";
-import type { AdSlot, Advertisement } from "@/types";
+import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, Advertisement } from "@/types";
 
 type SlotResponse = {
   ok: boolean;
@@ -14,21 +13,59 @@ type SlotResponse = {
 export function InlineSlotAdClient({
   slot = "leaderboard-sidebar",
   venueId,
+  pageKey,
+  adType,
+  displayTrigger,
+  placementKey,
+  roundNumber,
+  sequenceIndex,
+  excludeAdIds,
+  allowAnyVenue = false,
   showPlaceholder = true,
 }: {
   slot?: AdSlot;
   venueId?: string;
+  pageKey?: AdPageKey;
+  adType?: AdType;
+  displayTrigger?: AdDisplayTrigger;
+  placementKey?: string;
+  roundNumber?: number;
+  sequenceIndex?: number;
+  excludeAdIds?: string[];
+  allowAnyVenue?: boolean;
   showPlaceholder?: boolean;
 }) {
   const [ad, setAd] = useState<Advertisement | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const [hasPriority, setHasPriority] = useState(false);
-  const ownerId = useId();
 
   useEffect(() => {
     const params = new URLSearchParams({ slot });
     if (venueId) {
       params.set("venueId", venueId);
+    }
+    if (pageKey) {
+      params.set("pageKey", pageKey);
+    }
+    if (adType) {
+      params.set("adType", adType);
+    }
+    if (displayTrigger) {
+      params.set("displayTrigger", displayTrigger);
+    }
+    if (placementKey) {
+      params.set("placementKey", placementKey);
+    }
+    if (Number.isFinite(roundNumber)) {
+      params.set("roundNumber", String(Math.round(Number(roundNumber))));
+    }
+    if (Number.isFinite(sequenceIndex)) {
+      params.set("sequenceIndex", String(Math.round(Number(sequenceIndex))));
+    }
+    if (excludeAdIds && excludeAdIds.length > 0) {
+      params.set("excludeAdIds", excludeAdIds.join(","));
+    }
+    if (allowAnyVenue) {
+      params.set("allowAnyVenue", "1");
     }
 
     const load = async () => {
@@ -48,35 +85,10 @@ export function InlineSlotAdClient({
     };
 
     void load();
-  }, [slot, venueId]);
+  }, [slot, venueId, pageKey, adType, displayTrigger, placementKey, roundNumber, sequenceIndex, excludeAdIds, allowAnyVenue]);
 
-  useEffect(() => {
-    if (!ad) {
-      releaseAdTier(ownerId);
-      setHasPriority(false);
-      return;
-    }
-
-    const syncPriority = () => {
-      const granted = requestAdTier("other", ownerId);
-      setHasPriority(granted);
-    };
-
-    syncPriority();
-    const unsubscribe = subscribeAdTierChange(syncPriority);
-    return () => {
-      unsubscribe();
-      releaseAdTier(ownerId);
-      setHasPriority(false);
-    };
-  }, [ad, ownerId]);
-
-  if (ad && hasPriority) {
+  if (ad) {
     return <AdBanner ad={ad} />;
-  }
-
-  if (ad && !hasPriority) {
-    return null;
   }
 
   if (!showPlaceholder || !loaded) {

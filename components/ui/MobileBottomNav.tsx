@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { APP_PAGE_NAMES } from "@/lib/pageNames";
 
 const NAV_ITEMS = [
-  { href: "/trivia", label: "Trivia" },
-  { href: "/predictions", label: "Picks" },
+  { href: "/trivia", label: APP_PAGE_NAMES.trivia },
+  { href: "/predictions", label: APP_PAGE_NAMES.sportsPredictions },
   { href: "/activity", label: "Activity" },
   { href: "/leaderboard", label: "Leaders" },
 ];

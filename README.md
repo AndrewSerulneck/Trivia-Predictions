@@ -47,6 +47,12 @@ Open `http://localhost:3000`.
 
 ## Current App Status
 - Core pages: `/join`, `/trivia`, `/predictions`, `/activity`, `/leaderboard`, `/admin`
+- Canonical page names (see `lib/pageNames.ts`):
+  - `Join`: `/` and `/join`
+  - `Venue`: `/venue/[venueId]`
+  - `Trivia`: `/trivia`
+  - `Sports Predictions`: `/predictions` (`/prediction` is a legacy redirect)
+  - `Sports Bingo`: planned route `/bingo` (not implemented yet)
 - API routes: `/api/trivia`, `/api/predictions`, `/api/predictions/quota`, `/api/venues`, `/api/activity`, `/api/leaderboard`, `/api/notifications`, `/api/admin`, `/api/admin/users`, `/api/admin/bootstrap`, `/api/ads/impression`, `/api/ads/click`, `/api/cron/predictions-settle`
 - Join flow: anonymous auth + venue-locked usernames + geofence verification (100m default, optional local bypass)
 - SQL migrations:

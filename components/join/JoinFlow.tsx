@@ -16,6 +16,8 @@ import { isSupabaseConfigured } from "@/lib/supabase";
 import { getVenueById, listVenues } from "@/lib/venues";
 import type { Venue } from "@/types";
 import { getVenueDisplayName, getVenueVisual as getVenueVisualFromConfig } from "@/lib/venueDisplay";
+import { APP_PAGE_NAMES } from "@/lib/pageNames";
+import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
 
@@ -483,7 +485,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
   return (
     <PageShell
-      title="Join Venue"
+      title={APP_PAGE_NAMES.join}
       showAlerts={false}
     >
       <div className="space-y-4 text-sm">
@@ -535,11 +537,15 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                 );
               })}
             </ul>
-            <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-100/80 p-6 text-center">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Ad Placeholder</p>
-              <p className="mt-1 text-lg font-semibold text-slate-700">Banner Advertisement Slot</p>
-              <p className="mt-2 max-w-md text-sm text-slate-600">This is a placeholder for a venue banner ad.</p>
-            </div>
+            <InlineSlotAdClient
+              slot="leaderboard-sidebar"
+              venueId={venueParam || undefined}
+              pageKey="join"
+              adType="inline"
+              displayTrigger="on-load"
+              allowAnyVenue
+              showPlaceholder
+            />
           </div>
         )}
 

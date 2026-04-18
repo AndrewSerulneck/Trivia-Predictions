@@ -1,13 +1,20 @@
 import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import type { AdSlot, Advertisement } from "@/types";
+import { normalizeAdPlacementMeta, type AdPlacementMeta } from "@/lib/adPlacements";
+import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, Advertisement } from "@/types";
 
 type AdEventType = "impression" | "click";
 
 type AdvertisementRow = {
   id: string;
   slot: AdSlot;
+  page_key: AdPageKey | null;
+  ad_type: AdType | null;
+  display_trigger: AdDisplayTrigger | null;
+  placement_key: string | null;
+  round_number: number | null;
+  sequence_index: number | null;
   venue_id: string | null;
   venue_ids: string[] | null;
   advertiser_name: string;
@@ -27,9 +34,25 @@ type AdvertisementRow = {
 };
 
 function mapAdRow(row: AdvertisementRow): Advertisement {
+  const placementMeta = normalizeAdPlacementMeta({
+    slot: row.slot,
+    pageKey: row.page_key ?? undefined,
+    adType: row.ad_type ?? undefined,
+    displayTrigger: row.display_trigger ?? undefined,
+    placementKey: row.placement_key ?? undefined,
+    roundNumber: row.round_number ?? undefined,
+    sequenceIndex: row.sequence_index ?? undefined,
+  });
+
   return {
     id: row.id,
     slot: row.slot,
+    pageKey: placementMeta.pageKey,
+    adType: placementMeta.adType,
+    displayTrigger: placementMeta.displayTrigger,
+    placementKey: placementMeta.placementKey,
+    roundNumber: placementMeta.roundNumber,
+    sequenceIndex: placementMeta.sequenceIndex,
     venueId: row.venue_id ?? undefined,
     venueIds: Array.isArray(row.venue_ids) ? row.venue_ids : row.venue_id ? [row.venue_id] : undefined,
     advertiserName: row.advertiser_name,
@@ -83,7 +106,38 @@ function chooseWeightedRandomAd(rows: AdvertisementRow[]): AdvertisementRow | nu
   return rows[rows.length - 1];
 }
 
-async function getActiveAdQuery(slot: AdSlot, venueId?: string): Promise<Advertisement | null> {
+function chooseWeightedAdBySequence(rows: AdvertisementRow[], sequenceIndex: number): AdvertisementRow | null {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  const safeSequence = Math.max(1, Math.round(sequenceIndex));
+  const weights = rows.map((row) =>
+    Number.isFinite(Number(row.delivery_weight)) ? Math.max(1, Number(row.delivery_weight)) : 1
+  );
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+  if (totalWeight <= 0) {
+    return rows[(safeSequence - 1) % rows.length] ?? rows[0] ?? null;
+  }
+
+  const target = ((safeSequence - 1) % totalWeight) + 1;
+  let running = 0;
+  for (let index = 0; index < rows.length; index += 1) {
+    running += weights[index] ?? 1;
+    if (target <= running) {
+      return rows[index] ?? rows[0] ?? null;
+    }
+  }
+
+  return rows[rows.length - 1] ?? null;
+}
+
+type AdLookupOptions = Partial<AdPlacementMeta> & {
+  excludeAdIds?: string[];
+  allowAnyVenue?: boolean;
+};
+
+async function getActiveAdQuery(slot: AdSlot, venueId?: string, options?: AdLookupOptions): Promise<Advertisement | null> {
   if (!supabaseAdmin) {
     return null;
   }
@@ -93,7 +147,7 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string): Promise<Adverti
   let query = supabaseAdmin
     .from("advertisements")
     .select(
-      "id, slot, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
+      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .eq("slot", slot)
     .eq("active", true)
@@ -102,7 +156,22 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string): Promise<Adverti
     .order("start_date", { ascending: false })
     .limit(100);
 
-  if (venueId) {
+  if (options?.pageKey) {
+    query = query.eq("page_key", options.pageKey);
+  }
+  if (options?.adType) {
+    query = query.eq("ad_type", options.adType);
+  }
+  if (options?.displayTrigger) {
+    query = query.eq("display_trigger", options.displayTrigger);
+  }
+  if (options?.placementKey) {
+    query = query.eq("placement_key", options.placementKey);
+  }
+
+  if (options?.allowAnyVenue) {
+    // Intentionally skip venue filter and allow any targeted join inline ad to fill this slot.
+  } else if (venueId) {
     query = query.or(`venue_id.eq.${venueId},venue_ids.cs.{${venueId}}`);
   } else {
     query = query.is("venue_id", null).is("venue_ids", null);
@@ -114,7 +183,34 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string): Promise<Adverti
     return null;
   }
 
-  const pickedRow = chooseWeightedRandomAd(data);
+  const excluded = new Set((options?.excludeAdIds ?? []).map((id) => id.trim()).filter(Boolean));
+  const rows = data.filter((row) => !excluded.has(row.id));
+  if (rows.length === 0) {
+    return null;
+  }
+
+  const requestedRound = Number.isFinite(options?.roundNumber) ? Math.round(Number(options?.roundNumber)) : undefined;
+  const requestedSequence = Number.isFinite(options?.sequenceIndex)
+    ? Math.round(Number(options?.sequenceIndex))
+    : undefined;
+
+  const filteredByRound = requestedRound
+    ? rows.filter((row) => Number(row.round_number) === requestedRound)
+    : rows;
+  const roundPool = filteredByRound.length > 0 ? filteredByRound : rows;
+
+  let sequencePool = roundPool;
+  if (requestedSequence && options?.placementKey === "venue-leaderboard-inline") {
+    const filteredBySequence = roundPool.filter((row) => Number(row.sequence_index) === requestedSequence);
+    sequencePool = filteredBySequence.length > 0 ? filteredBySequence : roundPool;
+  }
+
+  if (requestedSequence && options?.placementKey === "predictions-inline" && sequencePool.length > 0) {
+    const weightedRow = chooseWeightedAdBySequence(sequencePool, requestedSequence);
+    return weightedRow ? mapAdRow(weightedRow) : null;
+  }
+
+  const pickedRow = chooseWeightedRandomAd(sequencePool);
   if (!pickedRow) {
     return null;
   }
@@ -122,15 +218,15 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string): Promise<Adverti
   return mapAdRow(pickedRow);
 }
 
-export async function getActiveAdForSlot(slot: AdSlot, venueId?: string): Promise<Advertisement | null> {
+export async function getActiveAdForSlot(slot: AdSlot, venueId?: string, options?: AdLookupOptions): Promise<Advertisement | null> {
   if (venueId) {
-    const venueAd = await getActiveAdQuery(slot, venueId);
+    const venueAd = await getActiveAdQuery(slot, venueId, options);
     if (venueAd) {
       return venueAd;
     }
   }
 
-  return getActiveAdQuery(slot);
+  return getActiveAdQuery(slot, undefined, options);
 }
 
 export async function getAdById(id: string): Promise<Advertisement | null> {
@@ -141,7 +237,7 @@ export async function getAdById(id: string): Promise<Advertisement | null> {
   const { data, error } = await supabaseAdmin
     .from("advertisements")
     .select(
-      "id, slot, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
+      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .eq("id", id)
     .maybeSingle<AdvertisementRow>();

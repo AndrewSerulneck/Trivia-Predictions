@@ -9,6 +9,18 @@ export type AdSlot =
   | "popup-on-entry"
   | "popup-on-scroll";
 
+export type AdPageKey =
+  | "global"
+  | "join"
+  | "venue"
+  | "trivia"
+  | "sports-predictions"
+  | "sports-bingo";
+
+export type AdType = "popup" | "banner" | "inline";
+
+export type AdDisplayTrigger = "on-load" | "on-scroll" | "round-end";
+
 export type PredictionStatus = "pending" | "won" | "lost" | "push" | "canceled";
 
 export interface Venue {
@@ -105,6 +117,12 @@ export interface Notification {
 export interface Advertisement {
   id: string;
   slot: AdSlot;
+  pageKey: AdPageKey;
+  adType: AdType;
+  displayTrigger: AdDisplayTrigger;
+  placementKey?: string;
+  roundNumber?: number;
+  sequenceIndex?: number;
   venueId?: string;
   venueIds?: string[];
   advertiserName: string;

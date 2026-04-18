@@ -17,7 +17,7 @@ import {
 } from "@/lib/admin";
 import { requireAdminAuth } from "@/lib/adminAuth";
 import { recordAdClick, recordAdImpression } from "@/lib/ads";
-import type { AdSlot } from "@/types";
+import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType } from "@/types";
 
 export async function GET(request: Request) {
   try {
@@ -90,6 +90,12 @@ export async function POST(request: Request) {
       | {
           resource: "ads";
           slot: AdSlot;
+          pageKey?: AdPageKey;
+          adType?: AdType;
+          displayTrigger?: AdDisplayTrigger;
+          placementKey?: string;
+          roundNumber?: number;
+          sequenceIndex?: number;
           venueId?: string;
           venueIds?: string[];
           advertiserName: string;
@@ -145,6 +151,12 @@ export async function POST(request: Request) {
     if (body.resource === "ads") {
       const item = await createAdminAdvertisement({
         slot: body.slot,
+        pageKey: body.pageKey,
+        adType: body.adType,
+        displayTrigger: body.displayTrigger,
+        placementKey: body.placementKey,
+        roundNumber: body.roundNumber,
+        sequenceIndex: body.sequenceIndex,
         venueId: body.venueId,
         venueIds: body.venueIds,
         advertiserName: body.advertiserName,
@@ -276,6 +288,12 @@ export async function PATCH(request: Request) {
           resource: "ads";
           id: string;
           slot: AdSlot;
+          pageKey?: AdPageKey;
+          adType?: AdType;
+          displayTrigger?: AdDisplayTrigger;
+          placementKey?: string;
+          roundNumber?: number;
+          sequenceIndex?: number;
           venueId?: string;
           venueIds?: string[];
           advertiserName: string;
@@ -320,6 +338,12 @@ export async function PATCH(request: Request) {
       const item = await updateAdminAdvertisement({
         id: body.id,
         slot: body.slot,
+        pageKey: body.pageKey,
+        adType: body.adType,
+        displayTrigger: body.displayTrigger,
+        placementKey: body.placementKey,
+        roundNumber: body.roundNumber,
+        sequenceIndex: body.sequenceIndex,
         venueId: body.venueId,
         venueIds: body.venueIds,
         advertiserName: body.advertiserName,
