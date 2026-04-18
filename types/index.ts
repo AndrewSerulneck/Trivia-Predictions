@@ -5,6 +5,7 @@ export type AdSlot =
   | "mid-content"
   | "leaderboard-sidebar"
   | "footer"
+  | "mobile-adhesion"
   | "popup-on-entry"
   | "popup-on-scroll";
 
@@ -105,6 +106,7 @@ export interface Advertisement {
   id: string;
   slot: AdSlot;
   venueId?: string;
+  venueIds?: string[];
   advertiserName: string;
   deliveryWeight: number;
   imageUrl: string;
@@ -112,6 +114,8 @@ export interface Advertisement {
   altText: string;
   width: number;
   height: number;
+  dismissDelaySeconds: number;
+  popupCooldownSeconds: number;
   active: boolean;
   startDate: string;
   endDate?: string;

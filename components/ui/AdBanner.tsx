@@ -5,7 +5,7 @@ import type { Advertisement } from "@/types";
 
 const IMPRESSION_THROTTLE_MS = 1000 * 60 * 30;
 
-export function AdBanner({ ad }: { ad: Advertisement }) {
+export function AdBanner({ ad, variant = "default" }: { ad: Advertisement; variant?: "default" | "adhesion" }) {
   const sentForId = useRef<string | null>(null);
 
   useEffect(() => {
@@ -35,9 +35,19 @@ export function AdBanner({ ad }: { ad: Advertisement }) {
     });
   }, [ad.id]);
 
+  const isAdhesion = variant === "adhesion";
+
   return (
-    <aside className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Sponsored</p>
+    <aside
+      className={
+        isAdhesion
+          ? "rounded-xl border border-slate-300 bg-white/95 p-2 shadow-[0_8px_24px_rgba(15,23,42,0.22)] backdrop-blur"
+          : "rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+      }
+    >
+      <p className={isAdhesion ? "mb-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500" : "mb-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500"}>
+        Sponsored
+      </p>
       <a href={`/api/ads/click?id=${encodeURIComponent(ad.id)}`} target="_blank" rel="noreferrer noopener" className="block">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -45,7 +55,11 @@ export function AdBanner({ ad }: { ad: Advertisement }) {
           alt={ad.altText}
           width={ad.width}
           height={ad.height}
-          className="h-auto w-full rounded-md border border-slate-100 object-cover"
+          className={
+            isAdhesion
+              ? "h-auto max-h-[64px] w-full rounded-md border border-slate-100 object-contain"
+              : "h-auto w-full rounded-md border border-slate-100 object-cover"
+          }
         />
       </a>
     </aside>

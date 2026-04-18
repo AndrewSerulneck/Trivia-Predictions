@@ -1,6 +1,6 @@
 import { PageShell } from "@/components/ui/PageShell";
 import { PredictionMarketList } from "@/components/predictions/PredictionMarketList";
-import { SlotAd } from "@/components/ui/SlotAd";
+import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { BackButton } from "@/components/navigation/BackButton";
 
 export default async function PredictionsPage() {
@@ -11,9 +11,9 @@ export default async function PredictionsPage() {
     >
       <div className="space-y-4">
         <BackButton label="Back" />
-        <SlotAd slot="inline-content" />
+        <InlineSlotAdClient slot="inline-content" showPlaceholder={false} />
         <PredictionMarketList />
-        <SlotAd slot="mid-content" />
+        <InlineSlotAdClient slot="mid-content" showPlaceholder={false} />
       </div>
     </PageShell>
   );

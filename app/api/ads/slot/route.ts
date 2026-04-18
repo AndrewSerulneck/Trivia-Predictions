@@ -10,6 +10,7 @@ function isAdSlot(value: string): value is AdSlot {
     "mid-content",
     "leaderboard-sidebar",
     "footer",
+    "mobile-adhesion",
     "popup-on-entry",
     "popup-on-scroll",
   ].includes(value);

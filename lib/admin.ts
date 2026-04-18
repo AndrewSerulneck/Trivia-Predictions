@@ -15,6 +15,7 @@ type AdvertisementRow = {
   id: string;
   slot: AdSlot;
   venue_id: string | null;
+  venue_ids: string[] | null;
   advertiser_name: string;
   delivery_weight: number | null;
   image_url: string;
@@ -22,6 +23,8 @@ type AdvertisementRow = {
   alt_text: string;
   width: number;
   height: number;
+  dismiss_delay_seconds: number | null;
+  popup_cooldown_seconds: number | null;
   active: boolean;
   start_date: string;
   end_date: string | null;
@@ -95,6 +98,7 @@ function mapAdRow(row: AdvertisementRow): Advertisement {
     id: row.id,
     slot: row.slot,
     venueId: row.venue_id ?? undefined,
+    venueIds: Array.isArray(row.venue_ids) ? row.venue_ids : row.venue_id ? [row.venue_id] : undefined,
     advertiserName: row.advertiser_name,
     deliveryWeight: Number.isFinite(Number(row.delivery_weight)) ? Math.max(1, Number(row.delivery_weight)) : 1,
     imageUrl: row.image_url,
@@ -102,6 +106,12 @@ function mapAdRow(row: AdvertisementRow): Advertisement {
     altText: row.alt_text,
     width: row.width,
     height: row.height,
+    dismissDelaySeconds: Number.isFinite(Number(row.dismiss_delay_seconds))
+      ? Math.min(300, Math.max(0, Math.round(Number(row.dismiss_delay_seconds))))
+      : 3,
+    popupCooldownSeconds: Number.isFinite(Number(row.popup_cooldown_seconds))
+      ? Math.min(86400, Math.max(0, Math.round(Number(row.popup_cooldown_seconds))))
+      : 180,
     active: row.active,
     startDate: row.start_date,
     endDate: row.end_date ?? undefined,
@@ -136,6 +146,21 @@ function isValidHttpUrl(value: string): boolean {
   try {
     const url = new URL(value);
     return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isValidClickUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    if (url.protocol === "http:" || url.protocol === "https:") {
+      return true;
+    }
+    if (url.protocol === "mailto:") {
+      return Boolean(url.pathname && url.pathname.trim().length > 0);
+    }
+    return false;
   } catch {
     return false;
   }
@@ -345,7 +370,7 @@ export async function listAdminAdvertisements(): Promise<Advertisement[]> {
   const { data, error } = await supabaseAdmin!
     .from("advertisements")
     .select(
-      "id, slot, venue_id, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, active, start_date, end_date, impressions, clicks"
+      "id, slot, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .order("created_at", { ascending: false })
     .limit(100);
@@ -360,6 +385,7 @@ export async function listAdminAdvertisements(): Promise<Advertisement[]> {
 export async function createAdminAdvertisement(input: {
   slot: AdSlot;
   venueId?: string;
+  venueIds?: string[];
   advertiserName: string;
   deliveryWeight?: number;
   imageUrl: string;
@@ -367,6 +393,8 @@ export async function createAdminAdvertisement(input: {
   altText: string;
   width: number;
   height: number;
+  dismissDelaySeconds?: number;
+  popupCooldownSeconds?: number;
   active: boolean;
   startDate: string;
   endDate?: string;
@@ -385,20 +413,37 @@ export async function createAdminAdvertisement(input: {
   if (!input.clickUrl.trim()) {
     throw new Error("Click URL is required.");
   }
-  if (!isValidHttpUrl(input.clickUrl.trim())) {
-    throw new Error("Click URL must be a valid http(s) URL.");
+  if (!isValidClickUrl(input.clickUrl.trim())) {
+    throw new Error("Click URL must be a valid http(s) URL or mailto: link.");
   }
   if (!input.altText.trim()) {
     throw new Error("Alt text is required.");
   }
   const width = Number(input.width);
   const height = Number(input.height);
+  const dismissDelaySeconds = Number.isFinite(input.dismissDelaySeconds)
+    ? Math.round(Number(input.dismissDelaySeconds))
+    : 3;
+  const popupCooldownSeconds = Number.isFinite(input.popupCooldownSeconds)
+    ? Math.round(Number(input.popupCooldownSeconds))
+    : 180;
   const deliveryWeight = Number.isFinite(input.deliveryWeight) ? Math.round(Number(input.deliveryWeight)) : 1;
+  const normalizedVenueIds = Array.from(
+    new Set((input.venueIds ?? []).map((item) => item.trim()).filter(Boolean))
+  );
+  const fallbackVenueId = input.venueId?.trim() || "";
+  const finalVenueIds = normalizedVenueIds.length > 0 ? normalizedVenueIds : fallbackVenueId ? [fallbackVenueId] : [];
   if (!Number.isFinite(width) || width < 1) {
     throw new Error("Width must be at least 1.");
   }
   if (!Number.isFinite(height) || height < 1) {
     throw new Error("Height must be at least 1.");
+  }
+  if (!Number.isFinite(dismissDelaySeconds) || dismissDelaySeconds < 0 || dismissDelaySeconds > 300) {
+    throw new Error("Dismiss delay must be between 0 and 300 seconds.");
+  }
+  if (!Number.isFinite(popupCooldownSeconds) || popupCooldownSeconds < 0 || popupCooldownSeconds > 86400) {
+    throw new Error("Popup cooldown must be between 0 and 86400 seconds.");
   }
   if (!Number.isFinite(deliveryWeight) || deliveryWeight < 1 || deliveryWeight > 100) {
     throw new Error("Delivery weight must be between 1 and 100.");
@@ -408,7 +453,8 @@ export async function createAdminAdvertisement(input: {
     .from("advertisements")
     .insert({
       slot: input.slot,
-      venue_id: input.venueId?.trim() || null,
+      venue_id: finalVenueIds.length === 1 ? finalVenueIds[0] : null,
+      venue_ids: finalVenueIds.length > 0 ? finalVenueIds : null,
       advertiser_name: input.advertiserName.trim(),
       delivery_weight: deliveryWeight,
       image_url: input.imageUrl.trim(),
@@ -416,12 +462,14 @@ export async function createAdminAdvertisement(input: {
       alt_text: input.altText.trim(),
       width,
       height,
+      dismiss_delay_seconds: dismissDelaySeconds,
+      popup_cooldown_seconds: popupCooldownSeconds,
       active: input.active,
       start_date: input.startDate,
       end_date: input.endDate?.trim() || null,
     })
     .select(
-      "id, slot, venue_id, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, active, start_date, end_date, impressions, clicks"
+      "id, slot, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .single<AdvertisementRow>();
 
@@ -436,6 +484,7 @@ export async function updateAdminAdvertisement(input: {
   id: string;
   slot: AdSlot;
   venueId?: string;
+  venueIds?: string[];
   advertiserName: string;
   deliveryWeight?: number;
   imageUrl: string;
@@ -443,6 +492,8 @@ export async function updateAdminAdvertisement(input: {
   altText: string;
   width: number;
   height: number;
+  dismissDelaySeconds?: number;
+  popupCooldownSeconds?: number;
   active: boolean;
   startDate: string;
   endDate?: string;
@@ -465,20 +516,37 @@ export async function updateAdminAdvertisement(input: {
   if (!input.clickUrl.trim()) {
     throw new Error("Click URL is required.");
   }
-  if (!isValidHttpUrl(input.clickUrl.trim())) {
-    throw new Error("Click URL must be a valid http(s) URL.");
+  if (!isValidClickUrl(input.clickUrl.trim())) {
+    throw new Error("Click URL must be a valid http(s) URL or mailto: link.");
   }
   if (!input.altText.trim()) {
     throw new Error("Alt text is required.");
   }
   const width = Number(input.width);
   const height = Number(input.height);
+  const dismissDelaySeconds = Number.isFinite(input.dismissDelaySeconds)
+    ? Math.round(Number(input.dismissDelaySeconds))
+    : 3;
+  const popupCooldownSeconds = Number.isFinite(input.popupCooldownSeconds)
+    ? Math.round(Number(input.popupCooldownSeconds))
+    : 180;
   const deliveryWeight = Number.isFinite(input.deliveryWeight) ? Math.round(Number(input.deliveryWeight)) : 1;
+  const normalizedVenueIds = Array.from(
+    new Set((input.venueIds ?? []).map((item) => item.trim()).filter(Boolean))
+  );
+  const fallbackVenueId = input.venueId?.trim() || "";
+  const finalVenueIds = normalizedVenueIds.length > 0 ? normalizedVenueIds : fallbackVenueId ? [fallbackVenueId] : [];
   if (!Number.isFinite(width) || width < 1) {
     throw new Error("Width must be at least 1.");
   }
   if (!Number.isFinite(height) || height < 1) {
     throw new Error("Height must be at least 1.");
+  }
+  if (!Number.isFinite(dismissDelaySeconds) || dismissDelaySeconds < 0 || dismissDelaySeconds > 300) {
+    throw new Error("Dismiss delay must be between 0 and 300 seconds.");
+  }
+  if (!Number.isFinite(popupCooldownSeconds) || popupCooldownSeconds < 0 || popupCooldownSeconds > 86400) {
+    throw new Error("Popup cooldown must be between 0 and 86400 seconds.");
   }
   if (!Number.isFinite(deliveryWeight) || deliveryWeight < 1 || deliveryWeight > 100) {
     throw new Error("Delivery weight must be between 1 and 100.");
@@ -488,7 +556,8 @@ export async function updateAdminAdvertisement(input: {
     .from("advertisements")
     .update({
       slot: input.slot,
-      venue_id: input.venueId?.trim() || null,
+      venue_id: finalVenueIds.length === 1 ? finalVenueIds[0] : null,
+      venue_ids: finalVenueIds.length > 0 ? finalVenueIds : null,
       advertiser_name: input.advertiserName.trim(),
       delivery_weight: deliveryWeight,
       image_url: input.imageUrl.trim(),
@@ -496,13 +565,15 @@ export async function updateAdminAdvertisement(input: {
       alt_text: input.altText.trim(),
       width,
       height,
+      dismiss_delay_seconds: dismissDelaySeconds,
+      popup_cooldown_seconds: popupCooldownSeconds,
       active: input.active,
       start_date: input.startDate,
       end_date: input.endDate?.trim() || null,
     })
     .eq("id", id)
     .select(
-      "id, slot, venue_id, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, active, start_date, end_date, impressions, clicks"
+      "id, slot, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .single<AdvertisementRow>();
 
@@ -536,6 +607,7 @@ export async function getAdminAdsDebugSnapshot(windowHours = 24): Promise<AdminA
     "mid-content",
     "leaderboard-sidebar",
     "footer",
+    "mobile-adhesion",
     "popup-on-entry",
     "popup-on-scroll",
   ];

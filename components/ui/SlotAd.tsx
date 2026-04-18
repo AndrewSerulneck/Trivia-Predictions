@@ -23,14 +23,18 @@ export async function SlotAd({
     }
 
     return (
-      <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-100/80 p-6 text-center">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Ad Placeholder</p>
-        <p className="mt-1 text-lg font-semibold text-slate-700">Banner Advertisement Slot</p>
-        <p className="mt-2 max-w-md text-sm text-slate-600">This is a placeholder for a venue banner ad.</p>
-        <p className="mt-2 max-w-md text-sm text-slate-700">
-          To advertise on Hightop Challenge, please reach out to adinfo@hightopchallenge.com.
-        </p>
-      </div>
+      <a
+        href="https://mail.google.com/mail/?view=cm&fs=1&to=adinfo@hightopchallenge.com&su=Advertising%20Inquiry%20-%20Hightop%20Challenge"
+        className="block rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
+        aria-label="Contact Hightop Challenge advertising via email"
+      >
+        <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-100/80 p-6 text-center transition-colors hover:bg-slate-100">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Ad Placeholder</p>
+          <p className="mt-2 max-w-md text-sm text-slate-700">
+            To advertise on Hightop Challenge, please reach out to adinfo@hightopchallenge.com.
+          </p>
+        </div>
+      </a>
     );
   }
 

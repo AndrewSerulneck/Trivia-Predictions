@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { getVenueId } from "@/lib/storage";
+import { releaseAdTier, requestAdTier } from "@/components/ui/adPriority";
 import type { Advertisement, AdSlot } from "@/types";
 
 type PopupTrigger = "popup-on-entry" | "popup-on-scroll";
@@ -16,18 +17,7 @@ type SlotResponse = {
 type PopupState = {
   open: boolean;
   trigger: PopupTrigger;
-  ad?: Advertisement;
-};
-
-const PLACEHOLDER_BY_TRIGGER: Record<PopupTrigger, { title: string; subtitle: string }> = {
-  "popup-on-entry": {
-    title: "Placeholder Advertisement",
-    subtitle: "To advertise on Hightop Challenge, please reach out to adinfo@hightopchallenge.com.",
-  },
-  "popup-on-scroll": {
-    title: "Placeholder Advertisement",
-    subtitle: "To advertise on Hightop Challenge, please reach out to adinfo@hightopchallenge.com.",
-  },
+  ad: Advertisement;
 };
 
 function isPopupSlot(slot: AdSlot): slot is PopupTrigger {
@@ -41,8 +31,33 @@ function isVenueRoute(pathname: string | null): boolean {
   return /^\/venue\/[^/]+/.test(pathname);
 }
 
+function readLastShownAt(trigger: PopupTrigger): number {
+  if (typeof window === "undefined") {
+    return 0;
+  }
+  try {
+    const value = window.sessionStorage.getItem(`tp:popup-last-shown:${trigger}`);
+    const parsed = Number.parseInt(value ?? "", 10);
+    return Number.isFinite(parsed) ? parsed : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function writeLastShownAt(trigger: PopupTrigger, timestamp: number): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.sessionStorage.setItem(`tp:popup-last-shown:${trigger}`, String(timestamp));
+  } catch {
+    // Ignore session storage failures.
+  }
+}
+
 export function PopupAds() {
   const pathname = usePathname();
+  const popupOwnerId = useId();
   const [popup, setPopup] = useState<PopupState | null>(null);
   const scrollTriggeredRef = useRef<Record<string, boolean>>({});
   const dismissedByTriggerRef = useRef<Record<PopupTrigger, boolean>>({
@@ -88,29 +103,42 @@ export function PopupAds() {
 
       try {
         const ad = await loadSlotAd(trigger);
+        if (!ad) {
+          return;
+        }
+
+        const cooldownSeconds = Number.isFinite(ad.popupCooldownSeconds)
+          ? Math.max(0, Math.round(ad.popupCooldownSeconds))
+          : 180;
+        const now = Date.now();
+        const lastShownAt = readLastShownAt(trigger);
+        if (cooldownSeconds > 0 && lastShownAt > 0 && now - lastShownAt < cooldownSeconds * 1000) {
+          return;
+        }
+
         if (popupOpenRef.current) {
           return;
         }
+
+        const hasPriority = requestAdTier("popup", popupOwnerId);
+        if (!hasPriority) {
+          return;
+        }
+
+        writeLastShownAt(trigger, now);
         popupOpenRef.current = true;
         setPopup({
           open: true,
           trigger,
-          ad: ad ?? undefined,
+          ad,
         });
       } catch {
-        if (popupOpenRef.current) {
-          return;
-        }
-        popupOpenRef.current = true;
-        setPopup({
-          open: true,
-          trigger,
-        });
+        return;
       } finally {
         popupOpeningRef.current = false;
       }
     },
-    [loadSlotAd]
+    [loadSlotAd, popupOwnerId]
   );
 
   const closePopup = useCallback(() => {
@@ -123,8 +151,9 @@ export function PopupAds() {
     }
     popupOpenRef.current = false;
     popupOpeningRef.current = false;
+    releaseAdTier(popupOwnerId);
     setPopup((prev) => (prev ? { ...prev, open: false } : prev));
-  }, [popup]);
+  }, [popup, popupOwnerId]);
 
   useEffect(() => {
     const resetTimer = window.setTimeout(() => {
@@ -134,6 +163,7 @@ export function PopupAds() {
       };
       popupOpenRef.current = false;
       popupOpeningRef.current = false;
+      releaseAdTier(popupOwnerId);
       setPopup(null);
     }, 0);
 
@@ -151,7 +181,7 @@ export function PopupAds() {
       window.clearTimeout(resetTimer);
       window.clearTimeout(timer);
     };
-  }, [pathname, showPopup]);
+  }, [pathname, popupOwnerId, showPopup]);
 
   useEffect(() => {
     if (!isVenueRoute(pathname) || pathname.startsWith("/admin")) {
@@ -239,12 +269,17 @@ export function PopupAds() {
     };
   }, [popup?.open]);
 
+  useEffect(() => {
+    return () => {
+      releaseAdTier(popupOwnerId);
+    };
+  }, [popupOwnerId]);
+
   if (!popup?.open || !isPopupSlot(popup.trigger)) {
     return null;
   }
 
-  const placeholder = PLACEHOLDER_BY_TRIGGER[popup.trigger];
-  const adRatio = popup.ad && popup.ad.width > 0 && popup.ad.height > 0 ? popup.ad.width / popup.ad.height : 9 / 16;
+  const adRatio = popup.ad.width > 0 && popup.ad.height > 0 ? popup.ad.width / popup.ad.height : 9 / 16;
   const safeWidth = "calc(100vw - 28px)";
   const safeHeight = "calc(100svh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 190px)";
   const modalMaxHeight = "calc(100svh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 16px)";
@@ -283,38 +318,24 @@ export function PopupAds() {
           </button>
         </div>
 
-        {popup.ad ? (
-          <a
-            href={`/api/ads/click?id=${encodeURIComponent(popup.ad.id)}`}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="block p-0.5"
-          >
-            <div className="mx-auto flex items-center justify-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={popup.ad.imageUrl}
-                alt={popup.ad.altText}
-                width={popup.ad.width}
-                height={popup.ad.height}
-                style={frameStyle}
-                className="block rounded-lg border border-slate-200 bg-slate-100 object-contain"
-              />
-            </div>
-          </a>
-        ) : (
-          <div className="p-0.5">
-            <div className="mx-auto flex items-center justify-center">
-              <div
-                style={frameStyle}
-                className="flex min-h-[220px] flex-col items-center justify-center rounded-xl border border-dashed border-amber-300 bg-gradient-to-br from-[#f8e6d5] via-[#f2d4b5] to-[#e7b08b] p-6 text-center"
-              >
-                <p className="text-lg font-black text-slate-900">{placeholder.title}</p>
-                <p className="mt-2 text-sm text-slate-700">{placeholder.subtitle}</p>
-              </div>
-            </div>
+        <a
+          href={`/api/ads/click?id=${encodeURIComponent(popup.ad.id)}`}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="block p-0.5"
+        >
+          <div className="mx-auto flex items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={popup.ad.imageUrl}
+              alt={popup.ad.altText}
+              width={popup.ad.width}
+              height={popup.ad.height}
+              style={frameStyle}
+              className="block rounded-lg border border-slate-200 bg-slate-100 object-contain"
+            />
           </div>
-        )}
+        </a>
       </div>
     </div>
   );

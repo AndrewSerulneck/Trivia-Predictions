@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
 import { PageShell } from "@/components/ui/PageShell";
-import { SlotAd } from "@/components/ui/SlotAd";
+import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { getLeaderboardForVenue } from "@/lib/leaderboard";
 import { listVenues } from "@/lib/venues";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
@@ -38,7 +38,7 @@ export default async function LeaderboardPage() {
 
         {selectedVenue ? <LeaderboardTable venueId={selectedVenue.id} initialEntries={entries} /> : null}
 
-        <SlotAd slot="leaderboard-sidebar" venueId={selectedVenue?.id} />
+        <InlineSlotAdClient slot="leaderboard-sidebar" venueId={selectedVenue?.id} showPlaceholder={false} />
       </div>
     </PageShell>
   );

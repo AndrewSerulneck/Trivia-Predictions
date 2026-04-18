@@ -9,6 +9,7 @@ type AdvertisementRow = {
   id: string;
   slot: AdSlot;
   venue_id: string | null;
+  venue_ids: string[] | null;
   advertiser_name: string;
   delivery_weight: number | null;
   image_url: string;
@@ -16,6 +17,8 @@ type AdvertisementRow = {
   alt_text: string;
   width: number;
   height: number;
+  dismiss_delay_seconds: number | null;
+  popup_cooldown_seconds: number | null;
   active: boolean;
   start_date: string;
   end_date: string | null;
@@ -28,6 +31,7 @@ function mapAdRow(row: AdvertisementRow): Advertisement {
     id: row.id,
     slot: row.slot,
     venueId: row.venue_id ?? undefined,
+    venueIds: Array.isArray(row.venue_ids) ? row.venue_ids : row.venue_id ? [row.venue_id] : undefined,
     advertiserName: row.advertiser_name,
     deliveryWeight: Number.isFinite(Number(row.delivery_weight)) ? Math.max(1, Number(row.delivery_weight)) : 1,
     imageUrl: row.image_url,
@@ -35,6 +39,12 @@ function mapAdRow(row: AdvertisementRow): Advertisement {
     altText: row.alt_text,
     width: row.width,
     height: row.height,
+    dismissDelaySeconds: Number.isFinite(Number(row.dismiss_delay_seconds))
+      ? Math.min(300, Math.max(0, Math.round(Number(row.dismiss_delay_seconds))))
+      : 3,
+    popupCooldownSeconds: Number.isFinite(Number(row.popup_cooldown_seconds))
+      ? Math.min(86400, Math.max(0, Math.round(Number(row.popup_cooldown_seconds))))
+      : 180,
     active: row.active,
     startDate: row.start_date,
     endDate: row.end_date ?? undefined,
@@ -83,7 +93,7 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string): Promise<Adverti
   let query = supabaseAdmin
     .from("advertisements")
     .select(
-      "id, slot, venue_id, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, active, start_date, end_date, impressions, clicks"
+      "id, slot, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .eq("slot", slot)
     .eq("active", true)
@@ -92,7 +102,11 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string): Promise<Adverti
     .order("start_date", { ascending: false })
     .limit(100);
 
-  query = venueId ? query.eq("venue_id", venueId) : query.is("venue_id", null);
+  if (venueId) {
+    query = query.or(`venue_id.eq.${venueId},venue_ids.cs.{${venueId}}`);
+  } else {
+    query = query.is("venue_id", null).is("venue_ids", null);
+  }
 
   const { data, error } = await query.returns<AdvertisementRow[]>();
 
@@ -127,7 +141,7 @@ export async function getAdById(id: string): Promise<Advertisement | null> {
   const { data, error } = await supabaseAdmin
     .from("advertisements")
     .select(
-      "id, slot, venue_id, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, active, start_date, end_date, impressions, clicks"
+      "id, slot, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .eq("id", id)
     .maybeSingle<AdvertisementRow>();

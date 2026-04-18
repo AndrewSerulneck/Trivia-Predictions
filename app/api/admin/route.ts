@@ -91,6 +91,7 @@ export async function POST(request: Request) {
           resource: "ads";
           slot: AdSlot;
           venueId?: string;
+          venueIds?: string[];
           advertiserName: string;
           deliveryWeight?: number;
           imageUrl: string;
@@ -98,6 +99,8 @@ export async function POST(request: Request) {
           altText: string;
           width: number;
           height: number;
+          dismissDelaySeconds?: number;
+          popupCooldownSeconds?: number;
           active: boolean;
           startDate: string;
           endDate?: string;
@@ -143,6 +146,7 @@ export async function POST(request: Request) {
       const item = await createAdminAdvertisement({
         slot: body.slot,
         venueId: body.venueId,
+        venueIds: body.venueIds,
         advertiserName: body.advertiserName,
         deliveryWeight: body.deliveryWeight,
         imageUrl: body.imageUrl,
@@ -150,6 +154,8 @@ export async function POST(request: Request) {
         altText: body.altText,
         width: body.width,
         height: body.height,
+        dismissDelaySeconds: body.dismissDelaySeconds,
+        popupCooldownSeconds: body.popupCooldownSeconds,
         active: body.active,
         startDate: body.startDate,
         endDate: body.endDate,
@@ -271,6 +277,7 @@ export async function PATCH(request: Request) {
           id: string;
           slot: AdSlot;
           venueId?: string;
+          venueIds?: string[];
           advertiserName: string;
           deliveryWeight?: number;
           imageUrl: string;
@@ -278,6 +285,8 @@ export async function PATCH(request: Request) {
           altText: string;
           width: number;
           height: number;
+          dismissDelaySeconds?: number;
+          popupCooldownSeconds?: number;
           active: boolean;
           startDate: string;
           endDate?: string;
@@ -312,6 +321,7 @@ export async function PATCH(request: Request) {
         id: body.id,
         slot: body.slot,
         venueId: body.venueId,
+        venueIds: body.venueIds,
         advertiserName: body.advertiserName,
         deliveryWeight: body.deliveryWeight,
         imageUrl: body.imageUrl,
@@ -319,6 +329,8 @@ export async function PATCH(request: Request) {
         altText: body.altText,
         width: body.width,
         height: body.height,
+        dismissDelaySeconds: body.dismissDelaySeconds,
+        popupCooldownSeconds: body.popupCooldownSeconds,
         active: body.active,
         startDate: body.startDate,
         endDate: body.endDate,

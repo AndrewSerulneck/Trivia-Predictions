@@ -15,9 +15,21 @@ const AD_SLOTS: AdSlot[] = [
   "mid-content",
   "leaderboard-sidebar",
   "footer",
+  "mobile-adhesion",
   "popup-on-entry",
   "popup-on-scroll",
 ];
+const AD_SLOT_DEFAULT_SIZE: Record<AdSlot, { width: number; height: number }> = {
+  header: { width: 728, height: 90 },
+  "inline-content": { width: 300, height: 250 },
+  sidebar: { width: 300, height: 600 },
+  "mid-content": { width: 728, height: 90 },
+  "leaderboard-sidebar": { width: 300, height: 250 },
+  footer: { width: 728, height: 90 },
+  "mobile-adhesion": { width: 320, height: 50 },
+  "popup-on-entry": { width: 1080, height: 1920 },
+  "popup-on-scroll": { width: 1080, height: 1920 },
+};
 const ADDRESS_LOOKUP_DEBOUNCE_MS = 250;
 const MAX_AD_IMAGE_BYTES = 300 * 1024;
 const AD_STATIC_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -55,6 +67,20 @@ function getPopupImageFitMessage(width: number, height: number): string {
     return "Near 9:16. Popup will auto-fit with minimal padding.";
   }
   return "Not 9:16. Popup will still auto-fit, with extra padding.";
+}
+
+function getRecommendedSlotSize(slot: AdSlot): { width: number; height: number } {
+  return AD_SLOT_DEFAULT_SIZE[slot] ?? { width: 728, height: 90 };
+}
+
+function toggleVenueSelection(current: string[], venueId: string): string[] {
+  if (!venueId) {
+    return current;
+  }
+  if (current.includes(venueId)) {
+    return current.filter((id) => id !== venueId);
+  }
+  return [...current, venueId];
 }
 
 type LoadState = "idle" | "loading" | "error";
@@ -144,7 +170,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [difficulty, setDifficulty] = useState("");
 
   const [slot, setSlot] = useState<AdSlot>("header");
-  const [venueId, setVenueId] = useState("");
+  const [venueIds, setVenueIds] = useState<string[]>([]);
   const [advertiserName, setAdvertiserName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [adImageFile, setAdImageFile] = useState<File | null>(null);
@@ -155,6 +181,8 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [width, setWidth] = useState(728);
   const [height, setHeight] = useState(90);
   const [deliveryWeight, setDeliveryWeight] = useState(1);
+  const [dismissDelaySeconds, setDismissDelaySeconds] = useState(3);
+  const [popupCooldownSeconds, setPopupCooldownSeconds] = useState(180);
   const [active, setActive] = useState(true);
   const [startDate, setStartDate] = useState(() => formatDateTimeLocal(new Date()));
   const [endDate, setEndDate] = useState("");
@@ -166,7 +194,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [editDifficulty, setEditDifficulty] = useState("");
 
   const [editSlot, setEditSlot] = useState<AdSlot>("header");
-  const [editVenueId, setEditVenueId] = useState("");
+  const [editVenueIds, setEditVenueIds] = useState<string[]>([]);
   const [editAdvertiserName, setEditAdvertiserName] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
   const [editAdImageFile, setEditAdImageFile] = useState<File | null>(null);
@@ -177,6 +205,8 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [editWidth, setEditWidth] = useState(728);
   const [editHeight, setEditHeight] = useState(90);
   const [editDeliveryWeight, setEditDeliveryWeight] = useState(1);
+  const [editDismissDelaySeconds, setEditDismissDelaySeconds] = useState(3);
+  const [editPopupCooldownSeconds, setEditPopupCooldownSeconds] = useState(180);
   const [editActive, setEditActive] = useState(true);
   const [editStartDate, setEditStartDate] = useState("");
   const [editEndDate, setEditEndDate] = useState("");
@@ -712,7 +742,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
         body: JSON.stringify({
           resource: "ads",
           slot,
-          venueId: venueId || undefined,
+          venueIds: venueIds.length > 0 ? venueIds : undefined,
           advertiserName,
           imageUrl: uploadedImageUrl,
           clickUrl,
@@ -720,6 +750,8 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           width,
           height,
           deliveryWeight,
+          dismissDelaySeconds,
+          popupCooldownSeconds,
           active,
           startDate: new Date(startDate).toISOString(),
           endDate: endDate ? new Date(endDate).toISOString() : undefined,
@@ -738,6 +770,9 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       setWidth(728);
       setHeight(90);
       setDeliveryWeight(1);
+      setDismissDelaySeconds(3);
+      setPopupCooldownSeconds(180);
+      setVenueIds([]);
       setActive(true);
       setEndDate("");
       await loadAll();
@@ -1034,7 +1069,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const beginEditAd = (item: Advertisement) => {
     setEditingAdId(item.id);
     setEditSlot(item.slot);
-    setEditVenueId(item.venueId ?? "");
+    setEditVenueIds(item.venueIds && item.venueIds.length > 0 ? item.venueIds : item.venueId ? [item.venueId] : []);
     setEditAdvertiserName(item.advertiserName);
     setEditImageUrl(item.imageUrl);
     setEditAdImageFile(null);
@@ -1044,6 +1079,8 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     setEditWidth(item.width);
     setEditHeight(item.height);
     setEditDeliveryWeight(item.deliveryWeight ?? 1);
+    setEditDismissDelaySeconds(item.dismissDelaySeconds ?? 3);
+    setEditPopupCooldownSeconds(item.popupCooldownSeconds ?? 180);
     setEditActive(item.active);
     setEditStartDate(isoToDateTimeLocal(item.startDate));
     setEditEndDate(item.endDate ? isoToDateTimeLocal(item.endDate) : "");
@@ -1066,7 +1103,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           resource: "ads",
           id: editingAdId,
           slot: editSlot,
-          venueId: editVenueId || undefined,
+          venueIds: editVenueIds.length > 0 ? editVenueIds : undefined,
           advertiserName: editAdvertiserName,
           imageUrl: nextImageUrl,
           clickUrl: editClickUrl,
@@ -1074,6 +1111,8 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           width: editWidth,
           height: editHeight,
           deliveryWeight: editDeliveryWeight,
+          dismissDelaySeconds: editDismissDelaySeconds,
+          popupCooldownSeconds: editPopupCooldownSeconds,
           active: editActive,
           startDate: new Date(editStartDate).toISOString(),
           endDate: editEndDate ? new Date(editEndDate).toISOString() : undefined,
@@ -1845,7 +1884,13 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <select
             value={slot}
-            onChange={(event) => setSlot(event.target.value as AdSlot)}
+            onChange={(event) => {
+              const nextSlot = event.target.value as AdSlot;
+              const recommended = getRecommendedSlotSize(nextSlot);
+              setSlot(nextSlot);
+              setWidth(recommended.width);
+              setHeight(recommended.height);
+            }}
             className="rounded-md border border-slate-300 px-3 py-2 text-sm"
           >
             {AD_SLOTS.map((item) => (
@@ -1854,25 +1899,34 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
               </option>
             ))}
           </select>
-          <select
-            value={venueId}
-            onChange={(event) => setVenueId(event.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-          >
-            <option value="">Global (all venues)</option>
-            {availableVenues.map((venue) => (
-              <option key={venue.id} value={venue.id}>
-                {getVenueDisplayName(venue)}
-              </option>
-            ))}
-          </select>
+          <div className="rounded-md border border-slate-300 px-3 py-2 text-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Venue targeting</p>
+            <p className="mt-1 text-xs text-slate-600">
+              {venueIds.length === 0 ? "All venues" : `${venueIds.length} selected`}
+            </p>
+            <div className="mt-2 max-h-32 space-y-1 overflow-y-auto pr-1">
+              {availableVenues.map((venue) => (
+                <label key={venue.id} className="flex items-center gap-2 text-xs text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={venueIds.includes(venue.id)}
+                    onChange={() => setVenueIds((current) => toggleVenueSelection(current, venue.id))}
+                  />
+                  {getVenueDisplayName(venue)}
+                </label>
+              ))}
+            </div>
+          </div>
         </div>
-        <input
-          value={advertiserName}
-          onChange={(event) => setAdvertiserName(event.target.value)}
-          placeholder="Advertiser name"
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-        />
+        <div className="space-y-1">
+          <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Advertiser Name</label>
+          <input
+            value={advertiserName}
+            onChange={(event) => setAdvertiserName(event.target.value)}
+            placeholder="Ex: Nike, DraftKings, Local Pizza Shop"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
         <div className="space-y-1 rounded-md border border-slate-200 bg-slate-50 p-3">
           <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">
             Ad Image (Static Only)
@@ -1893,59 +1947,111 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
             <p className="break-all text-[11px] text-slate-500">Uploaded URL: {imageUrl}</p>
           ) : null}
         </div>
-        <input
-          value={clickUrl}
-          onChange={(event) => setClickUrl(event.target.value)}
-          placeholder="Click URL"
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-        />
-        <input
-          value={altText}
-          onChange={(event) => setAltText(event.target.value)}
-          placeholder="Alt text"
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-        />
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <div className="space-y-1">
+          <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Click URL</label>
           <input
-            type="number"
-            min={1}
-            value={width}
-            onChange={(event) => setWidth(Number(event.target.value))}
-            placeholder="Width"
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-          />
-          <input
-            type="number"
-            min={1}
-            value={height}
-            onChange={(event) => setHeight(Number(event.target.value))}
-            placeholder="Height"
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-          />
-          <input
-            type="number"
-            min={1}
-            max={100}
-            value={deliveryWeight}
-            onChange={(event) => setDeliveryWeight(Number(event.target.value))}
-            placeholder="Delivery weight (1-100)"
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+            value={clickUrl}
+            onChange={(event) => setClickUrl(event.target.value)}
+            placeholder="Where users go when they tap the ad"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
-        <p className="text-xs text-slate-500">Higher delivery weight means this ad is shown more often.</p>
+        <div className="space-y-1">
+          <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Alt Text</label>
+          <input
+            value={altText}
+            onChange={(event) => setAltText(event.target.value)}
+            placeholder="Short accessibility description of the ad image"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <input
-            type="datetime-local"
-            value={startDate}
-            onChange={(event) => setStartDate(event.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-          />
-          <input
-            type="datetime-local"
-            value={endDate}
-            onChange={(event) => setEndDate(event.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-          />
+          <div className="space-y-1">
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Image Width (px)</label>
+            <input
+              type="number"
+              min={1}
+              value={width}
+              onChange={(event) => setWidth(Number(event.target.value))}
+              placeholder="Ex: 320"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Image Height (px)</label>
+            <input
+              type="number"
+              min={1}
+              value={height}
+              onChange={(event) => setHeight(Number(event.target.value))}
+              placeholder="Ex: 50"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Delivery Weight (1-100)</label>
+            <input
+              type="number"
+              min={1}
+              max={100}
+              value={deliveryWeight}
+              onChange={(event) => setDeliveryWeight(Number(event.target.value))}
+              placeholder="Higher means shown more often"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Dismiss Delay (seconds)</label>
+            <input
+              type="number"
+              min={0}
+              max={300}
+              value={dismissDelaySeconds}
+              onChange={(event) => setDismissDelaySeconds(Number(event.target.value))}
+              placeholder="Time before users can tap X"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="space-y-1 sm:col-span-2">
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Popup Cooldown (seconds)</label>
+            <input
+              type="number"
+              min={0}
+              max={86400}
+              value={popupCooldownSeconds}
+              onChange={(event) => setPopupCooldownSeconds(Number(event.target.value))}
+              placeholder="Minimum wait before this popup trigger can appear again"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
+        <p className="text-xs text-slate-500">Higher delivery weight means this ad is shown more often.</p>
+        <p className="text-xs text-slate-500">
+          Venue targeting: leave all unchecked for all venues, check one for one venue, or check multiple venues.
+        </p>
+        <p className="text-xs text-slate-500">
+          Recommended for <span className="font-semibold">{slot}</span>: {getRecommendedSlotSize(slot).width}x
+          {getRecommendedSlotSize(slot).height}
+        </p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="space-y-1">
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Start Date / Time</label>
+            <input
+              type="datetime-local"
+              value={startDate}
+              onChange={(event) => setStartDate(event.target.value)}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">End Date / Time (Optional)</label>
+            <input
+              type="datetime-local"
+              value={endDate}
+              onChange={(event) => setEndDate(event.target.value)}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
         </div>
         <label className="inline-flex items-center gap-2 text-sm text-slate-700">
           <input
@@ -2068,7 +2174,13 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <select
                       value={editSlot}
-                      onChange={(event) => setEditSlot(event.target.value as AdSlot)}
+                      onChange={(event) => {
+                        const nextSlot = event.target.value as AdSlot;
+                        const recommended = getRecommendedSlotSize(nextSlot);
+                        setEditSlot(nextSlot);
+                        setEditWidth(recommended.width);
+                        setEditHeight(recommended.height);
+                      }}
                       className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                     >
                       {AD_SLOTS.map((slotOption) => (
@@ -2077,24 +2189,35 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                         </option>
                       ))}
                     </select>
-                    <select
-                      value={editVenueId}
-                      onChange={(event) => setEditVenueId(event.target.value)}
-                      className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-                    >
-                      <option value="">Global (all venues)</option>
-                      {availableVenues.map((venue) => (
-                        <option key={venue.id} value={venue.id}>
-                          {getVenueDisplayName(venue)}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="rounded-md border border-slate-300 px-2 py-1.5 text-sm">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Venue targeting</p>
+                      <p className="mt-1 text-xs text-slate-600">
+                        {editVenueIds.length === 0 ? "All venues" : `${editVenueIds.length} selected`}
+                      </p>
+                      <div className="mt-2 max-h-28 space-y-1 overflow-y-auto pr-1">
+                        {availableVenues.map((venue) => (
+                          <label key={venue.id} className="flex items-center gap-2 text-xs text-slate-700">
+                            <input
+                              type="checkbox"
+                              checked={editVenueIds.includes(venue.id)}
+                              onChange={() =>
+                                setEditVenueIds((current) => toggleVenueSelection(current, venue.id))
+                              }
+                            />
+                            {getVenueDisplayName(venue)}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <input
-                    value={editAdvertiserName}
-                    onChange={(event) => setEditAdvertiserName(event.target.value)}
-                    className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-                  />
+                  <div className="space-y-1">
+                    <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Advertiser Name</label>
+                    <input
+                      value={editAdvertiserName}
+                      onChange={(event) => setEditAdvertiserName(event.target.value)}
+                      className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                    />
+                  </div>
                   <div className="space-y-1 rounded-md border border-slate-200 bg-slate-50 p-3">
                     <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">
                       Replace Ad Image (Optional)
@@ -2113,54 +2236,104 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                     {editAdImageDetails ? <p className="text-xs text-emerald-700">{editAdImageDetails}</p> : null}
                     <p className="break-all text-[11px] text-slate-500">Current URL: {editImageUrl}</p>
                   </div>
-                  <input
-                    value={editClickUrl}
-                    onChange={(event) => setEditClickUrl(event.target.value)}
-                    className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-                  />
-                  <input
-                    value={editAltText}
-                    onChange={(event) => setEditAltText(event.target.value)}
-                    className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-                  />
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <div className="space-y-1">
+                    <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Click URL</label>
                     <input
-                      type="number"
-                      min={1}
-                      value={editWidth}
-                      onChange={(event) => setEditWidth(Number(event.target.value))}
-                      className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-                    />
-                    <input
-                      type="number"
-                      min={1}
-                      value={editHeight}
-                      onChange={(event) => setEditHeight(Number(event.target.value))}
-                      className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-                    />
-                    <input
-                      type="number"
-                      min={1}
-                      max={100}
-                      value={editDeliveryWeight}
-                      onChange={(event) => setEditDeliveryWeight(Number(event.target.value))}
-                      className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                      value={editClickUrl}
+                      onChange={(event) => setEditClickUrl(event.target.value)}
+                      className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                     />
                   </div>
-                  <p className="text-xs text-slate-500">Higher delivery weight means this ad is shown more often.</p>
+                  <div className="space-y-1">
+                    <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Alt Text</label>
+                    <input
+                      value={editAltText}
+                      onChange={(event) => setEditAltText(event.target.value)}
+                      className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                    />
+                  </div>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <input
-                      type="datetime-local"
-                      value={editStartDate}
-                      onChange={(event) => setEditStartDate(event.target.value)}
-                      className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-                    />
-                    <input
-                      type="datetime-local"
-                      value={editEndDate}
-                      onChange={(event) => setEditEndDate(event.target.value)}
-                      className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-                    />
+                    <div className="space-y-1">
+                      <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Image Width (px)</label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={editWidth}
+                        onChange={(event) => setEditWidth(Number(event.target.value))}
+                        className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Image Height (px)</label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={editHeight}
+                        onChange={(event) => setEditHeight(Number(event.target.value))}
+                        className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Delivery Weight (1-100)</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={editDeliveryWeight}
+                        onChange={(event) => setEditDeliveryWeight(Number(event.target.value))}
+                        className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Dismiss Delay (seconds)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={300}
+                        value={editDismissDelaySeconds}
+                        onChange={(event) => setEditDismissDelaySeconds(Number(event.target.value))}
+                        className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1 sm:col-span-2">
+                      <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Popup Cooldown (seconds)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={86400}
+                        value={editPopupCooldownSeconds}
+                        onChange={(event) => setEditPopupCooldownSeconds(Number(event.target.value))}
+                        className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-500">Higher delivery weight means this ad is shown more often.</p>
+                  <p className="text-xs text-slate-500">
+                    Venue targeting: leave all unchecked for all venues, check one for one venue, or check multiple venues.
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Recommended for <span className="font-semibold">{editSlot}</span>: {getRecommendedSlotSize(editSlot).width}x
+                    {getRecommendedSlotSize(editSlot).height}
+                  </p>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Start Date / Time</label>
+                      <input
+                        type="datetime-local"
+                        value={editStartDate}
+                        onChange={(event) => setEditStartDate(event.target.value)}
+                        className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">End Date / Time (Optional)</label>
+                      <input
+                        type="datetime-local"
+                        value={editEndDate}
+                        onChange={(event) => setEditEndDate(event.target.value)}
+                        className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                      />
+                    </div>
                   </div>
                   <label className="inline-flex items-center gap-2 text-sm text-slate-700">
                     <input
@@ -2195,7 +2368,12 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                   <p className="font-medium">{item.advertiserName}</p>
                   <p className="text-xs text-slate-600">
                     {item.slot} | {item.width}x{item.height} | Weight {item.deliveryWeight ?? 1} | {item.active ? "active" : "inactive"} |{" "}
-                    {item.venueId ?? "global"}
+                    {(item.venueIds ?? (item.venueId ? [item.venueId] : [])).length > 0
+                      ? `${(item.venueIds ?? (item.venueId ? [item.venueId] : [])).length} venue(s)`
+                      : "global"}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Dismiss delay: {item.dismissDelaySeconds ?? 3}s | Popup cooldown: {item.popupCooldownSeconds ?? 180}s
                   </p>
                   <p className="text-xs text-slate-500">
                     Impressions: {item.impressions ?? 0} | Clicks: {item.clicks ?? 0} | CTR:{" "}
