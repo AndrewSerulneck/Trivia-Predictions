@@ -143,10 +143,6 @@ export function MobileAdhesionAd() {
       style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 8px)" }}
     >
       <div className="relative mx-auto w-full max-w-md pointer-events-auto">
-        <div className="mb-1 rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-left">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-700">Ad Space #4001</p>
-          <p className="text-[11px] text-amber-800">Mobile adhesion slot</p>
-        </div>
         {showDismissButton ? (
           <button
             type="button"

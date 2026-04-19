@@ -1164,9 +1164,6 @@ export function PredictionMarketList() {
                               placementKey="predictions-inline"
                               sequenceIndex={adBreakNumber}
                               showPlaceholder
-                              showPlacementDebug
-                              placeholderLabel={`Ad Space #${2000 + adBreakNumber}`}
-                              placeholderDetails={`Predictions inline break ${adBreakNumber} (placement key predictions-inline)`}
                             />
                           ) : null}
                         </Fragment>

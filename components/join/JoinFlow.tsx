@@ -545,9 +545,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               displayTrigger="on-load"
               allowAnyVenue
               showPlaceholder
-              showPlacementDebug
-              placeholderLabel="Ad Space #3001"
-              placeholderDetails="Join page inline slot"
             />
           </div>
         )}

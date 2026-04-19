@@ -347,18 +347,6 @@ export function PopupAds() {
     width: `min(${safeWidth}, calc((${safeHeight}) * ${adRatio}))`,
     height: `min(${safeHeight}, calc((${safeWidth}) / ${adRatio}))`,
   };
-  const popupDebugNumber =
-    popup.trigger === "popup-on-entry"
-      ? 5001
-      : popup.trigger === "popup-on-scroll"
-        ? 5002
-        : 5100 + (Number.isFinite(popup.ad.roundNumber) ? Math.max(1, Math.round(Number(popup.ad.roundNumber))) : 0);
-  const popupDebugDescription =
-    popup.trigger === "popup-on-entry"
-      ? "Popup on entry"
-      : popup.trigger === "popup-on-scroll"
-        ? "Popup on scroll"
-        : `Popup round-end${Number.isFinite(popup.ad.roundNumber) ? ` (round ${popup.ad.roundNumber})` : ""}`;
 
   return (
     <div
@@ -379,12 +367,7 @@ export function PopupAds() {
         style={{ maxHeight: modalMaxHeight }}
       >
         <div className="flex items-center justify-between border-b border-amber-200 bg-gradient-to-r from-amber-100 via-orange-100 to-red-100 px-3 py-2">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-700">Sponsored</p>
-            <p className="text-[11px] font-medium text-slate-700">
-              Ad Space #{popupDebugNumber} · {popupDebugDescription}
-            </p>
-          </div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-700">Sponsored</p>
           <button
             type="button"
             onClick={closePopup}

@@ -138,9 +138,6 @@ export function LeaderboardTable({
                           placementKey="venue-leaderboard-inline"
                           sequenceIndex={sequenceIndex}
                           showPlaceholder
-                          placeholderLabel={`Venue Inline Ad Space #${1000 + adBreakNumber}`}
-                          placeholderDetails={`Variant ${sequenceIndex} for placement key venue-leaderboard-inline`}
-                          showPlacementDebug
                         />
                       </td>
                     </tr>
@@ -160,9 +157,6 @@ export function LeaderboardTable({
                     placementKey="venue-leaderboard-inline"
                     sequenceIndex={1}
                     showPlaceholder
-                    placeholderLabel="Venue Inline Ad Space #1001"
-                    placeholderDetails="Variant 1 for placement key venue-leaderboard-inline"
-                    showPlacementDebug
                   />
                 </td>
               </tr>

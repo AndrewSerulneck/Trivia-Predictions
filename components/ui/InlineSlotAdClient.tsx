@@ -22,9 +22,6 @@ export function InlineSlotAdClient({
   excludeAdIds,
   allowAnyVenue = false,
   showPlaceholder = true,
-  placeholderLabel = "Ad Placeholder",
-  placeholderDetails,
-  showPlacementDebug = false,
 }: {
   slot?: AdSlot;
   venueId?: string;
@@ -37,9 +34,6 @@ export function InlineSlotAdClient({
   excludeAdIds?: string[];
   allowAnyVenue?: boolean;
   showPlaceholder?: boolean;
-  placeholderLabel?: string;
-  placeholderDetails?: string;
-  showPlacementDebug?: boolean;
 }) {
   const [ad, setAd] = useState<Advertisement | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -94,17 +88,7 @@ export function InlineSlotAdClient({
   }, [slot, venueId, pageKey, adType, displayTrigger, placementKey, roundNumber, sequenceIndex, excludeAdIds, allowAnyVenue]);
 
   if (ad) {
-    return (
-      <div className="space-y-2">
-        {showPlacementDebug ? (
-          <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-left">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{placeholderLabel}</p>
-            {placeholderDetails ? <p className="mt-1 text-xs text-amber-800">{placeholderDetails}</p> : null}
-          </div>
-        ) : null}
-        <AdBanner ad={ad} />
-      </div>
-    );
+    return <AdBanner ad={ad} />;
   }
 
   if (!showPlaceholder || !loaded) {
@@ -118,10 +102,7 @@ export function InlineSlotAdClient({
       aria-label="Open Hightop Challenge advertising intake form"
     >
       <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-100/80 p-6 text-center transition-colors hover:bg-slate-100">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{placeholderLabel}</p>
-        {placeholderDetails ? (
-          <p className="mt-1 text-xs font-medium text-slate-600">{placeholderDetails}</p>
-        ) : null}
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Ad Placeholder</p>
         <p className="mt-2 max-w-md text-sm text-slate-700">
           To advertise on Hightop Challenge, please reach out to adinfo@hightopchallenge.com.
         </p>

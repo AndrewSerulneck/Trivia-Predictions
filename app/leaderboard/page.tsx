@@ -42,9 +42,6 @@ export default async function LeaderboardPage() {
           slot="leaderboard-sidebar"
           venueId={selectedVenue?.id}
           showPlaceholder
-          showPlacementDebug
-          placeholderLabel="Ad Space #3003"
-          placeholderDetails="Leaderboard page sidebar slot"
         />
       </div>
     </PageShell>
