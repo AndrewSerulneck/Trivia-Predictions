@@ -20,12 +20,14 @@ export function AdvertisingIntakeForm() {
   const [adDescription, setAdDescription] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const normalizedBusinessLink = useMemo(() => normalizeBusinessLink(businessLink), [businessLink]);
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrorMessage("");
+    setSubmitted(false);
 
     const trimmedName = name.trim();
     const trimmedEmail = email.trim();
@@ -44,24 +46,39 @@ export function AdvertisingIntakeForm() {
       return;
     }
 
-    const details = [
-      `Name: ${trimmedName}`,
-      `Email: ${trimmedEmail}`,
-      `Phone: ${trimmedPhone}`,
-      `Business: ${trimmedBusiness || "Not provided"}`,
-      `Business Link: ${normalizedBusinessLink || "Not provided"}`,
-      `Ad Description: ${trimmedAdDescription || "Not provided"}`,
-    ].join("\n");
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/advertise/intake", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: trimmedName,
+          email: trimmedEmail,
+          phone: trimmedPhone,
+          business: trimmedBusiness,
+          businessLink: normalizedBusinessLink,
+          adDescription: trimmedAdDescription,
+        }),
+      });
+      const payload = (await response.json()) as { ok: boolean; error?: string };
+      if (!payload.ok) {
+        throw new Error(payload.error ?? "Failed to submit advertising intake form.");
+      }
 
-    const subject = encodeURIComponent("Advertising Interest - Hightop Challenge");
-    const body = encodeURIComponent(details);
-    const mailtoUrl = `mailto:${INTAKE_EMAIL}?subject=${subject}&body=${body}`;
-
-    if (typeof window !== "undefined") {
-      window.location.href = mailtoUrl;
+      setSubmitted(true);
+      setName("");
+      setEmail("");
+      setPhone("");
+      setBusiness("");
+      setBusinessLink("");
+      setAdDescription("");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Failed to submit advertising intake form.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setSubmitted(true);
   };
 
   return (
@@ -71,7 +88,7 @@ export function AdvertisingIntakeForm() {
       ) : null}
       {submitted ? (
         <div className="rounded-md border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-700">
-          Thanks. If your email app did not open, send your details to {INTAKE_EMAIL}.
+          Thanks. Your advertising interest form has been sent to {INTAKE_EMAIL}.
         </div>
       ) : null}
 
@@ -161,9 +178,10 @@ export function AdvertisingIntakeForm() {
 
       <button
         type="submit"
+        disabled={isSubmitting}
         className="w-full rounded-md bg-slate-900 px-4 py-2.5 text-base font-semibold text-white"
       >
-        Submit Advertising Interest
+        {isSubmitting ? "Submitting..." : "Submit Advertising Interest"}
       </button>
     </form>
   );
