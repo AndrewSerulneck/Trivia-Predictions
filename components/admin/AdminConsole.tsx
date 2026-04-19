@@ -2638,9 +2638,10 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                             {slotsForType.map((slotEntry) => {
                               const occupied = slotEntry.ads.length > 0;
                               return (
-                                <button
+                                <div
                                   key={slotEntry.slot.id}
-                                  type="button"
+                                  role="button"
+                                  tabIndex={0}
                                   onClick={() => {
                                     if (slotEntry.ads.length > 0) {
                                       openAdEditorFromBoard(slotEntry.ads[0]);
@@ -2648,11 +2649,21 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                                     }
                                     startCreateAdFromSlot(slotEntry.slot);
                                   }}
+                                  onKeyDown={(event) => {
+                                    if (event.key === "Enter" || event.key === " ") {
+                                      event.preventDefault();
+                                      if (slotEntry.ads.length > 0) {
+                                        openAdEditorFromBoard(slotEntry.ads[0]);
+                                        return;
+                                      }
+                                      startCreateAdFromSlot(slotEntry.slot);
+                                    }
+                                  }}
                                   className={`rounded-md border px-2 py-1.5 ${
                                     occupied
                                       ? "border-emerald-200 bg-emerald-50"
                                       : "border-amber-200 bg-amber-50"
-                                  } w-full text-left transition-colors hover:brightness-95`}
+                                  } w-full cursor-pointer text-left transition-colors hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400`}
                                 >
                                   <p className="text-xs font-semibold text-slate-800">{slotEntry.slot.label}</p>
                                   <p className={`text-[11px] ${occupied ? "text-emerald-800" : "text-amber-800"}`}>
@@ -2675,7 +2686,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                                       ))}
                                     </div>
                                   ) : null}
-                                </button>
+                                </div>
                               );
                             })}
                           </div>
