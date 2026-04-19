@@ -134,10 +134,12 @@ export function LeaderboardTable({
                           venueId={venueId}
                           pageKey="venue"
                           adType="inline"
-                          displayTrigger="on-scroll"
+                          displayTrigger="on-load"
                           placementKey="venue-leaderboard-inline"
                           sequenceIndex={sequenceIndex}
-                          showPlaceholder={false}
+                          showPlaceholder
+                          placeholderLabel={`Venue Inline Ad Space #${adBreakNumber}`}
+                          placeholderDetails={`Variant ${sequenceIndex} for placement key venue-leaderboard-inline`}
                         />
                       </td>
                     </tr>

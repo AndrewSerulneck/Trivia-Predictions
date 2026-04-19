@@ -22,6 +22,8 @@ export function InlineSlotAdClient({
   excludeAdIds,
   allowAnyVenue = false,
   showPlaceholder = true,
+  placeholderLabel = "Ad Placeholder",
+  placeholderDetails,
 }: {
   slot?: AdSlot;
   venueId?: string;
@@ -34,6 +36,8 @@ export function InlineSlotAdClient({
   excludeAdIds?: string[];
   allowAnyVenue?: boolean;
   showPlaceholder?: boolean;
+  placeholderLabel?: string;
+  placeholderDetails?: string;
 }) {
   const [ad, setAd] = useState<Advertisement | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -102,7 +106,10 @@ export function InlineSlotAdClient({
       aria-label="Open Hightop Challenge advertising intake form"
     >
       <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-100/80 p-6 text-center transition-colors hover:bg-slate-100">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Ad Placeholder</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{placeholderLabel}</p>
+        {placeholderDetails ? (
+          <p className="mt-1 text-xs font-medium text-slate-600">{placeholderDetails}</p>
+        ) : null}
         <p className="mt-2 max-w-md text-sm text-slate-700">
           To advertise on Hightop Challenge, please reach out to adinfo@hightopchallenge.com.
         </p>

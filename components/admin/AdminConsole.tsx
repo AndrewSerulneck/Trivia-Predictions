@@ -31,10 +31,10 @@ const AD_TRIGGER_LABEL: Record<AdDisplayTrigger, string> = {
 const FORM_SELECT_CLASS = "rounded-md border border-slate-300 px-3 py-2.5 text-base leading-6";
 const FORM_LABEL_CLASS = "block text-xs font-medium uppercase tracking-wide text-slate-600";
 const VENUE_INLINE_VARIANTS = [
-  { value: 1, label: "Inline Leaderboard 1 - 25" },
-  { value: 2, label: "Inline Leaderboard 26 - 50" },
-  { value: 3, label: "Inline Leaderboard 51 - 75" },
-  { value: 4, label: "Inline Leaderboard 76 - 100" },
+  { value: 1, label: "Variant 1 (ranks 1-25, 101-125, ...)" },
+  { value: 2, label: "Variant 2 (ranks 26-50, 126-150, ...)" },
+  { value: 3, label: "Variant 3 (ranks 51-75, 151-175, ...)" },
+  { value: 4, label: "Variant 4 (ranks 76-100, 176-200, ...)" },
 ] as const;
 
 function getAdTypesForPage(pageKey: AdPageKey): AdType[] {
@@ -2159,6 +2159,9 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                   </option>
                 ))}
               </select>
+              <p className="text-xs text-slate-500">
+                Leaderboard ad spaces appear every 25 rows and cycle through Variants 1-4.
+              </p>
             </div>
           ) : null}
           <div className="rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700">
@@ -2518,6 +2521,9 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                             </option>
                           ))}
                         </select>
+                        <p className="text-xs text-slate-500">
+                          Leaderboard ad spaces appear every 25 rows and cycle through Variants 1-4.
+                        </p>
                       </div>
                     ) : null}
                     <div className="rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700">
