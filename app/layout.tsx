@@ -29,7 +29,13 @@ export default async function RootLayout({
           <div className="pointer-events-none absolute bottom-16 right-4 h-36 w-36 rounded-full bg-amber-200/35 blur-3xl" />
 
           {children}
-          <InlineSlotAdClient slot="footer" showPlaceholder />
+          <InlineSlotAdClient
+            slot="footer"
+            showPlaceholder
+            showPlacementDebug
+            placeholderLabel="Ad Space #3002"
+            placeholderDetails="Footer inline slot"
+          />
         </div>
         <PopupAds />
         <MobileAdhesionAd />

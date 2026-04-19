@@ -38,7 +38,14 @@ export default async function LeaderboardPage() {
 
         {selectedVenue ? <LeaderboardTable venueId={selectedVenue.id} initialEntries={entries} /> : null}
 
-        <InlineSlotAdClient slot="leaderboard-sidebar" venueId={selectedVenue?.id} showPlaceholder={false} />
+        <InlineSlotAdClient
+          slot="leaderboard-sidebar"
+          venueId={selectedVenue?.id}
+          showPlaceholder
+          showPlacementDebug
+          placeholderLabel="Ad Space #3003"
+          placeholderDetails="Leaderboard page sidebar slot"
+        />
       </div>
     </PageShell>
   );

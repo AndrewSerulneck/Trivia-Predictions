@@ -12,9 +12,21 @@ export default async function PredictionsPage() {
     >
       <div className="space-y-4">
         <BackButton label="Back" />
-        <InlineSlotAdClient slot="inline-content" showPlaceholder={false} />
+        <InlineSlotAdClient
+          slot="inline-content"
+          showPlaceholder
+          showPlacementDebug
+          placeholderLabel="Ad Space #3101"
+          placeholderDetails="Predictions page top inline slot"
+        />
         <PredictionMarketList />
-        <InlineSlotAdClient slot="mid-content" showPlaceholder={false} />
+        <InlineSlotAdClient
+          slot="mid-content"
+          showPlaceholder
+          showPlacementDebug
+          placeholderLabel="Ad Space #3102"
+          placeholderDetails="Predictions page bottom inline slot"
+        />
       </div>
     </PageShell>
   );

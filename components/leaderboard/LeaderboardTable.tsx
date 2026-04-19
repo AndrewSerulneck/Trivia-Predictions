@@ -138,7 +138,7 @@ export function LeaderboardTable({
                           placementKey="venue-leaderboard-inline"
                           sequenceIndex={sequenceIndex}
                           showPlaceholder
-                          placeholderLabel={`Venue Inline Ad Space #${adBreakNumber}`}
+                          placeholderLabel={`Venue Inline Ad Space #${1000 + adBreakNumber}`}
                           placeholderDetails={`Variant ${sequenceIndex} for placement key venue-leaderboard-inline`}
                           showPlacementDebug
                         />
@@ -148,6 +148,25 @@ export function LeaderboardTable({
                 </Fragment>
               );
             })}
+            {entries.length < 25 ? (
+              <tr className="bg-slate-50">
+                <td colSpan={3} className="px-3 py-3">
+                  <InlineSlotAdClient
+                    slot="leaderboard-sidebar"
+                    venueId={venueId}
+                    pageKey="venue"
+                    adType="inline"
+                    displayTrigger="on-load"
+                    placementKey="venue-leaderboard-inline"
+                    sequenceIndex={1}
+                    showPlaceholder
+                    placeholderLabel="Venue Inline Ad Space #1001"
+                    placeholderDetails="Variant 1 for placement key venue-leaderboard-inline"
+                    showPlacementDebug
+                  />
+                </td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
       </div>
