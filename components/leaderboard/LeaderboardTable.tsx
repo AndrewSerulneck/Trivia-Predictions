@@ -140,6 +140,7 @@ export function LeaderboardTable({
                           showPlaceholder
                           placeholderLabel={`Venue Inline Ad Space #${adBreakNumber}`}
                           placeholderDetails={`Variant ${sequenceIndex} for placement key venue-leaderboard-inline`}
+                          showPlacementDebug
                         />
                       </td>
                     </tr>

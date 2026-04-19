@@ -24,6 +24,7 @@ export function InlineSlotAdClient({
   showPlaceholder = true,
   placeholderLabel = "Ad Placeholder",
   placeholderDetails,
+  showPlacementDebug = false,
 }: {
   slot?: AdSlot;
   venueId?: string;
@@ -38,6 +39,7 @@ export function InlineSlotAdClient({
   showPlaceholder?: boolean;
   placeholderLabel?: string;
   placeholderDetails?: string;
+  showPlacementDebug?: boolean;
 }) {
   const [ad, setAd] = useState<Advertisement | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -92,7 +94,17 @@ export function InlineSlotAdClient({
   }, [slot, venueId, pageKey, adType, displayTrigger, placementKey, roundNumber, sequenceIndex, excludeAdIds, allowAnyVenue]);
 
   if (ad) {
-    return <AdBanner ad={ad} />;
+    return (
+      <div className="space-y-2">
+        {showPlacementDebug ? (
+          <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-left">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{placeholderLabel}</p>
+            {placeholderDetails ? <p className="mt-1 text-xs text-amber-800">{placeholderDetails}</p> : null}
+          </div>
+        ) : null}
+        <AdBanner ad={ad} />
+      </div>
+    );
   }
 
   if (!showPlaceholder || !loaded) {
