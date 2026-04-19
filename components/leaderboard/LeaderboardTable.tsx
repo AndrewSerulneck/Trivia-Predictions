@@ -111,7 +111,7 @@ export function LeaderboardTable({
               const isCurrentUser = currentUserId && entry.userId === currentUserId;
               const shouldRenderAdBreak = (index + 1) % 15 === 0;
               const adBreakNumber = shouldRenderAdBreak ? (index + 1) / 15 : 0;
-              const sequenceIndex = shouldRenderAdBreak ? ((adBreakNumber - 1) % 4) + 1 : 1;
+              const sequenceIndex = shouldRenderAdBreak ? ((adBreakNumber - 1) % 6) + 1 : 1;
               return (
                 <Fragment key={entry.userId}>
                   <tr className={isCurrentUser ? "bg-blue-50" : undefined}>
