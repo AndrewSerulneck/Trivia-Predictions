@@ -10,9 +10,44 @@ type BackButtonProps = {
 export function BackButton({ href = "/", label = "Back" }: BackButtonProps) {
   const router = useRouter();
 
+  const getInternalReferrerPath = (): string => {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      return "";
+    }
+    const referrer = document.referrer?.trim();
+    if (!referrer) {
+      return "";
+    }
+
+    try {
+      const parsedReferrer = new URL(referrer);
+      if (parsedReferrer.origin !== window.location.origin) {
+        return "";
+      }
+
+      const nextPath = `${parsedReferrer.pathname}${parsedReferrer.search}${parsedReferrer.hash}`;
+      if (!nextPath || nextPath.startsWith("/api/") || nextPath.startsWith("/advertise")) {
+        return "";
+      }
+
+      return nextPath;
+    } catch {
+      return "";
+    }
+  };
+
   const handleBack = () => {
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      router.back();
+    if (typeof window !== "undefined") {
+      const currentUrl = window.location.href;
+      window.history.back();
+
+      window.setTimeout(() => {
+        if (window.location.href !== currentUrl) {
+          return;
+        }
+        const referrerPath = getInternalReferrerPath();
+        router.push(referrerPath || href);
+      }, 150);
       return;
     }
 
