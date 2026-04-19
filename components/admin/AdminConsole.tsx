@@ -385,6 +385,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [editAddressSuggestions, setEditAddressSuggestions] = useState<AdminAddressSuggestion[]>([]);
   const [isEditAddressLookupLoading, setIsEditAddressLookupLoading] = useState(false);
   const [adsCreateReturnSection, setAdsCreateReturnSection] = useState<AdminSection | null>(null);
+  const [adsListReturnToBoard, setAdsListReturnToBoard] = useState(false);
   const addressSuggestionsCacheRef = useRef<Map<string, AdminAddressSuggestion[]>>(new Map());
   const addressLookupDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const addressLookupRequestId = useRef(0);
@@ -1381,6 +1382,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   };
 
   const beginEditAd = (item: Advertisement) => {
+    setAdsListReturnToBoard(false);
     setEditingAdId(item.id);
     setEditPageKey(item.pageKey === "global" ? "join" : item.pageKey);
     setEditAdType(item.adType);
@@ -1425,6 +1427,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const openAdEditorFromBoard = (item: Advertisement) => {
     setActiveSection("ads-list");
     beginEditAd(item);
+    setAdsListReturnToBoard(true);
     if (typeof window !== "undefined") {
       window.setTimeout(() => {
         const row = document.getElementById(`ad-row-${item.id}`);
@@ -1486,6 +1489,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
         throw new Error(payload.error ?? "Failed to update ad.");
       }
       setEditingAdId(null);
+      setAdsListReturnToBoard(false);
       setEditAdImageFile(null);
       setEditAdImageDetails("");
       await loadAll();
@@ -2726,7 +2730,23 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
             ))}
           </div>
         </div>
-        <p className="text-xs text-slate-600">All advertisements (live and scheduled):</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-xs text-slate-600">All advertisements (live and scheduled):</p>
+          {adsListReturnToBoard && editingAdId ? (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingAdId(null);
+                if (typeof window !== "undefined") {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }}
+              className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100"
+            >
+              Back to Manage Advertisements
+            </button>
+          ) : null}
+        </div>
         <ul className="space-y-2">
           {ads.map((item) => (
             <li id={`ad-row-${item.id}`} key={item.id} className="rounded-md border border-slate-200 p-2 text-sm">
@@ -2986,7 +3006,12 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                     </button>
                     <button
                       type="button"
-                      onClick={() => setEditingAdId(null)}
+                      onClick={() => {
+                        setEditingAdId(null);
+                        if (typeof window !== "undefined") {
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }
+                      }}
                       className="rounded-md bg-slate-500 px-3 py-2 text-sm font-medium text-white sm:py-1.5 sm:text-xs"
                     >
                       Cancel
