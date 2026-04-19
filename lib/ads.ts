@@ -5,6 +5,10 @@ import { normalizeAdPlacementMeta, type AdPlacementMeta } from "@/lib/adPlacemen
 import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, Advertisement } from "@/types";
 
 type AdEventType = "impression" | "click";
+type AdEventContext = {
+  pageKey?: AdPageKey;
+  venueId?: string;
+};
 
 type AdvertisementRow = {
   id: string;
@@ -271,14 +275,17 @@ async function incrementCounter(id: string, field: "impressions" | "clicks"): Pr
     .eq("id", id);
 }
 
-async function insertAdEvent(id: string, eventType: AdEventType): Promise<void> {
+async function insertAdEvent(id: string, eventType: AdEventType, context?: AdEventContext): Promise<void> {
   if (!supabaseAdmin || !id) {
     return;
   }
 
+  const safeVenueId = context?.venueId?.trim() ?? "";
   const { error } = await supabaseAdmin.from("ad_events").insert({
     ad_id: id,
     event_type: eventType,
+    page_key: context?.pageKey ?? null,
+    venue_id: safeVenueId || null,
   });
 
   if (error) {
@@ -287,10 +294,10 @@ async function insertAdEvent(id: string, eventType: AdEventType): Promise<void> 
   }
 }
 
-export async function recordAdImpression(id: string): Promise<void> {
-  await Promise.all([incrementCounter(id, "impressions"), insertAdEvent(id, "impression")]);
+export async function recordAdImpression(id: string, context?: AdEventContext): Promise<void> {
+  await Promise.all([incrementCounter(id, "impressions"), insertAdEvent(id, "impression", context)]);
 }
 
-export async function recordAdClick(id: string): Promise<void> {
-  await Promise.all([incrementCounter(id, "clicks"), insertAdEvent(id, "click")]);
+export async function recordAdClick(id: string, context?: AdEventContext): Promise<void> {
+  await Promise.all([incrementCounter(id, "clicks"), insertAdEvent(id, "click", context)]);
 }
