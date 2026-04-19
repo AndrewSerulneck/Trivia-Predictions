@@ -130,6 +130,17 @@ function matchesInventorySlot(ad: Advertisement, slot: AdInventorySlot): boolean
   return true;
 }
 
+function isAdTargetingVenue(ad: Advertisement, venueId: string): boolean {
+  if (!venueId) {
+    return true;
+  }
+  const targetedVenueIds = ad.venueIds && ad.venueIds.length > 0 ? ad.venueIds : ad.venueId ? [ad.venueId] : [];
+  if (targetedVenueIds.length === 0) {
+    return true;
+  }
+  return targetedVenueIds.includes(venueId);
+}
+
 function getAdTypesForPage(pageKey: AdPageKey): AdType[] {
   if (pageKey === "trivia") {
     return ["popup", "banner"];
@@ -400,7 +411,9 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     const liveAds = ads.filter((item) => isAdLiveNow(item, nowMs));
 
     return AD_PAGE_KEYS.map((page) => {
-      const pageLiveAds = liveAds.filter((item) => item.pageKey === page);
+      const pageLiveAds = liveAds.filter(
+        (item) => item.pageKey === page && isAdTargetingVenue(item, selectedManagedVenueId)
+      );
       const inventorySlots = AD_INVENTORY_SLOTS[page] ?? [];
       const slotsWithAds = inventorySlots.map((slot) => ({
         slot,
@@ -416,7 +429,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
         unmatchedAds,
       };
     });
-  }, [ads]);
+  }, [ads, selectedManagedVenueId]);
 
   useEffect(() => {
     if (!availableAdTypes.includes(adType)) {
@@ -1384,6 +1397,32 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     setEditActive(item.active);
     setEditStartDate(isoToDateTimeLocal(item.startDate));
     setEditEndDate(item.endDate ? isoToDateTimeLocal(item.endDate) : "");
+  };
+
+  const startCreateAdFromSlot = (slotConfig: AdInventorySlot) => {
+    setActiveSection("ads-create");
+    setPageKey(slotConfig.pageKey);
+    setAdType(slotConfig.adType);
+    setDisplayTrigger(slotConfig.displayTrigger ?? "on-load");
+    setPlacementKey(slotConfig.placementKey ?? "default");
+    setRoundNumber(Number.isFinite(slotConfig.roundNumber) ? Number(slotConfig.roundNumber) : "all");
+    setSequenceIndex(Number.isFinite(slotConfig.sequenceIndex) ? Number(slotConfig.sequenceIndex) : 1);
+    setVenueIds(selectedManagedVenueId ? [selectedManagedVenueId] : []);
+    setErrorMessage("");
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const openAdEditorFromBoard = (item: Advertisement) => {
+    setActiveSection("ads-list");
+    beginEditAd(item);
+    if (typeof window !== "undefined") {
+      window.setTimeout(() => {
+        const row = document.getElementById(`ad-row-${item.id}`);
+        row?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 50);
+    }
   };
 
   const saveAdEdit = async () => {
@@ -2562,6 +2601,23 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
         </p>
         <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
           <h3 className="text-sm font-semibold text-slate-800">Live Ads By Website Page</h3>
+          <div className="max-w-sm space-y-1">
+            <label className={FORM_LABEL_CLASS}>Venue Context For Placement Availability</label>
+            <select
+              value={selectedManagedVenueId}
+              onChange={(event) => setSelectedManagedVenueId(event.target.value)}
+              className={FORM_SELECT_CLASS}
+            >
+              {availableVenues.map((venue) => (
+                <option key={venue.id} value={venue.id}>
+                  {getVenueDisplayName(venue)}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-slate-600">
+              Includes ads targeted to this venue and ads targeted to all venues.
+            </p>
+          </div>
           <div className="space-y-3">
             {liveAdPages.map((pageEntry) => (
               <div key={pageEntry.page} className="rounded-md border border-slate-200 bg-white p-3">
@@ -2582,24 +2638,44 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                             {slotsForType.map((slotEntry) => {
                               const occupied = slotEntry.ads.length > 0;
                               return (
-                                <div
+                                <button
                                   key={slotEntry.slot.id}
+                                  type="button"
+                                  onClick={() => {
+                                    if (slotEntry.ads.length > 0) {
+                                      openAdEditorFromBoard(slotEntry.ads[0]);
+                                      return;
+                                    }
+                                    startCreateAdFromSlot(slotEntry.slot);
+                                  }}
                                   className={`rounded-md border px-2 py-1.5 ${
                                     occupied
                                       ? "border-emerald-200 bg-emerald-50"
                                       : "border-amber-200 bg-amber-50"
-                                  }`}
+                                  } w-full text-left transition-colors hover:brightness-95`}
                                 >
                                   <p className="text-xs font-semibold text-slate-800">{slotEntry.slot.label}</p>
                                   <p className={`text-[11px] ${occupied ? "text-emerald-800" : "text-amber-800"}`}>
                                     {occupied ? `Occupied (${slotEntry.ads.length})` : "Available"}
                                   </p>
                                   {slotEntry.ads.length > 0 ? (
-                                    <p className="text-[11px] text-slate-600">
-                                      {slotEntry.ads.map((adItem) => adItem.advertiserName).join(", ")}
-                                    </p>
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                      {slotEntry.ads.map((adItem) => (
+                                        <button
+                                          key={adItem.id}
+                                          type="button"
+                                          onClick={(event) => {
+                                            event.stopPropagation();
+                                            openAdEditorFromBoard(adItem);
+                                          }}
+                                          className="rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[11px] text-slate-700 hover:bg-slate-100"
+                                        >
+                                          Edit {adItem.advertiserName}
+                                        </button>
+                                      ))}
+                                    </div>
                                   ) : null}
-                                </div>
+                                </button>
                               );
                             })}
                           </div>
@@ -2623,7 +2699,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
         <p className="text-xs text-slate-600">All advertisements (live and scheduled):</p>
         <ul className="space-y-2">
           {ads.map((item) => (
-            <li key={item.id} className="rounded-md border border-slate-200 p-2 text-sm">
+            <li id={`ad-row-${item.id}`} key={item.id} className="rounded-md border border-slate-200 p-2 text-sm">
               {editingAdId === item.id ? (
                 <div className="space-y-2">
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
