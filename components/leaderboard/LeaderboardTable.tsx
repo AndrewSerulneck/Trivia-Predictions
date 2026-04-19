@@ -109,8 +109,8 @@ export function LeaderboardTable({
           <tbody className="divide-y divide-slate-100 bg-white">
             {entries.map((entry, index) => {
               const isCurrentUser = currentUserId && entry.userId === currentUserId;
-              const shouldRenderAdBreak = (index + 1) % 25 === 0;
-              const adBreakNumber = shouldRenderAdBreak ? (index + 1) / 25 : 0;
+              const shouldRenderAdBreak = (index + 1) % 15 === 0;
+              const adBreakNumber = shouldRenderAdBreak ? (index + 1) / 15 : 0;
               const sequenceIndex = shouldRenderAdBreak ? ((adBreakNumber - 1) % 4) + 1 : 1;
               return (
                 <Fragment key={entry.userId}>
@@ -148,7 +148,7 @@ export function LeaderboardTable({
                 </Fragment>
               );
             })}
-            {entries.length < 25 ? (
+            {entries.length < 15 ? (
               <tr className="bg-slate-50">
                 <td colSpan={3} className="px-3 py-3">
                   <InlineSlotAdClient
