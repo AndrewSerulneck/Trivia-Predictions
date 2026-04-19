@@ -9,7 +9,7 @@ import { deriveSlotFromPlacement } from "@/lib/adPlacements";
 import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, Advertisement, TriviaQuestion, Venue } from "@/types";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
 
-const AD_PAGE_KEYS: AdPageKey[] = ["join", "venue", "trivia", "sports-predictions", "sports-bingo"];
+const AD_PAGE_KEYS: Array<Exclude<AdPageKey, "global">> = ["join", "venue", "trivia", "sports-predictions", "sports-bingo"];
 const AD_PAGE_LABEL: Record<AdPageKey, string> = {
   global: "Global",
   join: "Join",
@@ -38,6 +38,97 @@ const VENUE_INLINE_VARIANTS = [
   { value: 5, label: "Variant 5 (ranks 61-75, 151-165, ...)" },
   { value: 6, label: "Variant 6 (ranks 76-90, 166-180, ...)" },
 ] as const;
+const AD_TYPE_ORDER: AdType[] = ["popup", "banner", "inline"];
+
+type AdInventorySlot = {
+  id: string;
+  pageKey: AdPageKey;
+  adType: AdType;
+  label: string;
+  displayTrigger?: AdDisplayTrigger;
+  placementKey?: string;
+  roundNumber?: number;
+  sequenceIndex?: number;
+};
+
+const AD_INVENTORY_SLOTS: Record<Exclude<AdPageKey, "global">, AdInventorySlot[]> = {
+  join: [
+    { id: "join-popup-entry", pageKey: "join", adType: "popup", label: "Popup on Landing", displayTrigger: "on-load" },
+    { id: "join-banner-mobile", pageKey: "join", adType: "banner", label: "Mobile Banner (Adhesion)", displayTrigger: "on-load" },
+    { id: "join-inline-main", pageKey: "join", adType: "inline", label: "Inline Join Slot", displayTrigger: "on-load" },
+  ],
+  venue: [
+    { id: "venue-popup-entry", pageKey: "venue", adType: "popup", label: "Popup on Landing", displayTrigger: "on-load" },
+    { id: "venue-popup-scroll", pageKey: "venue", adType: "popup", label: "Popup on Scroll", displayTrigger: "on-scroll" },
+    { id: "venue-banner-mobile", pageKey: "venue", adType: "banner", label: "Mobile Banner (Adhesion)", displayTrigger: "on-load" },
+    ...VENUE_INLINE_VARIANTS.map((variant) => ({
+      id: `venue-inline-v${variant.value}`,
+      pageKey: "venue" as const,
+      adType: "inline" as const,
+      label: `Leaderboard Inline Variant ${variant.value}`,
+      displayTrigger: "on-load" as const,
+      placementKey: "venue-leaderboard-inline",
+      sequenceIndex: variant.value,
+    })),
+  ],
+  trivia: [
+    { id: "trivia-popup-entry", pageKey: "trivia", adType: "popup", label: "Popup on Landing", displayTrigger: "on-load" },
+    { id: "trivia-popup-round-1", pageKey: "trivia", adType: "popup", label: "Popup Round End (Round 1)", displayTrigger: "round-end", roundNumber: 1 },
+    { id: "trivia-popup-round-2", pageKey: "trivia", adType: "popup", label: "Popup Round End (Round 2)", displayTrigger: "round-end", roundNumber: 2 },
+    { id: "trivia-popup-round-3", pageKey: "trivia", adType: "popup", label: "Popup Round End (Round 3)", displayTrigger: "round-end", roundNumber: 3 },
+    { id: "trivia-banner-mobile", pageKey: "trivia", adType: "banner", label: "Mobile Banner (Adhesion)", displayTrigger: "on-load" },
+  ],
+  "sports-predictions": [
+    { id: "pred-popup-entry", pageKey: "sports-predictions", adType: "popup", label: "Popup on Landing", displayTrigger: "on-load" },
+    { id: "pred-popup-scroll", pageKey: "sports-predictions", adType: "popup", label: "Popup on Scroll", displayTrigger: "on-scroll" },
+    { id: "pred-banner-mobile", pageKey: "sports-predictions", adType: "banner", label: "Mobile Banner (Adhesion)", displayTrigger: "on-load" },
+    { id: "pred-inline-breaks", pageKey: "sports-predictions", adType: "inline", label: "Inline Breaks (Every 10 Markets)", displayTrigger: "on-scroll", placementKey: "predictions-inline" },
+  ],
+  "sports-bingo": [
+    { id: "bingo-popup-entry", pageKey: "sports-bingo", adType: "popup", label: "Popup on Landing", displayTrigger: "on-load" },
+    { id: "bingo-popup-scroll", pageKey: "sports-bingo", adType: "popup", label: "Popup on Scroll", displayTrigger: "on-scroll" },
+    { id: "bingo-banner-mobile", pageKey: "sports-bingo", adType: "banner", label: "Mobile Banner (Adhesion)", displayTrigger: "on-load" },
+  ],
+};
+
+function isAdLiveNow(item: Advertisement, nowMs: number): boolean {
+  if (!item.active) {
+    return false;
+  }
+
+  const startMs = new Date(item.startDate).getTime();
+  if (Number.isFinite(startMs) && startMs > nowMs) {
+    return false;
+  }
+
+  if (item.endDate) {
+    const endMs = new Date(item.endDate).getTime();
+    if (Number.isFinite(endMs) && endMs < nowMs) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function matchesInventorySlot(ad: Advertisement, slot: AdInventorySlot): boolean {
+  if (ad.pageKey !== slot.pageKey || ad.adType !== slot.adType) {
+    return false;
+  }
+  if (slot.displayTrigger && ad.displayTrigger !== slot.displayTrigger) {
+    return false;
+  }
+  if (slot.placementKey && ad.placementKey !== slot.placementKey) {
+    return false;
+  }
+  if (Number.isFinite(slot.roundNumber) && Number(ad.roundNumber) !== Number(slot.roundNumber)) {
+    return false;
+  }
+  if (Number.isFinite(slot.sequenceIndex) && Number(ad.sequenceIndex) !== Number(slot.sequenceIndex)) {
+    return false;
+  }
+  return true;
+}
 
 function getAdTypesForPage(pageKey: AdPageKey): AdType[] {
   if (pageKey === "trivia") {
@@ -304,6 +395,28 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     () => getTriggersForPlacement(editPageKey, editAdType),
     [editPageKey, editAdType]
   );
+  const liveAdPages = useMemo(() => {
+    const nowMs = Date.now();
+    const liveAds = ads.filter((item) => isAdLiveNow(item, nowMs));
+
+    return AD_PAGE_KEYS.map((page) => {
+      const pageLiveAds = liveAds.filter((item) => item.pageKey === page);
+      const inventorySlots = AD_INVENTORY_SLOTS[page] ?? [];
+      const slotsWithAds = inventorySlots.map((slot) => ({
+        slot,
+        ads: pageLiveAds.filter((item) => matchesInventorySlot(item, slot)),
+      }));
+      const slottedIds = new Set(slotsWithAds.flatMap((entry) => entry.ads.map((item) => item.id)));
+      const unmatchedAds = pageLiveAds.filter((item) => !slottedIds.has(item.id));
+
+      return {
+        page,
+        pageLiveAds,
+        slotsWithAds,
+        unmatchedAds,
+      };
+    });
+  }, [ads]);
 
   useEffect(() => {
     if (!availableAdTypes.includes(adType)) {
@@ -2444,6 +2557,70 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       {shouldRenderSectionContent && activeSection === "ads-list" ? (
       <section className="space-y-2 rounded-lg border border-slate-200 p-3">
         <h2 className="text-base font-semibold">Advertisements ({ads.length})</h2>
+        <p className="text-xs text-slate-600">
+          Live placement board organized by page. A space is <span className="font-semibold text-emerald-700">occupied</span> when at least one live ad matches it.
+        </p>
+        <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <h3 className="text-sm font-semibold text-slate-800">Live Ads By Website Page</h3>
+          <div className="space-y-3">
+            {liveAdPages.map((pageEntry) => (
+              <div key={pageEntry.page} className="rounded-md border border-slate-200 bg-white p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-slate-800">{AD_PAGE_LABEL[pageEntry.page]}</p>
+                  <p className="text-xs text-slate-600">Live ads: {pageEntry.pageLiveAds.length}</p>
+                </div>
+                <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-3">
+                  {AD_TYPE_ORDER.map((typeKey) => {
+                    const slotsForType = pageEntry.slotsWithAds.filter((entry) => entry.slot.adType === typeKey);
+                    return (
+                      <div key={`${pageEntry.page}-${typeKey}`} className="rounded-md border border-slate-200 p-2">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{AD_TYPE_LABEL[typeKey]}</p>
+                        {slotsForType.length === 0 ? (
+                          <p className="mt-1 text-xs text-slate-500">No {AD_TYPE_LABEL[typeKey].toLowerCase()} spaces configured.</p>
+                        ) : (
+                          <div className="mt-2 space-y-1.5">
+                            {slotsForType.map((slotEntry) => {
+                              const occupied = slotEntry.ads.length > 0;
+                              return (
+                                <div
+                                  key={slotEntry.slot.id}
+                                  className={`rounded-md border px-2 py-1.5 ${
+                                    occupied
+                                      ? "border-emerald-200 bg-emerald-50"
+                                      : "border-amber-200 bg-amber-50"
+                                  }`}
+                                >
+                                  <p className="text-xs font-semibold text-slate-800">{slotEntry.slot.label}</p>
+                                  <p className={`text-[11px] ${occupied ? "text-emerald-800" : "text-amber-800"}`}>
+                                    {occupied ? `Occupied (${slotEntry.ads.length})` : "Available"}
+                                  </p>
+                                  {slotEntry.ads.length > 0 ? (
+                                    <p className="text-[11px] text-slate-600">
+                                      {slotEntry.ads.map((adItem) => adItem.advertiserName).join(", ")}
+                                    </p>
+                                  ) : null}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {pageEntry.unmatchedAds.length > 0 ? (
+                  <div className="mt-2 rounded-md border border-rose-200 bg-rose-50 p-2">
+                    <p className="text-xs font-semibold text-rose-800">Unmapped live ads</p>
+                    <p className="text-xs text-rose-700">
+                      {pageEntry.unmatchedAds.map((item) => item.advertiserName).join(", ")}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </div>
+        <p className="text-xs text-slate-600">All advertisements (live and scheduled):</p>
         <ul className="space-y-2">
           {ads.map((item) => (
             <li key={item.id} className="rounded-md border border-slate-200 p-2 text-sm">
