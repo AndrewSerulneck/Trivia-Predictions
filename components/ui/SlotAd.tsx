@@ -24,9 +24,9 @@ export async function SlotAd({
 
     return (
       <a
-        href="https://mail.google.com/mail/?view=cm&fs=1&to=adinfo@hightopchallenge.com&su=Advertising%20Inquiry%20-%20Hightop%20Challenge"
+        href="/advertise"
         className="block rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
-        aria-label="Contact Hightop Challenge advertising via email"
+        aria-label="Open Hightop Challenge advertising intake form"
       >
         <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-100/80 p-6 text-center transition-colors hover:bg-slate-100">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Ad Placeholder</p>
