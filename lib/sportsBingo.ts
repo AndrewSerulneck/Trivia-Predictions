@@ -415,8 +415,32 @@ function toGameLabel(homeTeam: string, awayTeam: string): string {
   return `${awayTeam} vs. ${homeTeam}`;
 }
 
-function formatTeamDisplayName(team: string): string {
-  return team.trim();
+function toMascotDisplayName(team: string): string {
+  const trimmed = team.trim();
+  if (!trimmed) {
+    return trimmed;
+  }
+
+  const parts = trimmed.split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) {
+    return trimmed;
+  }
+
+  const lastTwo = parts.slice(-2).join(" ");
+  const keepLastTwo = new Set([
+    "Red Sox",
+    "White Sox",
+    "Blue Jays",
+    "Trail Blazers",
+    "Golden Knights",
+    "Maple Leafs",
+  ]);
+
+  if (keepLastTwo.has(lastTwo)) {
+    return lastTwo;
+  }
+
+  return parts[parts.length - 1] ?? trimmed;
 }
 
 function resolverKey(resolver: SportsBingoResolver): string {
@@ -447,8 +471,8 @@ function resolverKey(resolver: SportsBingoResolver): string {
 }
 
 function buildSquareLabel(game: SportsBingoGame, resolver: SportsBingoResolver): string {
-  const homeTeam = formatTeamDisplayName(game.homeTeam);
-  const awayTeam = formatTeamDisplayName(game.awayTeam);
+  const homeTeam = toMascotDisplayName(game.homeTeam);
+  const awayTeam = toMascotDisplayName(game.awayTeam);
   const teamForSide = (team: TeamSide) => (team === "home" ? homeTeam : awayTeam);
   const opponentForSide = (team: TeamSide) => (team === "home" ? awayTeam : homeTeam);
 
@@ -460,32 +484,32 @@ function buildSquareLabel(game: SportsBingoGame, resolver: SportsBingoResolver):
     case "moneyline": {
       const team = teamForSide(resolver.team);
       const opponent = opponentForSide(resolver.team);
-      return `${team} will beat the ${opponent}.`;
+      return `${team} to beat ${opponent}.`;
     }
     case "spread_more_than": {
       const team = teamForSide(resolver.team);
-      return `${team} will win by more than ${formatLine(resolver.line)} points.`;
+      return `${team} wins by ${formatLine(resolver.line)}+ points.`;
     }
     case "spread_keep_close": {
       const team = teamForSide(resolver.team);
-      return `${team} will win the game or lose by less than ${formatLine(resolver.line)} points.`;
+      return `${team} wins or loses by fewer than ${formatLine(resolver.line)} points.`;
     }
     case "game_total_over":
-      return `There will be more than ${formatLine(resolver.line)} points scored in the ${awayTeam} vs. ${homeTeam} game.`;
+      return `Total points: over ${formatLine(resolver.line)}.`;
     case "game_total_under":
-      return `There will be less than ${formatLine(resolver.line)} points scored in the ${awayTeam} vs. ${homeTeam} game.`;
+      return `Total points: under ${formatLine(resolver.line)}.`;
     case "team_total_over": {
       const team = teamForSide(resolver.team);
-      return `${team} will score more than ${formatLine(resolver.line)} points.`;
+      return `${team}: over ${formatLine(resolver.line)} points.`;
     }
     case "team_total_under": {
       const team = teamForSide(resolver.team);
-      return `${team} will score less than ${formatLine(resolver.line)} points.`;
+      return `${team}: under ${formatLine(resolver.line)} points.`;
     }
     case "player_prop": {
       const statLabel = PLAYER_PROP_MARKET_LABELS[resolver.marketKey] ?? "stat";
-      const directionText = resolver.direction === "over" ? "more than" : "less than";
-      return `${resolver.player} will record ${directionText} ${formatLine(resolver.line)} ${statLabel}.`;
+      const directionText = resolver.direction === "over" ? "over" : "under";
+      return `${resolver.player}: ${directionText} ${formatLine(resolver.line)} ${statLabel}.`;
     }
     default:
       return "Sports Bingo square";

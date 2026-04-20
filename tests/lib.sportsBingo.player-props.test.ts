@@ -97,7 +97,7 @@ describe("sports bingo player props ingestion", () => {
     expect(eventCalls).toHaveLength(2);
     expect(eventCalls[0]).toContain("regions=us");
     expect(eventCalls[1]).toContain("regions=us%2Ceu%2Cuk");
-    expect(board.squares.some((square) => square.label.includes("will record"))).toBe(true);
+    expect(board.squares.some((square) => square.label.includes("Jayson Tatum"))).toBe(true);
   });
 
   it("requests NFL player prop market keys for NFL games", async () => {
