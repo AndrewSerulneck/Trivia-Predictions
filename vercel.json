@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/predictions-settle",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/bingo-progress",
+      "schedule": "*/1 * * * *"
     }
   ]
 }

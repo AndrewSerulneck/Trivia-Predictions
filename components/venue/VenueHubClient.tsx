@@ -24,7 +24,7 @@ export function VenueHubClient({
   initialEntries: LeaderboardEntry[];
 }) {
   const router = useRouter();
-  const [pendingDestination, setPendingDestination] = useState<"trivia" | "predictions" | null>(null);
+  const [pendingDestination, setPendingDestination] = useState<"trivia" | "predictions" | "bingo" | null>(null);
   const [isWarmingUp, setIsWarmingUp] = useState(true);
   const [warmupMessage, setWarmupMessage] = useState("Preparing games...");
   const warmupPromiseRef = useRef<Promise<void> | null>(null);
@@ -141,6 +141,11 @@ export function VenueHubClient({
             },
           });
         }
+
+        setWarmupMessage("Preparing sports bingo...");
+        await fetch("/api/bingo/games?sportKey=basketball_nba&includeLocked=true", {
+          cache: "no-store",
+        });
       } catch {
         // Warmup is best-effort; ignore transient failures.
       } finally {
@@ -153,22 +158,25 @@ export function VenueHubClient({
     return warmupPromise;
   }, []);
 
-  const goTo = async (destination: "trivia" | "predictions") => {
+  const goTo = async (destination: "trivia" | "predictions" | "bingo") => {
     triggerPulse();
     setPendingDestination(destination);
     if (isWarmingUp) {
-      setWarmupMessage(`Opening ${destination === "trivia" ? "Trivia" : "Predictions"}...`);
+      setWarmupMessage(
+        `Opening ${destination === "trivia" ? "Trivia" : destination === "predictions" ? "Predictions" : "Sports Bingo"}...`
+      );
       const timeout = new Promise<void>((resolve) => {
         window.setTimeout(resolve, 2200);
       });
       await Promise.race([runWarmup(), timeout]);
     }
-    router.push(destination === "trivia" ? "/trivia" : "/predictions");
+    router.push(destination === "trivia" ? "/trivia" : destination === "predictions" ? "/predictions" : "/bingo");
   };
 
   useEffect(() => {
     router.prefetch("/trivia");
     router.prefetch("/predictions");
+    router.prefetch("/bingo");
     if (!warmupStartedRef.current) {
       warmupStartedRef.current = true;
       void runWarmup();
@@ -178,6 +186,7 @@ export function VenueHubClient({
   const warmupTitle = useMemo(() => {
     if (pendingDestination === "trivia") return "Opening Trivia...";
     if (pendingDestination === "predictions") return "Opening Predictions...";
+    if (pendingDestination === "bingo") return "Opening Sports Bingo...";
     return "Getting everything ready";
   }, [pendingDestination]);
 
@@ -205,7 +214,7 @@ export function VenueHubClient({
         </button>
       </div>
 
-      <section className="grid grid-cols-2 gap-3">
+      <section className="grid grid-cols-1 gap-3">
         <button
           type="button"
           onMouseDown={triggerPulse}
@@ -233,6 +242,20 @@ export function VenueHubClient({
             🔮
           </span>
           {pendingDestination === "predictions" ? "Opening Predictions..." : "Make Sports Predictions"}
+        </button>
+        <button
+          type="button"
+          onMouseDown={triggerPulse}
+          onClick={() => {
+            void goTo("bingo");
+          }}
+          disabled={pendingDestination !== null}
+          className={`${ctaClass} bg-gradient-to-br from-fuchsia-600 to-pink-500 text-white shadow-md shadow-pink-200 hover:from-fuchsia-700 hover:to-pink-600 active:scale-95`}
+        >
+          <span aria-hidden="true" className="text-4xl leading-none">
+            🎰
+          </span>
+          {pendingDestination === "bingo" ? "Opening Sports Bingo..." : "Play Sports Bingo"}
         </button>
       </section>
 
