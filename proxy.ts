@@ -8,6 +8,9 @@ function isPublicPath(pathname: string): boolean {
   if (pathname === "/join" || pathname.startsWith("/join/")) {
     return true;
   }
+  if (pathname === "/advertise" || pathname.startsWith("/advertise/")) {
+    return true;
+  }
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     return true;
   }
