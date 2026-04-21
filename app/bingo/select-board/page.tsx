@@ -10,7 +10,7 @@ export default function SportsBingoSelectBoardPage() {
       description="Step 3: Generate a board and lock it before game start."
     >
       <div className="h-full space-y-4 overflow-y-auto pr-1">
-        <BackButton href="/bingo/select-game" label="Back" />
+        <BackButton href="/bingo/select-game" label="Back" preferHref />
         <SportsBingoSelectBoard />
       </div>
     </PageShell>

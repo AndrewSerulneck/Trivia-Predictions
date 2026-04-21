@@ -34,6 +34,9 @@ type SubmitResponse = {
 
 const QUESTION_TIME_LIMIT_SECONDS = 15;
 const POINTS_PER_CORRECT = 10;
+const QUESTIONS_PER_ROUND = 15;
+const ROUND_LIMIT_PER_WINDOW = 3;
+const PRE_ROUND_COUNTDOWN_START = 3;
 const BUTTON_POP_CLASS =
   "transition-all duration-150 transform active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
 const BACK_TO_VENUE_CLASS =
@@ -157,6 +160,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [attempted, setAttempted] = useState(0);
   const [isRoundStarted, setIsRoundStarted] = useState(false);
+  const [preRoundCountdown, setPreRoundCountdown] = useState<number | null>(null);
   const [secondsRemaining, setSecondsRemaining] = useState(QUESTION_TIME_LIMIT_SECONDS);
   const [roundTotalPoints, setRoundTotalPoints] = useState<number | null>(null);
   const [roundStartPoints, setRoundStartPoints] = useState<number | null>(null);
@@ -196,6 +200,11 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     return estimatedRoundTotal - roundStartPoints;
   }, [estimatedRoundTotal, pointsWon, roundStartPoints]);
   const triviaQuotaLocked = Boolean(quota && !quota.isAdminBypass && quota.questionsRemaining <= 0);
+  const upcomingRoundNumber = useMemo(() => {
+    const used = Math.max(0, quota?.questionsUsed ?? 0);
+    const derivedRound = Math.floor(used / QUESTIONS_PER_ROUND) + 1;
+    return Math.min(ROUND_LIMIT_PER_WINDOW, Math.max(1, derivedRound));
+  }, [quota?.questionsUsed]);
 
   const loadQuota = useCallback(async () => {
     const userId = getUserId() ?? "";
@@ -374,6 +383,24 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
     setSecondsRemaining(QUESTION_TIME_LIMIT_SECONDS);
   }, [isRoundStarted, index, finished, selectedAnswer]);
+
+  useEffect(() => {
+    if (preRoundCountdown === null) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      if (preRoundCountdown <= 0) {
+        setPreRoundCountdown(null);
+        return;
+      }
+      setPreRoundCountdown((value) => (value === null ? null : value - 1));
+    }, preRoundCountdown <= 0 ? 550 : 700);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [preRoundCountdown]);
 
   useEffect(() => {
     if (!triviaQuotaLocked) {
@@ -560,7 +587,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   }, [showRewardPulse]);
 
   useEffect(() => {
-    if (!isRoundStarted || finished || selectedAnswer !== null || isSubmitting || triviaQuotaLocked) {
+    if (!isRoundStarted || preRoundCountdown !== null || finished || selectedAnswer !== null || isSubmitting || triviaQuotaLocked) {
       return;
     }
 
@@ -576,7 +603,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     return () => {
       window.clearTimeout(timer);
     };
-  }, [isRoundStarted, finished, selectedAnswer, isSubmitting, secondsRemaining, chooseAnswer, triviaQuotaLocked]);
+  }, [isRoundStarted, preRoundCountdown, finished, selectedAnswer, isSubmitting, secondsRemaining, chooseAnswer, triviaQuotaLocked]);
 
   const nextQuestion = () => {
     if (triviaQuotaLocked) {
@@ -739,6 +766,9 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   if (!isRoundStarted) {
     return (
       <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-base text-slate-700 sm:space-y-3 sm:p-4">
+        <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Round {upcomingRoundNumber} of {ROUND_LIMIT_PER_WINDOW}
+        </p>
         <p className="text-lg font-semibold text-slate-900">Ready to start trivia?</p>
         {triviaQuotaLocked ? (
           <p>
@@ -753,6 +783,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
           onMouseDown={() => triggerHaptic(20)}
           onClick={() => {
             setIsRoundStarted(true);
+            setPreRoundCountdown(PRE_ROUND_COUNTDOWN_START);
             setSecondsRemaining(QUESTION_TIME_LIMIT_SECONDS);
             setRoundStartPoints(currentUserPoints ?? null);
           }}
@@ -761,6 +792,20 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         >
           {triviaQuotaLocked ? `Locked ${formatCountdown(quotaSecondsRemaining)}` : "Yes, Start Trivia"}
         </button>
+      </div>
+    );
+  }
+
+  if (preRoundCountdown !== null) {
+    return (
+      <div className="space-y-3 rounded-2xl border-4 border-slate-900 bg-gradient-to-br from-cyan-200 to-blue-200 p-4 text-center text-slate-900 shadow-[6px_6px_0_#0f172a]">
+        <p className="text-sm font-black uppercase tracking-[0.12em] text-slate-700">Get Ready</p>
+        <p className="text-2xl font-black sm:text-3xl">
+          Round {upcomingRoundNumber}
+        </p>
+        <p className="text-6xl font-black leading-none sm:text-7xl">
+          {preRoundCountdown > 0 ? preRoundCountdown : "START!"}
+        </p>
       </div>
     );
   }

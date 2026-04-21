@@ -12,7 +12,7 @@ type SportOption = {
 
 const SPORT_OPTIONS: SportOption[] = [
   { key: "basketball_nba", label: "NBA", icon: "🏀", enabled: true },
-  { key: "americanfootball_nfl", label: "NFL", icon: "🏈", enabled: true, note: "Beta" },
+  { key: "americanfootball_nfl", label: "NFL", icon: "🏈", enabled: false, note: "Coming soon" },
   { key: "baseball_mlb", label: "MLB", icon: "⚾", enabled: false, note: "Coming soon" },
 ];
 

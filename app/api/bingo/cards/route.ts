@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  claimSportsBingoReward,
   createSportsBingoCard,
   generateSportsBingoBoard,
   listUserSportsBingoCards,
@@ -100,8 +101,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, card });
     }
 
+    if (action === "claim") {
+      const userId = String((body as { userId?: string }).userId ?? "").trim();
+      const cardId = String((body as { cardId?: string }).cardId ?? "").trim();
+      if (!userId || !cardId) {
+        return NextResponse.json(
+          { ok: false, error: "userId and cardId are required to claim Bingo points." },
+          { status: 400 }
+        );
+      }
+
+      const result = await claimSportsBingoReward({ userId, cardId });
+      return NextResponse.json({ ok: true, result });
+    }
+
     return NextResponse.json(
-      { ok: false, error: 'Unknown action. Use action="generate" or action="play".' },
+      { ok: false, error: 'Unknown action. Use action="generate", action="play", or action="claim".' },
       { status: 400 }
     );
   } catch (error) {

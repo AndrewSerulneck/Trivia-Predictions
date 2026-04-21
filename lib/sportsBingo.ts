@@ -7,7 +7,7 @@ const ODDS_API_KEY = process.env.ODDS_API_KEY?.trim() ?? "";
 const BALLDONTLIE_API_BASE_URL = process.env.BALLDONTLIE_API_BASE_URL ?? "https://api.balldontlie.io";
 const BALLDONTLIE_API_KEY = process.env.BALLDONTLIE_API_KEY?.trim() ?? "";
 const DEFAULT_SPORT_KEY = "basketball_nba";
-const BINGO_REWARD_POINTS = Number.parseInt(process.env.BINGO_REWARD_POINTS ?? "40", 10);
+const BINGO_REWARD_POINTS = Number.parseInt(process.env.BINGO_REWARD_POINTS ?? "100", 10);
 const BOARD_TARGET_WIN_RATE = Number.parseFloat(process.env.BINGO_BOARD_TARGET_WIN_RATE ?? "0.20");
 const BOARD_TARGET_TOLERANCE = Number.parseFloat(process.env.BINGO_BOARD_TARGET_TOLERANCE ?? "0.04");
 const BOARD_SIMULATION_TRIALS = Number.parseInt(process.env.BINGO_BOARD_SIM_TRIALS ?? "2500", 10);
@@ -185,6 +185,7 @@ export type SportsBingoCard = {
   status: CardStatus;
   boardProbability: number;
   rewardPoints: number;
+  rewardClaimedAt?: string;
   createdAt: string;
   settledAt?: string;
   squares: SportsBingoCardSquare[];
@@ -203,6 +204,7 @@ type SportsBingoCardRow = {
   status: CardStatus;
   board_probability: number;
   reward_points: number;
+  reward_claimed_at: string | null;
   near_win_notified_at: string | null;
   won_notified_at: string | null;
   won_line: unknown;
@@ -640,11 +642,11 @@ function buildSquareLabel(game: SportsBingoGame, resolver: SportsBingoResolver):
     }
     case "spread_more_than": {
       const team = teamForSide(resolver.team);
-      return `${team} wins by ${formatLine(resolver.line)}+ points.`;
+      return `${team} win by ${formatLine(resolver.line)}+ points.`;
     }
     case "spread_keep_close": {
       const team = teamForSide(resolver.team);
-      return `${team} wins or loses by fewer than ${formatLine(resolver.line)} points.`;
+      return `${team} win or lose by less than ${formatLine(resolver.line)} points.`;
     }
     case "game_total_over":
       return `Total points: over ${formatLine(resolver.line)}.`;
@@ -665,7 +667,7 @@ function buildSquareLabel(game: SportsBingoGame, resolver: SportsBingoResolver):
     }
     case "team_triple_double": {
       const team = teamForSide(resolver.team);
-      return `${team}: any player records a triple-double.`;
+      return `Any ${team} player records a triple-double.`;
     }
     case "any_triple_double":
       return "Any player records a triple-double.";
@@ -2169,6 +2171,7 @@ function mapCardRow(row: SportsBingoCardRow, squares: SportsBingoSquareRow[]): S
     status: row.status,
     boardProbability: Number(row.board_probability),
     rewardPoints: Number(row.reward_points),
+    rewardClaimedAt: row.reward_claimed_at ?? undefined,
     createdAt: row.created_at,
     settledAt: row.settled_at ?? undefined,
     squares: mappedSquares,
@@ -2185,7 +2188,7 @@ async function listCardRows(params: {
   let query = supabaseAdmin!
     .from("sports_bingo_cards")
     .select(
-      "id, user_id, venue_id, game_id, game_label, sport_key, home_team, away_team, starts_at, status, board_probability, reward_points, near_win_notified_at, won_notified_at, won_line, settled_at, created_at"
+      "id, user_id, venue_id, game_id, game_label, sport_key, home_team, away_team, starts_at, status, board_probability, reward_points, reward_claimed_at, near_win_notified_at, won_notified_at, won_line, settled_at, created_at"
     )
     .order("created_at", { ascending: false })
     .limit(Math.max(1, Math.min(params.limit ?? 100, 500)));
@@ -2750,16 +2753,10 @@ export async function refreshSportsBingoProgress(params: {
         .maybeSingle<{ id: string }>();
 
       if (!cardUpdateError && wonRow?.id) {
-        const currentPoints = await loadUserPoints(cardRow.user_id);
-        await supabaseAdmin!
-          .from("users")
-          .update({ points: currentPoints + Number(cardRow.reward_points) })
-          .eq("id", cardRow.user_id);
-
         await addNotification(
           cardRow.user_id,
-          "success",
-          `Bingo! You won ${cardRow.reward_points} points in ${cardRow.game_label}.`
+          "info",
+          `Bingo in ${cardRow.game_label}! Claim ${cardRow.reward_points} points from Bingo Home.`
         );
 
         settledWins += 1;
@@ -2977,7 +2974,7 @@ export async function createSportsBingoCard(params: {
     throw new Error("You already have an active Sports Bingo card for this game.");
   }
 
-  const rewardPoints = Number.isFinite(BINGO_REWARD_POINTS) ? Math.max(1, BINGO_REWARD_POINTS) : 40;
+  const rewardPoints = Number.isFinite(BINGO_REWARD_POINTS) ? Math.max(1, BINGO_REWARD_POINTS) : 100;
   const startsAtIso = new Date(entry.game.startsAt).toISOString();
 
   const { data: insertedCard, error: cardError } = await supabaseAdmin!
@@ -2996,13 +2993,17 @@ export async function createSportsBingoCard(params: {
       reward_points: rewardPoints,
     })
     .select(
-      "id, user_id, venue_id, game_id, game_label, sport_key, home_team, away_team, starts_at, status, board_probability, reward_points, near_win_notified_at, won_notified_at, won_line, settled_at, created_at"
+      "id, user_id, venue_id, game_id, game_label, sport_key, home_team, away_team, starts_at, status, board_probability, reward_points, reward_claimed_at, near_win_notified_at, won_notified_at, won_line, settled_at, created_at"
     )
     .single<SportsBingoCardRow>();
 
   if (cardError || !insertedCard) {
     if (isMissingSportsBingoTablesError(cardError)) {
       throw new Error(SPORTS_BINGO_MIGRATION_REQUIRED_ERROR);
+    }
+    const errorCode = (cardError as { code?: string } | null)?.code;
+    if (errorCode === "23505") {
+      throw new Error("You already have an active Sports Bingo card for this game.");
     }
     throw new Error(cardError?.message ?? "Failed to create Sports Bingo card.");
   }
@@ -3051,4 +3052,54 @@ export async function createSportsBingoCard(params: {
   }
 
   return mapCardRow(insertedCard, insertedSquares as SportsBingoSquareRow[]);
+}
+
+export async function claimSportsBingoReward(params: {
+  userId: string;
+  cardId: string;
+}): Promise<{ cardId: string; rewardPoints: number }> {
+  assertSupabaseConfigured();
+
+  const userId = params.userId.trim();
+  const cardId = params.cardId.trim();
+  if (!userId || !cardId) {
+    throw new Error("userId and cardId are required.");
+  }
+
+  const { data: claimedCard, error: claimError } = await supabaseAdmin!
+    .from("sports_bingo_cards")
+    .update({ reward_claimed_at: new Date().toISOString() })
+    .eq("id", cardId)
+    .eq("user_id", userId)
+    .eq("status", "won")
+    .is("reward_claimed_at", null)
+    .select("id, reward_points, game_label")
+    .maybeSingle<{ id: string; reward_points: number; game_label: string }>();
+
+  if (claimError) {
+    throw new Error(claimError.message ?? "Failed to claim Bingo points.");
+  }
+  if (!claimedCard) {
+    throw new Error("This Bingo reward was already claimed or is not eligible yet.");
+  }
+
+  const rewardPoints = Math.max(0, Number(claimedCard.reward_points ?? 0));
+  if (rewardPoints > 0) {
+    const currentPoints = await loadUserPoints(userId);
+    await supabaseAdmin!
+      .from("users")
+      .update({ points: currentPoints + rewardPoints })
+      .eq("id", userId);
+  }
+
+  await addNotification(
+    userId,
+    "success",
+    `Bingo payout claimed: You won ${rewardPoints} points in ${claimedCard.game_label}.`
+  );
+
+  return {
+    cardId: claimedCard.id,
+    rewardPoints,
+  };
 }

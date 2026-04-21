@@ -53,6 +53,7 @@ type PendingPredictionRow = {
   outcome_title: string;
   points: number;
   status: "pending" | "won" | "lost" | "push" | "canceled";
+  market_question?: string | null;
   created_at: string;
 };
 
@@ -1128,6 +1129,7 @@ export async function resolvePendingPredictionMarket(params: {
   predictionId: string;
   winningOutcomeId?: string;
   settleAsCanceled?: boolean;
+  marketQuestion?: string;
   cancellationReason?: "tie";
 }): Promise<{ affectedPicks: number; winners: number; losers: number; canceled: number }> {
   assertAdminConfigured();
@@ -1143,12 +1145,14 @@ export async function resolvePendingPredictionMarket(params: {
     throw new Error("winningOutcomeId is required unless settling as canceled.");
   }
 
-  let marketQuestion = "";
-  try {
-    const market = await getPredictionMarketById(predictionId);
-    marketQuestion = market?.question?.trim() ?? "";
-  } catch {
-    marketQuestion = "";
+  let marketQuestion = params.marketQuestion?.trim() ?? "";
+  if (!marketQuestion) {
+    try {
+      const market = await getPredictionMarketById(predictionId);
+      marketQuestion = market?.question?.trim() ?? "";
+    } catch {
+      marketQuestion = "";
+    }
   }
 
   if (settleAsCanceled && params.cancellationReason === "tie") {
@@ -1202,7 +1206,7 @@ export async function autoSettleResolvedPredictionMarkets(): Promise<{
 
   const { data, error } = await supabaseAdmin!
     .from("user_predictions")
-    .select("prediction_id")
+    .select("prediction_id, market_question")
     .eq("status", "pending")
     .limit(5000);
 
@@ -1210,8 +1214,25 @@ export async function autoSettleResolvedPredictionMarkets(): Promise<{
     throw new Error(error?.message ?? "Failed to load pending markets for settlement.");
   }
 
+  const pendingRows = data as Array<{ prediction_id: string; market_question?: string | null }>;
+  const marketQuestionByPredictionId = new Map<string, string>();
+  for (const row of pendingRows) {
+    const predictionId = String(row.prediction_id ?? "").trim();
+    if (!predictionId) {
+      continue;
+    }
+    const question = String(row.market_question ?? "").trim();
+    if (!question || marketQuestionByPredictionId.has(predictionId)) {
+      continue;
+    }
+    marketQuestionByPredictionId.set(predictionId, question);
+  }
   const pendingPredictionIds = Array.from(
-    new Set((data as Array<{ prediction_id: string }>).map((row) => row.prediction_id).filter(Boolean))
+    new Set(
+      pendingRows
+        .map((row) => String(row.prediction_id ?? "").trim())
+        .filter((predictionId) => predictionId.length > 0)
+    )
   );
   if (pendingPredictionIds.length === 0) {
     return {
@@ -1247,6 +1268,7 @@ export async function autoSettleResolvedPredictionMarkets(): Promise<{
       predictionId: item.predictionId,
       winningOutcomeId: item.winningOutcomeId,
       settleAsCanceled: item.settleAsCanceled,
+      marketQuestion: marketQuestionByPredictionId.get(item.predictionId),
       cancellationReason: item.cancellationReason,
     });
     settledMarkets += 1;
@@ -1326,16 +1348,7 @@ async function resolvePendingPredictionMarketLegacy(params: {
       return `Prediction resolved: ${outcome} won. You earned ${row.points} points.`;
     }
 
-    if (eventText) {
-      if (isBinaryOutcome) {
-        const happened = outcomeLower === "yes";
-        return happened
-          ? `${eventText}. This one did not go your way.`
-          : `${eventText} did not happen. This one did not go your way.`;
-      }
-      return `${eventText}. Result: ${outcome}. This one did not go your way.`;
-    }
-    return `Prediction resolved: ${outcome} did not win.`;
+    return "You lost this prediction.";
   };
 
   const { data, error } = await supabaseAdmin!

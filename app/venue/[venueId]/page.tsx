@@ -21,7 +21,7 @@ export default async function VenuePage({
 
   return (
     <PageShell title={APP_PAGE_NAMES.venue} description={venueDisplayName}>
-      <div className="space-y-4">
+      <div className="h-full space-y-4 overflow-y-auto pr-1">
         <VenueHubClient venue={venue} initialEntries={entries} />
       </div>
     </PageShell>

@@ -1,14 +1,33 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { getVenueId } from "@/lib/storage";
 
 type BackButtonProps = {
   href?: string;
   label?: string;
+  preferHref?: boolean;
+  venueHomeFallback?: boolean;
 };
 
-export function BackButton({ href = "/", label = "Back" }: BackButtonProps) {
+export function BackButton({
+  href = "/",
+  label = "Back",
+  preferHref = false,
+  venueHomeFallback = false,
+}: BackButtonProps) {
   const router = useRouter();
+
+  const resolveHref = () => {
+    if (!venueHomeFallback) {
+      return href;
+    }
+    const venueId = getVenueId()?.trim() ?? "";
+    if (!venueId) {
+      return href;
+    }
+    return `/venue/${encodeURIComponent(venueId)}`;
+  };
 
   const getInternalReferrerPath = (): string => {
     if (typeof window === "undefined" || typeof document === "undefined") {
@@ -37,6 +56,13 @@ export function BackButton({ href = "/", label = "Back" }: BackButtonProps) {
   };
 
   const handleBack = () => {
+    const fallbackHref = resolveHref();
+
+    if (preferHref) {
+      router.push(fallbackHref);
+      return;
+    }
+
     if (typeof window !== "undefined") {
       const currentUrl = window.location.href;
       window.history.back();
@@ -46,12 +72,12 @@ export function BackButton({ href = "/", label = "Back" }: BackButtonProps) {
           return;
         }
         const referrerPath = getInternalReferrerPath();
-        router.push(referrerPath || href);
+        router.push(referrerPath || fallbackHref);
       }, 150);
       return;
     }
 
-    router.push(href);
+    router.push(fallbackHref);
   };
 
   const triggerBackHaptic = () => {

@@ -10,7 +10,7 @@ export default function SportsBingoSelectSportPage() {
       description="Step 1: Select the sport for your Sports Bingo card."
     >
       <div className="h-full space-y-4 overflow-y-auto pr-1">
-        <BackButton href="/bingo" label="Back" />
+        <BackButton href="/bingo" label="Back" preferHref />
         <SportsBingoSelectSport />
       </div>
     </PageShell>

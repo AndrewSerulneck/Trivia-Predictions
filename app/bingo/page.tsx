@@ -10,7 +10,7 @@ export default function SportsBingoPage() {
       description="Your Sports Bingo home for active board previews and quick access to create new cards."
     >
       <div className="h-full space-y-4 overflow-y-auto pr-1">
-        <BackButton label="Back" />
+        <BackButton href="/" label="Back to Venue Home" preferHref venueHomeFallback />
         <SportsBingoHome />
       </div>
     </PageShell>

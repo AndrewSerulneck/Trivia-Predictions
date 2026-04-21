@@ -144,6 +144,7 @@ describe("resolvePendingPredictionMarket", () => {
     expect(insertedNotifications).toHaveLength(2);
     expect(insertedNotifications.some((item) => item.type === "success")).toBe(true);
     expect(insertedNotifications.some((item) => item.type === "warning")).toBe(true);
+    expect(insertedNotifications.some((item) => item.message === "You lost this prediction.")).toBe(true);
   });
 
   it("rejects invalid input before querying", async () => {

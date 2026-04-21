@@ -11,6 +11,10 @@ type UserPredictionRow = {
   outcome_title: string;
   points: number;
   status: UserPrediction["status"];
+  market_question: string | null;
+  market_closes_at: string | null;
+  market_sport: string | null;
+  market_league: string | null;
   created_at: string;
   resolved_at: string | null;
 };
@@ -46,6 +50,10 @@ function mapRow(row: UserPredictionRow): UserPrediction {
     outcomeTitle: row.outcome_title,
     points: row.points,
     status: row.status,
+    marketQuestion: row.market_question ?? undefined,
+    marketClosesAt: row.market_closes_at ?? undefined,
+    marketSport: row.market_sport ?? undefined,
+    marketLeague: row.market_league ?? undefined,
     createdAt: row.created_at,
     resolvedAt: row.resolved_at ?? undefined,
   };
@@ -218,8 +226,14 @@ export async function submitPredictionPick(params: {
       outcome_title: selected.outcome.title,
       points,
       status: "pending",
+      market_question: selected.market.question,
+      market_closes_at: selected.market.closesAt,
+      market_sport: selected.market.sport ?? null,
+      market_league: selected.market.league ?? null,
     })
-    .select("id, user_id, prediction_id, outcome_id, outcome_title, points, status, created_at, resolved_at")
+    .select(
+      "id, user_id, prediction_id, outcome_id, outcome_title, points, status, market_question, market_closes_at, market_sport, market_league, created_at, resolved_at"
+    )
     .single<UserPredictionRow>();
 
   if (error || !data) {
@@ -252,9 +266,12 @@ export async function listUserPredictions(
 
   let query = supabaseAdmin
     .from("user_predictions")
-    .select("id, user_id, prediction_id, outcome_id, outcome_title, points, status, created_at, resolved_at", {
+    .select(
+      "id, user_id, prediction_id, outcome_id, outcome_title, points, status, market_question, market_closes_at, market_sport, market_league, created_at, resolved_at",
+      {
       count: "exact",
-    })
+      }
+    )
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 

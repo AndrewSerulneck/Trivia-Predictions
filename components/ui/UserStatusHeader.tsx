@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CoinFXCanvas } from "@/components/ui/CoinFXCanvas";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { getUserId, getUsername, getVenueId } from "@/lib/storage";
 
@@ -12,26 +13,6 @@ type SummaryPayload = {
     points: number;
     venueId: string;
   } | null;
-};
-
-type CoinFlightToken = {
-  id: string;
-  fromX: number;
-  fromY: number;
-  toX: number;
-  toY: number;
-  delayMs: number;
-  durationMs: number;
-  rotateDeg: number;
-};
-
-type CoinFlightDetail = {
-  sourceElementId?: string;
-  sourceRect?: { left: number; top: number; width: number; height: number };
-  sourceX?: number;
-  sourceY?: number;
-  delta?: number;
-  coins?: number;
 };
 
 function TreasureChestIcon({ className = "h-8 w-8" }: { className?: string }) {
@@ -73,7 +54,9 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
   const [pointsPop, setPointsPop] = useState(false);
   const [pointsFlash, setPointsFlash] = useState(false);
   const [pointsGain, setPointsGain] = useState<number | null>(null);
-  const [coinFlights, setCoinFlights] = useState<CoinFlightToken[]>([]);
+  const [pointsBurstAmount, setPointsBurstAmount] = useState<number | null>(null);
+  const [pointsBurstVisible, setPointsBurstVisible] = useState(false);
+  const [pointsBurstToken, setPointsBurstToken] = useState(0);
 
   const priorPointsRef = useRef<number | null>(null);
   const displayedPointsRef = useRef(0);
@@ -81,7 +64,7 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
   const gainHideTimerRef = useRef<number | null>(null);
   const popHideTimerRef = useRef<number | null>(null);
   const flashHideTimerRef = useRef<number | null>(null);
-  const flightCleanupTimersRef = useRef<number[]>([]);
+  const burstHideTimerRef = useRef<number | null>(null);
 
   const animatePointsTo = useCallback((targetPoints: number) => {
     const safeTarget = Math.max(0, Math.round(targetPoints));
@@ -134,6 +117,9 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
     setPointsGain((current) => (current ?? 0) + delta);
     setPointsPop(true);
     setPointsFlash(true);
+    setPointsBurstAmount(delta);
+    setPointsBurstVisible(true);
+    setPointsBurstToken((value) => value + 1);
 
     if (gainHideTimerRef.current) {
       window.clearTimeout(gainHideTimerRef.current);
@@ -155,64 +141,13 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
     flashHideTimerRef.current = window.setTimeout(() => {
       setPointsFlash(false);
     }, 900);
-  }, []);
 
-  const launchCoinFlight = useCallback((detail?: CoinFlightDetail) => {
-    if (typeof window === "undefined" || typeof document === "undefined") {
-      return;
+    if (burstHideTimerRef.current) {
+      window.clearTimeout(burstHideTimerRef.current);
     }
-
-    const chest = document.getElementById("tp-treasure-chest-target") ?? document.getElementById("tp-treasure-chest");
-    if (!chest) {
-      return;
-    }
-
-    const chestRect = chest.getBoundingClientRect();
-    const toX = chestRect.left + chestRect.width / 2;
-    const toY = chestRect.top + chestRect.height / 2;
-
-    let fromX = window.innerWidth / 2;
-    let fromY = Math.max(96, window.innerHeight * 0.72);
-
-    if (detail?.sourceRect) {
-      fromX = detail.sourceRect.left + detail.sourceRect.width / 2;
-      fromY = detail.sourceRect.top + detail.sourceRect.height / 2;
-    } else if (detail?.sourceElementId) {
-      const source = document.getElementById(detail.sourceElementId);
-      if (source) {
-        const rect = source.getBoundingClientRect();
-        fromX = rect.left + rect.width / 2;
-        fromY = rect.top + rect.height / 2;
-      }
-    } else if (typeof detail?.sourceX === "number" && typeof detail?.sourceY === "number") {
-      fromX = detail.sourceX;
-      fromY = detail.sourceY;
-    }
-
-    const requestedCoins = Math.max(5, Math.min(12, detail?.coins ?? Math.round((detail?.delta ?? 10) / 2) + 5));
-    const createdAt = Date.now();
-    const burst: CoinFlightToken[] = Array.from({ length: requestedCoins }, (_, index) => {
-      const staggerMs = index * 95 + Math.round(Math.random() * 24);
-      return {
-        id: `${createdAt}-${index}-${Math.random().toString(16).slice(2)}`,
-        fromX: fromX + Math.round((Math.random() - 0.5) * 28),
-        fromY: fromY + Math.round((Math.random() - 0.5) * 18),
-        toX: toX + Math.round((Math.random() - 0.5) * 20),
-        toY: toY + Math.round((Math.random() - 0.5) * 14),
-        delayMs: staggerMs,
-        durationMs: 860 + Math.round(Math.random() * 180),
-        rotateDeg: Math.round(Math.random() * 360),
-      };
-    });
-
-    setCoinFlights((current) => [...current, ...burst]);
-
-    for (const item of burst) {
-      const timer = window.setTimeout(() => {
-        setCoinFlights((current) => current.filter((token) => token.id !== item.id));
-      }, item.delayMs + item.durationMs + 120);
-      flightCleanupTimersRef.current.push(timer);
-    }
+    burstHideTimerRef.current = window.setTimeout(() => {
+      setPointsBurstVisible(false);
+    }, 920);
   }, []);
 
   const loadSummary = useCallback(async () => {
@@ -269,26 +204,27 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
         const next = (points ?? 0) + delta;
         setPointsAndAnimate(next);
         animateGain(delta);
-        if (custom.detail?.source !== "trivia" && custom.detail?.source !== "notifications") {
-          launchCoinFlight({ delta });
+        if (
+          custom.detail?.source !== "trivia" &&
+          custom.detail?.source !== "notifications" &&
+          custom.detail?.source !== "bingo-claim"
+        ) {
+          window.dispatchEvent(
+            new CustomEvent("tp:coin-flight", {
+              detail: { delta, coins: Math.min(28, Math.max(10, Math.round(delta / 2) + 8)) },
+            })
+          );
         }
       }
       void loadSummary();
     };
 
-    const onCoinFlight = (event: Event) => {
-      const custom = event as CustomEvent<CoinFlightDetail>;
-      launchCoinFlight(custom.detail);
-    };
-
     window.addEventListener("tp:points-updated", onPointsUpdated);
-    window.addEventListener("tp:coin-flight", onCoinFlight as EventListener);
 
     return () => {
       window.clearTimeout(initialTimer);
       window.clearInterval(interval);
       window.removeEventListener("tp:points-updated", onPointsUpdated);
-      window.removeEventListener("tp:coin-flight", onCoinFlight as EventListener);
       if (pointsTickerRef.current) {
         window.clearInterval(pointsTickerRef.current);
       }
@@ -301,12 +237,11 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
       if (flashHideTimerRef.current) {
         window.clearTimeout(flashHideTimerRef.current);
       }
-      for (const timer of flightCleanupTimersRef.current) {
-        window.clearTimeout(timer);
+      if (burstHideTimerRef.current) {
+        window.clearTimeout(burstHideTimerRef.current);
       }
-      flightCleanupTimersRef.current = [];
     };
-  }, [animateGain, isJoinRoute, launchCoinFlight, loadSummary, points, setPointsAndAnimate]);
+  }, [animateGain, isJoinRoute, loadSummary, points, setPointsAndAnimate]);
 
   if (isJoinRoute) {
     return null;
@@ -320,27 +255,7 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
         compact ? "flex-wrap justify-center" : "flex-wrap justify-between"
       }`}
     >
-      {coinFlights.length > 0 ? (
-        <div className="pointer-events-none fixed inset-0 z-[120]">
-          {coinFlights.map((item) => (
-            <span
-              key={item.id}
-              className="absolute animate-tp-points-flow text-yellow-500 drop-shadow-[0_2px_0_rgba(15,23,42,0.28)]"
-              style={{
-                left: `${item.fromX}px`,
-                top: `${item.fromY}px`,
-                animationDelay: `${item.delayMs}ms`,
-                animationDuration: `${item.durationMs}ms`,
-                ["--flow-x" as string]: `${item.toX - item.fromX}px`,
-                ["--flow-y" as string]: `${item.toY - item.fromY}px`,
-                ["--coin-rotate" as string]: `${item.rotateDeg}deg`,
-              }}
-            >
-              <GoldCoinIcon className="h-16 w-16" />
-            </span>
-          ))}
-        </div>
-      ) : null}
+      <CoinFXCanvas />
       <div className={`flex min-w-0 items-center ${compact ? "w-full justify-between gap-1.5" : "w-full gap-2 sm:w-auto sm:justify-center sm:pr-2"}`}>
         <div
           className={`flex items-center rounded-2xl border-slate-900 bg-[#f7d7b0] font-medium text-slate-900 ${
@@ -359,19 +274,29 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
           <span className="truncate">{username || "Guest"}</span>
         </div>
         <div
-          className={`flex items-center border-slate-900 font-medium text-slate-900 transition-all duration-300 ${
+          className={`relative flex items-center border-slate-900 font-medium text-slate-900 transition-all duration-300 ${
             compact
               ? `h-10 min-w-0 flex-1 gap-1 rounded-xl border-2 px-2 py-1 text-[13px] shadow-[2px_2px_0_#0f172a] ${
-                  pointsFlash ? "bg-emerald-300" : "bg-[#f2bb66]"
+                  pointsFlash ? "bg-[#f5cf88]" : "bg-[#f2bb66]"
                 }`
               : `tp-bounce-hover h-[3.5rem] min-w-0 flex-1 justify-center gap-2 rounded-2xl border-4 px-2.5 py-1.5 text-base shadow-[4px_4px_0_#0f172a] sm:min-w-[11.25rem] sm:flex-none ${
-                  pointsFlash ? "bg-emerald-300 ring-2 ring-emerald-500/60" : "bg-[#f2bb66]"
+                  pointsFlash ? "bg-[#f5cf88] ring-2 ring-[#d89a4f]/60" : "bg-[#f2bb66]"
                 } ${
                   pointsPop ? "scale-110" : "scale-100"
                 }`
             }`}
           id="tp-points-pill"
         >
+          {pointsBurstVisible && pointsBurstAmount ? (
+            <div className="pointer-events-none absolute left-1/2 top-1 z-40 -translate-x-1/2">
+              <span
+                key={`points-burst-${pointsBurstToken}`}
+                className="inline-flex animate-tp-points-burst rounded-full border-2 border-emerald-800 bg-emerald-300/95 px-2 py-0.5 text-sm font-black text-emerald-900 shadow-[2px_2px_0_#065f46] sm:text-base"
+              >
+                +{pointsBurstAmount}
+              </span>
+            </div>
+          ) : null}
           <span id="tp-treasure-chest" className="relative inline-flex shrink-0 items-center justify-center">
             <TreasureChestIcon className={compact ? "h-6 w-6" : "h-12 w-12"} />
             <span

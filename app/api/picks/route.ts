@@ -55,18 +55,25 @@ export async function GET(request: Request) {
   const enrichedItems = includeMarkets
     ? await Promise.all(
         items.map(async (item) => {
+          const hasStoredSnapshot =
+            Boolean(item.marketQuestion?.trim()) ||
+            Boolean(item.marketClosesAt?.trim()) ||
+            Boolean(item.marketSport?.trim()) ||
+            Boolean(item.marketLeague?.trim());
           let market = null;
-          try {
-            market = await getPredictionMarketById(item.predictionId);
-          } catch {
-            market = null;
+          if (!hasStoredSnapshot) {
+            try {
+              market = await getPredictionMarketById(item.predictionId);
+            } catch {
+              market = null;
+            }
           }
           return {
             ...item,
-            marketQuestion: market?.question ?? null,
-            marketClosesAt: market?.closesAt ?? null,
-            marketSport: market?.sport ?? null,
-            marketLeague: market?.league ?? null,
+            marketQuestion: item.marketQuestion ?? market?.question ?? null,
+            marketClosesAt: item.marketClosesAt ?? market?.closesAt ?? null,
+            marketSport: item.marketSport ?? market?.sport ?? null,
+            marketLeague: item.marketLeague ?? market?.league ?? null,
           };
         })
       )

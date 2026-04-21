@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { TouchEvent as ReactTouchEvent } from "react";
 import { getUserId } from "@/lib/storage";
 
 type BingoCardSquare = {
@@ -28,6 +29,7 @@ type BingoCard = {
   status: "active" | "won" | "lost" | "canceled";
   boardProbability: number;
   rewardPoints: number;
+  rewardClaimedAt?: string;
   createdAt: string;
   settledAt?: string;
   squares: BingoCardSquare[];
@@ -36,6 +38,15 @@ type BingoCard = {
 type CardsResponse = {
   ok: boolean;
   cards?: BingoCard[];
+  error?: string;
+};
+
+type ClaimResponse = {
+  ok: boolean;
+  result?: {
+    cardId: string;
+    rewardPoints: number;
+  };
   error?: string;
 };
 
@@ -168,24 +179,109 @@ function renderCompactGrid(squares: BingoCardSquare[]) {
   );
 }
 
+function renderExpandedGrid(squares: BingoCardSquare[]) {
+  const byIndex = new Map<number, BingoCardSquare>();
+  for (const square of squares) {
+    byIndex.set(square.index, square);
+  }
+
+  return (
+    <div className="pb-1">
+      <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+        {Array.from({ length: 25 }).map((_, index) => {
+          const square = byIndex.get(index);
+          if (!square) {
+            return <div key={index} className="min-h-[72px] rounded-lg border border-slate-200 bg-slate-50 sm:min-h-[82px]" />;
+          }
+
+          const isFree = Boolean(square.isFree);
+          return (
+            <div
+              key={index}
+              className={`flex min-h-[72px] items-center justify-center rounded-lg border px-1.5 py-1.5 text-center text-[10px] font-semibold leading-tight sm:min-h-[82px] sm:px-2 sm:py-2 sm:text-[11px] ${getCardSquareStyle(
+                square.status,
+                isFree
+              )}`}
+            >
+              {isFree ? "FREE" : square.label}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function LoadingState({ label }: { label: string }) {
+  return (
+    <div className="mt-3 flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+      <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-cyan-600" />
+      {label}
+    </div>
+  );
+}
+
 export function SportsBingoHome() {
   const [userId, setUserId] = useState("");
   const [cards, setCards] = useState<BingoCard[]>([]);
   const [loadingCards, setLoadingCards] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [claimingCardId, setClaimingCardId] = useState("");
+  const [pressedCardId, setPressedCardId] = useState("");
+  const [showBoardLimitMessage, setShowBoardLimitMessage] = useState(false);
+  const holdTimerRef = useRef<number | null>(null);
+  const holdCardIdRef = useRef("");
+  const holdStartRef = useRef<{ x: number; y: number } | null>(null);
+  const activeTouchIdRef = useRef<number | null>(null);
+  const lastTouchAtRef = useRef(0);
+
+  const clearHoldTimer = useCallback(() => {
+    if (holdTimerRef.current !== null) {
+      window.clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+  }, []);
+
+  const clearPressedCard = useCallback(() => {
+    clearHoldTimer();
+    activeTouchIdRef.current = null;
+    holdCardIdRef.current = "";
+    holdStartRef.current = null;
+    setPressedCardId("");
+  }, [clearHoldTimer]);
+
+  const startTouchHold = useCallback(
+    (cardId: string, event: ReactTouchEvent<HTMLLIElement>) => {
+      const touch = event.touches[0];
+      if (!touch) {
+        return;
+      }
+      lastTouchAtRef.current = Date.now();
+      activeTouchIdRef.current = touch.identifier;
+      clearHoldTimer();
+      holdCardIdRef.current = cardId;
+      holdStartRef.current = { x: touch.clientX, y: touch.clientY };
+      holdTimerRef.current = window.setTimeout(() => {
+        setPressedCardId(holdCardIdRef.current);
+      }, 220);
+    },
+    [clearHoldTimer]
+  );
 
   useEffect(() => {
     setUserId(getUserId() ?? "");
   }, []);
 
-  const loadCards = useCallback(async () => {
+  const loadCards = useCallback(async ({ background = false }: { background?: boolean } = {}) => {
     if (!userId) {
       setCards([]);
       setLoadingCards(false);
       return;
     }
 
-    setLoadingCards(true);
+    if (!background) {
+      setLoadingCards(true);
+    }
     try {
       const response = await fetch(`/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=true`, {
         cache: "no-store",
@@ -194,13 +290,20 @@ export function SportsBingoHome() {
       if (!payload.ok) {
         throw new Error(payload.error ?? "Failed to load your Sports Bingo cards.");
       }
+      if (!background) {
+        setErrorMessage("");
+      }
       setCards(payload.cards ?? []);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Failed to load your Sports Bingo cards.");
+      if (!background || cards.length === 0) {
+        setErrorMessage(error instanceof Error ? error.message : "Failed to load your Sports Bingo cards.");
+      }
     } finally {
-      setLoadingCards(false);
+      if (!background) {
+        setLoadingCards(false);
+      }
     }
-  }, [userId]);
+  }, [cards.length, userId]);
 
   useEffect(() => {
     void loadCards();
@@ -211,7 +314,7 @@ export function SportsBingoHome() {
       return;
     }
     const interval = window.setInterval(() => {
-      void loadCards();
+      void loadCards({ background: true });
     }, 20000);
 
     return () => {
@@ -219,8 +322,124 @@ export function SportsBingoHome() {
     };
   }, [loadCards, userId]);
 
+  useEffect(() => {
+    const handleTouchMove = (event: TouchEvent) => {
+      const trackedTouchId = activeTouchIdRef.current;
+      const start = holdStartRef.current;
+      if (trackedTouchId === null || !start) {
+        return;
+      }
+
+      let trackedTouch: Touch | null = null;
+      for (let index = 0; index < event.touches.length; index += 1) {
+        const touch = event.touches.item(index);
+        if (touch && touch.identifier === trackedTouchId) {
+          trackedTouch = touch;
+          break;
+        }
+      }
+
+      if (!trackedTouch) {
+        clearPressedCard();
+        return;
+      }
+
+      const moved = Math.hypot(trackedTouch.clientX - start.x, trackedTouch.clientY - start.y);
+      if (moved > 10) {
+        clearPressedCard();
+      }
+    };
+
+    window.addEventListener("pointerup", clearPressedCard);
+    window.addEventListener("pointercancel", clearPressedCard);
+    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchend", clearPressedCard, { passive: true });
+    window.addEventListener("touchcancel", clearPressedCard, { passive: true });
+    window.addEventListener("scroll", clearPressedCard, { passive: true });
+    window.addEventListener("blur", clearPressedCard);
+
+    return () => {
+      window.removeEventListener("pointerup", clearPressedCard);
+      window.removeEventListener("pointercancel", clearPressedCard);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", clearPressedCard);
+      window.removeEventListener("touchcancel", clearPressedCard);
+      window.removeEventListener("scroll", clearPressedCard);
+      window.removeEventListener("blur", clearPressedCard);
+    };
+  }, [clearPressedCard]);
+
   const activeCards = useMemo(() => cards.filter((card) => card.status === "active"), [cards]);
   const settledCards = useMemo(() => cards.filter((card) => card.status !== "active"), [cards]);
+  const pressedCard = useMemo(
+    () => activeCards.find((card) => card.id === pressedCardId) ?? null,
+    [activeCards, pressedCardId]
+  );
+  const hasReachedBoardLimit = activeCards.length >= 4;
+
+  const claimPoints = async (card: BingoCard, event: React.MouseEvent<HTMLButtonElement>) => {
+    if (!userId || claimingCardId) {
+      return;
+    }
+
+    setClaimingCardId(card.id);
+    setErrorMessage("");
+    try {
+      const response = await fetch("/api/bingo/cards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "claim",
+          userId,
+          cardId: card.id,
+        }),
+      });
+      const payload = (await response.json()) as ClaimResponse;
+      if (!payload.ok || !payload.result) {
+        throw new Error(payload.error ?? "Failed to claim Bingo points.");
+      }
+
+      const buttonRect = event.currentTarget.getBoundingClientRect();
+      window.dispatchEvent(
+        new CustomEvent("tp:coin-flight", {
+          detail: {
+            sourceRect: {
+              left: buttonRect.left,
+              top: buttonRect.top,
+              width: buttonRect.width,
+              height: buttonRect.height,
+            },
+            delta: payload.result.rewardPoints,
+            coins: Math.min(32, Math.max(12, Math.round(payload.result.rewardPoints / 4))),
+          },
+        })
+      );
+      window.dispatchEvent(
+        new CustomEvent("tp:points-updated", {
+          detail: {
+            source: "bingo-claim",
+            delta: payload.result.rewardPoints,
+          },
+        })
+      );
+
+      setCards((prev) =>
+        prev.map((item) =>
+          item.id === card.id
+            ? {
+                ...item,
+                rewardClaimedAt: new Date().toISOString(),
+              }
+            : item
+        )
+      );
+      void loadCards({ background: true });
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Failed to claim Bingo points.");
+    } finally {
+      setClaimingCardId("");
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -229,34 +448,57 @@ export function SportsBingoHome() {
       ) : null}
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Sports Bingo Home</p>
-            <p className="mt-1 text-sm text-slate-700">Track active boards here and start a new board flow anytime.</p>
-          </div>
-          <span className="rounded-full border border-blue-200 bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700">
+        <p className="text-center text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Sports Bingo Home</p>
+        <p className="mt-1 text-center text-sm text-slate-700">Track active bingo boards here.</p>
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+          {hasReachedBoardLimit ? (
+            <button
+              type="button"
+              aria-disabled="true"
+              onMouseDown={() => {
+                setShowBoardLimitMessage(true);
+              }}
+              onMouseUp={() => {
+                setShowBoardLimitMessage(false);
+              }}
+              onMouseLeave={() => {
+                setShowBoardLimitMessage(false);
+              }}
+              onTouchStart={() => {
+                setShowBoardLimitMessage(true);
+              }}
+              onTouchEnd={() => {
+                setShowBoardLimitMessage(false);
+              }}
+              onTouchCancel={() => {
+                setShowBoardLimitMessage(false);
+              }}
+              className="inline-flex min-h-[42px] items-center rounded-full bg-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
+            >
+              {showBoardLimitMessage ? "Cannot exceed 4 active bingo boards!" : "Choose New Bingo Board"}
+            </button>
+          ) : (
+            <Link
+              href="/bingo/select-sport"
+              className="inline-flex min-h-[42px] items-center rounded-full bg-gradient-to-r from-blue-700 to-cyan-600 px-4 py-2 text-sm font-semibold text-white transition-all active:scale-95"
+            >
+              Choose New Bingo Board
+            </Link>
+          )}
+          <span className="inline-flex min-h-[42px] items-center rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-[12px] font-semibold text-blue-700">
             Active Cards: {activeCards.length}/4
           </span>
-        </div>
-
-        <div className="mt-4">
-          <Link
-            href="/bingo/select-sport"
-            className="inline-flex min-h-[42px] items-center rounded-full bg-gradient-to-r from-blue-700 to-cyan-600 px-4 py-2 text-sm font-semibold text-white transition-all active:scale-95"
-          >
-            Play Sports Bingo
-          </Link>
         </div>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-base font-semibold text-slate-900">Active Board Preview</h2>
-          <span className="text-xs text-slate-500">No extra tap needed</span>
+          <h2 className="text-base font-semibold text-slate-900">Active Boards</h2>
         </div>
+        <p className="mt-2 text-base font-bold text-slate-700">Press down on a board to expand it!</p>
 
         {loadingCards ? (
-          <p className="mt-3 text-sm text-slate-600">Loading your cards...</p>
+          <LoadingState label="Loading your cards..." />
         ) : activeCards.length === 0 ? (
           <p className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
             No active cards yet. Tap Play Sports Bingo to begin.
@@ -265,8 +507,34 @@ export function SportsBingoHome() {
           <ul className="mt-3 space-y-3">
             {activeCards.map((card) => {
               const summary = summarizeCardState(card);
+              const isPressed = pressedCardId === card.id;
               return (
-                <li key={card.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <li
+                  key={card.id}
+                  onMouseDown={(event) => {
+                    if (event.button !== 0) {
+                      return;
+                    }
+                    if (Date.now() - lastTouchAtRef.current < 800) {
+                      return;
+                    }
+                    setPressedCardId(card.id);
+                  }}
+                  onMouseUp={clearPressedCard}
+                  onMouseLeave={() => {
+                    setPressedCardId((current) => (current === card.id ? "" : current));
+                    clearHoldTimer();
+                  }}
+                  onTouchStart={(event) => {
+                    startTouchHold(card.id, event);
+                  }}
+                  onTouchEnd={clearPressedCard}
+                  onTouchCancel={clearPressedCard}
+                  className={`rounded-xl border border-slate-200 bg-slate-50 p-3 transition-all ${
+                    isPressed ? "shadow-md shadow-slate-300/60 ring-2 ring-cyan-300/60" : ""
+                  }`}
+                  style={{ touchAction: "pan-y", WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none" }}
+                >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-semibold text-slate-900">{card.gameLabel}</p>
                     <span className="rounded-full bg-blue-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-blue-700">
@@ -288,13 +556,14 @@ export function SportsBingoHome() {
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="text-base font-semibold text-slate-900">Recent Results</h2>
         {loadingCards ? (
-          <p className="mt-3 text-sm text-slate-600">Loading...</p>
+          <LoadingState label="Loading recent results..." />
         ) : settledCards.length === 0 ? (
           <p className="mt-3 text-sm text-slate-600">No settled cards yet.</p>
         ) : (
           <ul className="mt-3 space-y-3">
             {settledCards.slice(0, 8).map((card) => {
               const summary = summarizeCardState(card);
+              const showClaimOverlay = card.status === "won" && !card.rewardClaimedAt;
               return (
                 <li key={card.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -314,13 +583,49 @@ export function SportsBingoHome() {
                   <p className="mt-1 text-xs text-slate-600">
                     {formatLocalDateTime(card.startsAt)} · Hits {summary.hitCount}/25
                     {card.status === "won" ? ` · +${card.rewardPoints} points` : ""}
+                    {card.status === "won" && card.rewardClaimedAt ? " · Claimed" : ""}
                   </p>
+                  {card.status === "won" ? (
+                    <div className="relative mt-2">
+                      {renderCompactGrid(card.squares)}
+                      {showClaimOverlay ? (
+                        <>
+                          <div className="pointer-events-none absolute inset-0 rounded-lg bg-slate-900/10" />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <button
+                              type="button"
+                              disabled={claimingCardId === card.id}
+                              onClick={(event) => {
+                                void claimPoints(card, event);
+                              }}
+                              className="pointer-events-auto inline-flex min-h-[44px] items-center rounded-full bg-gradient-to-r from-emerald-700 to-teal-600 px-4 py-2 text-sm font-semibold text-white transition-all active:scale-95 disabled:opacity-60"
+                            >
+                              {claimingCardId === card.id ? "Claiming..." : "Claim Reward"}
+                            </button>
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </li>
               );
             })}
           </ul>
         )}
       </div>
+
+      {pressedCard ? (
+        <div className="pointer-events-none fixed inset-0 z-[90] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-950/35" />
+          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-2xl border border-cyan-300 bg-white p-3 shadow-2xl shadow-slate-900/40">
+            <p className="text-center text-sm font-semibold text-slate-900">{pressedCard.gameLabel}</p>
+            <p className="mb-2 mt-1 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-cyan-700">
+              Expanded Board Preview
+            </p>
+            {renderExpandedGrid(pressedCard.squares)}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

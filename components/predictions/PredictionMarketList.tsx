@@ -39,6 +39,13 @@ type UserPicksPayload = {
   >;
 };
 
+type PendingPickItem = UserPrediction & {
+  marketQuestion?: string | null;
+  marketClosesAt?: string | null;
+  marketSport?: string | null;
+  marketLeague?: string | null;
+};
+
 type PredictionQuota = {
   limit: number;
   picksUsed: number;
@@ -273,6 +280,7 @@ export function PredictionMarketList() {
   const [messages, setMessages] = useState<SubmitState>({});
   const [limitPopups, setLimitPopups] = useState<PopupState>({});
   const [pendingByMarket, setPendingByMarket] = useState<Record<string, boolean>>({});
+  const [justLockedMarketId, setJustLockedMarketId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [quota, setQuota] = useState<PredictionQuota | null>(null);
   const [quotaSecondsRemaining, setQuotaSecondsRemaining] = useState(0);
@@ -289,6 +297,7 @@ export function PredictionMarketList() {
   const [isInitializing, setIsInitializing] = useState(true);
   const hasInitializedRef = useRef(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const lockAnimationTimeoutRef = useRef<number | null>(null);
 
   const [selectedCloseWindow, setSelectedCloseWindow] = useState<CloseWindowKey>("all");
   const [selectedSport, setSelectedSport] = useState("");
@@ -296,14 +305,7 @@ export function PredictionMarketList() {
   const [browseFiltersCollapsed, setBrowseFiltersCollapsed] = useState(false);
   const [pendingPredictionsCollapsed, setPendingPredictionsCollapsed] = useState(false);
   const [pendingPicks, setPendingPicks] = useState<
-    Array<
-      UserPrediction & {
-        marketQuestion?: string | null;
-        marketClosesAt?: string | null;
-        marketSport?: string | null;
-        marketLeague?: string | null;
-      }
-    >
+    Array<PendingPickItem>
   >([]);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
@@ -347,7 +349,10 @@ export function PredictionMarketList() {
   const groupedMarketSections = useMemo(() => {
     const byLeague = new Map<string, Prediction[]>();
     for (const market of markets) {
-      const label = market.league?.trim() || "Additional Markets";
+      const label = market.league?.trim() ?? "";
+      if (!label) {
+        continue;
+      }
       const existing = byLeague.get(label) ?? [];
       existing.push(market);
       byLeague.set(label, existing);
@@ -377,6 +382,16 @@ export function PredictionMarketList() {
     });
     return indexById;
   }, [markets]);
+  const pendingPickByMarket = useMemo(() => {
+    const picksByMarket = new Map<string, PendingPickItem>();
+    for (const pick of pendingPicks) {
+      if (!pick.predictionId || picksByMarket.has(pick.predictionId)) {
+        continue;
+      }
+      picksByMarket.set(pick.predictionId, pick);
+    }
+    return picksByMarket;
+  }, [pendingPicks]);
   const loadQuota = useCallback(async () => {
     if (!userId) {
       setQuota(null);
@@ -525,7 +540,7 @@ export function PredictionMarketList() {
       const warmItems = (warmSnapshot?.payload.items ?? [])
         .map((market) => normalizeMarketPayload(market))
         .filter((market): market is Prediction => Boolean(market))
-        .filter((market) => Boolean(market.sport));
+        .filter((market) => Boolean(market.sport) && Boolean(market.league));
       if (warmItems.length > 0) {
         seededFromWarmCache = true;
         setAllMarkets(warmItems);
@@ -579,7 +594,7 @@ export function PredictionMarketList() {
         const normalizedMarkets = (payload.items ?? [])
           .map((market) => normalizeMarketPayload(market))
           .filter((market): market is Prediction => Boolean(market))
-          .filter((market) => Boolean(market.sport));
+          .filter((market) => Boolean(market.sport) && Boolean(market.league));
         setAllMarkets(normalizedMarkets);
         setSports(payload.sports ?? []);
         setLeaguesBySport(payload.leaguesBySport ?? {});
@@ -663,7 +678,7 @@ export function PredictionMarketList() {
       const incoming = (payload.items ?? [])
         .map((market) => normalizeMarketPayload(market))
         .filter((market): market is Prediction => Boolean(market))
-        .filter((market) => Boolean(market.sport));
+        .filter((market) => Boolean(market.sport) && Boolean(market.league));
       setAllMarkets((prev) => {
         const byId = new Set(prev.map((market) => market.id));
         const merged = [...prev];
@@ -730,6 +745,14 @@ export function PredictionMarketList() {
     [allMarkets]
   );
 
+  useEffect(() => {
+    return () => {
+      if (lockAnimationTimeoutRef.current) {
+        window.clearTimeout(lockAnimationTimeoutRef.current);
+      }
+    };
+  }, []);
+
   if (isInitializing) {
     return (
       <div className="space-y-6 rounded-lg border border-slate-200 bg-white p-6">
@@ -777,14 +800,51 @@ export function PredictionMarketList() {
       return;
     }
 
+    const existingPendingPick = pendingPickByMarket.get(predictionId);
+    if (existingPendingPick) {
+      const message = `You already picked "${existingPendingPick.outcomeTitle}" for this market.`;
+      setMessages((prev) => ({ ...prev, [predictionId]: message }));
+      triggerHaptic([20, 20]);
+      return;
+    }
+
     setPendingByMarket((prev) => ({ ...prev, [predictionId]: true }));
     setMessages((prev) => ({ ...prev, [predictionId]: "" }));
     triggerHaptic(10);
 
+    const selectedMarket = allMarkets.find((market) => market.id === predictionId);
+    const selectedOutcome = selectedMarket?.outcomes.find((outcome) => outcome.id === outcomeId);
+    const optimisticPickId = `optimistic-${predictionId}-${Date.now()}`;
+    const optimisticPick: PendingPickItem | null =
+      userId && selectedMarket && selectedOutcome
+        ? {
+            id: optimisticPickId,
+            userId,
+            predictionId,
+            outcomeId,
+            outcomeTitle: selectedOutcome.title,
+            points: calculatePoints(selectedOutcome.probability),
+            status: "pending",
+            createdAt: new Date().toISOString(),
+            marketQuestion: selectedMarket.question,
+            marketClosesAt: selectedMarket.closesAt,
+            marketSport: selectedMarket.sport ?? undefined,
+            marketLeague: selectedMarket.league ?? undefined,
+          }
+        : null;
+    if (optimisticPick) {
+      setPendingPicks((prev) => [optimisticPick, ...prev.filter((item) => item.predictionId !== predictionId)]);
+      setMessages((prev) => ({ ...prev, [predictionId]: "Pick locked in." }));
+      setJustLockedMarketId(predictionId);
+      if (lockAnimationTimeoutRef.current) {
+        window.clearTimeout(lockAnimationTimeoutRef.current);
+      }
+      lockAnimationTimeoutRef.current = window.setTimeout(() => {
+        setJustLockedMarketId((current) => (current === predictionId ? null : current));
+      }, 550);
+    }
+
     try {
-      const selectedOutcome = allMarkets
-        .find((market) => market.id === predictionId)
-        ?.outcomes.find((outcome) => outcome.id === outcomeId);
       if (!selectedOutcome) {
         throw new Error("Unable to identify selected option.");
       }
@@ -802,9 +862,12 @@ export function PredictionMarketList() {
 
       setMessages((prev) => ({ ...prev, [predictionId]: "Pick placed successfully." }));
       triggerHaptic([25, 40, 25]);
-      await loadQuota();
-      await loadPendingPicks();
+      void loadQuota();
+      void loadPendingPicks();
     } catch (error) {
+      if (optimisticPick) {
+        setPendingPicks((prev) => prev.filter((item) => item.id !== optimisticPickId));
+      }
       setMessages((prev) => ({
         ...prev,
         [predictionId]: error instanceof Error ? error.message : "Failed to place pick.",
@@ -814,48 +877,74 @@ export function PredictionMarketList() {
     }
   };
 
-  const renderMarketCard = (market: Prediction) => (
-    <article key={market.id} className="relative rounded-xl border border-slate-200 bg-white/90 p-4 shadow-sm">
-      <h2 className="font-medium">{market.question}</h2>
-      <p className="mt-1 text-xs text-slate-500">
-        {[market.sport, market.league].filter(Boolean).join(" · ")}
-        {[market.sport, market.league].some(Boolean) ? " · " : ""}
-        Closes: {new Date(market.closesAt).toLocaleString()}
-      </p>
-      <ul className="mt-3 space-y-2">
-        {market.outcomes.map((outcome) => (
-          <li
-            key={outcome.id}
-            className="rounded-md border border-slate-100 bg-slate-50 p-2 text-sm"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <span className="min-w-0 flex-1">{outcome.title}</span>
-              <span className="shrink-0 font-medium text-slate-700">
-                {formatProbability(outcome.probability)} · {calculatePoints(outcome.probability)} pts
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic();
-                void submitPick(market.id, outcome.id);
-              }}
-              disabled={Boolean(pendingByMarket[market.id])}
-              className={`tp-clean-button ${BUTTON_POP_CLASS} mt-2 inline-flex w-full items-center justify-center rounded-md bg-gradient-to-r from-blue-700 to-cyan-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60`}
-            >
-              Pick
-            </button>
-          </li>
-        ))}
-      </ul>
-      {limitPopups[market.id] ? (
-        <div className="pointer-events-none absolute right-3 top-3 z-20 max-w-[240px] rounded-md border border-rose-300 bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-800 shadow-sm">
-          {limitPopups[market.id]}
-        </div>
-      ) : null}
-      {messages[market.id] ? <p className="mt-2 text-xs text-slate-600">{messages[market.id]}</p> : null}
-    </article>
-  );
+  const renderMarketCard = (market: Prediction) => {
+    const existingPendingPick = pendingPickByMarket.get(market.id);
+    const marketLocked = Boolean(pendingByMarket[market.id]) || Boolean(existingPendingPick);
+    const isJustLocked = justLockedMarketId === market.id;
+    return (
+      <article
+        key={market.id}
+        className={`relative rounded-xl border bg-white/90 p-4 shadow-sm transition-all duration-300 ${
+          isJustLocked ? "scale-[1.01] border-emerald-300 shadow-[0_0_0_3px_rgba(16,185,129,0.18)]" : "border-slate-200"
+        }`}
+      >
+        <h2 className="font-medium">{market.question}</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          {[market.sport, market.league].filter(Boolean).join(" · ")}
+          {[market.sport, market.league].some(Boolean) ? " · " : ""}
+          Closes: {new Date(market.closesAt).toLocaleString()}
+        </p>
+        <ul className="mt-3 space-y-2">
+          {market.outcomes.map((outcome) => {
+            const isSelectedOutcome = existingPendingPick?.outcomeId === outcome.id;
+            return (
+              <li
+                key={outcome.id}
+                className={`rounded-md border p-2 text-sm ${
+                  isSelectedOutcome ? "border-emerald-300 bg-emerald-50" : "border-slate-100 bg-slate-50"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <span className="min-w-0 flex-1">{outcome.title}</span>
+                  <span className="shrink-0 font-medium text-slate-700">
+                    {formatProbability(outcome.probability)} · {calculatePoints(outcome.probability)} pts
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic();
+                    void submitPick(market.id, outcome.id);
+                  }}
+                  disabled={marketLocked}
+                  className={`tp-clean-button ${BUTTON_POP_CLASS} mt-2 inline-flex w-full items-center justify-center rounded-md px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60 ${
+                    existingPendingPick
+                      ? isSelectedOutcome
+                        ? "bg-emerald-700"
+                        : "bg-slate-500"
+                      : "bg-gradient-to-r from-blue-700 to-cyan-600"
+                  }`}
+                >
+                  {existingPendingPick ? (isSelectedOutcome ? "Selected" : "Locked") : "Pick"}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+        {existingPendingPick ? (
+          <p className="mt-2 text-xs font-semibold text-emerald-800">
+            You already picked {existingPendingPick.outcomeTitle} for this market.
+          </p>
+        ) : null}
+        {limitPopups[market.id] ? (
+          <div className="pointer-events-none absolute right-3 top-3 z-20 max-w-[240px] rounded-md border border-rose-300 bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-800 shadow-sm">
+            {limitPopups[market.id]}
+          </div>
+        ) : null}
+        {messages[market.id] ? <p className="mt-2 text-xs text-slate-600">{messages[market.id]}</p> : null}
+      </article>
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -1129,17 +1218,6 @@ export function PredictionMarketList() {
                       className={`${BUTTON_POP_CLASS} rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-400`}
                     >
                       {collapsedSections[section.id] ? "Expand" : "Collapse"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const sectionSport = markets.find((market) => market.league === section.label)?.sport ?? "";
-                        setSelectedSport(sectionSport);
-                        setSelectedLeague(section.label);
-                      }}
-                      className={`${BUTTON_POP_CLASS} rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-400`}
-                    >
-                      Filter To This League
                     </button>
                   </div>
                 </div>

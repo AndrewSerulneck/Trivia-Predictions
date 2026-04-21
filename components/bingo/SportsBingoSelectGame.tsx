@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { getUserId } from "@/lib/storage";
 
 type BingoGame = {
   id: string;
@@ -16,6 +17,16 @@ type BingoGame = {
 type GamesResponse = {
   ok: boolean;
   games?: BingoGame[];
+  error?: string;
+};
+
+type CardsResponse = {
+  ok: boolean;
+  cards?: Array<{
+    id: string;
+    gameId: string;
+    status: "active" | "won" | "lost" | "canceled";
+  }>;
   error?: string;
 };
 
@@ -40,9 +51,15 @@ export function SportsBingoSelectGame() {
   const searchParams = useSearchParams();
   const sportKey = (searchParams.get("sportKey") ?? "basketball_nba").trim() || "basketball_nba";
 
+  const [userId, setUserId] = useState("");
   const [games, setGames] = useState<BingoGame[]>([]);
+  const [activeGameIds, setActiveGameIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    setUserId(getUserId() ?? "");
+  }, []);
 
   const loadGames = useCallback(async () => {
     setLoading(true);
@@ -70,6 +87,34 @@ export function SportsBingoSelectGame() {
     void loadGames();
   }, [loadGames]);
 
+  useEffect(() => {
+    const loadCards = async () => {
+      if (!userId) {
+        setActiveGameIds(new Set());
+        return;
+      }
+      try {
+        const response = await fetch(`/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=true`, {
+          cache: "no-store",
+        });
+        const payload = (await response.json()) as CardsResponse;
+        if (!payload.ok) {
+          return;
+        }
+        const next = new Set(
+          (payload.cards ?? [])
+            .filter((card) => card.status === "active")
+            .map((card) => String(card.gameId ?? "").trim())
+            .filter(Boolean)
+        );
+        setActiveGameIds(next);
+      } catch {
+        // Keep UX responsive even if cards fetch fails.
+      }
+    };
+    void loadCards();
+  }, [userId]);
+
   const sportLabel = useMemo(() => SPORT_LABELS[sportKey] ?? sportKey, [sportKey]);
 
   return (
@@ -91,21 +136,42 @@ export function SportsBingoSelectGame() {
           </div>
         ) : (
           <div className="mt-4 space-y-2">
-            {games.map((game) => (
-              <button
-                key={game.id}
-                type="button"
-                onClick={() => {
-                  router.push(
-                    `/bingo/select-board?sportKey=${encodeURIComponent(sportKey)}&gameId=${encodeURIComponent(game.id)}`
-                  );
-                }}
-                className="w-full rounded-lg border border-slate-200 bg-white p-3 text-left transition-all hover:border-slate-300"
-              >
-                <p className="text-sm font-semibold text-slate-900">{game.awayTeam} vs {game.homeTeam}</p>
-                <p className="mt-1 text-xs text-slate-600">Starts {formatLocalDateTime(game.startsAt)}</p>
-              </button>
-            ))}
+            {games.map((game) => {
+              const unavailable = activeGameIds.has(game.id);
+              return (
+                <button
+                  key={game.id}
+                  type="button"
+                  onClick={() => {
+                    if (unavailable) {
+                      return;
+                    }
+                    router.push(
+                      `/bingo/select-board?sportKey=${encodeURIComponent(sportKey)}&gameId=${encodeURIComponent(game.id)}`
+                    );
+                  }}
+                  disabled={unavailable}
+                  className={`w-full rounded-lg border p-3 text-left transition-all ${
+                    unavailable
+                      ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-500"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-semibold text-slate-900">{game.awayTeam} vs {game.homeTeam}</p>
+                    {unavailable ? (
+                      <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-600">
+                        Unavailable
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-xs text-slate-600">Starts {formatLocalDateTime(game.startsAt)}</p>
+                  {unavailable ? (
+                    <p className="mt-1 text-[11px] text-slate-500">You already have an active Bingo card for this game.</p>
+                  ) : null}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

@@ -10,7 +10,7 @@ export default function SportsBingoSelectGamePage() {
       description="Step 2: Choose an upcoming game."
     >
       <div className="h-full space-y-4 overflow-y-auto pr-1">
-        <BackButton href="/bingo/select-sport" label="Back" />
+        <BackButton href="/bingo/select-sport" label="Back" preferHref />
         <SportsBingoSelectGame />
       </div>
     </PageShell>

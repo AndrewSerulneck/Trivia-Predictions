@@ -1072,6 +1072,21 @@ export async function listPredictionMarkets(params: PredictionListParams = {}): 
   }
 
   const filteredMarkets = [...normalized].filter((market) => {
+    const closesAtTs = +new Date(market.closesAt);
+    const hasValidCloseTime = Number.isFinite(closesAtTs);
+    const isPastCloseTime = hasValidCloseTime ? closesAtTs <= now : true;
+    if (market.isClosed || isPastCloseTime) {
+      return false;
+    }
+
+    // Sports views should only contain league-classified markets.
+    if (broadCategory === "sports") {
+      const league = String(market.league ?? "").trim();
+      if (!league) {
+        return false;
+      }
+    }
+
     const broadCategories = broadByMarketId.get(market.id);
     if (!excludeSensitive || !broadCategories) {
       return true;
@@ -1197,9 +1212,24 @@ function inferResolvedOutcome(market: Prediction): ResolvedPredictionOutcome | n
     return null;
   }
 
-  // Polymarket resolved markets generally settle with one outcome near 100%.
-  const winner = market.outcomes.find((outcome) => outcome.probability >= 99.5);
-  if (!winner) {
+  const ranked = [...market.outcomes]
+    .filter((outcome) => Number.isFinite(outcome.probability))
+    .sort((left, right) => right.probability - left.probability);
+  const top = ranked[0];
+  const runnerUp = ranked[1];
+
+  if (!top) {
+    return null;
+  }
+
+  // Most resolved markets finish near 100/0, but we also support slightly off
+  // values to avoid leaving clearly resolved markets pending indefinitely.
+  const clearHighConfidenceWinner = top.probability >= 99.5;
+  const clearLeadOverRunnerUp =
+    typeof runnerUp?.probability === "number" && top.probability - runnerUp.probability >= 1;
+  const hasMajority = top.probability > 50;
+
+  if (!clearHighConfidenceWinner && !(clearLeadOverRunnerUp && hasMajority)) {
     return {
       predictionId: market.id,
       settleAsCanceled: true,
@@ -1208,7 +1238,7 @@ function inferResolvedOutcome(market: Prediction): ResolvedPredictionOutcome | n
 
   return {
     predictionId: market.id,
-    winningOutcomeId: winner.id,
+    winningOutcomeId: top.id,
     settleAsCanceled: false,
   };
 }
@@ -1492,5 +1522,20 @@ export async function getPredictionMarketById(predictionId: string): Promise<Pre
     .map((item) => normalizeMarket(item))
     .filter((item): item is Prediction => Boolean(item));
 
-  return scanNormalized.find((item) => item.id === trimmed) ?? null;
+  const activeMatch = scanNormalized.find((item) => item.id === trimmed);
+  if (activeMatch) {
+    return activeMatch;
+  }
+
+  const closedScanQuery = new URLSearchParams({
+    active: "false",
+    closed: "true",
+    limit: String(Number.isFinite(DEFAULT_SCAN_LIMIT) ? Math.max(DEFAULT_SCAN_LIMIT, 100) : 1000),
+  });
+  const closedScan = await fetchGammaMarkets(closedScanQuery);
+  const closedScanNormalized = closedScan
+    .map((item) => normalizeMarket(item))
+    .filter((item): item is Prediction => Boolean(item));
+
+  return closedScanNormalized.find((item) => item.id === trimmed) ?? null;
 }

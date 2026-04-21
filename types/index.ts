@@ -93,6 +93,10 @@ export interface UserPrediction {
   outcomeTitle: string;
   points: number;
   status: PredictionStatus;
+  marketQuestion?: string;
+  marketClosesAt?: string;
+  marketSport?: string;
+  marketLeague?: string;
   createdAt: string;
   resolvedAt?: string;
 }
