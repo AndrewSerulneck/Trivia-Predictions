@@ -22,6 +22,7 @@ describe("sports bingo player props ingestion", () => {
     vi.resetModules();
     process.env.ODDS_API_KEY = "test-odds-key";
     process.env.ODDS_API_BASE_URL = "https://api.the-odds-api.com/v4";
+    process.env.BINGO_BOARD_SIM_TRIALS = "600";
   });
 
   afterEach(() => {
@@ -97,7 +98,17 @@ describe("sports bingo player props ingestion", () => {
     expect(eventCalls).toHaveLength(2);
     expect(eventCalls[0]).toContain("regions=us");
     expect(eventCalls[1]).toContain("regions=us%2Ceu%2Cuk");
+    expect(eventCalls[0]).toContain("player_points");
+    expect(eventCalls[0]).toContain("player_rebounds");
+    expect(eventCalls[0]).toContain("player_assists");
+    expect(eventCalls[0]).toContain("player_steals");
+    expect(eventCalls[0]).toContain("player_blocks");
+    expect(eventCalls[0]).not.toContain("player_points_rebounds_assists");
+    expect(eventCalls[0]).not.toContain("player_points_rebounds");
+    expect(eventCalls[0]).not.toContain("player_points_assists");
+    expect(eventCalls[0]).not.toContain("player_rebounds_assists");
     expect(board.squares.some((square) => square.label.includes("Jayson Tatum"))).toBe(true);
+    expect(board.squares.some((square) => square.label.toLowerCase().includes("triple-double"))).toBe(true);
   });
 
   it("requests NFL player prop market keys for NFL games", async () => {
@@ -112,7 +123,34 @@ describe("sports bingo player props ingestion", () => {
               commence_time: "2030-01-02T18:00:00Z",
               home_team: "Buffalo Bills",
               away_team: "New York Jets",
-              bookmakers: [],
+              bookmakers: [
+                {
+                  title: "DraftKings",
+                  markets: [
+                    {
+                      key: "h2h",
+                      outcomes: [
+                        { name: "Buffalo Bills", price: -145 },
+                        { name: "New York Jets", price: 125 },
+                      ],
+                    },
+                    {
+                      key: "spreads",
+                      outcomes: [
+                        { name: "Buffalo Bills", point: -3.5, price: -110 },
+                        { name: "New York Jets", point: 3.5, price: -110 },
+                      ],
+                    },
+                    {
+                      key: "totals",
+                      outcomes: [
+                        { name: "Over", point: 45.5, price: -110 },
+                        { name: "Under", point: 45.5, price: -110 },
+                      ],
+                    },
+                  ],
+                },
+              ],
             },
           ],
         })
