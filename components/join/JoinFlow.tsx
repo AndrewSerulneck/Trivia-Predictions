@@ -41,6 +41,8 @@ const DISABLE_GEOFENCE_FOR_TESTING = normalizeBooleanEnv(process.env.NEXT_PUBLIC
 
 const JOIN_BUTTON_POP_CLASS =
   "transition-all duration-150 active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
+const JOIN_LEGAL_NOTICE =
+  "Use of this platform is restricted to authorized, geofenced locations. To inquire about becoming an activated venue or to obtain a commercial license for your establishment, please contact partnerships@hightopchallenge.com.";
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message) return error.message;
@@ -488,7 +490,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       title={APP_PAGE_NAMES.join}
       showAlerts={false}
     >
-      <div className="space-y-4 text-sm">
+      <div className="h-full space-y-4 overflow-y-auto pr-1 text-sm">
         {errorMessage && (
           <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-rose-700">
             {errorMessage}
@@ -589,11 +591,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               </label>
               <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
                 <p>
-                  If this is your first time playing Hightop Challenge, simply enter a username and PIN to create a
+                  If this is your first time playing Hightop Challenge, enter a username and PIN to create a
                   new profile.
                 </p>
                 <p className="mt-2">
-                  If have played Hightop Challenge before, simply enter the same username and PIN you enterred last
+                  If have played Hightop Challenge before, enter the same username and PIN you enterred last
                   time to continue playing.
                 </p>
               </div>
@@ -641,6 +643,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             Admin Login
           </button>
         </div>
+        <p className="text-center text-xs leading-relaxed text-slate-600">{JOIN_LEGAL_NOTICE}</p>
       </div>
     </PageShell>
   );

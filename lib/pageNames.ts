@@ -12,5 +12,5 @@ export const APP_PAGE_ROUTES = {
   trivia: "/trivia",
   sportsPredictions: "/predictions",
   sportsPredictionsLegacy: "/prediction",
-  sportsBingo: "/bingo", // Planned route; page not implemented yet.
+  sportsBingo: "/bingo",
 } as const;

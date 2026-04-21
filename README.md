@@ -45,15 +45,25 @@ Open `http://localhost:3000`.
 - Auth: `Authorization: Bearer $CRON_SECRET` or `x-cron-secret: $CRON_SECRET`
 - `vercel.json` schedules the cron endpoint every 5 minutes.
 
+## Sports Bingo Player Props
+- Player props are fetched from the event-level Odds API endpoint:
+  - `/sports/{sportKey}/events/{eventId}/odds`
+  - Region fallback sequence: `us` -> `us,eu,uk`
+- Current prop market catalogs are sport-specific in `lib/sportsBingo.ts`:
+  - NBA: points/rebounds/assists/threes/blocks/steals/turnovers and combo markets
+  - NFL: passing/rushing/receiving market set
+  - MLB: hitter and pitcher player-prop market set
+- Settlement note: team markets settle from score feeds, but true player-prop settlement requires a player-stats data feed. Until that feed is integrated, unresolved player-prop squares are voided and auto-replaced per house rules.
+
 ## Current App Status
-- Core pages: `/join`, `/trivia`, `/predictions`, `/activity`, `/leaderboard`, `/admin`
+- Core pages: `/join`, `/trivia`, `/predictions`, `/bingo`, `/activity`, `/leaderboard`, `/admin`
 - Canonical page names (see `lib/pageNames.ts`):
   - `Join`: `/` and `/join`
   - `Venue`: `/venue/[venueId]`
   - `Trivia`: `/trivia`
   - `Sports Predictions`: `/predictions` (`/prediction` is a legacy redirect)
-  - `Sports Bingo`: planned route `/bingo` (not implemented yet)
-- API routes: `/api/trivia`, `/api/predictions`, `/api/predictions/quota`, `/api/venues`, `/api/activity`, `/api/leaderboard`, `/api/notifications`, `/api/admin`, `/api/admin/users`, `/api/admin/bootstrap`, `/api/ads/impression`, `/api/ads/click`, `/api/cron/predictions-settle`
+  - `Sports Bingo`: `/bingo`
+- API routes: `/api/trivia`, `/api/predictions`, `/api/predictions/quota`, `/api/bingo/games`, `/api/bingo/cards`, `/api/venues`, `/api/activity`, `/api/leaderboard`, `/api/notifications`, `/api/admin`, `/api/admin/users`, `/api/admin/bootstrap`, `/api/ads/impression`, `/api/ads/click`, `/api/cron/predictions-settle`, `/api/cron/bingo-progress`
 - Join flow: anonymous auth + venue-locked usernames + geofence verification (100m default, optional local bypass)
 - SQL migrations:
   - `supabase/migrations/20260214153000_initial_schema.sql`

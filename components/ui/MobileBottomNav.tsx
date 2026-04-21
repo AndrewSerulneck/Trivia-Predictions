@@ -7,6 +7,7 @@ import { APP_PAGE_NAMES } from "@/lib/pageNames";
 const NAV_ITEMS = [
   { href: "/trivia", label: APP_PAGE_NAMES.trivia },
   { href: "/predictions", label: APP_PAGE_NAMES.sportsPredictions },
+  { href: "/bingo", label: APP_PAGE_NAMES.sportsBingo },
   { href: "/activity", label: "Activity" },
   { href: "/leaderboard", label: "Leaders" },
 ];
@@ -24,7 +25,7 @@ export function MobileBottomNav() {
       aria-label="Mobile navigation"
       className="pointer-events-none fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-6px_24px_rgba(15,23,42,0.12)] backdrop-blur md:hidden"
     >
-      <ul className="grid grid-cols-4 gap-1">
+      <ul className="grid grid-cols-5 gap-1">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href;
           return (
