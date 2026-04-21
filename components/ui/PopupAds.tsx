@@ -355,12 +355,6 @@ export function PopupAds() {
         paddingTop: "max(env(safe-area-inset-top, 0px), 8px)",
         paddingBottom: "max(env(safe-area-inset-bottom, 0px), 8px)",
       }}
-      onWheelCapture={(event) => {
-        event.preventDefault();
-      }}
-      onTouchMoveCapture={(event) => {
-        event.preventDefault();
-      }}
     >
       <div
         className="pointer-events-auto animate-tp-popup-sheet-up w-fit max-w-[calc(100vw-12px)] overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.28)]"
