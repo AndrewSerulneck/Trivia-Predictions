@@ -41,8 +41,6 @@ const DISABLE_GEOFENCE_FOR_TESTING = normalizeBooleanEnv(process.env.NEXT_PUBLIC
 
 const JOIN_BUTTON_POP_CLASS =
   "transition-all duration-150 active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
-const JOIN_LEGAL_NOTICE =
-  "Use of this platform is restricted to authorized, geofenced locations. To inquire about becoming an activated venue or to obtain a commercial license for your establishment, please contact partnerships@hightopchallenge.com.";
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message) return error.message;
@@ -643,7 +641,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             Admin Login
           </button>
         </div>
-        <p className="text-center text-xs leading-relaxed text-slate-600">{JOIN_LEGAL_NOTICE}</p>
       </div>
     </PageShell>
   );
