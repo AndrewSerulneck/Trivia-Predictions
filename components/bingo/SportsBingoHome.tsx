@@ -305,7 +305,18 @@ export function SportsBingoHome() {
   }, [loadCards, userId]);
 
   useEffect(() => {
+    if (!pressedCardId) {
+      activeTouchIdRef.current = null;
+    }
+  }, [pressedCardId]);
+
+  useEffect(() => {
     const handleTouchMove = (event: TouchEvent) => {
+      if (!pressedCardId) {
+        activeTouchIdRef.current = null;
+        return;
+      }
+
       const trackedTouchId = activeTouchIdRef.current;
       if (trackedTouchId === null) {
         return;
@@ -325,7 +336,9 @@ export function SportsBingoHome() {
         return;
       }
 
-      event.preventDefault();
+      if (event.cancelable) {
+        event.preventDefault();
+      }
     };
 
     window.addEventListener("pointerup", clearPressedCard);
@@ -345,7 +358,7 @@ export function SportsBingoHome() {
       window.removeEventListener("scroll", clearPressedCard);
       window.removeEventListener("blur", clearPressedCard);
     };
-  }, [clearPressedCard]);
+  }, [clearPressedCard, pressedCardId]);
 
   const activeCards = useMemo(() => cards.filter((card) => card.status === "active"), [cards]);
   const settledCards = useMemo(() => cards.filter((card) => card.status !== "active"), [cards]);
@@ -510,7 +523,12 @@ export function SportsBingoHome() {
                   className={`rounded-xl border border-slate-200 bg-slate-50 p-3 transition-all ${
                     isPressed ? "shadow-md shadow-slate-300/60 ring-2 ring-cyan-300/60" : ""
                   }`}
-                  style={{ touchAction: "none", WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none" }}
+                  style={{
+                    touchAction: isPressed ? "none" : "pan-y",
+                    WebkitTouchCallout: "none",
+                    WebkitUserSelect: "none",
+                    userSelect: "none",
+                  }}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-semibold text-slate-900">{card.gameLabel}</p>
