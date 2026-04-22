@@ -1,0 +1,56 @@
+name: Trivia Nightly
+
+on:
+  schedule:
+    # 02:15 UTC nightly (~10:15 PM ET during DST / 9:15 PM ET during EST)
+    - cron: "15 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  generate-and-import:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Generate Trivia For All Categories
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL }}
+        run: node scripts/generate-trivia-nightly.cjs --total 200 --batch-size 25
+
+      - name: Validate Trivia Files
+        run: npm run trivia:check
+
+      - name: Import Trivia To Supabase
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/import-trivia-questions.cjs --dir data/trivia/categories
+
+      - name: Commit Updated Trivia Files
+        run: |
+          if git diff --quiet -- data/trivia/categories; then
+            echo "No trivia JSON changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/trivia/categories
+          git commit -m "chore(trivia): nightly auto-generated questions"
+          git push

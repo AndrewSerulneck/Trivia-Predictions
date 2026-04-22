@@ -9,6 +9,8 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
+    "trivia:generate": "node --env-file=.env.local scripts/generate-trivia-questions.cjs",
+    "trivia:generate:nightly": "node --env-file=.env.local scripts/generate-trivia-nightly.cjs --total 200",
     "trivia:check": "node scripts/import-trivia-questions.cjs --dir data/trivia/categories --check",
     "trivia:import": "node --env-file=.env.local scripts/import-trivia-questions.cjs --dir data/trivia/categories"
   },
