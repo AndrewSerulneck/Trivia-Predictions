@@ -200,7 +200,7 @@ let oddsMarketsInFlight: Promise<Prediction[]> | null = null;
 const ODDS_API_BASE_URL = process.env.ODDS_API_BASE_URL ?? "https://api.the-odds-api.com/v4";
 const ODDS_API_KEY = process.env.ODDS_API_KEY?.trim() ?? "";
 const ODDS_API_LOOKAHEAD_HOURS = Number.parseInt(process.env.ODDS_API_LOOKAHEAD_HOURS ?? "168", 10);
-const ODDS_API_SCORES_DAYS = Number.parseInt(process.env.ODDS_API_SCORES_DAYS ?? "14", 10);
+const ODDS_API_SCORES_DAYS = Number.parseInt(process.env.ODDS_API_SCORES_DAYS ?? "3", 10);
 const ODDS_API_CACHE_TTL_MS = Number.parseInt(process.env.ODDS_API_CACHE_TTL_MS ?? "120000", 10);
 const ODDS_API_SPORT_KEYS = (process.env.ODDS_API_SPORT_KEYS ?? "").trim();
 
@@ -401,6 +401,12 @@ function normalizePositiveInt(input: number, fallback: number): number {
     return fallback;
   }
   return Math.floor(input);
+}
+
+function getOddsApiScoresDaysFrom(): string {
+  // Odds API scores endpoint supports daysFrom=1..3.
+  const days = normalizePositiveInt(ODDS_API_SCORES_DAYS, 3);
+  return String(Math.min(3, Math.max(1, days)));
 }
 
 function coercePercent(value: unknown): number | null {
@@ -1276,7 +1282,7 @@ async function listResolvedOddsOutcomes(predictionIds: string[]): Promise<Resolv
     return [];
   }
 
-  const daysFrom = String(Math.max(1, normalizePositiveInt(ODDS_API_SCORES_DAYS, 14)));
+  const daysFrom = getOddsApiScoresDaysFrom();
   const settled: ResolvedPredictionOutcome[] = [];
 
   for (const [sportKey, eventIds] of grouped.entries()) {
@@ -1459,7 +1465,7 @@ export async function getPredictionMarketById(predictionId: string): Promise<Pre
       try {
         const scoresQuery = new URLSearchParams({
           apiKey: ODDS_API_KEY,
-          daysFrom: String(Math.max(1, normalizePositiveInt(ODDS_API_SCORES_DAYS, 14))),
+          daysFrom: getOddsApiScoresDaysFrom(),
         });
         const scorePayload = await fetchOddsJson(`/sports/${parsed.sportKey}/scores`, scoresQuery);
         if (Array.isArray(scorePayload)) {

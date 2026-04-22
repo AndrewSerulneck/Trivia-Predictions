@@ -10,7 +10,7 @@ export default async function PredictionsPage() {
       description="Browse live sports markets, choose a sport, then drill into leagues to place picks."
     >
       <div className="space-y-4">
-        <BackButton label="Back" />
+        <BackButton label="Back" venueHomeFallback />
         <PredictionMarketList />
       </div>
     </PageShell>

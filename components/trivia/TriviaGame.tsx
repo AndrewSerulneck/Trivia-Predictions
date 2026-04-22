@@ -68,6 +68,7 @@ const CORRECT_FEEDBACK_FLASH_DURATION_MS = 1300;
 const INCORRECT_FEEDBACK_FLASH_DURATION_MS = 1300;
 const FIREWORK_HIDE_DELAY_MS = 2700;
 const RAIN_HIDE_DELAY_MS = 2700;
+const TRIVIA_ROUND_END_REASON_KEY = "tp:trivia-round-ended-reason";
 
 function triggerHaptic(pattern: number | number[] = 12) {
   if (typeof navigator === "undefined" || !("vibrate" in navigator)) return;
@@ -170,6 +171,8 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   const [rainEmojis, setRainEmojis] = useState<RainToken[]>([]);
   const [fireworks, setFireworks] = useState<FireworkToken[]>([]);
   const [quotaSecondsRemaining, setQuotaSecondsRemaining] = useState(0);
+  const [roundEndedMessage, setRoundEndedMessage] = useState("");
+  const [isPreparingNextRound, setIsPreparingNextRound] = useState(false);
   const roundCompletionHandledRef = useRef(false);
 
   const flashTimeoutRef = useRef<number | null>(null);
@@ -318,8 +321,31 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     []
   );
 
-  useEffect(() => {
-    const loadQuestions = async () => {
+  const resetRoundState = useCallback(() => {
+    setIndex(0);
+    setSelectedAnswer(null);
+    setIsSubmitting(false);
+    setFeedback("");
+    setFeedbackKind(null);
+    setRevealedCorrectAnswer(null);
+    setCorrectAnswers(0);
+    setAttempted(0);
+    setIsRoundStarted(false);
+    setPreRoundCountdown(null);
+    setSecondsRemaining(QUESTION_TIME_LIMIT_SECONDS);
+    setRoundTotalPoints(null);
+    setRoundStartPoints(null);
+    setRewardPulse("");
+    setShowRewardPulse(false);
+    setFeedbackFlash(null);
+    setRainEmojis([]);
+    setFireworks([]);
+    roundCompletionHandledRef.current = false;
+  }, []);
+
+  const loadRoundQuestions = useCallback(
+    async (options: { showLoading?: boolean; useWarmCache?: boolean } = {}) => {
+      const { showLoading = true, useWarmCache = true } = options;
       const userId = getUserId() ?? "";
       const venueId = getVenueId() ?? "";
       if (!userId || !venueId) {
@@ -327,19 +353,17 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         return;
       }
 
-      const warmSnapshot = readWarmTriviaCache(userId, venueId);
+      const warmSnapshot = useWarmCache ? readWarmTriviaCache(userId, venueId) : null;
       const hasWarmQuestions = Boolean(warmSnapshot?.questions && warmSnapshot.questions.length > 0);
-      setLoadingQuestions(true);
+
+      if (showLoading) {
+        setLoadingQuestions(true);
+      }
       setLoadError("");
 
       if (hasWarmQuestions && warmSnapshot) {
         setQuestions(warmSnapshot.questions);
-        setIndex(0);
-        setSelectedAnswer(null);
-        setFeedback("");
-        setFeedbackKind(null);
-        setRevealedCorrectAnswer(null);
-        setRoundStartPoints(null);
+        resetRoundState();
         if (warmSnapshot.quota) {
           setQuota({
             limit: warmSnapshot.quota.limit,
@@ -349,32 +373,79 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
             isAdminBypass: warmSnapshot.quota.isAdminBypass,
           });
         }
-        setLoadingQuestions(false);
+        if (showLoading) {
+          setLoadingQuestions(false);
+        }
       }
 
       try {
         const items = await fetchTriviaQuestions(userId);
         setQuestions(items);
-        setIndex(0);
-        setSelectedAnswer(null);
-        setFeedback("");
-        setFeedbackKind(null);
-        setRevealedCorrectAnswer(null);
-        setRoundStartPoints(null);
+        resetRoundState();
         await loadQuota();
         const startingPoints = await loadCurrentUserPoints();
         setRoundStartPoints(startingPoints);
       } catch (error) {
         setLoadError(error instanceof Error ? error.message : "Failed to load trivia.");
       } finally {
-        if (!hasWarmQuestions) {
+        if (showLoading && !hasWarmQuestions) {
           setLoadingQuestions(false);
         }
       }
+    },
+    [loadCurrentUserPoints, loadQuota, resetRoundState, router]
+  );
+
+  useEffect(() => {
+    void loadRoundQuestions({ showLoading: true, useWarmCache: true });
+  }, [loadRoundQuestions]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const endedReason = window.sessionStorage.getItem(TRIVIA_ROUND_END_REASON_KEY);
+    if (!endedReason) {
+      return;
+    }
+    window.sessionStorage.removeItem(TRIVIA_ROUND_END_REASON_KEY);
+    setRoundEndedMessage(endedReason);
+    resetRoundState();
+  }, [resetRoundState]);
+
+  useEffect(() => {
+    if (typeof document === "undefined" || typeof window === "undefined") {
+      return;
+    }
+
+    const endRoundForBackgrounding = () => {
+      if (!isRoundStarted || preRoundCountdown !== null || finished) {
+        return;
+      }
+      const reason = "Round ended because the browser was minimized or left during active play.";
+      window.sessionStorage.setItem(TRIVIA_ROUND_END_REASON_KEY, reason);
+      setRoundEndedMessage(reason);
+      resetRoundState();
+      void loadRoundQuestions({ showLoading: false, useWarmCache: false });
     };
 
-    void loadQuestions();
-  }, [loadQuota, loadCurrentUserPoints, router]);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        endRoundForBackgrounding();
+      }
+    };
+
+    const handlePageHide = () => {
+      endRoundForBackgrounding();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", handlePageHide);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", handlePageHide);
+    };
+  }, [finished, isRoundStarted, loadRoundQuestions, preRoundCountdown, resetRoundState]);
 
   useEffect(() => {
     if (!isRoundStarted || finished || selectedAnswer !== null) {
@@ -623,6 +694,16 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     setIndex((value) => value + 1);
   };
 
+  const startNextRound = useCallback(async () => {
+    setIsPreparingNextRound(true);
+    setRoundEndedMessage("");
+    try {
+      await loadRoundQuestions({ showLoading: true, useWarmCache: false });
+    } finally {
+      setIsPreparingNextRound(false);
+    }
+  }, [loadRoundQuestions]);
+
   useEffect(() => {
     if (!finished) {
       roundCompletionHandledRef.current = false;
@@ -722,7 +803,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
             <div className="rounded-2xl border-4 border-slate-900 bg-slate-50 p-2 shadow-[3px_3px_0_#0f172a]">
               <p className="text-xs uppercase text-slate-500">Round reward</p>
               <p className="text-lg font-bold text-emerald-700">+{pointsWon} points</p>
-              <p className="text-xs text-emerald-700">Fireworks unlocked: {correctAnswers}</p>
+              <p className="text-xs text-slate-600">Keep the streak going in your next round.</p>
             </div>
             <div className="rounded-2xl border-4 border-slate-900 bg-slate-50 p-2 shadow-[3px_3px_0_#0f172a] sm:col-span-2">
               <p className="text-xs uppercase text-slate-500">Total points</p>
@@ -731,26 +812,43 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
             </div>
           </div>
         </div>
-        <button
-          type="button"
-          onMouseDown={() => triggerHaptic(14)}
-          onClick={() => {
-            if (venueId) {
-              router.push(`/venue/${venueId}`);
-              return;
-            }
-            router.push("/");
-          }}
-          className={`${BUTTON_POP_CLASS} ${BACK_TO_VENUE_CLASS} mt-2 w-full`}
-        >
-          <span
-            aria-hidden="true"
-            className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs"
+        <div className="mt-2 grid gap-2">
+          <button
+            type="button"
+            onMouseDown={() => triggerHaptic(14)}
+            onClick={() => {
+              void startNextRound();
+            }}
+            disabled={isPreparingNextRound || triviaQuotaLocked}
+            className={`${BUTTON_POP_CLASS} inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border border-emerald-300 bg-gradient-to-r from-emerald-700 to-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald-200 disabled:opacity-60`}
           >
-            ←
-          </span>
-          Back to Venue Home Page
-        </button>
+            {isPreparingNextRound
+              ? "Loading next round..."
+              : triviaQuotaLocked
+                ? `Next round unlocks in ${formatCountdown(quotaSecondsRemaining)}`
+                : "Start Next Round"}
+          </button>
+          <button
+            type="button"
+            onMouseDown={() => triggerHaptic(14)}
+            onClick={() => {
+              if (venueId) {
+                router.push(`/venue/${venueId}`);
+                return;
+              }
+              router.push("/");
+            }}
+            className={`${BUTTON_POP_CLASS} ${BACK_TO_VENUE_CLASS} w-full`}
+          >
+            <span
+              aria-hidden="true"
+              className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs"
+            >
+              ←
+            </span>
+            Back to Venue Home Page
+          </button>
+        </div>
       </div>
     );
   }
@@ -766,6 +864,11 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   if (!isRoundStarted) {
     return (
       <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-base text-slate-700 sm:space-y-3 sm:p-4">
+        {roundEndedMessage ? (
+          <p className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+            {roundEndedMessage}
+          </p>
+        ) : null}
         <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
           Round {upcomingRoundNumber} of {ROUND_LIMIT_PER_WINDOW}
         </p>
@@ -782,6 +885,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
           type="button"
           onMouseDown={() => triggerHaptic(20)}
           onClick={() => {
+            setRoundEndedMessage("");
             setIsRoundStarted(true);
             setPreRoundCountdown(PRE_ROUND_COUNTDOWN_START);
             setSecondsRemaining(QUESTION_TIME_LIMIT_SECONDS);

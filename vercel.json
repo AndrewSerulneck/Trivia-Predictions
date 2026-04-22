@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/predictions-settle",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/1 * * * *"
     },
     {
       "path": "/api/cron/bingo-progress",

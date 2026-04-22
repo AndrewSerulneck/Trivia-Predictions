@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getUserId } from "@/lib/storage";
 import type { Notification, PredictionStatus, UserPrediction } from "@/types";
 
@@ -37,7 +38,22 @@ function statusBadgeClass(status?: PredictionStatus): string {
   return "bg-slate-100 text-slate-700";
 }
 
+function resolveNotificationHref(message: string): string {
+  const text = message.toLowerCase();
+  if (text.includes("bingo")) {
+    return "/bingo";
+  }
+  if (text.includes("prediction") || text.includes("market") || text.includes("pick")) {
+    return "/predictions";
+  }
+  if (text.includes("trivia") || text.includes("round")) {
+    return "/trivia";
+  }
+  return "/activity";
+}
+
 export function ActivityTimeline() {
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("picks");
   const [picks, setPicks] = useState<UserPrediction[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -133,6 +149,19 @@ export function ActivityTimeline() {
     } finally {
       setLoadingNotifications(false);
     }
+  };
+
+  const openNotification = async (item: Notification) => {
+    const userId = getUserId() ?? "";
+    if (userId && !item.read) {
+      await fetch("/api/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, notificationId: item.id }),
+      });
+      void loadNotifications(userId, notificationFilter, notificationsPage);
+    }
+    router.push(resolveNotificationHref(item.message));
   };
 
   const pickCounts = useMemo(() => {
@@ -310,8 +339,19 @@ export function ActivityTimeline() {
                     item.read ? "border-slate-200 bg-white text-slate-700" : "border-blue-200 bg-blue-50 text-slate-800"
                   }`}
                 >
-                  <p className="text-sm font-medium">{item.message}</p>
-                  <p className="mt-1 text-xs text-slate-500">{new Date(item.createdAt).toLocaleString()}</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void openNotification(item);
+                    }}
+                    className="w-full text-left"
+                  >
+                    <p className="text-sm font-medium">{item.message}</p>
+                    <div className="mt-1 flex items-center justify-between text-xs text-slate-500">
+                      <span>{new Date(item.createdAt).toLocaleString()}</span>
+                      <span className="font-semibold text-blue-700">View</span>
+                    </div>
+                  </button>
                 </li>
               ))}
             </ul>

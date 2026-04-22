@@ -229,26 +229,13 @@ export function SportsBingoHome() {
   const [claimingCardId, setClaimingCardId] = useState("");
   const [pressedCardId, setPressedCardId] = useState("");
   const [showBoardLimitMessage, setShowBoardLimitMessage] = useState(false);
-  const holdTimerRef = useRef<number | null>(null);
-  const holdCardIdRef = useRef("");
-  const holdStartRef = useRef<{ x: number; y: number } | null>(null);
   const activeTouchIdRef = useRef<number | null>(null);
   const lastTouchAtRef = useRef(0);
 
-  const clearHoldTimer = useCallback(() => {
-    if (holdTimerRef.current !== null) {
-      window.clearTimeout(holdTimerRef.current);
-      holdTimerRef.current = null;
-    }
-  }, []);
-
   const clearPressedCard = useCallback(() => {
-    clearHoldTimer();
     activeTouchIdRef.current = null;
-    holdCardIdRef.current = "";
-    holdStartRef.current = null;
     setPressedCardId("");
-  }, [clearHoldTimer]);
+  }, []);
 
   const startTouchHold = useCallback(
     (cardId: string, event: ReactTouchEvent<HTMLLIElement>) => {
@@ -258,14 +245,9 @@ export function SportsBingoHome() {
       }
       lastTouchAtRef.current = Date.now();
       activeTouchIdRef.current = touch.identifier;
-      clearHoldTimer();
-      holdCardIdRef.current = cardId;
-      holdStartRef.current = { x: touch.clientX, y: touch.clientY };
-      holdTimerRef.current = window.setTimeout(() => {
-        setPressedCardId(holdCardIdRef.current);
-      }, 220);
+      setPressedCardId(cardId);
     },
-    [clearHoldTimer]
+    []
   );
 
   useEffect(() => {
@@ -325,8 +307,7 @@ export function SportsBingoHome() {
   useEffect(() => {
     const handleTouchMove = (event: TouchEvent) => {
       const trackedTouchId = activeTouchIdRef.current;
-      const start = holdStartRef.current;
-      if (trackedTouchId === null || !start) {
+      if (trackedTouchId === null) {
         return;
       }
 
@@ -344,15 +325,12 @@ export function SportsBingoHome() {
         return;
       }
 
-      const moved = Math.hypot(trackedTouch.clientX - start.x, trackedTouch.clientY - start.y);
-      if (moved > 10) {
-        clearPressedCard();
-      }
+      event.preventDefault();
     };
 
     window.addEventListener("pointerup", clearPressedCard);
     window.addEventListener("pointercancel", clearPressedCard);
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", clearPressedCard, { passive: true });
     window.addEventListener("touchcancel", clearPressedCard, { passive: true });
     window.addEventListener("scroll", clearPressedCard, { passive: true });
@@ -523,7 +501,6 @@ export function SportsBingoHome() {
                   onMouseUp={clearPressedCard}
                   onMouseLeave={() => {
                     setPressedCardId((current) => (current === card.id ? "" : current));
-                    clearHoldTimer();
                   }}
                   onTouchStart={(event) => {
                     startTouchHold(card.id, event);
@@ -533,7 +510,7 @@ export function SportsBingoHome() {
                   className={`rounded-xl border border-slate-200 bg-slate-50 p-3 transition-all ${
                     isPressed ? "shadow-md shadow-slate-300/60 ring-2 ring-cyan-300/60" : ""
                   }`}
-                  style={{ touchAction: "pan-y", WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none" }}
+                  style={{ touchAction: "none", WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none" }}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-semibold text-slate-900">{card.gameLabel}</p>

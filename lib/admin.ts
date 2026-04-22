@@ -1204,17 +1204,28 @@ export async function autoSettleResolvedPredictionMarkets(): Promise<{
 }> {
   assertAdminConfigured();
 
-  const { data, error } = await supabaseAdmin!
-    .from("user_predictions")
-    .select("prediction_id, market_question")
-    .eq("status", "pending")
-    .limit(5000);
+  const pendingRows: Array<{ prediction_id: string; market_question?: string | null }> = [];
+  const batchSize = 2_000;
+  let offset = 0;
+  while (true) {
+    const { data, error } = await supabaseAdmin!
+      .from("user_predictions")
+      .select("prediction_id, market_question")
+      .eq("status", "pending")
+      .order("created_at", { ascending: true })
+      .range(offset, offset + batchSize - 1);
 
-  if (error || !data) {
-    throw new Error(error?.message ?? "Failed to load pending markets for settlement.");
+    if (error || !data) {
+      throw new Error(error?.message ?? "Failed to load pending markets for settlement.");
+    }
+
+    pendingRows.push(...(data as Array<{ prediction_id: string; market_question?: string | null }>));
+    if (data.length < batchSize) {
+      break;
+    }
+    offset += batchSize;
   }
 
-  const pendingRows = data as Array<{ prediction_id: string; market_question?: string | null }>;
   const marketQuestionByPredictionId = new Map<string, string>();
   for (const row of pendingRows) {
     const predictionId = String(row.prediction_id ?? "").trim();

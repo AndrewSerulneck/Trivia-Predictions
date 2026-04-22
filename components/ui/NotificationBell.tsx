@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getUserId } from "@/lib/storage";
 import type { Notification } from "@/types";
 
@@ -21,8 +22,23 @@ function extractPointsFromMessage(message: string): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }
 
+function resolveNotificationHref(message: string): string {
+  const text = message.toLowerCase();
+  if (text.includes("bingo")) {
+    return "/bingo";
+  }
+  if (text.includes("prediction") || text.includes("market") || text.includes("pick")) {
+    return "/predictions";
+  }
+  if (text.includes("trivia") || text.includes("round")) {
+    return "/trivia";
+  }
+  return "/activity";
+}
+
 export function NotificationBell() {
-  const [hasUser, setHasUser] = useState(false);
+  const router = useRouter();
+  const [hasUser] = useState(() => Boolean(getUserId()));
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; width: number } | null>(null);
@@ -87,7 +103,6 @@ export function NotificationBell() {
   useEffect(() => {
     const userId = getUserId() ?? "";
     userIdRef.current = userId;
-    setHasUser(Boolean(userId));
     if (!userId) {
       return;
     }
@@ -134,7 +149,6 @@ export function NotificationBell() {
 
   useEffect(() => {
     if (!open) {
-      setMenuPosition(null);
       return;
     }
 
@@ -233,21 +247,21 @@ export function NotificationBell() {
                     item.read ? "border-[#eadbcc] bg-white text-slate-600" : "border-[#d5e4f3] bg-[#f3f8ff] text-slate-800"
                   }`}
                 >
-                  <p>{item.message}</p>
-                  <div className="mt-1 flex items-center justify-between">
-                    <span>{new Date(item.createdAt).toLocaleString()}</span>
-                    {!item.read ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          void markRead(item.id);
-                        }}
-                        className="tp-clean-button rounded-md bg-white px-2 py-1 font-semibold text-blue-700 hover:text-blue-900"
-                      >
-                        Mark read
-                      </button>
-                    ) : null}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void markRead(item.id);
+                      setOpen(false);
+                      router.push(resolveNotificationHref(item.message));
+                    }}
+                    className="tp-clean-button w-full text-left"
+                  >
+                    <p>{item.message}</p>
+                    <div className="mt-1 flex items-center justify-between">
+                      <span>{new Date(item.createdAt).toLocaleString()}</span>
+                      <span className="rounded-md bg-white px-2 py-1 font-semibold text-blue-700">View</span>
+                    </div>
+                  </button>
                 </li>
               ))}
             </ul>

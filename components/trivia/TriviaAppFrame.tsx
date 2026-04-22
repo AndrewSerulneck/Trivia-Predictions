@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { TriviaGame } from "@/components/trivia/TriviaGame";
 import { UserStatusHeader } from "@/components/ui/UserStatusHeader";
 import { HightopLogo } from "@/components/ui/HightopLogo";
+import { getVenueId } from "@/lib/storage";
 
 export function TriviaAppFrame() {
   const router = useRouter();
@@ -65,11 +66,14 @@ export function TriviaAppFrame() {
             <button
               type="button"
               onClick={() => {
-                if (typeof window !== "undefined" && window.history.length > 1) {
+                const venueId = getVenueId()?.trim() ?? "";
+                if (venueId) {
+                  router.push(`/venue/${encodeURIComponent(venueId)}`);
+                } else if (typeof window !== "undefined" && window.history.length > 1) {
                   router.back();
-                  return;
+                } else {
+                  router.push("/");
                 }
-                router.push("/");
               }}
               className="inline-flex min-h-[40px] items-center justify-center gap-1 rounded-xl border-2 border-slate-900 bg-emerald-500 px-3 py-2 text-base font-semibold text-white shadow-[2px_2px_0_#0f172a] sm:min-h-[46px] sm:rounded-full sm:border-4 sm:px-4 sm:py-2 sm:shadow-[4px_4px_0_#0f172a]"
             >

@@ -15,7 +15,7 @@ const MAX_ACTIVE_CARDS_PER_USER = 4;
 const GAME_CATALOG_CACHE_MS = 30_000;
 const PLAYER_PROPS_CACHE_MS = 10 * 60 * 1000;
 const SCORE_CACHE_MS = 15_000;
-const NBA_PLAYER_STATS_CACHE_MS = 15_000;
+const NBA_PLAYER_STATS_CACHE_MS = 5_000;
 const BALLDONTLIE_GAME_LOOKUP_WINDOW_DAYS_RAW = Number.parseInt(
   process.env.BALLDONTLIE_GAME_LOOKUP_WINDOW_DAYS ?? "1",
   10
@@ -297,6 +297,8 @@ type BallDontLieGame = {
   status?: string;
   datetime?: string;
   date?: string;
+  home_team_score?: number | string | null;
+  visitor_team_score?: number | string | null;
   home_team?: BallDontLieTeam;
   visitor_team?: BallDontLieTeam;
 };
@@ -341,6 +343,8 @@ type NBAPlayerStatLine = {
 type NBAGamePlayerStatsSnapshot = {
   gameId: number;
   finalized: boolean;
+  homeScore: number | null;
+  awayScore: number | null;
   lines: NBAPlayerStatLine[];
   byPlayerKey: Map<string, NBAPlayerStatLine[]>;
   homeHasTripleDouble: boolean;
@@ -850,6 +854,8 @@ function buildNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow, game: BallDon
   return {
     gameId: Number(game.id ?? 0),
     finalized: isBallDontLieGameFinal(String(game.status ?? "")),
+    homeScore: parseScoreValue(game.home_team_score),
+    awayScore: parseScoreValue(game.visitor_team_score),
     lines,
     byPlayerKey,
     homeHasTripleDouble,
@@ -910,6 +916,45 @@ async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
     });
     return null;
   }
+}
+
+function toNBALiveScoreSnapshot(card: SportsBingoCardRow, snapshot: NBAGamePlayerStatsSnapshot | null): ScoreSnapshot | null {
+  if (card.sport_key !== "basketball_nba" || !snapshot) {
+    return null;
+  }
+
+  if (snapshot.homeScore === null || snapshot.awayScore === null) {
+    return null;
+  }
+
+  return {
+    gameId: card.game_id,
+    sportKey: card.sport_key,
+    homeTeam: card.home_team,
+    awayTeam: card.away_team,
+    homeScore: snapshot.homeScore,
+    awayScore: snapshot.awayScore,
+    completed: snapshot.finalized,
+  };
+}
+
+function mergeLiveScores(
+  primary: ScoreSnapshot | null | undefined,
+  fallback: ScoreSnapshot | null | undefined
+): ScoreSnapshot | null {
+  if (!primary) {
+    return fallback ?? null;
+  }
+  if (!fallback) {
+    return primary;
+  }
+
+  return {
+    ...primary,
+    homeScore: primary.homeScore ?? fallback.homeScore,
+    awayScore: primary.awayScore ?? fallback.awayScore,
+    completed: primary.completed || fallback.completed,
+  };
 }
 
 function pickLikeliestPlayerStatLine(lines: NBAPlayerStatLine[]): NBAPlayerStatLine | null {
@@ -2149,7 +2194,7 @@ function mapCardRow(row: SportsBingoCardRow, squares: SportsBingoSquareRow[]): S
     .map((square) => ({
       id: square.id,
       index: square.square_index,
-      key: resolverKey(parseResolver(square.resolver) ?? { kind: "replacement_auto" }),
+      key: resolverKey(parseResolver(square.resolver) ?? { kind: "free" }),
       label: square.label,
       probability: Number(square.probability),
       isFree: square.is_free,
@@ -2254,7 +2299,7 @@ function evaluateResolver(
   }
 
   if (resolver.kind === "replacement_auto") {
-    return { status: "hit", resolved: true };
+    return { status: "void", resolved: true };
   }
 
   if (home === null || away === null) {
@@ -2333,58 +2378,81 @@ function evaluateResolver(
       };
     }
     case "player_prop": {
-      if (!completed) {
-        return { status: "pending", resolved: false };
-      }
       if (!isNBAPlayerPropMarketSupported(resolver.marketKey)) {
         return { status: "void", resolved: true };
       }
       if (!nbaStatsSnapshot) {
+        if (!completed) {
+          return { status: "pending", resolved: false };
+        }
         return { status: "void", resolved: true };
-      }
-      if (!nbaStatsSnapshot.finalized) {
-        return { status: "pending", resolved: false };
       }
 
       const line = findNBAPlayerStatLine(nbaStatsSnapshot, resolver.player);
       if (!line) {
+        if (!completed && !nbaStatsSnapshot.finalized) {
+          return { status: "pending", resolved: false };
+        }
         return { status: "void", resolved: true };
       }
 
       const value = getNBAPlayerPropValue(line, resolver.marketKey);
       if (value === null || !Number.isFinite(value)) {
+        if (!completed && !nbaStatsSnapshot.finalized) {
+          return { status: "pending", resolved: false };
+        }
         return { status: "void", resolved: true };
       }
 
       if (value === resolver.line) {
+        if (!completed && !nbaStatsSnapshot.finalized) {
+          return { status: "pending", resolved: false };
+        }
         return { status: "void", resolved: true };
       }
 
       if (resolver.direction === "over") {
-        return { status: value > resolver.line ? "hit" : "miss", resolved: true };
+        if (value > resolver.line) {
+          return { status: "hit", resolved: true };
+        }
+        if (completed || nbaStatsSnapshot.finalized) {
+          return { status: "miss", resolved: true };
+        }
+        return { status: "pending", resolved: false };
       }
-      return { status: value < resolver.line ? "hit" : "miss", resolved: true };
+      if (completed || nbaStatsSnapshot.finalized) {
+        return { status: value < resolver.line ? "hit" : "miss", resolved: true };
+      }
+      return { status: "pending", resolved: false };
     }
     case "team_triple_double":
     case "any_triple_double": {
-      if (!completed) {
-        return { status: "pending", resolved: false };
-      }
       if (!nbaStatsSnapshot) {
+        if (!completed) {
+          return { status: "pending", resolved: false };
+        }
         return { status: "void", resolved: true };
       }
-      if (!nbaStatsSnapshot.finalized) {
-        return { status: "pending", resolved: false };
-      }
-
       if (resolver.kind === "any_triple_double") {
-        return { status: nbaStatsSnapshot.anyHasTripleDouble ? "hit" : "miss", resolved: true };
+        if (nbaStatsSnapshot.anyHasTripleDouble) {
+          return { status: "hit", resolved: true };
+        }
+        if (completed || nbaStatsSnapshot.finalized) {
+          return { status: "miss", resolved: true };
+        }
+        return { status: "pending", resolved: false };
       }
 
       const hasTeamTripleDouble = resolver.team === "home"
         ? nbaStatsSnapshot.homeHasTripleDouble
         : nbaStatsSnapshot.awayHasTripleDouble;
-      return { status: hasTeamTripleDouble ? "hit" : "miss", resolved: true };
+      if (hasTeamTripleDouble) {
+        return { status: "hit", resolved: true };
+      }
+      if (completed || nbaStatsSnapshot.finalized) {
+        return { status: "miss", resolved: true };
+      }
+      return { status: "pending", resolved: false };
     }
     default:
       return { status: "void", resolved: true };
@@ -2446,6 +2514,10 @@ function asArray(value: unknown): unknown[] {
 }
 
 async function getScoresBySportKey(sportKey: string): Promise<Map<string, ScoreSnapshot>> {
+  if (!ODDS_API_KEY) {
+    return new Map<string, ScoreSnapshot>();
+  }
+
   const now = Date.now();
   const cached = scoreCache.get(sportKey);
   if (cached && now < cached.expiresAt) {
@@ -2522,60 +2594,6 @@ function summarizeCard(card: SportsBingoCard): {
   return { hits, misses, pending };
 }
 
-async function replaceVoidedSquare(params: {
-  card: SportsBingoCardRow;
-  square: SportsBingoSquareRow;
-  usedKeys: Set<string>;
-  score: ScoreSnapshot;
-  nbaStatsSnapshot?: NBAGamePlayerStatsSnapshot | null;
-}): Promise<SportsBingoSquareRow> {
-  const catalog = await getGameCatalog(params.card.sport_key);
-  const gameEntry = catalog.find((entry) => entry.game.id === params.card.game_id);
-
-  const fallbackResolver: SportsBingoResolver = { kind: "replacement_auto" };
-  let replacement: SportsBingoSquareTemplate | null = null;
-
-  if (gameEntry) {
-    replacement = gameEntry.candidates.find((candidate) => !params.usedKeys.has(candidate.key)) ?? null;
-  }
-
-  const resolvedReplacement = replacement ?? {
-    key: "replacement_auto",
-    label: "Replacement square (house rules).",
-    resolver: fallbackResolver,
-    probability: 1,
-    bucket: "total" as CandidateBucket,
-  };
-
-  const evaluation = evaluateResolver(resolvedReplacement.resolver, params.score, params.nbaStatsSnapshot ?? null);
-  const nextStatus: SquareStatus = evaluation.status === "pending"
-    ? "pending"
-    : evaluation.status === "void"
-      ? "hit"
-      : evaluation.status;
-
-  const resolvedAt = nextStatus === "pending" ? null : new Date().toISOString();
-
-  const { data, error } = await supabaseAdmin!
-    .from("sports_bingo_squares")
-    .update({
-      label: resolvedReplacement.label,
-      resolver: resolvedReplacement.resolver,
-      probability: resolvedReplacement.probability,
-      status: nextStatus,
-      resolved_at: resolvedAt,
-    })
-    .eq("id", params.square.id)
-    .select("id, card_id, square_index, label, resolver, probability, is_free, status, created_at, resolved_at")
-    .single<SportsBingoSquareRow>();
-
-  if (error || !data) {
-    throw new Error(error?.message ?? "Failed to replace voided bingo square.");
-  }
-
-  return data;
-}
-
 async function loadUserPoints(userId: string): Promise<number> {
   const { data } = await supabaseAdmin!
     .from("users")
@@ -2604,7 +2622,6 @@ export async function refreshSportsBingoProgress(params: {
   nearWinAlerts: number;
 }> {
   assertSupabaseConfigured();
-  assertOddsConfigured();
 
   const activeCardRows = await listCardRows({
     userId: params.userId,
@@ -2625,7 +2642,11 @@ export async function refreshSportsBingoProgress(params: {
   const sportKeys = Array.from(new Set(activeCardRows.map((entry) => entry.card.sport_key).filter(Boolean)));
   const scoresBySport = new Map<string, Map<string, ScoreSnapshot>>();
   for (const sportKey of sportKeys) {
-    scoresBySport.set(sportKey, await getScoresBySportKey(sportKey));
+    try {
+      scoresBySport.set(sportKey, await getScoresBySportKey(sportKey));
+    } catch {
+      scoresBySport.set(sportKey, new Map<string, ScoreSnapshot>());
+    }
   }
 
   let updatedSquares = 0;
@@ -2637,10 +2658,7 @@ export async function refreshSportsBingoProgress(params: {
   for (const entry of activeCardRows) {
     const cardRow = entry.card;
     const squares = [...entry.squares];
-    const score = scoresBySport.get(cardRow.sport_key)?.get(cardRow.game_id);
-    if (!score) {
-      continue;
-    }
+    const oddsScore = scoresBySport.get(cardRow.sport_key)?.get(cardRow.game_id) ?? null;
 
     let nbaStatsSnapshot: NBAGamePlayerStatsSnapshot | null = null;
     if (cardRow.sport_key === "basketball_nba") {
@@ -2652,12 +2670,9 @@ export async function refreshSportsBingoProgress(params: {
       }
     }
 
-    const usedKeys = new Set<string>();
-    for (const square of squares) {
-      const resolver = parseResolver(square.resolver);
-      if (resolver) {
-        usedKeys.add(resolverKey(resolver));
-      }
+    const score = mergeLiveScores(oddsScore, toNBALiveScoreSnapshot(cardRow, nbaStatsSnapshot));
+    if (!score) {
+      continue;
     }
 
     for (let index = 0; index < squares.length; index += 1) {
@@ -2687,16 +2702,17 @@ export async function refreshSportsBingoProgress(params: {
 
       const resolver = parseResolver(square.resolver);
       if (!resolver) {
-        const replaced = await replaceVoidedSquare({
-          card: cardRow,
-          square,
-          usedKeys,
-          score,
-          nbaStatsSnapshot,
-        });
-        squares[index] = replaced;
+        const { data, error } = await supabaseAdmin!
+          .from("sports_bingo_squares")
+          .update({ status: "void", resolved_at: new Date().toISOString() })
+          .eq("id", square.id)
+          .select("id, card_id, square_index, label, resolver, probability, is_free, status, created_at, resolved_at")
+          .single<SportsBingoSquareRow>();
+        if (error || !data) {
+          throw new Error(error?.message ?? "Failed to mark bingo square as void.");
+        }
+        squares[index] = data;
         updatedSquares += 1;
-        usedKeys.add(resolverKey(parseResolver(replaced.resolver) ?? { kind: "replacement_auto" }));
         continue;
       }
 
@@ -2706,16 +2722,17 @@ export async function refreshSportsBingoProgress(params: {
       }
 
       if (evaluation.status === "void") {
-        const replaced = await replaceVoidedSquare({
-          card: cardRow,
-          square,
-          usedKeys,
-          score,
-          nbaStatsSnapshot,
-        });
-        squares[index] = replaced;
+        const { data, error } = await supabaseAdmin!
+          .from("sports_bingo_squares")
+          .update({ status: "void", resolved_at: new Date().toISOString() })
+          .eq("id", square.id)
+          .select("id, card_id, square_index, label, resolver, probability, is_free, status, created_at, resolved_at")
+          .single<SportsBingoSquareRow>();
+        if (error || !data) {
+          throw new Error(error?.message ?? "Failed to mark bingo square as void.");
+        }
+        squares[index] = data;
         updatedSquares += 1;
-        usedKeys.add(resolverKey(parseResolver(replaced.resolver) ?? { kind: "replacement_auto" }));
         continue;
       }
 
