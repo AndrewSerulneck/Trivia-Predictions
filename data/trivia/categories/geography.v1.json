@@ -3248,5 +3248,330 @@
     "correctAnswer": 3,
     "category": "Geography",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-continent-is-the-least-populated",
+    "question": "Which continent is the least populated?",
+    "options": [
+      "Asia",
+      "Africa",
+      "Antarctica",
+      "South America"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-country-is-known-for-its-extensive-network-of-fjords",
+    "question": "Which country is known for its extensive network of fjords?",
+    "options": [
+      "Sweden",
+      "Finland",
+      "Norway",
+      "Denmark"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-of-these-bodies-of-water-is-not-considered-an-ocean",
+    "question": "Which of these bodies of water is *not* considered an ocean?",
+    "options": [
+      "Pacific",
+      "Atlantic",
+      "Arctic",
+      "Mediterranean"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-largest-landlocked-country-in-the-world-by-area",
+    "question": "What is the largest landlocked country in the world by area?",
+    "options": [
+      "Mongolia",
+      "Kazakhstan",
+      "Chad",
+      "Bolivia"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-which-country-would-you-find-the-ancient-inca-city-of-machu-picchu",
+    "question": "In which country would you find the ancient Inca city of Machu Picchu?",
+    "options": [
+      "Mexico",
+      "Peru",
+      "Brazil",
+      "Ecuador"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-african-country-is-entirely-surrounded-by-south-africa",
+    "question": "Which African country is entirely surrounded by South Africa?",
+    "options": [
+      "Botswana",
+      "Lesotho",
+      "Namibia",
+      "Zimbabwe"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-gobi-desert-is-located-primarily-in-which-two-countries",
+    "question": "The Gobi Desert is located primarily in which two countries?",
+    "options": [
+      "China and India",
+      "Russia and Kazakhstan",
+      "Mongolia and China",
+      "Iran and Afghanistan"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-strait-separates-europe-from-africa",
+    "question": "Which strait separates Europe from Africa?",
+    "options": [
+      "Strait of Hormuz",
+      "Strait of Magellan",
+      "Strait of Gibraltar",
+      "Bering Strait"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-is-the-smallest-independent-state-in-the-world-by-both-area-and-population",
+    "question": "Which is the smallest independent state in the world by both area and population?",
+    "options": [
+      "Monaco",
+      "Vatican City",
+      "San Marino",
+      "Nauru"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-major-desert-covers-most-of-north-africa",
+    "question": "Which major desert covers most of North Africa?",
+    "options": [
+      "Kalahari",
+      "Arabian",
+      "Sahara",
+      "Gobi"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-country-is-the-worlds-largest-producer-of-coffee",
+    "question": "Which country is the world's largest producer of coffee?",
+    "options": [
+      "Colombia",
+      "Vietnam",
+      "Brazil",
+      "Ethiopia"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-great-barrier-reef-is-located-off-the-coast-of-which-country",
+    "question": "The Great Barrier Reef is located off the coast of which country?",
+    "options": [
+      "New Zealand",
+      "Australia",
+      "Indonesia",
+      "Philippines"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-european-capital-city-is-built-on-14-islands",
+    "question": "Which European capital city is built on 14 islands?",
+    "options": [
+      "Venice",
+      "Amsterdam",
+      "Copenhagen",
+      "Stockholm"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-sea-is-known-for-its-extremely-high-salt-content-allowing-people-to-float-easily",
+    "question": "Which sea is known for its extremely high salt content, allowing people to float easily?",
+    "options": [
+      "Black Sea",
+      "Red Sea",
+      "Dead Sea",
+      "Caspian Sea"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-serengeti-national-park-famous-for-its-annual-wildebeest-migration-is-primarily-located-in-which-country",
+    "question": "The Serengeti National Park, famous for its annual wildebeest migration, is primarily located in which country?",
+    "options": [
+      "Kenya",
+      "Tanzania",
+      "South Africa",
+      "Uganda"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-narrowest-point-of-the-english-channel",
+    "question": "What is the name of the narrowest point of the English Channel?",
+    "options": [
+      "Strait of Dover",
+      "Strait of Calais",
+      "Strait of Folkestone",
+      "Strait of Brighton"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-country-has-the-most-natural-lakes-within-its-borders",
+    "question": "Which country has the most natural lakes within its borders?",
+    "options": [
+      "USA",
+      "Russia",
+      "Canada",
+      "China"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-city-is-the-southernmost-capital-city-in-the-world",
+    "question": "Which city is the southernmost capital city in the world?",
+    "options": [
+      "Santiago",
+      "Buenos Aires",
+      "Wellington",
+      "Canberra"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-highest-active-volcano-in-europe-mount-etna-is-located-in-which-country",
+    "question": "The highest active volcano in Europe, Mount Etna, is located in which country?",
+    "options": [
+      "Greece",
+      "Italy",
+      "Iceland",
+      "Spain"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-major-city-is-divided-by-the-bosphorus-strait-connecting-two-continents",
+    "question": "Which major city is divided by the Bosphorus Strait, connecting two continents?",
+    "options": [
+      "Athens",
+      "Rome",
+      "Istanbul",
+      "Cairo"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-desert-covers-large-parts-of-botswana-and-namibia",
+    "question": "Which desert covers large parts of Botswana and Namibia?",
+    "options": [
+      "Sahara",
+      "Gobi",
+      "Kalahari",
+      "Atacama"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-city-is-the-capital-of-australia",
+    "question": "Which city is the capital of Australia?",
+    "options": [
+      "Sydney",
+      "Melbourne",
+      "Canberra",
+      "Perth"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-archipelago-is-located-off-the-northwest-coast-of-africa-and-is-an-autonomous-community-of-spain",
+    "question": "Which archipelago is located off the northwest coast of Africa and is an autonomous community of Spain?",
+    "options": [
+      "Azores",
+      "Madeira",
+      "Canary Islands",
+      "Cape Verde"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-mountain-range-traditionally-forms-part-of-the-boundary-between-europe-and-asia",
+    "question": "Which mountain range traditionally forms part of the boundary between Europe and Asia?",
+    "options": [
+      "Caucasus Mountains",
+      "Carpathian Mountains",
+      "Urals Mountains",
+      "Dinaric Alps"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-is-the-longest-river-in-south-america",
+    "question": "Which is the longest river in South America?",
+    "options": [
+      "Amazon River",
+      "Paraná River",
+      "Magdalena River",
+      "Orinoco River"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "easy"
   }
 ]

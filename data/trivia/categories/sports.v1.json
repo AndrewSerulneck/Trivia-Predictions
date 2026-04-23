@@ -2143,5 +2143,330 @@
     "correctAnswer": 2,
     "category": "Sports",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-sport-uses-terms-like-birdie-bogey-and-eagle",
+    "question": "Which sport uses terms like \"birdie,\" \"bogey,\" and \"eagle\"?",
+    "options": [
+      "Golf",
+      "Tennis",
+      "Bowling",
+      "Badminton"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-players-are-on-a-standard-baseball-team-on-the-field-at-one-time",
+    "question": "How many players are on a standard baseball team on the field at one time?",
+    "options": [
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-famous-boxer-was-known-by-the-nickname-the-greatest",
+    "question": "Which famous boxer was known by the nickname \"The Greatest\"?",
+    "options": [
+      "Mike Tyson",
+      "Muhammad Ali",
+      "George Foreman",
+      "Joe Frazier"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-regulation-height-of-a-basketball-hoop-in-professional-play",
+    "question": "What is the regulation height of a basketball hoop in professional play?",
+    "options": [
+      "8 feet",
+      "9 feet",
+      "10 feet",
+      "11 feet"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-country-did-the-sport-of-sumo-wrestling-originate",
+    "question": "In which country did the sport of Sumo wrestling originate?",
+    "options": [
+      "China",
+      "Korea",
+      "Japan",
+      "Thailand"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-german-car-manufacturer-has-won-the-most-24-hours-of-le-mans-races",
+    "question": "Which German car manufacturer has won the most 24 Hours of Le Mans races?",
+    "options": [
+      "BMW",
+      "Audi",
+      "Mercedes-Benz",
+      "Porsche"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-maximum-score-a-player-can-achieve-in-a-single-frame-of-ten-pin-bowling",
+    "question": "What is the maximum score a player can achieve in a single frame of ten-pin bowling?",
+    "options": [
+      "10",
+      "30",
+      "100",
+      "300"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-team-won-the-first-ever-super-bowl-in-1967",
+    "question": "Which team won the first-ever Super Bowl in 1967?",
+    "options": [
+      "Green Bay Packers",
+      "Kansas City Chiefs",
+      "Dallas Cowboys",
+      "New York Jets"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-bases-are-there-on-a-baseball-field",
+    "question": "How many bases are there on a baseball field?",
+    "options": [
+      "3",
+      "4",
+      "5",
+      "6"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-tennis-grand-slam-tournament-is-played-on-clay-courts",
+    "question": "Which tennis Grand Slam tournament is played on clay courts?",
+    "options": [
+      "Wimbledon",
+      "US Open",
+      "Australian Open",
+      "French Open"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-football-soccer-how-many-minutes-are-played-in-regular-time",
+    "question": "In football (soccer), how many minutes are played in regular time?",
+    "options": [
+      "80",
+      "90",
+      "100",
+      "120"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-is-the-only-athlete-to-win-olympic-gold-medals-in-both-the-winter-and-summer-games-in-different-sports",
+    "question": "Who is the only athlete to win Olympic gold medals in both the Winter and Summer Games in different sports?",
+    "options": [
+      "Eddie Eagan",
+      "Jim Thorpe",
+      "Babe Didrikson Zaharias",
+      "Michael Jordan"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-trophy-awarded-to-the-winner-of-the-nhl-playoffs",
+    "question": "What is the name of the trophy awarded to the winner of the NHL playoffs?",
+    "options": [
+      "Calder Cup",
+      "Stanley Cup",
+      "Vezina Trophy",
+      "Art Ross Trophy"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-individual-sport-uses-a-foil-epee-or-saber",
+    "question": "Which individual sport uses a foil, epee, or saber?",
+    "options": [
+      "Archery",
+      "Fencing",
+      "Kendo",
+      "Judo"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-maximum-number-of-players-a-soccer-team-can-have-on-the-field-at-one-time-including-the-goalkeeper",
+    "question": "What is the maximum number of players a soccer team can have on the field at one time, including the goalkeeper?",
+    "options": [
+      "9",
+      "10",
+      "11",
+      "12"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-holds-the-record-for-the-most-olympic-gold-medals-won-by-an-individual-male-athlete",
+    "question": "Who holds the record for the most Olympic gold medals won by an individual male athlete?",
+    "options": [
+      "Usain Bolt",
+      "Michael Phelps",
+      "Carl Lewis",
+      "Paavo Nurmi"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-is-credited-with-inventing-the-modern-game-of-basketball",
+    "question": "Which country is credited with inventing the modern game of basketball?",
+    "options": [
+      "Canada",
+      "United States",
+      "United Kingdom",
+      "France"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-official-length-of-a-marathon-race-in-kilometers",
+    "question": "What is the official length of a marathon race in kilometers?",
+    "options": [
+      "26.2 km",
+      "42.195 km",
+      "50 km",
+      "100 km"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-which-sport-would-you-perform-a-slam-dunk",
+    "question": "In which sport would you perform a \"slam dunk\"?",
+    "options": [
+      "Volleyball",
+      "Rugby",
+      "Basketball",
+      "Water Polo"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-city-hosted-the-2016-summer-olympics",
+    "question": "Which city hosted the 2016 Summer Olympics?",
+    "options": [
+      "London",
+      "Rio de Janeiro",
+      "Tokyo",
+      "Beijing"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-was-the-first-female-gymnast-to-score-a-perfect-10-at-the-olympic-games",
+    "question": "Who was the first female gymnast to score a perfect 10 at the Olympic Games?",
+    "options": [
+      "Olga Korbut",
+      "Mary Lou Retton",
+      "Nadia Comaneci",
+      "Simone Biles"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-material-are-olympic-curling-stones-made-from",
+    "question": "What material are Olympic curling stones made from?",
+    "options": [
+      "Granite",
+      "Basalt",
+      "Marble",
+      "Limestone"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-individual-has-won-the-most-masters-tournaments-in-golf-history",
+    "question": "Which individual has won the most Masters Tournaments in golf history?",
+    "options": [
+      "Jack Nicklaus",
+      "Tiger Woods",
+      "Arnold Palmer",
+      "Ben Hogan"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-which-sport-can-you-score-a-hat-trick",
+    "question": "In which sport can you score a \"hat-trick\"?",
+    "options": [
+      "Basketball",
+      "Tennis",
+      "Ice Hockey",
+      "Baseball"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-maximum-score-a-player-can-achieve-in-a-single-game-of-bowling",
+    "question": "What is the maximum score a player can achieve in a single game of bowling?",
+    "options": [
+      "200",
+      "250",
+      "300",
+      "1000"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
   }
 ]

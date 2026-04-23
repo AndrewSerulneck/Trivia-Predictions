@@ -2143,5 +2143,330 @@
     "correctAnswer": 2,
     "category": "Music",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-instrument-is-yo-yo-ma-famous-for-playing",
+    "question": "Which instrument is Yo-Yo Ma famous for playing?",
+    "options": [
+      "Violin",
+      "Cello",
+      "Piano",
+      "Trumpet"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-city-are-the-beatles-famously-from",
+    "question": "What city are The Beatles famously from?",
+    "options": [
+      "London",
+      "Manchester",
+      "Liverpool",
+      "Birmingham"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-instrument-is-a-violin-a-part-of-the-family-of",
+    "question": "Which instrument is a violin a part of the family of?",
+    "options": [
+      "Woodwind",
+      "Percussion",
+      "Brass",
+      "String"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-musical-term-for-a-very-slow-tempo",
+    "question": "What is the musical term for a very slow tempo?",
+    "options": [
+      "Allegro",
+      "Andante",
+      "Largo",
+      "Presto"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-country-did-the-pop-group-abba-originate-from",
+    "question": "Which country did the pop group ABBA originate from?",
+    "options": [
+      "Norway",
+      "Denmark",
+      "Sweden",
+      "Finland"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-annual-music-awards-given-by-the-recording-academy",
+    "question": "What is the name of the annual music awards given by the Recording Academy?",
+    "options": [
+      "MTV Video Music Awards",
+      "Billboard Music Awards",
+      "American Music Awards",
+      "Grammy Awards"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-singer-songwriter-released-the-hit-song-rolling-in-the-deep",
+    "question": "Which singer-songwriter released the hit song \"Rolling in the Deep\"?",
+    "options": [
+      "Adele",
+      "Rihanna",
+      "Dua Lipa",
+      "Taylor Swift"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-genre-of-music-is-often-associated-with-bob-marley",
+    "question": "What genre of music is often associated with Bob Marley?",
+    "options": [
+      "Ska",
+      "Calypso",
+      "Reggae",
+      "Dancehall"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-classical-composer-became-deaf-later-in-his-life",
+    "question": "Which classical composer became deaf later in his life?",
+    "options": [
+      "Wolfgang Amadeus Mozart",
+      "Johann Sebastian Bach",
+      "Ludwig van Beethoven",
+      "Joseph Haydn"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-band-released-the-iconic-album-nevermind-in-1991",
+    "question": "Which band released the iconic album \"Nevermind\" in 1991?",
+    "options": [
+      "Pearl Jam",
+      "Soundgarden",
+      "Nirvana",
+      "Alice in Chains"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-composed-the-famous-set-of-violin-concertos-known-as-the-four-seasons",
+    "question": "Who composed the famous set of violin concertos known as \"The Four Seasons\"?",
+    "options": [
+      "Antonio Vivaldi",
+      "Johann Pachelbel",
+      "George Frideric Handel",
+      "Claudio Monteverdi"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-female-artist-released-the-critically-acclaimed-album-lemonade-in-2016",
+    "question": "Which female artist released the critically acclaimed album \"Lemonade\" in 2016?",
+    "options": [
+      "Rihanna",
+      "Adele",
+      "Beyoncé",
+      "Lady Gaga"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-stage-name-of-the-singer-born-robyn-fenty",
+    "question": "What is the stage name of the singer born Robyn Fenty?",
+    "options": [
+      "Sia",
+      "Alicia Keys",
+      "Rihanna",
+      "Cardi B"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-legendary-guitarist-is-known-for-his-innovative-use-of-feedback-and-distortion",
+    "question": "Which legendary guitarist is known for his innovative use of feedback and distortion?",
+    "options": [
+      "Eric Clapton",
+      "Jimi Hendrix",
+      "Jimmy Page",
+      "B.B. King"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-instrument-is-a-characteristic-feature-of-scottish-folk-music",
+    "question": "Which instrument is a characteristic feature of Scottish folk music?",
+    "options": [
+      "Accordion",
+      "Uilleann Pipes",
+      "Bagpipes",
+      "Harp"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-common-term-for-the-main-melody-in-a-piece-of-music",
+    "question": "What is the common term for the main melody in a piece of music?",
+    "options": [
+      "Harmony",
+      "Rhythm",
+      "Tempo",
+      "Theme"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-british-rock-band-is-known-for-songs-like-stairway-to-heaven-and-whole-lotta-love",
+    "question": "Which British rock band is known for songs like \"Stairway to Heaven\" and \"Whole Lotta Love\"?",
+    "options": [
+      "The Who",
+      "Led Zeppelin",
+      "Deep Purple",
+      "Black Sabbath"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-composer-wrote-the-epic-opera-cycle-der-ring-des-nibelungen",
+    "question": "Which composer wrote the epic opera cycle \"Der Ring des Nibelungen\"?",
+    "options": [
+      "Giuseppe Verdi",
+      "Richard Wagner",
+      "Giacomo Puccini",
+      "Georges Bizet"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-musical-term-for-gradually-getting-softer",
+    "question": "What is the musical term for gradually getting softer?",
+    "options": [
+      "Crescendo",
+      "Accelerando",
+      "Diminuendo",
+      "Forte"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-jazz-saxophonist-was-a-key-figure-in-the-development-of-bebop",
+    "question": "Which jazz saxophonist was a key figure in the development of bebop?",
+    "options": [
+      "John Coltrane",
+      "Miles Davis",
+      "Charlie Parker",
+      "Thelonious Monk"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-theremin-is-unique-for-being-played-without-what",
+    "question": "The theremin is unique for being played without what?",
+    "options": [
+      "A bow",
+      "Keys",
+      "Physical contact",
+      "Strings"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-electronic-music-duo-is-known-for-their-distinctive-helmets-and-albums-like-discovery",
+    "question": "Which electronic music duo is known for their distinctive helmets and albums like \"Discovery\"?",
+    "options": [
+      "The Chemical Brothers",
+      "Justice",
+      "Daft Punk",
+      "Kraftwerk"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-is-often-referred-to-as-the-father-of-gospel-music",
+    "question": "Who is often referred to as the \"Father of Gospel Music\"?",
+    "options": [
+      "Mahalia Jackson",
+      "Sam Cooke",
+      "Thomas A. Dorsey",
+      "James Cleveland"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-russian-composer-wrote-the-famous-ballets-swan-lake-and-the-nutcracker",
+    "question": "Which Russian composer wrote the famous ballets \"Swan Lake\" and \"The Nutcracker\"?",
+    "options": [
+      "Igor Stravinsky",
+      "Sergei Rachmaninoff",
+      "Dmitri Shostakovich",
+      "Pyotr Ilyich Tchaikovsky"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-pop-superstar-is-known-for-hits-like-bad-romance-and-poker-face",
+    "question": "Which pop superstar is known for hits like \"Bad Romance\" and \"Poker Face\"?",
+    "options": [
+      "Katy Perry",
+      "Lady Gaga",
+      "Taylor Swift",
+      "Adele"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
   }
 ]

@@ -1558,5 +1558,330 @@
     "correctAnswer": 2,
     "category": "Animals",
     "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-fastest-land-animal",
+    "question": "What is the fastest land animal?",
+    "options": [
+      "Lion",
+      "Cheetah",
+      "Gazelle",
+      "Horse"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-largest-animal-on-earth",
+    "question": "What is the largest animal on Earth?",
+    "options": [
+      "African Elephant",
+      "Blue Whale",
+      "Colossal Squid",
+      "Grizzly Bear"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-reptile-is-famous-for-its-ability-to-change-skin-color-to-match-its-surroundings",
+    "question": "Which reptile is famous for its ability to change skin color to match its surroundings?",
+    "options": [
+      "Komodo Dragon",
+      "Chameleon",
+      "Gecko",
+      "Iguana"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-bird-is-known-for-being-unable-to-fly-despite-its-large-size",
+    "question": "Which bird is known for being unable to fly, despite its large size?",
+    "options": [
+      "Eagle",
+      "Sparrow",
+      "Ostrich",
+      "Hummingbird"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-legs-does-an-insect-typically-have",
+    "question": "How many legs does an insect typically have?",
+    "options": [
+      "Four",
+      "Six",
+      "Eight",
+      "Ten"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-a-baby-rabbit-commonly-called",
+    "question": "What is a baby rabbit commonly called?",
+    "options": [
+      "Calf",
+      "Fawn",
+      "Pup",
+      "Kit"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-primary-diet-of-a-polar-bear",
+    "question": "What is the primary diet of a polar bear?",
+    "options": [
+      "Bamboo",
+      "Fish",
+      "Seals",
+      "Berries"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-distinctive-black-and-white-stripes",
+    "question": "Which animal is known for its distinctive black and white stripes?",
+    "options": [
+      "Tiger",
+      "Panda",
+      "Zebra",
+      "Badger"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-bird-species-is-notorious-for-laying-its-eggs-in-the-nests-of-other-birds",
+    "question": "Which bird species is notorious for laying its eggs in the nests of other birds?",
+    "options": [
+      "Robin",
+      "Cuckoo",
+      "Penguin",
+      "Ostrich"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-unique-defense-mechanism-does-a-skunk-use-when-threatened",
+    "question": "What unique defense mechanism does a skunk use when threatened?",
+    "options": [
+      "Playing dead",
+      "Spraying foul-smelling liquid",
+      "Changing color",
+      "Retracting into a shell"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-animals-is-a-monotreme-meaning-it-lays-eggs-but-nurses-its-young",
+    "question": "Which of these animals is a monotreme, meaning it lays eggs but nurses its young?",
+    "options": [
+      "Kangaroo",
+      "Platypus",
+      "Hedgehog",
+      "Dolphin"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-ability-to-regrow-lost-limbs-such-as-arms-or-rays",
+    "question": "Which animal is known for its ability to regrow lost limbs, such as arms or rays?",
+    "options": [
+      "Lizard",
+      "Crab",
+      "Starfish",
+      "Frog"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-only-mammal-capable-of-true-sustained-flight",
+    "question": "What is the only mammal capable of true sustained flight?",
+    "options": [
+      "Flying Squirrel",
+      "Bat",
+      "Sugar Glider",
+      "Bird"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-bird-species-is-known-for-building-elaborate-structures-called-bowers-to-attract-mates",
+    "question": "Which bird species is known for building elaborate structures called 'bowers' to attract mates?",
+    "options": [
+      "Weaver Bird",
+      "Hummingbird",
+      "Bowerbird",
+      "Peacock"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-famous-for-its-engineering-skills-building-dams-across-rivers",
+    "question": "Which animal is famous for its engineering skills, building dams across rivers?",
+    "options": [
+      "Otter",
+      "Beaver",
+      "Muskrat",
+      "Capybara"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-has-a-long-sticky-tongue-perfectly-adapted-for-catching-insects",
+    "question": "Which animal has a long, sticky tongue perfectly adapted for catching insects?",
+    "options": [
+      "Snake",
+      "Frog",
+      "Anteater",
+      "Lizard"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-collective-noun-for-a-group-of-fish",
+    "question": "What is the collective noun for a group of fish?",
+    "options": [
+      "Flock",
+      "Herd",
+      "School",
+      "Swarm"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-ability-to-walk-on-water-by-running-across-the-surface",
+    "question": "Which animal is known for its ability to 'walk on water' by running across the surface?",
+    "options": [
+      "Water Strider",
+      "Basilisk Lizard",
+      "Pond Skater",
+      "Crocodile"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-collective-noun-for-a-group-of-crows",
+    "question": "What is the collective noun for a group of crows?",
+    "options": [
+      "Flock",
+      "Coven",
+      "Murder",
+      "Parliament"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-is-believed-to-have-the-longest-known-lifespan-of-all-vertebrates",
+    "question": "Which animal is believed to have the longest known lifespan of all vertebrates?",
+    "options": [
+      "Galapagos Tortoise",
+      "Bowhead Whale",
+      "Greenland Shark",
+      "Red Sea Urchin"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-primate-has-the-largest-eyes-relative-to-its-body-size-making-it-excellent-at-night-vision",
+    "question": "Which primate has the largest eyes relative to its body size, making it excellent at night vision?",
+    "options": [
+      "Gorilla",
+      "Chimpanzee",
+      "Tarsier",
+      "Lemur"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-possesses-the-strongest-bite-force-among-all-living-creatures",
+    "question": "Which animal possesses the strongest bite force among all living creatures?",
+    "options": [
+      "Great White Shark",
+      "Lion",
+      "Saltwater Crocodile",
+      "Grizzly Bear"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-highly-venomous-marine-animal-is-found-in-tropical-waters-and-known-for-its-potent-sting",
+    "question": "What highly venomous marine animal is found in tropical waters and known for its potent sting?",
+    "options": [
+      "Portuguese Man O' War",
+      "Blue-Ringed Octopus",
+      "Box Jellyfish",
+      "Stonefish"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-scientific-study-of-birds-called",
+    "question": "What is the scientific study of birds called?",
+    "options": [
+      "Entomology",
+      "Ichthyology",
+      "Ornithology",
+      "Herpetology"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-deep-sea-fish-is-famous-for-using-a-glowing-lure-on-its-head-to-attract-prey-in-dark-environments",
+    "question": "Which deep-sea fish is famous for using a glowing lure on its head to attract prey in dark environments?",
+    "options": [
+      "Anglerfish",
+      "Viperfish",
+      "Blobfish",
+      "Goblin Shark"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "hard"
   }
 ]

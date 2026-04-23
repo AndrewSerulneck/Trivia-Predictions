@@ -2533,5 +2533,330 @@
     "correctAnswer": 1,
     "category": "History",
     "difficulty": "hard"
+  },
+  {
+    "slug": "who-was-the-first-emperor-of-unified-china-known-for-beginning-the-great-wall-and-the-terracotta-army",
+    "question": "Who was the first emperor of unified China, known for beginning the Great Wall and the Terracotta Army?",
+    "options": [
+      "Qin Shi Huang",
+      "Emperor Wu of Han",
+      "Kublai Khan",
+      "Emperor Taizong"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-magna-carta-a-foundational-document-for-constitutional-law-was-signed-in-what-year",
+    "question": "The Magna Carta, a foundational document for constitutional law, was signed in what year?",
+    "options": [
+      "1066",
+      "1215",
+      "1492",
+      "1607"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-famous-queen-of-egypt-had-a-romantic-relationship-with-both-julius-caesar-and-mark-antony",
+    "question": "Which famous queen of Egypt had a romantic relationship with both Julius Caesar and Mark Antony?",
+    "options": [
+      "Nefertiti",
+      "Hatshepsut",
+      "Cleopatra VII",
+      "Sobekneferu"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-punic-wars-were-a-series-of-conflicts-between-rome-and-which-other-major-power",
+    "question": "The Punic Wars were a series of conflicts between Rome and which other major power?",
+    "options": [
+      "Persia",
+      "Carthage",
+      "Greece",
+      "Egypt"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-was-the-primary-cause-of-the-opium-wars-in-the-mid-19th-century",
+    "question": "What was the primary cause of the Opium Wars in the mid-19th century?",
+    "options": [
+      "Territorial disputes",
+      "Religious differences",
+      "Trade imbalances",
+      "Succession crisis"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-famously-said-veni-vidi-vici-i-came-i-saw-i-conquered",
+    "question": "Who famously said \"Veni, vidi, vici\" (I came, I saw, I conquered)?",
+    "options": [
+      "Alexander the Great",
+      "Julius Caesar",
+      "Augustus",
+      "Hannibal Barca"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-protestant-reformation-was-sparked-by-the-publication-of-the-ninety-five-theses-by-which-figure",
+    "question": "The Protestant Reformation was sparked by the publication of the Ninety-five Theses by which figure?",
+    "options": [
+      "John Calvin",
+      "Martin Luther",
+      "Henry VIII",
+      "Huldrych Zwingli"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-was-the-name-of-the-ancient-trade-route-connecting-the-east-and-west-primarily-for-silk",
+    "question": "What was the name of the ancient trade route connecting the East and West, primarily for silk?",
+    "options": [
+      "The Spice Route",
+      "The Amber Road",
+      "The Silk Road",
+      "The Royal Road"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-battle-of-hastings-in-1066-led-to-the-norman-conquest-of-which-country",
+    "question": "The Battle of Hastings in 1066 led to the Norman conquest of which country?",
+    "options": [
+      "France",
+      "Spain",
+      "England",
+      "Germany"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-was-the-name-of-the-powerful-aztec-emperor-who-encountered-hernn-corts",
+    "question": "What was the name of the powerful Aztec emperor who encountered Hernán Cortés?",
+    "options": [
+      "Atahualpa",
+      "Pachacuti",
+      "Moctezuma II",
+      "Cuauhtémoc"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-city-was-anne-franks-family-hidden-during-world-war-ii",
+    "question": "In which city was Anne Frank's family hidden during World War II?",
+    "options": [
+      "Berlin",
+      "Paris",
+      "Amsterdam",
+      "Warsaw"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-treaty-signed-in-1648-ended-the-thirty-years-war-and-established-the-principle-of-state-sovereignty",
+    "question": "Which treaty, signed in 1648, ended the Thirty Years' War and established the principle of state sovereignty?",
+    "options": [
+      "Treaty of Utrecht",
+      "Peace of Augsburg",
+      "Treaty of Westphalia",
+      "Congress of Vienna"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-explorer-is-credited-with-being-the-first-to-circumnavigate-the-earth-though-he-died-during-the-voyage",
+    "question": "Which explorer is credited with being the first to circumnavigate the Earth, though he died during the voyage?",
+    "options": [
+      "Christopher Columbus",
+      "Vasco da Gama",
+      "Ferdinand Magellan",
+      "James Cook"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-event-is-widely-considered-the-start-of-world-war-ii-in-europe",
+    "question": "What event is widely considered the start of World War II in Europe?",
+    "options": [
+      "Invasion of Poland",
+      "Battle of Britain",
+      "Attack on Pearl Harbor",
+      "Anschluss of Austria"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-reign-of-terror-was-a-period-of-extreme-violence-during-which-major-revolution",
+    "question": "The Reign of Terror was a period of extreme violence during which major revolution?",
+    "options": [
+      "American Revolution",
+      "Russian Revolution",
+      "French Revolution",
+      "Glorious Revolution"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-ancient-civilization-developed-the-first-known-writing-system-cuneiform",
+    "question": "Which ancient civilization developed the first known writing system, cuneiform?",
+    "options": [
+      "Egyptians",
+      "Greeks",
+      "Mesopotamians",
+      "Chinese"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-jacquerie-was-a-major-peasant-revolt-in-14th-century-which-country",
+    "question": "The Jacquerie was a major peasant revolt in 14th-century which country?",
+    "options": [
+      "England",
+      "France",
+      "Germany",
+      "Italy"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-chinese-dynasty-built-the-forbidden-city-in-beijing",
+    "question": "Which Chinese dynasty built the Forbidden City in Beijing?",
+    "options": [
+      "Han Dynasty",
+      "Tang Dynasty",
+      "Ming Dynasty",
+      "Qing Dynasty"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-was-the-leader-of-the-soviet-union-during-the-cuban-missile-crisis",
+    "question": "Who was the leader of the Soviet Union during the Cuban Missile Crisis?",
+    "options": [
+      "Joseph Stalin",
+      "Nikita Khrushchev",
+      "Leonid Brezhnev",
+      "Mikhail Gorbachev"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-authored-the-prince-a-16th-century-political-treatise-advising-rulers-on-how-to-gain-and-maintain-power",
+    "question": "Who authored \"The Prince\", a 16th-century political treatise advising rulers on how to gain and maintain power?",
+    "options": [
+      "Thomas More",
+      "Niccolò Machiavelli",
+      "Erasmus",
+      "Jean-Jacques Rousseau"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-hagia-sophia-originally-built-as-a-christian-cathedral-served-as-the-patriarchal-cathedral-of-the-imperial-capital-of-which-empire",
+    "question": "The Hagia Sophia, originally built as a Christian cathedral, served as the patriarchal cathedral of the imperial capital of which empire?",
+    "options": [
+      "Roman Empire",
+      "Byzantine Empire",
+      "Ottoman Empire",
+      "Sasanian Empire"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-edict-of-nantes-granting-substantial-rights-to-calvinist-protestants-huguenots-was-issued-in-which-country",
+    "question": "The Edict of Nantes, granting substantial rights to Calvinist Protestants (Huguenots), was issued in which country?",
+    "options": [
+      "England",
+      "Germany",
+      "France",
+      "Spain"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-was-the-founder-of-the-mongol-empire-one-of-the-largest-contiguous-empires-in-history",
+    "question": "Who was the founder of the Mongol Empire, one of the largest contiguous empires in history?",
+    "options": [
+      "Kublai Khan",
+      "Batu Khan",
+      "Genghis Khan",
+      "Timur"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-boston-tea-party-was-a-protest-against-which-british-policy",
+    "question": "The Boston Tea Party was a protest against which British policy?",
+    "options": [
+      "Stamp Act",
+      "Townshend Acts",
+      "Tea Act",
+      "Quartering Act"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-ziggurat-of-ur-an-ancient-mesopotamian-temple-was-built-by-which-civilization",
+    "question": "The Ziggurat of Ur, an ancient Mesopotamian temple, was built by which civilization?",
+    "options": [
+      "Assyrians",
+      "Babylonians",
+      "Sumerians",
+      "Akkadians"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
   }
 ]

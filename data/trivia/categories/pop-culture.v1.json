@@ -3430,5 +3430,330 @@
     "correctAnswer": 1,
     "category": "Pop Culture",
     "difficulty": "easy"
+  },
+  {
+    "slug": "who-sang-the-hit-song-single-ladies-put-a-ring-on-it",
+    "question": "Who sang the hit song \"Single Ladies (Put a Ring on It)\"?",
+    "options": [
+      "Beyoncé",
+      "Rihanna",
+      "Adele",
+      "Taylor Swift"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-fictional-city-is-the-home-of-batman",
+    "question": "What fictional city is the home of Batman?",
+    "options": [
+      "Gotham City",
+      "Metropolis",
+      "Star City",
+      "Central City"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animated-film-features-a-character-named-buzz-lightyear",
+    "question": "Which animated film features a character named Buzz Lightyear?",
+    "options": [
+      "Toy Story",
+      "Shrek",
+      "Finding Nemo",
+      "The Lion King"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-nintendos-iconic-red-hatted-plumber",
+    "question": "What is the name of Nintendo's iconic red-hatted plumber?",
+    "options": [
+      "Mario",
+      "Luigi",
+      "Link",
+      "Sonic"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-pop-superstar-is-known-for-her-little-monsters-fanbase",
+    "question": "Which pop superstar is known for her \"Little Monsters\" fanbase?",
+    "options": [
+      "Lady Gaga",
+      "Katy Perry",
+      "Ariana Grande",
+      "Britney Spears"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-the-tv-show-friends-what-is-the-name-of-the-coffee-shop-they-frequently-visit",
+    "question": "In the TV show \"Friends,\" what is the name of the coffee shop they frequently visit?",
+    "options": [
+      "Central Perk",
+      "The Daily Grind",
+      "Coffee Bean",
+      "Perk Up"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-quentin-tarantino-film-features-the-character-jules-winnfield",
+    "question": "Which Quentin Tarantino film features the character Jules Winnfield?",
+    "options": [
+      "Pulp Fiction",
+      "Reservoir Dogs",
+      "Kill Bill Vol. 1",
+      "Django Unchained"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-social-media-platform-is-known-for-its-short-video-format",
+    "question": "What social media platform is known for its short video format?",
+    "options": [
+      "TikTok",
+      "Instagram",
+      "Twitter",
+      "Facebook"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-performed-at-the-super-bowl-lvii-halftime-show-in-2023",
+    "question": "Who performed at the Super Bowl LVII halftime show in 2023?",
+    "options": [
+      "Rihanna",
+      "Beyoncé",
+      "Taylor Swift",
+      "Adele"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-fantasy-series-features-the-houses-stark-lannister-and-targaryen",
+    "question": "What fantasy series features the houses Stark, Lannister, and Targaryen?",
+    "options": [
+      "Game of Thrones",
+      "The Witcher",
+      "House of the Dragon",
+      "Lord of the Rings"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-actor-plays-iron-man-in-the-marvel-cinematic-universe",
+    "question": "Which actor plays Iron Man in the Marvel Cinematic Universe?",
+    "options": [
+      "Robert Downey Jr.",
+      "Chris Evans",
+      "Mark Ruffalo",
+      "Chris Hemsworth"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-game-the-legend-of-zelda-primarily-features-which-protagonist",
+    "question": "The game \"The Legend of Zelda\" primarily features which protagonist?",
+    "options": [
+      "Link",
+      "Zelda",
+      "Ganon",
+      "Impa"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-band-released-the-album-the-dark-side-of-the-moon",
+    "question": "Which band released the album \"The Dark Side of the Moon\"?",
+    "options": [
+      "Pink Floyd",
+      "Led Zeppelin",
+      "The Beatles",
+      "Queen"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-critically-acclaimed-drama-series-centers-on-a-chemistry-teacher-turned-drug-lord",
+    "question": "Which critically acclaimed drama series centers on a chemistry teacher turned drug lord?",
+    "options": [
+      "Breaking Bad",
+      "The Wire",
+      "Narcos",
+      "Ozark"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-magical-item-does-harry-potter-use-to-fly-in-quidditch",
+    "question": "What magical item does Harry Potter use to fly in Quidditch?",
+    "options": [
+      "Broomstick",
+      "Magic Carpet",
+      "Flying Car",
+      "Pegasus"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-reality-tv-family-stars-in-keeping-up-with-the-kardashians",
+    "question": "Which reality TV family stars in \"Keeping Up with the Kardashians\"?",
+    "options": [
+      "The Kardashians",
+      "The Jenners",
+      "The Hadids",
+      "The Osbournes"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-artist-is-known-for-hits-like-bad-guy-and-ocean-eyes",
+    "question": "What artist is known for hits like \"Bad Guy\" and \"Ocean Eyes\"?",
+    "options": [
+      "Billie Eilish",
+      "Olivia Rodrigo",
+      "Dua Lipa",
+      "Halsey"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-the-film-forrest-gump-what-is-forrests-famous-line-about-life",
+    "question": "In the film \"Forrest Gump,\" what is Forrest's famous line about life?",
+    "options": [
+      "Life is like a box of chocolates.",
+      "Life is what you make it.",
+      "Life is a journey.",
+      "Life goes on."
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animated-sitcom-features-a-yellow-family-named-simpson",
+    "question": "Which animated sitcom features a yellow family named Simpson?",
+    "options": [
+      "The Simpsons",
+      "Family Guy",
+      "South Park",
+      "American Dad!"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-company-developed-the-popular-battle-royale-game-fortnite",
+    "question": "Which company developed the popular battle royale game \"Fortnite\"?",
+    "options": [
+      "Epic Games",
+      "Activision Blizzard",
+      "Valve",
+      "Nintendo"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-is-often-referred-to-as-the-king-of-pop",
+    "question": "Who is often referred to as the \"King of Pop\"?",
+    "options": [
+      "Michael Jackson",
+      "Elvis Presley",
+      "Prince",
+      "Stevie Wonder"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-director-is-known-for-films-like-inception-the-dark-knight-and-oppenheimer",
+    "question": "Which director is known for films like \"Inception,\" \"The Dark Knight,\" and \"Oppenheimer\"?",
+    "options": [
+      "Christopher Nolan",
+      "Steven Spielberg",
+      "Martin Scorsese",
+      "Quentin Tarantino"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-animal-is-the-main-character-in-the-animated-series-bojack-horseman",
+    "question": "What animal is the main character in the animated series \"BoJack Horseman\"?",
+    "options": [
+      "Horse",
+      "Dog",
+      "Cat",
+      "Bird"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-singer-released-the-album-21-and-hits-like-rolling-in-the-deep",
+    "question": "Which singer released the album \"21\" and hits like \"Rolling in the Deep\"?",
+    "options": [
+      "Adele",
+      "Amy Winehouse",
+      "Duffy",
+      "Sam Smith"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-character-darth-vader-is-from-which-iconic-sci-fi-franchise",
+    "question": "The character Darth Vader is from which iconic sci-fi franchise?",
+    "options": [
+      "Star Wars",
+      "Star Trek",
+      "Alien",
+      "Transformers"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
   }
 ]

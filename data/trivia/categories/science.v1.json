@@ -2910,5 +2910,330 @@
     "correctAnswer": 2,
     "category": "Science",
     "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-chemical-symbol-for-table-salt",
+    "question": "What is the chemical symbol for table salt?",
+    "options": [
+      "NaCl",
+      "H2O",
+      "CO2",
+      "O2"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-force-pulls-objects-towards-the-center-of-the-earth",
+    "question": "Which force pulls objects towards the center of the Earth?",
+    "options": [
+      "Friction",
+      "Tension",
+      "Gravity",
+      "Buoyancy"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-freezing-point-of-water-in-degrees-celsius",
+    "question": "What is the freezing point of water in degrees Celsius?",
+    "options": [
+      "100",
+      "32",
+      "0",
+      "-10"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-organ-pumps-blood-throughout-the-human-body",
+    "question": "Which organ pumps blood throughout the human body?",
+    "options": [
+      "Lungs",
+      "Liver",
+      "Brain",
+      "Heart"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-gas-do-plants-primarily-absorb-from-the-atmosphere-for-photosynthesis",
+    "question": "What gas do plants primarily absorb from the atmosphere for photosynthesis?",
+    "options": [
+      "Oxygen",
+      "Nitrogen",
+      "Carbon Dioxide",
+      "Hydrogen"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-outermost-layer-of-the-earth-called",
+    "question": "What is the outermost layer of the Earth called?",
+    "options": [
+      "Mantle",
+      "Core",
+      "Crust",
+      "Outer Core"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-si-unit-of-electric-current",
+    "question": "What is the SI unit of electric current?",
+    "options": [
+      "Volt",
+      "Ohm",
+      "Ampere",
+      "Watt"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-type-of-lens-is-used-to-correct-farsightedness-hyperopia",
+    "question": "Which type of lens is used to correct farsightedness (hyperopia)?",
+    "options": [
+      "Concave",
+      "Convex",
+      "Cylindrical",
+      "Plano"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-process-by-which-a-liquid-turns-into-a-gas-below-its-boiling-point",
+    "question": "What is the process by which a liquid turns into a gas below its boiling point?",
+    "options": [
+      "Condensation",
+      "Sublimation",
+      "Evaporation",
+      "Melting"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-scientist-formulated-the-laws-of-motion-and-universal-gravitation",
+    "question": "Which scientist formulated the laws of motion and universal gravitation?",
+    "options": [
+      "Albert Einstein",
+      "Isaac Newton",
+      "Galileo Galilei",
+      "Nikola Tesla"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-largest-organ-of-the-human-body",
+    "question": "What is the largest organ of the human body?",
+    "options": [
+      "Brain",
+      "Liver",
+      "Skin",
+      "Heart"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-chromosomes-do-normal-human-somatic-cells-contain",
+    "question": "How many chromosomes do normal human somatic cells contain?",
+    "options": [
+      "23",
+      "46",
+      "92",
+      "48"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-primary-component-of-natural-gas",
+    "question": "What is the primary component of natural gas?",
+    "options": [
+      "Ethane",
+      "Propane",
+      "Butane",
+      "Methane"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-subatomic-particle-carries-a-negative-electrical-charge",
+    "question": "Which subatomic particle carries a negative electrical charge?",
+    "options": [
+      "Proton",
+      "Neutron",
+      "Electron",
+      "Photon"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-galaxy-our-solar-system-is-a-part-of",
+    "question": "What is the name of the galaxy our solar system is a part of?",
+    "options": [
+      "Andromeda",
+      "Triangulum",
+      "Whirlpool",
+      "Milky Way"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-scientific-term-for-a-positively-charged-ion",
+    "question": "What is the scientific term for a positively charged ion?",
+    "options": [
+      "Anion",
+      "Isotope",
+      "Cation",
+      "Molecule"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-endocrine-gland-produces-the-hormone-insulin",
+    "question": "Which endocrine gland produces the hormone insulin?",
+    "options": [
+      "Thyroid",
+      "Adrenal",
+      "Pancreas",
+      "Pituitary"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-smallest-bone-in-the-human-body",
+    "question": "What is the smallest bone in the human body?",
+    "options": [
+      "Femur",
+      "Stirrup (Stapes)",
+      "Patella",
+      "Humerus"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-the-equation-ehv-what-does-h-represent",
+    "question": "In the equation E=hv, what does 'h' represent?",
+    "options": [
+      "Heat capacity",
+      "Hubble's constant",
+      "Planck's constant",
+      "Wavelength"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-type-of-chemical-bond-involves-the-sharing-of-electron-pairs-between-atoms",
+    "question": "What type of chemical bond involves the sharing of electron pairs between atoms?",
+    "options": [
+      "Ionic bond",
+      "Metallic bond",
+      "Covalent bond",
+      "Hydrogen bond"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-astronomical-event-occurs-when-the-moon-passes-directly-between-the-sun-and-earth",
+    "question": "Which astronomical event occurs when the Moon passes directly between the Sun and Earth?",
+    "options": [
+      "Lunar eclipse",
+      "Solar eclipse",
+      "Meteor shower",
+      "Supermoon"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-specific-name-for-the-vascular-tissue-in-plants-that-transports-water-and-dissolved-nutrients-from-the-roots-upwards",
+    "question": "What is the specific name for the vascular tissue in plants that transports water and dissolved nutrients from the roots upwards?",
+    "options": [
+      "Phloem",
+      "Cambium",
+      "Xylem",
+      "Epidermis"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-primary-gas-that-makes-up-the-majority-of-earths-atmosphere",
+    "question": "What is the primary gas that makes up the majority of Earth's atmosphere?",
+    "options": [
+      "Oxygen",
+      "Carbon Dioxide",
+      "Nitrogen",
+      "Argon"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-of-the-following-elements-is-a-noble-gas",
+    "question": "Which of the following elements is a noble gas?",
+    "options": [
+      "Chlorine",
+      "Neon",
+      "Hydrogen",
+      "Iron"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-process-by-which-plants-convert-light-energy-into-chemical-energy",
+    "question": "What is the name of the process by which plants convert light energy into chemical energy?",
+    "options": [
+      "Respiration",
+      "Fermentation",
+      "Photosynthesis",
+      "Transpiration"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
   }
 ]

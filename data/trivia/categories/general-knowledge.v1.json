@@ -323,5 +323,330 @@
     "correctAnswer": 1,
     "category": "General Knowledge",
     "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-capital-city-of-japan",
+    "question": "What is the capital city of Japan?",
+    "options": [
+      "Beijing",
+      "Seoul",
+      "Tokyo",
+      "Bangkok"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-chemical-symbol-for-water",
+    "question": "What is the chemical symbol for water?",
+    "options": [
+      "O2",
+      "H2O",
+      "CO2",
+      "NaCl"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-wrote-the-classic-novel-don-quixote",
+    "question": "Who wrote the classic novel \"Don Quixote\"?",
+    "options": [
+      "William Shakespeare",
+      "Miguel de Cervantes",
+      "Leo Tolstoy",
+      "Charles Dickens"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-which-year-did-the-titanic-sink",
+    "question": "In which year did the Titanic sink?",
+    "options": [
+      "1905",
+      "1912",
+      "1923",
+      "1931"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-vegetable-is-known-for-making-people-cry-when-sliced",
+    "question": "Which vegetable is known for making people cry when sliced?",
+    "options": [
+      "Potato",
+      "Carrot",
+      "Onion",
+      "Celery"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-artist-painted-the-starry-night",
+    "question": "Which artist painted \"The Starry Night\"?",
+    "options": [
+      "Claude Monet",
+      "Pablo Picasso",
+      "Vincent van Gogh",
+      "Leonardo da Vinci"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-largest-ocean-on-earth",
+    "question": "What is the largest ocean on Earth?",
+    "options": [
+      "Atlantic Ocean",
+      "Indian Ocean",
+      "Arctic Ocean",
+      "Pacific Ocean"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-was-the-last-queen-of-france-before-the-french-revolution",
+    "question": "Who was the last Queen of France before the French Revolution?",
+    "options": [
+      "Catherine the Great",
+      "Queen Victoria",
+      "Marie Antoinette",
+      "Elizabeth I"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-planet-is-known-as-the-red-planet",
+    "question": "What planet is known as the \"Red Planet\"?",
+    "options": [
+      "Jupiter",
+      "Mars",
+      "Venus",
+      "Saturn"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-fast-food-company-is-known-for-its-golden-arches-logo",
+    "question": "Which fast-food company is known for its \"golden arches\" logo?",
+    "options": [
+      "Burger King",
+      "Wendy's",
+      "McDonald's",
+      "KFC"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-is-the-author-of-the-dystopian-novel-1984",
+    "question": "Who is the author of the dystopian novel \"1984\"?",
+    "options": [
+      "Aldous Huxley",
+      "George Orwell",
+      "F. Scott Fitzgerald",
+      "Ernest Hemingway"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-process-by-which-plants-make-their-own-food",
+    "question": "What is the process by which plants make their own food?",
+    "options": [
+      "Respiration",
+      "Digestion",
+      "Photosynthesis",
+      "Transpiration"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-magna-carta-was-signed-in-which-year",
+    "question": "The Magna Carta was signed in which year?",
+    "options": [
+      "1066",
+      "1215",
+      "1492",
+      "1776"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-type-of-animal-is-a-killer-whale",
+    "question": "What type of animal is a 'killer whale'?",
+    "options": [
+      "Shark",
+      "Whale",
+      "Dolphin",
+      "Porpoise"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-hosted-the-2016-summer-olympics",
+    "question": "Which country hosted the 2016 Summer Olympics?",
+    "options": [
+      "China",
+      "Brazil",
+      "United Kingdom",
+      "Russia"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-only-letter-in-the-alphabet-not-appearing-in-the-name-of-any-us-state",
+    "question": "What is the only letter in the alphabet not appearing in the name of any US state?",
+    "options": [
+      "Z",
+      "Q",
+      "X",
+      "J"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-sushi-traditionally-wrapped-in",
+    "question": "What is sushi traditionally wrapped in?",
+    "options": [
+      "Rice paper",
+      "Nori",
+      "Soy paper",
+      "Lettuce"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-musical-instrument-is-sometimes-called-the-king-of-instruments",
+    "question": "Which musical instrument is sometimes called the \"king of instruments\"?",
+    "options": [
+      "Piano",
+      "Violin",
+      "Organ",
+      "Guitar"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-film-won-the-first-academy-award-for-best-picture",
+    "question": "Which film won the first Academy Award for Best Picture?",
+    "options": [
+      "Wings",
+      "Sunrise: A Song of Two Humans",
+      "The Circus",
+      "The Broadway Melody"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-city-is-famous-for-its-leaning-tower",
+    "question": "Which city is famous for its leaning tower?",
+    "options": [
+      "Rome",
+      "Venice",
+      "Florence",
+      "Pisa"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-speed-of-light-in-a-vacuum-approximately",
+    "question": "What is the speed of light in a vacuum, approximately?",
+    "options": [
+      "150,000 km/s",
+      "300,000 km/s",
+      "450,000 km/s",
+      "600,000 km/s"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-wrote-don-quixote",
+    "question": "Who wrote 'Don Quixote'?",
+    "options": [
+      "Miguel de Cervantes",
+      "William Shakespeare",
+      "Leo Tolstoy",
+      "Charles Dickens"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-is-credited-with-inventing-the-world-wide-web",
+    "question": "Who is credited with inventing the World Wide Web?",
+    "options": [
+      "Bill Gates",
+      "Steve Jobs",
+      "Tim Berners-Lee",
+      "Mark Zuckerberg"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-the-following-is-the-largest-ocean-on-earth",
+    "question": "Which of the following is the largest ocean on Earth?",
+    "options": [
+      "Atlantic Ocean",
+      "Indian Ocean",
+      "Arctic Ocean",
+      "Pacific Ocean"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-famous-landmark-is-located-in-paris-france",
+    "question": "Which famous landmark is located in Paris, France?",
+    "options": [
+      "Colosseum",
+      "Big Ben",
+      "Eiffel Tower",
+      "Statue of Liberty"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
   }
 ]
