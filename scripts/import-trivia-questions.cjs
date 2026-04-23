@@ -2,6 +2,7 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
+const dns = require("node:dns");
 const { createClient } = require("@supabase/supabase-js");
 
 const DEFAULT_FILE = "data/trivia/questions.v1.json";
@@ -9,6 +10,11 @@ const DEFAULT_DIR = "data/trivia/categories";
 const CHUNK_SIZE = 200;
 const MAX_RETRIES = 5;
 const BASE_RETRY_DELAY_MS = 3000;
+
+// GitHub-hosted runners can prefer IPv6 first; forcing IPv4 first avoids intermittent
+// fetch failures when a provider endpoint has partial IPv6 reachability.
+dns.setDefaultResultOrder("ipv4first");
+const IPV4_DISPATCHER = getIpv4Dispatcher();
 
 function parseArgs(argv) {
   const args = {
@@ -132,8 +138,8 @@ function normalizeAndValidate(questions) {
 }
 
 async function upsertRows(rows) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = normalizeEnvValue(process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const serviceRoleKey = normalizeEnvValue(process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   assert(supabaseUrl, "Missing NEXT_PUBLIC_SUPABASE_URL in environment.");
   assert(serviceRoleKey, "Missing SUPABASE_SERVICE_ROLE_KEY in environment.");
@@ -149,10 +155,18 @@ async function upsertRows(rows) {
     !/^".*"$/.test(serviceRoleKey),
     'SUPABASE_SERVICE_ROLE_KEY appears wrapped in quotes. Store raw value without quotes.'
   );
+  const hostname = new URL(supabaseUrl).hostname.toLowerCase();
+  assert(
+    !["localhost", "127.0.0.1", "0.0.0.0"].includes(hostname),
+    `NEXT_PUBLIC_SUPABASE_URL points to a local host (${hostname}). Use your production Supabase project URL for CI.`
+  );
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    global: { fetch: createDiagnosticFetch() },
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  await verifyConnectivity(supabaseUrl);
 
   let processed = 0;
   for (let start = 0; start < rows.length; start += CHUNK_SIZE) {
@@ -164,7 +178,7 @@ async function upsertRows(rows) {
           .upsert(chunk, { onConflict: "slug" });
 
         if (error) {
-          throw new Error(`Supabase upsert failed: ${error.message}`);
+          throw new Error(`Supabase upsert failed: ${describeError(error)}`);
         }
       },
       {
@@ -188,7 +202,7 @@ async function upsertRows(rows) {
   );
 
   if (error) {
-    throw new Error(`Count query failed: ${error.message}`);
+    throw new Error(`Count query failed: ${describeError(error)}`);
   }
 
   console.log(`Done. trivia_questions total rows: ${count ?? "unknown"}`);
@@ -204,11 +218,12 @@ async function retryAsync(fn, options) {
     } catch (error) {
       lastError = error;
       const message = error instanceof Error ? error.message : String(error);
+      const detail = describeError(error);
       const isLast = attempt === MAX_RETRIES;
-      const retriable = isRetriableNetworkError(message);
+      const retriable = isRetriableNetworkError(`${message} ${detail}`);
 
       if (!retriable || isLast) {
-        throw new Error(`${operation} failed after ${attempt} attempt(s): ${message}`);
+        throw new Error(`${operation} failed after ${attempt} attempt(s): ${detail}`);
       }
 
       const waitMs = BASE_RETRY_DELAY_MS * attempt;
@@ -230,12 +245,130 @@ function isRetriableNetworkError(message) {
     normalized.includes("fetch failed") ||
     normalized.includes("network") ||
     normalized.includes("econnreset") ||
+    normalized.includes("econnrefused") ||
     normalized.includes("etimedout") ||
     normalized.includes("eai_again") ||
     normalized.includes("enotfound") ||
+    normalized.includes("socket hang up") ||
     normalized.includes("503") ||
     normalized.includes("504")
   );
+}
+
+function normalizeEnvValue(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function createDiagnosticFetch() {
+  return async (resource, init = {}) => {
+    const requestUrl = getRequestUrl(resource);
+    try {
+      const fetchInit = IPV4_DISPATCHER
+        ? { ...init, dispatcher: init.dispatcher || IPV4_DISPATCHER }
+        : init;
+      return await fetch(resource, fetchInit);
+    } catch (error) {
+      throw await withNetworkDiagnostics(error, requestUrl);
+    }
+  };
+}
+
+async function verifyConnectivity(supabaseUrl) {
+  const origin = getOrigin(supabaseUrl);
+  if (!origin) return;
+
+  try {
+    const fetchInit = IPV4_DISPATCHER ? { method: "HEAD", dispatcher: IPV4_DISPATCHER } : { method: "HEAD" };
+    await fetch(origin, fetchInit);
+    console.log(`Supabase connectivity preflight succeeded for ${origin}.`);
+  } catch (error) {
+    throw await withNetworkDiagnostics(error, origin);
+  }
+}
+
+function getOrigin(value) {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return "";
+  }
+}
+
+function getRequestUrl(resource) {
+  if (typeof resource === "string") return resource;
+  if (resource && typeof resource.url === "string") return resource.url;
+  return "";
+}
+
+async function withNetworkDiagnostics(error, requestUrl) {
+  try {
+    const hostname = requestUrl ? new URL(requestUrl).hostname : "";
+    if (!hostname) return error;
+
+    const records = await dns.promises.lookup(hostname, { all: true, family: 4 });
+    const ips = records.map((entry) => entry.address).filter(Boolean);
+    if (ips.length === 0) return error;
+
+    const details = `IPv4 DNS for ${hostname}: ${ips.join(", ")}`;
+    if (error instanceof Error) {
+      return new Error(`${error.message} | ${details}`, { cause: error });
+    }
+    return new Error(`${String(error)} | ${details}`);
+  } catch {
+    return error;
+  }
+}
+
+function getIpv4Dispatcher() {
+  try {
+    // Optional dependency: available in some Node runtimes. If absent,
+    // we still keep DNS + error diagnostics.
+    const { Agent } = require("undici");
+    return new Agent({ connect: { family: 4 } });
+  } catch {
+    return null;
+  }
+}
+
+function describeError(error) {
+  if (!error) return "Unknown error";
+
+  const parts = [];
+  let current = error;
+  let depth = 0;
+
+  while (current && depth < 5) {
+    if (current instanceof Error) {
+      if (current.message) {
+        parts.push(current.message);
+      } else {
+        parts.push(current.name || "Error");
+      }
+
+      if (typeof current.code === "string") parts.push(`code=${current.code}`);
+      if (typeof current.errno === "number") parts.push(`errno=${current.errno}`);
+      if (typeof current.type === "string") parts.push(`type=${current.type}`);
+      if (typeof current.address === "string") parts.push(`address=${current.address}`);
+      if (typeof current.port === "number") parts.push(`port=${current.port}`);
+
+      current = current.cause;
+      depth += 1;
+      continue;
+    }
+
+    if (typeof current === "object") {
+      if (typeof current.message === "string") parts.push(current.message);
+      if (typeof current.code === "string") parts.push(`code=${current.code}`);
+      if (typeof current.details === "string") parts.push(current.details);
+      if (typeof current.hint === "string") parts.push(current.hint);
+      break;
+    }
+
+    parts.push(String(current));
+    break;
+  }
+
+  return Array.from(new Set(parts.filter(Boolean))).join(" | ") || "Unknown error";
 }
 
 function sleep(ms) {
