@@ -1,4 +1,6 @@
 name: Trivia Nightly
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 on:
   schedule:
@@ -14,14 +16,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - name: Install deps
@@ -30,7 +32,8 @@ jobs:
       - name: Generate Trivia For All Categories
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL }}
+          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-2.5-flash' }}
+          GEMINI_MODEL_FALLBACKS: ${{ secrets.GEMINI_MODEL_FALLBACKS || 'gemini-2.0-flash' }}
         run: node scripts/generate-trivia-nightly.cjs --total 200 --batch-size 25
 
       - name: Validate Trivia Files

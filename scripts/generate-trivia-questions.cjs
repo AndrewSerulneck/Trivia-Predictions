@@ -4,10 +4,12 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const DEFAULT_DIR = "data/trivia/categories";
-const DEFAULT_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-pro";
+const DEFAULT_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const DEFAULT_COUNT = 25;
 const DEFAULT_BATCH_SIZE = 25;
 const MAX_ATTEMPTS = 10;
+const MAX_API_RETRIES = 5;
+const BASE_RETRY_DELAY_MS = 4000;
 const VALID_DIFFICULTIES = new Set(["easy", "medium", "hard"]);
 
 function parseArgs(argv) {
@@ -219,6 +221,60 @@ function buildPrompt({ category, count, existingSample }) {
 }
 
 async function callGemini({ apiKey, model, prompt }) {
+  const fallbackModels = String(process.env.GEMINI_MODEL_FALLBACKS || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const modelsToTry = [model, ...fallbackModels.filter((candidate) => candidate !== model)];
+
+  let lastError = null;
+  for (const candidateModel of modelsToTry) {
+    try {
+      return await callGeminiWithRetries({ apiKey, model: candidateModel, prompt });
+    } catch (error) {
+      lastError = error;
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(`Model "${candidateModel}" failed: ${message}`);
+    }
+  }
+
+  throw lastError || new Error("Gemini request failed for all attempted models.");
+}
+
+async function callGeminiWithRetries({ apiKey, model, prompt }) {
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= MAX_API_RETRIES; attempt += 1) {
+    try {
+      return await callGeminiOnce({ apiKey, model, prompt });
+    } catch (error) {
+      lastError = error;
+      const message = error instanceof Error ? error.message : String(error);
+      const isLastAttempt = attempt === MAX_API_RETRIES;
+      const retryAfterMs = parseRetryAfterMs(message);
+
+      if (isLastAttempt) {
+        break;
+      }
+
+      if (!isRetriableGeminiError(message)) {
+        break;
+      }
+
+      const waitMs = retryAfterMs || BASE_RETRY_DELAY_MS * attempt;
+      console.warn(
+        `Gemini request retry ${attempt}/${MAX_API_RETRIES - 1} for "${model}" in ${Math.round(
+          waitMs / 1000
+        )}s...`
+      );
+      await sleep(waitMs);
+    }
+  }
+
+  throw lastError || new Error("Gemini request failed.");
+}
+
+async function callGeminiOnce({ apiKey, model, prompt }) {
   const endpoint =
     process.env.GEMINI_API_URL ||
     `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
@@ -247,6 +303,32 @@ async function callGemini({ apiKey, model, prompt }) {
     .trim();
 
   return extractJsonArray(text);
+}
+
+function parseRetryAfterMs(message) {
+  const match = String(message).match(/retry in ([\d.]+)s/i);
+  if (!match) {
+    return 0;
+  }
+  const seconds = Number.parseFloat(match[1]);
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    return 0;
+  }
+  return Math.ceil(seconds * 1000);
+}
+
+function isRetriableGeminiError(message) {
+  const normalized = String(message || "").toLowerCase();
+  return (
+    normalized.includes("429") ||
+    normalized.includes("quota exceeded") ||
+    normalized.includes("rate limit") ||
+    normalized.includes("retry in")
+  );
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function writeQuestions(filePath, rows) {
