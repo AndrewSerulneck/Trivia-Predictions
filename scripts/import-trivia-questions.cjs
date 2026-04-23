@@ -276,13 +276,25 @@ function createDiagnosticFetch() {
 async function verifyConnectivity(supabaseUrl) {
   const origin = getOrigin(supabaseUrl);
   if (!origin) return;
+  const hostname = new URL(origin).hostname;
+
+  try {
+    const records = await dns.promises.lookup(hostname, { all: true });
+    const formatted = records.map((entry) => `${entry.address} (IPv${entry.family})`).join(", ");
+    if (formatted) {
+      console.log(`Supabase DNS lookup for ${hostname}: ${formatted}`);
+    }
+  } catch (error) {
+    throw new Error(`Supabase DNS lookup failed for ${hostname}: ${describeError(error)}`);
+  }
 
   try {
     const fetchInit = IPV4_DISPATCHER ? { method: "HEAD", dispatcher: IPV4_DISPATCHER } : { method: "HEAD" };
     await fetch(origin, fetchInit);
     console.log(`Supabase connectivity preflight succeeded for ${origin}.`);
   } catch (error) {
-    throw await withNetworkDiagnostics(error, origin);
+    const diagnosticError = await withNetworkDiagnostics(error, origin);
+    throw new Error(`Supabase connectivity preflight failed for ${origin}: ${describeError(diagnosticError)}`);
   }
 }
 
@@ -396,6 +408,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
+  console.error(describeError(error));
   process.exit(1);
 });
