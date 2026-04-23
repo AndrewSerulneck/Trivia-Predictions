@@ -1,1 +1,327 @@
-[]
+[
+  {
+    "slug": "what-is-the-capital-city-of-france",
+    "question": "What is the capital city of France?",
+    "options": [
+      "Paris",
+      "Rome",
+      "Berlin",
+      "Madrid"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-painted-the-mona-lisa",
+    "question": "Who painted the Mona Lisa?",
+    "options": [
+      "Vincent van Gogh",
+      "Leonardo da Vinci",
+      "Pablo Picasso",
+      "Claude Monet"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-days-are-in-a-leap-year",
+    "question": "How many days are in a leap year?",
+    "options": [
+      "365",
+      "366",
+      "360",
+      "364"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-author-wrote-romeo-and-juliet",
+    "question": "Which author wrote 'Romeo and Juliet'?",
+    "options": [
+      "Charles Dickens",
+      "William Shakespeare",
+      "Jane Austen",
+      "Mark Twain"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-continent-is-the-largest-by-land-area",
+    "question": "Which continent is the largest by land area?",
+    "options": [
+      "Africa",
+      "Europe",
+      "Asia",
+      "North America"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-players-are-on-a-standard-soccer-team-on-the-field",
+    "question": "How many players are on a standard soccer team on the field?",
+    "options": [
+      "9",
+      "10",
+      "11",
+      "12"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-year-did-world-war-ii-officially-end",
+    "question": "In which year did World War II officially end?",
+    "options": [
+      "1943",
+      "1945",
+      "1947",
+      "1950"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-largest-mammal-in-the-world",
+    "question": "What is the largest mammal in the world?",
+    "options": [
+      "Elephant",
+      "Blue Whale",
+      "Great White Shark",
+      "Giraffe"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-gas-do-plants-absorb-from-the-atmosphere",
+    "question": "What gas do plants absorb from the atmosphere?",
+    "options": [
+      "Oxygen",
+      "Nitrogen",
+      "Carbon Dioxide",
+      "Hydrogen"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-desert-is-the-largest-hot-desert-in-the-world",
+    "question": "Which desert is the largest hot desert in the world?",
+    "options": [
+      "Gobi Desert",
+      "Sahara Desert",
+      "Arabian Desert",
+      "Atacama Desert"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-main-organ-of-the-human-respiratory-system",
+    "question": "What is the main organ of the human respiratory system?",
+    "options": [
+      "Heart",
+      "Brain",
+      "Lungs",
+      "Liver"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-invented-the-light-bulb",
+    "question": "Who invented the light bulb?",
+    "options": [
+      "Isaac Newton",
+      "Albert Einstein",
+      "Thomas Edison",
+      "Nikola Tesla"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-classic-novel-begins-with-the-line-call-me-ishmael",
+    "question": "Which classic novel begins with the line \"Call me Ishmael\"?",
+    "options": [
+      "Moby Dick",
+      "Great Expectations",
+      "Pride and Prejudice",
+      "The Catcher in the Rye"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-fruit-is-famous-for-keeping-the-doctor-away",
+    "question": "Which fruit is famous for keeping the doctor away?",
+    "options": [
+      "Banana",
+      "Apple",
+      "Orange",
+      "Grape"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-instrument-has-black-and-white-keys",
+    "question": "Which instrument has black and white keys?",
+    "options": [
+      "Guitar",
+      "Violin",
+      "Drum",
+      "Piano"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-fictional-detective-lives-at-221b-baker-street",
+    "question": "Which fictional detective lives at 221B Baker Street?",
+    "options": [
+      "Hercule Poirot",
+      "Sherlock Holmes",
+      "Miss Marple",
+      "Philip Marlowe"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-was-the-first-person-to-step-on-the-moon",
+    "question": "Who was the first person to step on the Moon?",
+    "options": [
+      "Buzz Aldrin",
+      "Yuri Gagarin",
+      "Neil Armstrong",
+      "Michael Collins"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-cities-is-not-a-capital-city",
+    "question": "Which of these cities is NOT a capital city?",
+    "options": [
+      "London",
+      "Sydney",
+      "Tokyo",
+      "Cairo"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-a-group-of-lions-called",
+    "question": "What is a group of lions called?",
+    "options": [
+      "Herd",
+      "Flock",
+      "Pack",
+      "Pride"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-hardest-natural-substance-on-earth",
+    "question": "What is the hardest natural substance on Earth?",
+    "options": [
+      "Iron",
+      "Gold",
+      "Diamond",
+      "Quartz"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-ancient-wonder-was-a-massive-lighthouse",
+    "question": "Which ancient wonder was a massive lighthouse?",
+    "options": [
+      "Pyramids of Giza",
+      "Hanging Gardens of Babylon",
+      "Colossus of Rhodes",
+      "Lighthouse of Alexandria"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-primary-color-of-a-ripe-banana",
+    "question": "What is the primary color of a ripe banana?",
+    "options": [
+      "Green",
+      "Red",
+      "Yellow",
+      "Brown"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-color-is-typically-associated-with-royalty",
+    "question": "What color is typically associated with royalty?",
+    "options": [
+      "Red",
+      "Blue",
+      "Purple",
+      "Green"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-famous-tower-is-located-in-paris-france",
+    "question": "Which famous tower is located in Paris, France?",
+    "options": [
+      "Big Ben",
+      "Leaning Tower of Pisa",
+      "Eiffel Tower",
+      "Empire State Building"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-developed-the-theory-of-relativity",
+    "question": "Who developed the theory of relativity?",
+    "options": [
+      "Isaac Newton",
+      "Albert Einstein",
+      "Stephen Hawking",
+      "Nikola Tesla"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  }
+]

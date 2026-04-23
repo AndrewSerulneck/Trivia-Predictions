@@ -3105,5 +3105,330 @@
     "correctAnswer": 1,
     "category": "Pop Culture",
     "difficulty": "medium"
+  },
+  {
+    "slug": "who-directed-the-1994-film-pulp-fiction",
+    "question": "Who directed the 1994 film \"Pulp Fiction\"?",
+    "options": [
+      "Quentin Tarantino",
+      "Martin Scorsese",
+      "Steven Spielberg",
+      "Christopher Nolan"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-pop-superstar-is-known-for-hits-like-single-ladies-put-a-ring-on-it-and-crazy-in-love",
+    "question": "Which pop superstar is known for hits like \"Single Ladies (Put a Ring on It)\" and \"Crazy in Love\"?",
+    "options": [
+      "Rihanna",
+      "Beyoncé",
+      "Adele",
+      "Taylor Swift"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-iconic-iron-throne-is-a-central-symbol-of-power-in-which-fantasy-tv-series",
+    "question": "The iconic 'Iron Throne' is a central symbol of power in which fantasy TV series?",
+    "options": [
+      "The Witcher",
+      "The Lord of the Rings",
+      "Game of Thrones",
+      "House of the Dragon"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "before-christian-bale-which-actor-famously-portrayed-batman-in-tim-burtons-1989-film",
+    "question": "Before Christian Bale, which actor famously portrayed Batman in Tim Burton's 1989 film?",
+    "options": [
+      "George Clooney",
+      "Val Kilmer",
+      "Michael Keaton",
+      "Adam West"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-artist-released-the-album-thriller-which-became-the-best-selling-album-of-all-time",
+    "question": "Which artist released the album \"Thriller,\" which became the best-selling album of all time?",
+    "options": [
+      "Prince",
+      "Stevie Wonder",
+      "Michael Jackson",
+      "Lionel Richie"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "before-starring-in-the-office-steve-carell-was-a-correspondent-on-which-satirical-news-program",
+    "question": "Before starring in \"The Office,\" Steve Carell was a correspondent on which satirical news program?",
+    "options": [
+      "Saturday Night Live",
+      "The Daily Show",
+      "The Colbert Report",
+      "Last Week Tonight"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-director-is-known-for-his-distinct-visual-style-and-frequent-collaborations-with-actor-johnny-depp-in-films-like-edward-scissorhands-and-sleepy-hollow",
+    "question": "Which director is known for his distinct visual style and frequent collaborations with actor Johnny Depp in films like \"Edward Scissorhands\" and \"Sleepy Hollow\"?",
+    "options": [
+      "Wes Anderson",
+      "Tim Burton",
+      "Christopher Nolan",
+      "Guillermo del Toro"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-character-walter-white-is-the-protagonist-of-which-acclaimed-tv-drama",
+    "question": "The character Walter White is the protagonist of which acclaimed TV drama?",
+    "options": [
+      "Narcos",
+      "Breaking Bad",
+      "Ozark",
+      "Dexter"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-singer-is-often-referred-to-as-the-queen-of-pop",
+    "question": "Which singer is often referred to as the \"Queen of Pop\"?",
+    "options": [
+      "Mariah Carey",
+      "Janet Jackson",
+      "Madonna",
+      "Whitney Houston"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-the-marvel-cinematic-universe-what-is-captain-americas-real-name",
+    "question": "In the Marvel Cinematic Universe, what is Captain America's real name?",
+    "options": [
+      "Tony Stark",
+      "Bruce Banner",
+      "Steve Rogers",
+      "Peter Parker"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-director-won-back-to-back-best-director-oscars-for-birdman-and-the-revenant",
+    "question": "Which director won back-to-back Best Director Oscars for \"Birdman\" and \"The Revenant\"?",
+    "options": [
+      "Alfonso Cuarón",
+      "Guillermo del Toro",
+      "Alejandro G. Iñárritu",
+      "Damien Chazelle"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-was-the-first-full-length-computer-animated-feature-film",
+    "question": "What was the first full-length computer-animated feature film?",
+    "options": [
+      "Shrek",
+      "Toy Story",
+      "Finding Nemo",
+      "Monsters, Inc."
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-actress-played-hermione-granger-in-the-harry-potter-film-series",
+    "question": "Which actress played Hermione Granger in the \"Harry Potter\" film series?",
+    "options": [
+      "Emma Stone",
+      "Scarlett Johansson",
+      "Emma Watson",
+      "Kristen Stewart"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-highest-grossing-film-of-all-time-unadjusted-for-inflation",
+    "question": "What is the highest-grossing film of all time (unadjusted for inflation)?",
+    "options": [
+      "Titanic",
+      "Avatar",
+      "Avengers: Endgame",
+      "Star Wars: The Force Awakens"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-band-released-the-iconic-album-nevermind-featuring-the-hit-song-smells-like-teen-spirit",
+    "question": "Which band released the iconic album \"Nevermind\" featuring the hit song \"Smells Like Teen Spirit\"?",
+    "options": [
+      "Pearl Jam",
+      "Soundgarden",
+      "Nirvana",
+      "Alice in Chains"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-wrote-the-best-selling-novel-the-da-vinci-code",
+    "question": "Who wrote the best-selling novel \"The Da Vinci Code\"?",
+    "options": [
+      "J.K. Rowling",
+      "Stephen King",
+      "Dan Brown",
+      "Gillian Flynn"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-solo-artist-holds-the-record-for-the-most-number-one-singles-on-the-billboard-hot-100-chart",
+    "question": "Which solo artist holds the record for the most number-one singles on the Billboard Hot 100 chart?",
+    "options": [
+      "Elvis Presley",
+      "Mariah Carey",
+      "Michael Jackson",
+      "Janet Jackson"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-year-did-mtv-first-launch",
+    "question": "What year did MTV first launch?",
+    "options": [
+      "1979",
+      "1981",
+      "1983",
+      "1985"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-actor-is-famous-for-his-role-as-james-bond-in-films-like-casino-royale-and-skyfall",
+    "question": "Which actor is famous for his role as James Bond in films like \"Casino Royale\" and \"Skyfall\"?",
+    "options": [
+      "Pierce Brosnan",
+      "Sean Connery",
+      "Roger Moore",
+      "Daniel Craig"
+    ],
+    "correctAnswer": 3,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-term-meme-was-first-coined-by-which-evolutionary-biologist",
+    "question": "The term \"Meme\" was first coined by which evolutionary biologist?",
+    "options": [
+      "Charles Darwin",
+      "Richard Dawkins",
+      "Stephen Jay Gould",
+      "E.O. Wilson"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-character-elle-woods-is-the-protagonist-of-which-popular-comedy-film",
+    "question": "The character Elle Woods is the protagonist of which popular comedy film?",
+    "options": [
+      "Clueless",
+      "Mean Girls",
+      "Legally Blonde",
+      "Easy A"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-singer-holds-the-record-for-the-most-grammy-awards-won-by-a-female-artist",
+    "question": "Which singer holds the record for the most Grammy Awards won by a female artist?",
+    "options": [
+      "Beyoncé",
+      "Adele",
+      "Alison Krauss",
+      "Aretha Franklin"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-high-school-featured-in-the-musical-film-grease",
+    "question": "What is the name of the high school featured in the musical film \"Grease\"?",
+    "options": [
+      "North Shore High",
+      "Rydell High",
+      "East High",
+      "Westview High"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-tech-billionaire-founded-tesla-and-spacex",
+    "question": "Which tech billionaire founded Tesla and SpaceX?",
+    "options": [
+      "Jeff Bezos",
+      "Bill Gates",
+      "Elon Musk",
+      "Mark Zuckerberg"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-critically-acclaimed-tv-series-the-crown-dramatizes-the-reign-of-which-british-monarch",
+    "question": "The critically acclaimed TV series \"The Crown\" dramatizes the reign of which British monarch?",
+    "options": [
+      "Queen Victoria",
+      "Queen Elizabeth II",
+      "King George VI",
+      "Queen Mary I"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
   }
 ]

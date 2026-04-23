@@ -1818,5 +1818,330 @@
     "correctAnswer": 1,
     "category": "Sports",
     "difficulty": "easy"
+  },
+  {
+    "slug": "which-player-holds-the-record-for-the-most-nba-championships-won-as-a-player",
+    "question": "Which player holds the record for the most NBA championships won as a player?",
+    "options": [
+      "Michael Jordan",
+      "LeBron James",
+      "Bill Russell",
+      "Kareem Abdul-Jabbar"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-points-is-a-touchdown-worth-in-american-football",
+    "question": "How many points is a touchdown worth in American football?",
+    "options": [
+      "3",
+      "6",
+      "7",
+      "1"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-grand-slam-tennis-tournament-is-played-on-clay-courts",
+    "question": "Which Grand Slam tennis tournament is played on clay courts?",
+    "options": [
+      "Wimbledon",
+      "US Open",
+      "Australian Open",
+      "French Open"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-colors-are-featured-in-the-five-olympic-rings",
+    "question": "Which colors are featured in the five Olympic rings?",
+    "options": [
+      "Blue, Yellow, Black, Green, Red",
+      "Blue, Yellow, Orange, Green, Red",
+      "White, Blue, Yellow, Black, Green",
+      "Yellow, Red, Black, Purple, Orange"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-is-the-only-golfer-to-have-won-all-four-major-championships-at-least-three-times",
+    "question": "Who is the only golfer to have won all four major championships at least three times?",
+    "options": [
+      "Tiger Woods",
+      "Jack Nicklaus",
+      "Ben Hogan",
+      "Arnold Palmer"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-it-called-when-a-baseball-player-hits-the-ball-out-of-the-park-for-a-run",
+    "question": "What is it called when a baseball player hits the ball out of the park for a run?",
+    "options": [
+      "Triple",
+      "Double",
+      "Home Run",
+      "Single"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-country-hosts-the-monaco-grand-prix",
+    "question": "Which country hosts the Monaco Grand Prix?",
+    "options": [
+      "France",
+      "Italy",
+      "Monaco",
+      "Spain"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-wickets-are-there-in-a-standard-game-of-cricket",
+    "question": "How many wickets are there in a standard game of cricket?",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-periods-are-in-a-standard-ice-hockey-game",
+    "question": "How many periods are in a standard ice hockey game?",
+    "options": [
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-track-and-field-event-involves-throwing-a-heavy-spherical-object",
+    "question": "Which track and field event involves throwing a heavy spherical object?",
+    "options": [
+      "Javelin Throw",
+      "Discus Throw",
+      "Shot Put",
+      "Hammer Throw"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-was-known-as-the-brown-bomber",
+    "question": "Who was known as \"The Brown Bomber\"?",
+    "options": [
+      "Muhammad Ali",
+      "Joe Louis",
+      "Mike Tyson",
+      "George Foreman"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-points-is-a-try-worth-in-rugby-union",
+    "question": "How many points is a try worth in Rugby Union?",
+    "options": [
+      "3",
+      "5",
+      "7",
+      "2"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-tour-de-france-is-an-annual-multi-stage-race-primarily-held-in-which-country",
+    "question": "The Tour de France is an annual multi-stage race primarily held in which country?",
+    "options": [
+      "Italy",
+      "Spain",
+      "France",
+      "Belgium"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-nfl-team-is-known-for-its-steel-curtain-defense",
+    "question": "Which NFL team is known for its \"Steel Curtain\" defense?",
+    "options": [
+      "Dallas Cowboys",
+      "Pittsburgh Steelers",
+      "Green Bay Packers",
+      "New England Patriots"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-stroke-is-typically-considered-the-fastest-in-competitive-swimming",
+    "question": "Which stroke is typically considered the fastest in competitive swimming?",
+    "options": [
+      "Backstroke",
+      "Breaststroke",
+      "Butterfly",
+      "Freestyle (Front Crawl)"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-which-city-were-the-first-modern-olympic-games-held-in-1896",
+    "question": "In which city were the first modern Olympic Games held in 1896?",
+    "options": [
+      "Paris",
+      "London",
+      "Athens",
+      "Rome"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-holds-the-record-for-the-most-career-assists-in-nba-history",
+    "question": "Who holds the record for the most career assists in NBA history?",
+    "options": [
+      "Magic Johnson",
+      "John Stockton",
+      "Jason Kidd",
+      "Chris Paul"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-country-won-the-fifa-world-cup-in-2022",
+    "question": "Which country won the FIFA World Cup in 2022?",
+    "options": [
+      "Brazil",
+      "France",
+      "Argentina",
+      "Germany"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-is-often-referred-to-as-the-king-of-clay-in-mens-tennis",
+    "question": "Who is often referred to as the \"King of Clay\" in men's tennis?",
+    "options": [
+      "Roger Federer",
+      "Novak Djokovic",
+      "Rafael Nadal",
+      "Pete Sampras"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-pitcher-holds-the-mlb-record-for-most-career-no-hitters",
+    "question": "Which pitcher holds the MLB record for most career no-hitters?",
+    "options": [
+      "Nolan Ryan",
+      "Randy Johnson",
+      "Sandy Koufax",
+      "Cy Young"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-does-nascar-stand-for",
+    "question": "What does NASCAR stand for?",
+    "options": [
+      "National Association of Stock Car Auto Racing",
+      "North American Stock Car Auto Racing",
+      "National Auto Sports Car Association",
+      "North American Auto Sports Car Racing"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-sport-involves-competitors-sliding-headfirst-down-an-ice-track-on-a-small-sled",
+    "question": "Which sport involves competitors sliding headfirst down an ice track on a small sled?",
+    "options": [
+      "Luge",
+      "Skeleton",
+      "Bobsled",
+      "Nordic Combined"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-horse-is-the-only-triple-crown-winner-to-complete-the-feat-undefeated",
+    "question": "Which horse is the only Triple Crown winner to complete the feat undefeated?",
+    "options": [
+      "Secretariat",
+      "Seattle Slew",
+      "Citation",
+      "Affirmed"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-highest-belt-rank-in-most-traditional-martial-arts-like-karate-or-taekwondo",
+    "question": "What is the highest belt rank in most traditional martial arts like Karate or Taekwondo?",
+    "options": [
+      "Red Belt",
+      "Blue Belt",
+      "Black Belt",
+      "Brown Belt"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-maximum-number-of-golf-clubs-a-player-is-allowed-to-carry-in-their-bag-during-a-round",
+    "question": "What is the maximum number of golf clubs a player is allowed to carry in their bag during a round?",
+    "options": [
+      "10",
+      "12",
+      "14",
+      "16"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
   }
 ]

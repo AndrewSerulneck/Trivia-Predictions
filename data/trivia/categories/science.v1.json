@@ -2585,5 +2585,330 @@
     "correctAnswer": 2,
     "category": "Science",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-powerhouse-of-the-cell",
+    "question": "What is the powerhouse of the cell?",
+    "options": [
+      "Nucleus",
+      "Mitochondria",
+      "Ribosome",
+      "Endoplasmic Reticulum"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-force-keeps-planets-in-orbit-around-the-sun",
+    "question": "What force keeps planets in orbit around the Sun?",
+    "options": [
+      "Electromagnetic force",
+      "Strong nuclear force",
+      "Gravity",
+      "Weak nuclear force"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-process-by-which-plants-convert-light-energy-into-chemical-energy",
+    "question": "What is the process by which plants convert light energy into chemical energy?",
+    "options": [
+      "Respiration",
+      "Transpiration",
+      "Photosynthesis",
+      "Germination"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-primary-function-of-red-blood-cells",
+    "question": "What is the primary function of red blood cells?",
+    "options": [
+      "Fighting infection",
+      "Clotting blood",
+      "Transporting oxygen",
+      "Producing antibodies"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-unit-of-electrical-resistance",
+    "question": "What is the unit of electrical resistance?",
+    "options": [
+      "Volt",
+      "Ampere",
+      "Ohm",
+      "Watt"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-type-of-bond-involves-the-sharing-of-electron-pairs-between-atoms",
+    "question": "What type of bond involves the sharing of electron pairs between atoms?",
+    "options": [
+      "Ionic bond",
+      "Covalent bond",
+      "Metallic bond",
+      "Hydrogen bond"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-galaxy-is-our-solar-system-a-part-of",
+    "question": "Which galaxy is our solar system a part of?",
+    "options": [
+      "Andromeda",
+      "Triangulum",
+      "Whirlpool",
+      "Milky Way"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-process-called-when-water-vapor-turns-into-liquid-water-forming-clouds",
+    "question": "What is the process called when water vapor turns into liquid water, forming clouds?",
+    "options": [
+      "Evaporation",
+      "Precipitation",
+      "Condensation",
+      "Transpiration"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-organelle-is-responsible-for-protein-synthesis",
+    "question": "Which organelle is responsible for protein synthesis?",
+    "options": [
+      "Lysosome",
+      "Golgi apparatus",
+      "Ribosome",
+      "Vacuole"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-phenomenon-describes-the-bending-of-light-as-it-passes-from-one-medium-to-another",
+    "question": "What phenomenon describes the bending of light as it passes from one medium to another?",
+    "options": [
+      "Diffraction",
+      "Reflection",
+      "Refraction",
+      "Dispersion"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-maximum-number-of-electrons-that-can-occupy-the-third-electron-shell-n3",
+    "question": "What is the maximum number of electrons that can occupy the third electron shell (n=3)?",
+    "options": [
+      "2",
+      "8",
+      "18",
+      "32"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-theoretical-boundary-around-a-black-hole-beyond-which-no-light-or-information-can-escape",
+    "question": "What is the theoretical boundary around a black hole beyond which no light or information can escape?",
+    "options": [
+      "Singularity",
+      "Event Horizon",
+      "Photon Sphere",
+      "Ergosphere"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-type-of-rock-is-formed-from-the-cooling-and-solidification-of-molten-magma-or-lava",
+    "question": "Which type of rock is formed from the cooling and solidification of molten magma or lava?",
+    "options": [
+      "Sedimentary",
+      "Metamorphic",
+      "Igneous",
+      "Gneiss"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-process-by-which-genetic-information-from-dna-is-copied-into-mrna",
+    "question": "What is the process by which genetic information from DNA is copied into mRNA?",
+    "options": [
+      "Translation",
+      "Replication",
+      "Transcription",
+      "Mutation"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-does-the-acronym-led-stand-for",
+    "question": "What does the acronym LED stand for?",
+    "options": [
+      "Light Emitting Diode",
+      "Liquid Emitting Display",
+      "Luminous Energy Device",
+      "Laser Emitting Detector"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-element-has-the-atomic-number-6",
+    "question": "What element has the atomic number 6?",
+    "options": [
+      "Oxygen",
+      "Nitrogen",
+      "Carbon",
+      "Boron"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-of-the-following-is-a-vertebrate",
+    "question": "Which of the following is a vertebrate?",
+    "options": [
+      "Spider",
+      "Snail",
+      "Fish",
+      "Jellyfish"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-most-common-gas-in-earths-atmosphere",
+    "question": "What is the most common gas in Earth's atmosphere?",
+    "options": [
+      "Oxygen",
+      "Carbon Dioxide",
+      "Nitrogen",
+      "Argon"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-particle-that-mediates-the-strong-nuclear-force",
+    "question": "What is the name of the particle that mediates the strong nuclear force?",
+    "options": [
+      "Photon",
+      "Electron",
+      "Gluon",
+      "Neutrino"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-these-is-a-noble-gas",
+    "question": "Which of these is a noble gas?",
+    "options": [
+      "Chlorine",
+      "Oxygen",
+      "Helium",
+      "Nitrogen"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-scientific-term-for-the-study-of-fungi",
+    "question": "What is the scientific term for the study of fungi?",
+    "options": [
+      "Zoology",
+      "Botany",
+      "Mycology",
+      "Entomology"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-smallest-unit-of-matter-that-retains-an-elements-chemical-identity",
+    "question": "What is the smallest unit of matter that retains an element's chemical identity?",
+    "options": [
+      "Proton",
+      "Electron",
+      "Atom",
+      "Molecule"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-protein-in-red-blood-cells-is-responsible-for-transporting-oxygen",
+    "question": "What protein in red blood cells is responsible for transporting oxygen?",
+    "options": [
+      "Hemoglobin",
+      "Myoglobin",
+      "Keratin",
+      "Collagen"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-principle-explains-why-an-object-floats-or-sinks-based-on-the-buoyant-force-equal-to-the-weight-of-the-fluid-it-displaces",
+    "question": "Which principle explains why an object floats or sinks based on the buoyant force equal to the weight of the fluid it displaces?",
+    "options": [
+      "Pascal's Principle",
+      "Bernoulli's Principle",
+      "Archimedes' Principle",
+      "Heisenberg's Uncertainty Principle"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-primary-astronomical-body-responsible-for-earths-ocean-tides",
+    "question": "What is the primary astronomical body responsible for Earth's ocean tides?",
+    "options": [
+      "The Sun",
+      "Jupiter",
+      "The Moon",
+      "Mars"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
   }
 ]

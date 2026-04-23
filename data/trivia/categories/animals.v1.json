@@ -1233,5 +1233,330 @@
     "correctAnswer": 3,
     "category": "Animals",
     "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-a-group-of-lions-commonly-known-as",
+    "question": "What is a group of lions commonly known as?",
+    "options": [
+      "Herd",
+      "Pack",
+      "Pride",
+      "Flock"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-renowned-for-its-ability-to-change-its-skin-color-to-match-its-environment",
+    "question": "Which animal is renowned for its ability to change its skin color to match its environment?",
+    "options": [
+      "Frog",
+      "Gecko",
+      "Chameleon",
+      "Salamander"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-fastest-land-animal-on-earth",
+    "question": "What is the fastest land animal on Earth?",
+    "options": [
+      "Lion",
+      "Gazelle",
+      "Cheetah",
+      "Horse"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-marine-animals-is-classified-as-a-mammal",
+    "question": "Which of these marine animals is classified as a mammal?",
+    "options": [
+      "Shark",
+      "Tuna",
+      "Whale",
+      "Octopus"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-only-mammal-naturally-capable-of-sustained-flight",
+    "question": "What is the only mammal naturally capable of sustained flight?",
+    "options": [
+      "Flying Squirrel",
+      "Sugar Glider",
+      "Bat",
+      "Colugo"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-legs-does-an-adult-insect-typically-have",
+    "question": "How many legs does an adult insect typically have?",
+    "options": [
+      "Four",
+      "Six",
+      "Eight",
+      "Ten"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-primary-diet-of-a-giant-panda",
+    "question": "What is the primary diet of a giant panda?",
+    "options": [
+      "Fish",
+      "Fruits",
+      "Bamboo",
+      "Insects"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-bird-species-is-famous-for-the-male-building-intricate-and-decorated-structures-to-attract-a-mate",
+    "question": "Which bird species is famous for the male building intricate and decorated structures to attract a mate?",
+    "options": [
+      "Hummingbird",
+      "Weaver Bird",
+      "Bowerbird",
+      "Kingfisher"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-largest-known-species-of-fish-in-the-world",
+    "question": "What is the largest known species of fish in the world?",
+    "options": [
+      "Great White Shark",
+      "Tiger Shark",
+      "Whale Shark",
+      "Basking Shark"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-unique-mammal-lays-eggs-instead-of-giving-birth-to-live-young",
+    "question": "Which unique mammal lays eggs instead of giving birth to live young?",
+    "options": [
+      "Kangaroo",
+      "Platypus",
+      "Opossum",
+      "Pangolin"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "approximately-how-long-is-the-gestation-period-for-an-african-elephant",
+    "question": "Approximately how long is the gestation period for an African elephant?",
+    "options": [
+      "12 months",
+      "18 months",
+      "22 months",
+      "28 months"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-has-fingerprints-so-similar-to-humans-that-they-can-be-confused-at-a-crime-scene",
+    "question": "Which animal has fingerprints so similar to humans that they can be confused at a crime scene?",
+    "options": [
+      "Chimpanzee",
+      "Gorilla",
+      "Koala",
+      "Orangutan"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-insect-emerges-from-a-chrysalis-after-a-caterpillars-metamorphosis",
+    "question": "What insect emerges from a chrysalis after a caterpillar's metamorphosis?",
+    "options": [
+      "Beetle",
+      "Dragonfly",
+      "Butterfly",
+      "Bee"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-organ-do-most-fish-use-to-extract-oxygen-from-water",
+    "question": "What organ do most fish use to extract oxygen from water?",
+    "options": [
+      "Lungs",
+      "Spiracles",
+      "Gills",
+      "Swim Bladder"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-fascinating-sea-creature-is-known-for-having-three-hearts",
+    "question": "Which fascinating sea creature is known for having three hearts?",
+    "options": [
+      "Jellyfish",
+      "Starfish",
+      "Octopus",
+      "Crab"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-a-young-goat-commonly-referred-to-as",
+    "question": "What is a young goat commonly referred to as?",
+    "options": [
+      "Calf",
+      "Lamb",
+      "Kid",
+      "Fawn"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "on-which-continent-would-you-primarily-find-kangaroos-in-their-natural-habitat",
+    "question": "On which continent would you primarily find kangaroos in their natural habitat?",
+    "options": [
+      "Africa",
+      "South America",
+      "Asia",
+      "Australia"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-collective-noun-used-to-describe-a-group-of-owls",
+    "question": "What is the collective noun used to describe a group of owls?",
+    "options": [
+      "Flock",
+      "Coven",
+      "Parliament",
+      "Hoot"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-tall-african-animal-is-renowned-for-its-extremely-long-neck",
+    "question": "Which tall African animal is renowned for its extremely long neck?",
+    "options": [
+      "Zebra",
+      "Elephant",
+      "Giraffe",
+      "Rhinoceros"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-do-snakes-smell-their-environment",
+    "question": "How do snakes \"smell\" their environment?",
+    "options": [
+      "Through their nostrils",
+      "Using their ears",
+      "By flicking their tongue",
+      "With their skin"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-land-animal-is-known-to-have-the-highest-blood-pressure",
+    "question": "Which land animal is known to have the highest blood pressure?",
+    "options": [
+      "Elephant",
+      "Rhinoceros",
+      "Giraffe",
+      "Hippopotamus"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-sound-is-typically-associated-with-a-dog",
+    "question": "What sound is typically associated with a dog?",
+    "options": [
+      "Meow",
+      "Roar",
+      "Bark",
+      "Hiss"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-bird-species-is-widely-recognized-for-its-ability-to-imitate-human-speech",
+    "question": "Which bird species is widely recognized for its ability to imitate human speech?",
+    "options": [
+      "Crow",
+      "Owl",
+      "Parrot",
+      "Pigeon"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-is-the-largest-venomous-snake-in-the-world-by-length",
+    "question": "Which is the largest venomous snake in the world by length?",
+    "options": [
+      "Black Mamba",
+      "Inland Taipan",
+      "King Cobra",
+      "Rattlesnake"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-these-animals-is-well-known-for-hibernating-through-the-winter-months",
+    "question": "Which of these animals is well-known for hibernating through the winter months?",
+    "options": [
+      "Wolf",
+      "Deer",
+      "Bear",
+      "Fox"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
   }
 ]
