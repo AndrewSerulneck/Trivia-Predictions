@@ -64,17 +64,53 @@ function listCategories(dir) {
     .sort();
   assert(files.length > 0, `No category JSON files found in ${absoluteDir}`);
 
-  return files.map((file) => file.replace(/\.json$/i, "").replace(/\.v\d+$/i, ""));
+  return files.map((file) => {
+    const filePath = path.join(absoluteDir, file);
+    const raw = fs.readFileSync(filePath, "utf8");
+    const parsed = JSON.parse(raw);
+    assert(Array.isArray(parsed), `Category file must contain a JSON array: ${filePath}`);
+
+    return {
+      file,
+      category: file.replace(/\.json$/i, "").replace(/\.v\d+$/i, ""),
+      currentCount: parsed.length,
+    };
+  });
 }
 
-function buildCountsByCategory(categories, total) {
-  const counts = new Map();
-  const base = Math.floor(total / categories.length);
-  const remainder = total % categories.length;
+function buildCountsByCategory(records, total) {
+  assert(total >= 0, "--total must be zero or greater.");
 
-  for (let index = 0; index < categories.length; index += 1) {
-    const category = categories[index];
-    counts.set(category, base + (index < remainder ? 1 : 0));
+  const counts = new Map();
+  for (const record of records) {
+    counts.set(record.category, 0);
+  }
+
+  const allocationState = records.map((record) => ({
+    category: record.category,
+    totalAfterAllocation: record.currentCount,
+    assignedTonight: 0,
+  }));
+
+  // Balance strategy:
+  // - Always assign the next question to the category with the lowest total count.
+  // - Once categories are close/equal, tie-break by tonight's assigned count, then slug.
+  // This naturally evens out underfilled categories first, then shifts to even distribution.
+  for (let i = 0; i < total; i += 1) {
+    allocationState.sort((a, b) => {
+      if (a.totalAfterAllocation !== b.totalAfterAllocation) {
+        return a.totalAfterAllocation - b.totalAfterAllocation;
+      }
+      if (a.assignedTonight !== b.assignedTonight) {
+        return a.assignedTonight - b.assignedTonight;
+      }
+      return a.category.localeCompare(b.category);
+    });
+
+    const target = allocationState[0];
+    target.assignedTonight += 1;
+    target.totalAfterAllocation += 1;
+    counts.set(target.category, target.assignedTonight);
   }
 
   return counts;
@@ -124,16 +160,26 @@ function main() {
 
   const categories = listCategories(args.dir);
   const countsByCategory = buildCountsByCategory(categories, args.total);
-  const nonZeroCategories = categories.filter((category) => (countsByCategory.get(category) || 0) > 0);
+  const nonZeroCategories = categories.filter(
+    (record) => (countsByCategory.get(record.category) || 0) > 0
+  );
 
   console.log(
     `Nightly trivia generation starting for ${args.total} total across ${categories.length} categories.`
   );
+  console.log("Current category counts:");
+  for (const record of categories) {
+    console.log(`- ${record.category}: ${record.currentCount}`);
+  }
+  console.log("Planned nightly additions:");
+  for (const record of categories) {
+    console.log(`- ${record.category}: +${countsByCategory.get(record.category) || 0}`);
+  }
 
-  for (const category of nonZeroCategories) {
-    const count = countsByCategory.get(category) || 0;
-    console.log(`\n=== Category: ${category} (${count}) ===`);
-    runGeneratorForCategory({ category, count, args });
+  for (const record of nonZeroCategories) {
+    const count = countsByCategory.get(record.category) || 0;
+    console.log(`\n=== Category: ${record.category} (${count}) ===`);
+    runGeneratorForCategory({ category: record.category, count, args });
   }
 
   console.log("\nNightly trivia generation complete.");
