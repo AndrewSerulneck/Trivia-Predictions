@@ -7,6 +7,8 @@ const { createClient } = require("@supabase/supabase-js");
 const DEFAULT_FILE = "data/trivia/questions.v1.json";
 const DEFAULT_DIR = "data/trivia/categories";
 const CHUNK_SIZE = 200;
+const MAX_RETRIES = 5;
+const BASE_RETRY_DELAY_MS = 3000;
 
 function parseArgs(argv) {
   const args = {
@@ -135,6 +137,18 @@ async function upsertRows(rows) {
 
   assert(supabaseUrl, "Missing NEXT_PUBLIC_SUPABASE_URL in environment.");
   assert(serviceRoleKey, "Missing SUPABASE_SERVICE_ROLE_KEY in environment.");
+  assert(
+    /^https?:\/\//i.test(supabaseUrl),
+    "NEXT_PUBLIC_SUPABASE_URL must start with http:// or https:// (no quotes)."
+  );
+  assert(
+    !/^".*"$/.test(supabaseUrl),
+    'NEXT_PUBLIC_SUPABASE_URL appears wrapped in quotes. Store raw value without quotes.'
+  );
+  assert(
+    !/^".*"$/.test(serviceRoleKey),
+    'SUPABASE_SERVICE_ROLE_KEY appears wrapped in quotes. Store raw value without quotes.'
+  );
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -143,27 +157,89 @@ async function upsertRows(rows) {
   let processed = 0;
   for (let start = 0; start < rows.length; start += CHUNK_SIZE) {
     const chunk = rows.slice(start, start + CHUNK_SIZE);
-    const { error } = await supabase
-      .from("trivia_questions")
-      .upsert(chunk, { onConflict: "slug" });
+    await retryAsync(
+      async () => {
+        const { error } = await supabase
+          .from("trivia_questions")
+          .upsert(chunk, { onConflict: "slug" });
 
-    if (error) {
-      throw new Error(`Supabase upsert failed: ${error.message}`);
-    }
+        if (error) {
+          throw new Error(`Supabase upsert failed: ${error.message}`);
+        }
+      },
+      {
+        operation: `upsert chunk ${Math.floor(start / CHUNK_SIZE) + 1}`,
+      }
+    );
 
     processed += chunk.length;
     console.log(`Upserted ${processed}/${rows.length} questions...`);
   }
 
-  const { count, error } = await supabase
-    .from("trivia_questions")
-    .select("*", { count: "exact", head: true });
+  const { count, error } = await retryAsync(
+    async () => {
+      return supabase
+        .from("trivia_questions")
+        .select("*", { count: "exact", head: true });
+    },
+    {
+      operation: "count query",
+    }
+  );
 
   if (error) {
     throw new Error(`Count query failed: ${error.message}`);
   }
 
   console.log(`Done. trivia_questions total rows: ${count ?? "unknown"}`);
+}
+
+async function retryAsync(fn, options) {
+  const operation = options?.operation || "operation";
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt += 1) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      const message = error instanceof Error ? error.message : String(error);
+      const isLast = attempt === MAX_RETRIES;
+      const retriable = isRetriableNetworkError(message);
+
+      if (!retriable || isLast) {
+        throw new Error(`${operation} failed after ${attempt} attempt(s): ${message}`);
+      }
+
+      const waitMs = BASE_RETRY_DELAY_MS * attempt;
+      console.warn(
+        `${operation} attempt ${attempt}/${MAX_RETRIES} failed (${message}). Retrying in ${Math.round(
+          waitMs / 1000
+        )}s...`
+      );
+      await sleep(waitMs);
+    }
+  }
+
+  throw lastError || new Error(`${operation} failed.`);
+}
+
+function isRetriableNetworkError(message) {
+  const normalized = String(message || "").toLowerCase();
+  return (
+    normalized.includes("fetch failed") ||
+    normalized.includes("network") ||
+    normalized.includes("econnreset") ||
+    normalized.includes("etimedout") ||
+    normalized.includes("eai_again") ||
+    normalized.includes("enotfound") ||
+    normalized.includes("503") ||
+    normalized.includes("504")
+  );
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function main() {
