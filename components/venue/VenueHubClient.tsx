@@ -214,7 +214,8 @@ export function VenueHubClient({
         </button>
       </div>
 
-      <section className="grid grid-cols-1 gap-3">
+  {/* Games container */}
+  <section className="grid grid-cols-1 gap-3" aria-label="Games">
         <button
           type="button"
           onMouseDown={triggerPulse}
@@ -269,7 +270,8 @@ export function VenueHubClient({
         </section>
       )}
 
-      <section className="space-y-2">
+      {/* Leaderboard container */}
+      <section className="space-y-2" aria-label="Leaderboard">
         <h2 className="text-lg font-semibold text-slate-900">{venueDisplayName} Leaderboard</h2>
         <p className="text-sm text-slate-600">Compete with players currently joined at this venue.</p>
         <LeaderboardTable venueId={venue.id} initialEntries={initialEntries} />
