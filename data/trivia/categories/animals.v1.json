@@ -1883,5 +1883,44 @@
     "correctAnswer": 0,
     "category": "Animals",
     "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-largest-land-animal-on-earth",
+    "question": "What is the largest land animal on Earth?",
+    "options": [
+      "Giraffe",
+      "Hippopotamus",
+      "African Elephant",
+      "Rhinoceros"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-reptile-is-well-known-for-its-ability-to-change-its-skin-color-to-match-its-surroundings",
+    "question": "Which reptile is well-known for its ability to change its skin color to match its surroundings?",
+    "options": [
+      "Gecko",
+      "Iguana",
+      "Chameleon",
+      "Komodo Dragon"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-marsupial-has-fingerprints-so-unique-they-can-be-mistaken-for-human-fingerprints-at-a-crime-scene",
+    "question": "Which marsupial has fingerprints so unique they can be mistaken for human fingerprints at a crime scene?",
+    "options": [
+      "Kangaroo",
+      "Wombat",
+      "Koala",
+      "Possum"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
   }
 ]
