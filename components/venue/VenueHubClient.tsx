@@ -61,7 +61,7 @@ export function VenueHubClient({
     navigator.vibrate(14);
   };
   const ctaClass =
-    "inline-flex min-h-[96px] w-full flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 px-3 py-4 text-center text-base font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95";
+    "inline-flex min-h-[140px] flex-shrink-0 w-72 flex-col items-start justify-center gap-3 rounded-2xl border border-slate-200 px-4 py-4 text-left text-base font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95";
 
   const runWarmup = useCallback(async () => {
     if (warmupPromiseRef.current) {
@@ -191,8 +191,8 @@ export function VenueHubClient({
   }, [pendingDestination]);
 
   return (
-    <div className="space-y-5">
-      <div className="flex justify-start">
+    <div className="space-y-5 max-w-full overflow-x-hidden">
+      <div className="flex justify-start w-full max-w-full">
         <button
           type="button"
           onClick={leaveVenue}
@@ -215,7 +215,9 @@ export function VenueHubClient({
       </div>
 
   {/* Games container */}
-  <section className="grid grid-cols-1 gap-3" aria-label="Games">
+  <section className="rounded-lg border border-slate-200 bg-white p-3 w-full max-w-full" aria-label="Games card">
+    <div className="space-y-3">
+      <div className="flex gap-3 overflow-x-auto pb-2" role="list">
         <button
           type="button"
           onMouseDown={triggerPulse}
@@ -258,10 +260,12 @@ export function VenueHubClient({
           </span>
           {pendingDestination === "bingo" ? "Opening Sports Bingo..." : "Play Sports Bingo"}
         </button>
-      </section>
+      </div>
+    </div>
+  </section>
 
       {(isWarmingUp || pendingDestination !== null) && (
-        <section className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+        <section className="rounded-lg border border-blue-200 bg-blue-50 p-3 w-full max-w-full overflow-x-hidden">
           <div className="flex items-center gap-2 text-sm font-medium text-blue-800">
             <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-blue-300 border-t-blue-700" />
             <span>{warmupTitle}</span>
@@ -271,10 +275,12 @@ export function VenueHubClient({
       )}
 
       {/* Leaderboard container */}
-      <section className="space-y-2" aria-label="Leaderboard">
-        <h2 className="text-lg font-semibold text-slate-900">{venueDisplayName} Leaderboard</h2>
-        <p className="text-sm text-slate-600">Compete with players currently joined at this venue.</p>
-        <LeaderboardTable venueId={venue.id} initialEntries={initialEntries} />
+      <section className="rounded-lg border border-slate-200 bg-white p-3 w-full max-w-full overflow-x-hidden" aria-label="Leaderboard card">
+        <div className="space-y-2 min-w-0">
+          <h2 className="text-lg font-semibold text-slate-900">{venueDisplayName} Leaderboard</h2>
+          <p className="text-sm text-slate-600">Compete with players currently joined at this venue.</p>
+          <LeaderboardTable venueId={venue.id} initialEntries={initialEntries} />
+        </div>
       </section>
     </div>
   );

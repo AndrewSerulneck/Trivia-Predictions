@@ -345,7 +345,7 @@ export function PredictionMarketList() {
       return false;
     }
     return !isSportInSeason(selectedSport, new Date());
-  }, [errorMessage, loading, markets.length, selectedCloseWindow, selectedLeague, selectedSport]);
+  }, [errorMessage, loading, markets.length, selectedLeague, selectedSport]);
   const groupedMarketSections = useMemo(() => {
     const byLeague = new Map<string, Prediction[]>();
     for (const market of markets) {

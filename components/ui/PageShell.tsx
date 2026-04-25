@@ -5,6 +5,7 @@ import { NotificationBell } from "@/components/ui/NotificationBell";
 type PageShellProps = {
   title: string;
   description?: string;
+  noContainer?: boolean;
   showBranding?: boolean;
   showUserStatus?: boolean;
   showAlerts?: boolean;
@@ -18,7 +19,12 @@ export function PageShell({
   showUserStatus = true,
   showAlerts = true,
   children,
+  noContainer = false,
 }: PageShellProps) {
+  const mainClass = noContainer
+    ? "min-h-0 flex-1 overflow-hidden p-0"
+    : "tp-comic-card min-h-0 flex-1 overflow-hidden p-4 text-base";
+
   return (
     <div className="flex min-h-[100dvh] flex-col gap-4">
       <header className="tp-hud-card sticky top-2 z-20 p-4">
@@ -40,7 +46,7 @@ export function PageShell({
         </div>
       </header>
 
-      <main className="tp-comic-card min-h-0 flex-1 overflow-hidden p-4 text-base">
+      <main className={mainClass}>
         {children}
       </main>
     </div>
