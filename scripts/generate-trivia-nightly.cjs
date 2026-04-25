@@ -5,7 +5,7 @@ const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
 const DEFAULT_DIR = "data/trivia/categories";
-const DEFAULT_TOTAL = 200;
+const DEFAULT_TOTAL = 100;
 const DEFAULT_BATCH_SIZE = 25;
 
 function parseArgs(argv) {
@@ -128,6 +128,7 @@ function runGeneratorForCategory({ category, count, args }) {
     String(count),
     "--batch-size",
     String(args.batchSize),
+    "--allow-partial",
   ];
 
   if (args.model) {

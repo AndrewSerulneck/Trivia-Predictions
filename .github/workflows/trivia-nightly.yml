@@ -38,7 +38,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-2.5-flash' }}
           GEMINI_MODEL_FALLBACKS: ${{ secrets.GEMINI_MODEL_FALLBACKS || 'gemini-2.0-flash' }}
-        run: node scripts/generate-trivia-nightly.cjs --total 200 --batch-size 25
+        run: node scripts/generate-trivia-nightly.cjs --total 100 --batch-size 25
 
       - name: Validate Trivia Files
         run: npm run trivia:check

@@ -19,6 +19,7 @@ function parseArgs(argv) {
     count: DEFAULT_COUNT,
     batchSize: DEFAULT_BATCH_SIZE,
     model: DEFAULT_MODEL,
+    allowPartial: false,
     dryRun: false,
   };
 
@@ -51,6 +52,10 @@ function parseArgs(argv) {
     }
     if (token === "--dry-run") {
       args.dryRun = true;
+      continue;
+    }
+    if (token === "--allow-partial") {
+      args.allowPartial = true;
     }
   }
 
@@ -403,17 +408,26 @@ async function main() {
     );
   }
 
-  assert(
-    created.length === args.count,
-    `Unable to generate enough unique questions. Created ${created.length}/${args.count}.`
-  );
+  if (created.length !== args.count) {
+    const message = `Unable to generate enough unique questions. Created ${created.length}/${args.count}.`;
+    if (!args.allowPartial) {
+      throw new Error(message);
+    }
+    console.warn(`${message} Continuing because --allow-partial is enabled.`);
+  }
 
   const merged = [...targetQuestions, ...created];
-  if (!args.dryRun) {
+  if (!args.dryRun && created.length > 0) {
     writeQuestions(record.filePath, merged);
   }
 
-  console.log(`${args.dryRun ? "Dry run complete." : "Wrote questions."}`);
+  if (args.dryRun) {
+    console.log("Dry run complete.");
+  } else if (created.length > 0) {
+    console.log("Wrote questions.");
+  } else {
+    console.log("No new questions written.");
+  }
   console.log(`Category: ${record.displayCategory}`);
   console.log(`File: ${record.filePath}`);
   console.log(`Added: ${created.length}`);
