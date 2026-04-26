@@ -1,16 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { getVenueId } from "@/lib/storage";
 
 export function BackToVenueButton() {
-  const [href, setHref] = useState("/");
-
-  useEffect(() => {
-    const venueId = getVenueId();
-    setHref(venueId ? `/venue/${venueId}` : "/");
-  }, []);
+  // Derive href synchronously to avoid setting state inside an effect.
+  const venueId = getVenueId();
+  const href = venueId ? `/venue/${venueId}` : "/";
 
   const triggerBackHaptic = () => {
     if (typeof navigator === "undefined" || !("vibrate" in navigator)) return;

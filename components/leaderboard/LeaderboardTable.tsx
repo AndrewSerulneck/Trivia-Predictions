@@ -98,12 +98,17 @@ export function LeaderboardTable({
         </p>
       ) : null}
       <div className="overflow-x-auto rounded-lg border border-slate-200">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
+        <table className="w-full table-fixed divide-y divide-slate-200 text-sm">
+          <colgroup>
+            <col style={{ width: "20%" }} />
+            <col style={{ width: "56%" }} />
+            <col style={{ width: "24%" }} />
+          </colgroup>
           <thead className="bg-slate-50 text-left text-slate-600">
             <tr>
               <th className="px-3 py-2 font-medium">Rank</th>
               <th className="px-3 py-2 font-medium">Username</th>
-              <th className="px-3 py-2 font-medium">Points</th>
+              <th className="px-3 py-2 font-medium text-right">Points</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white">
@@ -117,14 +122,14 @@ export function LeaderboardTable({
                   <tr className={isCurrentUser ? "bg-blue-50" : undefined}>
                     <td className="px-3 py-2 font-semibold text-slate-700">#{entry.rank}</td>
                     <td className="px-3 py-2">
-                      {entry.username}
+                      <span className="block truncate align-middle">{entry.username}</span>
                       {isCurrentUser ? (
                         <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700">
                           You
                         </span>
                       ) : null}
                     </td>
-                    <td className="px-3 py-2 font-medium">{entry.points}</td>
+                    <td className="px-3 py-2 text-right font-medium">{entry.points}</td>
                   </tr>
                   {shouldRenderAdBreak ? (
                     <tr className="bg-slate-50">

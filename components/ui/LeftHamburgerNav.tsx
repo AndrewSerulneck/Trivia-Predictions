@@ -41,9 +41,11 @@ export function LeftHamburgerNav() {
       return;
     }
 
-    document.body.style.overflow = isOpen ? "hidden" : "";
+    document.body.classList.toggle("tp-modal-open", isOpen);
+    document.documentElement.classList.toggle("tp-modal-open", isOpen);
     return () => {
-      document.body.style.overflow = "";
+      document.body.classList.remove("tp-modal-open");
+      document.documentElement.classList.remove("tp-modal-open");
     };
   }, [isOpen]);
 

@@ -251,12 +251,12 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
 
   return (
     <div
-      className={`relative flex w-full items-center gap-2 ${
-        compact ? "flex-wrap justify-center" : "flex-wrap justify-between"
+      className={`relative flex w-full gap-2 flex-col sm:flex-row sm:items-center ${
+        compact ? "justify-center" : "justify-between"
       }`}
     >
       <CoinFXCanvas />
-      <div className={`flex min-w-0 items-center ${compact ? "w-full justify-between gap-1.5" : "w-full gap-2 sm:w-auto sm:justify-center sm:pr-2"}`}>
+  <div className={`flex min-w-0 items-center ${compact ? "w-full justify-between gap-1.5" : "w-full gap-2 sm:w-auto sm:justify-center sm:pr-2"}`}>
         <div
           className={`flex items-center rounded-2xl border-slate-900 bg-[#f7d7b0] font-medium text-slate-900 ${
             compact
@@ -266,12 +266,13 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
         >
           <span
             className={`inline-flex shrink-0 items-center justify-center rounded-full border-slate-900 bg-white ${
-              compact ? "h-7 w-7 border-2 text-sm" : "h-10 w-10 border-4 text-lg"
+              compact ? "h-7 w-7 border-2 text-sm" : "h-8 w-8 border-2 text-sm sm:h-9 sm:w-9 sm:border-3"
             }`}
+            style={{ flexShrink: 0 }}
           >
             {((username || "G").trim()[0] ?? "G").toUpperCase()}
           </span>
-          <span className="truncate">{username || "Guest"}</span>
+          <span className="truncate max-w-[6.5rem] sm:max-w-[12rem]">{username || "Guest"}</span>
         </div>
         <div
           className={`relative flex items-center border-slate-900 font-medium text-slate-900 transition-all duration-300 ${
@@ -306,8 +307,8 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
             />
           </span>
           <span className={`inline-flex items-center gap-1 font-black ${compact ? "text-sm" : ""}`}>
-            <GoldCoinIcon className={compact ? "h-6 w-6" : "h-10 w-10"} />
-            {(points ?? displayedPoints).toLocaleString()}
+            <GoldCoinIcon className={compact ? "h-5 w-5" : "h-7 w-7 sm:h-10 sm:w-10"} />
+            <span className="truncate max-w-[4.5rem] sm:max-w-[6rem] text-right">{(points ?? displayedPoints).toLocaleString()}</span>
           </span>
         </div>
       </div>

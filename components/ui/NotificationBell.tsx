@@ -38,7 +38,9 @@ function resolveNotificationHref(message: string): string {
 
 export function NotificationBell() {
   const router = useRouter();
-  const [hasUser] = useState(() => Boolean(getUserId()));
+  // Start false to keep server and client initial HTML consistent.
+  // Read from storage after mount to avoid hydration mismatches.
+  const [hasUser, setHasUser] = useState(false);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; width: number } | null>(null);
@@ -103,8 +105,10 @@ export function NotificationBell() {
   useEffect(() => {
     const userId = getUserId() ?? "";
     userIdRef.current = userId;
+    // Schedule setHasUser asynchronously to avoid synchronous setState in effect
+    const hasUserTimer = window.setTimeout(() => setHasUser(Boolean(userId)), 0);
     if (!userId) {
-      return;
+      return () => window.clearTimeout(hasUserTimer);
     }
 
     const poll = () => {
@@ -117,6 +121,7 @@ export function NotificationBell() {
     }, 20000);
 
     return () => {
+      window.clearTimeout(hasUserTimer);
       window.clearTimeout(initialTimer);
       window.clearInterval(interval);
     };
