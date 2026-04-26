@@ -297,35 +297,12 @@ export function PopupAds() {
 
     const body = document.body;
     const root = document.documentElement;
-    const previousBodyOverflow = body.style.overflow;
-    const previousBodyPosition = body.style.position;
-    const previousBodyTop = body.style.top;
-    const previousBodyWidth = body.style.width;
-    const previousBodyTouchAction = body.style.touchAction;
-    const previousBodyOverscrollBehavior = body.style.overscrollBehavior;
-    const previousRootOverflow = root.style.overflow;
-    const previousRootOverscrollBehavior = root.style.overscrollBehavior;
-    const scrollY = window.scrollY;
-
-    body.style.overflow = "hidden";
-    body.style.position = "fixed";
-    body.style.top = `-${scrollY}px`;
-    body.style.width = "100%";
-    body.style.touchAction = "none";
-    body.style.overscrollBehavior = "none";
-    root.style.overflow = "hidden";
-    root.style.overscrollBehavior = "none";
+    body.classList.add("tp-modal-open");
+    root.classList.add("tp-modal-open");
 
     return () => {
-      body.style.overflow = previousBodyOverflow;
-      body.style.position = previousBodyPosition;
-      body.style.top = previousBodyTop;
-      body.style.width = previousBodyWidth;
-      body.style.touchAction = previousBodyTouchAction;
-      body.style.overscrollBehavior = previousBodyOverscrollBehavior;
-      root.style.overflow = previousRootOverflow;
-      root.style.overscrollBehavior = previousRootOverscrollBehavior;
-      window.scrollTo(0, scrollY);
+      body.classList.remove("tp-modal-open");
+      root.classList.remove("tp-modal-open");
     };
   }, [popup?.open]);
 

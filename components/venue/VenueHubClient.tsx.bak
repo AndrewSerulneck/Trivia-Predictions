@@ -1,0 +1,338 @@
+"use client";
+
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import type { Venue, LeaderboardEntry, TriviaQuestion, Prediction } from "@/types";
+import { getUserId, getVenueId, clearVenueSession } from "@/lib/storage";
+import { getVenueDisplayName } from "@/lib/venueDisplay";
+import { writeWarmTriviaCache, writeWarmPredictionsCache } from "@/lib/warmupCache";
+import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
+
+export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; initialEntries?: LeaderboardEntry[] }) {
+  const router = useRouter();
+  const [pendingDestination, setPendingDestination] = useState<"trivia" | "predictions" | "bingo" | null>(null);
+  const [isWarmingUp, setIsWarmingUp] = useState(true);
+  const [warmupMessage, setWarmupMessage] = useState("Preparing games...");
+  const warmupPromiseRef = useRef<Promise<void> | null>(null);
+  const warmupStartedRef = useRef(false);
+
+  useEffect(() => {
+    const storedUserId = getUserId() ?? "";
+    const storedVenueId = getVenueId() ?? "";
+    if (!storedUserId) {
+      router.replace(`/?v=${venue.id}`);
+      return;
+    }
+    if (storedVenueId !== venue.id) router.replace(`/?v=${venue.id}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const venueDisplayName = getVenueDisplayName(venue as any);
+
+  const triggerPulse = () => {
+    if (typeof navigator === "undefined" || !("vibrate" in navigator)) return;
+    navigator.vibrate(14);
+  };
+
+  const leaveVenue = () => {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate([22, 40, 22]);
+    clearVenueSession();
+    router.push("/");
+  };
+
+  const ctaClass =
+    "inline-flex min-h-[420px] flex-shrink-0 w-64 sm:w-72 flex-col items-start justify-start gap-3 rounded-2xl border border-slate-200 px-4 py-4 text-left text-base font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95";
+
+  const runWarmup = useCallback(async () => {
+    if (warmupPromiseRef.current) return warmupPromiseRef.current;
+    const userId = getUserId() ?? "";
+    const venueId = getVenueId() ?? "";
+    if (!userId || !venueId) {
+      setIsWarmingUp(false);
+      return;
+    }
+
+    const warmup = (async () => {
+      try {
+        setWarmupMessage("Preparing trivia...");
+        const [tQRes, tQuotaRes] = await Promise.allSettled([
+          fetch(`/api/trivia?userId=${encodeURIComponent(userId)}`, { cache: "no-store" }),
+          fetch(`/api/trivia/quota?userId=${encodeURIComponent(userId)}`, { cache: "no-store" }),
+        ]);
+        let triviaQuestions: TriviaQuestion[] = [];
+        let triviaQuota: any = null;
+        if (tQRes.status === "fulfilled") {
+          try {
+            const payload = (await tQRes.value.json()) as { ok?: boolean; questions?: TriviaQuestion[] };
+            if (payload.ok && Array.isArray(payload.questions)) triviaQuestions = payload.questions;
+          } catch {
+            // ignore
+          }
+        }
+        if (tQuotaRes.status === "fulfilled") {
+          try {
+            const payload = (await tQuotaRes.value.json()) as { ok?: boolean; quota?: any };
+            if (payload.ok) triviaQuota = payload.quota ?? null;
+          } catch {
+            // ignore
+          }
+        }
+        if (triviaQuestions.length > 0) writeWarmTriviaCache({ userId, venueId, questions: triviaQuestions, quota: triviaQuota });
+
+        setWarmupMessage("Preparing predictions...");
+        try {
+          const predictionsResponse = await fetch("/api/predictions?page=1&pageSize=24&excludeSensitive=false", { cache: "no-store" });
+          const predictionsPayload = (await predictionsResponse.json()) as {
+            ok?: boolean;
+            items?: Prediction[];
+            page?: number;
+            pageSize?: number;
+            totalItems?: number;
+            totalPages?: number;
+            sports?: string[];
+            leaguesBySport?: Record<string, string[]>;
+          };
+          if (predictionsPayload.ok && Array.isArray(predictionsPayload.items) && predictionsPayload.items.length > 0) {
+            writeWarmPredictionsCache({
+              venueId,
+              payload: {
+                items: predictionsPayload.items,
+                page: predictionsPayload.page,
+                pageSize: predictionsPayload.pageSize,
+                totalItems: predictionsPayload.totalItems,
+                totalPages: predictionsPayload.totalPages,
+                sports: predictionsPayload.sports,
+                leaguesBySport: predictionsPayload.leaguesBySport,
+              },
+            });
+          }
+        } catch {
+          // ignore
+        }
+
+        setWarmupMessage("Preparing sports bingo...");
+        try {
+          await fetch("/api/bingo/games?sportKey=basketball_nba&includeLocked=true", { cache: "no-store" });
+        } catch {
+          // ignore
+        }
+      } catch {
+        // ignore
+      } finally {
+        setIsWarmingUp(false);
+        setWarmupMessage("Ready");
+      }
+    })();
+
+    warmupPromiseRef.current = warmup;
+    return warmup;
+  }, []);
+
+  const scrollWrapRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = scrollWrapRef.current;
+    if (!el) return;
+    const centerOnMount = () => {
+      const groupWidth = el.scrollWidth / 3;
+      el.scrollLeft = groupWidth;
+    };
+    centerOnMount();
+
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        const max = el.scrollWidth;
+        const groupWidth = max / 3;
+        const left = el.scrollLeft;
+        const centerStart = groupWidth * 0.5;
+        const centerEnd = groupWidth * 2 - groupWidth * 0.5;
+        if (left < centerStart || left > centerEnd) {
+          const rel = left - groupWidth;
+          const mod = ((rel % groupWidth) + groupWidth) % groupWidth;
+          el.scrollLeft = groupWidth + mod;
+        }
+        ticking = false;
+      });
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const goTo = async (destination: "trivia" | "predictions" | "bingo") => {
+    triggerPulse();
+    setPendingDestination(destination);
+    if (isWarmingUp) {
+      setWarmupMessage(`Opening ${destination === "trivia" ? "Hightop Trivia™" : destination === "predictions" ? "Hightop Sports Predictions™" : "Hightop Sports Bingo™"}...`);
+      const timeout = new Promise<void>((resolve) => window.setTimeout(resolve, 2200));
+      await Promise.race([runWarmup(), timeout]);
+    }
+    router.push(destination === "trivia" ? "/trivia" : destination === "predictions" ? "/predictions" : "/bingo");
+  };
+
+  useEffect(() => {
+    router.prefetch("/trivia");
+    router.prefetch("/predictions");
+    router.prefetch("/bingo");
+    if (!warmupStartedRef.current) {
+      warmupStartedRef.current = true;
+      void runWarmup();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const warmupTitle = useMemo(() => {
+    if (pendingDestination === "trivia") return "Opening Hightop Trivia™...";
+    if (pendingDestination === "predictions") return "Opening Hightop Sports Predictions™...";
+    if (pendingDestination === "bingo") return "Opening Hightop Sports Bingo™...";
+    return "Getting everything ready";
+  }, [pendingDestination]);
+
+  const gameButtons = (groupIdx: number) => {
+    const ariaHidden = groupIdx !== 1;
+    return (
+      <div key={`group-${groupIdx}`} className="flex items-start gap-4">
+        <button
+          key={`trivia-${groupIdx}`}
+          type="button"
+          onMouseDown={triggerPulse}
+          onClick={() => void goTo("trivia")}
+          disabled={pendingDestination !== null}
+          className={`${ctaClass} flex-none bg-gradient-to-br from-blue-600 to-cyan-500 text-white shadow-md shadow-blue-200 hover:from-blue-700 hover:to-cyan-600 active:scale-95`}
+          aria-hidden={ariaHidden}
+        >
+          {pendingDestination === "trivia" ? (
+            "Opening Hightop Trivia™..."
+          ) : (
+            <div className="w-full">
+              <div className="flex items-start gap-3">
+                <span aria-hidden className="text-5xl leading-none">🧠</span>
+                <div>
+                  <div className="text-xl font-bold">Hightop Trivia™</div>
+                  <div className="mt-1 text-sm font-semibold underline opacity-95">Rules:</div>
+                </div>
+              </div>
+              <ul className="mt-3 text-xs leading-snug space-y-1 text-white/90">
+                <li>• 3 Rounds of 20 questions</li>
+                <li>• 15 second clock per question</li>
+                <li>• Max 3 rounds per hour</li>
+                <li>• 10 points per correct answer</li>
+              </ul>
+            </div>
+          )}
+        </button>
+
+        <button
+          key={`predictions-${groupIdx}`}
+          type="button"
+          onMouseDown={triggerPulse}
+          onClick={() => void goTo("predictions")}
+          disabled={pendingDestination !== null}
+          className={`${ctaClass} flex-none bg-gradient-to-br from-slate-800 to-violet-700 text-white shadow-md shadow-violet-200 hover:from-slate-900 hover:to-violet-800 active:scale-95`}
+          aria-hidden={ariaHidden}
+        >
+          {pendingDestination === "predictions" ? (
+            "Opening Hightop Sports Predictions™..."
+          ) : (
+            <div className="w-full">
+              <div className="flex items-start gap-3">
+                <span aria-hidden className="text-5xl leading-none">🔮</span>
+                <div>
+                  <div className="text-xl font-bold">Hightop Sports Predictions™</div>
+                  <div className="mt-1 text-sm font-semibold underline opacity-95">Rules:</div>
+                </div>
+              </div>
+              <ul className="mt-3 text-xs leading-snug space-y-1 text-white/90">
+                <li>• Predict outcomes before game start</li>
+                <li>• Pay attention to odds and start times</li>
+                <li>• Payouts vary by confidence</li>
+              </ul>
+            </div>
+          )}
+        </button>
+
+        <button
+          key={`bingo-${groupIdx}`}
+          type="button"
+          onMouseDown={triggerPulse}
+          onClick={() => void goTo("bingo")}
+          disabled={pendingDestination !== null}
+          className={`${ctaClass} flex-none bg-gradient-to-br from-amber-600 to-rose-500 text-white shadow-md shadow-rose-200 hover:from-amber-700 hover:to-rose-600 active:scale-95`}
+          aria-hidden={ariaHidden}
+        >
+          {pendingDestination === "bingo" ? (
+            "Opening Hightop Sports Bingo™..."
+          ) : (
+            <div className="w-full">
+              <div className="flex items-start gap-3">
+                <span aria-hidden className="text-5xl leading-none">🎯</span>
+                <div>
+                  <div className="text-xl font-bold">Hightop Sports Bingo™</div>
+                  <div className="mt-1 text-sm font-semibold underline opacity-95">Rules:</div>
+                </div>
+              </div>
+              <ul className="mt-3 text-xs leading-snug space-y-1 text-white/90">
+                <li>• Complete rows based on live events</li>
+                <li>• Cards are updated in real time</li>
+                <li>• Multiple winners possible</li>
+              </ul>
+            </div>
+          )}
+        </button>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">{venueDisplayName}</h2>
+          <div className="text-sm text-slate-500">Join games and view leaderboard</div>
+        </div>
+        <div className="flex items-center gap-3">
+          <button onClick={leaveVenue} className="text-sm text-slate-600 underline">
+            Leave
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <div className="relative">
+            <div
+              ref={scrollWrapRef}
+              className="-mx-4 overflow-x-auto pb-4 scroll-smooth"
+              style={{ WebkitOverflowScrolling: "touch" }}
+              role="list"
+              aria-label="Games"
+            >
+              <div className="flex gap-4 px-4">
+                {[0, 1, 2].map((g) => (
+                  <div key={`dup-${g}`} className="flex gap-4" aria-hidden={g !== 1}>
+                    {gameButtons(g)}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {isWarmingUp && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="bg-white/90 px-4 py-2 rounded-full text-sm font-medium shadow">{warmupTitle}</div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="lg:col-span-1">
+          <div className="rounded-2xl border border-slate-200 p-4">
+            <h3 className="text-lg font-semibold">Leaderboard</h3>
+            <div className="mt-3">
+              <LeaderboardTable venueId={venue.id} initialEntries={initialEntries} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

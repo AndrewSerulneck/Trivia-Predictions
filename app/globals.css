@@ -21,16 +21,45 @@ body {
   text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
   background:
-    radial-gradient(circle at 16% 12%, rgba(214, 130, 62, 0.32), transparent 34%),
-    radial-gradient(circle at 88% 18%, rgba(166, 69, 52, 0.28), transparent 34%),
-    radial-gradient(circle at 72% 80%, rgba(133, 54, 38, 0.2), transparent 30%),
-    linear-gradient(180deg, #fdf4e8 0%, #f7e3cf 55%, #f0d2bb 100%);
+    repeating-linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0) 0px,
+      rgba(255, 255, 255, 0) 78px,
+      rgba(255, 255, 255, 0.55) 78px,
+      rgba(255, 255, 255, 0.55) 80px
+    ),
+    linear-gradient(180deg, #2f8f46 0%, #2b8440 100%);
 }
 
 html {
   overflow-x: hidden;
   text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0) 0px,
+      rgba(255, 255, 255, 0) 78px,
+      rgba(255, 255, 255, 0.55) 78px,
+      rgba(255, 255, 255, 0.55) 80px
+    ),
+    linear-gradient(180deg, #2f8f46 0%, #2b8440 100%);
+}
+
+html.tp-modal-open,
+body.tp-modal-open {
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+.game-rail-viewport {
+  width: 100dvw;
+  margin-left: calc(50% - 50dvw);
+  margin-right: calc(50% - 50dvw);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 button:not(:disabled),
@@ -145,6 +174,42 @@ h4,
   border-width: 2px;
   border-radius: 16px;
   box-shadow: 3px 3px 0 var(--tp-ink);
+}
+
+/* True full-bleed utility: escape parent content width and touch viewport edges. */
+.tp-full-bleed {
+  position: relative;
+  left: 50%;
+  right: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}
+
+/* Tighter chrome for small phones (iPhone SE and similar) */
+@media (max-width: 380px) {
+  .tp-hud-card,
+  .tp-comic-card {
+    border-width: 2px !important;
+    border-radius: 12px !important;
+    box-shadow: 4px 4px 0 var(--tp-ink) !important;
+    padding: 0.5rem !important;
+  }
+
+  button:not(:disabled),
+  a[role="button"] {
+    border-width: 2px !important;
+    border-radius: 12px !important;
+    box-shadow: 2px 2px 0 var(--tp-ink) !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  .tp-hud-card .mx-auto,
+  .tp-comic-card .mx-auto {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
 }
 
 .tp-trivia-compact button:not(:disabled),
