@@ -318,8 +318,8 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
   return (
     <>
       {gameRailNode}
-      <div className="space-y-6">
-      <section className="mx-0 rounded-none bg-gradient-to-r from-[#1f2a36]/86 via-[#253444]/88 to-[#1f2a36]/86 py-4">
+      <div className="space-y-4">
+      <section className="mx-0 rounded-none bg-gradient-to-r from-[#1f2a36]/86 via-[#253444]/88 to-[#1f2a36]/86 py-3">
         <div className="px-2">
           <div className="tp-hud-card !border-transparent !shadow-none rounded-2xl p-3">
             <div className="flex items-center justify-between">
@@ -339,10 +339,10 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
           </div>
         </div>
 
-        <div ref={railAnchorRef} className="mt-4" style={{ height: GAME_RAIL_PLACEHOLDER_HEIGHT_PX }} aria-hidden />
+        <div ref={railAnchorRef} className="mt-2" style={{ height: GAME_RAIL_PLACEHOLDER_HEIGHT_PX }} aria-hidden />
       </section>
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-4">
         <div>
           <div className="tp-hud-card !border-transparent !shadow-none rounded-2xl p-4">
             <h3 className="text-lg font-semibold">Leaderboard</h3>
