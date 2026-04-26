@@ -2468,5 +2468,57 @@
     "correctAnswer": 1,
     "category": "Music",
     "difficulty": "easy"
+  },
+  {
+    "slug": "which-iconic-british-band-is-famous-for-the-song-bohemian-rhapsody",
+    "question": "Which iconic British band is famous for the song 'Bohemian Rhapsody'?",
+    "options": [
+      "The Beatles",
+      "Led Zeppelin",
+      "Queen",
+      "The Rolling Stones"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-cello-belongs-to-which-family-of-instruments",
+    "question": "The cello belongs to which family of instruments?",
+    "options": [
+      "Woodwind",
+      "Brass",
+      "Percussion",
+      "String"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-baroque-composer-is-celebrated-for-his-brandenburg-concertos",
+    "question": "Which Baroque composer is celebrated for his 'Brandenburg Concertos'?",
+    "options": [
+      "George Frideric Handel",
+      "Johann Sebastian Bach",
+      "Antonio Vivaldi",
+      "Claudio Monteverdi"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-is-widely-known-as-the-king-of-pop",
+    "question": "Who is widely known as the 'King of Pop'?",
+    "options": [
+      "Prince",
+      "Elvis Presley",
+      "Michael Jackson",
+      "James Brown"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
   }
 ]

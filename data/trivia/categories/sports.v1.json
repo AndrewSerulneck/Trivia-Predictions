@@ -2468,5 +2468,57 @@
     "correctAnswer": 2,
     "category": "Sports",
     "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-grand-slam-singles-titles-did-roger-federer-win-in-his-career",
+    "question": "How many Grand Slam singles titles did Roger Federer win in his career?",
+    "options": [
+      "18",
+      "20",
+      "22",
+      "24"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-holds-the-record-for-the-most-olympic-gold-medals-won-by-an-individual-in-a-single-games",
+    "question": "Who holds the record for the most Olympic gold medals won by an individual in a single Games?",
+    "options": [
+      "Carl Lewis",
+      "Michael Phelps",
+      "Usain Bolt",
+      "Larisa Latynina"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-the-four-major-golf-championships-is-always-played-at-augusta-national-golf-club",
+    "question": "Which of the four major golf championships is always played at Augusta National Golf Club?",
+    "options": [
+      "The Open Championship",
+      "PGA Championship",
+      "US Open",
+      "The Masters"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-nickname-for-the-trophy-awarded-to-the-winner-of-the-nhl-playoffs",
+    "question": "What is the nickname for the trophy awarded to the winner of the NHL playoffs?",
+    "options": [
+      "Stanley Cup",
+      "Calder Cup",
+      "Vezina Trophy",
+      "Hart Memorial Trophy"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "medium"
   }
 ]

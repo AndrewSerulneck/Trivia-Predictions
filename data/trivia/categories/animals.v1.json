@@ -1922,5 +1922,590 @@
     "correctAnswer": 2,
     "category": "Animals",
     "difficulty": "hard"
+  },
+  {
+    "slug": "what-do-you-call-a-baby-cat",
+    "question": "What do you call a baby cat?",
+    "options": [
+      "Cub",
+      "Kitten",
+      "Pup",
+      "Chick"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-black-and-white-stripes",
+    "question": "Which animal is known for its black and white stripes?",
+    "options": [
+      "Lion",
+      "Tiger",
+      "Zebra",
+      "Giraffe"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-farm-animal-is-famous-for-saying-moo",
+    "question": "Which farm animal is famous for saying \"Moo\"?",
+    "options": [
+      "Pig",
+      "Cow",
+      "Sheep",
+      "Chicken"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-common-name-for-a-large-flightless-bird-native-to-africa",
+    "question": "What is the common name for a large, flightless bird native to Africa?",
+    "options": [
+      "Emu",
+      "Kiwi",
+      "Ostrich",
+      "Rhea"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-hibernates-through-the-winter",
+    "question": "Which animal hibernates through the winter?",
+    "options": [
+      "Deer",
+      "Bear",
+      "Wolf",
+      "Rabbit"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-long-trunk",
+    "question": "Which animal is known for its long trunk?",
+    "options": [
+      "Rhino",
+      "Hippo",
+      "Elephant",
+      "Giraffe"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-a-common-pet-known-for-barking",
+    "question": "Which animal is a common pet known for barking?",
+    "options": [
+      "Cat",
+      "Dog",
+      "Bird",
+      "Fish"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-builds-large-nests-called-drey-in-trees",
+    "question": "Which animal builds large nests called 'drey' in trees?",
+    "options": [
+      "Squirrel",
+      "Bird",
+      "Monkey",
+      "Koala"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-marine-mammal-is-known-for-its-complex-vocalizations-or-songs",
+    "question": "Which marine mammal is known for its complex vocalizations or \"songs\"?",
+    "options": [
+      "Dolphin",
+      "Orca",
+      "Humpback Whale",
+      "Seal"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-distinctive-humps-and-ability-to-survive-long-periods-without-water",
+    "question": "Which animal is known for its distinctive hump(s) and ability to survive long periods without water?",
+    "options": [
+      "Buffalo",
+      "Camel",
+      "Rhino",
+      "Elephant"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-an-amphibian-known-for-its-sticky-tongue-and-jumping-ability",
+    "question": "Which animal is an amphibian known for its sticky tongue and jumping ability?",
+    "options": [
+      "Lizard",
+      "Snake",
+      "Turtle",
+      "Frog"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-having-tentacles-and-releasing-ink-when-threatened",
+    "question": "Which animal is known for having tentacles and releasing ink when threatened?",
+    "options": [
+      "Jellyfish",
+      "Starfish",
+      "Squid",
+      "Crab"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-has-a-shell-and-can-retract-its-head-and-limbs-into-it-for-protection",
+    "question": "Which animal has a shell and can retract its head and limbs into it for protection?",
+    "options": [
+      "Snail",
+      "Turtle",
+      "Crab",
+      "Armadillo"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-type-of-animal-is-a-gorilla",
+    "question": "What type of animal is a 'gorilla'?",
+    "options": [
+      "Reptile",
+      "Amphibian",
+      "Primate",
+      "Rodent"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-only-species-of-big-cat-that-cannot-roar-instead-making-purrs-chirps-and-meows",
+    "question": "What is the only species of big cat that cannot roar, instead making purrs, chirps, and meows?",
+    "options": [
+      "Lion",
+      "Tiger",
+      "Jaguar",
+      "Snow Leopard"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-is-a-monotreme-known-for-laying-eggs-but-also-nursing-its-young-with-milk",
+    "question": "Which animal is a monotreme, known for laying eggs but also nursing its young with milk?",
+    "options": [
+      "Kangaroo",
+      "Platypus",
+      "Opossum",
+      "Hedgehog"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-collective-noun-for-a-group-of-giraffes",
+    "question": "What is the collective noun for a group of giraffes?",
+    "options": [
+      "Herd",
+      "Tower",
+      "Flock",
+      "Parade"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-marine-animal-is-capable-of-regenerating-lost-limbs-and-even-its-central-nervous-system",
+    "question": "Which marine animal is capable of regenerating lost limbs and even its central nervous system?",
+    "options": [
+      "Jellyfish",
+      "Sea Anemone",
+      "Starfish",
+      "Sea Urchin"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-only-species-of-bear-that-is-strictly-carnivorous-primarily-preying-on-seals",
+    "question": "What is the only species of bear that is strictly carnivorous, primarily preying on seals?",
+    "options": [
+      "Grizzly Bear",
+      "Black Bear",
+      "Polar Bear",
+      "Panda Bear"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-possesses-the-longest-tongue-relative-to-its-body-size-among-all-mammals",
+    "question": "Which animal possesses the longest tongue relative to its body size among all mammals?",
+    "options": [
+      "Anteater",
+      "Giraffe",
+      "Pangolin",
+      "Tube-lipped Nectar Bat"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-is-known-to-perform-the-longest-migration-of-any-mammal-traveling-thousands-of-miles-between-feeding-and-breeding-grounds",
+    "question": "Which animal is known to perform the longest migration of any mammal, traveling thousands of miles between feeding and breeding grounds?",
+    "options": [
+      "Wildebeest",
+      "Caribou",
+      "Gray Whale",
+      "Humpback Whale"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-phenomenon-where-certain-animals-enter-a-state-of-dormancy-during-periods-of-extreme-heat-or-drought",
+    "question": "What is the phenomenon where certain animals enter a state of dormancy during periods of extreme heat or drought?",
+    "options": [
+      "Hibernation",
+      "Diapause",
+      "Estivation",
+      "Brumation"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-bird-is-known-for-its-ability-to-mimic-human-speech",
+    "question": "Which bird is known for its ability to mimic human speech?",
+    "options": [
+      "Ostrich",
+      "Penguin",
+      "Parrot",
+      "Eagle"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-insect-is-known-for-its-elaborate-waggle-dance-to-communicate-food-locations",
+    "question": "What insect is known for its elaborate 'waggle dance' to communicate food locations?",
+    "options": [
+      "Ant",
+      "Bee",
+      "Fly",
+      "Mosquito"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-lays-the-largest-eggs",
+    "question": "Which animal lays the largest eggs?",
+    "options": [
+      "Chicken",
+      "Crocodile",
+      "Ostrich",
+      "Kiwi"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-has-the-longest-known-lifespan",
+    "question": "Which animal has the longest known lifespan?",
+    "options": [
+      "Elephant",
+      "Greenland Shark",
+      "Blue Whale",
+      "Giant Tortoise"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-ability-to-change-its-skin-color-to-blend-with-its-surroundings",
+    "question": "Which animal is known for its ability to change its skin color to blend with its surroundings?",
+    "options": [
+      "Snake",
+      "Frog",
+      "Chameleon",
+      "Lizard"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-primary-diet-of-a-panda",
+    "question": "What is the primary diet of a panda?",
+    "options": [
+      "Fish",
+      "Bamboo",
+      "Small rodents",
+      "Insects"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-famous-for-its-exceptionally-long-neck",
+    "question": "Which animal is famous for its exceptionally long neck?",
+    "options": [
+      "Zebra",
+      "Giraffe",
+      "Horse",
+      "Llama"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-unique-defense-mechanism-does-the-bombardier-beetle-use",
+    "question": "What unique defense mechanism does the bombardier beetle use?",
+    "options": [
+      "Playing dead",
+      "Emitting a foul smell",
+      "Spraying hot chemicals",
+      "Biting with venom"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-aquatic-animal-uses-echolocation-to-navigate-and-hunt",
+    "question": "Which aquatic animal uses echolocation to navigate and hunt?",
+    "options": [
+      "Shark",
+      "Dolphin",
+      "Seal",
+      "Octopus"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-building-elaborate-dams-across-rivers-and-streams",
+    "question": "Which animal is known for building elaborate dams across rivers and streams?",
+    "options": [
+      "Otter",
+      "Beaver",
+      "Muskrat",
+      "Platypus"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-type-of-animal-are-sharks-classified-as",
+    "question": "Which type of animal are 'sharks' classified as?",
+    "options": [
+      "Mammals",
+      "Reptiles",
+      "Fish",
+      "Amphibians"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-has-fingerprints-so-unique-they-can-be-mistaken-for-human-fingerprints",
+    "question": "Which animal has fingerprints so unique they can be mistaken for human fingerprints?",
+    "options": [
+      "Chimpanzee",
+      "Koala",
+      "Raccoon",
+      "Bear"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-undergoes-metamorphosis-changing-from-a-larva-caterpillar-to-an-adult",
+    "question": "Which animal undergoes metamorphosis, changing from a larva (caterpillar) to an adult?",
+    "options": [
+      "Spider",
+      "Butterfly",
+      "Beetle",
+      "Grasshopper"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-primary-sense-bats-use-to-navigate-in-the-dark",
+    "question": "What is the primary sense bats use to navigate in the dark?",
+    "options": [
+      "Sight",
+      "Smell",
+      "Hearing",
+      "Touch"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-venomous-snake-is-known-for-its-distinctive-hood-and-striking-posture",
+    "question": "Which venomous snake is known for its distinctive 'hood' and striking posture?",
+    "options": [
+      "Rattlesnake",
+      "Cobra",
+      "Anaconda",
+      "Black Mamba"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-remarkable-ability-to-regrow-lost-limbs-eyes-and-even-parts-of-its-brain",
+    "question": "Which animal is known for its remarkable ability to regrow lost limbs, eyes, and even parts of its brain?",
+    "options": [
+      "Starfish",
+      "Salamander",
+      "Crab",
+      "Earthworm"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-collective-noun-for-a-group-of-owls",
+    "question": "What is the collective noun for a group of owls?",
+    "options": [
+      "Flock",
+      "Parliament",
+      "Murder",
+      "Gaggle"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-is-famous-for-migrating-thousands-of-miles-to-warmer-waters-to-breed",
+    "question": "Which animal is famous for migrating thousands of miles to warmer waters to breed?",
+    "options": [
+      "Great White Shark",
+      "Humpback Whale",
+      "Killer Whale",
+      "Bluefin Tuna"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-small-bird-is-known-for-its-ability-to-fly-backward",
+    "question": "Which small bird is known for its ability to fly backward?",
+    "options": [
+      "Sparrow",
+      "Robin",
+      "Hummingbird",
+      "Swift"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-large-land-animal-is-well-known-for-its-long-trunk-and-tusks",
+    "question": "Which large land animal is well-known for its long trunk and tusks?",
+    "options": [
+      "Elephant",
+      "Rhinoceros",
+      "Hippopotamus",
+      "Giraffe"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-primary-diet-of-a-monarch-butterfly-caterpillar",
+    "question": "What is the primary diet of a monarch butterfly caterpillar?",
+    "options": [
+      "Nectar",
+      "Leaves from various plants",
+      "Other small insects",
+      "Milkweed leaves"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-marine-animal-is-known-for-having-three-hearts",
+    "question": "Which marine animal is known for having three hearts?",
+    "options": [
+      "Jellyfish",
+      "Octopus",
+      "Seahorse",
+      "Dolphin"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-these-animals-has-the-longest-neck-in-proportion-to-its-body-size",
+    "question": "Which of these animals has the longest neck in proportion to its body size?",
+    "options": [
+      "Ostrich",
+      "Giraffe",
+      "Llama",
+      "Swan"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
   }
 ]

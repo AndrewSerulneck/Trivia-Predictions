@@ -1896,5 +1896,616 @@
     "correctAnswer": 1,
     "category": "General Knowledge",
     "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-primary-color-of-the-sky-on-a-clear-day",
+    "question": "What is the primary color of the sky on a clear day?",
+    "options": [
+      "Green",
+      "Yellow",
+      "Blue",
+      "Red"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-capital-of-japan",
+    "question": "What is the capital of Japan?",
+    "options": [
+      "Kyoto",
+      "Tokyo",
+      "Osaka",
+      "Seoul"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-common-name-for-h2o",
+    "question": "What is the common name for H2O?",
+    "options": [
+      "Salt",
+      "Sugar",
+      "Air",
+      "Water"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-country-is-known-for-the-great-wall",
+    "question": "Which country is known for the Great Wall?",
+    "options": [
+      "India",
+      "China",
+      "Japan",
+      "Russia"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-longest-river-in-the-world",
+    "question": "What is the longest river in the world?",
+    "options": [
+      "Amazon River",
+      "Yangtze River",
+      "Mississippi River",
+      "Nile River"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-element-is-essential-for-all-known-life-and-is-the-basis-of-organic-chemistry",
+    "question": "Which element is essential for all known life and is the basis of organic chemistry?",
+    "options": [
+      "Oxygen",
+      "Nitrogen",
+      "Carbon",
+      "Hydrogen"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-greek-mythology-who-was-the-god-of-the-sea",
+    "question": "In Greek mythology, who was the god of the sea?",
+    "options": [
+      "Zeus",
+      "Hades",
+      "Poseidon",
+      "Apollo"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-major-world-religion-originated-in-india-and-is-based-on-the-teachings-of-siddhartha-gautama",
+    "question": "Which major world religion originated in India and is based on the teachings of Siddhartha Gautama?",
+    "options": [
+      "Hinduism",
+      "Islam",
+      "Christianity",
+      "Buddhism"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-famous-playwright-wrote-romeo-and-juliet",
+    "question": "Which famous playwright wrote 'Romeo and Juliet'?",
+    "options": [
+      "Charles Dickens",
+      "William Shakespeare",
+      "Jane Austen",
+      "Mark Twain"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-is-famous-for-its-fjords",
+    "question": "Which country is famous for its fjords?",
+    "options": [
+      "Sweden",
+      "Finland",
+      "Denmark",
+      "Norway"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-year-did-the-first-man-walk-on-the-moon",
+    "question": "What year did the first man walk on the moon?",
+    "options": [
+      "1959",
+      "1969",
+      "1979",
+      "1989"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-philosopher-is-known-for-the-socratic-method",
+    "question": "Which philosopher is known for the Socratic method?",
+    "options": [
+      "Plato",
+      "Aristotle",
+      "Socrates",
+      "Epicurus"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-battle-marked-the-final-defeat-of-napoleon-bonaparte",
+    "question": "Which battle marked the final defeat of Napoleon Bonaparte?",
+    "options": [
+      "Battle of Trafalgar",
+      "Battle of Austerlitz",
+      "Battle of Borodino",
+      "Battle of Waterloo"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-deepest-point-in-the-earths-oceans",
+    "question": "What is the deepest point in the Earth's oceans?",
+    "options": [
+      "Puerto Rico Trench",
+      "Mariana Trench",
+      "Sunda Trench",
+      "Tonga Trench"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-classical-composer-was-deaf",
+    "question": "Which classical composer was deaf?",
+    "options": [
+      "Wolfgang Amadeus Mozart",
+      "Johann Sebastian Bach",
+      "Ludwig van Beethoven",
+      "Frédéric Chopin"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-type-of-animal-is-a-koala",
+    "question": "What type of animal is a koala?",
+    "options": [
+      "Bear",
+      "Marsupial",
+      "Rodent",
+      "Primate"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-authored-the-classic-novel-to-kill-a-mockingbird",
+    "question": "Who authored the classic novel 'To Kill a Mockingbird'?",
+    "options": [
+      "J.K. Rowling",
+      "Harper Lee",
+      "Mark Twain",
+      "Ernest Hemingway"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-organ-is-primarily-responsible-for-pumping-blood-throughout-the-human-body",
+    "question": "Which organ is primarily responsible for pumping blood throughout the human body?",
+    "options": [
+      "Lungs",
+      "Brain",
+      "Heart",
+      "Kidneys"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-what-year-did-world-war-i-officially-begin",
+    "question": "In what year did World War I officially begin?",
+    "options": [
+      "1910",
+      "1914",
+      "1918",
+      "1923"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-players-are-on-a-standard-soccer-football-team-on-the-field-at-one-time",
+    "question": "How many players are on a standard soccer (football) team on the field at one time?",
+    "options": [
+      "9",
+      "10",
+      "11",
+      "12"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-roman-mythology-who-is-the-goddess-of-love-beauty-pleasure-and-procreation",
+    "question": "In Roman mythology, who is the goddess of love, beauty, pleasure, and procreation?",
+    "options": [
+      "Juno",
+      "Minerva",
+      "Venus",
+      "Ceres"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "mount-everest-the-worlds-highest-peak-is-part-of-which-mountain-range",
+    "question": "Mount Everest, the world's highest peak, is part of which mountain range?",
+    "options": [
+      "Andes",
+      "Rockies",
+      "Himalayas",
+      "Alps"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-does-www-commonly-stand-for-in-a-website-address",
+    "question": "What does 'WWW' commonly stand for in a website address?",
+    "options": [
+      "World Wide Widgets",
+      "World Web Wonders",
+      "World Wide Web",
+      "Web World Wide"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-fictional-detective-resides-at-221b-baker-street",
+    "question": "Which fictional detective resides at 221B Baker Street?",
+    "options": [
+      "Hercule Poirot",
+      "Sherlock Holmes",
+      "Miss Marple",
+      "Auguste Dupin"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-considered-the-fastest-land-animal",
+    "question": "What is considered the fastest land animal?",
+    "options": [
+      "Lion",
+      "Cheetah",
+      "Gazelle",
+      "Ostrich"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-philosopher-is-famous-for-the-phrase-cogito-ergo-sum-i-think-therefore-i-am",
+    "question": "Which philosopher is famous for the phrase 'Cogito, ergo sum' (I think, therefore I am)?",
+    "options": [
+      "Plato",
+      "Aristotle",
+      "René Descartes",
+      "Socrates"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-iconic-rock-band-released-the-album-the-dark-side-of-the-moon",
+    "question": "Which iconic rock band released the album 'The Dark Side of the Moon'?",
+    "options": [
+      "Led Zeppelin",
+      "The Rolling Stones",
+      "Pink Floyd",
+      "Queen"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-color-are-the-black-boxes-flight-recorders-on-airplanes",
+    "question": "What color are the 'black boxes' (flight recorders) on airplanes?",
+    "options": [
+      "Black",
+      "Yellow",
+      "Orange",
+      "Red"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-is-the-largest-and-deepest-ocean-on-earth",
+    "question": "Which is the largest and deepest ocean on Earth?",
+    "options": [
+      "Atlantic Ocean",
+      "Indian Ocean",
+      "Arctic Ocean",
+      "Pacific Ocean"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-cold-war-was-a-geopolitical-rivalry-primarily-between-the-united-states-and-which-other-major-power",
+    "question": "The Cold War was a geopolitical rivalry primarily between the United States and which other major power?",
+    "options": [
+      "Nazi Germany",
+      "Imperial Japan",
+      "Soviet Union",
+      "China"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-is-widely-credited-with-inventing-the-practical-incandescent-light-bulb",
+    "question": "Who is widely credited with inventing the practical incandescent light bulb?",
+    "options": [
+      "Nikola Tesla",
+      "Alexander Graham Bell",
+      "Thomas Edison",
+      "Benjamin Franklin"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-greek-god-is-the-king-of-the-gods-and-ruler-of-mount-olympus",
+    "question": "Which Greek god is the king of the gods and ruler of Mount Olympus?",
+    "options": [
+      "Poseidon",
+      "Hades",
+      "Zeus",
+      "Apollo"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-invented-the-telephone",
+    "question": "Who invented the telephone?",
+    "options": [
+      "Thomas Edison",
+      "Alexander Graham Bell",
+      "Nikola Tesla",
+      "Guglielmo Marconi"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-composer-wrote-the-symphony-no-5",
+    "question": "Which composer wrote the 'Symphony No. 5'?",
+    "options": [
+      "Wolfgang Amadeus Mozart",
+      "Ludwig van Beethoven",
+      "Johann Sebastian Bach",
+      "Pyotr Ilyich Tchaikovsky"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-wrote-1984",
+    "question": "Who wrote '1984'?",
+    "options": [
+      "Aldous Huxley",
+      "George Orwell",
+      "Ray Bradbury",
+      "Kurt Vonnegut"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-often-are-the-olympic-games-held",
+    "question": "How often are the Olympic Games held?",
+    "options": [
+      "Every 2 years",
+      "Every 3 years",
+      "Every 4 years",
+      "Every 5 years"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-element-has-the-highest-melting-point",
+    "question": "Which element has the highest melting point?",
+    "options": [
+      "Tungsten",
+      "Carbon",
+      "Iron",
+      "Platinum"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-famous-ancient-civilization-built-the-pyramids-of-giza",
+    "question": "Which famous ancient civilization built the pyramids of Giza?",
+    "options": [
+      "Roman",
+      "Greek",
+      "Egyptian",
+      "Mayan"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-element-is-represented-by-the-symbol-pb-on-the-periodic-table",
+    "question": "Which element is represented by the symbol 'Pb' on the periodic table?",
+    "options": [
+      "Phosphorus",
+      "Potassium",
+      "Platinum",
+      "Lead"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-european-country-is-famous-for-its-fjords",
+    "question": "Which European country is famous for its fjords?",
+    "options": [
+      "Sweden",
+      "Finland",
+      "Norway",
+      "Denmark"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-chemical-formula-h2o-commonly-known-as",
+    "question": "What is the chemical formula H2O commonly known as?",
+    "options": [
+      "Salt",
+      "Sugar",
+      "Water",
+      "Air"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-spanish-author-wrote-the-famous-novel-don-quixote",
+    "question": "Which Spanish author wrote the famous novel \"Don Quixote\"?",
+    "options": [
+      "Gabriel García Márquez",
+      "Jorge Luis Borges",
+      "Miguel de Cervantes",
+      "Pablo Neruda"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-what-year-did-the-rms-titanic-sink-in-the-north-atlantic-ocean",
+    "question": "In what year did the RMS Titanic sink in the North Atlantic Ocean?",
+    "options": [
+      "1905",
+      "1912",
+      "1918",
+      "1923"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-renaissance-artist-is-famous-for-painting-the-ceiling-of-the-sistine-chapel",
+    "question": "Which Renaissance artist is famous for painting the ceiling of the Sistine Chapel?",
+    "options": [
+      "Leonardo da Vinci",
+      "Raphael",
+      "Donatello",
+      "Michelangelo"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-only-metal-that-is-liquid-at-standard-room-temperature",
+    "question": "What is the only metal that is liquid at standard room temperature?",
+    "options": [
+      "Bromine",
+      "Gallium",
+      "Cesium",
+      "Mercury"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-countrys-flag-features-a-red-circle-on-a-white-background",
+    "question": "Which country's flag features a red circle on a white background?",
+    "options": [
+      "China",
+      "South Korea",
+      "Japan",
+      "Canada"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-of-these-is-the-largest-sea-in-the-world-by-area",
+    "question": "Which of these is the largest sea in the world by area?",
+    "options": [
+      "Caribbean Sea",
+      "Mediterranean Sea",
+      "South China Sea",
+      "Arabian Sea"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
   }
 ]
