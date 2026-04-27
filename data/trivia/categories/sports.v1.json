@@ -2520,5 +2520,330 @@
     "correctAnswer": 0,
     "category": "Sports",
     "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-country-did-the-martial-art-of-judo-originate",
+    "question": "In which country did the martial art of Judo originate?",
+    "options": [
+      "China",
+      "Korea",
+      "Japan",
+      "Thailand"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-maximum-number-of-clubs-a-golfer-is-allowed-to-carry-in-their-bag-during-a-round",
+    "question": "What is the maximum number of clubs a golfer is allowed to carry in their bag during a round?",
+    "options": [
+      "10",
+      "12",
+      "14",
+      "16"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-which-sport-would-you-find-a-penalty-shootout-to-decide-a-drawn-match",
+    "question": "In which sport would you find a \"penalty shootout\" to decide a drawn match?",
+    "options": [
+      "Basketball",
+      "Ice Hockey",
+      "Rugby",
+      "Soccer"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-swimmer-holds-the-record-for-the-most-olympic-medals-of-all-time",
+    "question": "Which swimmer holds the record for the most Olympic medals of all time?",
+    "options": [
+      "Mark Spitz",
+      "Ian Thorpe",
+      "Michael Phelps",
+      "Ryan Lochte"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-term-for-a-perfect-game-in-baseball-where-no-opposing-player-reaches-base",
+    "question": "What is the term for a perfect game in baseball, where no opposing player reaches base?",
+    "options": [
+      "No-hitter",
+      "Shutout",
+      "Perfect game",
+      "Grand slam"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-players-are-on-a-standard-ice-hockey-team-on-the-ice-at-one-time-including-the-goalie",
+    "question": "How many players are on a standard ice hockey team on the ice at one time (including the goalie)?",
+    "options": [
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-tennis-player-holds-the-record-for-the-most-french-open-mens-singles-titles",
+    "question": "Which tennis player holds the record for the most French Open men's singles titles?",
+    "options": [
+      "Bjorn Borg",
+      "Rafael Nadal",
+      "Novak Djokovic",
+      "Roger Federer"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-nfl-team-has-appeared-in-the-most-super-bowls",
+    "question": "Which NFL team has appeared in the most Super Bowls?",
+    "options": [
+      "Dallas Cowboys",
+      "New England Patriots",
+      "San Francisco 49ers",
+      "Green Bay Packers"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-basketball-how-many-points-is-a-shot-worth-if-taken-from-beyond-the-arc",
+    "question": "In basketball, how many points is a shot worth if taken from beyond the arc?",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-piece-of-equipment-is-used-to-hit-the-ball-in-tennis",
+    "question": "What piece of equipment is used to hit the ball in tennis?",
+    "options": [
+      "Bat",
+      "Club",
+      "Racket",
+      "Paddle"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-country-traditionally-hosts-the-wimbledon-tennis-tournament",
+    "question": "Which country traditionally hosts the Wimbledon tennis tournament?",
+    "options": [
+      "United States",
+      "France",
+      "Australia",
+      "United Kingdom"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-sport-can-you-perform-a-triple-axel",
+    "question": "In which sport can you perform a \"triple axel\"?",
+    "options": [
+      "Gymnastics",
+      "Diving",
+      "Figure Skating",
+      "Surfing"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-was-the-first-formula-1-driver-to-win-seven-world-championships",
+    "question": "Who was the first Formula 1 driver to win seven World Championships?",
+    "options": [
+      "Lewis Hamilton",
+      "Juan Manuel Fangio",
+      "Michael Schumacher",
+      "Ayrton Senna"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-object-called-that-bowlers-try-to-knock-down",
+    "question": "What is the object called that bowlers try to knock down?",
+    "options": [
+      "Pins",
+      "Cones",
+      "Targets",
+      "Skittles"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-international-governing-body-for-soccer",
+    "question": "What is the name of the international governing body for soccer?",
+    "options": [
+      "UEFA",
+      "FIFA",
+      "CONCACAF",
+      "AFC"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-standard-number-of-players-on-a-volleyball-team-on-the-court-at-one-time",
+    "question": "What is the standard number of players on a volleyball team on the court at one time?",
+    "options": [
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-team-won-the-first-ever-nba-championship-in-1947",
+    "question": "Which team won the first-ever NBA championship in 1947?",
+    "options": [
+      "Minneapolis Lakers",
+      "Boston Celtics",
+      "Philadelphia Warriors",
+      "New York Knicks"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-highest-possible-break-in-a-single-frame-of-snooker-assuming-no-fouls",
+    "question": "What is the highest possible break in a single frame of snooker, assuming no fouls?",
+    "options": [
+      "147",
+      "155",
+      "169",
+      "177"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-color-jersey-does-the-leader-of-the-tour-de-france-wear",
+    "question": "What color jersey does the leader of the Tour de France wear?",
+    "options": [
+      "Red",
+      "Blue",
+      "Yellow",
+      "Green"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-legendary-coach-is-credited-with-inventing-the-triangle-offense-in-basketball",
+    "question": "Which legendary coach is credited with inventing the \"Triangle Offense\" in basketball?",
+    "options": [
+      "Red Auerbach",
+      "Phil Jackson",
+      "Gregg Popovich",
+      "Pat Riley"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-distance-of-the-race-known-as-the-mile-in-meters",
+    "question": "What is the distance of the race known as \"The Mile\" in meters?",
+    "options": [
+      "1500 meters",
+      "1600 meters",
+      "1609.34 meters",
+      "1700 meters"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-players-are-on-a-standard-soccer-team-on-the-field-during-a-match",
+    "question": "How many players are on a standard soccer team on the field during a match?",
+    "options": [
+      "9",
+      "10",
+      "11",
+      "12"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-city-hosted-the-inaugural-modern-olympic-games-in-1896",
+    "question": "Which city hosted the inaugural modern Olympic Games in 1896?",
+    "options": [
+      "Paris",
+      "London",
+      "Athens",
+      "Rome"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-golfer-is-the-only-one-to-have-achieved-a-career-grand-slam-twice",
+    "question": "Which golfer is the only one to have achieved a career Grand Slam twice?",
+    "options": [
+      "Arnold Palmer",
+      "Tiger Woods",
+      "Jack Nicklaus",
+      "Ben Hogan"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-baseball-how-many-strikes-does-a-batter-accumulate-before-a-strikeout-occurs",
+    "question": "In baseball, how many strikes does a batter accumulate before a strikeout occurs?",
+    "options": [
+      "Two",
+      "Three",
+      "Four",
+      "Five"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
   }
 ]

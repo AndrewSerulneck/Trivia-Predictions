@@ -2520,5 +2520,330 @@
     "correctAnswer": 2,
     "category": "Music",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-composer-is-famous-for-his-moonlight-sonata",
+    "question": "Which composer is famous for his \"Moonlight Sonata\"?",
+    "options": [
+      "Ludwig van Beethoven",
+      "Wolfgang Amadeus Mozart",
+      "Johann Sebastian Bach",
+      "Frédéric Chopin"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-legendary-guitarist-was-known-for-his-innovative-electric-guitar-playing-and-the-band-the-jimi-hendrix-experience",
+    "question": "Which legendary guitarist was known for his innovative electric guitar playing and the band The Jimi Hendrix Experience?",
+    "options": [
+      "Eric Clapton",
+      "Jimmy Page",
+      "Jimi Hendrix",
+      "Carlos Santana"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-stage-name-of-stefani-germanotta",
+    "question": "What is the stage name of Stefani Germanotta?",
+    "options": [
+      "Madonna",
+      "Lady Gaga",
+      "Ariana Grande",
+      "Katy Perry"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-miles-davis-album-is-considered-a-seminal-work-in-cool-jazz-and-modal-jazz",
+    "question": "Which Miles Davis album is considered a seminal work in cool jazz and modal jazz?",
+    "options": [
+      "Bitches Brew",
+      "Kind of Blue",
+      "Birth of the Cool",
+      "In a Silent Way"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-oboe-belongs-to-which-family-of-instruments",
+    "question": "The oboe belongs to which family of instruments?",
+    "options": [
+      "Brass",
+      "Woodwind",
+      "String",
+      "Percussion"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-does-allegro-typically-mean-in-music",
+    "question": "What does 'allegro' typically mean in music?",
+    "options": [
+      "Slowly",
+      "Moderately",
+      "Fast",
+      "Very Softly"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-singer-is-known-for-her-powerful-vocals-and-hits-like-i-will-always-love-you",
+    "question": "Which singer is known for her powerful vocals and hits like \"I Will Always Love You\"?",
+    "options": [
+      "Mariah Carey",
+      "Whitney Houston",
+      "Celine Dion",
+      "Aretha Franklin"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-is-often-credited-with-popularizing-reggae-music-worldwide",
+    "question": "Who is often credited with popularizing reggae music worldwide?",
+    "options": [
+      "Peter Tosh",
+      "Bob Marley",
+      "Jimmy Cliff",
+      "Toots Hibbert"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-practice-of-figured-bass-is-most-commonly-associated-with-which-musical-era",
+    "question": "The practice of 'figured bass' is most commonly associated with which musical era?",
+    "options": [
+      "Renaissance",
+      "Baroque",
+      "Classical",
+      "Romantic"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-artist-had-a-major-hit-with-happy-from-the-movie-despicable-me-2",
+    "question": "Which artist had a major hit with \"Happy\" from the movie \"Despicable Me 2\"?",
+    "options": [
+      "Bruno Mars",
+      "Justin Timberlake",
+      "Pharrell Williams",
+      "Ed Sheeran"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-grunge-band-famously-released-the-album-nevermind",
+    "question": "Which grunge band famously released the album \"Nevermind\"?",
+    "options": [
+      "Pearl Jam",
+      "Soundgarden",
+      "Alice in Chains",
+      "Nirvana"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-composer-wrote-the-eroica-symphony",
+    "question": "Which composer wrote the \"Eroica Symphony\"?",
+    "options": [
+      "Ludwig van Beethoven",
+      "Johannes Brahms",
+      "Franz Schubert",
+      "Pyotr Ilyich Tchaikovsky"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-highest-pitched-instrument-in-the-standard-orchestral-brass-section",
+    "question": "What is the highest pitched instrument in the standard orchestral brass section?",
+    "options": [
+      "French Horn",
+      "Trombone",
+      "Tuba",
+      "Trumpet"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-a-fugue-in-music",
+    "question": "What is a 'fugue' in music?",
+    "options": [
+      "A slow, lyrical movement",
+      "A contrapuntal compositional technique",
+      "A type of opera aria",
+      "A short, improvisatory piece"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-artist-is-known-for-wearing-a-single-white-glove-and-performing-the-moonwalk",
+    "question": "Which artist is known for wearing a single white glove and performing the 'moonwalk'?",
+    "options": [
+      "Prince",
+      "Michael Jackson",
+      "James Brown",
+      "Usher"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-country-music-legend-sang-ring-of-fire",
+    "question": "Which country music legend sang \"Ring of Fire\"?",
+    "options": [
+      "Willie Nelson",
+      "Johnny Cash",
+      "George Jones",
+      "Merle Haggard"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-russian-composer-is-known-for-his-opera-boris-godunov",
+    "question": "Which Russian composer is known for his opera \"Boris Godunov\"?",
+    "options": [
+      "Sergei Rachmaninoff",
+      "Igor Stravinsky",
+      "Dmitri Shostakovich",
+      "Modest Mussorgsky"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-girl-group-released-the-hit-song-wannabe",
+    "question": "Which girl group released the hit song \"Wannabe\"?",
+    "options": [
+      "Destiny's Child",
+      "TLC",
+      "Spice Girls",
+      "The Pussycat Dolls"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-band-is-known-for-their-album-rumours-and-hits-like-go-your-own-way",
+    "question": "Which band is known for their album \"Rumours\" and hits like \"Go Your Own Way\"?",
+    "options": [
+      "Fleetwood Mac",
+      "The Eagles",
+      "Led Zeppelin",
+      "The Rolling Stones"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-avant-garde-jazz-musician-pioneered-the-concept-of-harmolodics",
+    "question": "Which avant-garde jazz musician pioneered the concept of \"harmolodics\"?",
+    "options": [
+      "John Coltrane",
+      "Ornette Coleman",
+      "Charles Mingus",
+      "Thelonious Monk"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-common-name-for-the-instrument-also-known-as-a-harmonica",
+    "question": "What is the common name for the instrument also known as a harmonica?",
+    "options": [
+      "Mouth organ",
+      "Jaw harp",
+      "Kazoo",
+      "Ocarina"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-british-band-is-famous-for-hits-like-bohemian-rhapsody-and-we-will-rock-you",
+    "question": "Which British band is famous for hits like \"Bohemian Rhapsody\" and \"We Will Rock You\"?",
+    "options": [
+      "Queen",
+      "The Beatles",
+      "Led Zeppelin",
+      "The Rolling Stones"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-string-instrument-is-known-for-its-deep-resonant-sound-and-is-the-largest-of-the-bowed-string-family",
+    "question": "Which string instrument is known for its deep, resonant sound and is the largest of the bowed string family?",
+    "options": [
+      "Cello",
+      "Viola",
+      "Contrabass",
+      "Violin"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-term-ostinato-refers-to-what-musical-device",
+    "question": "The term 'ostinato' refers to what musical device?",
+    "options": [
+      "A rapid succession of notes",
+      "A repeating musical phrase or rhythm",
+      "A sudden change in tempo",
+      "A complex chord progression"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-iconic-pink-floyd-album-features-a-prism-refracting-light-on-its-cover",
+    "question": "Which iconic Pink Floyd album features a prism refracting light on its cover?",
+    "options": [
+      "The Wall",
+      "Animals",
+      "Wish You Were Here",
+      "The Dark Side of the Moon"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "medium"
   }
 ]

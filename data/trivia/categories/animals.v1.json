@@ -2507,5 +2507,330 @@
     "correctAnswer": 1,
     "category": "Animals",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-do-giant-pandas-primarily-eat",
+    "question": "What do giant pandas primarily eat?",
+    "options": [
+      "Fish",
+      "Bamboo",
+      "Insects",
+      "Berries"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-bird-lays-the-largest-eggs",
+    "question": "Which bird lays the largest eggs?",
+    "options": [
+      "Chicken",
+      "Eagle",
+      "Ostrich",
+      "Penguin"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-a-baby-goat-called",
+    "question": "What is a baby goat called?",
+    "options": [
+      "Calf",
+      "Fawn",
+      "Kid",
+      "Lamb"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "kangaroos-are-native-to-which-continent",
+    "question": "Kangaroos are native to which continent?",
+    "options": [
+      "Asia",
+      "Africa",
+      "South America",
+      "Australia"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-famous-for-changing-its-skin-color-to-match-its-surroundings",
+    "question": "Which animal is famous for changing its skin color to match its surroundings?",
+    "options": [
+      "Octopus",
+      "Frog",
+      "Chameleon",
+      "Lizard"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-insect-is-known-for-producing-silk",
+    "question": "Which insect is known for producing silk?",
+    "options": [
+      "Bee",
+      "Spider",
+      "Silkworm",
+      "Ant"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-well-known-for-hibernating-through-the-winter-months",
+    "question": "Which animal is well-known for hibernating through the winter months?",
+    "options": [
+      "Fox",
+      "Wolf",
+      "Bear",
+      "Deer"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-marine-animal-has-eight-arms",
+    "question": "Which marine animal has eight arms?",
+    "options": [
+      "Squid",
+      "Crab",
+      "Starfish",
+      "Octopus"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-scientific-name-for-the-domestic-dog",
+    "question": "What is the scientific name for the domestic dog?",
+    "options": [
+      "Felis catus",
+      "Equus caballus",
+      "Canis lupus familiaris",
+      "Bos taurus"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-mammal-has-the-longest-gestation-period",
+    "question": "Which mammal has the longest gestation period?",
+    "options": [
+      "Blue Whale",
+      "Human",
+      "African Elephant",
+      "Giraffe"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-a-group-of-crows-called",
+    "question": "What is a group of crows called?",
+    "options": [
+      "Parliament",
+      "Muster",
+      "Murder",
+      "Conspiracy"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-is-believed-to-have-the-strongest-bite-force-among-living-animals",
+    "question": "Which animal is believed to have the strongest bite force among living animals?",
+    "options": [
+      "Lion",
+      "Grizzly Bear",
+      "Saltwater Crocodile",
+      "Great White Shark"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-is-recognized-by-its-unique-black-and-white-stripes",
+    "question": "Which animal is recognized by its unique black and white stripes?",
+    "options": [
+      "Tiger",
+      "Panda",
+      "Zebra",
+      "Badger"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-largest-species-of-big-cat",
+    "question": "What is the largest species of big cat?",
+    "options": [
+      "Lion",
+      "Leopard",
+      "Tiger",
+      "Jaguar"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-flightless-bird-is-an-excellent-swimmer-and-lives-in-cold-climates",
+    "question": "Which flightless bird is an excellent swimmer and lives in cold climates?",
+    "options": [
+      "Ostrich",
+      "Kiwi",
+      "Penguin",
+      "Emu"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-do-polar-bears-primarily-hunt-and-eat",
+    "question": "What do polar bears primarily hunt and eat?",
+    "options": [
+      "Fish",
+      "Berries",
+      "Seals",
+      "Caribou"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-extremely-slow-movement-and-often-found-hanging-upside-down",
+    "question": "Which animal is known for its extremely slow movement and often found hanging upside down?",
+    "options": [
+      "Koala",
+      "Sloth",
+      "Snail",
+      "Turtle"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-is-the-only-mammal-capable-of-sustained-flight",
+    "question": "Which is the only mammal capable of sustained flight?",
+    "options": [
+      "Flying Squirrel",
+      "Bat",
+      "Sugar Glider",
+      "Colugo"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-carrying-its-home-on-its-back-and-for-its-long-lifespan",
+    "question": "Which animal is known for carrying its home on its back and for its long lifespan?",
+    "options": [
+      "Snail",
+      "Hermit Crab",
+      "Tortoise",
+      "Clam"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-has-its-heart-located-in-its-head",
+    "question": "Which animal has its heart located in its head?",
+    "options": [
+      "Spider",
+      "Shrimp",
+      "Crab",
+      "Snail"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-term-for-when-a-snake-sheds-its-skin",
+    "question": "What is the term for when a snake sheds its skin?",
+    "options": [
+      "Molting",
+      "Hibernation",
+      "Ecdysis",
+      "Metamorphosis"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-a-group-of-fish-called",
+    "question": "What is a group of fish called?",
+    "options": [
+      "A school",
+      "A flock",
+      "A herd",
+      "A pride"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-capable-of-changing-its-skin-color-to-blend-with-its-surroundings",
+    "question": "Which animal is capable of changing its skin color to blend with its surroundings?",
+    "options": [
+      "Frog",
+      "Salamander",
+      "Chameleon",
+      "Gecko"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-animals-lays-eggs",
+    "question": "Which of these animals lays eggs?",
+    "options": [
+      "Bat",
+      "Dolphin",
+      "Platypus",
+      "Kangaroo"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-has-the-largest-eyes-relative-to-its-body-size",
+    "question": "Which animal has the largest eyes relative to its body size?",
+    "options": [
+      "Tarsier",
+      "Owl",
+      "Giant Squid",
+      "Ostrich"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
   }
 ]

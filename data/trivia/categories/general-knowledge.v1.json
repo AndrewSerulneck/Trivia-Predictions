@@ -2507,5 +2507,317 @@
     "correctAnswer": 2,
     "category": "General Knowledge",
     "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-longest-river-in-south-america",
+    "question": "What is the name of the longest river in South America?",
+    "options": [
+      "Paraná River",
+      "Magdalena River",
+      "Amazon River",
+      "Orinoco River"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-is-credited-with-discovering-penicillin",
+    "question": "Who is credited with discovering penicillin?",
+    "options": [
+      "Louis Pasteur",
+      "Alexander Fleming",
+      "Robert Koch",
+      "Jonas Salk"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-colors-are-in-a-rainbow",
+    "question": "How many colors are in a rainbow?",
+    "options": [
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-famous-physicist-developed-the-theory-of-general-relativity",
+    "question": "Which famous physicist developed the theory of general relativity?",
+    "options": [
+      "Isaac Newton",
+      "Albert Einstein",
+      "Stephen Hawking",
+      "Galileo Galilei"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-year-did-the-american-civil-war-begin",
+    "question": "In which year did the American Civil War begin?",
+    "options": [
+      "1859",
+      "1861",
+      "1863",
+      "1865"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-common-name-for-the-phenomenon-where-the-moon-appears-to-change-shape",
+    "question": "What is the common name for the phenomenon where the moon appears to change shape?",
+    "options": [
+      "Lunar eclipse",
+      "Solar eclipse",
+      "Phases of the moon",
+      "Tides"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-mythological-creature-is-half-man-and-half-horse",
+    "question": "Which mythological creature is half-man and half-horse?",
+    "options": [
+      "Minotaur",
+      "Sphinx",
+      "Centaur",
+      "Griffin"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-galaxy-our-solar-system-is-in",
+    "question": "What is the name of the galaxy our solar system is in?",
+    "options": [
+      "Andromeda",
+      "Triangulum",
+      "Pinwheel",
+      "Milky Way"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-ocean-is-the-smallest-in-the-world",
+    "question": "Which ocean is the smallest in the world?",
+    "options": [
+      "Atlantic Ocean",
+      "Indian Ocean",
+      "Arctic Ocean",
+      "Southern Ocean"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-wrote-the-philosophical-work-thus-spoke-zarathustra",
+    "question": "Who wrote the philosophical work \"Thus Spoke Zarathustra\"?",
+    "options": [
+      "Immanuel Kant",
+      "Friedrich Nietzsche",
+      "Arthur Schopenhauer",
+      "Søren Kierkegaard"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-which-year-did-world-war-ii-end",
+    "question": "In which year did World War II end?",
+    "options": [
+      "1943",
+      "1944",
+      "1945",
+      "1946"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-chemical-element-with-the-symbol-w",
+    "question": "What is the chemical element with the symbol 'W'?",
+    "options": [
+      "Tungsten",
+      "Tin",
+      "Titanium",
+      "Tantalum"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-common-term-for-a-group-of-lions",
+    "question": "What is the common term for a group of lions?",
+    "options": [
+      "Herd",
+      "Pack",
+      "Pride",
+      "Colony"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-ancient-city-was-home-to-the-library-of-alexandria",
+    "question": "Which ancient city was home to the Library of Alexandria?",
+    "options": [
+      "Athens",
+      "Rome",
+      "Babylon",
+      "Alexandria"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-these-is-a-primary-color",
+    "question": "Which of these is a primary color?",
+    "options": [
+      "Green",
+      "Orange",
+      "Purple",
+      "Red"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-strait-that-separates-alaska-from-russia",
+    "question": "What is the name of the strait that separates Alaska from Russia?",
+    "options": [
+      "Strait of Gibraltar",
+      "Bering Strait",
+      "Strait of Magellan",
+      "English Channel"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-formulated-the-three-laws-of-planetary-motion",
+    "question": "Who formulated the three laws of planetary motion?",
+    "options": [
+      "Nicolaus Copernicus",
+      "Johannes Kepler",
+      "Tycho Brahe",
+      "Galileo Galilei"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-planet-is-known-as-the-morning-star-or-evening-star",
+    "question": "Which planet is known as the 'Morning Star' or 'Evening Star'?",
+    "options": [
+      "Mars",
+      "Venus",
+      "Jupiter",
+      "Saturn"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-is-credited-with-inventing-the-light-bulb",
+    "question": "Who is credited with inventing the light bulb?",
+    "options": [
+      "Nikola Tesla",
+      "Alexander Graham Bell",
+      "Thomas Edison",
+      "Isaac Newton"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-gas-do-plants-absorb-from-the-atmosphere",
+    "question": "Which gas do plants absorb from the atmosphere?",
+    "options": [
+      "Oxygen",
+      "Nitrogen",
+      "Carbon Dioxide",
+      "Hydrogen"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-highest-mountain-peak-in-africa",
+    "question": "What is the highest mountain peak in Africa?",
+    "options": [
+      "Mount Everest",
+      "Mount Kilimanjaro",
+      "Mount Elbrus",
+      "Mount Fuji"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-famous-artist-painted-the-starry-night",
+    "question": "Which famous artist painted 'The Starry Night'?",
+    "options": [
+      "Pablo Picasso",
+      "Vincent van Gogh",
+      "Claude Monet",
+      "Leonardo da Vinci"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-country-would-you-find-the-ancient-city-of-petra",
+    "question": "In which country would you find the ancient city of Petra?",
+    "options": [
+      "Egypt",
+      "Greece",
+      "Jordan",
+      "Turkey"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-the-following-is-not-a-primary-color-of-light",
+    "question": "Which of the following is not a primary color of light?",
+    "options": [
+      "Red",
+      "Green",
+      "Blue",
+      "Yellow"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "hard"
   }
 ]
