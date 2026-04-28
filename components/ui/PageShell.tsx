@@ -27,15 +27,15 @@ export function PageShell({
   const mainClass = noContainer
     ? "min-h-0 flex-1 overflow-x-hidden overflow-y-visible p-0"
     : "tp-comic-card min-h-0 flex-1 overflow-x-hidden overflow-y-visible p-3 sm:p-4 text-base";
-  const compactTopPaddingClass = useCompactTopNav
+  const compactHeaderSpacerClass = useCompactTopNav
     ? showUserStatus
       ? showPageTitle
-        ? "pt-[calc(env(safe-area-inset-top)+6.1rem)] sm:pt-[calc(env(safe-area-inset-top)+6.5rem)]"
-        : "pt-[calc(env(safe-area-inset-top)+4.75rem)] sm:pt-[calc(env(safe-area-inset-top)+5.05rem)]"
+        ? "h-[calc(env(safe-area-inset-top)+6.6rem)] sm:h-[calc(env(safe-area-inset-top)+7rem)]"
+        : "h-[calc(env(safe-area-inset-top)+5.2rem)] sm:h-[calc(env(safe-area-inset-top)+5.5rem)]"
       : showPageTitle
-      ? "pt-[calc(env(safe-area-inset-top)+3.1rem)]"
-      : "pt-0"
-    : "";
+      ? "h-[calc(env(safe-area-inset-top)+3.5rem)]"
+      : "h-0"
+    : "h-0";
   const shellGapClass = "gap-3";
 
   return (
@@ -91,7 +91,9 @@ export function PageShell({
         </header>
       )}
 
-      <main className={`tp-page-main ${mainClass} ${compactTopPaddingClass}`}>
+      {useCompactTopNav ? <div aria-hidden className={`w-full shrink-0 ${compactHeaderSpacerClass}`} /> : null}
+
+      <main className={`tp-page-main ${mainClass}`}>
         {noContainer ? (
           <>{children}</>
         ) : (

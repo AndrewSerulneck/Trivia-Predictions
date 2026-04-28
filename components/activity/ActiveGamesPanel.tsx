@@ -60,6 +60,17 @@ type PredictionPayload = {
   error?: string;
 };
 
+type ChallengesPayload = {
+  ok: boolean;
+  challenges?: Array<{
+    id: string;
+    senderUserId: string;
+    receiverUserId: string;
+    status: "pending" | "accepted" | "declined" | "canceled" | "expired" | "completed";
+  }>;
+  error?: string;
+};
+
 function formatLocalDateTime(iso: string): string {
   const parsed = new Date(iso);
   if (!Number.isFinite(parsed.getTime())) {
@@ -116,6 +127,8 @@ export function ActiveGamesPanel() {
   const [bingoCards, setBingoCards] = useState<BingoCard[]>([]);
   const [pickEmPicks, setPickEmPicks] = useState<PickEmPick[]>([]);
   const [predictionPicks, setPredictionPicks] = useState<PredictionPick[]>([]);
+  const [pendingChallengesReceived, setPendingChallengesReceived] = useState(0);
+  const [pendingChallengesSent, setPendingChallengesSent] = useState(0);
 
   useEffect(() => {
     setUserId(getUserId() ?? "");
@@ -137,7 +150,7 @@ export function ActiveGamesPanel() {
       setErrorMessage("");
 
       try {
-        const [bingoResponse, pickEmResponse, predictionResponse] = await Promise.all([
+        const [bingoResponse, pickEmResponse, predictionResponse, challengesResponse] = await Promise.all([
           fetch(`/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=true`, { cache: "no-store" }),
           fetch(`/api/pickem/picks?userId=${encodeURIComponent(userId)}&includeSettled=true&limit=200`, {
             cache: "no-store",
@@ -148,13 +161,17 @@ export function ActiveGamesPanel() {
               cache: "no-store",
             }
           ),
+          fetch(`/api/challenges?userId=${encodeURIComponent(userId)}&includeResolved=true`, {
+            cache: "no-store",
+          }),
         ]);
 
-        const [bingoPayload, pickEmPayload, predictionPayload] = (await Promise.all([
+        const [bingoPayload, pickEmPayload, predictionPayload, challengesPayload] = (await Promise.all([
           bingoResponse.json(),
           pickEmResponse.json(),
           predictionResponse.json(),
-        ])) as [BingoPayload, PickEmPayload, PredictionPayload];
+          challengesResponse.json(),
+        ])) as [BingoPayload, PickEmPayload, PredictionPayload, ChallengesPayload];
 
         if (!bingoPayload.ok) {
           throw new Error(bingoPayload.error ?? "Failed to load Sports Bingo boards.");
@@ -165,10 +182,20 @@ export function ActiveGamesPanel() {
         if (!predictionPayload.ok) {
           throw new Error(predictionPayload.error ?? "Failed to load prediction picks.");
         }
+        if (!challengesPayload.ok) {
+          throw new Error(challengesPayload.error ?? "Failed to load challenge summary.");
+        }
 
         setBingoCards(bingoPayload.cards ?? []);
         setPickEmPicks(pickEmPayload.picks ?? []);
         setPredictionPicks(predictionPayload.items ?? []);
+        const allChallenges = challengesPayload.challenges ?? [];
+        setPendingChallengesReceived(
+          allChallenges.filter((challenge) => challenge.status === "pending" && challenge.receiverUserId === userId).length
+        );
+        setPendingChallengesSent(
+          allChallenges.filter((challenge) => challenge.status === "pending" && challenge.senderUserId === userId).length
+        );
       } catch (error) {
         if (!background) {
           setErrorMessage(error instanceof Error ? error.message : "Failed to load active games.");
@@ -249,6 +276,13 @@ export function ActiveGamesPanel() {
       completedPickEmPicksThisWeek.length +
       completedPredictionPicksThisWeek.length,
     [completedBingoCardsThisWeek.length, completedPickEmPicksThisWeek.length, completedPredictionPicksThisWeek.length]
+  );
+  const totalWinsThisWeek = useMemo(
+    () =>
+      completedBingoCardsThisWeek.filter((card) => card.status === "won").length +
+      completedPickEmPicksThisWeek.filter((pick) => pick.status === "won").length +
+      completedPredictionPicksThisWeek.filter((pick) => pick.status === "won").length,
+    [completedBingoCardsThisWeek, completedPickEmPicksThisWeek, completedPredictionPicksThisWeek]
   );
   const unclaimedBingoCards = useMemo(
     () => bingoCards.filter((card) => card.status === "won" && !card.rewardClaimedAt),
@@ -458,6 +492,14 @@ export function ActiveGamesPanel() {
         </p>
         <p className="mt-1 text-sm text-slate-700">
           Completed this week: <span className="font-semibold">{totalCompletedThisWeek}</span>.
+        </p>
+        <p className="mt-1 text-sm text-slate-700">
+          Games won this week: <span className="font-semibold">{totalWinsThisWeek}</span>.
+        </p>
+        <p className="mt-1 text-sm text-slate-700">
+          Pending challenges:{" "}
+          <span className="font-semibold">{pendingChallengesReceived}</span> received ·{" "}
+          <span className="font-semibold">{pendingChallengesSent}</span> sent.
         </p>
         {statusMessage ? (
           <p className="mt-2 rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800">

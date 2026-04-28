@@ -9,7 +9,7 @@ import { getVenueDisplayName } from "@/lib/venueDisplay";
 import { writeWarmTriviaCache, writeWarmPredictionsCache } from "@/lib/warmupCache";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
 
-type Dest = "trivia" | "predictions" | "pickem" | "bingo";
+type Dest = "trivia" | "predictions" | "pickem" | "bingo" | "fantasy";
 const GAME_RAIL_REPEAT_COUNT = 7;
 const GAME_RAIL_EDGE_CLIP_PX = 28;
 const GAME_RAIL_PLACEHOLDER_HEIGHT_PX = 372;
@@ -19,6 +19,11 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
   const [pendingDestination, setPendingDestination] = useState<Dest | null>(null);
   const [isWarmingUp, setIsWarmingUp] = useState(true);
   const [railTop, setRailTop] = useState<number | null>(null);
+  const [weeklyPrizeTitle, setWeeklyPrizeTitle] = useState("Weekly Venue Champion Prize");
+  const [weeklyPrizeDescription, setWeeklyPrizeDescription] = useState(
+    "Top the leaderboard by week end to earn this venue's reward."
+  );
+  const [weeklyPrizePoints, setWeeklyPrizePoints] = useState(0);
   const warmupPromiseRef = useRef<Promise<void> | null>(null);
   const warmupStartedRef = useRef(false);
   const railAnchorRef = useRef<HTMLDivElement | null>(null);
@@ -82,6 +87,23 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
 
         try {
           await fetch("/api/pickem/sports", { cache: "no-store" });
+        } catch {}
+
+        try {
+          const prizeRes = await fetch(`/api/prizes?venueId=${encodeURIComponent(venueId)}`, {
+            cache: "no-store",
+          });
+          const prizeBody = await prizeRes.json().catch(() => null);
+          if (prizeBody?.ok && prizeBody.weeklyPrize) {
+            setWeeklyPrizeTitle(String(prizeBody.weeklyPrize.prizeTitle ?? "Weekly Venue Champion Prize"));
+            setWeeklyPrizeDescription(
+              String(
+                prizeBody.weeklyPrize.prizeDescription ??
+                  "Top the leaderboard by week end to earn this venue's reward."
+              )
+            );
+            setWeeklyPrizePoints(Math.max(0, Number(prizeBody.weeklyPrize.rewardPoints ?? 0)));
+          }
         } catch {}
       } finally {
         setIsWarmingUp(false);
@@ -205,6 +227,10 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
     router.prefetch("/predictions");
     router.prefetch("/pickem");
     router.prefetch("/bingo");
+    router.prefetch("/pending-challenges");
+    router.prefetch("/active-games");
+    router.prefetch("/redeem-prizes");
+    router.prefetch("/activity");
     if (!warmupStartedRef.current) {
       warmupStartedRef.current = true;
       void runWarmup();
@@ -226,6 +252,8 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
           ? "/predictions"
           : dest === "pickem"
           ? "/pickem"
+          : dest === "fantasy"
+          ? "/pending-challenges"
           : "/bingo"
       );
     },
@@ -275,7 +303,9 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
 
         <button
           type="button"
-          disabled
+          onMouseDown={triggerPulse}
+          onClick={() => void goTo("fantasy")}
+          disabled={pendingDestination !== null}
           className={`${ctaClass} bg-slate-800 text-white`}
         >
           <div className={titleClass}>Hightop Fantasy™</div>
@@ -284,7 +314,7 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
           <div className={rulesBodyClass}>-Draft a quarterback, running back, two wide receivers and a team defense.</div>
           <div className={rulesBodyClass}>- 4 challenges per week</div>
           <div className={rulesBodyClass}>- Winner gets 250 points</div>
-          <div className={`mt-2 ${rulesBodyClass} font-bold`}>Coming Soon</div>
+          <div className={`mt-2 ${rulesBodyClass} font-bold`}>Create or manage challenges</div>
         </button>
 
         <button
@@ -326,6 +356,7 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
     if (pendingDestination === "trivia") return "Opening Hightop Trivia™...";
     if (pendingDestination === "predictions") return "Opening Hightop Sports Predictions™...";
     if (pendingDestination === "pickem") return "Opening Hightop Pick 'Em™...";
+    if (pendingDestination === "fantasy") return "Opening Hightop Fantasy™...";
     if (pendingDestination === "bingo") return "Opening Hightop Sports Bingo™...";
     return "Getting everything ready";
   }, [pendingDestination]);
@@ -385,8 +416,50 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
 
           <div className="mt-3 tp-hud-card !border-transparent !shadow-none rounded-2xl p-3">
             <div className="text-xs font-black uppercase tracking-[0.16em] text-slate-700">This Week&apos;s Prize</div>
-            <div className="mt-1 text-base font-semibold text-slate-900">Prize details coming soon</div>
-            <div className="text-xs text-slate-700">Winning player at this venue will see the reward posted here each week.</div>
+            <div className="mt-1 text-base font-semibold text-slate-900">{weeklyPrizeTitle}</div>
+            <div className="text-xs text-slate-700">{weeklyPrizeDescription}</div>
+            {weeklyPrizePoints > 0 ? (
+              <div className="mt-1 text-xs font-semibold text-slate-800">Bonus reward: +{weeklyPrizePoints} points</div>
+            ) : null}
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onMouseDown={triggerPulse}
+              onClick={() => router.push("/active-games")}
+              className="tp-clean-button rounded-xl border border-slate-300 bg-white px-2 py-2 text-left"
+            >
+              <div className="text-xs font-black uppercase tracking-[0.08em] text-slate-600">Active Games</div>
+              <div className="mt-0.5 text-xs text-slate-700">Track active and completed games</div>
+            </button>
+            <button
+              type="button"
+              onMouseDown={triggerPulse}
+              onClick={() => router.push("/pending-challenges")}
+              className="tp-clean-button rounded-xl border border-slate-300 bg-white px-2 py-2 text-left"
+            >
+              <div className="text-xs font-black uppercase tracking-[0.08em] text-slate-600">Challenges</div>
+              <div className="mt-0.5 text-xs text-slate-700">Manage sent and received invites</div>
+            </button>
+            <button
+              type="button"
+              onMouseDown={triggerPulse}
+              onClick={() => router.push("/redeem-prizes")}
+              className="tp-clean-button rounded-xl border border-slate-300 bg-white px-2 py-2 text-left"
+            >
+              <div className="text-xs font-black uppercase tracking-[0.08em] text-slate-600">Prize Wallet</div>
+              <div className="mt-0.5 text-xs text-slate-700">View and claim won prizes</div>
+            </button>
+            <button
+              type="button"
+              onMouseDown={triggerPulse}
+              onClick={() => router.push("/activity")}
+              className="tp-clean-button rounded-xl border border-slate-300 bg-white px-2 py-2 text-left"
+            >
+              <div className="text-xs font-black uppercase tracking-[0.08em] text-slate-600">Alerts &amp; History</div>
+              <div className="mt-0.5 text-xs text-slate-700">Review notifications and pick history</div>
+            </button>
           </div>
         </div>
 

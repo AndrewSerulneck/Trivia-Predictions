@@ -24,6 +24,15 @@ function extractPointsFromMessage(message: string): number {
 
 function resolveNotificationHref(message: string): string {
   const text = message.toLowerCase();
+  if (text.includes("challenge")) {
+    return "/pending-challenges";
+  }
+  if (text.includes("prize")) {
+    return "/redeem-prizes";
+  }
+  if (text.includes("pick 'em") || text.includes("pick em") || text.includes("pick’em")) {
+    return "/pickem";
+  }
   if (text.includes("bingo")) {
     return "/bingo";
   }

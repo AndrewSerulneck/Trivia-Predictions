@@ -118,6 +118,59 @@ export interface Notification {
   createdAt: string;
 }
 
+export type ChallengeGameType = "pickem" | "fantasy" | "trivia" | "bingo";
+export type ChallengeStatus =
+  | "pending"
+  | "accepted"
+  | "declined"
+  | "canceled"
+  | "expired"
+  | "completed";
+
+export interface ChallengeInvite {
+  id: string;
+  venueId: string;
+  gameType: ChallengeGameType;
+  senderUserId: string;
+  senderUsername: string;
+  receiverUserId: string;
+  receiverUsername: string;
+  challengeTitle: string;
+  challengeDetails?: string;
+  status: ChallengeStatus;
+  weekStart: string;
+  expiresAt?: string;
+  createdAt: string;
+  respondedAt?: string;
+}
+
+export interface WeeklyPrize {
+  id: string;
+  venueId: string;
+  weekStart: string;
+  prizeTitle: string;
+  prizeDescription?: string;
+  rewardPoints: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type PrizeWinStatus = "awarded" | "claimed";
+
+export interface PrizeWin {
+  id: string;
+  venueId: string;
+  userId: string;
+  weekStart: string;
+  prizeTitle: string;
+  prizeDescription?: string;
+  rewardPoints: number;
+  status: PrizeWinStatus;
+  awardedAt: string;
+  claimedAt?: string;
+}
+
 export interface Advertisement {
   id: string;
   slot: AdSlot;

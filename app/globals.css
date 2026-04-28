@@ -53,6 +53,13 @@ body.tp-modal-open {
   touch-action: none;
 }
 
+html.tp-popup-open,
+body.tp-popup-open {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
+}
+
 .game-rail-viewport {
   width: 100dvw;
   margin-left: calc(50% - 50dvw);
