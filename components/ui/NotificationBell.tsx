@@ -49,6 +49,7 @@ export function NotificationBell() {
   const hasLoadedOnceRef = useRef(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [items, setItems] = useState<Notification[]>([]);
+  const unreadBadgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);
 
   const loadNotifications = async (targetUserId: string) => {
     if (!targetUserId) {
@@ -198,14 +199,16 @@ export function NotificationBell() {
         id="tp-notification-bell"
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="tp-clean-button inline-flex items-center gap-2 rounded-md bg-gradient-to-r from-[#f9f1e6] to-[#f5ddbf] px-3 py-1.5 text-sm font-semibold text-[#1c2b3a] hover:from-[#fff6ea] hover:to-[#f9e3c8]"
+        className="tp-clean-button relative inline-flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-r from-[#f9f1e6] to-[#f5ddbf] text-base font-semibold text-[#1c2b3a] hover:from-[#fff6ea] hover:to-[#f9e3c8]"
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-label={unreadCount > 0 ? `${unreadCount} unread alerts` : "Open alerts"}
       >
         <span aria-hidden="true">🔔</span>
-        Alerts
         {unreadCount > 0 ? (
-          <span className="ml-2 rounded-full bg-rose-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
+          <span className="absolute -right-1 -top-1 inline-flex min-h-[1.05rem] min-w-[1.05rem] items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white shadow">
+            {unreadBadgeLabel}
+          </span>
         ) : null}
       </button>
 

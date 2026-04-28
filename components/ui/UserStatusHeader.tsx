@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CoinFXCanvas } from "@/components/ui/CoinFXCanvas";
 import { NotificationBell } from "@/components/ui/NotificationBell";
@@ -13,6 +13,11 @@ type SummaryPayload = {
     points: number;
     venueId: string;
   } | null;
+};
+
+type UserStatusHeaderProps = {
+  variant?: "default" | "trivia";
+  showAlerts?: boolean;
 };
 
 function TreasureChestIcon({ className = "h-8 w-8" }: { className?: string }) {
@@ -40,14 +45,22 @@ function GoldCoinIcon({ className = "h-5 w-5" }: { className?: string }) {
   );
 }
 
-type UserStatusHeaderProps = {
-  variant?: "default" | "trivia";
-  showAlerts?: boolean;
-};
+function isActiveMenuPath(pathname: string, href: string): boolean {
+  if (href === "/") {
+    return pathname === href;
+  }
+  if (href.startsWith("/venue/")) {
+    return pathname.startsWith("/venue/");
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function UserStatusHeader({ variant = "default", showAlerts = true }: UserStatusHeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const isJoinRoute = pathname === "/" || pathname === "/join";
+  const compact = variant === "trivia";
+
   const [username, setUsername] = useState("");
   const [points, setPoints] = useState<number | null>(null);
   const [displayedPoints, setDisplayedPoints] = useState(0);
@@ -57,6 +70,7 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
   const [pointsBurstAmount, setPointsBurstAmount] = useState<number | null>(null);
   const [pointsBurstVisible, setPointsBurstVisible] = useState(false);
   const [pointsBurstToken, setPointsBurstToken] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const priorPointsRef = useRef<number | null>(null);
   const displayedPointsRef = useRef(0);
@@ -65,6 +79,32 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
   const popHideTimerRef = useRef<number | null>(null);
   const flashHideTimerRef = useRef<number | null>(null);
   const burstHideTimerRef = useRef<number | null>(null);
+
+  const joinedVenueId = getVenueId()?.trim() ?? "";
+  const venueHomeHref = joinedVenueId ? `/venue/${encodeURIComponent(joinedVenueId)}` : "/";
+
+  const menuItems = [
+    {
+      label: "Active and Completed Games",
+      description: "Track active games and this week's completed results.",
+      href: "/active-games",
+    },
+    {
+      label: "Leaderboard",
+      description: "See where you rank and how many points you need to win!",
+      href: venueHomeHref,
+    },
+    {
+      label: "Pending Challenges",
+      description: "Review and respond to head-to-head invites.",
+      href: "/pending-challenges",
+    },
+    {
+      label: "Redeem Prizes",
+      description: "See earned rewards and prize redemptions.",
+      href: "/redeem-prizes",
+    },
+  ];
 
   const animatePointsTo = useCallback((targetPoints: number) => {
     const safeTarget = Math.max(0, Math.round(targetPoints));
@@ -243,85 +283,221 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
     };
   }, [animateGain, isJoinRoute, loadSummary, points, setPointsAndAnimate]);
 
+  useEffect(() => {
+    if (compact || isJoinRoute) {
+      return;
+    }
+
+    document.body.classList.toggle("tp-modal-open", isMenuOpen);
+    document.documentElement.classList.toggle("tp-modal-open", isMenuOpen);
+    return () => {
+      document.body.classList.remove("tp-modal-open");
+      document.documentElement.classList.remove("tp-modal-open");
+    };
+  }, [compact, isJoinRoute, isMenuOpen]);
+
   if (isJoinRoute) {
     return null;
   }
 
-  const compact = variant === "trivia";
-
-  return (
-    <div
-      className={`relative flex w-full gap-2 flex-col sm:flex-row sm:items-center ${
-        compact ? "justify-center" : "justify-between"
-      }`}
-    >
-      <CoinFXCanvas />
-  <div className={`flex min-w-0 items-center ${compact ? "w-full justify-between gap-1.5" : "w-full gap-2 sm:w-auto sm:justify-center sm:pr-2"}`}>
-        <div
-          className={`flex items-center rounded-2xl border-slate-900 bg-[#f7d7b0] font-medium text-slate-900 ${
-            compact
-              ? "h-10 min-w-0 flex-1 gap-1 rounded-xl border-2 px-2 py-1 text-[13px] shadow-[2px_2px_0_#0f172a]"
-              : "tp-bounce-hover h-[3.5rem] min-w-0 flex-1 justify-center gap-2 border-4 px-2.5 py-1.5 text-base shadow-[4px_4px_0_#0f172a] sm:min-w-[11.25rem] sm:flex-none"
-            }`}
-        >
-          <span
-            className={`inline-flex shrink-0 items-center justify-center rounded-full border-slate-900 bg-white ${
-              compact ? "h-7 w-7 border-2 text-sm" : "h-8 w-8 border-2 text-sm sm:h-9 sm:w-9 sm:border-3"
-            }`}
-            style={{ flexShrink: 0 }}
-          >
+  if (compact) {
+    return (
+      <div className="relative flex w-full items-center justify-between gap-1.5">
+        <CoinFXCanvas />
+        <div className="flex h-10 min-w-0 flex-1 items-center gap-1 rounded-xl border-2 border-slate-900 bg-[#f7d7b0] px-2 py-1 text-[13px] font-medium text-slate-900 shadow-[2px_2px_0_#0f172a]">
+          <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-slate-900 bg-white text-sm">
             {((username || "G").trim()[0] ?? "G").toUpperCase()}
           </span>
-          <span className="truncate max-w-[6.5rem] sm:max-w-[12rem]">{username || "Guest"}</span>
+          <span className="truncate">{username || "Guest"}</span>
         </div>
+
         <div
-          className={`relative flex items-center border-slate-900 font-medium text-slate-900 transition-all duration-300 ${
-            compact
-              ? `h-10 min-w-0 flex-1 gap-1 rounded-xl border-2 px-2 py-1 text-[13px] shadow-[2px_2px_0_#0f172a] ${
-                  pointsFlash ? "bg-[#f5cf88]" : "bg-[#f2bb66]"
-                }`
-              : `tp-bounce-hover h-[3.5rem] min-w-0 flex-1 justify-center gap-2 rounded-2xl border-4 px-2.5 py-1.5 text-base shadow-[4px_4px_0_#0f172a] sm:min-w-[11.25rem] sm:flex-none ${
-                  pointsFlash ? "bg-[#f5cf88] ring-2 ring-[#d89a4f]/60" : "bg-[#f2bb66]"
-                } ${
-                  pointsPop ? "scale-110" : "scale-100"
-                }`
-            }`}
+          role="button"
+          tabIndex={0}
+          onClick={() => router.push(venueHomeHref)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              router.push(venueHomeHref);
+            }
+          }}
           id="tp-points-pill"
+          className={`relative flex h-10 min-w-0 flex-1 items-center gap-1 rounded-xl border-2 border-slate-900 px-2 py-1 text-[13px] font-medium text-slate-900 shadow-[2px_2px_0_#0f172a] transition-all duration-300 ${
+            pointsFlash ? "bg-[#f5cf88]" : "bg-[#f2bb66]"
+          } ${pointsPop ? "scale-105" : "scale-100"} cursor-pointer`}
+          aria-label="Open venue leaderboard"
         >
           {pointsBurstVisible && pointsBurstAmount ? (
             <div className="pointer-events-none absolute left-1/2 top-1 z-40 -translate-x-1/2">
               <span
                 key={`points-burst-${pointsBurstToken}`}
-                className="inline-flex animate-tp-points-burst rounded-full border-2 border-emerald-800 bg-emerald-300/95 px-2 py-0.5 text-sm font-black text-emerald-900 shadow-[2px_2px_0_#065f46] sm:text-base"
+                className="inline-flex animate-tp-points-burst rounded-full border-2 border-emerald-800 bg-emerald-300/95 px-2 py-0.5 text-sm font-black text-emerald-900 shadow-[2px_2px_0_#065f46]"
               >
                 +{pointsBurstAmount}
               </span>
             </div>
           ) : null}
           <span id="tp-treasure-chest" className="relative inline-flex shrink-0 items-center justify-center">
-            <TreasureChestIcon className={compact ? "h-6 w-6" : "h-12 w-12"} />
+            <TreasureChestIcon className="h-6 w-6" />
             <span
               id="tp-treasure-chest-target"
               aria-hidden="true"
               className="absolute left-1/2 top-[44%] h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0"
             />
           </span>
-          <span className={`inline-flex items-center gap-1 font-black ${compact ? "text-sm" : ""}`}>
-            <GoldCoinIcon className={compact ? "h-5 w-5" : "h-7 w-7 sm:h-10 sm:w-10"} />
-            <span className="truncate max-w-[4.5rem] sm:max-w-[6rem] text-right">{(points ?? displayedPoints).toLocaleString()}</span>
+          <span className="inline-flex items-center gap-1 text-sm font-black">
+            <GoldCoinIcon className="h-5 w-5" />
+            <span className="truncate text-right">{(points ?? displayedPoints).toLocaleString()}</span>
           </span>
         </div>
       </div>
-      {variant !== "trivia" && pointsGain ? (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full border-4 border-slate-900 bg-[#e9784e] px-2 py-1 text-sm font-medium text-[#fff7ea] shadow-[3px_3px_0_#0f172a] animate-bounce">
-          +{pointsGain} coins
+    );
+  }
+
+  return (
+    <div className="relative w-full">
+      <CoinFXCanvas />
+
+      <div className="relative z-[220]">
+        <div className="relative flex w-full items-center gap-2 rounded-none border-2 border-x-0 border-t-0 border-slate-900 bg-[#f7d7b0] px-2 py-1.5 text-slate-900 shadow-[0_3px_0_#0f172a]">
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(true)}
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-2 border-slate-900 bg-white text-lg font-bold text-slate-900 shadow-[2px_2px_0_#0f172a]"
+            aria-label="Open navigation menu"
+            aria-expanded={isMenuOpen}
+          >
+            ☰
+          </button>
+
+          <div className="ml-auto flex min-w-0 items-center gap-1.5">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => router.push(venueHomeHref)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  router.push(venueHomeHref);
+                }
+              }}
+              className="inline-flex min-h-9 min-w-0 max-w-[13.5rem] cursor-pointer items-center gap-1.5 rounded-lg border-2 border-slate-900 bg-white px-2 py-1 text-sm font-semibold shadow-[2px_2px_0_#0f172a] sm:max-w-[16rem]"
+              aria-label="Open venue home"
+            >
+              <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-900 bg-[#f7d7b0] text-[11px] font-black">
+                {((username || "G").trim()[0] ?? "G").toUpperCase()}
+              </span>
+              <span className="break-all text-[13px] leading-tight">{username || "Guest"}</span>
+            </div>
+
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => router.push(venueHomeHref)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  router.push(venueHomeHref);
+                }
+              }}
+              id="tp-points-pill"
+              className={`relative inline-flex h-9 min-w-[6.25rem] items-center justify-center gap-1.5 rounded-lg border-2 border-slate-900 px-2 text-sm font-black shadow-[2px_2px_0_#0f172a] transition-all duration-300 ${
+                pointsFlash ? "bg-[#f5cf88]" : "bg-[#f2bb66]"
+              } ${pointsPop ? "scale-105" : "scale-100"} cursor-pointer`}
+              aria-label="Open venue leaderboard"
+            >
+              {pointsBurstVisible && pointsBurstAmount ? (
+                <div className="pointer-events-none absolute left-1/2 top-1 z-40 -translate-x-1/2">
+                  <span
+                    key={`points-burst-${pointsBurstToken}`}
+                    className="inline-flex animate-tp-points-burst rounded-full border-2 border-emerald-800 bg-emerald-300/95 px-2 py-0.5 text-xs font-black text-emerald-900 shadow-[2px_2px_0_#065f46]"
+                  >
+                    +{pointsBurstAmount}
+                  </span>
+                </div>
+              ) : null}
+              <span id="tp-treasure-chest" className="relative inline-flex shrink-0 items-center justify-center">
+                <TreasureChestIcon className="h-5 w-5" />
+                <span
+                  id="tp-treasure-chest-target"
+                  aria-hidden="true"
+                  className="absolute left-1/2 top-[44%] h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0"
+                />
+              </span>
+              <GoldCoinIcon className="h-4 w-4" />
+              <span>{(points ?? displayedPoints).toLocaleString()}</span>
+            </div>
+
+            {showAlerts ? <NotificationBell /> : null}
+          </div>
+        </div>
+      </div>
+
+      {pointsGain ? (
+        <div className="pointer-events-none absolute right-2 top-[3.15rem] z-[76] rounded-full border-2 border-emerald-900 bg-emerald-300/95 px-2 py-0.5 text-xs font-black text-emerald-900 shadow-[2px_2px_0_#065f46] animate-bounce">
+          +{pointsGain}
         </div>
       ) : null}
-      {variant !== "trivia" && showAlerts ? (
-        <div className="shrink-0">
-          <NotificationBell />
-        </div>
-      ) : null}
+
+      <div
+        className={`fixed inset-0 z-[1200] ${isMenuOpen ? "pointer-events-auto" : "pointer-events-none"}`}
+        aria-hidden={!isMenuOpen}
+      >
+        <button
+          type="button"
+          onClick={() => setIsMenuOpen(false)}
+          className={`absolute inset-0 h-full w-full bg-black/40 transition-opacity duration-200 ${
+            isMenuOpen ? "opacity-100" : "opacity-0"
+          }`}
+          aria-label="Close navigation menu"
+        />
+
+        <aside
+          className={`absolute inset-y-0 left-0 w-72 max-w-[86vw] border-r-2 border-slate-900 bg-[#fff7ea] px-4 py-4 shadow-xl transition-transform duration-200 ${
+            isMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-base font-black tracking-wide text-slate-900">Menu</h3>
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen(false)}
+              className="rounded-md border-2 border-slate-900 bg-white px-2 py-1 text-sm font-semibold text-slate-900 shadow-[2px_2px_0_#0f172a]"
+            >
+              Close
+            </button>
+          </div>
+
+          <nav aria-label="Primary navigation">
+            <ul className="space-y-2">
+              {menuItems.map((item) => {
+                const active = isActiveMenuPath(pathname, item.href);
+                return (
+                  <li key={`${item.label}:${item.href}`}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        router.push(item.href);
+                      }}
+                      className={`w-full rounded-lg border-2 px-3 py-2.5 text-left shadow-[2px_2px_0_#0f172a] ${
+                        active
+                          ? "border-slate-900 bg-slate-900 text-white"
+                          : "border-slate-900 bg-white text-slate-900"
+                      }`}
+                    >
+                      <div className="text-sm font-black">{item.label}</div>
+                      <div className={`mt-0.5 text-xs ${active ? "text-slate-200" : "text-slate-600"}`}>
+                        {item.description}
+                      </div>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+        </aside>
+      </div>
     </div>
   );
 }

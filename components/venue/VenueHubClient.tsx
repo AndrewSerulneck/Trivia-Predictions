@@ -9,10 +9,10 @@ import { getVenueDisplayName } from "@/lib/venueDisplay";
 import { writeWarmTriviaCache, writeWarmPredictionsCache } from "@/lib/warmupCache";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
 
-type Dest = "trivia" | "predictions" | "bingo";
+type Dest = "trivia" | "predictions" | "pickem" | "bingo";
 const GAME_RAIL_REPEAT_COUNT = 7;
 const GAME_RAIL_EDGE_CLIP_PX = 28;
-const GAME_RAIL_PLACEHOLDER_HEIGHT_PX = 548;
+const GAME_RAIL_PLACEHOLDER_HEIGHT_PX = 372;
 
 export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; initialEntries?: LeaderboardEntry[] }) {
   const router = useRouter();
@@ -79,6 +79,10 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
             } catch {}
           }
         } catch {}
+
+        try {
+          await fetch("/api/pickem/sports", { cache: "no-store" });
+        } catch {}
       } finally {
         setIsWarmingUp(false);
       }
@@ -92,27 +96,57 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
     const anchor = railAnchorRef.current;
     if (!anchor || typeof window === "undefined") return;
 
+    let rafId: number | null = null;
     const measure = () => {
       const rect = anchor.getBoundingClientRect();
       setRailTop(rect.top + window.scrollY);
+    };
+    const scheduleMeasure = () => {
+      if (rafId !== null) {
+        return;
+      }
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        measure();
+      });
     };
 
     const raf1 = window.requestAnimationFrame(measure);
     const raf2 = window.requestAnimationFrame(measure);
     measure();
 
-    const onResize = () => measure();
+    const onResize = () => scheduleMeasure();
+    const onScroll = () => scheduleMeasure();
     window.addEventListener("resize", onResize);
     window.addEventListener("orientationchange", onResize);
+    window.addEventListener("scroll", onScroll, true);
 
-    const ro = new ResizeObserver(() => measure());
+    const ro = new ResizeObserver(() => scheduleMeasure());
     ro.observe(anchor);
+    if (anchor.parentElement) {
+      ro.observe(anchor.parentElement);
+    }
+    if (document.body) {
+      ro.observe(document.body);
+    }
+
+    // Catch late hydration/layout changes above the anchor on small devices.
+    const settleTimer = window.setInterval(scheduleMeasure, 250);
+    const stopSettleTimer = window.setTimeout(() => {
+      window.clearInterval(settleTimer);
+    }, 4000);
 
     return () => {
       window.cancelAnimationFrame(raf1);
       window.cancelAnimationFrame(raf2);
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+      }
       window.removeEventListener("resize", onResize);
       window.removeEventListener("orientationchange", onResize);
+      window.removeEventListener("scroll", onScroll, true);
+      window.clearInterval(settleTimer);
+      window.clearTimeout(stopSettleTimer);
       ro.disconnect();
     };
   }, []);
@@ -169,6 +203,7 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
   useEffect(() => {
     router.prefetch("/trivia");
     router.prefetch("/predictions");
+    router.prefetch("/pickem");
     router.prefetch("/bingo");
     if (!warmupStartedRef.current) {
       warmupStartedRef.current = true;
@@ -184,16 +219,24 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
         const t = new Promise<void>((r) => window.setTimeout(r, 2200));
         await Promise.race([runWarmup(), t]);
       }
-      router.push(dest === "trivia" ? "/trivia" : dest === "predictions" ? "/predictions" : "/bingo");
+      router.push(
+        dest === "trivia"
+          ? "/trivia"
+          : dest === "predictions"
+          ? "/predictions"
+          : dest === "pickem"
+          ? "/pickem"
+          : "/bingo"
+      );
     },
     [isWarmingUp, runWarmup, router]
   );
 
   const ctaClass =
-    "inline-flex h-[500px] flex-shrink-0 w-72 flex-col items-start justify-start gap-3 rounded-2xl border px-4 py-4 text-left text-base font-semibold";
-  const titleClass = "text-[1.7rem] leading-tight font-bold";
-  const rulesLabelClass = "mt-1 text-base font-semibold underline";
-  const rulesBodyClass = "text-sm leading-snug";
+    "inline-flex min-h-[20.5rem] w-[16.75rem] flex-shrink-0 flex-col items-start justify-start gap-2 rounded-2xl border px-3 py-3 text-left text-base font-semibold";
+  const titleClass = "text-[1.35rem] leading-tight font-bold";
+  const rulesLabelClass = "mt-1 text-[1.02rem] font-semibold underline";
+  const rulesBodyClass = "text-[0.91rem] leading-snug";
 
   const gameButtons = (groupIdx: number) => {
     const ariaHidden = groupIdx !== 2;
@@ -246,16 +289,17 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
 
         <button
           type="button"
-          disabled
+          onMouseDown={triggerPulse}
+          onClick={() => void goTo("pickem")}
+          disabled={pendingDestination !== null}
           className={`${ctaClass} bg-indigo-600 text-white`}
         >
-          <div className={titleClass}>Hightop Pick 'Em™</div>
+          <div className={titleClass}>Hightop Pick &apos;Em™</div>
           <div className={rulesLabelClass}>Rules:</div>
           <div className={`mt-2 ${rulesBodyClass}`}>-Think you can pick the most winners this week? Prove it.</div>
           <div className={rulesBodyClass}>-Challenge another user head-to-head</div>
           <div className={rulesBodyClass}>-Choose a sport and pick more winners than they do</div>
           <div className={rulesBodyClass}>-Add other users to your league to multiply your rewards</div>
-          <div className={`mt-2 ${rulesBodyClass} font-bold`}>Coming Soon</div>
         </button>
 
         <button
@@ -272,7 +316,7 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
           <div className={rulesBodyClass}>-Watch live as squares update in real-time.</div>
           <div className={rulesBodyClass}>-Up to 4 active boards at a time</div>
           <div className={rulesBodyClass}>-100 points for boards that hit Bingo</div>
-          <div className={rulesBodyClass}>-Click "Collect Points" to claim your reward</div>
+          <div className={rulesBodyClass}>-Click &quot;Collect Points&quot; to claim your reward</div>
         </button>
       </div>
     );
@@ -281,6 +325,7 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
   const warmupTitle = useMemo(() => {
     if (pendingDestination === "trivia") return "Opening Hightop Trivia™...";
     if (pendingDestination === "predictions") return "Opening Hightop Sports Predictions™...";
+    if (pendingDestination === "pickem") return "Opening Hightop Pick 'Em™...";
     if (pendingDestination === "bingo") return "Opening Hightop Sports Bingo™...";
     return "Getting everything ready";
   }, [pendingDestination]);
@@ -318,9 +363,9 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
   return (
     <>
       {gameRailNode}
-      <div className="space-y-4">
-      <section className="mx-0 rounded-none bg-gradient-to-r from-[#1f2a36]/86 via-[#253444]/88 to-[#1f2a36]/86 py-3">
-        <div className="px-2">
+      <div className="space-y-3">
+      <section className="mx-0 rounded-none bg-gradient-to-r from-[#1f2a36]/86 via-[#253444]/88 to-[#1f2a36]/86 py-2.5">
+        <div className="relative z-[120] px-2">
           <div className="tp-hud-card !border-transparent !shadow-none rounded-2xl p-3">
             <div className="flex items-center justify-between">
               <div>
@@ -337,19 +382,25 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
               </div>
             </div>
           </div>
+
+          <div className="mt-3 tp-hud-card !border-transparent !shadow-none rounded-2xl p-3">
+            <div className="text-xs font-black uppercase tracking-[0.16em] text-slate-700">This Week&apos;s Prize</div>
+            <div className="mt-1 text-base font-semibold text-slate-900">Prize details coming soon</div>
+            <div className="text-xs text-slate-700">Winning player at this venue will see the reward posted here each week.</div>
+          </div>
         </div>
 
-        <div ref={railAnchorRef} className="mt-2" style={{ height: GAME_RAIL_PLACEHOLDER_HEIGHT_PX }} aria-hidden />
+        <div ref={railAnchorRef} className="mt-3" style={{ height: GAME_RAIL_PLACEHOLDER_HEIGHT_PX }} aria-hidden />
       </section>
 
-      <div className="grid grid-cols-1 gap-4">
-        <div>
-          <div className="tp-hud-card !border-transparent !shadow-none rounded-2xl p-4">
-            <h3 className="text-lg font-semibold">Leaderboard</h3>
-            <div className="mt-3">
-              <LeaderboardTable venueId={venue.id} initialEntries={initialEntries} />
-            </div>
-          </div>
+      <div className="tp-hud-card !border-transparent !shadow-none rounded-2xl p-4" style={{ background: "#4a2e18" }}>
+        <div className="inline-flex rounded-xl border-2 border-[#3b2412] bg-[#1f5136] px-3 py-1.5 shadow-[0_2px_0_rgba(0,0,0,0.25)]">
+          <h3 className="text-2xl font-semibold text-[#ecf8f1] [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.45)]">
+            Leaderboard
+          </h3>
+        </div>
+        <div className="mt-3">
+          <LeaderboardTable venueId={venue.id} initialEntries={initialEntries} />
         </div>
       </div>
       </div>

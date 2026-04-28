@@ -12,6 +12,13 @@ type LeaderboardPayload = {
   error?: string;
 };
 
+function rankBadge(rank: number): string {
+  if (rank === 1) return "1st";
+  if (rank === 2) return "2nd";
+  if (rank === 3) return "3rd";
+  return `#${rank}`;
+}
+
 export function LeaderboardTable({
   venueId,
   initialEntries = [],
@@ -93,46 +100,81 @@ export function LeaderboardTable({
   return (
     <div className="space-y-2">
       {currentUserRank ? (
-        <p className="text-sm text-slate-600">
-          Your current rank: <strong>#{currentUserRank}</strong>
-        </p>
+        <div className="inline-flex rounded-xl border-2 border-[#3b2412] bg-[#1f5136] px-3 py-1.5 shadow-[0_2px_0_rgba(0,0,0,0.25)]">
+          <p className="text-base font-semibold text-[#ecf8f1] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">
+            Your current rank: <strong>#{currentUserRank}</strong>
+          </p>
+        </div>
       ) : null}
-      <div className="overflow-x-auto rounded-lg border border-slate-200">
-        <table className="w-full table-fixed divide-y divide-slate-200 text-sm">
+      <div className="overflow-x-auto rounded-2xl border-4 border-[#3b2412] bg-[#4a2e18] p-1 shadow-[0_10px_20px_rgba(15,23,42,0.32),inset_0_0_0_2px_rgba(255,255,255,0.08)]">
+        <table
+          className="w-full table-fixed divide-y divide-white/15 text-sm text-[#f3fff8]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 16%, rgba(255,255,255,0.07) 0, rgba(255,255,255,0) 32%), radial-gradient(circle at 78% 82%, rgba(255,255,255,0.05) 0, rgba(255,255,255,0) 34%), linear-gradient(180deg, #245f41 0%, #1f5136 100%)",
+          }}
+        >
           <colgroup>
             <col style={{ width: "20%" }} />
             <col style={{ width: "56%" }} />
             <col style={{ width: "24%" }} />
           </colgroup>
-          <thead className="bg-slate-50 text-left text-slate-600">
+          <thead className="bg-[#275f41] text-left text-[#f8fff8]">
             <tr>
-              <th className="px-3 py-2 font-medium">Rank</th>
-              <th className="px-3 py-2 font-medium">Username</th>
-              <th className="px-3 py-2 font-medium text-right">Points</th>
+              <th className="px-3 py-2 text-lg font-semibold [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">Rank</th>
+              <th className="px-3 py-2 text-lg font-semibold [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">Username</th>
+              <th className="px-3 py-2 text-right text-lg font-semibold [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">Points</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 bg-white">
+          <tbody className="divide-y divide-white/10 bg-transparent">
             {entries.map((entry, index) => {
               const isCurrentUser = currentUserId && entry.userId === currentUserId;
               const shouldRenderAdBreak = (index + 1) % 15 === 0;
               const adBreakNumber = shouldRenderAdBreak ? (index + 1) / 15 : 0;
               const sequenceIndex = shouldRenderAdBreak ? ((adBreakNumber - 1) % 6) + 1 : 1;
+              const isTopThree = entry.rank <= 3;
               return (
                 <Fragment key={entry.userId}>
-                  <tr className={isCurrentUser ? "bg-blue-50" : undefined}>
-                    <td className="px-3 py-2 font-semibold text-slate-700">#{entry.rank}</td>
+                  <tr
+                    className={
+                      isCurrentUser
+                        ? "bg-[#4a8766]/72"
+                        : isTopThree
+                        ? "bg-[#417b5a]/58"
+                        : "bg-[#2e6647]/32"
+                    }
+                  >
                     <td className="px-3 py-2">
-                      <span className="block truncate align-middle">{entry.username}</span>
+                      <span
+                        className={`inline-flex min-w-[2.45rem] items-center justify-center rounded-full border px-2 py-0.5 text-base font-semibold [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.45)] ${
+                          entry.rank === 1
+                            ? "border-amber-200 bg-amber-100/30 text-amber-50"
+                            : entry.rank === 2
+                            ? "border-slate-200 bg-slate-100/25 text-slate-100"
+                            : entry.rank === 3
+                            ? "border-orange-200 bg-orange-100/25 text-orange-100"
+                            : "border-white/40 bg-white/10 text-[#f6fff8]"
+                        }`}
+                      >
+                        {rankBadge(entry.rank)}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2">
+                      <span className="block truncate align-middle text-xl [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.45)]">
+                        {entry.username}
+                      </span>
                       {isCurrentUser ? (
-                        <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                        <span className="ml-2 rounded-full border border-white/55 bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white">
                           You
                         </span>
                       ) : null}
                     </td>
-                    <td className="px-3 py-2 text-right font-medium">{entry.points}</td>
+                    <td className="px-3 py-2 text-right text-xl font-semibold text-[#f6fff8] [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.45)]">
+                      {entry.points}
+                    </td>
                   </tr>
                   {shouldRenderAdBreak ? (
-                    <tr className="bg-slate-50">
+                    <tr className="bg-[#275f41]/85">
                       <td colSpan={3} className="px-3 py-3">
                         <InlineSlotAdClient
                           slot="leaderboard-sidebar"
@@ -151,7 +193,7 @@ export function LeaderboardTable({
               );
             })}
             {entries.length < 15 ? (
-              <tr className="bg-slate-50">
+              <tr className="bg-[#275f41]/85">
                 <td colSpan={3} className="px-3 py-3">
                   <InlineSlotAdClient
                     slot="leaderboard-sidebar"

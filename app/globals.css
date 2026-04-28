@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Bree+Serif&family=Nunito:wght@400;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Bree+Serif&family=Kalam:wght@400;700&family=Nunito:wght@400;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -60,6 +60,45 @@ body.tp-modal-open {
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile-first shell hardening for narrow devices like iPhone SE. */
+@media (max-width: 430px) {
+  .tp-app-shell,
+  .tp-page-shell,
+  .tp-page-main,
+  .tp-legal-card {
+    width: 100%;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+  }
+
+  .tp-page-shell {
+    overflow-x: clip;
+  }
+
+  .tp-page-header-compact {
+    left: 0 !important;
+    right: 0 !important;
+    width: 100dvw !important;
+    max-width: 100dvw !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .tp-hud-card,
+  .tp-comic-card {
+    box-shadow: 0 4px 0 var(--tp-ink) !important;
+  }
+
+  .tp-page-header button:not(:disabled),
+  .tp-page-main button:not(:disabled),
+  .tp-page-header a[role="button"],
+  .tp-page-main a[role="button"] {
+    box-shadow: 0 2px 0 var(--tp-ink) !important;
+  }
 }
 
 button:not(:disabled),
@@ -192,7 +231,7 @@ h4,
   .tp-comic-card {
     border-width: 2px !important;
     border-radius: 12px !important;
-    box-shadow: 4px 4px 0 var(--tp-ink) !important;
+    box-shadow: 0 4px 0 var(--tp-ink) !important;
     padding: 0.5rem !important;
   }
 
@@ -200,16 +239,11 @@ h4,
   a[role="button"] {
     border-width: 2px !important;
     border-radius: 12px !important;
-    box-shadow: 2px 2px 0 var(--tp-ink) !important;
+    box-shadow: 0 2px 0 var(--tp-ink) !important;
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
   }
 
-  .tp-hud-card .mx-auto,
-  .tp-comic-card .mx-auto {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-  }
 }
 
 .tp-trivia-compact button:not(:disabled),

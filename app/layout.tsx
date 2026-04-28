@@ -25,13 +25,13 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className="touch-manipulation">
-  <div className="relative mx-auto grid min-h-screen min-w-[320px] max-w-[100vw] sm:max-w-[720px] grid-rows-[1fr_auto] gap-4 overflow-visible px-3 pb-24 pt-6">
+  <div className="tp-app-shell relative mx-auto grid min-h-screen w-full max-w-[720px] box-border grid-rows-[1fr_auto] gap-4 overflow-x-hidden overflow-y-visible px-2 sm:px-3 pb-24">
           <div className="pointer-events-none absolute -top-20 -right-12 h-52 w-52 rounded-full bg-orange-300/40 blur-3xl" />
           <div className="pointer-events-none absolute top-24 -left-16 h-44 w-44 rounded-full bg-red-300/30 blur-3xl" />
           <div className="pointer-events-none absolute bottom-16 right-4 h-36 w-36 rounded-full bg-amber-200/35 blur-3xl" />
 
           <main className="min-h-0">{children}</main>
-          <footer className="tp-comic-card px-3 py-2 text-center text-xs leading-relaxed text-slate-700 break-words">
+          <footer className="tp-comic-card tp-legal-card px-3 py-2 text-center text-xs leading-relaxed text-slate-700 break-words">
             {GLOBAL_LEGAL_NOTICE}
           </footer>
         </div>
