@@ -2819,5 +2819,278 @@
     "correctAnswer": 3,
     "category": "General Knowledge",
     "difficulty": "hard"
+  },
+  {
+    "slug": "which-philosophical-school-founded-by-zeno-of-citium-emphasized-virtue-reason-and-living-in-harmony-with-nature",
+    "question": "Which philosophical school, founded by Zeno of Citium, emphasized virtue, reason, and living in harmony with nature?",
+    "options": [
+      "Epicureanism",
+      "Stoicism",
+      "Cynicism",
+      "Platonism"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-the-following-is-not-one-of-the-four-classical-elements",
+    "question": "Which of the following is not one of the four classical elements?",
+    "options": [
+      "Earth",
+      "Air",
+      "Ether",
+      "Water"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-gas-makes-up-the-majority-of-earths-atmosphere",
+    "question": "Which gas makes up the majority of Earth's atmosphere?",
+    "options": [
+      "Oxygen",
+      "Carbon Dioxide",
+      "Nitrogen",
+      "Argon"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-year-did-the-first-human-land-on-the-moon",
+    "question": "In which year did the first human land on the Moon?",
+    "options": [
+      "1965",
+      "1969",
+      "1971",
+      "1973"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-smallest-planet-in-our-solar-system",
+    "question": "What is the smallest planet in our solar system?",
+    "options": [
+      "Mars",
+      "Mercury",
+      "Venus",
+      "Earth"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-instrument-is-used-to-measure-atmospheric-pressure",
+    "question": "Which instrument is used to measure atmospheric pressure?",
+    "options": [
+      "Thermometer",
+      "Anemometer",
+      "Barometer",
+      "Hydrometer"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-only-letter-in-the-alphabet-that-does-not-appear-in-the-name-of-any-us-state",
+    "question": "What is the only letter in the alphabet that does not appear in the name of any U.S. state?",
+    "options": [
+      "Z",
+      "Q",
+      "X",
+      "J"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-the-following-is-a-type-of-cloud-known-for-producing-thunderstorms",
+    "question": "Which of the following is a type of cloud known for producing thunderstorms?",
+    "options": [
+      "Cirrus",
+      "Stratus",
+      "Cumulonimbus",
+      "Altocumulus"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-wrote-the-novel-1984",
+    "question": "Who wrote the novel \"1984\"?",
+    "options": [
+      "Aldous Huxley",
+      "George Orwell",
+      "F. Scott Fitzgerald",
+      "Ernest Hemingway"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-process-of-converting-atmospheric-nitrogen-into-ammonia-or-other-nitrogenous-compounds-is-known-as-what",
+    "question": "The process of converting atmospheric nitrogen into ammonia or other nitrogenous compounds is known as what?",
+    "options": [
+      "Denitrification",
+      "Nitrification",
+      "Nitrogen Fixation",
+      "Ammonification"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-composed-the-famous-opera-the-marriage-of-figaro",
+    "question": "Who composed the famous opera \"The Marriage of Figaro\"?",
+    "options": [
+      "Ludwig van Beethoven",
+      "Wolfgang Amadeus Mozart",
+      "Johann Sebastian Bach",
+      "Giuseppe Verdi"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-planet-is-often-referred-to-as-the-red-planet",
+    "question": "Which planet is often referred to as the \"Red Planet\"?",
+    "options": [
+      "Venus",
+      "Mars",
+      "Jupiter",
+      "Saturn"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-is-credited-with-inventing-the-practical-incandescent-light-bulb",
+    "question": "Who is credited with inventing the practical incandescent light bulb?",
+    "options": [
+      "Nikola Tesla",
+      "Alexander Graham Bell",
+      "Thomas Edison",
+      "Benjamin Franklin"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-sea-separates-europe-from-africa",
+    "question": "Which sea separates Europe from Africa?",
+    "options": [
+      "North Sea",
+      "Mediterranean Sea",
+      "Black Sea",
+      "Red Sea"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-days-are-there-in-a-leap-year",
+    "question": "How many days are there in a leap year?",
+    "options": [
+      "364",
+      "365",
+      "366",
+      "367"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-physicist-developed-the-theory-of-relativity",
+    "question": "Which physicist developed the theory of relativity?",
+    "options": [
+      "Isaac Newton",
+      "Stephen Hawking",
+      "Albert Einstein",
+      "Galileo Galilei"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-primary-ingredient-in-guacamole",
+    "question": "What is the primary ingredient in guacamole?",
+    "options": [
+      "Tomato",
+      "Avocado",
+      "Onion",
+      "Lime"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-famous-scientist-developed-the-theory-of-evolution-by-natural-selection",
+    "question": "Which famous scientist developed the theory of evolution by natural selection?",
+    "options": [
+      "Isaac Newton",
+      "Charles Darwin",
+      "Albert Einstein",
+      "Marie Curie"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-renaissance-artist-painted-the-mona-lisa",
+    "question": "Which Renaissance artist painted the 'Mona Lisa'?",
+    "options": [
+      "Michelangelo",
+      "Raphael",
+      "Leonardo da Vinci",
+      "Donatello"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-elements-is-a-noble-gas",
+    "question": "Which of these elements is a noble gas?",
+    "options": [
+      "Oxygen",
+      "Nitrogen",
+      "Neon",
+      "Hydrogen"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-large-flightless-bird-is-native-to-australia-and-is-the-second-largest-living-bird-by-height",
+    "question": "Which large flightless bird is native to Australia and is the second-largest living bird by height?",
+    "options": [
+      "Ostrich",
+      "Rhea",
+      "Emu",
+      "Cassowary"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
   }
 ]

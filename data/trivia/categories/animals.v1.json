@@ -2832,5 +2832,265 @@
     "correctAnswer": 0,
     "category": "Animals",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-exceptionally-long-neck",
+    "question": "Which animal is known for its exceptionally long neck?",
+    "options": [
+      "Elephant",
+      "Rhinoceros",
+      "Giraffe",
+      "Zebra"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-famous-for-building-dams-in-rivers",
+    "question": "Which animal is famous for building dams in rivers?",
+    "options": [
+      "Otter",
+      "Beaver",
+      "Muskrat",
+      "Platypus"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-type-of-animal-is-a-butterfly-before-it-becomes-an-adult",
+    "question": "What type of animal is a butterfly before it becomes an adult?",
+    "options": [
+      "Tadpole",
+      "Larva",
+      "Caterpillar",
+      "Nymph"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-farm-animal-is-primarily-raised-for-its-wool",
+    "question": "Which farm animal is primarily raised for its wool?",
+    "options": [
+      "Cow",
+      "Pig",
+      "Chicken",
+      "Sheep"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-largest-land-animal-by-mass",
+    "question": "What is the largest land animal by mass?",
+    "options": [
+      "Asian Elephant",
+      "White Rhinoceros",
+      "Hippopotamus",
+      "African Bush Elephant"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-bird-species-is-well-known-for-its-ability-to-mimic-human-speech",
+    "question": "Which bird species is well-known for its ability to mimic human speech?",
+    "options": [
+      "Pigeon",
+      "Eagle",
+      "Parrot",
+      "Ostrich"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "on-which-continent-would-you-primarily-find-kangaroos-in-the-wild",
+    "question": "On which continent would you primarily find kangaroos in the wild?",
+    "options": [
+      "Africa",
+      "Asia",
+      "North America",
+      "Australia"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-marine-mammal-is-known-for-its-complex-communication-and-echolocation",
+    "question": "Which marine mammal is known for its complex communication and echolocation?",
+    "options": [
+      "Seal",
+      "Dolphin",
+      "Walrus",
+      "Manatee"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-kind-of-animal-is-an-orca-commonly-known-as-a-killer-whale",
+    "question": "What kind of animal is an orca, commonly known as a 'killer whale'?",
+    "options": [
+      "Large Fish",
+      "Shark",
+      "Baleen Whale",
+      "Oceanic Dolphin"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-has-the-longest-known-gestation-period-among-mammals",
+    "question": "Which animal has the longest known gestation period among mammals?",
+    "options": [
+      "Blue Whale",
+      "African Elephant",
+      "Giraffe",
+      "Human"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-is-the-worlds-longest-venomous-snake",
+    "question": "Which is the world's longest venomous snake?",
+    "options": [
+      "Black Mamba",
+      "Inland Taipan",
+      "King Cobra",
+      "Eastern Brown Snake"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-is-the-only-marsupial-native-to-north-america",
+    "question": "Which is the only marsupial native to North America?",
+    "options": [
+      "Kangaroo",
+      "Koala",
+      "Opossum",
+      "Wallaby"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animals-unique-fingerprints-are-so-similar-to-humans-that-they-can-be-confused-by-forensics",
+    "question": "Which animal's unique fingerprints are so similar to humans that they can be confused by forensics?",
+    "options": [
+      "Chimpanzee",
+      "Gorilla",
+      "Koala",
+      "Orangutan"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-scientific-name-for-the-common-domestic-cat",
+    "question": "What is the scientific name for the common domestic cat?",
+    "options": [
+      "Panthera leo",
+      "Canis familiaris",
+      "Equus caballus",
+      "Felis catus"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-these-animals-is-known-for-its-ability-to-regrow-lost-limbs-or-body-parts",
+    "question": "Which of these animals is known for its ability to regrow lost limbs or body parts?",
+    "options": [
+      "Frog",
+      "Lizard",
+      "Starfish",
+      "Crab"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-a-male-duck-called",
+    "question": "What is a male duck called?",
+    "options": [
+      "Drake",
+      "Gander",
+      "Rooster",
+      "Cob"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-neck-vertebrae-does-a-giraffe-have",
+    "question": "How many neck vertebrae does a giraffe have?",
+    "options": [
+      "5",
+      "7",
+      "10",
+      "12"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-collective-noun-for-a-group-of-lions",
+    "question": "What is the collective noun for a group of lions?",
+    "options": [
+      "Pack",
+      "Herd",
+      "Pride",
+      "Swarm"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-considered-the-smallest-mammal-in-the-world-by-weight-and-size",
+    "question": "What is considered the smallest mammal in the world by weight and size?",
+    "options": [
+      "Pygmy Shrew",
+      "Etruscan Shrew",
+      "Bumblebee Bat",
+      "Least Weasel"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-primary-food-source-for-a-giant-panda",
+    "question": "What is the primary food source for a giant panda?",
+    "options": [
+      "Fish",
+      "Bamboo",
+      "Small rodents",
+      "Leaves and berries"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
   }
 ]

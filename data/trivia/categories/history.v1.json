@@ -2858,5 +2858,252 @@
     "correctAnswer": 2,
     "category": "History",
     "difficulty": "hard"
+  },
+  {
+    "slug": "which-ancient-greek-city-state-was-known-for-its-powerful-navy-and-democratic-government",
+    "question": "Which ancient Greek city-state was known for its powerful navy and democratic government?",
+    "options": [
+      "Athens",
+      "Sparta",
+      "Corinth",
+      "Thebes"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-famously-nailed-his-ninety-five-theses-to-the-church-door-in-wittenberg-sparking-the-protestant-reformation",
+    "question": "Who famously nailed his Ninety-five Theses to the church door in Wittenberg, sparking the Protestant Reformation?",
+    "options": [
+      "Martin Luther",
+      "John Calvin",
+      "Huldrych Zwingli",
+      "Jan Hus"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-year-is-generally-considered-the-end-of-world-war-ii",
+    "question": "Which year is generally considered the end of World War II?",
+    "options": [
+      "1945",
+      "1939",
+      "1918",
+      "1950"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-great-pyramid-of-giza-was-built-as-a-tomb-for-which-pharaoh",
+    "question": "The Great Pyramid of Giza was built as a tomb for which pharaoh?",
+    "options": [
+      "Khufu",
+      "Tutankhamun",
+      "Ramesses II",
+      "Akhenaten"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-berlin-wall-was-erected-in-which-year",
+    "question": "The Berlin Wall was erected in which year?",
+    "options": [
+      "1961",
+      "1949",
+      "1989",
+      "1953"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-was-the-first-tsar-of-russia-crowned-in-1547",
+    "question": "Who was the first Tsar of Russia, crowned in 1547?",
+    "options": [
+      "Ivan the Terrible",
+      "Peter the Great",
+      "Catherine the Great",
+      "Michael Romanov"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-american-declaration-of-independence-was-signed-in-which-year",
+    "question": "The American Declaration of Independence was signed in which year?",
+    "options": [
+      "1776",
+      "1789",
+      "1765",
+      "1783"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-powerful-carthaginian-general-was-famous-for-leading-elephants-across-the-alps-to-attack-rome",
+    "question": "Which powerful Carthaginian general was famous for leading elephants across the Alps to attack Rome?",
+    "options": [
+      "Hannibal Barca",
+      "Scipio Africanus",
+      "Hamilcar Barca",
+      "Pyrrhus of Epirus"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-magna-carta-a-foundational-document-for-constitutional-law-was-signed-by-king-john-of-england-in-which-year",
+    "question": "The Magna Carta, a foundational document for constitutional law, was signed by King John of England in which year?",
+    "options": [
+      "1215",
+      "1066",
+      "1492",
+      "1688"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-ming-dynasty-is-known-for-commissioning-the-voyages-of-which-great-admiral",
+    "question": "The Ming Dynasty is known for commissioning the voyages of which great admiral?",
+    "options": [
+      "Zheng He",
+      "Kublai Khan",
+      "Marco Polo",
+      "Genghis Khan"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-peloponnesian-war-was-fought-primarily-between-which-two-greek-city-states",
+    "question": "The Peloponnesian War was fought primarily between which two Greek city-states?",
+    "options": [
+      "Athens and Sparta",
+      "Athens and Thebes",
+      "Sparta and Corinth",
+      "Thebes and Corinth"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-fall-of-the-bastille-in-1789-is-often-considered-the-symbolic-start-of-which-major-revolution",
+    "question": "The fall of the Bastille in 1789 is often considered the symbolic start of which major revolution?",
+    "options": [
+      "French Revolution",
+      "American Revolution",
+      "Russian Revolution",
+      "Industrial Revolution"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-portuguese-explorer-was-the-first-european-to-reach-india-by-sea-circumnavigating-africa",
+    "question": "Which Portuguese explorer was the first European to reach India by sea, circumnavigating Africa?",
+    "options": [
+      "Vasco da Gama",
+      "Christopher Columbus",
+      "Ferdinand Magellan",
+      "Bartolomeu Dias"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-famously-said-i-have-a-dream-during-the-civil-rights-movement",
+    "question": "Who famously said \"I have a dream\" during the Civil Rights Movement?",
+    "options": [
+      "Martin Luther King Jr.",
+      "Malcolm X",
+      "Rosa Parks",
+      "John F. Kennedy"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-code-of-hammurabi-originated-in-which-ancient-civilization",
+    "question": "The Code of Hammurabi originated in which ancient civilization?",
+    "options": [
+      "Babylonian",
+      "Egyptian",
+      "Roman",
+      "Greek"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-was-the-first-roman-emperor",
+    "question": "Who was the first Roman Emperor?",
+    "options": [
+      "Julius Caesar",
+      "Augustus",
+      "Nero",
+      "Constantine"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-explorers-expedition-was-the-first-to-circumnavigate-the-earth",
+    "question": "Which explorer's expedition was the first to circumnavigate the Earth?",
+    "options": [
+      "Christopher Columbus",
+      "Vasco da Gama",
+      "Ferdinand Magellan",
+      "James Cook"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-city-is-widely-considered-the-birthplace-of-the-renaissance",
+    "question": "Which city is widely considered the birthplace of the Renaissance?",
+    "options": [
+      "Rome",
+      "Venice",
+      "Florence",
+      "Milan"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-treaty-officially-ended-world-war-i",
+    "question": "Which treaty officially ended World War I?",
+    "options": [
+      "Treaty of Trianon",
+      "Treaty of Versailles",
+      "Treaty of Brest-Litovsk",
+      "Treaty of Lausanne"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
   }
 ]

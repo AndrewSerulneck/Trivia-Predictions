@@ -2845,5 +2845,265 @@
     "correctAnswer": 1,
     "category": "Sports",
     "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-points-is-a-successful-free-throw-worth-in-basketball",
+    "question": "How many points is a successful free throw worth in basketball?",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-it-called-when-a-baseball-player-hits-the-ball-out-of-the-park",
+    "question": "What is it called when a baseball player hits the ball out of the park?",
+    "options": [
+      "Double",
+      "Triple",
+      "Home Run",
+      "Grand Slam"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-term-for-a-score-of-one-under-par-on-a-hole-in-golf",
+    "question": "What is the term for a score of one under par on a hole in golf?",
+    "options": [
+      "Bogey",
+      "Birdie",
+      "Eagle",
+      "Albatross"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-scoring-term-for-zero-points-in-tennis",
+    "question": "What is the scoring term for zero points in tennis?",
+    "options": [
+      "Nil",
+      "Empty",
+      "Love",
+      "Zero"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-city-hosted-the-2016-summer-olympic-games",
+    "question": "Which city hosted the 2016 Summer Olympic Games?",
+    "options": [
+      "London",
+      "Rio de Janeiro",
+      "Tokyo",
+      "Beijing"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-boxing-what-is-the-maximum-number-of-rounds-in-a-professional-heavyweight-fight",
+    "question": "In boxing, what is the maximum number of rounds in a professional heavyweight fight?",
+    "options": [
+      "8",
+      "10",
+      "12",
+      "15"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-famous-cycling-race-is-held-primarily-in-france",
+    "question": "Which famous cycling race is held primarily in France?",
+    "options": [
+      "Giro d'Italia",
+      "Vuelta a España",
+      "Tour de Suisse",
+      "Tour de France"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-swimming-stroke-involves-a-swimmer-lying-on-their-back",
+    "question": "Which swimming stroke involves a swimmer lying on their back?",
+    "options": [
+      "Breaststroke",
+      "Butterfly",
+      "Freestyle",
+      "Backstroke"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-players-from-one-team-are-on-the-ice-during-a-standard-ice-hockey-game-excluding-the-goalie",
+    "question": "How many players from one team are on the ice during a standard ice hockey game (excluding the goalie)?",
+    "options": [
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-international-tournament-held-every-four-years-for-rugby-union",
+    "question": "What is the name of the international tournament held every four years for Rugby Union?",
+    "options": [
+      "Rugby Championship",
+      "Six Nations",
+      "Bledisloe Cup",
+      "Rugby World Cup"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-world-record-time-for-the-mens-100-meter-dash-set-by-usain-bolt",
+    "question": "What is the world record time for the men's 100-meter dash, set by Usain Bolt?",
+    "options": [
+      "9.58 seconds",
+      "9.69 seconds",
+      "9.77 seconds",
+      "9.81 seconds"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-martial-art-uses-a-gi-uniform-and-involves-throws-joint-locks-and-chokeholds",
+    "question": "Which martial art uses a 'gi' uniform and involves throws, joint locks, and chokeholds?",
+    "options": [
+      "Karate",
+      "Taekwondo",
+      "Judo",
+      "Kung Fu"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-formula-1-circuit-is-known-for-its-iconic-eau-rouge-corner",
+    "question": "Which Formula 1 circuit is known for its iconic 'Eau Rouge' corner?",
+    "options": [
+      "Monza",
+      "Silverstone",
+      "Spa-Francorchamps",
+      "Monaco"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-most-famous-horse-race-in-the-united-states-held-annually-in-kentucky",
+    "question": "What is the name of the most famous horse race in the United States, held annually in Kentucky?",
+    "options": [
+      "Preakness Stakes",
+      "Belmont Stakes",
+      "Kentucky Derby",
+      "Breeders' Cup"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-highest-possible-score-with-three-darts-in-a-single-turn-without-a-double-or-triple",
+    "question": "What is the highest possible score with three darts in a single turn without a double or triple?",
+    "options": [
+      "150",
+      "180",
+      "170",
+      "160"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-term-for-the-most-powerful-and-critical-part-of-a-breaking-wave-ideal-for-surfing",
+    "question": "What is the term for the most powerful and critical part of a breaking wave, ideal for surfing?",
+    "options": [
+      "The Lip",
+      "The Foam",
+      "The Curl",
+      "The Shoulder"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-gymnastic-apparatus-is-a-long-narrow-raised-beam-that-gymnasts-perform-routines-on",
+    "question": "Which gymnastic apparatus is a long, narrow, raised beam that gymnasts perform routines on?",
+    "options": [
+      "Uneven Bars",
+      "Vault",
+      "Parallel Bars",
+      "Balance Beam"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-feathered-projectile-used-in-badminton",
+    "question": "What is the name of the feathered projectile used in badminton?",
+    "options": [
+      "Shuttlecock",
+      "Birdie",
+      "Featherball",
+      "Volley"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-winter-olympic-sport-do-athletes-slide-down-an-ice-track-head-first-on-a-small-sled",
+    "question": "In which winter Olympic sport do athletes slide down an ice track head-first on a small sled?",
+    "options": [
+      "Luge",
+      "Bobsleigh",
+      "Skeleton",
+      "Ski Jumping"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-tennis-what-term-is-used-to-refer-to-a-score-of-zero",
+    "question": "In tennis, what term is used to refer to a score of zero?",
+    "options": [
+      "Nil",
+      "Love",
+      "Zero",
+      "Deuce"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
   }
 ]

@@ -2845,5 +2845,265 @@
     "correctAnswer": 3,
     "category": "Music",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-musical-instrument-typically-has-88-keys",
+    "question": "Which musical instrument typically has 88 keys?",
+    "options": [
+      "Piano",
+      "Organ",
+      "Harpsichord",
+      "Synthesizer"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-a-common-term-for-a-musical-interval-spanning-eight-notes",
+    "question": "What is a common term for a musical interval spanning eight notes?",
+    "options": [
+      "Octave",
+      "Quint",
+      "Tritone",
+      "Unison"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-singer-released-the-hit-song-single-ladies-put-a-ring-on-it",
+    "question": "Which singer released the hit song 'Single Ladies (Put a Ring on It)'?",
+    "options": [
+      "Beyoncé",
+      "Rihanna",
+      "Adele",
+      "Lady Gaga"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-classical-composer-continued-to-compose-masterpieces-despite-becoming-deaf-in-his-later-years",
+    "question": "Which classical composer continued to compose masterpieces despite becoming deaf in his later years?",
+    "options": [
+      "Ludwig van Beethoven",
+      "Wolfgang Amadeus Mozart",
+      "Johann Sebastian Bach",
+      "Franz Schubert"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-band-released-the-iconic-rock-anthem-stairway-to-heaven",
+    "question": "Which band released the iconic rock anthem 'Stairway to Heaven'?",
+    "options": [
+      "Led Zeppelin",
+      "The Rolling Stones",
+      "The Beatles",
+      "Queen"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-common-name-for-the-musical-symbol",
+    "question": "What is the common name for the musical symbol #?",
+    "options": [
+      "Sharp",
+      "Flat",
+      "Natural",
+      "Treble"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-artist-is-famous-for-songs-like-shape-of-you-and-thinking-out-loud",
+    "question": "Which artist is famous for songs like 'Shape of You' and 'Thinking Out Loud'?",
+    "options": [
+      "Ed Sheeran",
+      "Shawn Mendes",
+      "Justin Bieber",
+      "Harry Styles"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-jazz-trumpeter-was-a-key-figure-in-the-development-of-bebop-and-known-for-his-bent-trumpet",
+    "question": "Which jazz trumpeter was a key figure in the development of bebop and known for his bent trumpet?",
+    "options": [
+      "Dizzy Gillespie",
+      "Miles Davis",
+      "Louis Armstrong",
+      "Chet Baker"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-legendary-music-festival-took-place-in-upstate-new-york-in-1969",
+    "question": "Which legendary music festival took place in upstate New York in 1969?",
+    "options": [
+      "Woodstock",
+      "Monterey Pop Festival",
+      "Lollapalooza",
+      "Glastonbury Festival"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-genre-of-music-known-as-reggae-originated-in-which-country",
+    "question": "The genre of music known as Reggae originated in which country?",
+    "options": [
+      "Jamaica",
+      "Brazil",
+      "Cuba",
+      "Trinidad and Tobago"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-album-by-the-beatles-features-the-band-walking-across-a-zebra-crossing-on-its-cover",
+    "question": "Which album by The Beatles features the band walking across a zebra crossing on its cover?",
+    "options": [
+      "Abbey Road",
+      "Sgt. Pepper's Lonely Hearts Club Band",
+      "Revolver",
+      "The White Album"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-pop-superstar-is-known-for-her-theatrical-performances-and-hits-like-bad-romance",
+    "question": "Which pop superstar is known for her theatrical performances and hits like 'Bad Romance'?",
+    "options": [
+      "Lady Gaga",
+      "Katy Perry",
+      "Ariana Grande",
+      "Taylor Swift"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-rock-band-had-a-massive-hit-with-the-song-sweet-child-o-mine",
+    "question": "Which rock band had a massive hit with the song 'Sweet Child o' Mine'?",
+    "options": [
+      "Guns N' Roses",
+      "Aerosmith",
+      "Bon Jovi",
+      "Metallica"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-term-for-a-musical-composition-for-a-solo-instrument-often-with-piano-accompaniment-typically-in-several-movements",
+    "question": "What is the term for a musical composition for a solo instrument, often with piano accompaniment, typically in several movements?",
+    "options": [
+      "Sonata",
+      "Symphony",
+      "Concerto",
+      "Oratorio"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-string-instrument-typically-uses-a-bow-to-produce-its-sound",
+    "question": "Which string instrument typically uses a bow to produce its sound?",
+    "options": [
+      "Violin",
+      "Guitar",
+      "Trumpet",
+      "Flute"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-composed-the-famous-ballet-the-nutcracker",
+    "question": "Who composed the famous ballet 'The Nutcracker'?",
+    "options": [
+      "Pyotr Ilyich Tchaikovsky",
+      "Igor Stravinsky",
+      "Sergei Prokofiev",
+      "Ludwig Minkus"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-influential-punk-rock-band-released-the-critically-acclaimed-album-london-calling",
+    "question": "Which influential punk rock band released the critically acclaimed album 'London Calling'?",
+    "options": [
+      "The Clash",
+      "Sex Pistols",
+      "Ramones",
+      "Green Day"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-rapper-won-a-pulitzer-prize-for-music-for-his-album-damn",
+    "question": "Which rapper won a Pulitzer Prize for Music for his album 'DAMN.'?",
+    "options": [
+      "Jay-Z",
+      "Kendrick Lamar",
+      "Kanye West",
+      "Drake"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-vocal-music-what-is-the-highest-female-vocal-range",
+    "question": "In vocal music, what is the highest female vocal range?",
+    "options": [
+      "Mezzo-soprano",
+      "Contralto",
+      "Soprano",
+      "Alto"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-iconic-artist-is-known-for-his-hit-song-billie-jean-and-the-signature-moonwalk-dance",
+    "question": "Which iconic artist is known for his hit song 'Billie Jean' and the signature 'moonwalk' dance?",
+    "options": [
+      "Prince",
+      "Michael Jackson",
+      "Usher",
+      "Bruno Mars"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
   }
 ]
