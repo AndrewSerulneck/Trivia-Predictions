@@ -328,7 +328,7 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
           aria-label="Open venue leaderboard"
         >
           {pointsBurstVisible && pointsBurstAmount ? (
-            <div className="pointer-events-none absolute left-1/2 top-1 z-40 -translate-x-1/2">
+            <div className="pointer-events-none absolute left-1/2 top-1 z-[1400] -translate-x-1/2">
               <span
                 key={`points-burst-${pointsBurstToken}`}
                 className="inline-flex animate-tp-points-burst rounded-full border-2 border-emerald-800 bg-emerald-300/95 px-2 py-0.5 text-sm font-black text-emerald-900 shadow-[2px_2px_0_#065f46]"
@@ -346,7 +346,9 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
             />
           </span>
           <span className="inline-flex items-center gap-1 text-sm font-black">
-            <GoldCoinIcon className="h-5 w-5" />
+            <span id="tp-coin-icon-target" className="inline-flex items-center justify-center">
+              <GoldCoinIcon className="h-5 w-5" />
+            </span>
             <span className="truncate text-right">{(points ?? displayedPoints).toLocaleString()}</span>
           </span>
         </div>
@@ -407,7 +409,7 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
               aria-label="Open venue leaderboard"
             >
               {pointsBurstVisible && pointsBurstAmount ? (
-                <div className="pointer-events-none absolute left-1/2 top-1 z-40 -translate-x-1/2">
+                <div className="pointer-events-none absolute left-1/2 top-1 z-[1400] -translate-x-1/2">
                   <span
                     key={`points-burst-${pointsBurstToken}`}
                     className="inline-flex animate-tp-points-burst rounded-full border-2 border-emerald-800 bg-emerald-300/95 px-2 py-0.5 text-xs font-black text-emerald-900 shadow-[2px_2px_0_#065f46]"
@@ -424,7 +426,9 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
                   className="absolute left-1/2 top-[44%] h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0"
                 />
               </span>
-              <GoldCoinIcon className="h-4 w-4" />
+              <span id="tp-coin-icon-target" className="inline-flex items-center justify-center">
+                <GoldCoinIcon className="h-4 w-4" />
+              </span>
               <span>{(points ?? displayedPoints).toLocaleString()}</span>
             </div>
 
@@ -434,7 +438,7 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
       </div>
 
       {pointsGain ? (
-        <div className="pointer-events-none absolute right-2 top-[3.15rem] z-[76] rounded-full border-2 border-emerald-900 bg-emerald-300/95 px-2 py-0.5 text-xs font-black text-emerald-900 shadow-[2px_2px_0_#065f46] animate-bounce">
+        <div className="pointer-events-none absolute right-2 top-[3.15rem] z-[1400] rounded-full border-2 border-emerald-900 bg-emerald-300/95 px-2 py-0.5 text-xs font-black text-emerald-900 shadow-[2px_2px_0_#065f46] animate-tp-points-fall">
           +{pointsGain}
         </div>
       ) : null}

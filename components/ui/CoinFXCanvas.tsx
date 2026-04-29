@@ -63,7 +63,10 @@ function resolveSource(detail?: CoinFlightDetail): { x: number; y: number } {
 }
 
 function resolveDestination(): { x: number; y: number } {
-  const target = document.getElementById("tp-treasure-chest-target") ?? document.getElementById("tp-treasure-chest");
+  const target =
+    document.getElementById("tp-coin-icon-target") ??
+    document.getElementById("tp-treasure-chest-target") ??
+    document.getElementById("tp-treasure-chest");
   if (!target) {
     return {
       x: window.innerWidth * 0.8,
@@ -250,6 +253,5 @@ export function CoinFXCanvas() {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-[120]" aria-hidden="true" />;
+  return <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-[1150]" aria-hidden="true" />;
 }
-

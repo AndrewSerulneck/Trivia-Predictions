@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { getUserId } from "@/lib/storage";
 import { getVenueId } from "@/lib/storage";
 import { readWarmTriviaCache } from "@/lib/warmupCache";
+import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
 import type { TriviaQuestion } from "@/types";
 
 type TriviaApiResponse = {
@@ -69,6 +70,22 @@ const INCORRECT_FEEDBACK_FLASH_DURATION_MS = 1300;
 const FIREWORK_HIDE_DELAY_MS = 2700;
 const RAIN_HIDE_DELAY_MS = 2700;
 const TRIVIA_ROUND_END_REASON_KEY = "tp:trivia-round-ended-reason";
+const TRIVIA_LIVE_PREVIEW_STORAGE_KEY = "tp:trivia:live-preview:v1";
+const TRIVIA_LIVE_PREVIEW_MAX_AGE_MS = 60 * 60 * 1000;
+
+type TriviaLivePreviewSnapshot = {
+  updatedAt: number;
+  isRoundStarted: boolean;
+  questionId: string;
+  questionIndex: number;
+  totalQuestions: number;
+  secondsRemaining: number;
+  correctAnswers: number;
+  attempted: number;
+  questionText: string;
+  userId: string;
+  venueId: string;
+};
 
 function triggerHaptic(pattern: number | number[] = 12) {
   if (typeof navigator === "undefined" || !("vibrate" in navigator)) return;
@@ -116,10 +133,13 @@ function randomEmoji(list: readonly string[]) {
 
 function createRainToken(pool: readonly string[], index = 0, total = RAIN_ITEM_COUNT): RainToken {
   const laneCount = Math.max(1, total);
-  const laneWidth = 100 / laneCount;
-  const laneLeft = laneWidth * index + laneWidth / 2;
-  const jitter = (Math.random() - 0.5) * Math.min(5.5, laneWidth * 0.85);
-  const boundedLeft = Math.max(3, Math.min(97, laneLeft + jitter));
+  const spreadMin = 10;
+  const spreadMax = 90;
+  const spreadWidth = spreadMax - spreadMin;
+  const laneWidth = spreadWidth / laneCount;
+  const laneLeft = spreadMin + laneWidth * index + laneWidth / 2;
+  const jitter = (Math.random() - 0.5) * Math.min(2.4, laneWidth * 0.45);
+  const boundedLeft = Math.max(spreadMin, Math.min(spreadMax, laneLeft + jitter));
   return {
     id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
     emoji: randomEmoji(pool),
@@ -174,6 +194,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   const [roundEndedMessage, setRoundEndedMessage] = useState("");
   const [isPreparingNextRound, setIsPreparingNextRound] = useState(false);
   const roundCompletionHandledRef = useRef(false);
+  const backgroundRoundExitRef = useRef(false);
 
   const flashTimeoutRef = useRef<number | null>(null);
   const rainTimeoutRef = useRef<number | null>(null);
@@ -250,6 +271,123 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     setRoundStartPoints((previous) => previous ?? currentUserEntry.points);
     return currentUserEntry.points;
   }, []);
+
+  const clearLivePreviewSnapshot = useCallback(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    try {
+      window.sessionStorage.removeItem(TRIVIA_LIVE_PREVIEW_STORAGE_KEY);
+    } catch {
+      // Ignore storage write failures.
+    }
+    try {
+      window.localStorage.removeItem(TRIVIA_LIVE_PREVIEW_STORAGE_KEY);
+    } catch {
+      // Ignore storage write failures.
+    }
+  }, []);
+
+  const forfeitQuestion = useCallback(async (questionId: string, secondsLeft?: number) => {
+    const userId = getUserId() ?? "";
+    if (!userId || !questionId) {
+      return;
+    }
+    const boundedSeconds = Number.isFinite(secondsLeft ?? NaN)
+      ? Math.max(0, Math.min(QUESTION_TIME_LIMIT_SECONDS, Math.floor(secondsLeft ?? 0)))
+      : 0;
+    const elapsed = Math.max(0, QUESTION_TIME_LIMIT_SECONDS - boundedSeconds);
+
+    await fetch("/api/trivia", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      keepalive: true,
+      body: JSON.stringify({
+        userId,
+        questionId,
+        answer: -1,
+        timeElapsed: elapsed,
+      }),
+    }).catch(() => {
+      // Best effort: if this fails we still continue loading trivia.
+    });
+  }, []);
+
+  const recoverInterruptedQuestion = useCallback(async (): Promise<boolean> => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    const readSnapshot = (): TriviaLivePreviewSnapshot | null => {
+      const parse = (raw: string | null): TriviaLivePreviewSnapshot | null => {
+        if (!raw) {
+          return null;
+        }
+        try {
+          const parsed = JSON.parse(raw) as Partial<TriviaLivePreviewSnapshot>;
+          if (!parsed.isRoundStarted || typeof parsed.questionId !== "string" || !parsed.questionId.trim()) {
+            return null;
+          }
+          if (!Number.isFinite(Number(parsed.updatedAt ?? 0))) {
+            return null;
+          }
+          return {
+            updatedAt: Number(parsed.updatedAt),
+            isRoundStarted: true,
+            questionId: String(parsed.questionId),
+            questionIndex: Number(parsed.questionIndex ?? 0),
+            totalQuestions: Number(parsed.totalQuestions ?? 0),
+            secondsRemaining: Number(parsed.secondsRemaining ?? 0),
+            correctAnswers: Number(parsed.correctAnswers ?? 0),
+            attempted: Number(parsed.attempted ?? 0),
+            questionText: String(parsed.questionText ?? ""),
+            userId: String(parsed.userId ?? ""),
+            venueId: String(parsed.venueId ?? ""),
+          };
+        } catch {
+          return null;
+        }
+      };
+
+      const localRaw = window.localStorage.getItem(TRIVIA_LIVE_PREVIEW_STORAGE_KEY);
+      const localParsed = parse(localRaw);
+      if (localParsed) {
+        return localParsed;
+      }
+      const sessionRaw = window.sessionStorage.getItem(TRIVIA_LIVE_PREVIEW_STORAGE_KEY);
+      return parse(sessionRaw);
+    };
+
+    const snapshot = readSnapshot();
+    if (!snapshot) {
+      clearLivePreviewSnapshot();
+      return false;
+    }
+
+    const currentUserId = (getUserId() ?? "").trim();
+    const currentVenueId = (getVenueId() ?? "").trim();
+    const ageMs = Date.now() - snapshot.updatedAt;
+    if (
+      !currentUserId ||
+      !currentVenueId ||
+      snapshot.userId !== currentUserId ||
+      snapshot.venueId !== currentVenueId ||
+      ageMs < 0 ||
+      ageMs > TRIVIA_LIVE_PREVIEW_MAX_AGE_MS
+    ) {
+      clearLivePreviewSnapshot();
+      return false;
+    }
+
+    clearLivePreviewSnapshot();
+    await forfeitQuestion(snapshot.questionId, snapshot.secondsRemaining);
+
+    const fallbackQuestionNumber = Math.max(1, snapshot.questionIndex || 1);
+    setRoundEndedMessage(
+      `Question ${fallbackQuestionNumber} was forfeited after the session was interrupted. Continuing from the next question.`
+    );
+    return true;
+  }, [clearLivePreviewSnapshot, forfeitQuestion]);
 
   const triggerPointsFlow = useCallback((optionIndex: number) => {
     if (typeof document === "undefined" || !gameRootRef.current) {
@@ -341,6 +479,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     setRainEmojis([]);
     setFireworks([]);
     roundCompletionHandledRef.current = false;
+    backgroundRoundExitRef.current = false;
   }, []);
 
   const loadRoundQuestions = useCallback(
@@ -397,8 +536,22 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   );
 
   useEffect(() => {
-    void loadRoundQuestions({ showLoading: true, useWarmCache: true });
-  }, [loadRoundQuestions]);
+    let cancelled = false;
+
+    const bootstrapRound = async () => {
+      const recoveredInterruptedQuestion = await recoverInterruptedQuestion();
+      if (cancelled) {
+        return;
+      }
+      await loadRoundQuestions({ showLoading: true, useWarmCache: !recoveredInterruptedQuestion });
+    };
+
+    void bootstrapRound();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadRoundQuestions, recoverInterruptedQuestion]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -419,14 +572,36 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     }
 
     const endRoundForBackgrounding = () => {
+      if (backgroundRoundExitRef.current) {
+        return;
+      }
       if (!isRoundStarted || preRoundCountdown !== null || finished) {
         return;
       }
-      const reason = "Round ended because the browser was minimized or left during active play.";
-      window.sessionStorage.setItem(TRIVIA_ROUND_END_REASON_KEY, reason);
+      backgroundRoundExitRef.current = true;
+
+      const activeQuestionId = selectedAnswer === null ? question?.id ?? "" : "";
+      const activeQuestionNumber = Math.max(1, index + 1);
+      const didForfeit = Boolean(activeQuestionId);
+
+      clearLivePreviewSnapshot();
+      if (didForfeit) {
+        void forfeitQuestion(activeQuestionId, secondsRemaining);
+      }
+
+      const reason = didForfeit
+        ? `Question ${activeQuestionNumber} was forfeited because the browser was minimized or closed during active play.`
+        : "Round ended because the browser was minimized or left during active play.";
+      try {
+        window.sessionStorage.setItem(TRIVIA_ROUND_END_REASON_KEY, reason);
+      } catch {
+        // Ignore storage write failures.
+      }
       setRoundEndedMessage(reason);
       resetRoundState();
-      void loadRoundQuestions({ showLoading: false, useWarmCache: false });
+      void loadRoundQuestions({ showLoading: false, useWarmCache: false }).finally(() => {
+        backgroundRoundExitRef.current = false;
+      });
     };
 
     const handleVisibilityChange = () => {
@@ -445,7 +620,19 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("pagehide", handlePageHide);
     };
-  }, [finished, isRoundStarted, loadRoundQuestions, preRoundCountdown, resetRoundState]);
+  }, [
+    clearLivePreviewSnapshot,
+    finished,
+    forfeitQuestion,
+    index,
+    isRoundStarted,
+    loadRoundQuestions,
+    preRoundCountdown,
+    question?.id,
+    resetRoundState,
+    secondsRemaining,
+    selectedAnswer,
+  ]);
 
   useEffect(() => {
     if (!isRoundStarted || finished || selectedAnswer !== null) {
@@ -759,9 +946,86 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     void loadTotalPoints();
   }, [finished]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (!isRoundStarted || preRoundCountdown !== null || finished || !question || selectedAnswer !== null || isSubmitting) {
+      clearLivePreviewSnapshot();
+      return;
+    }
+
+    const currentUserId = (getUserId() ?? "").trim();
+    const currentVenueId = (getVenueId() ?? "").trim();
+    if (!currentUserId || !currentVenueId) {
+      clearLivePreviewSnapshot();
+      return;
+    }
+
+    const payload: TriviaLivePreviewSnapshot = {
+      updatedAt: Date.now(),
+      isRoundStarted: true,
+      questionId: question.id,
+      questionIndex: index + 1,
+      totalQuestions: questions.length,
+      secondsRemaining,
+      correctAnswers,
+      attempted,
+      questionText: question.question,
+      userId: currentUserId,
+      venueId: currentVenueId,
+    };
+    const serialized = JSON.stringify(payload);
+
+    try {
+      window.sessionStorage.setItem(TRIVIA_LIVE_PREVIEW_STORAGE_KEY, serialized);
+    } catch {
+      // Ignore storage write failures.
+    }
+    try {
+      window.localStorage.setItem(TRIVIA_LIVE_PREVIEW_STORAGE_KEY, serialized);
+    } catch {
+      // Ignore storage write failures.
+    }
+  }, [
+    attempted,
+    clearLivePreviewSnapshot,
+    correctAnswers,
+    finished,
+    index,
+    isSubmitting,
+    isRoundStarted,
+    preRoundCountdown,
+    question,
+    questions.length,
+    secondsRemaining,
+    selectedAnswer,
+  ]);
+
+  const returnToVenueHome = useCallback(() => {
+    const venueId = getVenueId()?.trim() ?? "";
+    if (!venueId) {
+      router.push("/");
+      return;
+    }
+
+    const targetPath = `/venue/${encodeURIComponent(venueId)}`;
+    void runVenueGameReturnTransition({
+      gameKey: "trivia",
+      navigate: () =>
+        navigateBackToVenue({
+          venuePath: targetPath,
+          fallbackNavigate: () => {
+            router.push(targetPath);
+          },
+        }),
+    });
+  }, [router]);
+
   if (loadingQuestions) {
     return (
-      <div className="space-y-4 rounded-md border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
+      <div className="space-y-4 rounded-md border border-cyan-200/45 bg-slate-950/35 p-5 text-sm text-cyan-50 backdrop-blur-sm">
         <div className="relative mx-auto h-20 w-20">
           <div className="absolute inset-0 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
           <div className="absolute inset-2 flex items-center justify-center rounded-full bg-slate-900 text-xs font-black tracking-[0.2em] text-white">
@@ -785,30 +1049,29 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   }
 
   if (finished) {
-    const venueId = getVenueId() ?? "";
     const totalAfterRound = roundTotalPoints ?? estimatedRoundTotal ?? currentUserPoints ?? 0;
     const roundGain = Math.max(0, roundDelta);
     return (
-      <div className="flex h-full min-h-0 flex-col rounded-2xl border-4 border-slate-900 bg-gradient-to-br from-emerald-100 to-cyan-100 p-2 shadow-[5px_5px_0_#0f172a]">
-        <div className="flex min-h-0 flex-1 flex-col rounded-2xl border-4 border-slate-900 bg-white p-2 shadow-[4px_4px_0_#0f172a]">
-          <p className="mb-2 text-sm font-black tracking-wide text-emerald-800">Round complete 🎉</p>
+      <div className="flex h-full min-h-0 flex-col rounded-2xl border-2 border-cyan-200/55 bg-slate-950/35 p-2 shadow-[0_10px_28px_rgba(15,23,42,0.45)] backdrop-blur-sm">
+        <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-cyan-100/45 bg-slate-900/35 p-2">
+          <p className="mb-2 text-sm font-black tracking-wide text-emerald-200">Round complete 🎉</p>
           <div className="grid min-h-0 flex-1 gap-2 sm:grid-cols-2">
-            <div className="rounded-2xl border-4 border-slate-900 bg-slate-50 p-2 shadow-[3px_3px_0_#0f172a]">
-              <p className="text-xs uppercase text-slate-500">Scoreboard</p>
-              <p className="text-lg font-bold text-slate-900">
+            <div className="rounded-2xl border border-cyan-200/55 bg-cyan-900/35 p-2">
+              <p className="text-xs uppercase text-cyan-100/90">Scoreboard</p>
+              <p className="text-lg font-bold text-cyan-50">
                 {correctAnswers}/{attempted}
               </p>
-              <p className="text-sm text-slate-600">{accuracy}% accuracy</p>
+              <p className="text-sm text-cyan-100">{accuracy}% accuracy</p>
             </div>
-            <div className="rounded-2xl border-4 border-slate-900 bg-slate-50 p-2 shadow-[3px_3px_0_#0f172a]">
-              <p className="text-xs uppercase text-slate-500">Round reward</p>
+            <div className="rounded-2xl border border-cyan-200/55 bg-cyan-900/35 p-2">
+              <p className="text-xs uppercase text-cyan-100/90">Round reward</p>
               <p className="text-lg font-bold text-emerald-700">+{pointsWon} points</p>
-              <p className="text-xs text-slate-600">Keep the streak going in your next round.</p>
+              <p className="text-xs text-cyan-100">Keep the streak going in your next round.</p>
             </div>
-            <div className="rounded-2xl border-4 border-slate-900 bg-slate-50 p-2 shadow-[3px_3px_0_#0f172a] sm:col-span-2">
-              <p className="text-xs uppercase text-slate-500">Total points</p>
-              <p className="text-xl font-bold text-slate-900">{totalAfterRound}</p>
-              <p className="text-sm text-slate-600">Round gain: +{roundGain}</p>
+            <div className="rounded-2xl border border-cyan-200/55 bg-cyan-900/35 p-2 sm:col-span-2">
+              <p className="text-xs uppercase text-cyan-100/90">Total points</p>
+              <p className="text-xl font-bold text-cyan-50">{totalAfterRound}</p>
+              <p className="text-sm text-cyan-100">Round gain: +{roundGain}</p>
             </div>
           </div>
         </div>
@@ -831,13 +1094,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
           <button
             type="button"
             onMouseDown={() => triggerHaptic(14)}
-            onClick={() => {
-              if (venueId) {
-                router.push(`/venue/${venueId}`);
-                return;
-              }
-              router.push("/");
-            }}
+            onClick={returnToVenueHome}
             className={`${BUTTON_POP_CLASS} ${BACK_TO_VENUE_CLASS} w-full`}
           >
             <span
@@ -855,7 +1112,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
   if (!question) {
     return (
-      <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+      <div className="rounded-md border border-cyan-200/45 bg-slate-950/35 p-4 text-sm text-cyan-50 backdrop-blur-sm">
         No new trivia questions available right now.
       </div>
     );
@@ -863,16 +1120,16 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
   if (!isRoundStarted) {
     return (
-      <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-base text-slate-700 sm:space-y-3 sm:p-4">
+      <div className="space-y-2 rounded-md border border-cyan-200/45 bg-slate-950/38 p-3 text-base text-cyan-50 backdrop-blur-sm sm:space-y-3 sm:p-4">
         {roundEndedMessage ? (
           <p className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
             {roundEndedMessage}
           </p>
         ) : null}
-        <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+        <p className="text-sm font-semibold uppercase tracking-wide text-cyan-100">
           Round {upcomingRoundNumber} of {ROUND_LIMIT_PER_WINDOW}
         </p>
-        <p className="text-lg font-semibold text-slate-900">Ready to start trivia?</p>
+        <p className="text-lg font-semibold text-yellow-200">Ready to start trivia?</p>
         {triviaQuotaLocked ? (
           <p>
             Trivia limit reached. You can start another round in{" "}
@@ -896,18 +1153,35 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         >
           {triviaQuotaLocked ? `Locked ${formatCountdown(quotaSecondsRemaining)}` : "Yes, Start Trivia"}
         </button>
+        <button
+          type="button"
+          onMouseDown={() => triggerHaptic(14)}
+          onClick={returnToVenueHome}
+          className={`${BUTTON_POP_CLASS} ${BACK_TO_VENUE_CLASS} w-full`}
+        >
+          <span
+            aria-hidden="true"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs"
+          >
+            ←
+          </span>
+          Back to Venue Home Page
+        </button>
       </div>
     );
   }
 
   if (preRoundCountdown !== null) {
     return (
-      <div className="space-y-3 rounded-2xl border-4 border-slate-900 bg-gradient-to-br from-cyan-200 to-blue-200 p-4 text-center text-slate-900 shadow-[6px_6px_0_#0f172a]">
-        <p className="text-sm font-black uppercase tracking-[0.12em] text-slate-700">Get Ready</p>
-        <p className="text-2xl font-black sm:text-3xl">
+      <div className="space-y-3 rounded-2xl border-2 border-cyan-200/55 bg-slate-950/38 p-4 text-center text-cyan-50 shadow-[0_12px_28px_rgba(15,23,42,0.45)] backdrop-blur-sm">
+        <p className="text-sm font-black uppercase tracking-[0.12em] text-cyan-100">Get Ready</p>
+        <p className="text-2xl font-black text-yellow-200 sm:text-3xl">
           Round {upcomingRoundNumber}
         </p>
-        <p className="text-6xl font-black leading-none sm:text-7xl">
+        <p
+          key={`count-${preRoundCountdown}`}
+          className="animate-tp-countdown-pop text-6xl font-black leading-none text-cyan-100 sm:text-7xl"
+        >
           {preRoundCountdown > 0 ? preRoundCountdown : "START!"}
         </p>
       </div>
@@ -933,6 +1207,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
               className={`absolute top-[-20px] animate-tp-rain ${item.sizeClass} font-black`}
               style={{
                 left: `${item.left}%`,
+                marginLeft: "-0.5em",
                 animationDelay: `${item.delayMs}ms`,
                 animationDuration: `${item.durationMs}ms`,
                 ["--rain-drift" as string]: `${item.drift}px`,
@@ -964,33 +1239,17 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         </div>
       ) : null}
 
-      {quota ? (
-        <div className="space-y-1 rounded-xl border-2 border-slate-900 bg-cyan-100 p-1 shadow-[2px_2px_0_#0f172a] sm:rounded-2xl sm:border-4 sm:p-2 sm:shadow-[5px_5px_0_#0f172a]">
-          <div className="flex items-center justify-between text-sm font-medium text-slate-700">
-            <span>Trivia Progress This Window</span>
-            {quota.isAdminBypass ? (
-              <span>Unlimited (Admin)</span>
-            ) : (
-              <span>
-                {quota.questionsUsed}/{quota.limit}
-              </span>
-            )}
-          </div>
-          {!quota.isAdminBypass ? (
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 sm:h-2">
-              <div
-                className="h-full rounded-full bg-blue-600 transition-all"
-                style={{ width: `${Math.min(100, (quota.questionsUsed / quota.limit) * 100)}%` }}
-              />
-            </div>
-          ) : null}
-          {triviaQuotaLocked ? (
-            <p className="text-sm font-semibold text-rose-700">
-              Limit reached. Next round unlocks in {formatCountdown(quotaSecondsRemaining)}.
-            </p>
-          ) : null}
+      <div className="rounded-xl border-2 border-cyan-200/55 bg-slate-900/45 p-1.5 text-cyan-50 shadow-[2px_2px_0_#0f172a] sm:rounded-2xl sm:border-4 sm:p-2 sm:shadow-[5px_5px_0_#0f172a]">
+        <div className="flex items-center justify-between gap-2 text-sm font-black uppercase tracking-[0.08em]">
+          <span>Round {upcomingRoundNumber} of {ROUND_LIMIT_PER_WINDOW}</span>
+          <span>{quota?.isAdminBypass ? "Admin Unlimited" : "Live Round"}</span>
         </div>
-      ) : null}
+        {triviaQuotaLocked ? (
+          <p className="mt-1 text-sm font-semibold text-rose-200">
+            Limit reached. Next round unlocks in {formatCountdown(quotaSecondsRemaining)}.
+          </p>
+        ) : null}
+      </div>
 
       <div className="rounded-xl border-2 border-slate-900 bg-yellow-100 p-1.5 text-sm font-semibold text-slate-700 shadow-[2px_2px_0_#0f172a] sm:rounded-2xl sm:border-4 sm:p-2 sm:shadow-[5px_5px_0_#0f172a]">
         <div className="flex items-center justify-between gap-2 sm:gap-3">
@@ -1013,7 +1272,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
             {rewardPulse}
           </div>
         ) : null}
-        <h2 className="px-0.5 text-base font-black leading-snug text-slate-900 sm:text-xl">
+        <h2 className="px-0.5 text-base font-black leading-snug text-white [text-shadow:0_1px_0_rgba(2,6,23,0.7),0_0_12px_rgba(255,255,255,0.24)] sm:text-xl">
           {question.question}
         </h2>
         <div className="grid min-h-0 flex-1 grid-cols-1 content-start gap-2 overflow-y-auto pr-0.5 sm:gap-3">

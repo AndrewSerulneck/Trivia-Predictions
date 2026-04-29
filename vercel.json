@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/pickem-settle",
       "schedule": "*/1 * * * *"
+    },
+    {
+      "path": "/api/cron/fantasy-progress",
+      "schedule": "*/1 * * * *"
     }
   ]
 }

@@ -6,6 +6,7 @@ import { calculatePoints, formatProbability } from "@/lib/predictions";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { readWarmPredictionsCache, writeWarmPredictionsCache } from "@/lib/warmupCache";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
+import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 import type { Prediction, UserPrediction } from "@/types";
 
 type SubmitState = Record<string, string>;
@@ -974,6 +975,10 @@ export function PredictionMarketList() {
           You are not joined to a venue in this browser yet. Use Home to join a venue first.
         </div>
       )}
+      <VenueEntryRulesPanel
+        gameKey="predictions"
+        shouldDisplay={Boolean(userId) && !loading && pendingPicks.length === 0}
+      />
       <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-3">
         <div className="flex items-center justify-between gap-2">
           <div className="inline-flex items-center gap-2">

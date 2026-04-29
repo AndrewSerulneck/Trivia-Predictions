@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { TouchEvent as ReactTouchEvent } from "react";
 import { getUserId } from "@/lib/storage";
+import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 
 type BingoCardSquare = {
   id: string;
@@ -434,12 +435,16 @@ export function SportsBingoHome() {
 
   return (
     <div className="space-y-4">
+      <VenueEntryRulesPanel
+        gameKey="bingo"
+        shouldDisplay={Boolean(userId) && !loadingCards && activeCards.length === 0}
+      />
       {errorMessage ? (
         <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">{errorMessage}</div>
       ) : null}
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p className="text-center text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Sports Bingo Home</p>
+      <div className="rounded-2xl border border-amber-200/70 bg-amber-50/85 p-4 shadow-sm">
+        <p className="text-center text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Hightop Sports Bingo™</p>
         <p className="mt-1 text-center text-sm text-slate-700">Track active bingo boards here.</p>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
           {hasReachedBoardLimit ? (
@@ -482,7 +487,7 @@ export function SportsBingoHome() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="rounded-2xl border border-amber-200/70 bg-amber-50/85 p-4 shadow-sm">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-base font-semibold text-slate-900">Active Boards</h2>
         </div>
@@ -548,7 +553,7 @@ export function SportsBingoHome() {
         )}
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="rounded-2xl border border-amber-200/70 bg-amber-50/85 p-4 shadow-sm">
         <h2 className="text-base font-semibold text-slate-900">Recent Results</h2>
         {loadingCards ? (
           <LoadingState label="Loading recent results..." />

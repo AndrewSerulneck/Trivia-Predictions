@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { randomInt } from "node:crypto";
 import type { TriviaQuestion } from "@/types";
 
 type TriviaQuestionRow = {
@@ -73,7 +74,7 @@ function mapQuestionRow(row: TriviaQuestionRow): TriviaQuestion {
 
 function shuffleInPlace<T>(items: T[]): T[] {
   for (let index = items.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
+    const swapIndex = randomInt(index + 1);
     [items[index], items[swapIndex]] = [items[swapIndex], items[index]];
   }
   return items;
@@ -128,7 +129,8 @@ function pickBalancedRandomQuestions(questions: TriviaQuestion[], limit: number)
 }
 
 export async function getTriviaQuestions(limit = 15, userId?: string): Promise<TriviaQuestion[]> {
-  if (!supabaseAdmin) {
+  const client = supabaseAdmin;
+  if (!client) {
     return pickBalancedRandomQuestions(FALLBACK_QUESTIONS, limit);
   }
 
@@ -136,7 +138,7 @@ export async function getTriviaQuestions(limit = 15, userId?: string): Promise<T
   let answeredQuestionIds = new Set<string>();
 
   if (userId) {
-    const { data: answersData, error: answersError } = await supabaseAdmin
+    const { data: answersData, error: answersError } = await client
       .from("trivia_answers")
       .select("question_id")
       .eq("user_id", userId)
@@ -153,9 +155,9 @@ export async function getTriviaQuestions(limit = 15, userId?: string): Promise<T
     );
   }
 
-  const queryLimit = Math.min(MAX_CANDIDATE_QUESTIONS, Math.max(safeLimit * 30, 300));
+  const queryLimit = Math.min(MAX_CANDIDATE_QUESTIONS, Math.max(safeLimit * 40, 480));
 
-  const { count: totalQuestionCount, error: countError } = await supabaseAdmin
+  const { count: totalQuestionCount, error: countError } = await client
     .from("trivia_questions")
     .select("id", { count: "exact", head: true });
 
@@ -164,19 +166,62 @@ export async function getTriviaQuestions(limit = 15, userId?: string): Promise<T
   }
 
   const total = Math.max(0, totalQuestionCount ?? 0);
-  const maxOffset = Math.max(0, total - queryLimit);
-  const randomOffset = maxOffset > 0 ? Math.floor(Math.random() * (maxOffset + 1)) : 0;
-
-  const { data, error } = await supabaseAdmin
-    .from("trivia_questions")
-    .select("id, question, options, correct_answer, category, difficulty")
-    .range(randomOffset, randomOffset + queryLimit - 1);
-
-  if (error || !data) {
+  if (total === 0) {
     return pickBalancedRandomQuestions(FALLBACK_QUESTIONS, safeLimit);
   }
 
-  const mapped = shuffleInPlace(data.map((row) => mapQuestionRow(row as TriviaQuestionRow)));
+  const candidatesById = new Map<string, TriviaQuestionRow>();
+  if (total <= queryLimit) {
+    const { data, error } = await client
+      .from("trivia_questions")
+      .select("id, question, options, correct_answer, category, difficulty")
+      .range(0, total - 1);
+    if (error || !data) {
+      return pickBalancedRandomQuestions(FALLBACK_QUESTIONS, safeLimit);
+    }
+    for (const row of data) {
+      const typed = row as TriviaQuestionRow;
+      candidatesById.set(typed.id, typed);
+    }
+  } else {
+    const windowCount = 4;
+    const minWindow = Math.max(220, safeLimit * 12);
+    const windowSize = Math.min(
+      Math.max(minWindow, Math.ceil(queryLimit / windowCount)),
+      MAX_CANDIDATE_QUESTIONS
+    );
+    const maxOffset = Math.max(0, total - windowSize);
+    const offsets = [0];
+    for (let index = 0; index < windowCount; index += 1) {
+      offsets.push(maxOffset > 0 ? randomInt(maxOffset + 1) : 0);
+    }
+
+    const windows = await Promise.all(
+      offsets.map((offset) =>
+        client
+          .from("trivia_questions")
+          .select("id, question, options, correct_answer, category, difficulty")
+          .range(offset, offset + windowSize - 1)
+      )
+    );
+
+    for (const result of windows) {
+      if (result.error || !result.data) {
+        continue;
+      }
+      for (const row of result.data) {
+        const typed = row as TriviaQuestionRow;
+        candidatesById.set(typed.id, typed);
+      }
+    }
+  }
+
+  const candidateRows = [...candidatesById.values()];
+  if (candidateRows.length === 0) {
+    return pickBalancedRandomQuestions(FALLBACK_QUESTIONS, safeLimit);
+  }
+
+  const mapped = shuffleInPlace(candidateRows.map((row) => mapQuestionRow(row)));
   if (!userId) {
     return pickBalancedRandomQuestions(mapped, safeLimit);
   }

@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { getVenueId } from "@/lib/storage";
+import { VENUE_HOME_GAME_KEYS, inferVenueGameKeyFromPath } from "@/lib/venueGameCards";
+import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
 
 type BackButtonProps = {
   href?: string;
@@ -57,6 +59,31 @@ export function BackButton({
 
   const handleBack = () => {
     const fallbackHref = resolveHref();
+
+    if (venueHomeFallback) {
+      const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+      const gameKey = inferVenueGameKeyFromPath(pathname);
+      if (gameKey && VENUE_HOME_GAME_KEYS.includes(gameKey)) {
+        void runVenueGameReturnTransition({
+          gameKey,
+          navigate: () =>
+            navigateBackToVenue({
+              venuePath: fallbackHref,
+              fallbackNavigate: () => {
+                router.push(fallbackHref);
+              },
+            }),
+        });
+        return;
+      }
+      void navigateBackToVenue({
+        venuePath: fallbackHref,
+        fallbackNavigate: () => {
+          router.push(fallbackHref);
+        },
+      });
+      return;
+    }
 
     if (preferHref) {
       router.push(fallbackHref);

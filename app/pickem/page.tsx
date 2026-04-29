@@ -1,16 +1,19 @@
-import { PageShell } from "@/components/ui/PageShell";
-import { BackButton } from "@/components/navigation/BackButton";
-import { PickEmSportSelect } from "@/components/pickem/PickEmSportSelect";
-import { PickEmRecentPicks } from "@/components/pickem/PickEmRecentPicks";
+import { PickEmGameList } from "@/components/pickem/PickEmGameList";
+import { GameLandingExperience } from "@/components/venue/GameLandingExperience";
 
-export default function PickEmPage() {
+export default async function PickEmPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sport?: string }>;
+}) {
+  const params = await searchParams;
+  const initialSportSlug = String(params.sport ?? "").trim().toLowerCase();
+
   return (
-    <PageShell title="" showPageTitle={false}>
-      <div className="h-full space-y-3 overflow-y-auto">
-        <BackButton label="Back to Venue Home" venueHomeFallback preferHref />
-        <PickEmSportSelect />
-        <PickEmRecentPicks />
+    <GameLandingExperience gameKey="pickem" playLabel="Play Pick 'Em">
+      <div className="space-y-3">
+        <PickEmGameList initialSportSlug={initialSportSlug} />
       </div>
-    </PageShell>
+    </GameLandingExperience>
   );
 }

@@ -30,10 +30,10 @@ export function PageShell({
   const compactHeaderSpacerClass = useCompactTopNav
     ? showUserStatus
       ? showPageTitle
-        ? "h-[calc(env(safe-area-inset-top)+6.6rem)] sm:h-[calc(env(safe-area-inset-top)+7rem)]"
-        : "h-[calc(env(safe-area-inset-top)+5.2rem)] sm:h-[calc(env(safe-area-inset-top)+5.5rem)]"
+        ? "h-[calc(env(safe-area-inset-top)+5.35rem)] sm:h-[calc(env(safe-area-inset-top)+6.4rem)]"
+        : "h-[calc(env(safe-area-inset-top)+4.35rem)] sm:h-[calc(env(safe-area-inset-top)+5.1rem)]"
       : showPageTitle
-      ? "h-[calc(env(safe-area-inset-top)+3.5rem)]"
+      ? "h-[calc(env(safe-area-inset-top)+2.9rem)]"
       : "h-0"
     : "h-0";
   const shellGapClass = "gap-3";
@@ -41,7 +41,7 @@ export function PageShell({
   return (
     <div className={`tp-page-shell flex min-h-[100dvh] flex-col overflow-x-hidden ${shellGapClass}`}>
       {useCompactTopNav ? (
-        <header className="tp-page-header tp-page-header-compact fixed inset-x-0 top-0 z-[1000] w-screen max-w-none overflow-visible px-0 pb-0 pt-0">
+        <header className="tp-page-header tp-page-header-compact fixed inset-x-0 top-0 z-[1000] w-full max-w-none overflow-visible px-0 pb-0 pt-0">
           <div className="w-full max-w-none box-border px-0 pt-[max(env(safe-area-inset-top),0px)]">
             {showUserStatus ? <UserStatusHeader showAlerts={showAlerts} /> : null}
             {showPageTitle ? (
@@ -93,11 +93,11 @@ export function PageShell({
 
       {useCompactTopNav ? <div aria-hidden className={`w-full shrink-0 ${compactHeaderSpacerClass}`} /> : null}
 
-      <main className={`tp-page-main ${mainClass}`}>
+      <main className={`tp-page-main min-w-0 ${mainClass}`}>
         {noContainer ? (
           <>{children}</>
         ) : (
-          <div className="mx-auto w-full max-w-[680px] px-2 sm:px-3 box-border">{children}</div>
+          <div className="mx-auto w-full max-w-[680px] min-w-0 px-2 sm:px-3 box-border">{children}</div>
         )}
       </main>
     </div>

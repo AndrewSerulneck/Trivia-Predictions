@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getUserId, getVenueId } from "@/lib/storage";
+import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 import type { ChallengeGameType, ChallengeInvite } from "@/types";
 
 type ChallengePayload = {
@@ -207,6 +208,10 @@ export function PendingChallengesPanel() {
 
   return (
     <div className="space-y-4">
+      <VenueEntryRulesPanel
+        gameKey="fantasy"
+        shouldDisplay={pendingReceived.length + pendingSent.length === 0}
+      />
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">Challenge Center</h2>
         <p className="mt-1 text-sm text-slate-700">

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { AdBanner } from "@/components/ui/AdBanner";
 import { isLandingPopupGateActive, releaseAdTier, requestAdTier, subscribeAdTierChange } from "@/components/ui/adPriority";
 import { getVenueId } from "@/lib/storage";
+import { isVenueTransitionGateActive } from "@/lib/venueGameTransition";
 import type { AdPageKey, Advertisement } from "@/types";
 
 type SlotResponse = {
@@ -115,7 +116,7 @@ export function MobileAdhesionAd() {
     }
 
     const syncPriority = () => {
-      if (isLandingPopupGateActive()) {
+      if (isLandingPopupGateActive() || isVenueTransitionGateActive()) {
         releaseAdTier(ownerId);
         setHasPriority(false);
         return;

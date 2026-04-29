@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { getVenueId } from "@/lib/storage";
+import { isVenueTransitionGateActive } from "@/lib/venueGameTransition";
 import { releaseAdTier, requestAdTier, setLandingPopupGate } from "@/components/ui/adPriority";
 import type { Advertisement, AdPageKey } from "@/types";
 
@@ -119,6 +120,9 @@ export function PopupAds() {
       if (popupOpenRef.current || popupOpeningRef.current) {
         return false;
       }
+      if (isVenueTransitionGateActive()) {
+        return false;
+      }
       if (dismissedByTriggerRef.current[trigger]) {
         return false;
       }
@@ -202,6 +206,12 @@ export function PopupAds() {
         window.clearTimeout(resetTimer);
       };
     }
+    if (isVenueTransitionGateActive()) {
+      setLandingPopupGate(false);
+      return () => {
+        window.clearTimeout(resetTimer);
+      };
+    }
 
     setLandingPopupGate(true);
     const timer = window.setTimeout(() => {
@@ -231,6 +241,9 @@ export function PopupAds() {
 
     const onScroll = () => {
       if (popupOpenRef.current) {
+        return;
+      }
+      if (isVenueTransitionGateActive()) {
         return;
       }
       if (scrollTriggeredRef.current[key]) {
