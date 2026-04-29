@@ -63,7 +63,7 @@ export function GameLandingExperience({
                 className="aspect-[3/4.9]"
                 style={{ width: "min(95vw, 22.5rem, calc((100dvh - 5.75rem) * 0.6122449))" }}
               >
-                <GameRuleCardPanel gameKey={gameKey} layout="hub" className="h-full w-full" />
+                <GameRuleCardPanel gameKey={gameKey} layout="landing" className="h-full w-full" />
               </div>
             </div>
             <div className="grid shrink-0 grid-cols-2 gap-2 pt-3 sm:pt-4">
@@ -72,7 +72,7 @@ export function GameLandingExperience({
                 onClick={backToVenue}
                 className="tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-emerald-500 px-3 py-2 text-base font-black text-white"
               >
-                ← Back
+                Close
               </button>
               <button
                 type="button"

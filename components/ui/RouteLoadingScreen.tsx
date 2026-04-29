@@ -2,7 +2,7 @@
 
 export function RouteLoadingScreen({
   title = "Loading Hightop Challenge",
-  subtitle = "Getting everything ready...",
+  subtitle = "",
 }: {
   title?: string;
   subtitle?: string;
@@ -14,7 +14,7 @@ export function RouteLoadingScreen({
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-300 border-t-slate-900" />
         </div>
         <p className="text-lg font-black text-slate-900">{title}</p>
-        <p className="mt-1 text-sm font-medium text-slate-600">{subtitle}</p>
+        {subtitle ? <p className="mt-1 text-sm font-medium text-slate-600">{subtitle}</p> : null}
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200">
           <div className="h-full w-1/3 animate-pulse rounded-full bg-slate-900" />
         </div>

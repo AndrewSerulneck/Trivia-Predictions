@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { CoinFXCanvas } from "@/components/ui/CoinFXCanvas";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { getUserId, getUsername, getVenueId } from "@/lib/storage";
@@ -55,11 +55,24 @@ function isActiveMenuPath(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function getVenueIdFromPathname(pathname: string): string {
+  const match = pathname.match(/^\/venue\/([^/?#]+)/i);
+  if (!match?.[1]) {
+    return "";
+  }
+  try {
+    return decodeURIComponent(match[1]).trim();
+  } catch {
+    return String(match[1]).trim();
+  }
+}
+
 export function UserStatusHeader({ variant = "default", showAlerts = true }: UserStatusHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const isJoinRoute = pathname === "/" || pathname === "/join";
   const compact = variant === "trivia";
+  const venueIdFromPath = getVenueIdFromPathname(pathname);
 
   const [username, setUsername] = useState("");
   const [points, setPoints] = useState<number | null>(null);
@@ -71,6 +84,11 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
   const [pointsBurstVisible, setPointsBurstVisible] = useState(false);
   const [pointsBurstToken, setPointsBurstToken] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const storedVenueId = useSyncExternalStore(
+    () => () => {},
+    () => (getVenueId() ?? "").trim(),
+    () => ""
+  );
 
   const priorPointsRef = useRef<number | null>(null);
   const displayedPointsRef = useRef(0);
@@ -80,7 +98,7 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
   const flashHideTimerRef = useRef<number | null>(null);
   const burstHideTimerRef = useRef<number | null>(null);
 
-  const joinedVenueId = getVenueId()?.trim() ?? "";
+  const joinedVenueId = venueIdFromPath || storedVenueId;
   const venueHomeHref = joinedVenueId ? `/venue/${encodeURIComponent(joinedVenueId)}` : "/";
 
   const menuItems = [

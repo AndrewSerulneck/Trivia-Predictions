@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { getVenueId } from "@/lib/storage";
 import { APP_PAGE_NAMES } from "@/lib/pageNames";
 
@@ -22,10 +22,27 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function getVenueIdFromPathname(pathname: string): string {
+  const match = pathname.match(/^\/venue\/([^/?#]+)/i);
+  if (!match?.[1]) {
+    return "";
+  }
+  try {
+    return decodeURIComponent(match[1]).trim();
+  } catch {
+    return String(match[1]).trim();
+  }
+}
+
 export function LeftHamburgerNav() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const joinedVenueId = getVenueId() ?? "";
+  const storedVenueId = useSyncExternalStore(
+    () => () => {},
+    () => (getVenueId() ?? "").trim(),
+    () => ""
+  );
+  const joinedVenueId = getVenueIdFromPathname(pathname) || storedVenueId;
 
   useEffect(() => {
     const closeTimer = window.setTimeout(() => {

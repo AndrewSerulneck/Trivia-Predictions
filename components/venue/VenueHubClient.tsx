@@ -1,26 +1,59 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import type { Venue, LeaderboardEntry } from "@/types";
 import { getUserId, getVenueId, clearVenueSession } from "@/lib/storage";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
 import { writeWarmTriviaCache, writeWarmPredictionsCache } from "@/lib/warmupCache";
+import {
+  consumeVenueHomeBootstrap,
+  consumeVenueHomeEntryHandoff,
+  type HomeBadgeCounts,
+  type TriviaQuotaSnapshot,
+} from "@/lib/venueHomeBootstrap";
 import { VENUE_GAME_CARD_BY_KEY, VENUE_HOME_GAME_KEYS, type VenueGameKey } from "@/lib/venueGameCards";
 import { runVenueGameOpenTransition } from "@/lib/venueGameTransition";
-import { GameRuleCardPanel } from "@/components/venue/GameIdentityPanel";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
 
-const GAME_RAIL_MIN_PLACEHOLDER_HEIGHT_PX = 440;
-
-type TriviaQuotaSnapshot = {
-  limit: number;
-  questionsUsed: number;
-  questionsRemaining: number;
-  windowSecondsRemaining: number;
-  isAdminBypass?: boolean;
+type BingoBadgePayload = {
+  ok: boolean;
+  cards?: Array<{ status?: string }>;
 };
+
+type PickEmBadgePayload = {
+  ok: boolean;
+  picks?: Array<{ status?: string }>;
+};
+
+type ChallengesBadgePayload = {
+  ok: boolean;
+  challenges?: Array<{
+    status?: string;
+    receiverUserId?: string;
+  }>;
+};
+
+type HomeScreenIndex = 0 | 1;
+
+const GAME_ICON_BG_BY_KEY: Record<VenueGameKey, string> = {
+  trivia: "bg-[linear-gradient(138deg,#0ea5e9_0%,#2563eb_45%,#7c3aed_100%)]",
+  bingo: "bg-[linear-gradient(136deg,#f97316_0%,#ef4444_50%,#ec4899_100%)]",
+  pickem: "bg-[linear-gradient(138deg,#2563eb_0%,#7c3aed_58%,#ec4899_100%)]",
+  fantasy: "bg-[linear-gradient(136deg,#7c3aed_0%,#2563eb_50%,#06b6d4_100%)]",
+  predictions: "bg-[linear-gradient(136deg,#0f172a_0%,#334155_50%,#1e293b_100%)]",
+};
+
+const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
+  trivia: ["Hightop", "Trivia™"],
+  bingo: ["Hightop", "Bingo™"],
+  pickem: ["Hightop", "Pick 'Em™"],
+  fantasy: ["Hightop", "Fantasy™"],
+  predictions: ["Hightop", "Predictions™"],
+};
+
+const SWIPE_SCREEN_COUNT = 2;
+const SWIPE_TRIGGER_PX = 18;
 
 function formatCountdown(seconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(seconds));
@@ -29,25 +62,153 @@ function formatCountdown(seconds: number): string {
   return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
 }
 
-export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; initialEntries?: LeaderboardEntry[] }) {
-  const router = useRouter();
-  const [pendingDestination, setPendingDestination] = useState<VenueGameKey | null>(null);
-  const [activeGameIndex, setActiveGameIndex] = useState(0);
-  const [isWarmingUp, setIsWarmingUp] = useState(true);
-  const [triviaQuota, setTriviaQuota] = useState<TriviaQuotaSnapshot | null>(null);
-  const [triviaUnlockSeconds, setTriviaUnlockSeconds] = useState(0);
-  const [triviaGateNotice, setTriviaGateNotice] = useState("");
-  const [railTop, setRailTop] = useState<number | null>(null);
-  const [railPlaceholderHeight, setRailPlaceholderHeight] = useState(GAME_RAIL_MIN_PLACEHOLDER_HEIGHT_PX);
-  const [railContentNode, setRailContentNode] = useState<HTMLDivElement | null>(null);
-  const [weeklyPrizeTitle, setWeeklyPrizeTitle] = useState("Weekly Venue Champion Prize");
-  const [weeklyPrizeDescription, setWeeklyPrizeDescription] = useState(
-    "Top the leaderboard by week end to earn this venue's reward."
+function formatBadgeCount(value: number): string {
+  const safeCount = Math.max(0, Math.floor(value));
+  if (safeCount > 99) {
+    return "99+";
+  }
+  return String(safeCount);
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function pathMatches(expectedPath: string, candidatePath: string): boolean {
+  if (!expectedPath) {
+    return true;
+  }
+  return candidatePath === expectedPath || candidatePath.startsWith(`${expectedPath}/`);
+}
+
+function WhistleIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
+      <circle cx="41" cy="37" r="16" fill="#fef3c7" stroke="#0f172a" strokeWidth="4" />
+      <circle cx="41" cy="37" r="5.4" fill="#0f172a" />
+      <path d="M24 29 8 21l-2 12 14 9" fill="#f59e0b" stroke="#0f172a" strokeWidth="4" strokeLinejoin="round" />
+      <path d="M21 41c-6 0-11 4-11 9" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
+      <path d="m54 19 8-4" stroke="#ef4444" strokeWidth="4" strokeLinecap="round" />
+      <path d="m55 27 8 1" stroke="#ef4444" strokeWidth="4" strokeLinecap="round" />
+    </svg>
   );
-  const [weeklyPrizePoints, setWeeklyPrizePoints] = useState(0);
+}
+
+function TriviaGlyph({ className = "h-10 w-10" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
+      <circle cx="32" cy="32" r="24" fill="#f59e0b" stroke="#0f172a" strokeWidth="4" />
+      <path d="M16 32h32M32 16v32" stroke="#0f172a" strokeWidth="3.4" opacity="0.28" />
+      <path d="M32 20c6 0 10 4 10 8 0 3-2 5-4 7-2 2-3 3-3 6" stroke="#0f172a" strokeWidth="4.2" fill="none" strokeLinecap="round" />
+      <circle cx="35" cy="47" r="2.6" fill="#0f172a" />
+    </svg>
+  );
+}
+
+function BingoGlyph({ className = "h-10 w-10" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
+      <circle cx="32" cy="32" r="24" fill="#fb923c" stroke="#0f172a" strokeWidth="4" />
+      <path d="M10 32h44M32 10v44" stroke="#0f172a" strokeWidth="3" opacity="0.28" />
+      <path d="M16 20c10 8 22 17 32 24" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
+      <path d="M16 44c10-8 22-17 32-24" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PickEmGlyph({ className = "h-10 w-10" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
+      <path d="M19 14h26v8l-5 8H24l-5-8z" fill="#fde68a" stroke="#0f172a" strokeWidth="4" strokeLinejoin="round" />
+      <path d="M22 30h20v6c0 6-4 12-10 12s-10-6-10-12z" fill="#facc15" stroke="#0f172a" strokeWidth="4" />
+      <path d="M15 18c-3 0-6 2-6 5 0 4 3 8 8 8" fill="none" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
+      <path d="M49 18c3 0 6 2 6 5 0 4-3 8-8 8" fill="none" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
+      <path d="m26 36 4 4 8-9" fill="none" stroke="#1d4ed8" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function FantasyGlyph({ className = "h-10 w-10" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
+      <path d="M32 8 50 16v14c0 12-7 21-18 26C21 51 14 42 14 30V16z" fill="#34d399" stroke="#0f172a" strokeWidth="4" strokeLinejoin="round" />
+      <path d="m32 20 3.8 7.6 8.4 1.2-6.1 5.9 1.4 8.3-7.5-3.9-7.5 3.9 1.4-8.3-6.1-5.9 8.4-1.2z" fill="#fef08a" stroke="#0f172a" strokeWidth="3" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function TrophyGlyph({ className = "h-10 w-10" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
+      <path d="M20 10h24v10c0 8-5 15-12 18-7-3-12-10-12-18z" fill="#fcd34d" stroke="#0f172a" strokeWidth="4" />
+      <path d="M24 38h16v8H24z" fill="#f59e0b" stroke="#0f172a" strokeWidth="4" />
+      <path d="M18 46h28v8H18z" fill="#facc15" stroke="#0f172a" strokeWidth="4" />
+      <path d="M44 14h8c0 7-4 12-10 13" fill="none" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
+      <path d="M20 14h-8c0 7 4 12 10 13" fill="none" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
+      <circle cx="32" cy="21" r="4" fill="#fef9c3" stroke="#0f172a" strokeWidth="3" />
+    </svg>
+  );
+}
+
+function GameGlyph({ gameKey }: { gameKey: VenueGameKey }) {
+  if (gameKey === "trivia") return <TriviaGlyph />;
+  if (gameKey === "bingo") return <BingoGlyph />;
+  if (gameKey === "pickem") return <PickEmGlyph />;
+  if (gameKey === "fantasy") return <FantasyGlyph />;
+  return <TriviaGlyph />;
+}
+
+function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; initialEntries?: LeaderboardEntry[] }) {
+  const router = useRouter();
+  const initialUserId = useMemo(() => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+    return (getUserId() ?? "").trim();
+  }, []);
+  const bootstrapSnapshotRef = useRef(
+    initialUserId
+      ? consumeVenueHomeBootstrap({
+          venueId: venue.id,
+          userId: initialUserId,
+        })
+      : null
+  );
+  const bootstrapSnapshot = bootstrapSnapshotRef.current;
+  const entryHandoffVisibleOnMount = useMemo(() => {
+    if (!initialUserId) {
+      return false;
+    }
+    return consumeVenueHomeEntryHandoff({
+      venueId: venue.id,
+      userId: initialUserId,
+    });
+  }, [initialUserId, venue.id]);
+  const [pendingDestination, setPendingDestination] = useState<VenueGameKey | null>(null);
+  const [triviaQuota, setTriviaQuota] = useState<TriviaQuotaSnapshot | null>(bootstrapSnapshot?.triviaQuota ?? null);
+  const [triviaUnlockSeconds, setTriviaUnlockSeconds] = useState(() => {
+    const quota = bootstrapSnapshot?.triviaQuota ?? null;
+    const isLocked = Boolean(quota && !quota.isAdminBypass && quota.questionsRemaining <= 0);
+    return isLocked ? Math.max(0, Math.floor(quota?.windowSecondsRemaining ?? 0)) : 0;
+  });
+  const [triviaGateNotice, setTriviaGateNotice] = useState("");
+  const [homeBadgeCounts, setHomeBadgeCounts] = useState<HomeBadgeCounts>(bootstrapSnapshot?.homeBadgeCounts ?? {});
+  const [dismissedBadgeGames, setDismissedBadgeGames] = useState<Set<VenueGameKey>>(new Set());
+  const [weeklyPrizeTitle, setWeeklyPrizeTitle] = useState(
+    bootstrapSnapshot?.weeklyPrizeTitle ?? "Weekly Venue Champion Prize"
+  );
+  const [weeklyPrizeDescription, setWeeklyPrizeDescription] = useState(
+    bootstrapSnapshot?.weeklyPrizeDescription ?? "Top the leaderboard by week end to earn this venue's reward."
+  );
+  const [weeklyPrizePoints, setWeeklyPrizePoints] = useState(bootstrapSnapshot?.weeklyPrizePoints ?? 0);
+  const [activeScreen, setActiveScreen] = useState<HomeScreenIndex>(0);
+  const [homeRevealComplete, setHomeRevealComplete] = useState(!entryHandoffVisibleOnMount);
+  const venueReadyDispatchedRef = useRef(false);
+  const swipeViewportRef = useRef<HTMLDivElement | null>(null);
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
   const warmupPromiseRef = useRef<Promise<void> | null>(null);
   const warmupStartedRef = useRef(false);
-  const railAnchorRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const storedUserId = getUserId() ?? "";
@@ -58,6 +219,56 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
   }, []);
 
   const venueDisplayName = getVenueDisplayName(venue as any);
+
+  useEffect(() => {
+    if (!entryHandoffVisibleOnMount || typeof window === "undefined") {
+      setHomeRevealComplete(true);
+      return;
+    }
+    const expectedPath = window.location.pathname;
+    const onOverlayHidden = (event: Event) => {
+      const detail = (event as CustomEvent<{ path?: string } | undefined>).detail;
+      const hiddenPath = String(detail?.path ?? "").trim();
+      if (!pathMatches(expectedPath, hiddenPath)) {
+        return;
+      }
+      setHomeRevealComplete(true);
+    };
+    window.addEventListener("tp:global-transition-overlay-hidden", onOverlayHidden as EventListener);
+    const fallbackTimer = window.setTimeout(() => {
+      setHomeRevealComplete(true);
+    }, 1800);
+
+    return () => {
+      window.removeEventListener("tp:global-transition-overlay-hidden", onOverlayHidden as EventListener);
+      window.clearTimeout(fallbackTimer);
+    };
+  }, [entryHandoffVisibleOnMount]);
+
+  useEffect(() => {
+    if (venueReadyDispatchedRef.current || typeof window === "undefined") {
+      return;
+    }
+    venueReadyDispatchedRef.current = true;
+    const rafId = window.requestAnimationFrame(() => {
+      try {
+        window.sessionStorage.setItem(
+          "tp:venue-home-ready:v1",
+          JSON.stringify({ path: window.location.pathname, at: Date.now() })
+        );
+      } catch {
+        // Ignore storage failures on restricted browsers.
+      }
+      window.dispatchEvent(
+        new CustomEvent("tp:venue-home-ready", {
+          detail: { path: window.location.pathname },
+        })
+      );
+    });
+    return () => {
+      window.cancelAnimationFrame(rafId);
+    };
+  }, []);
 
   const triggerPulse = () => {
     if (typeof navigator === "undefined" || !("vibrate" in navigator)) return;
@@ -74,6 +285,50 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
     router.push("/");
   };
 
+  const goToScreen = useCallback((screenIndex: HomeScreenIndex) => {
+    const viewport = swipeViewportRef.current;
+    if (!viewport) {
+      return;
+    }
+    const nextIndex = clamp(screenIndex, 0, SWIPE_SCREEN_COUNT - 1);
+    viewport.scrollTo({
+      left: viewport.clientWidth * nextIndex,
+      behavior: "smooth",
+    });
+  }, []);
+
+  const onSwipeTouchStart = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+    const touch = event.touches[0];
+    touchStartXRef.current = touch?.clientX ?? null;
+    touchStartYRef.current = touch?.clientY ?? null;
+  }, []);
+
+  const onSwipeTouchEnd = useCallback(
+    (event: React.TouchEvent<HTMLDivElement>) => {
+      const startX = touchStartXRef.current;
+      const startY = touchStartYRef.current;
+      touchStartXRef.current = null;
+      touchStartYRef.current = null;
+      if (startX === null || startY === null) return;
+
+      const touch = event.changedTouches[0];
+      if (!touch) return;
+
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+      if (Math.abs(dx) < SWIPE_TRIGGER_PX || Math.abs(dx) < Math.abs(dy) * 0.62) return;
+
+      if (dx < 0 && activeScreen === 0) {
+        goToScreen(1);
+        return;
+      }
+      if (dx > 0 && activeScreen === 1) {
+        goToScreen(0);
+      }
+    },
+    [activeScreen, goToScreen]
+  );
+
   const loadTriviaQuota = useCallback(async (): Promise<TriviaQuotaSnapshot | null> => {
     const userId = (getUserId() ?? "").trim();
     if (!userId) {
@@ -81,13 +336,10 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
       setTriviaUnlockSeconds(0);
       return null;
     }
-
     try {
       const response = await fetch(`/api/trivia/quota?userId=${encodeURIComponent(userId)}`, { cache: "no-store" });
       const payload = (await response.json()) as { ok: boolean; quota?: TriviaQuotaSnapshot | null };
-      if (!payload.ok) {
-        return null;
-      }
+      if (!payload.ok) return null;
       const nextQuota = payload.quota ?? null;
       setTriviaQuota(nextQuota);
       const isLocked = Boolean(nextQuota && !nextQuota.isAdminBypass && nextQuota.questionsRemaining <= 0);
@@ -98,169 +350,142 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
     }
   }, []);
 
+  const loadHomeBadges = useCallback(async () => {
+    const userId = (getUserId() ?? "").trim();
+    if (!userId) {
+      setHomeBadgeCounts({});
+      return;
+    }
+    try {
+      const [bingoResponse, pickEmResponse, challengesResponse] = await Promise.all([
+        fetch(`/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=true`, { cache: "no-store" }),
+        fetch(`/api/pickem/picks?userId=${encodeURIComponent(userId)}&includeSettled=true&limit=200`, { cache: "no-store" }),
+        fetch(`/api/challenges?userId=${encodeURIComponent(userId)}&includeResolved=true`, { cache: "no-store" }),
+      ]);
+      const [bingoPayload, pickEmPayload, challengesPayload] = (await Promise.all([
+        bingoResponse.json(),
+        pickEmResponse.json(),
+        challengesResponse.json(),
+      ])) as [BingoBadgePayload, PickEmBadgePayload, ChallengesBadgePayload];
+      if (!bingoPayload.ok || !pickEmPayload.ok || !challengesPayload.ok) return;
+      const activeBingoCount = (bingoPayload.cards ?? []).filter((card) => card.status === "active").length;
+      const pendingPickEmCount = (pickEmPayload.picks ?? []).filter((pick) => pick.status === "pending").length;
+      const pendingFantasyCount = (challengesPayload.challenges ?? []).filter(
+        (challenge) => challenge.status === "pending" && challenge.receiverUserId === userId
+      ).length;
+      setHomeBadgeCounts({ bingo: activeBingoCount, pickem: pendingPickEmCount, fantasy: pendingFantasyCount });
+    } catch {}
+  }, []);
+
   const runWarmup = useCallback(async () => {
     if (warmupPromiseRef.current) return warmupPromiseRef.current;
     const userId = getUserId() ?? "";
     const venueId = getVenueId() ?? "";
-    if (!userId || !venueId) return setIsWarmingUp(false);
-
+    if (!userId || !venueId) return;
     const p = (async () => {
+      let warmedTriviaQuota: TriviaQuotaSnapshot | null = null;
       try {
-        let warmedTriviaQuota: TriviaQuotaSnapshot | null = null;
-        try {
-          const [tRes, tQuotaRes] = await Promise.all([
-            fetch(`/api/trivia?userId=${encodeURIComponent(userId)}`, { cache: "no-store" }),
-            fetch(`/api/trivia/quota?userId=${encodeURIComponent(userId)}`, { cache: "no-store" }),
-          ]);
-          const body = await tRes.json().catch(() => null);
-          const quotaBody = (await tQuotaRes.json().catch(() => null)) as
-            | { ok?: boolean; quota?: TriviaQuotaSnapshot | null }
-            | null;
-          if (quotaBody?.ok) {
-            warmedTriviaQuota = quotaBody.quota ?? null;
-            setTriviaQuota(warmedTriviaQuota);
-            const isLocked = Boolean(
-              warmedTriviaQuota &&
-              !warmedTriviaQuota.isAdminBypass &&
-              warmedTriviaQuota.questionsRemaining <= 0
-            );
-            setTriviaUnlockSeconds(
-              isLocked ? Math.max(0, Math.floor(warmedTriviaQuota?.windowSecondsRemaining ?? 0)) : 0
-            );
-          }
-          if (body?.ok && Array.isArray(body.questions)) {
-            try {
-              writeWarmTriviaCache({ userId, venueId, questions: body.questions, quota: warmedTriviaQuota });
-            } catch {}
-          }
-        } catch {}
-
-        try {
-          const pr = await fetch(
-            "/api/predictions?page=1&pageSize=24&excludeSensitive=false",
-            { cache: "no-store" }
-          );
-          const pb = await pr.json().catch(() => null);
-          if (pb?.ok) {
-            try {
-              writeWarmPredictionsCache({ venueId, payload: pb });
-            } catch {}
-          }
-        } catch {}
-
-        try {
-          await fetch("/api/pickem/sports", { cache: "no-store" });
-        } catch {}
-
-        try {
-          const prizeRes = await fetch(`/api/prizes?venueId=${encodeURIComponent(venueId)}`, {
-            cache: "no-store",
-          });
-          const prizeBody = await prizeRes.json().catch(() => null);
-          if (prizeBody?.ok && prizeBody.weeklyPrize) {
-            setWeeklyPrizeTitle(String(prizeBody.weeklyPrize.prizeTitle ?? "Weekly Venue Champion Prize"));
-            setWeeklyPrizeDescription(
-              String(
-                prizeBody.weeklyPrize.prizeDescription ??
-                  "Top the leaderboard by week end to earn this venue's reward."
-              )
-            );
-            setWeeklyPrizePoints(Math.max(0, Number(prizeBody.weeklyPrize.rewardPoints ?? 0)));
-          }
-        } catch {}
-      } finally {
-        setIsWarmingUp(false);
-      }
+        const [tRes, tQuotaRes] = await Promise.all([
+          fetch(`/api/trivia?userId=${encodeURIComponent(userId)}`, { cache: "no-store" }),
+          fetch(`/api/trivia/quota?userId=${encodeURIComponent(userId)}`, { cache: "no-store" }),
+        ]);
+        const body = await tRes.json().catch(() => null);
+        const quotaBody = (await tQuotaRes.json().catch(() => null)) as { ok?: boolean; quota?: TriviaQuotaSnapshot | null } | null;
+        if (quotaBody?.ok) {
+          warmedTriviaQuota = quotaBody.quota ?? null;
+          setTriviaQuota(warmedTriviaQuota);
+          const isLocked = Boolean(warmedTriviaQuota && !warmedTriviaQuota.isAdminBypass && warmedTriviaQuota.questionsRemaining <= 0);
+          setTriviaUnlockSeconds(isLocked ? Math.max(0, Math.floor(warmedTriviaQuota?.windowSecondsRemaining ?? 0)) : 0);
+        }
+        if (body?.ok && Array.isArray(body.questions)) {
+          try {
+            writeWarmTriviaCache({ userId, venueId, questions: body.questions, quota: warmedTriviaQuota });
+          } catch {}
+        }
+      } catch {}
+      try {
+        const pr = await fetch("/api/predictions?page=1&pageSize=24&excludeSensitive=false", { cache: "no-store" });
+        const pb = await pr.json().catch(() => null);
+        if (pb?.ok) {
+          try {
+            writeWarmPredictionsCache({ venueId, payload: pb });
+          } catch {}
+        }
+      } catch {}
+      try {
+        await fetch("/api/pickem/sports", { cache: "no-store" });
+      } catch {}
+      try {
+        const prizeRes = await fetch(`/api/prizes?venueId=${encodeURIComponent(venueId)}`, { cache: "no-store" });
+        const prizeBody = await prizeRes.json().catch(() => null);
+        if (prizeBody?.ok && prizeBody.weeklyPrize) {
+          setWeeklyPrizeTitle(String(prizeBody.weeklyPrize.prizeTitle ?? "Weekly Venue Champion Prize"));
+          setWeeklyPrizeDescription(String(prizeBody.weeklyPrize.prizeDescription ?? "Top the leaderboard by week end to earn this venue's reward."));
+          setWeeklyPrizePoints(Math.max(0, Number(prizeBody.weeklyPrize.rewardPoints ?? 0)));
+        }
+      } catch {}
+      await loadHomeBadges();
     })();
-
     warmupPromiseRef.current = p;
     return p;
-  }, []);
+  }, [loadHomeBadges]);
 
   useEffect(() => {
-    if (triviaUnlockSeconds <= 0) {
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      setTriviaUnlockSeconds((value) => Math.max(0, value - 1));
-    }, 1000);
-    return () => {
-      window.clearTimeout(timer);
-    };
+    if (triviaUnlockSeconds <= 0) return;
+    const timer = window.setTimeout(() => setTriviaUnlockSeconds((value) => Math.max(0, value - 1)), 1000);
+    return () => window.clearTimeout(timer);
   }, [triviaUnlockSeconds]);
 
   useEffect(() => {
-    if (!triviaGateNotice) {
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      setTriviaGateNotice("");
-    }, 3500);
-    return () => {
-      window.clearTimeout(timer);
-    };
+    if (!triviaGateNotice) return;
+    const timer = window.setTimeout(() => setTriviaGateNotice(""), 3500);
+    return () => window.clearTimeout(timer);
   }, [triviaGateNotice]);
 
   useEffect(() => {
-    const anchor = railAnchorRef.current;
-    if (!anchor || typeof window === "undefined") return;
-
-    let rafId: number | null = null;
-    const measure = () => {
-      const rect = anchor.getBoundingClientRect();
-      setRailTop(rect.top + window.scrollY);
-    };
-    const scheduleMeasure = () => {
-      if (rafId !== null) {
-        return;
-      }
-      rafId = window.requestAnimationFrame(() => {
-        rafId = null;
-        measure();
-      });
-    };
-
-    const raf1 = window.requestAnimationFrame(measure);
-    const raf2 = window.requestAnimationFrame(measure);
-    measure();
-
-    const onResize = () => scheduleMeasure();
-    const onScroll = () => scheduleMeasure();
-    window.addEventListener("resize", onResize);
-    window.addEventListener("orientationchange", onResize);
-    window.addEventListener("scroll", onScroll, true);
-
-    const ro = new ResizeObserver(() => scheduleMeasure());
-    ro.observe(anchor);
-    if (anchor.parentElement) {
-      ro.observe(anchor.parentElement);
-    }
-    if (document.body) {
-      ro.observe(document.body);
-    }
-
-    // Catch late hydration/layout changes above the anchor on small devices.
-    const settleTimer = window.setInterval(scheduleMeasure, 250);
-    const stopSettleTimer = window.setTimeout(() => {
-      window.clearInterval(settleTimer);
-    }, 4000);
-
-    return () => {
-      window.cancelAnimationFrame(raf1);
-      window.cancelAnimationFrame(raf2);
-      if (rafId !== null) {
-        window.cancelAnimationFrame(rafId);
-      }
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("orientationchange", onResize);
-      window.removeEventListener("scroll", onScroll, true);
-      window.clearInterval(settleTimer);
-      window.clearTimeout(stopSettleTimer);
-      ro.disconnect();
-    };
-  }, []);
+    if (!homeRevealComplete) return;
+    const userId = (getUserId() ?? "").trim();
+    if (!userId) return;
+    const interval = window.setInterval(() => void loadHomeBadges(), 20000);
+    return () => window.clearInterval(interval);
+  }, [homeRevealComplete, loadHomeBadges]);
 
   useEffect(() => {
+    const viewport = swipeViewportRef.current;
+    if (!viewport || typeof window === "undefined") return;
+    let rafId: number | null = null;
+    const measureActiveScreen = () => {
+      const width = Math.max(1, viewport.clientWidth);
+      const rawIndex = viewport.scrollLeft / width;
+      const next = clamp(Math.round(rawIndex), 0, SWIPE_SCREEN_COUNT - 1) as HomeScreenIndex;
+      setActiveScreen(next);
+    };
+    const onScroll = () => {
+      if (rafId !== null) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        measureActiveScreen();
+      });
+    };
+    const onResize = () => {
+      const nextLeft = viewport.clientWidth * activeScreen;
+      viewport.scrollTo({ left: nextLeft });
+      measureActiveScreen();
+    };
+    measureActiveScreen();
+    viewport.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    return () => {
+      if (rafId !== null) window.cancelAnimationFrame(rafId);
+      viewport.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+    };
+  }, [activeScreen]);
+
+  useEffect(() => {
+    if (!homeRevealComplete) return;
     router.prefetch("/trivia");
     router.prefetch("/predictions");
     router.prefetch("/pickem");
@@ -270,220 +495,160 @@ export function VenueHubClient({ venue, initialEntries = [] }: { venue: Venue; i
     router.prefetch("/active-games");
     router.prefetch("/redeem-prizes");
     router.prefetch("/activity");
-    if (!warmupStartedRef.current) {
+    if (!warmupStartedRef.current && !bootstrapSnapshotRef.current) {
       warmupStartedRef.current = true;
       void runWarmup();
     }
-  }, [runWarmup, router]);
-
-  useEffect(() => {
-    if (!railContentNode || typeof window === "undefined") {
-      return;
-    }
-
-    const measure = () => {
-      const nextHeight = Math.ceil(railContentNode.getBoundingClientRect().height + 12);
-      setRailPlaceholderHeight(Math.max(GAME_RAIL_MIN_PLACEHOLDER_HEIGHT_PX, nextHeight));
-    };
-
-    measure();
-    const rafId = window.requestAnimationFrame(measure);
-    const resizeObserver = new ResizeObserver(() => {
-      measure();
-    });
-    resizeObserver.observe(railContentNode);
-
-    const onResize = () => measure();
-    window.addEventListener("resize", onResize);
-    window.addEventListener("orientationchange", onResize);
-
-    return () => {
-      window.cancelAnimationFrame(rafId);
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("orientationchange", onResize);
-      resizeObserver.disconnect();
-    };
-  }, [railContentNode, activeGameIndex, isWarmingUp]);
+  }, [homeRevealComplete, runWarmup, router]);
 
   const goTo = useCallback(
     async (dest: VenueGameKey, sourceElement: HTMLElement | null) => {
       const destination = VENUE_GAME_CARD_BY_KEY[dest];
       if (!destination) return;
-
       triggerPulse();
-
       if (dest === "trivia") {
         const latestQuota = await loadTriviaQuota();
         const triviaLocked = Boolean(latestQuota && !latestQuota.isAdminBypass && latestQuota.questionsRemaining <= 0);
         if (triviaLocked) {
           const unlockIn = Math.max(0, Math.floor(latestQuota?.windowSecondsRemaining ?? triviaUnlockSeconds));
           setTriviaUnlockSeconds(unlockIn);
-          setTriviaGateNotice(
-            unlockIn > 0
-              ? `Trivia is locked for now. Try again in ${formatCountdown(unlockIn)}.`
-              : "Trivia is locked for now. Please try again soon."
-          );
+          setTriviaGateNotice(unlockIn > 0 ? `Trivia is locked for now. Try again in ${formatCountdown(unlockIn)}.` : "Trivia is locked for now. Please try again soon.");
           return;
         }
       }
-
       setTriviaGateNotice("");
-      setPendingDestination(dest);
-      await runVenueGameOpenTransition({
-        gameKey: dest,
-        sourceElement,
-        targetPath: destination.path,
-        navigate: () => {
-          router.push(destination.path);
-        },
+      setDismissedBadgeGames((previous) => {
+        if (previous.has(dest)) return previous;
+        const next = new Set(previous);
+        next.add(dest);
+        return next;
       });
+      setPendingDestination(dest);
+      try {
+        await runVenueGameOpenTransition({
+          gameKey: dest,
+          sourceElement,
+          targetPath: destination.path,
+          navigate: () => router.push(destination.path),
+        });
+      } catch {
+        setPendingDestination(null);
+      }
     },
     [loadTriviaQuota, router, triviaUnlockSeconds]
   );
 
   const homeCards = useMemo(() => VENUE_HOME_GAME_KEYS.map((key) => VENUE_GAME_CARD_BY_KEY[key]), []);
-  const activeCard = homeCards[activeGameIndex] ?? homeCards[0];
+  const leaderboardInitialEntries =
+    bootstrapSnapshot?.leaderboardEntries && bootstrapSnapshot.leaderboardEntries.length > 0
+      ? bootstrapSnapshot.leaderboardEntries
+      : initialEntries;
   const triviaIsLocked = Boolean(triviaQuota && !triviaQuota.isAdminBypass && triviaQuota.questionsRemaining <= 0);
-  const triviaUnlockCountdown = triviaUnlockSeconds > 0
-    ? triviaUnlockSeconds
-    : triviaIsLocked
-      ? Math.max(0, Math.floor(triviaQuota?.windowSecondsRemaining ?? 0))
-      : 0;
+  const triviaUnlockCountdown = triviaUnlockSeconds > 0 ? triviaUnlockSeconds : triviaIsLocked ? Math.max(0, Math.floor(triviaQuota?.windowSecondsRemaining ?? 0)) : 0;
 
-  const goPrevCard = useCallback(() => {
-    setActiveGameIndex((index) => (index - 1 + homeCards.length) % homeCards.length);
-  }, [homeCards.length]);
-
-  const goNextCard = useCallback(() => {
-    setActiveGameIndex((index) => (index + 1) % homeCards.length);
-  }, [homeCards.length]);
-
-  const warmupTitle = useMemo(() => {
-    if (pendingDestination === "trivia") return "Opening Hightop Trivia™...";
-    if (pendingDestination === "predictions") return "Opening Hightop Sports Predictions™...";
-    if (pendingDestination === "pickem") return "Opening Hightop Pick 'Em™...";
-    if (pendingDestination === "fantasy") return "Opening Hightop Fantasy™...";
-    if (pendingDestination === "bingo") return "Opening Hightop Sports Bingo™...";
-    return "Getting everything ready";
-  }, [pendingDestination]);
-
-  const gameRailNode =
-        railTop !== null && typeof document !== "undefined"
-      ? createPortal(
-          <div className="absolute left-0 right-0 z-[80] pointer-events-none" style={{ top: railTop }}>
-            <div
-              ref={setRailContentNode}
-              className="relative pointer-events-auto overflow-visible bg-gradient-to-r from-[#1f2a36]/88 via-[#253444]/90 to-[#1f2a36]/88 py-3"
-            >
-              <div className="mx-auto max-w-[30rem] px-2 md:max-w-[28rem] lg:max-w-[26rem]">
-                <div className="flex items-center justify-center gap-2">
-                  <button
-                    type="button"
-                    onMouseDown={triggerPulse}
-                    onClick={goPrevCard}
-                    className="tp-clean-button inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl font-black text-slate-800"
-                    aria-label="Previous game"
-                  >
-                    ‹
-                  </button>
-                  {activeCard ? (
-                    <button
-                      type="button"
-                      onMouseDown={triggerPulse}
-                      onClick={(event) => {
-                        void goTo(activeCard.key, event.currentTarget);
-                      }}
-                      disabled={pendingDestination !== null}
-                      data-venue-game-card={activeCard.key}
-                      className="group relative inline-flex w-[clamp(18rem,95vw,22.5rem)] md:w-[clamp(16rem,40vw,19.5rem)] aspect-[3/4.9] text-left"
-                      style={{ border: 0, boxShadow: "none", background: "transparent" }}
-                    >
-                      <GameRuleCardPanel gameKey={activeCard.key} layout="hub" className="h-full w-full" />
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    onMouseDown={triggerPulse}
-                    onClick={goNextCard}
-                    className="tp-clean-button inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl font-black text-slate-800"
-                    aria-label="Next game"
-                  >
-                    ›
-                  </button>
-                </div>
-                <div className="mt-2 text-center text-xs font-black tracking-[0.12em] text-white/90">
-                  {Math.min(homeCards.length, activeGameIndex + 1)}/{homeCards.length}
-                </div>
-                {activeCard?.key === "trivia" && triviaUnlockCountdown > 0 ? (
-                  <div className="mt-2 rounded-full border border-amber-200/80 bg-amber-100/95 px-3 py-1.5 text-center text-[11px] font-black tracking-[0.08em] text-amber-900">
-                    Trivia unlocks in {formatCountdown(triviaUnlockCountdown)}
-                  </div>
-                ) : null}
-                {triviaGateNotice ? (
-                  <div className="mt-2 rounded-xl border border-rose-200/80 bg-rose-100/95 px-3 py-2 text-center text-xs font-semibold text-rose-900">
-                    {triviaGateNotice}
-                  </div>
-                ) : null}
-              </div>
-              {isWarmingUp && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="bg-white/90 px-4 py-2 rounded-full text-sm font-medium shadow">{warmupTitle}</div>
-                </div>
-              )}
-            </div>
-          </div>,
-          document.body
-        )
-      : null;
+  const visibleBadgeByGame = useMemo(() => {
+    const badges = new Map<VenueGameKey, string>();
+    if (triviaUnlockCountdown > 0) badges.set("trivia", "!");
+    for (const [gameKey, count] of Object.entries(homeBadgeCounts) as Array<[VenueGameKey, number | undefined]>) {
+      if (!count || count <= 0) continue;
+      badges.set(gameKey, formatBadgeCount(count));
+    }
+    for (const dismissedGame of dismissedBadgeGames) badges.delete(dismissedGame);
+    return badges;
+  }, [dismissedBadgeGames, homeBadgeCounts, triviaUnlockCountdown]);
 
   return (
-    <>
-      {gameRailNode}
-      <div className="space-y-3">
-      <section className="mx-0 rounded-none bg-gradient-to-r from-[#1f2a36]/86 via-[#253444]/88 to-[#1f2a36]/86 py-2.5">
-        <div className="relative z-[120] px-2">
-          <div className="tp-hud-card !border-transparent !shadow-none rounded-2xl p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900">{venueDisplayName}</h2>
-                <div className="text-sm text-slate-700">Join games and view leaderboard</div>
-              </div>
-              <div>
-                <button
-                  onClick={leaveVenue}
-                  className="rounded-full border-2 border-white bg-[#1f2a36] px-3 py-1 text-sm font-semibold text-white"
-                >
-                  Leave
-                </button>
-              </div>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <section className="relative shrink-0 px-2 pb-3">
+        <div className="relative overflow-hidden rounded-[1.4rem] border-[2px] border-[#cbd5e1]/70 bg-[linear-gradient(172deg,#2f241d_0%,#2a1f19_45%,#211712_100%)] p-3 shadow-[0_8px_0_rgba(15,23,42,0.28),0_12px_24px_rgba(15,23,42,0.26)]">
+          <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(14deg,rgba(255,255,255,0.03)_0px,rgba(255,255,255,0.03)_2px,rgba(255,255,255,0)_2px,rgba(255,255,255,0)_9px)]" />
+          <div className="pointer-events-none absolute inset-[7px] rounded-[1rem] border border-[#94a3b8]/30" />
+          <div className="relative flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-[clamp(1.3rem,4.9vw,2rem)] font-black leading-[0.98] text-cyan-200 [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_0_8px_rgba(34,211,238,0.5),0_0_20px_rgba(34,211,238,0.35),0_2px_0_rgba(8,47,73,0.9)]">
+                {venueDisplayName}
+              </h2>
             </div>
+            <button
+              onMouseDown={triggerPulse}
+              onClick={leaveVenue}
+              className="tp-clean-button inline-flex items-center gap-1 rounded-xl border-[2px] border-emerald-300/85 bg-[linear-gradient(180deg,#052e2b_0%,#022c22_100%)] px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-emerald-200 shadow-[0_0_14px_rgba(16,185,129,0.35),0_3px_0_rgba(2,44,34,1)] transition hover:brightness-110 active:translate-y-[1px]"
+            >
+              <WhistleIcon className="h-5 w-5" />
+              <span className="leading-none">Close Out</span>
+            </button>
           </div>
-
-          <div className="mt-3 tp-hud-card !border-transparent !shadow-none rounded-2xl p-3">
-            <div className="text-xs font-black uppercase tracking-[0.16em] text-slate-700">This Week&apos;s Prize</div>
-            <div className="mt-1 text-base font-semibold text-slate-900">{weeklyPrizeTitle}</div>
-            <div className="text-xs text-slate-700">{weeklyPrizeDescription}</div>
-            {weeklyPrizePoints > 0 ? (
-              <div className="mt-1 text-xs font-semibold text-slate-800">Bonus reward: +{weeklyPrizePoints} points</div>
-            ) : null}
-          </div>
-
         </div>
 
-        <div ref={railAnchorRef} className="mt-3" style={{ height: railPlaceholderHeight }} aria-hidden />
+        <div className="relative z-20 mt-4 flex items-center justify-center gap-2">
+          <button type="button" onClick={() => goToScreen(0)} className={`tp-clean-button rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${activeScreen === 0 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-pressed={activeScreen === 0}>Games</button>
+          <button type="button" onClick={() => goToScreen(1)} className={`tp-clean-button rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${activeScreen === 1 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-pressed={activeScreen === 1}>Leaderboard</button>
+        </div>
       </section>
 
-      <div className="tp-hud-card !border-transparent !shadow-none rounded-2xl p-4" style={{ background: "#4a2e18" }}>
-        <div className="inline-flex rounded-xl border-2 border-[#3b2412] bg-[#1f5136] px-3 py-1.5 shadow-[0_2px_0_rgba(0,0,0,0.25)]">
-          <h3 className="text-2xl font-semibold text-[#ecf8f1] [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.45)]">
-            Leaderboard
-          </h3>
-        </div>
-        <div className="mt-3">
-          <LeaderboardTable venueId={venue.id} initialEntries={initialEntries} />
+      <div className="relative min-h-0 flex-1 overflow-hidden">
+        <div ref={swipeViewportRef} onTouchStart={onSwipeTouchStart} onTouchEnd={onSwipeTouchEnd} className="flex h-full w-full touch-pan-y snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Venue home screens">
+          <section className="relative h-full w-full shrink-0 snap-start overflow-y-auto px-3 pb-3 pt-1">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(14,165,233,0.3)_0%,rgba(14,165,233,0)_36%),radial-gradient(circle_at_84%_22%,rgba(251,146,60,0.35)_0%,rgba(251,146,60,0)_35%),radial-gradient(circle_at_52%_84%,rgba(236,72,153,0.3)_0%,rgba(236,72,153,0)_43%)]" />
+            <div className="relative mx-auto w-full max-w-[24rem] pt-1">
+              <div className="grid w-full grid-cols-2 gap-3 pb-2 sm:gap-4">
+                {homeCards.map((card) => {
+                  const isOpening = pendingDestination === card.key;
+                  const badge = visibleBadgeByGame.get(card.key);
+                  const titleLines = GAME_TITLE_LINES_BY_KEY[card.key];
+                  return (
+                    <button key={card.key} type="button" onMouseDown={triggerPulse} onClick={(event) => { void goTo(card.key, event.currentTarget); }} disabled={pendingDestination !== null} data-venue-game-card={card.key} className={`tp-clean-button group relative aspect-square w-full overflow-hidden !rounded-[22%] !border-[2px] !border-white/90 !shadow-[0_10px_20px_rgba(15,23,42,0.35)] p-0 text-left transition ${isOpening ? "opacity-90" : "hover:scale-[1.025] active:scale-[0.985]"}`}>
+                      <div className={`absolute inset-0 ${GAME_ICON_BG_BY_KEY[card.key]}`} />
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_26%_18%,rgba(255,255,255,0.38)_0%,rgba(255,255,255,0.1)_40%,rgba(255,255,255,0)_72%)]" />
+                      <div className="relative flex h-full flex-col items-center justify-center gap-2 p-2 text-center">
+                        <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-white/65 bg-white/20 shadow-[0_3px_10px_rgba(2,6,23,0.35)]"><GameGlyph gameKey={card.key} /></span>
+                        <span className="text-[clamp(2.16rem,8vw,2.76rem)] font-black leading-[0.8] text-white [font-family:'Kalam','Bree_Serif','Nunito',cursive] [text-shadow:0_2px_0_rgba(15,23,42,0.58),0_4px_10px_rgba(2,6,23,0.45)]">
+                          {titleLines.map((line) => <span key={`${card.key}-${line}`} className="block">{line}</span>)}
+                        </span>
+                      </div>
+                      {badge ? <span className="absolute right-1.5 top-1.5 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[10px] font-black leading-none text-white shadow-[0_2px_8px_rgba(15,23,42,0.45)]">{badge}</span> : null}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            {triviaUnlockCountdown > 0 ? <div className="mx-auto mt-2 max-w-[22rem] rounded-full border border-amber-200/80 bg-amber-100/95 px-3 py-1.5 text-center text-[11px] font-black tracking-[0.08em] text-amber-900">Trivia unlocks in {formatCountdown(triviaUnlockCountdown)}</div> : null}
+            {triviaGateNotice ? <div className="mx-auto mt-2 max-w-[22rem] rounded-xl border border-rose-200/80 bg-rose-100/95 px-3 py-2 text-center text-xs font-semibold text-rose-900">{triviaGateNotice}</div> : null}
+          </section>
+
+          <section className="h-full w-full shrink-0 snap-start overflow-y-auto px-3 pb-3 pt-1">
+            <div className="mx-auto w-full max-w-[26rem] space-y-3">
+              <div className="relative overflow-hidden rounded-[1.4rem] border-[3px] border-[#0f172a]/80 bg-[linear-gradient(146deg,#0f766e_0%,#06b6d4_50%,#22d3ee_100%)] p-3 shadow-[0_8px_0_rgba(15,23,42,0.35)]">
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_86%_10%,rgba(254,240,138,0.35)_0%,rgba(254,240,138,0)_34%)]" />
+                <div className="relative flex items-start gap-2">
+                  <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/70 bg-white/25 shadow-[0_2px_8px_rgba(2,6,23,0.35)]"><TrophyGlyph className="h-10 w-10 scale-[4]" /></div>
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-black uppercase tracking-[0.14em] text-cyan-50">This Week&apos;s Prize</div>
+                    <div className="text-base font-black leading-tight text-white">{weeklyPrizeTitle}</div>
+                    <div className="text-xs text-cyan-50/95">{weeklyPrizeDescription}</div>
+                    {weeklyPrizePoints > 0 ? <div className="mt-1 text-xs font-black text-amber-100">Bonus reward: +{weeklyPrizePoints} points</div> : null}
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-[1.6rem] border-[3px] border-[#3b2412] bg-[#4a2e18] p-3 shadow-[0_8px_0_rgba(15,23,42,0.3)]">
+                <div className="inline-flex rounded-xl border-2 border-[#3b2412] bg-[#1f5136] px-3 py-1.5 shadow-[0_2px_0_rgba(0,0,0,0.25)]">
+                  <h3 className="text-2xl font-semibold text-[#ecf8f1] [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.45)]">Leaderboard</h3>
+                </div>
+                <div className="mt-3">
+                  <LeaderboardTable
+                    venueId={venue.id}
+                    initialEntries={leaderboardInitialEntries}
+                    isEnabled={homeRevealComplete}
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
-      </div>
-    </>
+    </div>
   );
 }
+
+export const VenueHubClient = React.memo(VenueHubClientInner);
+VenueHubClient.displayName = "VenueHubClient";

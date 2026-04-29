@@ -17,8 +17,8 @@ export default async function VenuePage({
   const entries = await getLeaderboardForVenue(venue.id);
 
   return (
-    <PageShell title="" noContainer showPageTitle={false} showBranding={false} showAlerts>
-      <div className="h-full space-y-3 overflow-y-auto">
+    <PageShell title="" noContainer lockViewport showPageTitle={false} showBranding={false} showAlerts>
+      <div className="h-full w-full overflow-hidden">
         <VenueHubClient venue={venue} initialEntries={entries} />
       </div>
     </PageShell>

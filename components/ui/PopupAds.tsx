@@ -64,6 +64,85 @@ function writeLastShownAt(trigger: PopupTrigger, timestamp: number): void {
   }
 }
 
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+async function waitForWindowLoadReady(timeoutMs = 5000): Promise<void> {
+  if (typeof window === "undefined") {
+    return;
+  }
+  if (document.readyState !== "complete") {
+    await new Promise<void>((resolve) => {
+      let resolved = false;
+      const finish = () => {
+        if (resolved) return;
+        resolved = true;
+        window.removeEventListener("load", onLoad);
+        window.clearTimeout(timeoutId);
+        resolve();
+      };
+      const onLoad = () => finish();
+      const timeoutId = window.setTimeout(finish, Math.max(1200, timeoutMs));
+      window.addEventListener("load", onLoad, { once: true });
+    });
+  }
+  await new Promise<void>((resolve) => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => resolve());
+    });
+  });
+  await wait(140);
+}
+
+async function waitForVenueHomeReady(pathname: string | null, timeoutMs = 6000): Promise<void> {
+  if (typeof window === "undefined") {
+    return;
+  }
+  await waitForWindowLoadReady(timeoutMs);
+  try {
+    const raw = window.sessionStorage.getItem("tp:venue-home-ready:v1");
+    if (raw) {
+      const parsed = JSON.parse(raw) as { path?: string; at?: number };
+      const readyPath = String(parsed.path ?? "");
+      const at = Number(parsed.at ?? 0);
+      const expectedPath = String(pathname ?? "");
+      if (
+        (!expectedPath || !readyPath || readyPath === expectedPath) &&
+        Number.isFinite(at) &&
+        at > 0 &&
+        Date.now() - at <= 15000
+      ) {
+        return;
+      }
+    }
+  } catch {
+    // Ignore storage parsing failures.
+  }
+  await new Promise<void>((resolve) => {
+    let resolved = false;
+    const expectedPath = String(pathname ?? "");
+    const finish = () => {
+      if (resolved) return;
+      resolved = true;
+      window.removeEventListener("tp:venue-home-ready", onReady as EventListener);
+      window.clearTimeout(timeoutId);
+      resolve();
+    };
+    const onReady = (event: Event) => {
+      const detail = (event as CustomEvent<{ path?: string } | undefined>).detail;
+      const readyPath = String(detail?.path ?? "");
+      if (!expectedPath || !readyPath || readyPath === expectedPath) {
+        finish();
+      }
+    };
+    const timeoutId = window.setTimeout(finish, Math.max(1800, timeoutMs));
+    window.addEventListener("tp:venue-home-ready", onReady as EventListener);
+  });
+}
+
 export function PopupAds() {
   const pathname = usePathname();
   const popupOwnerId = useId();
@@ -76,6 +155,7 @@ export function PopupAds() {
   });
   const popupOpenRef = useRef(false);
   const popupOpeningRef = useRef(false);
+  const pageReadyRef = useRef(false);
 
   useEffect(() => {
     popupOpenRef.current = Boolean(popup?.open);
@@ -192,6 +272,7 @@ export function PopupAds() {
         "popup-on-scroll": false,
         "popup-round-end": false,
       };
+      pageReadyRef.current = false;
       popupOpenRef.current = false;
       popupOpeningRef.current = false;
       releaseAdTier(popupOwnerId);
@@ -213,19 +294,40 @@ export function PopupAds() {
       };
     }
 
+    pageReadyRef.current = false;
     setLandingPopupGate(true);
-    const timer = window.setTimeout(() => {
-      void (async () => {
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        if (pageKey === "venue") {
+          await waitForVenueHomeReady(pathname);
+        } else {
+          await waitForWindowLoadReady();
+        }
+        if (cancelled || isVenueTransitionGateActive()) {
+          setLandingPopupGate(false);
+          return;
+        }
+        pageReadyRef.current = true;
+        await wait(260);
+        if (cancelled) {
+          setLandingPopupGate(false);
+          return;
+        }
         const opened = await showPopup("popup-on-entry", { pageKey, displayTrigger: "on-load" });
         if (!opened) {
           setLandingPopupGate(false);
         }
-      })();
-    }, 450);
+      } catch {
+        setLandingPopupGate(false);
+      }
+    })();
 
     return () => {
+      cancelled = true;
+      pageReadyRef.current = false;
       window.clearTimeout(resetTimer);
-      window.clearTimeout(timer);
       setLandingPopupGate(false);
     };
   }, [pathname, popupOwnerId, showPopup]);
@@ -240,6 +342,9 @@ export function PopupAds() {
     scrollTriggeredRef.current[key] = false;
 
     const onScroll = () => {
+      if (!pageReadyRef.current) {
+        return;
+      }
       if (popupOpenRef.current) {
         return;
       }
@@ -390,6 +495,11 @@ export function PopupAds() {
     <div
       className="pointer-events-auto fixed inset-0 z-[5000] flex items-center justify-center bg-slate-900/30 p-2"
       style={{
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100svh",
+        touchAction: "none",
         paddingTop: "max(env(safe-area-inset-top, 0px), 8px)",
         paddingBottom: "max(env(safe-area-inset-bottom, 0px), 8px)",
       }}

@@ -6,6 +6,7 @@ type PageShellProps = {
   title: string;
   description?: string;
   noContainer?: boolean;
+  lockViewport?: boolean;
   showBranding?: boolean;
   showUserStatus?: boolean;
   showAlerts?: boolean;
@@ -22,10 +23,13 @@ export function PageShell({
   showPageTitle = true,
   children,
   noContainer = false,
+  lockViewport = false,
 }: PageShellProps) {
   const useCompactTopNav = !showBranding;
   const mainClass = noContainer
-    ? "min-h-0 flex-1 overflow-x-hidden overflow-y-visible p-0"
+    ? lockViewport
+      ? "min-h-0 flex-1 overflow-hidden p-0"
+      : "min-h-0 flex-1 overflow-x-hidden overflow-y-visible p-0"
     : "tp-comic-card min-h-0 flex-1 overflow-x-hidden overflow-y-visible p-3 sm:p-4 text-base";
   const compactHeaderSpacerClass = useCompactTopNav
     ? showUserStatus
@@ -38,8 +42,10 @@ export function PageShell({
     : "h-0";
   const shellGapClass = "gap-3";
 
+  const shellHeightClass = lockViewport ? "h-[100svh] min-h-[100svh] max-h-[100svh] overflow-hidden" : "min-h-[100dvh] overflow-x-hidden";
+
   return (
-    <div className={`tp-page-shell flex min-h-[100dvh] flex-col overflow-x-hidden ${shellGapClass}`}>
+    <div className={`tp-page-shell flex flex-col ${shellHeightClass} ${shellGapClass}`}>
       {useCompactTopNav ? (
         <header className="tp-page-header tp-page-header-compact fixed inset-x-0 top-0 z-[1000] w-full max-w-none overflow-visible px-0 pb-0 pt-0">
           <div className="w-full max-w-none box-border px-0 pt-[max(env(safe-area-inset-top),0px)]">

@@ -116,8 +116,8 @@ body.tp-popup-open {
 ::view-transition-group(root),
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 170ms;
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-duration: 0ms;
+  animation-timing-function: linear;
 }
 
 .game-rail-viewport {
@@ -238,6 +238,15 @@ textarea {
   box-shadow: 3px 3px 0 var(--tp-ink);
   font-weight: 600;
   line-height: 1.25;
+}
+
+/* Prevent iOS focus zoom: keep interactive form controls at >=16px. */
+@media (hover: none) and (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 input::placeholder,

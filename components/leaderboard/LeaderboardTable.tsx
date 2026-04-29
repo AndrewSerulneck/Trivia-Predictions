@@ -22,14 +22,16 @@ function rankBadge(rank: number): string {
 export function LeaderboardTable({
   venueId,
   initialEntries = [],
+  isEnabled = true,
 }: {
   venueId: string;
   initialEntries?: LeaderboardEntry[];
+  isEnabled?: boolean;
 }) {
   const [entries, setEntries] = useState<LeaderboardEntry[]>(initialEntries);
   const [errorMessage, setErrorMessage] = useState("");
   const [currentUserId, setCurrentUserId] = useState("");
-  const [isLoading, setIsLoading] = useState(initialEntries.length === 0);
+  const [isLoading, setIsLoading] = useState(isEnabled && initialEntries.length === 0);
 
   const load = useCallback(async () => {
     if (!venueId) return;
@@ -53,6 +55,9 @@ export function LeaderboardTable({
   }, [venueId]);
 
   useEffect(() => {
+    if (!isEnabled) {
+      return;
+    }
     setCurrentUserId(getUserId() ?? "");
     setEntries(initialEntries);
     void load();
@@ -70,7 +75,7 @@ export function LeaderboardTable({
       window.clearInterval(interval);
       window.removeEventListener("tp:points-updated", refreshOnPointsUpdate as EventListener);
     };
-  }, [venueId, initialEntries, load]);
+  }, [isEnabled, venueId, initialEntries, load]);
 
   const currentUserRank = useMemo(
     () => entries.find((entry) => entry.userId === currentUserId)?.rank ?? null,
