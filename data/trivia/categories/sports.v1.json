@@ -3105,5 +3105,239 @@
     "correctAnswer": 1,
     "category": "Sports",
     "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-points-is-a-free-throw-worth-in-basketball",
+    "question": "How many points is a free throw worth in basketball?",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-soccer-how-many-players-are-on-one-team-on-the-field-at-the-start-of-a-match",
+    "question": "In soccer, how many players are on one team on the field at the start of a match?",
+    "options": [
+      "9",
+      "10",
+      "11",
+      "12"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-strikes-result-in-a-strikeout-in-baseball",
+    "question": "How many strikes result in a 'strikeout' in baseball?",
+    "options": [
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-term-for-a-score-of-one-stroke-under-par-on-a-hole-in-golf",
+    "question": "What is the term for a score of one stroke under par on a hole in golf?",
+    "options": [
+      "Bogey",
+      "Birdie",
+      "Eagle",
+      "Albatross"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-points-is-a-touchdown-worth-in-american-football-before-any-extra-point-or-two-point-conversion",
+    "question": "How many points is a touchdown worth in American football (before any extra point or two-point conversion)?",
+    "options": [
+      "3",
+      "6",
+      "7",
+      "8"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-do-the-five-rings-on-the-olympic-flag-primarily-represent",
+    "question": "What do the five rings on the Olympic flag primarily represent?",
+    "options": [
+      "Five continents",
+      "Five major sports",
+      "Five host cities",
+      "Five Olympic values"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-a-boxing-referees-count-to-determine-if-a-knocked-down-boxer-can-continue",
+    "question": "What is a boxing referee's count to determine if a knocked-down boxer can continue?",
+    "options": [
+      "Five",
+      "Eight",
+      "Ten",
+      "Twelve"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-of-these-is-not-one-of-the-three-disciplines-in-olympic-fencing",
+    "question": "Which of these is NOT one of the three disciplines in Olympic fencing?",
+    "options": [
+      "Foil",
+      "Sabre",
+      "Épée",
+      "Rapier"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-which-track-and-field-event-do-athletes-throw-a-heavy-spherical-object",
+    "question": "In which track and field event do athletes throw a heavy spherical object?",
+    "options": [
+      "Javelin throw",
+      "Discus throw",
+      "Shot put",
+      "Hammer throw"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-pins-are-set-up-at-the-beginning-of-a-standard-game-of-ten-pin-bowling",
+    "question": "How many pins are set up at the beginning of a standard game of ten-pin bowling?",
+    "options": [
+      "8",
+      "9",
+      "10",
+      "12"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-color-jersey-is-worn-by-the-leader-of-the-general-classification-in-the-tour-de-france",
+    "question": "What color jersey is worn by the leader of the general classification in the Tour de France?",
+    "options": [
+      "Green",
+      "Polka Dot",
+      "White",
+      "Yellow"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-martial-art-originated-in-korea-and-is-known-for-its-emphasis-on-kicks",
+    "question": "Which martial art originated in Korea and is known for its emphasis on kicks?",
+    "options": [
+      "Judo",
+      "Karate",
+      "Taekwondo",
+      "Kung Fu"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-sport-do-competitors-slide-stones-across-a-sheet-of-ice-towards-a-target-area",
+    "question": "In which sport do competitors slide stones across a sheet of ice towards a target area?",
+    "options": [
+      "Bobsleigh",
+      "Luge",
+      "Curling",
+      "Skeleton"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-highest-possible-break-a-player-can-achieve-in-a-single-frame-of-snooker-without-any-fouls",
+    "question": "What is the highest possible break a player can achieve in a single frame of snooker without any fouls?",
+    "options": [
+      "100",
+      "147",
+      "155",
+      "162"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-term-for-the-vanes-or-feathers-at-the-rear-of-an-arrow-that-provide-stability-in-flight",
+    "question": "What is the term for the vanes or feathers at the rear of an arrow that provide stability in flight?",
+    "options": [
+      "Nock",
+      "Point",
+      "Fletching",
+      "Shaft"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-gymnastic-event-involves-performing-a-routine-on-a-sprung-floor-without-apparatus",
+    "question": "Which gymnastic event involves performing a routine on a sprung floor without apparatus?",
+    "options": [
+      "Uneven bars",
+      "Vault",
+      "Floor exercise",
+      "Parallel bars"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-athlete-holds-the-record-for-the-most-career-points-in-the-nba",
+    "question": "Which athlete holds the record for the most career points in the NBA?",
+    "options": [
+      "Michael Jordan",
+      "LeBron James",
+      "Kareem Abdul-Jabbar",
+      "Kobe Bryant"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-grand-slam-tennis-tournament-is-famously-played-on-red-clay-courts",
+    "question": "Which Grand Slam tennis tournament is famously played on red clay courts?",
+    "options": [
+      "Wimbledon",
+      "US Open",
+      "Australian Open",
+      "French Open"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "easy"
   }
 ]

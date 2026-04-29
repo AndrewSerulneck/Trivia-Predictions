@@ -3105,5 +3105,239 @@
     "correctAnswer": 1,
     "category": "History",
     "difficulty": "medium"
+  },
+  {
+    "slug": "in-what-year-did-world-war-ii-begin-with-the-invasion-of-poland",
+    "question": "In what year did World War II begin with the invasion of Poland?",
+    "options": [
+      "1938",
+      "1939",
+      "1940",
+      "1941"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-edict-of-nantes-granting-substantial-rights-to-calvinist-protestants-huguenots-in-largely-catholic-france-was-issued-by-which-french-monarch",
+    "question": "The Edict of Nantes, granting substantial rights to Calvinist Protestants (Huguenots) in largely Catholic France, was issued by which French monarch?",
+    "options": [
+      "Louis XIV",
+      "Henry IV",
+      "Francis I",
+      "Charles IX"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-was-the-longest-reigning-monarch-in-british-history",
+    "question": "Who was the longest-reigning monarch in British history?",
+    "options": [
+      "Queen Victoria",
+      "Queen Elizabeth I",
+      "King George III",
+      "Queen Elizabeth II"
+    ],
+    "correctAnswer": 3,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-ottoman-empire-was-officially-dissolved-and-replaced-by-the-republic-of-turkey-in-which-year",
+    "question": "The Ottoman Empire was officially dissolved and replaced by the Republic of Turkey in which year?",
+    "options": [
+      "1918",
+      "1920",
+      "1922",
+      "1924"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-major-battle-in-1066-led-to-the-norman-conquest-of-england",
+    "question": "Which major battle in 1066 led to the Norman conquest of England?",
+    "options": [
+      "Battle of Stirling Bridge",
+      "Battle of Hastings",
+      "Battle of Bosworth Field",
+      "Battle of Agincourt"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-hundred-years-war-was-fought-primarily-between-which-two-kingdoms",
+    "question": "The Hundred Years' War was fought primarily between which two kingdoms?",
+    "options": [
+      "Spain and Portugal",
+      "England and France",
+      "Germany and Russia",
+      "Italy and Austria"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-ancient-greek-historian-is-often-referred-to-as-the-father-of-history",
+    "question": "Which ancient Greek historian is often referred to as the 'Father of History'?",
+    "options": [
+      "Thucydides",
+      "Herodotus",
+      "Xenophon",
+      "Plutarch"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-event-is-widely-considered-to-have-ended-the-prehistoric-era",
+    "question": "What event is widely considered to have ended the prehistoric era?",
+    "options": [
+      "Invention of the wheel",
+      "Discovery of fire",
+      "Development of agriculture",
+      "Invention of writing"
+    ],
+    "correctAnswer": 3,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-treaty-of-westphalia-in-1648-is-significant-for-ending-which-major-european-conflict",
+    "question": "The Treaty of Westphalia in 1648 is significant for ending which major European conflict?",
+    "options": [
+      "The War of the Roses",
+      "The Thirty Years' War",
+      "The Seven Years' War",
+      "The English Civil War"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-was-the-primary-weapon-of-a-medieval-knight",
+    "question": "What was the primary weapon of a medieval knight?",
+    "options": [
+      "Bow and arrow",
+      "Musket",
+      "Sword",
+      "Spear"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-construction-of-the-suez-canal-was-completed-in-which-century",
+    "question": "The construction of the Suez Canal was completed in which century?",
+    "options": [
+      "17th century",
+      "18th century",
+      "19th century",
+      "20th century"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-chinese-dynasty-is-credited-with-building-much-of-the-great-wall-we-see-today",
+    "question": "Which Chinese dynasty is credited with building much of the Great Wall we see today?",
+    "options": [
+      "Han Dynasty",
+      "Tang Dynasty",
+      "Song Dynasty",
+      "Ming Dynasty"
+    ],
+    "correctAnswer": 3,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-famous-ship-sank-in-1912-after-hitting-an-iceberg",
+    "question": "Which famous ship sank in 1912 after hitting an iceberg?",
+    "options": [
+      "USS Arizona",
+      "RMS Lusitania",
+      "HMS Victory",
+      "RMS Titanic"
+    ],
+    "correctAnswer": 3,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-pivotal-battle-of-midway-during-world-war-ii-was-fought-primarily-in-which-theater",
+    "question": "The pivotal Battle of Midway during World War II was fought primarily in which theater?",
+    "options": [
+      "European",
+      "Pacific",
+      "African",
+      "Atlantic"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-was-the-last-empress-of-china-de-facto-ruling-for-47-years-during-the-late-qing-dynasty",
+    "question": "Who was the last empress of China, de facto ruling for 47 years during the late Qing Dynasty?",
+    "options": [
+      "Wu Zetian",
+      "Empress Dowager Cixi",
+      "Empress Xiaocigao",
+      "Empress Xiaoxianchun"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-portuguese-explorer-was-the-first-european-to-reach-india-by-sea-opening-a-direct-maritime-route-from-europe-to-asia",
+    "question": "Which Portuguese explorer was the first European to reach India by sea, opening a direct maritime route from Europe to Asia?",
+    "options": [
+      "Ferdinand Magellan",
+      "Christopher Columbus",
+      "Vasco da Gama",
+      "Bartolomeu Dias"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-was-the-first-roman-emperor-marking-the-end-of-the-roman-republic",
+    "question": "Who was the first Roman Emperor, marking the end of the Roman Republic?",
+    "options": [
+      "Julius Caesar",
+      "Augustus",
+      "Nero",
+      "Tiberius"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-fall-of-the-berlin-wall-in-1989-symbolized-the-impending-end-of-which-major-global-conflict",
+    "question": "The fall of the Berlin Wall in 1989 symbolized the impending end of which major global conflict?",
+    "options": [
+      "World War I",
+      "The Cold War",
+      "World War II",
+      "The Vietnam War"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
   }
 ]

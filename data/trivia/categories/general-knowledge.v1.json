@@ -3092,5 +3092,239 @@
     "correctAnswer": 2,
     "category": "General Knowledge",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-shakespearean-play-features-the-characters-romeo-and-juliet",
+    "question": "Which Shakespearean play features the characters Romeo and Juliet?",
+    "options": [
+      "Romeo and Juliet",
+      "Hamlet",
+      "Macbeth",
+      "Othello"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-smallest-bone-in-the-human-body",
+    "question": "What is the name of the smallest bone in the human body?",
+    "options": [
+      "Stapes",
+      "Femur",
+      "Patella",
+      "Humerus"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "mount-everest-is-located-in-which-mountain-range",
+    "question": "Mount Everest is located in which mountain range?",
+    "options": [
+      "Himalayas",
+      "Andes",
+      "Rockies",
+      "Alps"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-primary-color-is-often-associated-with-stop-signs",
+    "question": "Which primary color is often associated with stop signs?",
+    "options": [
+      "Red",
+      "Green",
+      "Blue",
+      "Yellow"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-painted-the-sistine-chapel-ceiling",
+    "question": "Who painted the 'Sistine Chapel ceiling'?",
+    "options": [
+      "Michelangelo",
+      "Leonardo da Vinci",
+      "Raphael",
+      "Donatello"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-literary-devices-involves-a-contrast-between-what-is-said-and-what-is-actually-meant",
+    "question": "Which of these literary devices involves a contrast between what is said and what is actually meant?",
+    "options": [
+      "Irony",
+      "Metaphor",
+      "Simile",
+      "Alliteration"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-fruit-is-famously-said-to-keep-the-doctor-away",
+    "question": "Which fruit is famously said to keep the doctor away?",
+    "options": [
+      "Apple",
+      "Banana",
+      "Orange",
+      "Grape"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-process-by-which-plants-make-their-own-food-using-sunlight",
+    "question": "What is the process by which plants make their own food using sunlight?",
+    "options": [
+      "Photosynthesis",
+      "Respiration",
+      "Fermentation",
+      "Transpiration"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-only-continent-with-land-in-all-four-hemispheres",
+    "question": "What is the only continent with land in all four hemispheres?",
+    "options": [
+      "Africa",
+      "Asia",
+      "North America",
+      "Antarctica"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-sides-does-a-triangle-have",
+    "question": "How many sides does a triangle have?",
+    "options": [
+      "Three",
+      "Four",
+      "Five",
+      "Six"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-phenomenon-where-light-bends-as-it-passes-from-one-medium-to-another",
+    "question": "What is the phenomenon where light bends as it passes from one medium to another?",
+    "options": [
+      "Refraction",
+      "Reflection",
+      "Diffraction",
+      "Interference"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-sculpted-the-famous-statue-of-david",
+    "question": "Who sculpted the famous statue of David?",
+    "options": [
+      "Leonardo da Vinci",
+      "Raphael",
+      "Donatello",
+      "Michelangelo"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-country-is-famous-for-inventing-pizza",
+    "question": "Which country is famous for inventing pizza?",
+    "options": [
+      "France",
+      "Spain",
+      "Italy",
+      "Greece"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-greek-mythology-who-is-the-god-of-the-sea",
+    "question": "In Greek mythology, who is the god of the sea?",
+    "options": [
+      "Zeus",
+      "Hades",
+      "Poseidon",
+      "Apollo"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-epic-poem-is-the-story-of-the-trojan-horse-primarily-featured",
+    "question": "In which epic poem is the story of the Trojan Horse primarily featured?",
+    "options": [
+      "The Odyssey",
+      "The Iliad",
+      "The Aeneid",
+      "Beowulf"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-famous-painting-mona-lisa-is-exhibited-in-which-museum",
+    "question": "The famous painting 'Mona Lisa' is exhibited in which museum?",
+    "options": [
+      "The Metropolitan Museum of Art",
+      "The British Museum",
+      "The Louvre Museum",
+      "The Uffizi Gallery"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-gas-do-plants-absorb-from-the-atmosphere-for-photosynthesis",
+    "question": "Which gas do plants absorb from the atmosphere for photosynthesis?",
+    "options": [
+      "Oxygen",
+      "Nitrogen",
+      "Carbon Dioxide",
+      "Hydrogen"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-instrument-is-used-to-measure-atmospheric-pressure",
+    "question": "What instrument is used to measure atmospheric pressure?",
+    "options": [
+      "Anemometer",
+      "Barometer",
+      "Hygrometer",
+      "Thermometer"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
   }
 ]

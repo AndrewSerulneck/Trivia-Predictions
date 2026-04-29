@@ -3235,5 +3235,109 @@
     "correctAnswer": 2,
     "category": "Science",
     "difficulty": "easy"
+  },
+  {
+    "slug": "which-organelle-is-responsible-for-generating-most-of-the-cells-supply-of-adenosine-triphosphate-atp",
+    "question": "Which organelle is responsible for generating most of the cell's supply of adenosine triphosphate (ATP)?",
+    "options": [
+      "Nucleus",
+      "Ribosome",
+      "Mitochondrion",
+      "Endoplasmic Reticulum"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-layer-of-earths-atmosphere-contains-the-ozone-layer",
+    "question": "What layer of Earth's atmosphere contains the ozone layer?",
+    "options": [
+      "Troposphere",
+      "Stratosphere",
+      "Mesosphere",
+      "Thermosphere"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-nucleic-acid-is-primarily-involved-in-carrying-genetic-information-from-the-nucleus-to-the-cytoplasm-for-protein-synthesis",
+    "question": "Which nucleic acid is primarily involved in carrying genetic information from the nucleus to the cytoplasm for protein synthesis?",
+    "options": [
+      "tRNA",
+      "rRNA",
+      "mRNA",
+      "DNA"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-ph-value-of-a-neutral-solution-at-25c",
+    "question": "What is the pH value of a neutral solution at 25°C?",
+    "options": [
+      "0",
+      "7",
+      "14",
+      "1"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-theoretical-boundary-around-a-black-hole-beyond-which-no-light-or-information-can-escape",
+    "question": "What is the name of the theoretical boundary around a black hole beyond which no light or information can escape?",
+    "options": [
+      "Singularity",
+      "Event Horizon",
+      "Photon Sphere",
+      "Accretion Disk"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-class-of-animals-includes-birds",
+    "question": "Which class of animals includes birds?",
+    "options": [
+      "Reptilia",
+      "Mammalia",
+      "Aves",
+      "Amphibia"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-fundamental-force-is-responsible-for-holding-the-nucleus-of-an-atom-together",
+    "question": "Which fundamental force is responsible for holding the nucleus of an atom together?",
+    "options": [
+      "Gravitational force",
+      "Electromagnetic force",
+      "Strong nuclear force",
+      "Weak nuclear force"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-standard-unit-of-electric-current",
+    "question": "What is the standard unit of electric current?",
+    "options": [
+      "Volt",
+      "Ampere",
+      "Ohm",
+      "Watt"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "easy"
   }
 ]

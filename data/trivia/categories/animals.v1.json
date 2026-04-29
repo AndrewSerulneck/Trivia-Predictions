@@ -3092,5 +3092,252 @@
     "correctAnswer": 1,
     "category": "Animals",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-scientific-term-for-the-fear-of-spiders",
+    "question": "What is the scientific term for the fear of spiders?",
+    "options": [
+      "Arachnophobia",
+      "Ophidiophobia",
+      "Cynophobia",
+      "Entomophobia"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-type-of-animal-is-a-flying-fox",
+    "question": "What type of animal is a 'flying fox'?",
+    "options": [
+      "Bird",
+      "Bat",
+      "Insect",
+      "Rodent"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-known-for-building-elaborate-bowers-to-attract-a-mate",
+    "question": "Which animal is known for building elaborate 'bowers' to attract a mate?",
+    "options": [
+      "Bowerbird",
+      "Peacock",
+      "Lyrebird",
+      "Hummingbird"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-can-sleep-for-three-years",
+    "question": "Which animal can sleep for three years?",
+    "options": [
+      "Snail",
+      "Bear",
+      "Bat",
+      "Python"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-has-the-unique-ability-to-rotate-its-head-almost-270-degrees-in-either-direction",
+    "question": "Which animal has the unique ability to rotate its head almost 270 degrees in either direction?",
+    "options": [
+      "Owl",
+      "Eagle",
+      "Hawk",
+      "Falcon"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-land-animal-is-the-fastest-runner",
+    "question": "Which land animal is the fastest runner?",
+    "options": [
+      "Cheetah",
+      "Lion",
+      "Gazelle",
+      "Horse"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-known-for-having-a-beard-of-bristles-under-its-chin",
+    "question": "Which animal is known for having a 'beard' of bristles under its chin?",
+    "options": [
+      "Goat",
+      "Lion",
+      "Walrus",
+      "Badger"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-type-of-animal-typically-has-a-cloaca",
+    "question": "Which type of animal typically has a cloaca?",
+    "options": [
+      "Mammals",
+      "Birds",
+      "Fish",
+      "Insects"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-do-camels-store-in-their-humps",
+    "question": "What do camels store in their humps?",
+    "options": [
+      "Water",
+      "Fat",
+      "Food",
+      "Blood"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-has-the-longest-lifespan-among-all-vertebrates",
+    "question": "Which animal has the longest lifespan among all vertebrates?",
+    "options": [
+      "Greenland Shark",
+      "Bowhead Whale",
+      "Galapagos Tortoise",
+      "Red Sea Urchin"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-collective-term-for-a-group-of-fish",
+    "question": "What is the collective term for a group of fish?",
+    "options": [
+      "School",
+      "Pod",
+      "Swarm",
+      "Herd"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-ability-to-regenerate-its-entire-brain",
+    "question": "Which animal is known for its ability to regenerate its entire brain?",
+    "options": [
+      "Starfish",
+      "Salamander",
+      "Jellyfish",
+      "Flatworm"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-big-cat-cannot-roar",
+    "question": "Which big cat cannot roar?",
+    "options": [
+      "Cheetah",
+      "Lion",
+      "Tiger",
+      "Leopard"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-produces-the-strongest-natural-fiber-in-the-world",
+    "question": "Which animal produces the strongest natural fiber in the world?",
+    "options": [
+      "Spider",
+      "Silkworm",
+      "Mussel",
+      "Goat (for cashmere)"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-process-where-insects-shed-their-exoskeleton",
+    "question": "What is the name of the process where insects shed their exoskeleton?",
+    "options": [
+      "Molting",
+      "Hibernation",
+      "Metamorphosis",
+      "Pupation"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-ability-to-change-its-skin-color-to-match-its-surroundings",
+    "question": "Which animal is known for its ability to change its skin color to match its surroundings?",
+    "options": [
+      "Gecko",
+      "Chameleon",
+      "Frog",
+      "Snake"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-do-adult-monarch-butterflies-primarily-feed-on",
+    "question": "What do adult monarch butterflies primarily feed on?",
+    "options": [
+      "Nectar",
+      "Leaves",
+      "Pollen",
+      "Small insects"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-having-the-largest-eyes-relative-to-its-body-size",
+    "question": "Which animal is known for having the largest eyes relative to its body size?",
+    "options": [
+      "Owl",
+      "Tarsier",
+      "Chameleon",
+      "Giant Squid"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-mammal-is-capable-of-true-sustained-flight",
+    "question": "Which mammal is capable of true, sustained flight?",
+    "options": [
+      "Flying Squirrel",
+      "Bat",
+      "Sugar Glider",
+      "Flying Lemur"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
   }
 ]

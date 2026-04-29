@@ -3105,5 +3105,239 @@
     "correctAnswer": 1,
     "category": "Music",
     "difficulty": "easy"
+  },
+  {
+    "slug": "which-instrument-has-both-black-and-white-keys-and-is-played-by-pressing-them",
+    "question": "Which instrument has both black and white keys and is played by pressing them?",
+    "options": [
+      "Guitar",
+      "Drum",
+      "Piano",
+      "Trumpet"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-pop-superstar-is-often-referred-to-as-the-queen-of-pop",
+    "question": "Which pop superstar is often referred to as the \"Queen of Pop\"?",
+    "options": [
+      "Mariah Carey",
+      "Madonna",
+      "Beyoncé",
+      "Janet Jackson"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-strings-does-a-standard-acoustic-or-electric-guitar-typically-have",
+    "question": "How many strings does a standard acoustic or electric guitar typically have?",
+    "options": [
+      "Four",
+      "Five",
+      "Six",
+      "Seven"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-classical-composer-continued-to-compose-masterpieces-even-after-becoming-completely-deaf",
+    "question": "Which classical composer continued to compose masterpieces even after becoming completely deaf?",
+    "options": [
+      "Wolfgang Amadeus Mozart",
+      "Johann Sebastian Bach",
+      "Ludwig van Beethoven",
+      "Pyotr Ilyich Tchaikovsky"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-musical-term-for-playing-very-softly",
+    "question": "What is the musical term for playing very softly?",
+    "options": [
+      "Forte",
+      "Mezzo",
+      "Piano",
+      "Allegro"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-american-singer-songwriter-is-known-for-hits-like-like-a-rolling-stone-and-blowin-in-the-wind",
+    "question": "Which American singer-songwriter is known for hits like 'Like a Rolling Stone' and 'Blowin' in the Wind'?",
+    "options": [
+      "Bruce Springsteen",
+      "Bob Dylan",
+      "Paul Simon",
+      "Neil Young"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-artist-released-the-best-selling-album-thriller-in-1982",
+    "question": "Which artist released the best-selling album \"Thriller\" in 1982?",
+    "options": [
+      "Prince",
+      "Stevie Wonder",
+      "Michael Jackson",
+      "Lionel Richie"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-legendary-british-rock-band-is-known-for-songs-like-stairway-to-heaven-and-whole-lotta-love",
+    "question": "Which legendary British rock band is known for songs like 'Stairway to Heaven' and 'Whole Lotta Love'?",
+    "options": [
+      "The Who",
+      "Pink Floyd",
+      "Led Zeppelin",
+      "Deep Purple"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-musical-term-for-a-rapid-alternation-between-two-adjacent-notes",
+    "question": "What is the musical term for a rapid alternation between two adjacent notes?",
+    "options": [
+      "Arpeggio",
+      "Vibrato",
+      "Trill",
+      "Glissando"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-musical-genre-originated-in-the-african-american-communities-of-new-orleans-louisiana-in-the-late-19th-and-early-20th-centuries",
+    "question": "Which musical genre originated in the African-American communities of New Orleans, Louisiana, in the late 19th and early 20th centuries?",
+    "options": [
+      "Blues",
+      "Gospel",
+      "Jazz",
+      "R&B"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-pop-star-is-famous-for-her-hits-havana-and-seorita",
+    "question": "Which pop star is famous for her hits 'Havana' and 'Señorita'?",
+    "options": [
+      "Ariana Grande",
+      "Dua Lipa",
+      "Camila Cabello",
+      "Selena Gomez"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-instrument-family-does-the-clarinet-belong-to",
+    "question": "Which instrument family does the clarinet belong to?",
+    "options": [
+      "Brass",
+      "String",
+      "Percussion",
+      "Woodwind"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-german-composer-is-credited-with-developing-the-concept-of-the-leitmotif-in-his-operas",
+    "question": "Which German composer is credited with developing the concept of the \"leitmotif\" in his operas?",
+    "options": [
+      "Johann Sebastian Bach",
+      "Wolfgang Amadeus Mozart",
+      "Richard Wagner",
+      "George Frideric Handel"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-term-for-a-vocal-technique-characterized-by-rapid-changes-in-pitch-often-from-chest-voice-to-head-voice-and-back",
+    "question": "What is the term for a vocal technique characterized by rapid changes in pitch, often from chest voice to head voice and back?",
+    "options": [
+      "Scat singing",
+      "Bel canto",
+      "Falsetto",
+      "Yodeling"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-opera-by-mozart-features-the-famous-aria-der-hlle-rache-kocht-in-meinem-herzen-queen-of-the-nights-aria",
+    "question": "Which opera by Mozart features the famous aria 'Der Hölle Rache kocht in meinem Herzen' (Queen of the Night's Aria)?",
+    "options": [
+      "Don Giovanni",
+      "The Marriage of Figaro",
+      "Così fan tutte",
+      "The Magic Flute"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-city-is-widely-considered-the-birthplace-of-the-grunge-music-movement-in-the-late-1980s-and-early-1990s",
+    "question": "Which city is widely considered the birthplace of the grunge music movement in the late 1980s and early 1990s?",
+    "options": [
+      "Los Angeles",
+      "New York City",
+      "Seattle",
+      "London"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-american-singer-songwriter-known-for-her-distinctive-voice-and-lyrical-depth-released-the-album-blue-in-1971",
+    "question": "Which American singer-songwriter, known for her distinctive voice and lyrical depth, released the album \"Blue\" in 1971?",
+    "options": [
+      "Carole King",
+      "Joni Mitchell",
+      "Joan Baez",
+      "Carly Simon"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-composer-wrote-the-famous-four-seasons-violin-concertos",
+    "question": "Which composer wrote the famous 'Four Seasons' violin concertos?",
+    "options": [
+      "Johann Sebastian Bach",
+      "George Frideric Handel",
+      "Antonio Vivaldi",
+      "Joseph Haydn"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
   }
 ]
