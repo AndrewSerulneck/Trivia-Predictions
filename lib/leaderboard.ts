@@ -8,6 +8,8 @@ type LeaderboardRow = {
   points: number;
 };
 
+const LEADERBOARD_QUERY_TIMEOUT_MS = 8000;
+
 const FALLBACK_LEADERBOARD: LeaderboardEntry[] = [
   {
     userId: "demo-1",
@@ -43,26 +45,47 @@ function rankEntries(rows: LeaderboardRow[]): LeaderboardEntry[] {
   }));
 }
 
+async function withTimedLeaderboardQuery<T>(runQuery: (signal: AbortSignal) => PromiseLike<T>): Promise<T> {
+  const controller = new AbortController();
+  const timeoutId = globalThis.setTimeout(() => {
+    controller.abort();
+  }, LEADERBOARD_QUERY_TIMEOUT_MS);
+
+  try {
+    return await runQuery(controller.signal);
+  } finally {
+    globalThis.clearTimeout(timeoutId);
+  }
+}
+
 export async function getLeaderboardForVenue(venueId: string): Promise<LeaderboardEntry[]> {
   if (!venueId) {
     return [];
   }
 
-  if (!supabaseAdmin) {
+  const adminClient = supabaseAdmin;
+  if (!adminClient) {
     return FALLBACK_LEADERBOARD.filter((entry) => entry.venueId === venueId);
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("users")
-    .select("id, username, venue_id, points")
-    .eq("venue_id", venueId)
-    .order("points", { ascending: false })
-    .order("username", { ascending: true })
-    .limit(50);
+  try {
+    const { data, error } = await withTimedLeaderboardQuery(async (signal) => {
+      return await adminClient
+        .from("users")
+        .select("id, username, venue_id, points")
+        .abortSignal(signal)
+        .eq("venue_id", venueId)
+        .order("points", { ascending: false })
+        .order("username", { ascending: true })
+        .limit(50);
+    });
 
-  if (error || !data) {
+    if (error || !data) {
+      return FALLBACK_LEADERBOARD.filter((entry) => entry.venueId === venueId);
+    }
+
+    return rankEntries(data as LeaderboardRow[]);
+  } catch {
     return FALLBACK_LEADERBOARD.filter((entry) => entry.venueId === venueId);
   }
-
-  return rankEntries(data as LeaderboardRow[]);
 }

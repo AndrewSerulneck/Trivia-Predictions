@@ -34,6 +34,16 @@ export type TriviaQuota = {
   isAdminBypass: boolean;
 };
 
+export class TriviaLimitReachedError extends Error {
+  quota: TriviaQuota;
+
+  constructor(message: string, quota: TriviaQuota) {
+    super(message);
+    this.name = "TriviaLimitReachedError";
+    this.quota = quota;
+  }
+}
+
 const FALLBACK_QUESTIONS: TriviaQuestion[] = [
   {
     id: "fallback-1",
@@ -362,7 +372,10 @@ export async function submitTriviaAnswer(params: {
       const minutes = Math.floor(quota.windowSecondsRemaining / 60);
       const seconds = quota.windowSecondsRemaining % 60;
       const countdown = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-      throw new Error(`Trivia limit reached (${TRIVIA_LIMIT_PER_WINDOW}). Try again in ${countdown}.`);
+      throw new TriviaLimitReachedError(
+        `Trivia limit reached (${TRIVIA_LIMIT_PER_WINDOW}). Try again in ${countdown}.`,
+        quota
+      );
     }
 
     const { data: existingAnswer, error: existingAnswerError } = await supabaseAdmin

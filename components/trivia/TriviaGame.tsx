@@ -30,6 +30,7 @@ type SubmitResponse = {
     saved: boolean;
     alreadyAnswered?: boolean;
   };
+  quota?: TriviaQuota | null;
   error?: string;
 };
 
@@ -83,8 +84,17 @@ type TriviaLivePreviewSnapshot = {
   correctAnswers: number;
   attempted: number;
   questionText: string;
+  questions: TriviaQuestion[];
   userId: string;
   venueId: string;
+};
+
+type RecoveredRoundState = {
+  questions: TriviaQuestion[];
+  nextIndex: number;
+  correctAnswers: number;
+  attempted: number;
+  message: string;
 };
 
 function triggerHaptic(pattern: number | number[] = 12) {
@@ -129,6 +139,31 @@ function randomInt(min: number, max: number) {
 
 function randomEmoji(list: readonly string[]) {
   return list[Math.floor(Math.random() * list.length)] ?? list[0] ?? "🎉";
+}
+
+function normalizeTriviaQuestion(value: unknown): TriviaQuestion | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const candidate = value as Partial<TriviaQuestion>;
+  const id = typeof candidate.id === "string" ? candidate.id.trim() : "";
+  const question = typeof candidate.question === "string" ? candidate.question.trim() : "";
+  const options = Array.isArray(candidate.options) ? candidate.options.filter((item): item is string => typeof item === "string") : [];
+  const correctAnswerRaw = Number(candidate.correctAnswer);
+  const correctAnswer = Number.isFinite(correctAnswerRaw) ? Math.floor(correctAnswerRaw) : -1;
+  if (!id || !question || options.length < 2 || correctAnswer < 0 || correctAnswer >= options.length) {
+    return null;
+  }
+
+  return {
+    id,
+    question,
+    options,
+    correctAnswer,
+    category: typeof candidate.category === "string" ? candidate.category : undefined,
+    difficulty: typeof candidate.difficulty === "string" ? candidate.difficulty : undefined,
+  };
 }
 
 function createRainToken(pool: readonly string[], index = 0, total = RAIN_ITEM_COUNT): RainToken {
@@ -230,17 +265,20 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     return Math.min(ROUND_LIMIT_PER_WINDOW, Math.max(1, derivedRound));
   }, [quota?.questionsUsed]);
 
-  const loadQuota = useCallback(async () => {
+  const loadQuota = useCallback(async (): Promise<TriviaQuota | null> => {
     const userId = getUserId() ?? "";
     if (!userId) {
       setQuota(null);
-      return;
+      return null;
     }
     const response = await fetch(`/api/trivia/quota?userId=${encodeURIComponent(userId)}`, { cache: "no-store" });
     const payload = (await response.json()) as { ok: boolean; quota?: TriviaQuota | null };
     if (payload.ok) {
-      setQuota(payload.quota ?? null);
+      const nextQuota = payload.quota ?? null;
+      setQuota(nextQuota);
+      return nextQuota;
     }
+    return null;
   }, []);
 
   const loadCurrentUserPoints = useCallback(async () => {
@@ -313,9 +351,9 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     });
   }, []);
 
-  const recoverInterruptedQuestion = useCallback(async (): Promise<boolean> => {
+  const recoverInterruptedQuestion = useCallback(async (): Promise<RecoveredRoundState | null> => {
     if (typeof window === "undefined") {
-      return false;
+      return null;
     }
 
     const readSnapshot = (): TriviaLivePreviewSnapshot | null => {
@@ -331,16 +369,37 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
           if (!Number.isFinite(Number(parsed.updatedAt ?? 0))) {
             return null;
           }
+
+          const parsedQuestions = Array.isArray(parsed.questions)
+            ? parsed.questions
+                .map((item) => normalizeTriviaQuestion(item))
+                .filter((item): item is TriviaQuestion => Boolean(item))
+            : [];
+          if (parsedQuestions.length === 0) {
+            return null;
+          }
+
+          const rawQuestionIndex = Number(parsed.questionIndex ?? 0);
+          const questionIndex = Number.isFinite(rawQuestionIndex) ? Math.floor(rawQuestionIndex) : 0;
+          if (questionIndex < 1 || questionIndex > parsedQuestions.length) {
+            return null;
+          }
+          const questionId = String(parsed.questionId).trim();
+          if (!questionId || parsedQuestions[questionIndex - 1]?.id !== questionId) {
+            return null;
+          }
+
           return {
             updatedAt: Number(parsed.updatedAt),
             isRoundStarted: true,
-            questionId: String(parsed.questionId),
-            questionIndex: Number(parsed.questionIndex ?? 0),
-            totalQuestions: Number(parsed.totalQuestions ?? 0),
+            questionId,
+            questionIndex,
+            totalQuestions: parsedQuestions.length,
             secondsRemaining: Number(parsed.secondsRemaining ?? 0),
             correctAnswers: Number(parsed.correctAnswers ?? 0),
             attempted: Number(parsed.attempted ?? 0),
             questionText: String(parsed.questionText ?? ""),
+            questions: parsedQuestions,
             userId: String(parsed.userId ?? ""),
             venueId: String(parsed.venueId ?? ""),
           };
@@ -361,7 +420,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     const snapshot = readSnapshot();
     if (!snapshot) {
       clearLivePreviewSnapshot();
-      return false;
+      return null;
     }
 
     const currentUserId = (getUserId() ?? "").trim();
@@ -376,17 +435,34 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
       ageMs > TRIVIA_LIVE_PREVIEW_MAX_AGE_MS
     ) {
       clearLivePreviewSnapshot();
-      return false;
+      return null;
     }
 
-    clearLivePreviewSnapshot();
     await forfeitQuestion(snapshot.questionId, snapshot.secondsRemaining);
+    clearLivePreviewSnapshot();
 
-    const fallbackQuestionNumber = Math.max(1, snapshot.questionIndex || 1);
-    setRoundEndedMessage(
-      `Question ${fallbackQuestionNumber} was forfeited after the session was interrupted. Continuing from the next question.`
+    const forfeitedQuestionNumber = Math.max(1, Math.floor(snapshot.questionIndex));
+    const nextIndex = Math.min(snapshot.questions.length, Math.max(0, forfeitedQuestionNumber));
+    const attemptedAfterForfeit = Math.min(
+      snapshot.questions.length,
+      Math.max(0, Math.floor(snapshot.attempted)) + 1
     );
-    return true;
+    const safeCorrectAnswers = Math.min(
+      attemptedAfterForfeit,
+      Math.max(0, Math.floor(snapshot.correctAnswers))
+    );
+    const message =
+      nextIndex < snapshot.questions.length
+        ? `Question ${forfeitedQuestionNumber} was forfeited after the session was interrupted. Continuing on question ${nextIndex + 1}.`
+        : `Question ${forfeitedQuestionNumber} was forfeited after the session was interrupted. This round is complete.`;
+
+    return {
+      questions: snapshot.questions,
+      nextIndex,
+      correctAnswers: safeCorrectAnswers,
+      attempted: attemptedAfterForfeit,
+      message,
+    };
   }, [clearLivePreviewSnapshot, forfeitQuestion]);
 
   const triggerPointsFlow = useCallback((optionIndex: number) => {
@@ -543,7 +619,41 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
       if (cancelled) {
         return;
       }
-      await loadRoundQuestions({ showLoading: true, useWarmCache: !recoveredInterruptedQuestion });
+
+      if (recoveredInterruptedQuestion) {
+        setLoadError("");
+        setQuestions(recoveredInterruptedQuestion.questions);
+        setIndex(recoveredInterruptedQuestion.nextIndex);
+        setSelectedAnswer(null);
+        setIsSubmitting(false);
+        setFeedback("");
+        setFeedbackKind(null);
+        setRevealedCorrectAnswer(null);
+        setCorrectAnswers(recoveredInterruptedQuestion.correctAnswers);
+        setAttempted(recoveredInterruptedQuestion.attempted);
+        setIsRoundStarted(recoveredInterruptedQuestion.nextIndex < recoveredInterruptedQuestion.questions.length);
+        setPreRoundCountdown(null);
+        setSecondsRemaining(QUESTION_TIME_LIMIT_SECONDS);
+        setRoundEndedMessage(recoveredInterruptedQuestion.message);
+        setRoundTotalPoints(null);
+        setRewardPulse("");
+        setShowRewardPulse(false);
+        setFeedbackFlash(null);
+        setRainEmojis([]);
+        setFireworks([]);
+        roundCompletionHandledRef.current = false;
+        backgroundRoundExitRef.current = false;
+
+        await loadQuota();
+        const startingPoints = await loadCurrentUserPoints();
+        if (!cancelled) {
+          setRoundStartPoints(startingPoints);
+          setLoadingQuestions(false);
+        }
+        return;
+      }
+
+      await loadRoundQuestions({ showLoading: true, useWarmCache: true });
     };
 
     void bootstrapRound();
@@ -551,7 +661,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     return () => {
       cancelled = true;
     };
-  }, [loadRoundQuestions, recoverInterruptedQuestion]);
+  }, [loadCurrentUserPoints, loadQuota, loadRoundQuestions, recoverInterruptedQuestion]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -584,7 +694,6 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
       const activeQuestionNumber = Math.max(1, index + 1);
       const didForfeit = Boolean(activeQuestionId);
 
-      clearLivePreviewSnapshot();
       if (didForfeit) {
         void forfeitQuestion(activeQuestionId, secondsRemaining);
       }
@@ -598,10 +707,9 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         // Ignore storage write failures.
       }
       setRoundEndedMessage(reason);
-      resetRoundState();
-      void loadRoundQuestions({ showLoading: false, useWarmCache: false }).finally(() => {
+      window.setTimeout(() => {
         backgroundRoundExitRef.current = false;
-      });
+      }, 800);
     };
 
     const handleVisibilityChange = () => {
@@ -621,15 +729,12 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
       window.removeEventListener("pagehide", handlePageHide);
     };
   }, [
-    clearLivePreviewSnapshot,
     finished,
     forfeitQuestion,
     index,
     isRoundStarted,
-    loadRoundQuestions,
     preRoundCountdown,
     question?.id,
-    resetRoundState,
     secondsRemaining,
     selectedAnswer,
   ]);
@@ -749,6 +854,9 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
         const payload = (await response.json()) as SubmitResponse;
         if (!payload.ok || !payload.result) {
+          if (payload.quota) {
+            setQuota(payload.quota);
+          }
           throw new Error(payload.error ?? "Failed to submit answer.");
         }
 
@@ -799,8 +907,10 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         void loadQuota();
         void loadCurrentUserPoints();
       } catch (error) {
-        setFeedback(error instanceof Error ? error.message : "Could not submit answer.");
+        const message = error instanceof Error ? error.message : "Could not submit answer.";
+        setFeedback(message);
         setFeedbackKind(null);
+        void loadQuota();
       } finally {
         setIsSubmitting(false);
       }
@@ -973,6 +1083,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
       correctAnswers,
       attempted,
       questionText: question.question,
+      questions,
       userId: currentUserId,
       venueId: currentVenueId,
     };
@@ -998,7 +1109,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     isRoundStarted,
     preRoundCountdown,
     question,
-    questions.length,
+    questions,
     secondsRemaining,
     selectedAnswer,
   ]);

@@ -128,6 +128,8 @@ function isLocationPermissionDenied(error: unknown): boolean {
 const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig(venue, index);
 
 const ACCESS_DISTANCE_METERS = 200;
+const PRELOAD_FETCH_TIMEOUT_MS = 5000;
+const PRELOAD_NAVIGATION_BUDGET_MS = 2200;
 
 function getGeofenceThresholdMeters(venueRadius: number, accuracy?: number): number {
   const normalizedVenueRadius = Number.isFinite(venueRadius) ? Math.max(0, Math.round(venueRadius)) : 0;
@@ -648,11 +650,21 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       }
 
       const fetchJson = async <T,>(url: string): Promise<T | null> => {
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => {
+          controller.abort();
+        }, PRELOAD_FETCH_TIMEOUT_MS);
+
         try {
-          const response = await fetch(url, { cache: "no-store" });
+          const response = await fetch(url, {
+            cache: "no-store",
+            signal: controller.signal,
+          });
           return (await response.json().catch(() => null)) as T | null;
         } catch {
           return null;
+        } finally {
+          window.clearTimeout(timeoutId);
         }
       };
 
@@ -794,8 +806,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       saveVenueId(venue.id);
       saveUsername(user.username);
       saveUserId(user.id);
-      await preloadVenueHome(venue, user.id);
       setVenueHomeEntryHandoff({ venueId: venue.id, userId: user.id });
+      const preloadPromise = preloadVenueHome(venue, user.id).catch(() => {
+        // Warm-cache calls are best effort and should never block navigation.
+      });
+      await Promise.race([
+        preloadPromise,
+        new Promise<void>((resolve) => {
+          window.setTimeout(resolve, PRELOAD_NAVIGATION_BUDGET_MS);
+        }),
+      ]);
       router.push(`/venue/${venue.id}`);
     } catch (error) {
       if (typeof window !== "undefined") {

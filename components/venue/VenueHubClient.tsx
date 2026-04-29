@@ -53,7 +53,10 @@ const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
 };
 
 const SWIPE_SCREEN_COUNT = 2;
-const SWIPE_TRIGGER_PX = 18;
+const SWIPE_TRIGGER_PX = 10;
+const SWIPE_FLICK_TRIGGER_PX = 8;
+const SWIPE_FLICK_MAX_DURATION_MS = 220;
+const SWIPE_DIRECTION_RATIO = 0.45;
 
 function formatCountdown(seconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(seconds));
@@ -207,6 +210,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const swipeViewportRef = useRef<HTMLDivElement | null>(null);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
+  const touchStartAtRef = useRef<number | null>(null);
   const warmupPromiseRef = useRef<Promise<void> | null>(null);
   const warmupStartedRef = useRef(false);
 
@@ -301,14 +305,17 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     const touch = event.touches[0];
     touchStartXRef.current = touch?.clientX ?? null;
     touchStartYRef.current = touch?.clientY ?? null;
+    touchStartAtRef.current = Date.now();
   }, []);
 
   const onSwipeTouchEnd = useCallback(
     (event: React.TouchEvent<HTMLDivElement>) => {
       const startX = touchStartXRef.current;
       const startY = touchStartYRef.current;
+      const startedAt = touchStartAtRef.current;
       touchStartXRef.current = null;
       touchStartYRef.current = null;
+      touchStartAtRef.current = null;
       if (startX === null || startY === null) return;
 
       const touch = event.changedTouches[0];
@@ -316,7 +323,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
 
       const dx = touch.clientX - startX;
       const dy = touch.clientY - startY;
-      if (Math.abs(dx) < SWIPE_TRIGGER_PX || Math.abs(dx) < Math.abs(dy) * 0.62) return;
+      const elapsedMs = startedAt === null ? Number.POSITIVE_INFINITY : Math.max(0, Date.now() - startedAt);
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
+      const isQuickFlick = elapsedMs <= SWIPE_FLICK_MAX_DURATION_MS && absDx >= SWIPE_FLICK_TRIGGER_PX;
+      const passesDirectionalRatio = absDx >= absDy * SWIPE_DIRECTION_RATIO;
+      if ((!isQuickFlick && absDx < SWIPE_TRIGGER_PX) || (!isQuickFlick && !passesDirectionalRatio)) return;
 
       if (dx < 0 && activeScreen === 0) {
         goToScreen(1);

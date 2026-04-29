@@ -3,6 +3,7 @@ import { defaultVenuesAsVenueModels } from "@/lib/defaultVenues";
 import type { Venue } from "@/types";
 
 const FALLBACK_VENUES: Venue[] = defaultVenuesAsVenueModels();
+const VENUE_QUERY_TIMEOUT_MS = 8000;
 
 type VenueRow = {
   id: string;
@@ -30,39 +31,68 @@ function mapVenueRow(row: VenueRow): Venue {
   };
 }
 
+async function withTimedVenueQuery<T>(runQuery: (signal: AbortSignal) => PromiseLike<T>): Promise<T> {
+  const controller = new AbortController();
+  const timeoutId = globalThis.setTimeout(() => {
+    controller.abort();
+  }, VENUE_QUERY_TIMEOUT_MS);
+
+  try {
+    return await runQuery(controller.signal);
+  } finally {
+    globalThis.clearTimeout(timeoutId);
+  }
+}
+
 export async function listVenues(): Promise<Venue[]> {
-  if (!isSupabaseConfigured || !supabase) {
+  const supabaseClient = supabase;
+  if (!isSupabaseConfigured || !supabaseClient) {
     return FALLBACK_VENUES;
   }
 
-  const { data, error } = await supabase
-    .from("venues")
-    .select("id, name, display_name, logo_text, icon_emoji, address, latitude, longitude, radius")
-    .order("name", { ascending: true });
+  try {
+    const { data, error } = await withTimedVenueQuery(async (signal) => {
+      return await supabaseClient
+        .from("venues")
+        .select("id, name, display_name, logo_text, icon_emoji, address, latitude, longitude, radius")
+        .abortSignal(signal)
+        .order("name", { ascending: true });
+    });
 
-  if (error || !data || data.length === 0) {
+    if (error || !data || data.length === 0) {
+      return FALLBACK_VENUES;
+    }
+
+    return data.map((row) => mapVenueRow(row as VenueRow));
+  } catch {
     return FALLBACK_VENUES;
   }
-
-  return data.map((row) => mapVenueRow(row as VenueRow));
 }
 
 export async function getVenueById(venueId: string): Promise<Venue | null> {
   if (!venueId) return null;
 
-  if (!isSupabaseConfigured || !supabase) {
+  const supabaseClient = supabase;
+  if (!isSupabaseConfigured || !supabaseClient) {
     return FALLBACK_VENUES.find((venue) => venue.id === venueId) ?? null;
   }
 
-  const { data, error } = await supabase
-    .from("venues")
-    .select("id, name, display_name, logo_text, icon_emoji, address, latitude, longitude, radius")
-    .eq("id", venueId)
-    .maybeSingle<VenueRow>();
+  try {
+    const { data, error } = await withTimedVenueQuery(async (signal) => {
+      return await supabaseClient
+        .from("venues")
+        .select("id, name, display_name, logo_text, icon_emoji, address, latitude, longitude, radius")
+        .abortSignal(signal)
+        .eq("id", venueId)
+        .maybeSingle<VenueRow>();
+    });
 
-  if (error) {
+    if (error) {
+      return FALLBACK_VENUES.find((venue) => venue.id === venueId) ?? null;
+    }
+
+    return data ? mapVenueRow(data) : FALLBACK_VENUES.find((venue) => venue.id === venueId) ?? null;
+  } catch {
     return FALLBACK_VENUES.find((venue) => venue.id === venueId) ?? null;
   }
-
-  return data ? mapVenueRow(data) : FALLBACK_VENUES.find((venue) => venue.id === venueId) ?? null;
 }

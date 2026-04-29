@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getTriviaQuestions, submitTriviaAnswer } from "@/lib/trivia";
+import { getTriviaQuestions, submitTriviaAnswer, TriviaLimitReachedError } from "@/lib/trivia";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -33,6 +33,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, result });
   } catch (error) {
+    if (error instanceof TriviaLimitReachedError) {
+      return NextResponse.json(
+        { ok: false, error: error.message, quota: error.quota },
+        { status: 429 }
+      );
+    }
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Failed to submit answer." },
       { status: 500 }

@@ -11,6 +11,9 @@ type GlobalTransitionHideDetail = {
   force?: boolean;
 };
 
+const TARGET_PATH_MATCH_TIMEOUT_MS = 12000;
+const OVERLAY_HARD_TIMEOUT_MS = 16000;
+
 function pathMatches(expectedPath: string, candidatePath: string): boolean {
   if (!expectedPath) {
     return true;
@@ -24,12 +27,17 @@ export function GlobalTransitionOverlay() {
   const targetPathRef = useRef<string>("");
   const visibleRef = useRef(false);
   const isFadingOutRef = useRef(false);
-  const safetyTimerRef = useRef<number | null>(null);
+  const pathMatchSafetyTimerRef = useRef<number | null>(null);
+  const hardSafetyTimerRef = useRef<number | null>(null);
 
-  const clearSafetyTimer = useCallback(() => {
-    if (safetyTimerRef.current !== null && typeof window !== "undefined") {
-      window.clearTimeout(safetyTimerRef.current);
-      safetyTimerRef.current = null;
+  const clearSafetyTimers = useCallback(() => {
+    if (pathMatchSafetyTimerRef.current !== null && typeof window !== "undefined") {
+      window.clearTimeout(pathMatchSafetyTimerRef.current);
+      pathMatchSafetyTimerRef.current = null;
+    }
+    if (hardSafetyTimerRef.current !== null && typeof window !== "undefined") {
+      window.clearTimeout(hardSafetyTimerRef.current);
+      hardSafetyTimerRef.current = null;
     }
   }, []);
 
@@ -37,10 +45,10 @@ export function GlobalTransitionOverlay() {
     if (isFadingOutRef.current) {
       return;
     }
-    clearSafetyTimer();
+    clearSafetyTimers();
     isFadingOutRef.current = true;
     setIsFadingOut(true);
-  }, [clearSafetyTimer]);
+  }, [clearSafetyTimers]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -73,12 +81,12 @@ export function GlobalTransitionOverlay() {
     const onShow = (event: Event) => {
       const detail = (event as CustomEvent<GlobalTransitionShowDetail | undefined>).detail;
       targetPathRef.current = String(detail?.targetPath ?? "").trim();
-      clearSafetyTimer();
+      clearSafetyTimers();
       visibleRef.current = true;
       isFadingOutRef.current = false;
       setIsFadingOut(false);
       setVisible(true);
-      safetyTimerRef.current = window.setTimeout(() => {
+      pathMatchSafetyTimerRef.current = window.setTimeout(() => {
         if (!visibleRef.current || isFadingOutRef.current) {
           return;
         }
@@ -86,7 +94,13 @@ export function GlobalTransitionOverlay() {
         if (pathMatches(targetPathRef.current, currentPath)) {
           startFadeOut();
         }
-      }, 12000);
+      }, TARGET_PATH_MATCH_TIMEOUT_MS);
+      hardSafetyTimerRef.current = window.setTimeout(() => {
+        if (!visibleRef.current || isFadingOutRef.current) {
+          return;
+        }
+        startFadeOut();
+      }, OVERLAY_HARD_TIMEOUT_MS);
     };
 
     const onHide = (event: Event) => {
@@ -120,9 +134,9 @@ export function GlobalTransitionOverlay() {
       window.removeEventListener("tp:global-transition-show", onShow as EventListener);
       window.removeEventListener("tp:global-transition-hide", onHide as EventListener);
       window.removeEventListener("tp:venue-home-ready", onVenueReady as EventListener);
-      clearSafetyTimer();
+      clearSafetyTimers();
     };
-  }, [clearSafetyTimer, startFadeOut]);
+  }, [clearSafetyTimers, startFadeOut]);
 
   const shouldRender = visible;
   const overlayLabel = useMemo(() => "Hightop Sports: Game On", []);
@@ -151,7 +165,7 @@ export function GlobalTransitionOverlay() {
         if (!isFadingOut) {
           return;
         }
-        clearSafetyTimer();
+        clearSafetyTimers();
         visibleRef.current = false;
         isFadingOutRef.current = false;
         setVisible(false);

@@ -10,6 +10,8 @@ type UserProfileRow = {
   created_at: string;
 };
 
+const JOIN_PROFILE_REQUEST_TIMEOUT_MS = 12000;
+
 function mapUserProfileRow(row: UserProfileRow): User {
   return {
     id: row.id,
@@ -19,6 +21,18 @@ function mapUserProfileRow(row: UserProfileRow): User {
     points: row.points,
     createdAt: row.created_at,
   };
+}
+
+function isAbortError(error: unknown): boolean {
+  if (error instanceof DOMException) {
+    return error.name === "AbortError";
+  }
+  return Boolean(
+    error &&
+      typeof error === "object" &&
+      "name" in error &&
+      (error as { name?: unknown }).name === "AbortError"
+  );
 }
 
 export function validateUsername(username: string): boolean {
@@ -88,17 +102,32 @@ export async function createUserProfile(params: {
 
   await ensureAnonymousSession();
 
-  const response = await fetch("/api/join/profile", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      username,
-      venueId: params.venueId,
-      pin,
-    }),
-  });
+  const controller = new AbortController();
+  const timeoutId = globalThis.setTimeout(() => {
+    controller.abort();
+  }, JOIN_PROFILE_REQUEST_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetch("/api/join/profile", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username,
+        venueId: params.venueId,
+        pin,
+      }),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (isAbortError(error)) {
+      throw new Error("Join request timed out. Please try again.");
+    }
+    throw error;
+  } finally {
+    globalThis.clearTimeout(timeoutId);
+  }
 
   const payload = (await response.json().catch(() => ({}))) as {
     ok?: boolean;
