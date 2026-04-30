@@ -3339,5 +3339,226 @@
     "correctAnswer": 1,
     "category": "History",
     "difficulty": "easy"
+  },
+  {
+    "slug": "in-what-year-did-world-war-i-begin",
+    "question": "In what year did World War I begin?",
+    "options": [
+      "1905",
+      "1914",
+      "1918",
+      "1923"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-magna-carta-a-foundational-document-in-constitutional-law-was-signed-in-which-year",
+    "question": "The Magna Carta, a foundational document in constitutional law, was signed in which year?",
+    "options": [
+      "1066",
+      "1215",
+      "1348",
+      "1492"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-roman-general-is-famous-for-conquering-gaul-and-later-becoming-dictator",
+    "question": "Which Roman general is famous for conquering Gaul and later becoming dictator?",
+    "options": [
+      "Augustus",
+      "Nero",
+      "Julius Caesar",
+      "Constantine"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-edict-of-nantes-which-granted-rights-to-protestants-in-france-was-revoked-by-which-monarch",
+    "question": "The Edict of Nantes, which granted rights to Protestants in France, was revoked by which monarch?",
+    "options": [
+      "Louis XIII",
+      "Henry IV",
+      "Louis XIV",
+      "Francis I"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-was-the-name-of-the-ship-that-brought-the-pilgrims-to-plymouth-massachusetts-in-1620",
+    "question": "What was the name of the ship that brought the Pilgrims to Plymouth, Massachusetts, in 1620?",
+    "options": [
+      "Pinta",
+      "Santa Maria",
+      "Mayflower",
+      "Discovery"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-taiping-rebellion-a-devastating-civil-war-in-the-mid-19th-century-occurred-in-which-country",
+    "question": "The Taiping Rebellion, a devastating civil war in the mid-19th century, occurred in which country?",
+    "options": [
+      "India",
+      "Russia",
+      "China",
+      "Japan"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-explorers-expedition-was-the-first-to-circumnavigate-the-earth-although-he-died-during-the-journey",
+    "question": "Which explorer's expedition was the first to circumnavigate the Earth, although he died during the journey?",
+    "options": [
+      "Christopher Columbus",
+      "Vasco da Gama",
+      "Ferdinand Magellan",
+      "James Cook"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-battle-of-thermopylae-where-a-small-greek-force-famously-held-off-the-persian-army-occurred-during-which-conflict",
+    "question": "The Battle of Thermopylae, where a small Greek force famously held off the Persian army, occurred during which conflict?",
+    "options": [
+      "Peloponnesian War",
+      "Trojan War",
+      "Persian Wars",
+      "Macedonian Wars"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-was-the-leader-of-the-soviet-union-during-the-cuban-missile-crisis-in-1962",
+    "question": "Who was the leader of the Soviet Union during the Cuban Missile Crisis in 1962?",
+    "options": [
+      "Joseph Stalin",
+      "Mikhail Gorbachev",
+      "Nikita Khrushchev",
+      "Leonid Brezhnev"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-famous-speech-by-abraham-lincoln-began-with-the-words-four-score-and-seven-years-ago",
+    "question": "Which famous speech by Abraham Lincoln began with the words 'Four score and seven years ago...'?",
+    "options": [
+      "I Have a Dream",
+      "Emancipation Proclamation",
+      "Gettysburg Address",
+      "Farewell Address"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-glorious-revolution-of-1688-led-to-the-establishment-of-a-constitutional-monarchy-in-which-country",
+    "question": "The Glorious Revolution of 1688 led to the establishment of a constitutional monarchy in which country?",
+    "options": [
+      "France",
+      "Spain",
+      "England",
+      "Netherlands"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-roman-city-was-famously-preserved-by-the-eruption-of-mount-vesuvius-in-79-ad",
+    "question": "What Roman city was famously preserved by the eruption of Mount Vesuvius in 79 AD?",
+    "options": [
+      "Rome",
+      "Athens",
+      "Alexandria",
+      "Pompeii"
+    ],
+    "correctAnswer": 3,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-along-with-friedrich-engels-co-authored-the-communist-manifesto",
+    "question": "Who, along with Friedrich Engels, co-authored 'The Communist Manifesto'?",
+    "options": [
+      "Vladimir Lenin",
+      "Karl Marx",
+      "Leon Trotsky",
+      "Mao Zedong"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-what-year-was-the-united-states-declaration-of-independence-adopted",
+    "question": "In what year was the United States Declaration of Independence adopted?",
+    "options": [
+      "1776",
+      "1789",
+      "1770",
+      "1783"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-ancient-egyptian-pharaoh-is-famous-for-his-golden-burial-mask-and-largely-intact-tomb-discovered-in-1922",
+    "question": "Which ancient Egyptian pharaoh is famous for his golden burial mask and largely intact tomb discovered in 1922?",
+    "options": [
+      "Akhenaten",
+      "Tutankhamun",
+      "Ramesses II",
+      "Thutmose III"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-invention-of-the-movable-type-printing-press-in-the-15th-century-is-attributed-to-which-individual",
+    "question": "The invention of the movable type printing press in the 15th century is attributed to which individual?",
+    "options": [
+      "Leonardo da Vinci",
+      "Johannes Gutenberg",
+      "Galileo Galilei",
+      "Isaac Newton"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-treaty-of-westphalia-signed-in-1648-is-often-cited-as-marking-the-beginning-of-the-modern-state-system-and-ended-which-major-european-conflict",
+    "question": "The Treaty of Westphalia, signed in 1648, is often cited as marking the beginning of the modern state system and ended which major European conflict?",
+    "options": [
+      "The Hundred Years' War",
+      "The Thirty Years' War",
+      "The War of the Roses",
+      "The Napoleonic Wars"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
   }
 ]

@@ -3339,5 +3339,226 @@
     "correctAnswer": 1,
     "category": "Animals",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-do-you-call-a-baby-kangaroo",
+    "question": "What do you call a baby kangaroo?",
+    "options": [
+      "Joey",
+      "Calf",
+      "Cub",
+      "Fawn"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-marine-mammal-is-known-for-using-echolocation-to-navigate-and-hunt",
+    "question": "Which marine mammal is known for using echolocation to navigate and hunt?",
+    "options": [
+      "Seal",
+      "Dolphin",
+      "Manatee",
+      "Walrus"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-only-continent-where-giraffes-can-be-found-in-the-wild",
+    "question": "What is the only continent where giraffes can be found in the wild?",
+    "options": [
+      "Asia",
+      "Africa",
+      "South America",
+      "Australia"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-bird-is-famous-for-building-an-elaborate-nest-called-a-bower-to-attract-a-mate",
+    "question": "Which bird is famous for building an elaborate nest called a bower to attract a mate?",
+    "options": [
+      "Weaver bird",
+      "Lyrebird",
+      "Bowerbird",
+      "Magpie"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-axolotl-is-a-type-of-salamander-known-for-retaining-its-larval-features-into-adulthood-what-is-this-phenomenon-called",
+    "question": "The axolotl is a type of salamander known for retaining its larval features into adulthood. What is this phenomenon called?",
+    "options": [
+      "Metamorphosis",
+      "Neoteny",
+      "Regeneration",
+      "Hibernation"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-type-of-animal-is-a-fossa-native-to-madagascar",
+    "question": "What type of animal is a 'fossa', native to Madagascar?",
+    "options": [
+      "Large lemur",
+      "Wild dog",
+      "Feline-like carnivore",
+      "Venomous snake"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-insect-is-known-for-building-elaborate-often-massive-mound-like-nests-in-tropical-and-subtropical-regions",
+    "question": "Which insect is known for building elaborate, often massive, mound-like nests in tropical and subtropical regions?",
+    "options": [
+      "Honey bee",
+      "Carpenter ant",
+      "Termite",
+      "Wasp"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animals-diet-primarily-consists-of-bamboo",
+    "question": "Which animal's diet primarily consists of bamboo?",
+    "options": [
+      "Koala",
+      "Panda",
+      "Sloth",
+      "Gorilla"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-primary-diet-of-a-vampire-bat",
+    "question": "What is the primary diet of a vampire bat?",
+    "options": [
+      "Fruit",
+      "Insects",
+      "Nectar",
+      "Blood"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-cephalopod-is-known-for-its-ability-to-change-the-texture-of-its-skin-to-mimic-rocks-or-coral",
+    "question": "Which cephalopod is known for its ability to change the texture of its skin to mimic rocks or coral?",
+    "options": [
+      "Squid",
+      "Cuttlefish",
+      "Octopus",
+      "Nautilus"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-produces-honey",
+    "question": "Which animal produces honey?",
+    "options": [
+      "Wasp",
+      "Bee",
+      "Ant",
+      "Butterfly"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-undergoes-a-complete-metamorphosis-transforming-from-a-larva-caterpillar-to-an-adult",
+    "question": "Which animal undergoes a complete metamorphosis, transforming from a larva (caterpillar) to an adult?",
+    "options": [
+      "Spider",
+      "Grasshopper",
+      "Butterfly",
+      "Earthworm"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-unique-adaptation-allows-some-birds-like-swifts-to-spend-almost-their-entire-lives-in-flight-even-sleeping-while-airborne",
+    "question": "What unique adaptation allows some birds, like swifts, to spend almost their entire lives in flight, even sleeping while airborne?",
+    "options": [
+      "Specialized wing structure",
+      "High metabolism",
+      "Unilateral sleep",
+      "Extreme feather density"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-these-is-a-marsupial-native-to-australia",
+    "question": "Which of these is a marsupial native to Australia?",
+    "options": [
+      "Armadillo",
+      "Opossum",
+      "Wallaby",
+      "Anteater"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-ocean-animal-is-known-for-having-three-hearts",
+    "question": "Which ocean animal is known for having three hearts?",
+    "options": [
+      "Octopus",
+      "Shark",
+      "Blue Whale",
+      "Jellyfish"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-birds-is-flightless-and-native-to-new-zealand",
+    "question": "Which of these birds is flightless and native to New Zealand?",
+    "options": [
+      "Kiwi",
+      "Emu",
+      "Ostrich",
+      "Penguin"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-large-land-animal-is-known-for-having-a-trunk",
+    "question": "Which large land animal is known for having a trunk?",
+    "options": [
+      "Rhinoceros",
+      "Hippopotamus",
+      "Elephant",
+      "Giraffe"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
   }
 ]

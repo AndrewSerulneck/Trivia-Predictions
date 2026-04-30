@@ -3339,5 +3339,213 @@
     "correctAnswer": 1,
     "category": "Science",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-force-keeps-us-on-the-ground",
+    "question": "What force keeps us on the ground?",
+    "options": [
+      "Friction",
+      "Gravity",
+      "Magnetism",
+      "Tension"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-main-function-of-red-blood-cells",
+    "question": "What is the main function of red blood cells?",
+    "options": [
+      "Fight infection",
+      "Clot blood",
+      "Carry oxygen",
+      "Produce antibodies"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-unit-of-measurement-for-frequency",
+    "question": "What is the unit of measurement for frequency?",
+    "options": [
+      "Watt",
+      "Joule",
+      "Hertz",
+      "Newton"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-process-of-a-solid-turning-directly-into-a-gas-called",
+    "question": "What is the process of a solid turning directly into a gas called?",
+    "options": [
+      "Evaporation",
+      "Condensation",
+      "Sublimation",
+      "Melting"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-gland-produces-insulin",
+    "question": "Which gland produces insulin?",
+    "options": [
+      "Thyroid",
+      "Adrenal",
+      "Pancreas",
+      "Pituitary"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-our-galaxy",
+    "question": "What is the name of our galaxy?",
+    "options": [
+      "Andromeda",
+      "Triangulum",
+      "Whirlpool",
+      "Milky Way"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "according-to-newtons-first-law-of-motion-an-object-in-motion-stays-in-motion-with-the-same-speed-and-in-the-same-direction-unless-acted-upon-by-an-unbalanced-force-this-is-also-known-as",
+    "question": "According to Newton's First Law of Motion, an object in motion stays in motion with the same speed and in the same direction unless acted upon by an unbalanced force. This is also known as:",
+    "options": [
+      "Law of Action-Reaction",
+      "Law of Conservation of Energy",
+      "Law of Inertia",
+      "Law of Universal Gravitation"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-does-ph-stand-for-in-chemistry",
+    "question": "What does 'pH' stand for in chemistry?",
+    "options": [
+      "Potential Hydrogen",
+      "Power of Helium",
+      "Proton Hydride",
+      "Purity Hydroxide"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-part-of-the-plant-conducts-photosynthesis",
+    "question": "Which part of the plant conducts photosynthesis?",
+    "options": [
+      "Roots",
+      "Stem",
+      "Flower",
+      "Leaves"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-a-light-year-a-unit-of",
+    "question": "What is a light-year a unit of?",
+    "options": [
+      "Time",
+      "Brightness",
+      "Distance",
+      "Mass"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-primary-function-of-ribosomes-in-a-cell",
+    "question": "What is the primary function of ribosomes in a cell?",
+    "options": [
+      "Energy production",
+      "Waste removal",
+      "Protein synthesis",
+      "Lipid storage"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-does-dna-stand-for",
+    "question": "What does DNA stand for?",
+    "options": [
+      "Deoxyribonucleic Acid",
+      "Dinitrogenous Acid",
+      "Dihydrogenous Acid",
+      "Deoxygenated Acid"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-phenomenon-causes-the-northern-and-southern-lights-aurora-borealis-and-australis",
+    "question": "What phenomenon causes the Northern and Southern Lights (Aurora Borealis and Australis)?",
+    "options": [
+      "Lunar reflections",
+      "Solar wind interacting with Earth's magnetic field",
+      "Atmospheric pressure changes",
+      "Ocean currents"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-chemical-symbol-for-oxygen",
+    "question": "What is the chemical symbol for Oxygen?",
+    "options": [
+      "O",
+      "Ox",
+      "Oy",
+      "Om"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-cellular-organelle-is-responsible-for-generating-most-of-the-cells-supply-of-adenosine-triphosphate-atp",
+    "question": "What cellular organelle is responsible for generating most of the cell's supply of adenosine triphosphate (ATP)?",
+    "options": [
+      "Endoplasmic Reticulum",
+      "Golgi Apparatus",
+      "Mitochondria",
+      "Lysosome"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-most-abundant-element-in-the-earths-crust",
+    "question": "What is the most abundant element in the Earth's crust?",
+    "options": [
+      "Iron",
+      "Silicon",
+      "Oxygen",
+      "Aluminum"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
   }
 ]

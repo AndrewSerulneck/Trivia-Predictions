@@ -3326,5 +3326,226 @@
     "correctAnswer": 1,
     "category": "General Knowledge",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-element-has-the-atomic-number-79",
+    "question": "Which element has the atomic number 79?",
+    "options": [
+      "Silver",
+      "Platinum",
+      "Gold",
+      "Copper"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-was-the-first-woman-to-fly-solo-across-the-atlantic-ocean",
+    "question": "Who was the first woman to fly solo across the Atlantic Ocean?",
+    "options": [
+      "Bessie Coleman",
+      "Harriet Quimby",
+      "Amelia Earhart",
+      "Jacqueline Cochran"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-country-is-the-largest-by-land-area",
+    "question": "Which country is the largest by land area?",
+    "options": [
+      "Canada",
+      "China",
+      "United States",
+      "Russia"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-only-letter-in-the-english-alphabet-not-found-in-any-us-state-name",
+    "question": "What is the only letter in the English alphabet not found in any U.S. state name?",
+    "options": [
+      "X",
+      "Z",
+      "Q",
+      "J"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-largest-planet-in-our-solar-system",
+    "question": "What is the largest planet in our solar system?",
+    "options": [
+      "Mars",
+      "Earth",
+      "Jupiter",
+      "Saturn"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-classical-composer-was-known-for-becoming-deaf-during-his-career",
+    "question": "Which classical composer was known for becoming deaf during his career?",
+    "options": [
+      "Wolfgang Amadeus Mozart",
+      "Ludwig van Beethoven",
+      "Johann Sebastian Bach",
+      "Antonio Vivaldi"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-human-bodys-largest-organ",
+    "question": "What is the human body's largest organ?",
+    "options": [
+      "Heart",
+      "Brain",
+      "Skin",
+      "Liver"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-plural-form-of-the-word-child",
+    "question": "What is the plural form of the word \"child\"?",
+    "options": [
+      "Childs",
+      "Childes",
+      "Children",
+      "Child's"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-country-hosted-the-first-modern-olympic-games-in-1896",
+    "question": "Which country hosted the first modern Olympic Games in 1896?",
+    "options": [
+      "France",
+      "United Kingdom",
+      "Greece",
+      "Italy"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-does-cpu-stand-for-in-computing",
+    "question": "What does \"CPU\" stand for in computing?",
+    "options": [
+      "Central Processing Unit",
+      "Computer Personal Unit",
+      "Central Peripheral Unit",
+      "Core Program Utility"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-year-did-neil-armstrong-first-walk-on-the-moon",
+    "question": "In which year did Neil Armstrong first walk on the moon?",
+    "options": [
+      "1965",
+      "1969",
+      "1972",
+      "1970"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-mountain-range-separates-europe-and-asia",
+    "question": "Which mountain range separates Europe and Asia?",
+    "options": [
+      "Andes",
+      "Himalayas",
+      "Rocky Mountains",
+      "Ural Mountains"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-scientist-is-credited-with-developing-the-theory-of-relativity",
+    "question": "Which scientist is credited with developing the theory of relativity?",
+    "options": [
+      "Isaac Newton",
+      "Albert Einstein",
+      "Marie Curie",
+      "Nikola Tesla"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-ocean-is-the-deepest-point-on-earth-the-mariana-trench-located",
+    "question": "In which ocean is the deepest point on Earth, the Mariana Trench, located?",
+    "options": [
+      "Atlantic Ocean",
+      "Indian Ocean",
+      "Southern Ocean",
+      "Pacific Ocean"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-famous-scientist-developed-the-laws-of-motion-and-universal-gravitation",
+    "question": "Which famous scientist developed the laws of motion and universal gravitation?",
+    "options": [
+      "Albert Einstein",
+      "Isaac Newton",
+      "Galileo Galilei",
+      "Nikola Tesla"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-century-did-the-french-revolution-begin",
+    "question": "In which century did the French Revolution begin?",
+    "options": [
+      "17th century",
+      "18th century",
+      "19th century",
+      "16th century"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-famous-painting-features-a-woman-with-an-enigmatic-smile",
+    "question": "Which famous painting features a woman with an enigmatic smile?",
+    "options": [
+      "The Starry Night",
+      "The Scream",
+      "Mona Lisa",
+      "The Last Supper"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
   }
 ]

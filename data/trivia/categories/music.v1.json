@@ -3339,5 +3339,226 @@
     "correctAnswer": 2,
     "category": "Music",
     "difficulty": "hard"
+  },
+  {
+    "slug": "which-traditional-scottish-instrument-is-known-for-its-distinctive-drone-sound-and-is-often-played-in-parades",
+    "question": "Which traditional Scottish instrument is known for its distinctive drone sound and is often played in parades?",
+    "options": [
+      "Violin",
+      "Bagpipes",
+      "Trumpet",
+      "Flute"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-iconic-british-band-sang-hey-jude-and-let-it-be",
+    "question": "Which iconic British band sang \"Hey Jude\" and \"Let It Be\"?",
+    "options": [
+      "The Rolling Stones",
+      "The Kinks",
+      "The Beatles",
+      "Queen"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-legendary-singer-is-widely-known-by-the-honorific-queen-of-soul",
+    "question": "Which legendary singer is widely known by the honorific \"Queen of Soul\"?",
+    "options": [
+      "Diana Ross",
+      "Etta James",
+      "Aretha Franklin",
+      "Whitney Houston"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-highest-female-vocal-range",
+    "question": "What is the highest female vocal range?",
+    "options": [
+      "Mezzo-Soprano",
+      "Alto",
+      "Soprano",
+      "Contralto"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-classical-composer-wrote-the-opera-the-marriage-of-figaro",
+    "question": "Which classical composer wrote the opera \"The Marriage of Figaro\"?",
+    "options": [
+      "Ludwig van Beethoven",
+      "Giuseppe Verdi",
+      "Wolfgang Amadeus Mozart",
+      "Richard Wagner"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-woodwind-instrument-known-for-its-curved-shape-and-distinctive-sound-is-commonly-used-in-jazz-music",
+    "question": "Which woodwind instrument, known for its curved shape and distinctive sound, is commonly used in jazz music?",
+    "options": [
+      "Flute",
+      "Oboe",
+      "Saxophone",
+      "Bassoon"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-popular-music-streaming-service-launched-in-2008-offers-a-vast-library-of-songs-and-podcasts",
+    "question": "Which popular music streaming service, launched in 2008, offers a vast library of songs and podcasts?",
+    "options": [
+      "Apple Music",
+      "Pandora",
+      "Spotify",
+      "Tidal"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-iconic-music-festival-held-in-august-1969-is-famous-for-promoting-peace-and-music",
+    "question": "Which iconic music festival, held in August 1969, is famous for promoting peace and music?",
+    "options": [
+      "Monterey Pop Festival",
+      "Isle of Wight Festival",
+      "Woodstock",
+      "Live Aid"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-british-rock-band-released-the-epic-song-bohemian-rhapsody-in-1975",
+    "question": "Which British rock band released the epic song \"Bohemian Rhapsody\" in 1975?",
+    "options": [
+      "Led Zeppelin",
+      "Pink Floyd",
+      "Queen",
+      "The Who"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-composer-is-credited-with-developing-the-twelve-tone-technique-dodecaphony-in-the-early-20th-century",
+    "question": "Which composer is credited with developing the twelve-tone technique (dodecaphony) in the early 20th century?",
+    "options": [
+      "Igor Stravinsky",
+      "Arnold Schoenberg",
+      "Claude Debussy",
+      "Béla Bartók"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-rock-band-released-the-highly-successful-album-rumours-in-1977",
+    "question": "Which rock band released the highly successful album \"Rumours\" in 1977?",
+    "options": [
+      "The Eagles",
+      "Fleetwood Mac",
+      "Led Zeppelin",
+      "Pink Floyd"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-american-composer-is-a-pioneer-of-minimalism-and-known-for-works-like-music-for-18-musicians",
+    "question": "Which American composer is a pioneer of minimalism and known for works like \"Music for 18 Musicians\"?",
+    "options": [
+      "Philip Glass",
+      "John Cage",
+      "Steve Reich",
+      "Terry Riley"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-is-generally-considered-the-lowest-pitched-instrument-in-the-brass-family",
+    "question": "Which is generally considered the lowest-pitched instrument in the brass family?",
+    "options": [
+      "Trumpet",
+      "French Horn",
+      "Trombone",
+      "Tuba"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-music-genre-characterized-by-a-prominent-bass-line-and-off-beat-rhythms-originated-in-jamaica-in-the-late-1960s",
+    "question": "Which music genre, characterized by a prominent bass line and off-beat rhythms, originated in Jamaica in the late 1960s?",
+    "options": [
+      "Calypso",
+      "Ska",
+      "Reggae",
+      "Dancehall"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-french-composer-wrote-the-famous-opera-carmen",
+    "question": "Which French composer wrote the famous opera \"Carmen\"?",
+    "options": [
+      "Claude Debussy",
+      "Georges Bizet",
+      "Camille Saint-Saëns",
+      "Hector Berlioz"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-american-city-is-often-credited-as-the-birthplace-of-rock-and-roll",
+    "question": "Which American city is often credited as the \"Birthplace of Rock and Roll\"?",
+    "options": [
+      "Nashville",
+      "Chicago",
+      "Memphis",
+      "Detroit"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-most-basic-three-note-chord-forming-the-foundation-of-western-harmony",
+    "question": "What is the most basic three-note chord, forming the foundation of Western harmony?",
+    "options": [
+      "Arpeggio",
+      "Octave",
+      "Triad",
+      "Scale"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
   }
 ]

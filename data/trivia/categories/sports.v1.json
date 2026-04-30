@@ -3339,5 +3339,213 @@
     "correctAnswer": 3,
     "category": "Sports",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-national-sport-of-canada",
+    "question": "What is the national sport of Canada?",
+    "options": [
+      "Ice Hockey",
+      "Lacrosse",
+      "Basketball",
+      "Curling"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-players-are-on-a-soccer-team-on-the-field-at-one-time-excluding-substitutes",
+    "question": "How many players are on a soccer team on the field at one time (excluding substitutes)?",
+    "options": [
+      "9",
+      "10",
+      "11",
+      "12"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-is-credited-with-inventing-the-sport-of-basketball",
+    "question": "Which country is credited with inventing the sport of basketball?",
+    "options": [
+      "Canada",
+      "United States",
+      "United Kingdom",
+      "France"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-baseball-what-is-it-called-when-a-batter-hits-the-ball-out-of-the-park-for-a-run",
+    "question": "In baseball, what is it called when a batter hits the ball out of the park for a run?",
+    "options": [
+      "Strikeout",
+      "Walk",
+      "Home Run",
+      "Foul Ball"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-city-hosted-the-first-modern-olympic-games-in-1896",
+    "question": "Which city hosted the first modern Olympic Games in 1896?",
+    "options": [
+      "Paris",
+      "London",
+      "Athens",
+      "Rome"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-tennis-grand-slam-tournament-is-the-only-one-played-on-grass-courts",
+    "question": "Which tennis Grand Slam tournament is the only one played on grass courts?",
+    "options": [
+      "French Open",
+      "US Open",
+      "Australian Open",
+      "Wimbledon"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-sport-would-you-typically-perform-a-slam-dunk",
+    "question": "In which sport would you typically perform a 'slam dunk'?",
+    "options": [
+      "Volleyball",
+      "Basketball",
+      "Handball",
+      "Water Polo"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-is-the-only-boxer-to-hold-world-titles-in-eight-different-weight-divisions",
+    "question": "Who is the only boxer to hold world titles in eight different weight divisions?",
+    "options": [
+      "Floyd Mayweather Jr.",
+      "Manny Pacquiao",
+      "Muhammad Ali",
+      "Mike Tyson"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "how-long-is-a-standard-marathon-race-in-kilometers-to-the-nearest-hundredth",
+    "question": "How long is a standard marathon race in kilometers (to the nearest hundredth)?",
+    "options": [
+      "26.20 km",
+      "42.195 km",
+      "50.00 km",
+      "100.00 km"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-primary-objective-of-the-game-of-curling",
+    "question": "What is the primary objective of the game of curling?",
+    "options": [
+      "Score goals",
+      "Hit a home run",
+      "Get stones closest to the target",
+      "Knock down pins"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-position-in-american-football-is-primarily-responsible-for-throwing-the-ball",
+    "question": "Which position in American football is primarily responsible for throwing the ball?",
+    "options": [
+      "Running Back",
+      "Wide Receiver",
+      "Quarterback",
+      "Defensive End"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-country-has-won-the-most-fifa-world-cups-in-mens-soccer",
+    "question": "Which country has won the most FIFA World Cups in men's soccer?",
+    "options": [
+      "Germany",
+      "Italy",
+      "Brazil",
+      "Argentina"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-multi-sport-event-where-athletes-compete-in-swimming-cycling-and-running",
+    "question": "What is the name of the multi-sport event where athletes compete in swimming, cycling, and running?",
+    "options": [
+      "Decathlon",
+      "Triathlon",
+      "Pentathlon",
+      "Biathlon"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-essential-piece-of-equipment-is-typically-worn-on-the-head-for-protection-in-ice-hockey",
+    "question": "What essential piece of equipment is typically worn on the head for protection in ice hockey?",
+    "options": [
+      "Goggles",
+      "Helmet",
+      "Face Mask",
+      "Shoulder Pads"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-which-year-did-the-first-winter-olympic-games-officially-take-place",
+    "question": "In which year did the first Winter Olympic Games officially take place?",
+    "options": [
+      "1896",
+      "1924",
+      "1936",
+      "1952"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-term-for-scoring-one-stroke-under-par-on-a-golf-hole",
+    "question": "What is the term for scoring one stroke under par on a golf hole?",
+    "options": [
+      "Birdie",
+      "Eagle",
+      "Bogey",
+      "Albatross"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "easy"
   }
 ]
