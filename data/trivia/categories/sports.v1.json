@@ -3547,5 +3547,200 @@
     "correctAnswer": 0,
     "category": "Sports",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-color-jersey-is-traditionally-worn-by-the-leader-in-the-tour-de-france-cycling-race",
+    "question": "What color jersey is traditionally worn by the leader in the Tour de France cycling race?",
+    "options": [
+      "Red",
+      "Green",
+      "Yellow",
+      "Polka Dot"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-sport-uses-a-lightweight-feathered-projectile-called-a-shuttlecock",
+    "question": "Which sport uses a lightweight feathered projectile called a shuttlecock?",
+    "options": [
+      "Table Tennis",
+      "Badminton",
+      "Volleyball",
+      "Squash"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-famous-boxer-is-often-referred-to-by-the-nickname-the-greatest",
+    "question": "Which famous boxer is often referred to by the nickname 'The Greatest'?",
+    "options": [
+      "Mike Tyson",
+      "Floyd Mayweather Jr.",
+      "Muhammad Ali",
+      "Joe Louis"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-sport-would-you-score-a-strike-by-knocking-down-all-pins-with-the-first-ball",
+    "question": "In which sport would you score a 'strike' by knocking down all pins with the first ball?",
+    "options": [
+      "Billiards",
+      "Darts",
+      "Bowling",
+      "Curling"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-city-in-georgia-usa-annually-hosts-the-prestigious-masters-golf-tournament",
+    "question": "Which city in Georgia, USA, annually hosts the prestigious Masters golf tournament?",
+    "options": [
+      "Atlanta",
+      "Savannah",
+      "Augusta",
+      "Macon"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-was-the-highest-possible-score-a-gymnast-could-achieve-in-the-perfect-10-era-of-gymnastics-judging",
+    "question": "What was the highest possible score a gymnast could achieve in the 'perfect 10' era of gymnastics judging?",
+    "options": [
+      "9.5",
+      "9.9",
+      "10.0",
+      "10.5"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-won-the-inaugural-rugby-world-cup-in-1987",
+    "question": "Which country won the inaugural Rugby World Cup in 1987?",
+    "options": [
+      "Australia",
+      "England",
+      "New Zealand",
+      "South Africa"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-holds-the-record-for-the-most-olympic-gold-medals-won-by-an-individual-athlete",
+    "question": "Who holds the record for the most Olympic gold medals won by an individual athlete?",
+    "options": [
+      "Usain Bolt",
+      "Michael Phelps",
+      "Larisa Latynina",
+      "Carl Lewis"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-olympic-sport-includes-disciplines-such-as-the-vault-uneven-bars-and-balance-beam",
+    "question": "Which Olympic sport includes disciplines such as the vault, uneven bars, and balance beam?",
+    "options": [
+      "Rhythmic Gymnastics",
+      "Diving",
+      "Artistic Gymnastics",
+      "Trampolining"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-standard-diameter-of-a-basketball-hoop-in-inches",
+    "question": "What is the standard diameter of a basketball hoop in inches?",
+    "options": [
+      "16 inches",
+      "18 inches",
+      "20 inches",
+      "22 inches"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-holds-the-record-for-the-most-career-race-wins-in-formula-1-history",
+    "question": "Who holds the record for the most career race wins in Formula 1 history?",
+    "options": [
+      "Ayrton Senna",
+      "Michael Schumacher",
+      "Lewis Hamilton",
+      "Alain Prost"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-common-name-for-the-sport-also-known-as-table-tennis",
+    "question": "What is the common name for the sport also known as table tennis?",
+    "options": [
+      "Paddleball",
+      "Racketball",
+      "Ping-Pong",
+      "Squash"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-horse-is-famous-for-winning-the-grand-national-steeplechase-three-times",
+    "question": "Which horse is famous for winning the Grand National steeplechase three times?",
+    "options": [
+      "Desert Orchid",
+      "Aldaniti",
+      "Red Rum",
+      "Shergar"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-players-are-on-a-standard-soccer-team-on-the-field-at-one-time",
+    "question": "How many players are on a standard soccer team on the field at one time?",
+    "options": [
+      "9",
+      "10",
+      "11",
+      "12"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-grand-slam-tennis-tournament-is-played-on-a-clay-surface",
+    "question": "Which Grand Slam tennis tournament is played on a clay surface?",
+    "options": [
+      "Wimbledon",
+      "US Open",
+      "Australian Open",
+      "French Open"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "medium"
   }
 ]

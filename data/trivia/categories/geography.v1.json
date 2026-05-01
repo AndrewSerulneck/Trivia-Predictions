@@ -3573,5 +3573,174 @@
     "correctAnswer": 0,
     "category": "Geography",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-largest-continent-by-land-area",
+    "question": "What is the largest continent by land area?",
+    "options": [
+      "Asia",
+      "Africa",
+      "North America",
+      "Europe"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-ocean-is-the-smallest-and-shallowest",
+    "question": "Which ocean is the smallest and shallowest?",
+    "options": [
+      "Atlantic Ocean",
+      "Indian Ocean",
+      "Arctic Ocean",
+      "Southern Ocean"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-country-is-entirely-surrounded-by-south-africa",
+    "question": "Which country is entirely surrounded by South Africa?",
+    "options": [
+      "Zimbabwe",
+      "Botswana",
+      "Lesotho",
+      "Namibia"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-amazon-rainforest-is-primarily-located-in-which-continent",
+    "question": "The Amazon Rainforest is primarily located in which continent?",
+    "options": [
+      "Africa",
+      "South America",
+      "Asia",
+      "Australia"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mount-kilimanjaro-the-highest-peak-in-africa-is-located-in-which-country",
+    "question": "Mount Kilimanjaro, the highest peak in Africa, is located in which country?",
+    "options": [
+      "Kenya",
+      "Uganda",
+      "Tanzania",
+      "Ethiopia"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-strait-connects-the-atlantic-ocean-to-the-mediterranean-sea",
+    "question": "Which strait connects the Atlantic Ocean to the Mediterranean Sea?",
+    "options": [
+      "Strait of Hormuz",
+      "Strait of Magellan",
+      "Strait of Gibraltar",
+      "Bering Strait"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-shares-the-longest-land-border-with-the-united-states",
+    "question": "Which country shares the longest land border with the United States?",
+    "options": [
+      "Mexico",
+      "Canada",
+      "Russia",
+      "Cuba"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-lowest-point-on-the-surface-of-the-earth-that-is-not-underwater",
+    "question": "What is the lowest point on the surface of the Earth that is not underwater?",
+    "options": [
+      "Death Valley",
+      "Mariana Trench",
+      "Dead Sea",
+      "Lake Assal"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-european-river-flows-through-vienna-budapest-and-belgrade",
+    "question": "Which European river flows through Vienna, Budapest, and Belgrade?",
+    "options": [
+      "Rhine",
+      "Elbe",
+      "Danube",
+      "Seine"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-atacama-desert-one-of-the-driest-places-on-earth-is-primarily-located-in-which-south-american-country",
+    "question": "The Atacama Desert, one of the driest places on Earth, is primarily located in which South American country?",
+    "options": [
+      "Peru",
+      "Argentina",
+      "Chile",
+      "Bolivia"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-country-is-an-archipelago-of-over-17000-islands-making-it-the-worlds-largest-island-country",
+    "question": "Which country is an archipelago of over 17,000 islands, making it the world's largest island country?",
+    "options": [
+      "Philippines",
+      "Japan",
+      "Indonesia",
+      "Maldives"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-desert-is-known-as-the-largest-hot-desert-in-the-world",
+    "question": "Which desert is known as the largest hot desert in the world?",
+    "options": [
+      "Sahara Desert",
+      "Arabian Desert",
+      "Gobi Desert",
+      "Kalahari Desert"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-capital-city-of-iceland",
+    "question": "What is the capital city of Iceland?",
+    "options": [
+      "Reykjavik",
+      "Oslo",
+      "Helsinki",
+      "Copenhagen"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "hard"
   }
 ]

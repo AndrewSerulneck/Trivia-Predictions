@@ -3560,5 +3560,187 @@
     "correctAnswer": 2,
     "category": "Animals",
     "difficulty": "easy"
+  },
+  {
+    "slug": "which-large-marine-mammal-uses-echolocation-to-navigate-and-hunt",
+    "question": "Which large marine mammal uses echolocation to navigate and hunt?",
+    "options": [
+      "Shark",
+      "Dolphin",
+      "Seal",
+      "Walrus"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-ability-to-regenerate-lost-limbs",
+    "question": "Which animal is known for its ability to regenerate lost limbs?",
+    "options": [
+      "Crab",
+      "Starfish",
+      "Jellyfish",
+      "Sea Anemone"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-primary-diet-of-a-koala",
+    "question": "What is the primary diet of a Koala?",
+    "options": [
+      "Bamboo shoots",
+      "Acacia leaves",
+      "Eucalyptus leaves",
+      "Grass"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-lays-the-largest-eggs-among-all-living-land-animals",
+    "question": "Which animal lays the largest eggs among all living land animals?",
+    "options": [
+      "Eagle",
+      "Ostrich",
+      "Crocodile",
+      "Emu"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-type-of-bear-is-native-to-the-arctic-region",
+    "question": "Which type of bear is native to the Arctic region?",
+    "options": [
+      "Grizzly Bear",
+      "Black Bear",
+      "Panda Bear",
+      "Polar Bear"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-unique-respiratory-adaptation-allows-some-fish-like-the-lungfish-to-survive-periods-of-drought",
+    "question": "What unique respiratory adaptation allows some fish, like the Lungfish, to survive periods of drought?",
+    "options": [
+      "Hibernation",
+      "Gills that filter air",
+      "Air sacs",
+      "Breathing air"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-venomous-snake-is-the-longest-in-the-world",
+    "question": "Which venomous snake is the longest in the world?",
+    "options": [
+      "Black Mamba",
+      "Inland Taipan",
+      "King Cobra",
+      "Rattlesnake"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-having-a-shell-and-moving-very-slowly-on-land",
+    "question": "Which animal is known for having a shell and moving very slowly on land?",
+    "options": [
+      "Frog",
+      "Snake",
+      "Turtle",
+      "Lizard"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animals-fingerprint-is-so-similar-to-a-humans-that-it-can-cause-confusion-at-crime-scenes",
+    "question": "Which animal's fingerprint is so similar to a human's that it can cause confusion at crime scenes?",
+    "options": [
+      "Chimpanzee",
+      "Gorilla",
+      "Orangutan",
+      "Koala"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-is-famous-for-its-ability-to-change-color-to-match-its-surroundings",
+    "question": "Which animal is famous for its ability to change color to match its surroundings?",
+    "options": [
+      "Frog",
+      "Gecko",
+      "Chameleon",
+      "Iguana"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-distinctive-black-and-white-stripes-unique-to-each-individual",
+    "question": "Which animal is known for its distinctive black and white stripes, unique to each individual?",
+    "options": [
+      "Tiger",
+      "Zebra",
+      "Skunk",
+      "Panda"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-to-have-the-longest-lifespan-among-all-vertebrates",
+    "question": "Which animal is known to have the longest lifespan among all vertebrates?",
+    "options": [
+      "Galapagos Tortoise",
+      "Bowhead Whale",
+      "Greenland Shark",
+      "Ocean Quahog"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-as-the-fastest-land-animal",
+    "question": "Which animal is known as the fastest land animal?",
+    "options": [
+      "Cheetah",
+      "Lion",
+      "Gazelle",
+      "Horse"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-of-these-mammals-is-capable-of-true-sustained-flight",
+    "question": "Which of these mammals is capable of true, sustained flight?",
+    "options": [
+      "Flying Squirrel",
+      "Bat",
+      "Sugar Glider",
+      "Colugo"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
   }
 ]

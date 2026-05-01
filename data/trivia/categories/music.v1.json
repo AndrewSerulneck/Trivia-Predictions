@@ -3560,5 +3560,187 @@
     "correctAnswer": 2,
     "category": "Music",
     "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-term-for-a-musical-passage-that-consists-of-a-single-melodic-line-without-accompaniment",
+    "question": "What is the term for a musical passage that consists of a single melodic line without accompaniment?",
+    "options": [
+      "Homophony",
+      "Polyphony",
+      "Monophony",
+      "Counterpoint"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-band-is-known-for-hits-like-stairway-to-heaven-and-whole-lotta-love",
+    "question": "Which band is known for hits like 'Stairway to Heaven' and 'Whole Lotta Love'?",
+    "options": [
+      "The Rolling Stones",
+      "Led Zeppelin",
+      "Pink Floyd",
+      "Queen"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-artist-has-won-the-most-grammy-awards-of-all-time",
+    "question": "Which artist has won the most Grammy Awards of all time?",
+    "options": [
+      "Beyoncé",
+      "Georg Solti",
+      "Quincy Jones",
+      "Stevie Wonder"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-most-common-time-signature-in-western-music",
+    "question": "What is the most common time signature in Western music?",
+    "options": [
+      "3/4",
+      "2/4",
+      "4/4",
+      "6/8"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "from-which-country-did-the-music-genre-k-pop-originate",
+    "question": "From which country did the music genre K-Pop originate?",
+    "options": [
+      "Japan",
+      "South Korea",
+      "China",
+      "Thailand"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-russian-composer-wrote-the-ballet-the-nutcracker",
+    "question": "Which Russian composer wrote the ballet 'The Nutcracker'?",
+    "options": [
+      "Igor Stravinsky",
+      "Sergei Rachmaninoff",
+      "Pyotr Ilyich Tchaikovsky",
+      "Dmitri Shostakovich"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-sang-the-hit-song-bad-guy-which-won-a-grammy-for-song-of-the-year",
+    "question": "Who sang the hit song 'Bad Guy' which won a Grammy for Song of the Year?",
+    "options": [
+      "Ariana Grande",
+      "Dua Lipa",
+      "Billie Eilish",
+      "Olivia Rodrigo"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-woodstock-music-art-fair-took-place-in-which-us-state",
+    "question": "The Woodstock Music & Art Fair took place in which U.S. state?",
+    "options": [
+      "California",
+      "New York",
+      "Massachusetts",
+      "Pennsylvania"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-instrument-is-a-member-of-the-double-reed-family",
+    "question": "Which instrument is a member of the double-reed family?",
+    "options": [
+      "Clarinet",
+      "Flute",
+      "Oboe",
+      "Saxophone"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-is-famously-known-as-the-king-of-pop",
+    "question": "Who is famously known as the 'King of Pop'?",
+    "options": [
+      "Elvis Presley",
+      "Prince",
+      "Michael Jackson",
+      "James Brown"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "seattle-washington-is-often-associated-with-the-rise-of-which-music-genre-in-the-late-1980s-and-early-1990s",
+    "question": "Seattle, Washington is often associated with the rise of which music genre in the late 1980s and early 1990s?",
+    "options": [
+      "Glam Metal",
+      "Grunge",
+      "Synth-Pop",
+      "Britpop"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-was-the-lead-singer-of-the-iconic-british-rock-band-queen",
+    "question": "Who was the lead singer of the iconic British rock band Queen?",
+    "options": [
+      "Elton John",
+      "Mick Jagger",
+      "Freddie Mercury",
+      "Robert Plant"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-woodwind-instrument-is-known-for-its-distinctive-curved-shape-and-is-often-featured-in-jazz-music",
+    "question": "Which woodwind instrument is known for its distinctive curved shape and is often featured in jazz music?",
+    "options": [
+      "Clarinet",
+      "Flute",
+      "Oboe",
+      "Saxophone"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-classical-composer-famously-wrote-the-unfinished-symphony-symphony-no-8-in-b-minor",
+    "question": "Which classical composer famously wrote the 'Unfinished Symphony' (Symphony No. 8 in B minor)?",
+    "options": [
+      "Ludwig van Beethoven",
+      "Franz Schubert",
+      "Wolfgang Amadeus Mozart",
+      "Johannes Brahms"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
   }
 ]

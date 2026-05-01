@@ -3560,5 +3560,187 @@
     "correctAnswer": 1,
     "category": "History",
     "difficulty": "hard"
+  },
+  {
+    "slug": "what-ancient-wonder-was-a-massive-lighthouse-at-the-entrance-to-alexandrias-harbor",
+    "question": "What ancient wonder was a massive lighthouse at the entrance to Alexandria's harbor?",
+    "options": [
+      "Colossus of Rhodes",
+      "Pharos of Alexandria",
+      "Temple of Artemis",
+      "Statue of Zeus"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-byzantine-emperor-is-known-for-his-legal-code-corpus-juris-civilis",
+    "question": "Which Byzantine emperor is known for his legal code, Corpus Juris Civilis?",
+    "options": [
+      "Theodosius I",
+      "Constantine I",
+      "Justinian I",
+      "Heraclius"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-was-the-first-emperor-of-the-roman-empire",
+    "question": "Who was the first emperor of the Roman Empire?",
+    "options": [
+      "Julius Caesar",
+      "Augustus",
+      "Nero",
+      "Constantine"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-black-death-a-devastating-pandemic-reached-europe-in-which-century",
+    "question": "The Black Death, a devastating pandemic, reached Europe in which century?",
+    "options": [
+      "12th",
+      "13th",
+      "14th",
+      "15th"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-invention-of-the-spinning-jenny-in-the-18th-century-was-a-key-development-in-which-revolution",
+    "question": "The invention of the spinning jenny in the 18th century was a key development in which revolution?",
+    "options": [
+      "French Revolution",
+      "American Revolution",
+      "Industrial Revolution",
+      "Russian Revolution"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-magna-carta-a-charter-of-rights-was-signed-by-king-john-of-england-in-what-year",
+    "question": "The Magna Carta, a charter of rights, was signed by King John of England in what year?",
+    "options": [
+      "1066",
+      "1215",
+      "1492",
+      "1776"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-chinese-dynasty-built-much-of-the-great-wall-and-unified-china-for-the-first-time",
+    "question": "Which Chinese dynasty built much of the Great Wall and unified China for the first time?",
+    "options": [
+      "Han Dynasty",
+      "Tang Dynasty",
+      "Qin Dynasty",
+      "Ming Dynasty"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-led-the-soviet-union-during-much-of-world-war-ii",
+    "question": "Who led the Soviet Union during much of World War II?",
+    "options": [
+      "Vladimir Lenin",
+      "Joseph Stalin",
+      "Nikita Khrushchev",
+      "Mikhail Gorbachev"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-renaissance-originated-in-which-european-country",
+    "question": "The Renaissance originated in which European country?",
+    "options": [
+      "France",
+      "England",
+      "Italy",
+      "Germany"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-battle-of-cannae-a-major-roman-defeat-was-fought-against-which-carthaginian-general",
+    "question": "The Battle of Cannae, a major Roman defeat, was fought against which Carthaginian general?",
+    "options": [
+      "Scipio Africanus",
+      "Hannibal",
+      "Hamilcar Barca",
+      "Hasdrubal Barca"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-was-the-primary-cause-of-the-opium-wars-in-19th-century-china",
+    "question": "What was the primary cause of the Opium Wars in 19th-century China?",
+    "options": [
+      "Territorial disputes",
+      "Religious conflicts",
+      "Trade imbalances",
+      "Succession crisis"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-was-the-british-prime-minister-during-most-of-world-war-ii",
+    "question": "Who was the British Prime Minister during most of World War II?",
+    "options": [
+      "Winston Churchill",
+      "Neville Chamberlain",
+      "Clement Attlee",
+      "Harold Wilson"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-code-of-hammurabi-one-of-the-earliest-and-most-complete-written-legal-codes-originated-in-which-ancient-civilization",
+    "question": "The Code of Hammurabi, one of the earliest and most complete written legal codes, originated in which ancient civilization?",
+    "options": [
+      "Ancient Egypt",
+      "Mesopotamia",
+      "Ancient Greece",
+      "Indus Valley Civilization"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-edict-of-nantes-issued-in-1598-to-grant-rights-to-huguenots-was-revoked-in-1685-by-which-french-monarch",
+    "question": "The Edict of Nantes, issued in 1598 to grant rights to Huguenots, was revoked in 1685 by which French monarch?",
+    "options": [
+      "Louis XIII",
+      "Louis XIV",
+      "Henry IV",
+      "Francis I"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
   }
 ]

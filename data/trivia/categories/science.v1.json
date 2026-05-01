@@ -3547,5 +3547,200 @@
     "correctAnswer": 2,
     "category": "Science",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-exoplanet-detection-method-observes-the-slight-dimming-of-a-stars-light-as-a-planet-passes-in-front-of-it",
+    "question": "Which exoplanet detection method observes the slight dimming of a star's light as a planet passes in front of it?",
+    "options": [
+      "Radial velocity method",
+      "Direct imaging",
+      "Gravitational microlensing",
+      "Transit method"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-geological-process-is-primarily-responsible-for-the-formation-of-mountain-ranges-like-the-himalayas",
+    "question": "What geological process is primarily responsible for the formation of mountain ranges like the Himalayas?",
+    "options": [
+      "Volcanism",
+      "Erosion",
+      "Plate tectonics",
+      "Meteorite impact"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-part-of-the-brain-primarily-controls-balance-and-coordination",
+    "question": "What part of the brain primarily controls balance and coordination?",
+    "options": [
+      "Cerebrum",
+      "Brainstem",
+      "Thalamus",
+      "Cerebellum"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-process-by-which-a-liquid-turns-into-a-gas-below-its-boiling-point",
+    "question": "What is the name of the process by which a liquid turns into a gas below its boiling point?",
+    "options": [
+      "Condensation",
+      "Sublimation",
+      "Evaporation",
+      "Melting"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-principle-states-that-its-impossible-to-know-precisely-both-the-position-and-momentum-of-a-particle-at-the-same-time",
+    "question": "What principle states that it's impossible to know precisely both the position and momentum of a particle at the same time?",
+    "options": [
+      "Pauli Exclusion Principle",
+      "Heisenberg Uncertainty Principle",
+      "Schrödinger's Equation",
+      "Bohr Model"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-term-for-a-region-of-spacetime-where-gravity-is-so-strong-that-nothing-not-even-light-can-escape",
+    "question": "What is the term for a region of spacetime where gravity is so strong that nothing, not even light, can escape?",
+    "options": [
+      "Nebula",
+      "Quasar",
+      "Pulsar",
+      "Black Hole"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-primary-function-of-the-myelin-sheath-in-neurons",
+    "question": "What is the primary function of the myelin sheath in neurons?",
+    "options": [
+      "To produce neurotransmitters",
+      "To provide structural support",
+      "To insulate the axon and speed up nerve impulses",
+      "To receive signals from other neurons"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-ph-value-for-a-neutral-solution",
+    "question": "What is the pH value for a neutral solution?",
+    "options": [
+      "0",
+      "7",
+      "14",
+      "Between 6 and 8"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-given-to-the-supercontinent-that-existed-approximately-335-million-years-ago",
+    "question": "What is the name given to the supercontinent that existed approximately 335 million years ago?",
+    "options": [
+      "Gondwana",
+      "Laurasia",
+      "Pangaea",
+      "Rodinia"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-state-of-matter-has-a-definite-volume-but-no-definite-shape",
+    "question": "What state of matter has a definite volume but no definite shape?",
+    "options": [
+      "Solid",
+      "Liquid",
+      "Gas",
+      "Plasma"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-unit-measures-electric-current",
+    "question": "What unit measures electric current?",
+    "options": [
+      "Volt",
+      "Ohm",
+      "Ampere",
+      "Watt"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-noble-gas-is-the-lightest",
+    "question": "Which noble gas is the lightest?",
+    "options": [
+      "Neon",
+      "Argon",
+      "Helium",
+      "Krypton"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-theory-developed-by-albert-einstein-describes-gravity-as-a-curvature-of-spacetime",
+    "question": "What theory, developed by Albert Einstein, describes gravity as a curvature of spacetime?",
+    "options": [
+      "Quantum Mechanics",
+      "String Theory",
+      "General Relativity",
+      "Special Relativity"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-fundamental-force-is-responsible-for-the-decay-of-radioactive-isotopes",
+    "question": "Which fundamental force is responsible for the decay of radioactive isotopes?",
+    "options": [
+      "Strong nuclear force",
+      "Electromagnetic force",
+      "Weak nuclear force",
+      "Gravitational force"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-process-do-plants-use-to-convert-light-energy-into-chemical-energy",
+    "question": "What process do plants use to convert light energy into chemical energy?",
+    "options": [
+      "Respiration",
+      "Fermentation",
+      "Photosynthesis",
+      "Transpiration"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
   }
 ]

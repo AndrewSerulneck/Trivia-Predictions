@@ -3547,5 +3547,200 @@
     "correctAnswer": 2,
     "category": "General Knowledge",
     "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-continents-are-there-in-the-world",
+    "question": "How many continents are there in the world?",
+    "options": [
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-painted-the-ceiling-of-the-sistine-chapel",
+    "question": "Who painted the ceiling of the Sistine Chapel?",
+    "options": [
+      "Leonardo da Vinci",
+      "Raphael",
+      "Michelangelo",
+      "Donatello"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-is-home-to-the-famous-monument-the-taj-mahal",
+    "question": "Which country is home to the famous monument, the Taj Mahal?",
+    "options": [
+      "China",
+      "India",
+      "Egypt",
+      "Iran"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-currency-used-in-japan",
+    "question": "What is the name of the currency used in Japan?",
+    "options": [
+      "Yuan",
+      "Won",
+      "Yen",
+      "Baht"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-is-considered-a-primary-color-of-light-rgb-model",
+    "question": "Which of these is considered a primary color of light (RGB model)?",
+    "options": [
+      "Green",
+      "Orange",
+      "Purple",
+      "Blue"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-authored-the-classic-novel-don-quixote",
+    "question": "Who authored the classic novel 'Don Quixote'?",
+    "options": [
+      "William Shakespeare",
+      "Miguel de Cervantes",
+      "Leo Tolstoy",
+      "Charles Dickens"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-largest-ocean-on-earth-by-surface-area",
+    "question": "What is the largest ocean on Earth by surface area?",
+    "options": [
+      "Atlantic Ocean",
+      "Indian Ocean",
+      "Southern Ocean",
+      "Pacific Ocean"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-large-flightless-bird-is-native-to-australia",
+    "question": "Which large flightless bird is native to Australia?",
+    "options": [
+      "Ostrich",
+      "Emu",
+      "Rhea",
+      "Cassowary"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-precious-metal-has-the-chemical-symbol-ag",
+    "question": "Which precious metal has the chemical symbol Ag?",
+    "options": [
+      "Gold",
+      "Silver",
+      "Platinum",
+      "Copper"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-organ-in-the-human-body-is-primarily-responsible-for-pumping-blood",
+    "question": "Which organ in the human body is primarily responsible for pumping blood?",
+    "options": [
+      "Lungs",
+      "Brain",
+      "Liver",
+      "Heart"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-wrote-the-classic-play-romeo-and-juliet",
+    "question": "Who wrote the classic play 'Romeo and Juliet'?",
+    "options": [
+      "Charles Dickens",
+      "William Shakespeare",
+      "Jane Austen",
+      "Mark Twain"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-instrument-is-often-referred-to-as-the-king-of-instruments",
+    "question": "Which instrument is often referred to as the 'king of instruments'?",
+    "options": [
+      "Piano",
+      "Violin",
+      "Organ",
+      "Guitar"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-which-year-did-the-first-world-war-begin",
+    "question": "In which year did the First World War begin?",
+    "options": [
+      "1905",
+      "1914",
+      "1918",
+      "1923"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-african-country-is-known-as-the-pearl-of-africa",
+    "question": "Which African country is known as the \"Pearl of Africa\"?",
+    "options": [
+      "Kenya",
+      "Uganda",
+      "Tanzania",
+      "Ethiopia"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-is-credited-with-inventing-the-incandescent-light-bulb",
+    "question": "Who is credited with inventing the incandescent light bulb?",
+    "options": [
+      "Nikola Tesla",
+      "Alexander Graham Bell",
+      "Thomas Edison",
+      "Marie Curie"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
   }
 ]
