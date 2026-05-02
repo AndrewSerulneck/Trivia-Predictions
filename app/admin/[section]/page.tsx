@@ -20,7 +20,7 @@ export default async function AdminSectionPage({
   return (
     <PageShell
       title={matchedSection.label}
-      description="Admin tool page."
+      showPageTitle={false}
       showBranding={false}
       showUserStatus={false}
     >

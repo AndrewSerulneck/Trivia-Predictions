@@ -7,8 +7,8 @@ export default async function AdminPage() {
 
   return (
     <PageShell
-      title="Admin Dashboard"
-      description="Choose a tool to open its page."
+      title="Admin"
+      showPageTitle={false}
       showBranding={false}
       showUserStatus={false}
     >

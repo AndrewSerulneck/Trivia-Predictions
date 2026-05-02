@@ -433,6 +433,92 @@ h4,
   min-height: 46px;
 }
 
+.admin-console,
+.admin-console * {
+  box-sizing: border-box;
+}
+
+.admin-console {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.admin-console--ads-list,
+.admin-console--ads-list * {
+  box-sizing: border-box;
+}
+
+.admin-console--ads-list {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.admin-console--ads-list .admin-ads-shell {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  position: relative;
+  container-type: inline-size;
+}
+
+.admin-console--ads-list .admin-ads-list,
+.admin-console--ads-list .admin-ads-item,
+.admin-console--ads-list .admin-ads-page-card,
+.admin-console--ads-list .admin-ads-live-board,
+.admin-console--ads-list .admin-ads-slot-row {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.admin-console--ads-list .admin-ads-item p,
+.admin-console--ads-list .admin-ads-item span,
+.admin-console--ads-list .admin-ads-item button,
+.admin-console--ads-list .admin-ads-slot-row p,
+.admin-console--ads-list .admin-ads-slot-row button {
+  word-break: break-all;
+  hyphens: auto;
+  white-space: normal;
+}
+
+.admin-console--ads-list img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+@container (max-width: 450px) {
+  .admin-console--ads-list .admin-ads-page-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-console--ads-list .admin-ads-shell .grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .admin-console--ads-list .admin-ads-shell input,
+  .admin-console--ads-list .admin-ads-shell select,
+  .admin-console--ads-list .admin-ads-shell textarea,
+  .admin-console--ads-list .admin-ads-shell button,
+  .admin-console--ads-list .admin-ads-shell p,
+  .admin-console--ads-list .admin-ads-shell label,
+  .admin-console--ads-list .admin-ads-shell span {
+    font-size: 16px !important;
+    line-height: 1.35 !important;
+  }
+}
+
+.admin-console input,
+.admin-console select,
+.admin-console textarea,
+.admin-console img,
+.admin-console button,
+.admin-console a {
+  max-width: 100%;
+}
+
 button[class*="text-xs"],
 a[role="button"][class*="text-xs"],
 button[class*="text-[11px]"],

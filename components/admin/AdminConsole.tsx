@@ -1566,10 +1566,13 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const isSectionMode = mode === "section";
   const selectedSection = ADMIN_SECTION_OPTIONS.find((section) => section.id === activeSection) ?? null;
   const shouldRenderSectionContent = !shouldShowBootstrap && isSectionMode;
+  const isManageAdvertisementsSection = shouldRenderSectionContent && activeSection === "ads-list";
 
   return (
     <div
-      className="admin-console space-y-6"
+      className={`admin-console min-w-0 max-w-full space-y-6 overflow-x-hidden [&_*]:max-w-full [&_*]:min-w-0 ${
+        isManageAdvertisementsSection ? "admin-console--ads-list" : ""
+      }`}
       style={{ fontFamily: '"Segoe UI", "Helvetica Neue", Arial, sans-serif' }}
     >
       {showLogout ? (
@@ -1633,7 +1636,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
         <section className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
           <h2 className="text-lg font-semibold">Admin Tools</h2>
           <p className="text-sm text-slate-600">Tap a tool to open its page.</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {ADMIN_SECTION_OPTIONS.map((section) => (
               <button
                 key={section.id}
@@ -1657,7 +1660,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
             onClick={() => {
               router.push("/admin");
             }}
-            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            className="w-full rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 sm:w-auto"
           >
             Back to Admin Dashboard
           </button>
@@ -2617,12 +2620,12 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       ) : null}
 
       {shouldRenderSectionContent && activeSection === "ads-list" ? (
-      <section className="space-y-2 rounded-lg border border-slate-200 p-3">
+      <section className="admin-ads-shell relative w-full min-w-0 max-w-full space-y-2 overflow-x-hidden rounded-lg border border-slate-200 p-3">
         <h2 className="text-base font-semibold">Advertisements ({ads.length})</h2>
         <p className="text-xs text-slate-600">
           Live placement board organized by page. A space is <span className="font-semibold text-emerald-700">occupied</span> when at least one live ad matches it.
         </p>
-        <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <div className="admin-ads-live-board space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
           <h3 className="text-sm font-semibold text-slate-800">Live Ads By Website Page</h3>
           <div className="max-w-sm space-y-1">
             <label className={FORM_LABEL_CLASS}>Venue Context For Placement Availability</label>
@@ -2643,8 +2646,8 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           </div>
           <div className="space-y-3">
             {liveAdPages.map((pageEntry) => (
-              <div key={pageEntry.page} className="rounded-md border border-slate-200 bg-white p-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
+              <div key={pageEntry.page} className="admin-ads-page-card min-w-0 rounded-md border border-slate-200 bg-white p-3">
+                <div className="admin-ads-page-header flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm font-semibold text-slate-800">{AD_PAGE_LABEL[pageEntry.page]}</p>
                   <p className="text-xs text-slate-600">Live ads: {pageEntry.pageLiveAds.length}</p>
                 </div>
@@ -2652,7 +2655,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                   {AD_TYPE_ORDER.map((typeKey) => {
                     const slotsForType = pageEntry.slotsWithAds.filter((entry) => entry.slot.adType === typeKey);
                     return (
-                      <div key={`${pageEntry.page}-${typeKey}`} className="rounded-md border border-slate-200 p-2">
+                      <div key={`${pageEntry.page}-${typeKey}`} className="min-w-0 rounded-md border border-slate-200 p-2">
                         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{AD_TYPE_LABEL[typeKey]}</p>
                         {slotsForType.length === 0 ? (
                           <p className="mt-1 text-xs text-slate-500">No {AD_TYPE_LABEL[typeKey].toLowerCase()} spaces configured.</p>
@@ -2682,14 +2685,14 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                                       startCreateAdFromSlot(slotEntry.slot);
                                     }
                                   }}
-                                  className={`rounded-md border px-2 py-1.5 ${
+                                  className={`admin-ads-slot-row rounded-md border px-2 py-1.5 ${
                                     occupied
                                       ? "border-emerald-200 bg-emerald-50"
                                       : "border-amber-200 bg-amber-50"
                                   } w-full cursor-pointer text-left transition-colors hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400`}
                                 >
-                                  <p className="text-xs font-semibold text-slate-800">{slotEntry.slot.label}</p>
-                                  <p className={`text-[11px] ${occupied ? "text-emerald-800" : "text-amber-800"}`}>
+                                  <p className="break-words text-xs font-semibold text-slate-800">{slotEntry.slot.label}</p>
+                                  <p className={`break-words text-[11px] ${occupied ? "text-emerald-800" : "text-amber-800"}`}>
                                     {occupied ? `Occupied (${slotEntry.ads.length})` : "Available"}
                                   </p>
                                   {slotEntry.ads.length > 0 ? (
@@ -2702,7 +2705,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                                             event.stopPropagation();
                                             openAdEditorFromBoard(adItem);
                                           }}
-                                          className="rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[11px] text-slate-700 hover:bg-slate-100"
+                                          className="max-w-full break-all whitespace-normal rounded border border-slate-300 bg-white px-1.5 py-0.5 text-left text-[11px] text-slate-700 hover:bg-slate-100"
                                         >
                                           Edit {adItem.advertiserName}
                                         </button>
@@ -2721,7 +2724,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                 {pageEntry.unmatchedAds.length > 0 ? (
                   <div className="mt-2 rounded-md border border-rose-200 bg-rose-50 p-2">
                     <p className="text-xs font-semibold text-rose-800">Unmapped live ads</p>
-                    <p className="text-xs text-rose-700">
+                    <p className="break-words text-xs text-rose-700">
                       {pageEntry.unmatchedAds.map((item) => item.advertiserName).join(", ")}
                     </p>
                   </div>
@@ -2747,9 +2750,9 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
             </button>
           ) : null}
         </div>
-        <ul className="space-y-2">
+        <ul className="admin-ads-list min-w-0 space-y-2">
           {ads.map((item) => (
-            <li id={`ad-row-${item.id}`} key={item.id} className="rounded-md border border-slate-200 p-2 text-sm">
+            <li id={`ad-row-${item.id}`} key={item.id} className="admin-ads-item min-w-0 overflow-hidden rounded-md border border-slate-200 p-2 text-sm">
               {editingAdId === item.id ? (
                 <div className="space-y-2">
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -3020,20 +3023,20 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                 </div>
               ) : (
                 <>
-                  <p className="font-medium">{item.advertiserName}</p>
-                  <p className="text-xs text-slate-600">
+                  <p className="break-words font-medium">{item.advertiserName}</p>
+                  <p className="break-words text-xs text-slate-600">
                     {AD_PAGE_LABEL[item.pageKey]} | {AD_TYPE_LABEL[item.adType]} | {AD_TRIGGER_LABEL[item.displayTrigger]} | {item.slot} | {item.width}x{item.height} | Weight {item.deliveryWeight ?? 1} | {item.active ? "active" : "inactive"} |{" "}
                     {(item.venueIds ?? (item.venueId ? [item.venueId] : [])).length > 0
                       ? `${(item.venueIds ?? (item.venueId ? [item.venueId] : [])).length} venue(s)`
                       : "global"}
                   </p>
                   {item.adType === "inline" ? (
-                    <p className="text-xs text-slate-500">
+                    <p className="break-words text-xs text-slate-500">
                       Inline variant: {item.sequenceIndex ?? 1} | Placement: {item.placementKey ?? "default"}
                     </p>
                   ) : null}
                   {item.adType === "popup" && item.displayTrigger === "round-end" ? (
-                    <p className="text-xs text-slate-500">
+                    <p className="break-words text-xs text-slate-500">
                       Trivia round: {item.roundNumber ?? "all"} | Placement: {item.placementKey ?? "default"}
                     </p>
                   ) : null}
