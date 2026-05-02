@@ -103,19 +103,14 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
 
   const menuItems = [
     {
-      label: "Active and Completed Games",
-      description: "Track active games and this week's completed results.",
+      label: "Career Stats",
+      description: "Track your lifetime performance across every game.",
       href: "/active-games",
     },
     {
-      label: "Leaderboard",
-      description: "See where you rank and how many points you need to win!",
-      href: venueHomeHref,
-    },
-    {
-      label: "Pending Challenges",
-      description: "Review and respond to head-to-head invites.",
-      href: "/pending-challenges",
+      label: "Advertise With Us",
+      description: "Submit the advertiser intake form.",
+      href: "/advertise",
     },
     {
       label: "Redeem Prizes",
@@ -265,7 +260,8 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
         if (
           custom.detail?.source !== "trivia" &&
           custom.detail?.source !== "notifications" &&
-          custom.detail?.source !== "bingo-claim"
+          custom.detail?.source !== "bingo-claim" &&
+          custom.detail?.source !== "fantasy-claim"
         ) {
           window.dispatchEvent(
             new CustomEvent("tp:coin-flight", {

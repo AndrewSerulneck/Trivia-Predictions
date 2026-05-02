@@ -33,9 +33,12 @@ const VENUE_ENTRY_STORAGE_KEY = "tp:venue:entry-snapshot:v1";
 const VENUE_TRANSITION_GATE_STORAGE_KEY = "tp:venue:transition-gate-until:v1";
 const VENUE_CARD_VIEWPORT_STORAGE_KEY = "tp:venue:card-viewport:v1";
 
-const FLIP_DURATION_MS = 450;
-const FLIP_EASING = "cubic-bezier(0.4, 0, 0.2, 1)";
-const SETTLE_DURATION_MS = 170;
+const OPEN_FLIP_DURATION_MS = 520;
+const RETURN_FLIP_DURATION_MS = 560;
+const OPEN_FLIP_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
+const RETURN_FLIP_EASING = "cubic-bezier(0.32, 0.72, 0, 1)";
+const SETTLE_DURATION_MS = 210;
+const SETTLE_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 const OPEN_GATE_DURATION_MS = 950;
 const RETURN_GATE_DURATION_MS = 2600;
 
@@ -342,7 +345,7 @@ async function playWAAPI(
       }
     }
   }
-  const duration = typeof options.duration === "number" ? options.duration : FLIP_DURATION_MS;
+  const duration = typeof options.duration === "number" ? options.duration : OPEN_FLIP_DURATION_MS;
   if (duration > 0) {
     await wait(duration);
   }
@@ -376,12 +379,12 @@ async function animateVenueCardSettle(gameKey: VenueGameKey): Promise<void> {
   card.style.transition = "none";
   card.style.transformOrigin = "50% 50%";
   card.style.willChange = "transform, opacity";
-  card.style.transform = "translate3d(0, -3px, 0) scale(1.06)";
-  card.style.opacity = "0.94";
+  card.style.transform = "translate3d(0, -2px, 0) scale(1.03)";
+  card.style.opacity = "0.92";
   card.getBoundingClientRect();
 
   window.requestAnimationFrame(() => {
-    card.style.transition = `transform ${SETTLE_DURATION_MS}ms ${FLIP_EASING}, opacity ${SETTLE_DURATION_MS}ms ease`;
+    card.style.transition = `transform ${SETTLE_DURATION_MS}ms ${SETTLE_EASING}, opacity ${SETTLE_DURATION_MS}ms ease`;
     card.style.transform = "translate3d(0, 0, 0) scale(1)";
     card.style.opacity = "1";
   });
@@ -458,7 +461,13 @@ export async function runVenueGameOpenTransition({
   const scaleY = clamp(firstRect.height / viewportHeight, 0.08, 1);
   const translateX = Math.round(firstRect.left);
   const translateY = Math.round(firstRect.top);
+  const midTranslateX = Math.round(translateX * 0.12);
+  const midTranslateY = Math.round(translateY * 0.12);
+  const midScaleX = clamp(scaleX + (1 - scaleX) * 0.88, 0.06, 1);
+  const midScaleY = clamp(scaleY + (1 - scaleY) * 0.88, 0.08, 1);
+  const midRadius = Math.max(6, Math.round(firstRadius * 0.3));
   const startTransform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scaleX}, ${scaleY})`;
+  const midTransform = `translate3d(${midTranslateX}px, ${midTranslateY}px, 0) scale(${midScaleX}, ${midScaleY})`;
   const endTransform = "translate3d(0px, 0px, 0) scale(1, 1)";
 
   const { root, backdrop, shell } = createSharedElementOverlay(gameKey, sourceElement);
@@ -466,16 +475,33 @@ export async function runVenueGameOpenTransition({
   shell.style.borderRadius = `${Math.round(firstRadius)}px`;
   document.body.appendChild(root);
 
+  // Fade the cloned button content out quickly so only the gradient shell
+  // expands — this prevents blurry-scaled-text choppiness.
+  const cloneChild = shell.firstElementChild as HTMLElement | null;
+  if (cloneChild) {
+    cloneChild.style.willChange = "opacity";
+    if (typeof cloneChild.animate === "function") {
+      cloneChild.animate([{ opacity: "1" }, { opacity: "0" }], {
+        duration: Math.round(OPEN_FLIP_DURATION_MS * 0.35),
+        easing: "ease-in",
+        fill: "forwards",
+      });
+    } else {
+      cloneChild.style.opacity = "0";
+    }
+  }
+
   const previousVisibility = sourceElement.style.visibility;
   sourceElement.style.visibility = "hidden";
 
   try {
     const cardAnimation = playWAAPI(shell, [
-      { transform: startTransform, borderRadius: `${Math.round(firstRadius)}px`, opacity: "1" },
-      { transform: endTransform, borderRadius: "0px", opacity: "1" },
+      { transform: startTransform, borderRadius: `${Math.round(firstRadius)}px`, opacity: "1", offset: 0 },
+      { transform: midTransform, borderRadius: `${midRadius}px`, opacity: "1", offset: 0.72 },
+      { transform: endTransform, borderRadius: "0px", opacity: "1", offset: 1 },
     ], {
-      duration: FLIP_DURATION_MS,
-      easing: FLIP_EASING,
+      duration: OPEN_FLIP_DURATION_MS,
+      easing: OPEN_FLIP_EASING,
       fill: "forwards",
     });
 
@@ -483,8 +509,8 @@ export async function runVenueGameOpenTransition({
       { opacity: "0" },
       { opacity: "1" },
     ], {
-      duration: 260,
-      easing: FLIP_EASING,
+      duration: 300,
+      easing: OPEN_FLIP_EASING,
       fill: "forwards",
     });
 
@@ -526,9 +552,16 @@ export async function runVenueGameReturnTransition({ gameKey, navigate }: Return
   const translateY = Math.round(lastRect.top - firstRect.top);
   const scaleX = clamp(lastRect.width / Math.max(1, firstRect.width), 0.06, 1);
   const scaleY = clamp(lastRect.height / Math.max(1, firstRect.height), 0.08, 1);
+  const midTranslateX = Math.round(translateX * 0.42);
+  const midTranslateY = Math.round(translateY * 0.42);
+  const midScaleX = clamp(1 + (scaleX - 1) * 0.42, 0.06, 1);
+  const midScaleY = clamp(1 + (scaleY - 1) * 0.42, 0.08, 1);
+  const preScale = 1.012;
   const startRadius = resolveElementRadiusPx(sourceSurface, 0);
   const endRadius = clamp(snapshot.borderRadiusPx, 8, 56);
   const startTransform = "translate3d(0px, 0px, 0) scale(1, 1)";
+  const preTransform = `translate3d(0px, 0px, 0) scale(${preScale}, ${preScale})`;
+  const midTransform = `translate3d(${midTranslateX}px, ${midTranslateY}px, 0) scale(${midScaleX}, ${midScaleY})`;
   const endTransform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scaleX}, ${scaleY})`;
 
   const sourcePath = window.location.pathname;
@@ -553,16 +586,17 @@ export async function runVenueGameReturnTransition({ gameKey, navigate }: Return
 
   try {
     const shrinkAnimation = playWAAPI(sourceSurface, [
-      { transform: startTransform, borderRadius: `${Math.round(startRadius)}px`, opacity: "1" },
-      { transform: endTransform, borderRadius: `${Math.round(endRadius)}px`, opacity: "0.96" },
+      { transform: startTransform, borderRadius: `${Math.round(startRadius)}px`, opacity: "1", offset: 0 },
+      { transform: preTransform, borderRadius: `${Math.round(startRadius)}px`, opacity: "1", offset: 0.06 },
+      { transform: midTransform, borderRadius: `${Math.round(Math.max(6, endRadius * 1.2))}px`, opacity: "0.88", offset: 0.52 },
+      { transform: endTransform, borderRadius: `${Math.round(endRadius)}px`, opacity: "0", offset: 1 },
     ], {
-      duration: FLIP_DURATION_MS,
-      easing: FLIP_EASING,
+      duration: RETURN_FLIP_DURATION_MS,
+      easing: RETURN_FLIP_EASING,
       fill: "forwards",
     });
 
     await shrinkAnimation;
-    sourceSurface.style.opacity = "0";
     await Promise.resolve(navigate());
     await wait(16);
   } finally {

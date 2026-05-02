@@ -1,9 +1,9 @@
 import { SportsBingoHome } from "@/components/bingo/SportsBingoHome";
 import { GameLandingExperience } from "@/components/venue/GameLandingExperience";
 
-export default function SportsBingoPage() {
+export default function SportsBingoHomePage() {
   return (
-    <GameLandingExperience gameKey="bingo" playLabel="Play Sports Bingo" playHref="/bingo/home">
+    <GameLandingExperience gameKey="bingo" initialPlaying>
       <div className="space-y-4">
         <SportsBingoHome />
       </div>

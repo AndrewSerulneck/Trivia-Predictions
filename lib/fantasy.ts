@@ -7,14 +7,17 @@ const ODDS_API_KEY = process.env.ODDS_API_KEY?.trim() ?? "";
 const BALLDONTLIE_API_BASE_URL = process.env.BALLDONTLIE_API_BASE_URL ?? "https://api.balldontlie.io";
 const BALLDONTLIE_API_KEY = process.env.BALLDONTLIE_API_KEY?.trim() ?? "";
 const FANTASY_SPORT_KEY = "basketball_nba";
+const FANTASY_NFL_SPORT_KEY = "americanfootball_nfl";
 const FANTASY_LINEUP_SIZE = 5;
-const FANTASY_POINTS_FOR_WINNER = Math.max(0, Number.parseInt(process.env.FANTASY_WINNER_POINTS ?? "250", 10) || 250);
+const FANTASY_POINTS_MULTIPLIER = Math.max(1, Number.parseInt(process.env.FANTASY_POINTS_MULTIPLIER ?? "10", 10) || 10);
 const FANTASY_PLAYER_POOL_LIMIT = 30;
 const FANTASY_SCORES_DAYS_FROM = 2;
 const FANTASY_TABLES_MISSING_ERROR =
   "Fantasy tables are not installed in this Supabase project yet. Run migration supabase/migrations/20260428184500_add_fantasy_entries.sql.";
 
 const FANTASY_PROP_MARKETS = ["player_points", "player_rebounds", "player_assists"] as const;
+const FANTASY_DAILY_GAME_ID_PREFIX = "nba-daily-";
+const FANTASY_DAILY_TEAM_LABEL = "All Teams";
 
 type FantasyEntryStatus = "pending" | "live" | "final" | "canceled";
 type FantasyGameStatus = "scheduled" | "live" | "final";
@@ -323,6 +326,20 @@ function getTodayDateInOffset(tzOffsetMinutes: number): string {
   return `${y}-${m}-${day}`;
 }
 
+function buildFantasyDailyGameId(date: string): string {
+  return `${FANTASY_DAILY_GAME_ID_PREFIX}${date}`;
+}
+
+function parseFantasyDailyGameId(gameId: string): string | null {
+  const raw = String(gameId ?? "").trim();
+  if (!raw.startsWith(FANTASY_DAILY_GAME_ID_PREFIX)) {
+    return null;
+  }
+
+  const date = raw.slice(FANTASY_DAILY_GAME_ID_PREFIX.length).trim();
+  return parseDateString(date) ? date : null;
+}
+
 function toApiIsoNoMs(ms: number): string {
   return new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
 }
@@ -346,6 +363,43 @@ function buildUtcRangeForLocalDay(
     fromMs: utcStartMs,
     toMs: utcEndMs,
   };
+}
+
+function buildUtcRangeForLocalWeekContaining(iso: string, tzOffsetMinutes: number): { fromIso: string; toIso: string } | null {
+  const utcMs = Date.parse(iso);
+  if (!Number.isFinite(utcMs)) {
+    return null;
+  }
+
+  const localMs = utcMs - tzOffsetMinutes * 60_000;
+  const localDate = new Date(localMs);
+  const dayOfWeek = localDate.getUTCDay();
+  const daysSinceMonday = (dayOfWeek + 6) % 7;
+
+  const weekStartLocalMs =
+    Date.UTC(localDate.getUTCFullYear(), localDate.getUTCMonth(), localDate.getUTCDate(), 0, 0, 0, 0) -
+    daysSinceMonday * 24 * 60 * 60 * 1000;
+  const weekEndLocalMs = weekStartLocalMs + 7 * 24 * 60 * 60 * 1000 - 1;
+
+  return {
+    fromIso: toApiIsoNoMs(weekStartLocalMs + tzOffsetMinutes * 60_000),
+    toIso: toApiIsoNoMs(weekEndLocalMs + tzOffsetMinutes * 60_000),
+  };
+}
+
+function buildUtcRangeForLocalDayContaining(iso: string, tzOffsetMinutes: number): { fromIso: string; toIso: string } | null {
+  const utcMs = Date.parse(iso);
+  if (!Number.isFinite(utcMs)) {
+    return null;
+  }
+
+  const localMs = utcMs - tzOffsetMinutes * 60_000;
+  const localDate = new Date(localMs);
+  const localDateKey = `${localDate.getUTCFullYear()}-${String(localDate.getUTCMonth() + 1).padStart(2, "0")}-${String(
+    localDate.getUTCDate()
+  ).padStart(2, "0")}`;
+  const range = buildUtcRangeForLocalDay(localDateKey, tzOffsetMinutes);
+  return { fromIso: range.fromIso, toIso: range.toIso };
 }
 
 function parseLineup(raw: unknown): string[] {
@@ -579,77 +633,57 @@ export async function listFantasyGames(params?: {
   return games.slice(0, limit);
 }
 
-export async function getFantasyPlayerPoolForGame(params: {
-  gameId: string;
-  sportKey?: string;
-}): Promise<FantasyPlayerPoolItem[]> {
-  const gameId = String(params.gameId ?? "").trim();
-  const sportKey = String(params.sportKey ?? FANTASY_SPORT_KEY).trim() || FANTASY_SPORT_KEY;
-  if (!gameId) {
-    throw new Error("gameId is required.");
-  }
+type MutableFantasyPoolPlayer = {
+  playerName: string;
+  lines: number[];
+  markets: Set<string>;
+};
 
-  const regions = ["us", "us,eu"];
-  const playersByKey = new Map<string, { playerName: string; lines: number[]; markets: Set<string> }>();
+function addPlayerLinesFromOddsPayload(
+  payload: unknown,
+  playersByKey: Map<string, MutableFantasyPoolPlayer>
+): void {
+  const odds = payload as OddsEventOdds | null;
+  const bookmakers = Array.isArray(odds?.bookmakers) ? odds.bookmakers : [];
+  for (const bookmaker of bookmakers) {
+    const markets = Array.isArray(bookmaker?.markets) ? bookmaker.markets : [];
+    for (const market of markets) {
+      const marketKey = String(market?.key ?? "").trim();
+      if (!FANTASY_PROP_MARKETS.includes(marketKey as (typeof FANTASY_PROP_MARKETS)[number])) {
+        continue;
+      }
 
-  for (const region of regions) {
-    const query = new URLSearchParams();
-    query.set("apiKey", ODDS_API_KEY);
-    query.set("regions", region);
-    query.set("markets", FANTASY_PROP_MARKETS.join(","));
-    query.set("oddsFormat", "american");
-
-    let payload: unknown = null;
-    try {
-      payload = await fetchOddsJson(`/sports/${encodeURIComponent(sportKey)}/events/${encodeURIComponent(gameId)}/odds`, query);
-    } catch {
-      continue;
-    }
-
-    const odds = payload as OddsEventOdds | null;
-    const bookmakers = Array.isArray(odds?.bookmakers) ? odds.bookmakers : [];
-    for (const bookmaker of bookmakers) {
-      const markets = Array.isArray(bookmaker?.markets) ? bookmaker.markets : [];
-      for (const market of markets) {
-        const marketKey = String(market?.key ?? "").trim();
-        if (!FANTASY_PROP_MARKETS.includes(marketKey as (typeof FANTASY_PROP_MARKETS)[number])) {
+      const outcomes = Array.isArray(market?.outcomes) ? market.outcomes : [];
+      for (const outcome of outcomes) {
+        const rawPlayerName = String(outcome?.description ?? "").trim();
+        if (!rawPlayerName) {
           continue;
         }
 
-        const outcomes = Array.isArray(market?.outcomes) ? market.outcomes : [];
-        for (const outcome of outcomes) {
-          const rawPlayerName = String(outcome?.description ?? "").trim();
-          if (!rawPlayerName) {
-            continue;
-          }
-
-          const key = normalizeNameKey(rawPlayerName);
-          if (!key) {
-            continue;
-          }
-
-          const current = playersByKey.get(key) ?? {
-            playerName: rawPlayerName,
-            lines: [],
-            markets: new Set<string>(),
-          };
-
-          const line = parseLineValue(outcome?.point);
-          if (line !== null) {
-            current.lines.push(line);
-          }
-          current.markets.add(marketKey);
-          playersByKey.set(key, current);
+        const key = normalizeNameKey(rawPlayerName);
+        if (!key) {
+          continue;
         }
+
+        const current = playersByKey.get(key) ?? {
+          playerName: rawPlayerName,
+          lines: [],
+          markets: new Set<string>(),
+        };
+
+        const line = parseLineValue(outcome?.point);
+        if (line !== null) {
+          current.lines.push(line);
+        }
+        current.markets.add(marketKey);
+        playersByKey.set(key, current);
       }
     }
-
-    if (playersByKey.size > 0) {
-      break;
-    }
   }
+}
 
-  const pool = Array.from(playersByKey.values())
+function toFantasyPlayerPool(playersByKey: Map<string, MutableFantasyPoolPlayer>): FantasyPlayerPoolItem[] {
+  return Array.from(playersByKey.values())
     .map((item) => {
       const total = item.lines.reduce((sum, value) => sum + value, 0);
       const projectedLine = item.lines.length > 0 ? Number((total / item.lines.length).toFixed(1)) : null;
@@ -669,8 +703,79 @@ export async function getFantasyPlayerPoolForGame(params: {
       return left.playerName.localeCompare(right.playerName);
     })
     .slice(0, FANTASY_PLAYER_POOL_LIMIT);
+}
 
-  return pool;
+async function loadFantasyPlayerPoolFromGameIds(params: { gameIds: string[]; sportKey?: string }): Promise<FantasyPlayerPoolItem[]> {
+  const gameIds = params.gameIds.map((value) => value.trim()).filter(Boolean);
+  const sportKey = String(params.sportKey ?? FANTASY_SPORT_KEY).trim() || FANTASY_SPORT_KEY;
+  if (gameIds.length === 0) {
+    return [];
+  }
+
+  const regions = ["us", "us,eu"];
+  const playersByKey = new Map<string, MutableFantasyPoolPlayer>();
+
+  for (const region of regions) {
+    for (const gameId of gameIds) {
+      const query = new URLSearchParams();
+      query.set("apiKey", ODDS_API_KEY);
+      query.set("regions", region);
+      query.set("markets", FANTASY_PROP_MARKETS.join(","));
+      query.set("oddsFormat", "american");
+
+      try {
+        const payload = await fetchOddsJson(`/sports/${encodeURIComponent(sportKey)}/events/${encodeURIComponent(gameId)}/odds`, query);
+        addPlayerLinesFromOddsPayload(payload, playersByKey);
+      } catch {
+        continue;
+      }
+    }
+
+    if (playersByKey.size > 0) {
+      break;
+    }
+  }
+
+  return toFantasyPlayerPool(playersByKey);
+}
+
+export async function getFantasyPlayerPoolForDate(params?: {
+  date?: string;
+  tzOffsetMinutes?: number | string;
+  includeStartedGames?: boolean;
+}): Promise<FantasyPlayerPoolItem[]> {
+  const tzOffsetMinutes = parseTimezoneOffset(params?.tzOffsetMinutes);
+  const date = parseDateString(params?.date) ? String(params?.date) : getTodayDateInOffset(tzOffsetMinutes);
+  const includeStartedGames = params?.includeStartedGames === true;
+
+  const games = await listFantasyGames({ date, tzOffsetMinutes, limit: 40 });
+  const eligibleGames = includeStartedGames ? games : games.filter((game) => !game.isLocked);
+  const gameIds = eligibleGames.map((game) => game.id).filter(Boolean);
+  return loadFantasyPlayerPoolFromGameIds({ gameIds, sportKey: FANTASY_SPORT_KEY });
+}
+
+export async function getFantasyPlayerPoolForGame(params: {
+  gameId: string;
+  sportKey?: string;
+  date?: string;
+  tzOffsetMinutes?: number | string;
+}): Promise<FantasyPlayerPoolItem[]> {
+  const gameId = String(params.gameId ?? "").trim();
+  const sportKey = String(params.sportKey ?? FANTASY_SPORT_KEY).trim() || FANTASY_SPORT_KEY;
+  if (!gameId) {
+    throw new Error("gameId is required.");
+  }
+
+  const dailyDate = parseFantasyDailyGameId(gameId);
+  if (dailyDate) {
+    return getFantasyPlayerPoolForDate({
+      date: params.date ?? dailyDate,
+      tzOffsetMinutes: params.tzOffsetMinutes,
+      includeStartedGames: false,
+    });
+  }
+
+  return loadFantasyPlayerPoolFromGameIds({ gameIds: [gameId], sportKey });
 }
 
 async function listFantasyGamesAroundNow(): Promise<FantasyGame[]> {
@@ -707,6 +812,65 @@ async function ensureFantasyTables(): Promise<void> {
   throw new Error(error.message ?? "Failed to access fantasy tables.");
 }
 
+async function assertFantasyEntryCadenceAvailable(params: {
+  userId: string;
+  sportKey: string;
+  startsAt: string;
+  tzOffsetMinutes: number;
+}): Promise<void> {
+  if (!supabaseAdmin) {
+    return;
+  }
+
+  const userId = params.userId.trim();
+  const sportKey = params.sportKey.trim();
+  const startsAt = params.startsAt.trim();
+  const tzOffsetMinutes = params.tzOffsetMinutes;
+  if (!userId || !sportKey || !startsAt) {
+    return;
+  }
+
+  let range: { fromIso: string; toIso: string } | null = null;
+  let cadenceLabel = "";
+  if (sportKey === FANTASY_SPORT_KEY) {
+    range = buildUtcRangeForLocalDayContaining(startsAt, tzOffsetMinutes);
+    cadenceLabel = "day";
+  } else if (sportKey === FANTASY_NFL_SPORT_KEY) {
+    range = buildUtcRangeForLocalWeekContaining(startsAt, tzOffsetMinutes);
+    cadenceLabel = "week";
+  } else {
+    return;
+  }
+
+  if (!range) {
+    return;
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("fantasy_entries")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("sport_key", sportKey)
+    .gte("starts_at", range.fromIso)
+    .lte("starts_at", range.toIso)
+    .limit(1)
+    .maybeSingle<{ id: string }>();
+
+  if (error && error.code !== "PGRST116") {
+    throw new Error(error.message ?? "Failed to validate fantasy entry limits.");
+  }
+
+  if (data?.id) {
+    if (sportKey === FANTASY_SPORT_KEY) {
+      throw new Error("You can only create 1 NBA fantasy team per day.");
+    }
+    if (sportKey === FANTASY_NFL_SPORT_KEY) {
+      throw new Error("You can only create 1 NFL fantasy team per week.");
+    }
+    throw new Error(`You can only create 1 fantasy team per ${cadenceLabel}.`);
+  }
+}
+
 async function findFantasyGameById(gameId: string): Promise<FantasyGame | null> {
   const games = await listFantasyGamesAroundNow();
   return games.find((game) => game.id === gameId) ?? null;
@@ -725,11 +889,13 @@ export async function submitFantasyEntry(params: {
   venueId: string;
   gameId: string;
   lineup: unknown;
+  tzOffsetMinutes?: number | string;
 }): Promise<FantasyEntry> {
   const userId = String(params.userId ?? "").trim();
   const venueId = String(params.venueId ?? "").trim();
   const gameId = String(params.gameId ?? "").trim();
   const lineup = validateLineup(params.lineup);
+  const tzOffsetMinutes = parseTimezoneOffset(params.tzOffsetMinutes);
 
   if (!userId || !venueId || !gameId) {
     throw new Error("userId, venueId, and gameId are required.");
@@ -737,32 +903,90 @@ export async function submitFantasyEntry(params: {
 
   await ensureFantasyTables();
 
-  const game = await findFantasyGameById(gameId);
-  if (!game) {
-    throw new Error("Game not found or unavailable for fantasy lineup entry.");
-  }
-  if (game.isLocked) {
-    throw new Error("This game has already started and is locked.");
+  const dailyDate = parseFantasyDailyGameId(gameId);
+  let entryGameId = gameId;
+  let entryGameLabel = "";
+  let entryHomeTeam = "";
+  let entryAwayTeam = "";
+  let entryStartsAt = "";
+  let entrySportKey = FANTASY_SPORT_KEY;
+  let playerPool: FantasyPlayerPoolItem[] = [];
+
+  if (dailyDate) {
+    const dayGames = await listFantasyGames({ date: dailyDate, tzOffsetMinutes, limit: 40 });
+    if (dayGames.length === 0) {
+      throw new Error("No NBA games available for this date.");
+    }
+
+    const eligibleGames = dayGames.filter((game) => !game.isLocked);
+    if (eligibleGames.length === 0) {
+      throw new Error("All NBA games for today have already started.");
+    }
+
+    playerPool = await getFantasyPlayerPoolForDate({
+      date: dailyDate,
+      tzOffsetMinutes,
+      includeStartedGames: false,
+    });
+    if (playerPool.length === 0) {
+      throw new Error("No eligible players are available from unstarted NBA games.");
+    }
+
+    const firstStart = eligibleGames
+      .map((game) => Date.parse(game.startsAt))
+      .filter(Number.isFinite)
+      .sort((left, right) => left - right)[0];
+    if (!Number.isFinite(firstStart)) {
+      throw new Error("Could not determine the next NBA start time for this slate.");
+    }
+
+    entryGameId = buildFantasyDailyGameId(dailyDate);
+    entryGameLabel = `NBA Daily Challenge (${dailyDate})`;
+    entryHomeTeam = FANTASY_DAILY_TEAM_LABEL;
+    entryAwayTeam = FANTASY_DAILY_TEAM_LABEL;
+    entryStartsAt = new Date(firstStart).toISOString();
+  } else {
+    const game = await findFantasyGameById(gameId);
+    if (!game) {
+      throw new Error("Game not found or unavailable for fantasy lineup entry.");
+    }
+    if (game.isLocked) {
+      throw new Error("This game has already started and is locked.");
+    }
+
+    playerPool = await getFantasyPlayerPoolForGame({ gameId: game.id, sportKey: game.sportKey });
+    entryGameId = game.id;
+    entryGameLabel = game.gameLabel;
+    entryHomeTeam = game.homeTeam;
+    entryAwayTeam = game.awayTeam;
+    entryStartsAt = game.startsAt;
+    entrySportKey = game.sportKey;
   }
 
-  const playerPool = await getFantasyPlayerPoolForGame({ gameId: game.id, sportKey: game.sportKey });
   const playerPoolKeys = new Set(playerPool.map((item) => normalizeNameKey(item.playerName)).filter(Boolean));
 
   for (const playerName of lineup) {
     if (!playerPoolKeys.has(normalizeNameKey(playerName))) {
-      throw new Error(`"${playerName}" is not in the available player pool for this game.`);
+      throw new Error(`"${playerName}" is not in the available player pool for this slate.`);
     }
   }
+
+  await assertFantasyEntryCadenceAvailable({
+    userId,
+    sportKey: entrySportKey,
+    startsAt: entryStartsAt,
+    tzOffsetMinutes,
+  });
 
   const row = {
     user_id: userId,
     venue_id: venueId,
-    sport_key: game.sportKey,
-    game_id: game.id,
-    game_label: game.gameLabel,
-    home_team: game.homeTeam,
-    away_team: game.awayTeam,
-    starts_at: game.startsAt,
+    sport_key: entrySportKey,
+    game_id: entryGameId,
+    game_label: entryGameLabel,
+    home_team: entryHomeTeam,
+    away_team: entryAwayTeam,
+    starts_at: entryStartsAt,
     lineup,
     status: "pending" as const,
     points: 0,
@@ -780,12 +1004,85 @@ export async function submitFantasyEntry(params: {
 
   if (error || !data) {
     if ((error as SupabaseLikeError | null)?.code === "23505") {
-      throw new Error("You already have an entry for this game.");
+      throw new Error("You already have an entry for this NBA daily slate.");
     }
     if (isMissingFantasyTablesError(error)) {
       throw new Error(FANTASY_TABLES_MISSING_ERROR);
     }
     throw new Error(error?.message ?? "Failed to create fantasy entry.");
+  }
+
+  return mapFantasyEntryRow(data);
+}
+
+export async function updateFantasyEntryLineup(params: {
+  userId: string;
+  venueId: string;
+  gameId: string;
+  lineup: unknown;
+  tzOffsetMinutes?: number | string;
+}): Promise<FantasyEntry> {
+  const userId = String(params.userId ?? "").trim();
+  const venueId = String(params.venueId ?? "").trim();
+  const gameId = String(params.gameId ?? "").trim();
+  const lineup = validateLineup(params.lineup);
+  const tzOffsetMinutes = parseTimezoneOffset(params.tzOffsetMinutes);
+
+  if (!userId || !venueId || !gameId) {
+    throw new Error("userId, venueId, and gameId are required.");
+  }
+
+  await ensureFantasyTables();
+
+  const { data: existingRow, error: existingError } = await supabaseAdmin!
+    .from("fantasy_entries")
+    .select(
+      "id, user_id, venue_id, sport_key, game_id, game_label, home_team, away_team, starts_at, lineup, status, points, score_breakdown, reward_points, reward_claimed_at, settled_at, created_at, updated_at"
+    )
+    .eq("user_id", userId)
+    .eq("venue_id", venueId)
+    .eq("game_id", gameId)
+    .maybeSingle<FantasyEntryRow>();
+
+  if (existingError || !existingRow) {
+    throw new Error("Fantasy entry not found for this slate.");
+  }
+  if (existingRow.status === "final" || existingRow.status === "canceled") {
+    throw new Error("This lineup can no longer be changed because games have already started.");
+  }
+
+  const dailyDate = parseFantasyDailyGameId(gameId);
+  const playerPool = dailyDate
+    ? await getFantasyPlayerPoolForDate({ date: dailyDate, tzOffsetMinutes, includeStartedGames: false })
+    : await getFantasyPlayerPoolForGame({ gameId, sportKey: existingRow.sport_key, tzOffsetMinutes });
+  const poolKeys = new Set(playerPool.map((item) => normalizeNameKey(item.playerName)).filter(Boolean));
+  if (poolKeys.size === 0) {
+    throw new Error("This lineup can no longer be changed because games have already started.");
+  }
+
+  const existingLineup = parseLineup(existingRow.lineup);
+  const existingStillEditable = existingLineup.every((playerName) => poolKeys.has(normalizeNameKey(playerName)));
+  if (!existingStillEditable) {
+    throw new Error("This lineup can no longer be changed because one or more selected players already started.");
+  }
+
+  for (const playerName of lineup) {
+    if (!poolKeys.has(normalizeNameKey(playerName))) {
+      throw new Error(`"${playerName}" is not in the available player pool for this slate.`);
+    }
+  }
+
+  const { data, error } = await supabaseAdmin!
+    .from("fantasy_entries")
+    .update({ lineup, score_breakdown: {}, points: 0 })
+    .eq("id", existingRow.id)
+    .select(
+      "id, user_id, venue_id, sport_key, game_id, game_label, home_team, away_team, starts_at, lineup, status, points, score_breakdown, reward_points, reward_claimed_at, settled_at, created_at, updated_at"
+    )
+    .maybeSingle<FantasyEntryRow>();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Failed to update fantasy lineup.");
   }
 
   return mapFantasyEntryRow(data);
@@ -853,6 +1150,11 @@ function computeFantasyPoints(stat: {
   return Number(Math.max(0, total).toFixed(2));
 }
 
+function computeFantasyRewardPoints(totalFantasyPoints: number): number {
+  const safe = Number.isFinite(totalFantasyPoints) ? Math.max(0, totalFantasyPoints) : 0;
+  return Math.max(0, Math.round(safe * FANTASY_POINTS_MULTIPLIER));
+}
+
 function getBallDontLieGameTimestamp(game: BallDontLieGame): number {
   const primary = String(game.datetime ?? "").trim();
   if (primary) {
@@ -902,11 +1204,130 @@ function isBallDontLieGameFinal(status: string): boolean {
   return status.trim().toLowerCase().startsWith("final");
 }
 
+function buildMatchupKey(homeTeam: string, awayTeam: string): string {
+  const home = getTeamIdentityKey(homeTeam);
+  const away = getTeamIdentityKey(awayTeam);
+  if (!home || !away) {
+    return "";
+  }
+  return `${away}::${home}`;
+}
+
+async function fetchBallDontLieStatsForDailyEntry(
+  entry: FantasyEntryRow,
+  slateDate: string
+): Promise<{
+  status: FantasyEntryStatus;
+  totalPoints: number;
+  breakdown: Record<string, number>;
+}> {
+  const parsedDate = parseDateString(slateDate);
+  if (!parsedDate) {
+    return { status: entry.status, totalPoints: Number(entry.points ?? 0), breakdown: parseScoreBreakdown(entry.score_breakdown) };
+  }
+
+  const slateStart = new Date(Date.UTC(parsedDate.year, parsedDate.month - 1, parsedDate.day, 0, 0, 0, 0));
+  const rangeStart = new Date(slateStart);
+  rangeStart.setUTCDate(rangeStart.getUTCDate() - 1);
+  const rangeEnd = new Date(slateStart);
+  rangeEnd.setUTCDate(rangeEnd.getUTCDate() + 1);
+
+  const gamesQuery = new URLSearchParams();
+  gamesQuery.set("start_date", rangeStart.toISOString().slice(0, 10));
+  gamesQuery.set("end_date", rangeEnd.toISOString().slice(0, 10));
+  gamesQuery.set("per_page", "200");
+
+  const allGames = await fetchBallDontLieList<BallDontLieGame>("/v1/games", gamesQuery);
+  const scheduledGames = await listFantasyGames({ date: slateDate, tzOffsetMinutes: 0, limit: 40 });
+  const scheduledMatchups = new Set(
+    scheduledGames
+      .map((game) => buildMatchupKey(game.homeTeam, game.awayTeam))
+      .map((value) => value.trim())
+      .filter(Boolean)
+  );
+
+  const matchingGames = allGames.filter((game) => {
+    const home = getBallDontLieTeamDisplay(game.home_team);
+    const away = getBallDontLieTeamDisplay(game.visitor_team);
+    const matchupKey = buildMatchupKey(home, away);
+    return Boolean(matchupKey) && scheduledMatchups.has(matchupKey);
+  });
+
+  const gameIds = matchingGames.map((game) => game.id).filter((value): value is number => typeof value === "number");
+
+  let stats: BallDontLieStat[] = [];
+  if (gameIds.length > 0) {
+    const statsQuery = new URLSearchParams();
+    for (const gameId of gameIds) {
+      statsQuery.append("game_ids[]", String(gameId));
+    }
+    statsQuery.set("per_page", "200");
+    stats = await fetchBallDontLieList<BallDontLieStat>("/v1/stats", statsQuery);
+  }
+
+  const statsByPlayer = new Map<string, number>();
+  for (const row of stats) {
+    const first = String(row.player?.first_name ?? "").trim();
+    const last = String(row.player?.last_name ?? "").trim();
+    const full = `${first} ${last}`.trim();
+    const key = normalizeNameKey(full);
+    if (!key) {
+      continue;
+    }
+
+    const points = computeFantasyPoints({
+      pts: Number(row.pts ?? 0),
+      reb: Number(row.reb ?? 0),
+      ast: Number(row.ast ?? 0),
+      stl: Number(row.stl ?? 0),
+      blk: Number(row.blk ?? 0),
+      turnover: Number(row.turnover ?? 0),
+    });
+
+    const current = statsByPlayer.get(key) ?? 0;
+    statsByPlayer.set(key, Number((current + points).toFixed(2)));
+  }
+
+  const lineup = parseLineup(entry.lineup);
+  const breakdown: Record<string, number> = {};
+  let totalPoints = 0;
+
+  for (const playerName of lineup) {
+    const key = normalizeNameKey(playerName);
+    const playerPoints = Number((statsByPlayer.get(key) ?? 0).toFixed(2));
+    breakdown[playerName] = playerPoints;
+    totalPoints += playerPoints;
+  }
+
+  const allScheduledFinal =
+    scheduledMatchups.size > 0 &&
+    matchingGames.length >= scheduledMatchups.size &&
+    matchingGames.every((game) => isBallDontLieGameFinal(String(game.status ?? "")));
+  const startsAtMs = Date.parse(entry.starts_at);
+  const nowMs = Date.now();
+  const status: FantasyEntryStatus = allScheduledFinal
+    ? "final"
+    : Number.isFinite(startsAtMs) && nowMs >= startsAtMs
+    ? "live"
+    : "pending";
+
+  return {
+    status,
+    totalPoints: Number(totalPoints.toFixed(2)),
+    breakdown,
+  };
+}
+
 async function fetchBallDontLieStatsForEntry(entry: FantasyEntryRow): Promise<{
   status: FantasyEntryStatus;
   totalPoints: number;
   breakdown: Record<string, number>;
 }> {
+  const dailyDate = parseFantasyDailyGameId(entry.game_id);
+  if (dailyDate) {
+    return fetchBallDontLieStatsForDailyEntry(entry, dailyDate);
+  }
+
   const startDate = new Date(entry.starts_at);
   if (!Number.isFinite(startDate.getTime())) {
     return { status: entry.status, totalPoints: Number(entry.points ?? 0), breakdown: parseScoreBreakdown(entry.score_breakdown) };
@@ -988,48 +1409,6 @@ async function fetchBallDontLieStatsForEntry(entry: FantasyEntryRow): Promise<{
   };
 }
 
-async function awardFantasyWinners(params: { venueId: string; gameId: string }): Promise<void> {
-  const venueId = String(params.venueId ?? "").trim();
-  const gameId = String(params.gameId ?? "").trim();
-  if (!venueId || !gameId || !supabaseAdmin) {
-    return;
-  }
-
-  const { data, error } = await supabaseAdmin
-    .from("fantasy_entries")
-    .select("id, points, reward_points")
-    .eq("venue_id", venueId)
-    .eq("game_id", gameId)
-    .eq("status", "final");
-
-  if (error || !Array.isArray(data) || data.length === 0) {
-    return;
-  }
-
-  const normalized = data.map((row) => ({
-    id: String((row as { id?: string }).id ?? "").trim(),
-    points: Number((row as { points?: number }).points ?? 0),
-    rewardPoints: Math.max(0, Number((row as { reward_points?: number }).reward_points ?? 0)),
-  }));
-
-  const topPoints = normalized.reduce((max, row) => (row.points > max ? row.points : max), 0);
-  const winnerIds = new Set(normalized.filter((row) => row.points === topPoints).map((row) => row.id));
-
-  const updates = normalized.filter((row) => {
-    const shouldBe = winnerIds.has(row.id) ? FANTASY_POINTS_FOR_WINNER : 0;
-    return row.rewardPoints !== shouldBe;
-  });
-
-  if (updates.length === 0) {
-    return;
-  }
-
-  for (const update of updates) {
-    const nextReward = winnerIds.has(update.id) ? FANTASY_POINTS_FOR_WINNER : 0;
-    await supabaseAdmin.from("fantasy_entries").update({ reward_points: nextReward }).eq("id", update.id);
-  }
-}
-
 export async function refreshFantasyProgress(params?: {
   userId?: string;
   limit?: number;
@@ -1070,8 +1449,6 @@ export async function refreshFantasyProgress(params?: {
 
   let updated = 0;
   let finalized = 0;
-  const rewardKeys = new Set<string>();
-
   for (const entry of entries) {
     let next = {
       status: entry.status,
@@ -1089,8 +1466,10 @@ export async function refreshFantasyProgress(params?: {
     const breakdownChanged = JSON.stringify(existingBreakdown) !== JSON.stringify(next.breakdown);
     const statusChanged = next.status !== entry.status;
     const pointsChanged = Math.abs(next.totalPoints - Number(entry.points ?? 0)) >= 0.01;
+    const nextRewardPoints = next.status === "final" ? computeFantasyRewardPoints(next.totalPoints) : 0;
+    const rewardPointsChanged = nextRewardPoints !== Math.max(0, Number(entry.reward_points ?? 0));
 
-    if (!statusChanged && !pointsChanged && !breakdownChanged) {
+    if (!statusChanged && !pointsChanged && !breakdownChanged && !rewardPointsChanged) {
       continue;
     }
 
@@ -1098,6 +1477,7 @@ export async function refreshFantasyProgress(params?: {
       status: next.status,
       points: next.totalPoints,
       score_breakdown: next.breakdown,
+      reward_points: nextRewardPoints,
     };
 
     if (next.status === "final") {
@@ -1112,25 +1492,14 @@ export async function refreshFantasyProgress(params?: {
     updated += 1;
     if (next.status === "final") {
       finalized += 1;
-      rewardKeys.add(`${entry.venue_id}::${entry.game_id}`);
     }
-  }
-
-  let rewardedGames = 0;
-  for (const key of rewardKeys) {
-    const [venueId, gameId] = key.split("::");
-    if (!venueId || !gameId) {
-      continue;
-    }
-    await awardFantasyWinners({ venueId, gameId });
-    rewardedGames += 1;
   }
 
   return {
     scanned: entries.length,
     updated,
     finalized,
-    rewardedGames,
+    rewardedGames: 0,
   };
 }
 
@@ -1209,13 +1578,14 @@ export async function claimFantasyReward(params: {
 
   const { data: entry, error } = await supabaseAdmin
     .from("fantasy_entries")
-    .select("id, user_id, status, reward_points, reward_claimed_at")
+    .select("id, user_id, status, points, reward_points, reward_claimed_at")
     .eq("id", entryId)
     .eq("user_id", userId)
     .maybeSingle<{
       id: string;
       user_id: string;
       status: FantasyEntryStatus;
+      points: number;
       reward_points: number;
       reward_claimed_at: string | null;
     }>();
@@ -1230,7 +1600,7 @@ export async function claimFantasyReward(params: {
     return { claimed: false, pointsAwarded: 0 };
   }
 
-  const pointsAwarded = Math.max(0, Number(entry.reward_points ?? 0));
+  const pointsAwarded = computeFantasyRewardPoints(Number(entry.points ?? 0));
   if (pointsAwarded <= 0) {
     throw new Error("This entry does not have a reward to claim.");
   }
@@ -1238,7 +1608,7 @@ export async function claimFantasyReward(params: {
   const nowIso = new Date().toISOString();
   const { data: claimed, error: claimError } = await supabaseAdmin
     .from("fantasy_entries")
-    .update({ reward_claimed_at: nowIso })
+    .update({ reward_claimed_at: nowIso, reward_points: pointsAwarded })
     .eq("id", entry.id)
     .is("reward_claimed_at", null)
     .select("id")

@@ -1,6 +1,8 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import type { Notification } from "@/types";
 
+const NOTIFICATION_RETENTION_DAYS = 7;
+
 type NotificationRow = {
   id: string;
   user_id: string;
@@ -19,6 +21,19 @@ function mapNotificationRow(row: NotificationRow): Notification {
     read: row.read,
     createdAt: row.created_at,
   };
+}
+
+function getNotificationRetentionCutoffIso(): string {
+  const cutoffMs = Date.now() - NOTIFICATION_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+  return new Date(cutoffMs).toISOString();
+}
+
+async function purgeExpiredUserNotifications(userId: string): Promise<void> {
+  if (!supabaseAdmin || !userId) {
+    return;
+  }
+  const cutoffIso = getNotificationRetentionCutoffIso();
+  await supabaseAdmin.from("notifications").delete().eq("user_id", userId).lt("created_at", cutoffIso);
 }
 
 export async function getUserNotifications(userId: string): Promise<{
@@ -44,14 +59,18 @@ export async function listUserNotifications(
     return { unreadCount: 0, items: [], totalItems: 0 };
   }
 
+  await purgeExpiredUserNotifications(userId);
+
   const limit = Math.max(1, Math.min(100, Number(params.limit ?? 50)));
   const offset = Math.max(0, Number(params.offset ?? 0));
   const unreadOnly = Boolean(params.unreadOnly);
+  const cutoffIso = getNotificationRetentionCutoffIso();
 
   let query = supabaseAdmin
     .from("notifications")
     .select("id, user_id, message, type, read, created_at", { count: "exact" })
     .eq("user_id", userId)
+    .gte("created_at", cutoffIso)
     .order("created_at", { ascending: false });
 
   if (unreadOnly) {
@@ -68,6 +87,7 @@ export async function listUserNotifications(
     .from("notifications")
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
+    .gte("created_at", cutoffIso)
     .eq("read", false);
 
   const items = data.map((row) => mapNotificationRow(row as NotificationRow));
@@ -85,6 +105,8 @@ export async function markNotificationsRead(params: {
   if (!params.userId || !supabaseAdmin) {
     return;
   }
+
+  await purgeExpiredUserNotifications(params.userId);
 
   if (params.notificationId) {
     await supabaseAdmin

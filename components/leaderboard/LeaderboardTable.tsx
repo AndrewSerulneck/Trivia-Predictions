@@ -23,10 +23,12 @@ export function LeaderboardTable({
   venueId,
   initialEntries = [],
   isEnabled = true,
+  mobileBottomSpacer = false,
 }: {
   venueId: string;
   initialEntries?: LeaderboardEntry[];
   isEnabled?: boolean;
+  mobileBottomSpacer?: boolean;
 }) {
   const [entries, setEntries] = useState<LeaderboardEntry[]>(initialEntries);
   const [errorMessage, setErrorMessage] = useState("");
@@ -216,6 +218,7 @@ export function LeaderboardTable({
           </tbody>
         </table>
       </div>
+      {mobileBottomSpacer ? <div aria-hidden="true" className="h-[50svh] min-h-[14rem] md:hidden" /> : null}
     </div>
   );
 }

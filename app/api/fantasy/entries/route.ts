@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { claimFantasyReward, listUserFantasyEntries, refreshFantasyProgress, submitFantasyEntry } from "@/lib/fantasy";
+import { claimFantasyReward, listUserFantasyEntries, refreshFantasyProgress, submitFantasyEntry, updateFantasyEntryLineup } from "@/lib/fantasy";
 
 function normalizeBoolean(value: string | null, fallback: boolean): boolean {
   const normalized = String(value ?? "").trim().toLowerCase();
@@ -26,7 +26,9 @@ function toClientErrorStatus(message: string): number {
     normalized.includes("locked") ||
     normalized.includes("must") ||
     normalized.includes("available") ||
-    normalized.includes("claim")
+    normalized.includes("claim") ||
+    normalized.includes("only create") ||
+    normalized.includes("no longer be changed")
   ) {
     return 400;
   }
@@ -69,6 +71,7 @@ export async function POST(request: Request) {
       gameId?: string;
       lineup?: unknown;
       entryId?: string;
+      tzOffsetMinutes?: number | string;
     };
 
     const action = String(body.action ?? "").trim().toLowerCase();
@@ -81,12 +84,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, result });
     }
 
-    const entry = await submitFantasyEntry({
-      userId: String(body.userId ?? "").trim(),
-      venueId: String(body.venueId ?? "").trim(),
-      gameId: String(body.gameId ?? "").trim(),
-      lineup: body.lineup,
-    });
+    const entry =
+      action === "update"
+        ? await updateFantasyEntryLineup({
+            userId: String(body.userId ?? "").trim(),
+            venueId: String(body.venueId ?? "").trim(),
+            gameId: String(body.gameId ?? "").trim(),
+            lineup: body.lineup,
+            tzOffsetMinutes: body.tzOffsetMinutes,
+          })
+        : await submitFantasyEntry({
+          userId: String(body.userId ?? "").trim(),
+          venueId: String(body.venueId ?? "").trim(),
+          gameId: String(body.gameId ?? "").trim(),
+          lineup: body.lineup,
+          tzOffsetMinutes: body.tzOffsetMinutes,
+        });
 
     return NextResponse.json({ ok: true, entry });
   } catch (error) {

@@ -1,23 +1,23 @@
 "use client";
 
-export function RouteLoadingScreen({
-  title = "Loading Hightop Challenge",
-  subtitle = "",
-}: {
-  title?: string;
-  subtitle?: string;
-}) {
+export function RouteLoadingScreen() {
   return (
-    <div className="flex min-h-[60dvh] items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md rounded-2xl border-4 border-slate-900 bg-white p-6 text-center shadow-[8px_8px_0_#0f172a]">
-        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full border-4 border-slate-900 bg-gradient-to-br from-amber-200 via-orange-200 to-rose-200">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-300 border-t-slate-900" />
+    <div className="pointer-events-none fixed inset-0 z-[2400] flex h-screen w-screen items-center justify-center bg-black">
+      <div className="flex flex-col items-center justify-center px-6 text-center">
+        <div className="mb-4 h-28 w-28 [animation:spin_2.1s_linear_infinite]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/hightop-logo.svg"
+            alt="Hightop Challenge"
+            className="h-full w-full object-contain drop-shadow-[0_0_14px_rgba(255,255,255,0.22)]"
+            loading="eager"
+            decoding="async"
+            draggable={false}
+          />
         </div>
-        <p className="text-lg font-black text-slate-900">{title}</p>
-        {subtitle ? <p className="mt-1 text-sm font-medium text-slate-600">{subtitle}</p> : null}
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200">
-          <div className="h-full w-1/3 animate-pulse rounded-full bg-slate-900" />
-        </div>
+        <p className="text-[1.08rem] font-black tracking-[0.05em] text-white [font-family:'Kalam','Bree_Serif','Nunito',cursive]">
+          Hightop Challenge: Game On
+        </p>
       </div>
     </div>
   );

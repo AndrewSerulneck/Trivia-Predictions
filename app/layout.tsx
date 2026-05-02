@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { PopupAds } from "@/components/ui/PopupAds";
 import { MobileAdhesionAd } from "@/components/ui/MobileAdhesionAd";
 import { GlobalTransitionOverlay } from "@/components/ui/GlobalTransitionOverlay";
+import { ScrollRecoverySentinel } from "@/components/ui/ScrollRecoverySentinel";
 import "./globals.css";
 
 const GLOBAL_LEGAL_NOTICE =
@@ -40,6 +41,7 @@ export default async function RootLayout({
             {GLOBAL_LEGAL_NOTICE}
           </footer>
         </div>
+        <ScrollRecoverySentinel />
         <GlobalTransitionOverlay />
         <PopupAds />
         <MobileAdhesionAd />

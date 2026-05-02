@@ -11,8 +11,8 @@ const NAV_ITEMS = [
   { href: "/trivia", label: APP_PAGE_NAMES.trivia },
   { href: "/predictions", label: APP_PAGE_NAMES.sportsPredictions },
   { href: "/bingo", label: APP_PAGE_NAMES.sportsBingo },
-  { href: "/activity", label: "Activity" },
-  { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/active-games", label: APP_PAGE_NAMES.activeGames },
+  { href: "/advertise", label: "Advertise With Us" },
 ];
 
 function isActive(pathname: string, href: string): boolean {

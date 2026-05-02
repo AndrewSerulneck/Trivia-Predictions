@@ -79,53 +79,60 @@ function shortenLabel(label: string, maxLength = 38): string {
 
 function compactSquareLabel(label: string): string {
   const cleaned = label.replace(/\s+/g, " ").trim();
+  const supportPrefixMatch = cleaned.match(/^\[(SUPPORTED|POSSIBLE)\]\s*/i);
+  const supportPrefix = supportPrefixMatch?.[1]
+    ? supportPrefixMatch[1].toUpperCase() === "SUPPORTED"
+      ? "S: "
+      : "P: "
+    : "";
+  const body = supportPrefixMatch ? cleaned.replace(/^\[(SUPPORTED|POSSIBLE)\]\s*/i, "") : cleaned;
 
-  let match = cleaned.match(/^There will be more than ([\d.]+) points scored/i);
+  let match = body.match(/^There will be more than ([\d.]+) points scored/i);
   if (match?.[1]) {
-    return `Over ${match[1]} total points`;
+    return `${supportPrefix}Over ${match[1]} total points`;
   }
 
-  match = cleaned.match(/^There will be less than ([\d.]+) points scored/i);
+  match = body.match(/^There will be less than ([\d.]+) points scored/i);
   if (match?.[1]) {
-    return `Under ${match[1]} total points`;
+    return `${supportPrefix}Under ${match[1]} total points`;
   }
 
-  match = cleaned.match(/^(.+?) will win by more than ([\d.]+) points/i);
+  match = body.match(/^(.+?) will win by more than ([\d.]+) points/i);
   if (match?.[1] && match?.[2]) {
-    return `${match[1]} wins by ${match[2]}+`;
+    return `${supportPrefix}${match[1]} wins by ${match[2]}+`;
   }
 
-  match = cleaned.match(/^(.+?) will win the game or lose by less than ([\d.]+) points/i);
+  match = body.match(/^(.+?) will win the game or lose by less than ([\d.]+) points/i);
   if (match?.[1] && match?.[2]) {
-    return `${match[1]} win or lose by <${match[2]}`;
+    return `${supportPrefix}${match[1]} win or lose by <${match[2]}`;
   }
 
-  match = cleaned.match(/^(.+?) will score more than ([\d.]+) points/i);
+  match = body.match(/^(.+?) will score more than ([\d.]+) points/i);
   if (match?.[1] && match?.[2]) {
-    return `${match[1]} over ${match[2]} pts`;
+    return `${supportPrefix}${match[1]} over ${match[2]} pts`;
   }
 
-  match = cleaned.match(/^(.+?) will score less than ([\d.]+) points/i);
+  match = body.match(/^(.+?) will score less than ([\d.]+) points/i);
   if (match?.[1] && match?.[2]) {
-    return `${match[1]} under ${match[2]} pts`;
+    return `${supportPrefix}${match[1]} under ${match[2]} pts`;
   }
 
-  match = cleaned.match(/^(.+?) will beat the (.+?)\.?$/i);
+  match = body.match(/^(.+?) will beat the (.+?)\.?$/i);
   if (match?.[1] && match?.[2]) {
-    return `${match[1]} beats ${match[2]}`;
+    return `${supportPrefix}${match[1]} beats ${match[2]}`;
   }
 
-  match = cleaned.match(/^(.+?) will record more than ([\d.]+) (.+?)\.?$/i);
+  match = body.match(/^(.+?) will record more than ([\d.]+) (.+?)\.?$/i);
   if (match?.[1] && match?.[2] && match?.[3]) {
-    return `${match[1]} over ${match[2]} ${match[3]}`;
+    return `${supportPrefix}${match[1]} over ${match[2]} ${match[3]}`;
   }
 
-  match = cleaned.match(/^(.+?) will record less than ([\d.]+) (.+?)\.?$/i);
+  match = body.match(/^(.+?) will record less than ([\d.]+) (.+?)\.?$/i);
   if (match?.[1] && match?.[2] && match?.[3]) {
-    return `${match[1]} under ${match[2]} ${match[3]}`;
+    return `${supportPrefix}${match[1]} under ${match[2]} ${match[3]}`;
   }
 
-  return cleaned.replace(/\.$/, "");
+  return `${supportPrefix}${body.replace(/\.$/, "")}`;
 }
 
 function getPreviewSquareStyle(isFree: boolean): string {
@@ -240,15 +247,11 @@ export function SportsBingoSelectBoard() {
         clearPreviewPress();
         return;
       }
-
-      if (event.cancelable) {
-        event.preventDefault();
-      }
     };
 
     window.addEventListener("pointerup", clearPreviewPress);
     window.addEventListener("pointercancel", clearPreviewPress);
-    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchmove", handleTouchMove, { passive: true });
     window.addEventListener("touchend", clearPreviewPress, { passive: true });
     window.addEventListener("touchcancel", clearPreviewPress, { passive: true });
     window.addEventListener("scroll", clearPreviewPress, { passive: true });
@@ -414,7 +417,7 @@ export function SportsBingoSelectBoard() {
         throw new Error(payload.error ?? "Failed to lock your bingo card.");
       }
 
-      router.push("/bingo");
+      router.push("/bingo/home");
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Failed to lock your bingo card.");
     } finally {
@@ -577,6 +580,10 @@ export function SportsBingoSelectBoard() {
             <p className="text-xs text-slate-600">
               Keep generating new bingo cards until you find one you like, then press play!
             </p>
+            <p className="text-[11px] text-slate-500">
+              Legend: <span className="font-semibold text-emerald-700">S:</span> feed-verified square,{" "}
+              <span className="font-semibold text-amber-700">P:</span> implemented but needs deeper live validation.
+            </p>
             <div
               className={`mx-auto w-full max-w-[560px] transition-all duration-200 ${isPreviewPressed ? "scale-[1.01]" : ""}`}
               onMouseDown={(event) => {
@@ -598,7 +605,7 @@ export function SportsBingoSelectBoard() {
               onTouchEnd={clearPreviewPress}
               onTouchCancel={clearPreviewPress}
               style={{
-                touchAction: isPreviewPressed ? "none" : "pan-y",
+                touchAction: "pan-y",
                 WebkitTouchCallout: "none",
                 WebkitUserSelect: "none",
                 userSelect: "none",

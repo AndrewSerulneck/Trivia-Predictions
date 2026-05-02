@@ -6,7 +6,7 @@ export const APP_PAGE_NAMES = {
   sportsBingo: "Sports Bingo",
   sportsPickEm: "Sports Pick 'Em",
   sportsFantasy: "Fantasy",
-  activeGames: "Active and Completed Games",
+  activeGames: "Career Stats",
   pendingChallenges: "Pending Challenges",
   redeemPrizes: "Redeem Prizes",
 } as const;

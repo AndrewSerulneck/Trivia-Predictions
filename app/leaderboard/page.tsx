@@ -36,7 +36,13 @@ export default async function LeaderboardPage() {
           </p>
         )}
 
-        {selectedVenue ? <LeaderboardTable venueId={selectedVenue.id} initialEntries={entries} /> : null}
+        {selectedVenue ? (
+          <LeaderboardTable
+            venueId={selectedVenue.id}
+            initialEntries={entries}
+            mobileBottomSpacer
+          />
+        ) : null}
 
         <InlineSlotAdClient
           slot="leaderboard-sidebar"

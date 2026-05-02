@@ -42,11 +42,9 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
     cardClassName: "bg-slate-800 text-white",
     visibleOnVenueHome: true,
     rules: [
-      "-Challenge other players at your venue head-to-head",
-      "-Draft a quarterback, running back, two wide receivers and a team defense.",
-      "- 4 challenges per week",
-      "- Winner gets 250 points",
-      "-Create or manage challenges",
+      "-Draft a team",
+      "-Earn points based on player stats",
+      "-Rosters are locked once games begin",
     ],
   },
   {

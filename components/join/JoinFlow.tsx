@@ -21,6 +21,7 @@ import {
   type HomeBadgeCounts,
   type TriviaQuotaSnapshot,
 } from "@/lib/venueHomeBootstrap";
+import { writeBingoPrefetchCache } from "@/lib/bingoPrefetchCache";
 import type { LeaderboardEntry, Prediction, TriviaQuestion, Venue } from "@/types";
 import { getVenueDisplayName, getVenueVisual as getVenueVisualFromConfig } from "@/lib/venueDisplay";
 import { APP_PAGE_NAMES } from "@/lib/pageNames";
@@ -156,8 +157,6 @@ const ONBOARDING_PANEL_VARIANTS = {
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const router = useRouter();
   const venueParam = initialVenueId.trim();
-  const [showIntro, setShowIntro] = useState(true);
-  const [introFadeOut, setIntroFadeOut] = useState(false);
 
   const [status, setStatus] = useState<Status>("loading");
   const [errorMessage, setErrorMessage] = useState("");
@@ -182,31 +181,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const scanStreamRef = useRef<MediaStream | null>(null);
   const scanRafRef = useRef<number | null>(null);
   const scanCanvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const introSeen = window.sessionStorage.getItem("tp:intro-played:v1");
-    if (introSeen === "1") {
-      setShowIntro(false);
-      return;
-    }
-
-    const fadeTimer = window.setTimeout(() => {
-      setIntroFadeOut(true);
-    }, 2550);
-    const hideTimer = window.setTimeout(() => {
-      window.sessionStorage.setItem("tp:intro-played:v1", "1");
-      setShowIntro(false);
-    }, 3000);
-
-    return () => {
-      window.clearTimeout(fadeTimer);
-      window.clearTimeout(hideTimer);
-    };
-  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -726,6 +700,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       }
 
       const activeBingoCount = (bingoPayload?.cards ?? []).filter((card) => card.status === "active").length;
+      if (bingoPayload?.ok && Array.isArray(bingoPayload.cards)) {
+        writeBingoPrefetchCache(safeUserId, bingoPayload.cards);
+      }
       const pendingPickEmCount = (pickEmPayload?.picks ?? []).filter((pick) => pick.status === "pending").length;
       const pendingFantasyCount = (challengesPayload?.challenges ?? []).filter(
         (challenge) => challenge.status === "pending" && challenge.receiverUserId === safeUserId
@@ -834,38 +811,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
   return (
     <>
-      {showIntro ? (
-        <div
-          className={`fixed inset-0 z-[2000] flex items-center justify-center bg-black transition-opacity duration-500 ${
-            introFadeOut ? "opacity-0" : "opacity-100"
-          }`}
-          aria-hidden="true"
-        >
-          <div className="pointer-events-none relative flex w-full max-w-sm flex-col items-center justify-center px-8">
-            <div className="absolute inset-x-12 top-1/2 h-24 -translate-y-1/2 rounded-full bg-cyan-300/25 blur-3xl animate-pulse" />
-            <div className="absolute inset-x-8 top-1/2 h-[2px] -translate-y-1/2 bg-gradient-to-r from-transparent via-cyan-200 to-transparent opacity-70" />
-            <div className="relative mb-4 h-40 w-40 rounded-full border border-white/35 p-3 shadow-[0_0_45px_rgba(56,189,248,0.22)]">
-              <div className="absolute inset-0 rounded-full border border-white/20 animate-ping" />
-              <div className="relative h-full w-full rounded-full bg-white/95 p-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/brand/hightop-logo.svg"
-                  alt=""
-                  className="h-full w-full object-contain drop-shadow-[0_4px_14px_rgba(0,0,0,0.28)]"
-                  loading="eager"
-                  decoding="async"
-                />
-              </div>
-            </div>
-            <p className="text-[0.7rem] font-semibold tracking-[0.26em] text-white/70">OFFICIAL EXPERIENCE</p>
-            <p className="mt-2 text-center text-[1.06rem] font-black tracking-[0.05em] text-white [font-family:'Kalam','Bree_Serif','Nunito',cursive]">
-              Hightop Sports: Game On
-            </p>
-            <p className="mt-1 text-[0.68rem] tracking-[0.18em] text-white/45">LOADING</p>
-          </div>
-        </div>
-      ) : null}
-
       <PageShell
         title={APP_PAGE_NAMES.join}
         showBranding

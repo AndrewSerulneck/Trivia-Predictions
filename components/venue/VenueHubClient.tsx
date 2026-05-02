@@ -84,19 +84,6 @@ function pathMatches(expectedPath: string, candidatePath: string): boolean {
   return candidatePath === expectedPath || candidatePath.startsWith(`${expectedPath}/`);
 }
 
-function WhistleIcon({ className = "h-5 w-5" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
-      <circle cx="41" cy="37" r="16" fill="#fef3c7" stroke="#0f172a" strokeWidth="4" />
-      <circle cx="41" cy="37" r="5.4" fill="#0f172a" />
-      <path d="M24 29 8 21l-2 12 14 9" fill="#f59e0b" stroke="#0f172a" strokeWidth="4" strokeLinejoin="round" />
-      <path d="M21 41c-6 0-11 4-11 9" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
-      <path d="m54 19 8-4" stroke="#ef4444" strokeWidth="4" strokeLinecap="round" />
-      <path d="m55 27 8 1" stroke="#ef4444" strokeWidth="4" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 function TriviaGlyph({ className = "h-10 w-10" }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
@@ -572,22 +559,22 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <section className="relative shrink-0 px-2 pb-3">
-        <div className="relative overflow-hidden rounded-[1.4rem] border-[2px] border-[#cbd5e1]/70 bg-[linear-gradient(172deg,#2f241d_0%,#2a1f19_45%,#211712_100%)] p-3 shadow-[0_8px_0_rgba(15,23,42,0.28),0_12px_24px_rgba(15,23,42,0.26)]">
+        <div className="relative min-h-[7.2rem] overflow-hidden rounded-[1.4rem] border-[2px] border-[#cbd5e1]/70 bg-[linear-gradient(172deg,#2f241d_0%,#2a1f19_45%,#211712_100%)] p-[18px] shadow-[0_8px_0_rgba(15,23,42,0.28),0_12px_24px_rgba(15,23,42,0.26)]">
           <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(14deg,rgba(255,255,255,0.03)_0px,rgba(255,255,255,0.03)_2px,rgba(255,255,255,0)_2px,rgba(255,255,255,0)_9px)]" />
           <div className="pointer-events-none absolute inset-[7px] rounded-[1rem] border border-[#94a3b8]/30" />
-          <div className="relative flex items-center justify-between gap-3">
+          <div className="relative flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-[clamp(1.3rem,4.9vw,2rem)] font-black leading-[0.98] text-cyan-200 [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_0_8px_rgba(34,211,238,0.5),0_0_20px_rgba(34,211,238,0.35),0_2px_0_rgba(8,47,73,0.9)]">
+              <h2 className="text-[clamp(2.25rem,8.6vw,3.45rem)] font-black leading-[0.96] text-cyan-200 [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_0_10px_rgba(34,211,238,0.5),0_0_24px_rgba(34,211,238,0.35),0_2px_0_rgba(8,47,73,0.9)]">
                 {venueDisplayName}
               </h2>
             </div>
             <button
               onMouseDown={triggerPulse}
               onClick={leaveVenue}
-              className="tp-clean-button inline-flex items-center gap-1 rounded-xl border-[2px] border-emerald-300/85 bg-[linear-gradient(180deg,#052e2b_0%,#022c22_100%)] px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-emerald-200 shadow-[0_0_14px_rgba(16,185,129,0.35),0_3px_0_rgba(2,44,34,1)] transition hover:brightness-110 active:translate-y-[1px]"
+              className="tp-clean-button inline-flex items-center justify-center rounded-md border-[2px] border-white bg-[linear-gradient(180deg,#dc2626_0%,#b91c1c_100%)] px-4 py-2 text-sm font-black uppercase tracking-[0.14em] text-white shadow-[0_0_0_1px_rgba(127,29,29,0.7)_inset,0_3px_0_rgba(127,29,29,0.9),0_10px_18px_rgba(15,23,42,0.35)] transition hover:brightness-110 active:translate-y-[1px]"
+              aria-label="Exit venue"
             >
-              <WhistleIcon className="h-5 w-5" />
-              <span className="leading-none">Close Out</span>
+              <span className="leading-none">Exit</span>
             </button>
           </div>
         </div>
@@ -609,7 +596,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                   const badge = visibleBadgeByGame.get(card.key);
                   const titleLines = GAME_TITLE_LINES_BY_KEY[card.key];
                   return (
-                    <button key={card.key} type="button" onMouseDown={triggerPulse} onClick={(event) => { void goTo(card.key, event.currentTarget); }} disabled={pendingDestination !== null} data-venue-game-card={card.key} className={`tp-clean-button group relative aspect-square w-full overflow-hidden !rounded-[22%] !border-[2px] !border-white/90 !shadow-[0_10px_20px_rgba(15,23,42,0.35)] p-0 text-left transition ${isOpening ? "opacity-90" : "hover:scale-[1.025] active:scale-[0.985]"}`}>
+                    <button key={card.key} type="button" onMouseDown={triggerPulse} onClick={(event) => { void goTo(card.key, event.currentTarget); }} disabled={pendingDestination !== null} data-venue-game-card={card.key} className={`tp-clean-button tp-game-card-btn group relative aspect-square w-full overflow-hidden !rounded-[22%] !border-[2px] !border-white/90 !shadow-[0_10px_20px_rgba(15,23,42,0.35)] p-0 text-left${isOpening ? " is-opening" : ""}`}>
                       <div className={`absolute inset-0 ${GAME_ICON_BG_BY_KEY[card.key]}`} />
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_26%_18%,rgba(255,255,255,0.38)_0%,rgba(255,255,255,0.1)_40%,rgba(255,255,255,0)_72%)]" />
                       <div className="relative flex h-full flex-col items-center justify-center gap-2 p-2 text-center">
