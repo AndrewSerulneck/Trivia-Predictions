@@ -11,7 +11,7 @@ import {
   validateUsername,
 } from "@/lib/auth";
 import { calculateDistanceMeters, getBestCurrentLocation, getCurrentLocation } from "@/lib/geolocation";
-import { saveUserId, saveUsername, saveVenueId } from "@/lib/storage";
+import { getUserId, getVenueId, saveUserId, saveUsername, saveVenueId } from "@/lib/storage";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { getVenueById, listVenues } from "@/lib/venues";
 import { writeWarmPredictionsCache, writeWarmTriviaCache } from "@/lib/warmupCache";
@@ -130,7 +130,6 @@ const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig
 
 const ACCESS_DISTANCE_METERS = 200;
 const PRELOAD_FETCH_TIMEOUT_MS = 4500;
-const PRELOAD_NAVIGATION_BUDGET_MS = 3500;
 
 function getGeofenceThresholdMeters(venueRadius: number, accuracy?: number): number {
   const normalizedVenueRadius = Number.isFinite(venueRadius) ? Math.max(0, Math.round(venueRadius)) : 0;
@@ -184,6 +183,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
   useEffect(() => {
     const load = async () => {
+      if (venueParam && getUserId() && getVenueId() === venueParam) {
+        router.replace(`/venue/${venueParam}`);
+        return;
+      }
+
       setStatus("loading");
       setErrorMessage("");
       setLocationVerified(false);
@@ -788,17 +792,12 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       saveUsername(user.username);
       saveUserId(user.id);
       setVenueHomeEntryHandoff({ venueId: venue.id, userId: user.id });
-      const preloadPromise = preloadVenueHome(venue, user.id).catch(() => {
-        // Preload is best-effort; never block navigation on failure.
-      });
-      await Promise.race([
-        preloadPromise,
-        new Promise<void>((resolve) => {
-          window.setTimeout(resolve, PRELOAD_NAVIGATION_BUDGET_MS);
-        }),
-      ]);
+      // Navigate immediately so the loading overlay has maximum runway before
+      // its safety timeout. Preload runs in the background; VenueHubClient's
+      // warmup handles the null-bootstrap case when preload hasn't finished.
       didNavigate = true;
       router.push(`/venue/${venue.id}`);
+      void preloadVenueHome(venue, user.id).catch(() => {});
     } catch (error) {
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));

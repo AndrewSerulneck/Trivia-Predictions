@@ -11,8 +11,8 @@ type GlobalTransitionHideDetail = {
   force?: boolean;
 };
 
-const TARGET_PATH_MATCH_TIMEOUT_MS = 12000;
-const OVERLAY_HARD_TIMEOUT_MS = 16000;
+const TARGET_PATH_MATCH_TIMEOUT_MS = 18000;
+const OVERLAY_HARD_TIMEOUT_MS = 25000;
 
 function pathMatches(expectedPath: string, candidatePath: string): boolean {
   if (!expectedPath) {
