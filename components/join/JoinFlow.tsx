@@ -129,8 +129,8 @@ function isLocationPermissionDenied(error: unknown): boolean {
 const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig(venue, index);
 
 const ACCESS_DISTANCE_METERS = 200;
-const PRELOAD_FETCH_TIMEOUT_MS = 5000;
-const PRELOAD_NAVIGATION_BUDGET_MS = 2200;
+const PRELOAD_FETCH_TIMEOUT_MS = 4500;
+const PRELOAD_NAVIGATION_BUDGET_MS = 3500;
 
 function getGeofenceThresholdMeters(venueRadius: number, accuracy?: number): number {
   const normalizedVenueRadius = Number.isFinite(venueRadius) ? Math.max(0, Math.round(venueRadius)) : 0;
@@ -628,12 +628,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         const timeoutId = window.setTimeout(() => {
           controller.abort();
         }, PRELOAD_FETCH_TIMEOUT_MS);
-
         try {
-          const response = await fetch(url, {
-            cache: "no-store",
-            signal: controller.signal,
-          });
+          const response = await fetch(url, { cache: "no-store", signal: controller.signal });
           return (await response.json().catch(() => null)) as T | null;
         } catch {
           return null;
@@ -642,94 +638,101 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         }
       };
 
-      const [
-        venuePayload,
-        leaderboardPayload,
-        triviaPayload,
-        triviaQuotaPayload,
-        predictionsPayload,
-        prizesPayload,
-        bingoPayload,
-        pickEmPayload,
-        challengesPayload,
-        pickEmSportsPayload,
-      ] = await Promise.all([
-        fetchJson<VenuesPayload>("/api/venues"),
-        fetchJson<LeaderboardPayload>(`/api/leaderboard?venue=${encodeURIComponent(venueId)}`),
-        fetchJson<TriviaPayload>(`/api/trivia?userId=${encodeURIComponent(safeUserId)}`),
-        fetchJson<TriviaQuotaPayload>(`/api/trivia/quota?userId=${encodeURIComponent(safeUserId)}`),
-        fetchJson<PredictionsPayload>("/api/predictions?page=1&pageSize=24&excludeSensitive=false"),
-        fetchJson<PrizesPayload>(`/api/prizes?venueId=${encodeURIComponent(venueId)}&userId=${encodeURIComponent(safeUserId)}`),
-        fetchJson<BingoBadgePayload>(`/api/bingo/cards?userId=${encodeURIComponent(safeUserId)}&includeSettled=true`),
-        fetchJson<PickEmBadgePayload>(`/api/pickem/picks?userId=${encodeURIComponent(safeUserId)}&includeSettled=true&limit=200`),
-        fetchJson<ChallengesBadgePayload>(`/api/challenges?userId=${encodeURIComponent(safeUserId)}&includeResolved=true`),
-        fetchJson<{ ok?: boolean }>("/api/pickem/sports"),
-      ]);
-      void pickEmSportsPayload;
+      // Defaults used when a non-essential fetch fails or times out.
+      let triviaQuota: TriviaQuotaSnapshot | null = null;
+      let homeBadgeCounts: HomeBadgeCounts = {};
+      let weeklyPrizeTitle = "Weekly Venue Champion Prize";
+      let weeklyPrizeDescription = "Top the leaderboard by week end to earn this venue's reward.";
+      let weeklyPrizePoints = 0;
+      let leaderboardEntries: LeaderboardEntry[] = [];
 
-      const venues = venuePayload?.ok && Array.isArray(venuePayload.venues) ? venuePayload.venues : [];
-      if (venues.length > 0 && !venues.some((item) => item.id === venueId)) {
-        throw new Error("Selected venue is not active right now. Please choose another venue.");
-      }
+      try {
+        const results = await Promise.allSettled([
+          fetchJson<VenuesPayload>("/api/venues"),
+          fetchJson<LeaderboardPayload>(`/api/leaderboard?venue=${encodeURIComponent(venueId)}`),
+          fetchJson<TriviaPayload>(`/api/trivia?userId=${encodeURIComponent(safeUserId)}`),
+          fetchJson<TriviaQuotaPayload>(`/api/trivia/quota?userId=${encodeURIComponent(safeUserId)}`),
+          fetchJson<PredictionsPayload>("/api/predictions?page=1&pageSize=24&excludeSensitive=false"),
+          fetchJson<PrizesPayload>(`/api/prizes?venueId=${encodeURIComponent(venueId)}&userId=${encodeURIComponent(safeUserId)}`),
+          fetchJson<BingoBadgePayload>(`/api/bingo/cards?userId=${encodeURIComponent(safeUserId)}&includeSettled=true`),
+          fetchJson<PickEmBadgePayload>(`/api/pickem/picks?userId=${encodeURIComponent(safeUserId)}&includeSettled=true&limit=200`),
+          fetchJson<ChallengesBadgePayload>(`/api/challenges?userId=${encodeURIComponent(safeUserId)}&includeResolved=true`),
+          fetchJson<{ ok?: boolean }>("/api/pickem/sports"),
+        ]);
 
-      const triviaQuota = triviaQuotaPayload?.ok ? (triviaQuotaPayload.quota ?? null) : null;
-      const triviaQuestions =
-        triviaPayload?.ok && Array.isArray(triviaPayload.questions) ? triviaPayload.questions : [];
-      if (triviaQuestions.length > 0) {
-        writeWarmTriviaCache({
+        const getValue = <T,>(result: PromiseSettledResult<T | null>): T | null =>
+          result.status === "fulfilled" ? result.value : null;
+
+        const venuePayload = getValue<VenuesPayload>(results[0]);
+        const leaderboardPayload = getValue<LeaderboardPayload>(results[1]);
+        const triviaPayload = getValue<TriviaPayload>(results[2]);
+        const triviaQuotaPayload = getValue<TriviaQuotaPayload>(results[3]);
+        const predictionsPayload = getValue<PredictionsPayload>(results[4]);
+        const prizesPayload = getValue<PrizesPayload>(results[5]);
+        const bingoPayload = getValue<BingoBadgePayload>(results[6]);
+        const pickEmPayload = getValue<PickEmBadgePayload>(results[7]);
+        const challengesPayload = getValue<ChallengesBadgePayload>(results[8]);
+
+        // Non-blocking venue validation: log but never throw.
+        const venues = venuePayload?.ok && Array.isArray(venuePayload.venues) ? venuePayload.venues : [];
+        if (venues.length > 0 && !venues.some((item) => item.id === venueId)) {
+          console.warn("[preload] Venue not in active list yet; continuing entry.");
+        }
+
+        triviaQuota = triviaQuotaPayload?.ok ? (triviaQuotaPayload.quota ?? null) : null;
+        const triviaQuestions =
+          triviaPayload?.ok && Array.isArray(triviaPayload.questions) ? triviaPayload.questions : [];
+        if (triviaQuestions.length > 0) {
+          writeWarmTriviaCache({ userId: safeUserId, venueId, questions: triviaQuestions, quota: triviaQuota });
+        }
+
+        if (predictionsPayload?.ok) {
+          writeWarmPredictionsCache({
+            venueId,
+            payload: {
+              items: Array.isArray(predictionsPayload.items) ? predictionsPayload.items : [],
+              page: predictionsPayload.page,
+              pageSize: predictionsPayload.pageSize,
+              totalItems: predictionsPayload.totalItems,
+              totalPages: predictionsPayload.totalPages,
+              sports: predictionsPayload.sports,
+              leaguesBySport: predictionsPayload.leaguesBySport,
+            },
+          });
+        }
+
+        const activeBingoCount = (bingoPayload?.cards ?? []).filter((c) => c.status === "active").length;
+        if (bingoPayload?.ok && Array.isArray(bingoPayload.cards)) {
+          writeBingoPrefetchCache(safeUserId, bingoPayload.cards);
+        }
+        const pendingPickEmCount = (pickEmPayload?.picks ?? []).filter((p) => p.status === "pending").length;
+        const pendingFantasyCount = (challengesPayload?.challenges ?? []).filter(
+          (ch) => ch.status === "pending" && ch.receiverUserId === safeUserId
+        ).length;
+        homeBadgeCounts = { bingo: activeBingoCount, pickem: pendingPickEmCount, fantasy: pendingFantasyCount };
+
+        const weeklyPrize = prizesPayload?.ok ? (prizesPayload.weeklyPrize ?? null) : null;
+        leaderboardEntries =
+          leaderboardPayload?.ok && Array.isArray(leaderboardPayload.entries) ? leaderboardPayload.entries : [];
+        weeklyPrizeTitle = String(weeklyPrize?.prizeTitle ?? weeklyPrizeTitle);
+        weeklyPrizeDescription = String(weeklyPrize?.prizeDescription ?? weeklyPrizeDescription);
+        weeklyPrizePoints = Math.max(0, Number(weeklyPrize?.rewardPoints ?? 0));
+      } catch {
+        // Non-essential fetch processing failed; bootstrap will use defaults.
+      } finally {
+        // Always write bootstrap so VenueHubClient never has to cold-start.
+        writeVenueHomeBootstrap({
+          fetchedAt: Date.now(),
+          venueId,
           userId: safeUserId,
-          venueId,
-          questions: triviaQuestions,
-          quota: triviaQuota,
+          triviaQuota,
+          homeBadgeCounts,
+          weeklyPrizeTitle,
+          weeklyPrizeDescription,
+          weeklyPrizePoints,
+          leaderboardEntries,
         });
       }
-
-      if (predictionsPayload?.ok) {
-        writeWarmPredictionsCache({
-          venueId,
-          payload: {
-            items: Array.isArray(predictionsPayload.items) ? predictionsPayload.items : [],
-            page: predictionsPayload.page,
-            pageSize: predictionsPayload.pageSize,
-            totalItems: predictionsPayload.totalItems,
-            totalPages: predictionsPayload.totalPages,
-            sports: predictionsPayload.sports,
-            leaguesBySport: predictionsPayload.leaguesBySport,
-          },
-        });
-      }
-
-      const activeBingoCount = (bingoPayload?.cards ?? []).filter((card) => card.status === "active").length;
-      if (bingoPayload?.ok && Array.isArray(bingoPayload.cards)) {
-        writeBingoPrefetchCache(safeUserId, bingoPayload.cards);
-      }
-      const pendingPickEmCount = (pickEmPayload?.picks ?? []).filter((pick) => pick.status === "pending").length;
-      const pendingFantasyCount = (challengesPayload?.challenges ?? []).filter(
-        (challenge) => challenge.status === "pending" && challenge.receiverUserId === safeUserId
-      ).length;
-      const homeBadgeCounts: HomeBadgeCounts = {
-        bingo: activeBingoCount,
-        pickem: pendingPickEmCount,
-        fantasy: pendingFantasyCount,
-      };
-
-      const weeklyPrize = prizesPayload?.ok ? prizesPayload.weeklyPrize ?? null : null;
-      const leaderboardEntries =
-        leaderboardPayload?.ok && Array.isArray(leaderboardPayload.entries) ? leaderboardPayload.entries : [];
-
-      writeVenueHomeBootstrap({
-        fetchedAt: Date.now(),
-        venueId,
-        userId: safeUserId,
-        triviaQuota,
-        homeBadgeCounts,
-        weeklyPrizeTitle: String(weeklyPrize?.prizeTitle ?? "Weekly Venue Champion Prize"),
-        weeklyPrizeDescription: String(
-          weeklyPrize?.prizeDescription ?? "Top the leaderboard by week end to earn this venue's reward."
-        ),
-        weeklyPrizePoints: Math.max(0, Number(weeklyPrize?.rewardPoints ?? 0)),
-        leaderboardEntries,
-      });
     },
     []
   );
@@ -766,6 +769,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     setStatus("saving");
     setLocationNotice("Joining venue...");
 
+    let didNavigate = false;
     try {
       // Ensure fallback demo venues exist server-side before user profile insert.
       void fetch("/api/join/ensure-venue", {
@@ -785,7 +789,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       saveUserId(user.id);
       setVenueHomeEntryHandoff({ venueId: venue.id, userId: user.id });
       const preloadPromise = preloadVenueHome(venue, user.id).catch(() => {
-        // Warm-cache calls are best effort and should never block navigation.
+        // Preload is best-effort; never block navigation on failure.
       });
       await Promise.race([
         preloadPromise,
@@ -793,19 +797,19 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           window.setTimeout(resolve, PRELOAD_NAVIGATION_BUDGET_MS);
         }),
       ]);
+      didNavigate = true;
       router.push(`/venue/${venue.id}`);
     } catch (error) {
       if (typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent("tp:global-transition-hide", {
-            detail: { force: true },
-          })
-        );
+        window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
       }
-      setIsOptimisticallyEntering(false);
-      setIsTransitioning(false);
-      setStatus("ready");
       setErrorMessage(getErrorMessage(error, "Failed to create profile."));
+    } finally {
+      if (!didNavigate) {
+        setIsOptimisticallyEntering(false);
+        setIsTransitioning(false);
+        setStatus("ready");
+      }
     }
   };
 

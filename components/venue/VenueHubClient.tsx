@@ -356,22 +356,25 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       return;
     }
     try {
-      const [bingoResponse, pickEmResponse, challengesResponse] = await Promise.all([
-        fetch(`/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=true`, { cache: "no-store" }),
-        fetch(`/api/pickem/picks?userId=${encodeURIComponent(userId)}&includeSettled=true&limit=200`, { cache: "no-store" }),
-        fetch(`/api/challenges?userId=${encodeURIComponent(userId)}&includeResolved=true`, { cache: "no-store" }),
+      const results = await Promise.allSettled([
+        fetch(`/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=true`, { cache: "no-store" })
+          .then((r) => r.json() as Promise<BingoBadgePayload>)
+          .catch((): BingoBadgePayload => ({ ok: false })),
+        fetch(`/api/pickem/picks?userId=${encodeURIComponent(userId)}&includeSettled=true&limit=200`, { cache: "no-store" })
+          .then((r) => r.json() as Promise<PickEmBadgePayload>)
+          .catch((): PickEmBadgePayload => ({ ok: false })),
+        fetch(`/api/challenges?userId=${encodeURIComponent(userId)}&includeResolved=true`, { cache: "no-store" })
+          .then((r) => r.json() as Promise<ChallengesBadgePayload>)
+          .catch((): ChallengesBadgePayload => ({ ok: false })),
       ]);
-      const [bingoPayload, pickEmPayload, challengesPayload] = (await Promise.all([
-        bingoResponse.json(),
-        pickEmResponse.json(),
-        challengesResponse.json(),
-      ])) as [BingoBadgePayload, PickEmBadgePayload, ChallengesBadgePayload];
-      if (!bingoPayload.ok || !pickEmPayload.ok || !challengesPayload.ok) return;
-      const activeBingoCount = (bingoPayload.cards ?? []).filter((card) => card.status === "active").length;
-      const pendingPickEmCount = (pickEmPayload.picks ?? []).filter((pick) => pick.status === "pending").length;
-      const pendingFantasyCount = (challengesPayload.challenges ?? []).filter(
-        (challenge) => challenge.status === "pending" && challenge.receiverUserId === userId
-      ).length;
+      const bingoPayload = results[0].status === "fulfilled" ? results[0].value : { ok: false as const };
+      const pickEmPayload = results[1].status === "fulfilled" ? results[1].value : { ok: false as const };
+      const challengesPayload = results[2].status === "fulfilled" ? results[2].value : { ok: false as const };
+      const activeBingoCount = bingoPayload.ok ? (bingoPayload.cards ?? []).filter((c) => c.status === "active").length : 0;
+      const pendingPickEmCount = pickEmPayload.ok ? (pickEmPayload.picks ?? []).filter((p) => p.status === "pending").length : 0;
+      const pendingFantasyCount = challengesPayload.ok
+        ? (challengesPayload.challenges ?? []).filter((ch) => ch.status === "pending" && ch.receiverUserId === userId).length
+        : 0;
       setHomeBadgeCounts({ bingo: activeBingoCount, pickem: pendingPickEmCount, fantasy: pendingFantasyCount });
     } catch {}
   }, []);
