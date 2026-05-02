@@ -4,6 +4,15 @@ import type { FantasyLeaderboardEntry, FantasyPlayerPoolItem } from "@/lib/fanta
 
 const FANTASY_DAILY_GAME_ID_PREFIX = "nba-daily-";
 
+function parseDailyGameDateFromId(gameId: string): string | null {
+  const trimmed = String(gameId ?? "").trim();
+  if (!trimmed.startsWith(FANTASY_DAILY_GAME_ID_PREFIX)) {
+    return null;
+  }
+  const rawDate = trimmed.slice(FANTASY_DAILY_GAME_ID_PREFIX.length).trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null;
+}
+
 function normalizePositiveInt(value: string | null, fallback: number): number {
   const parsed = Number.parseInt(String(value ?? "").trim(), 10);
   if (!Number.isFinite(parsed) || parsed <= 0) {
@@ -64,7 +73,13 @@ export async function GET(request: Request) {
 
     let playerPool: FantasyPlayerPoolItem[] = [];
     if (gameId) {
-      playerPool = await getFantasyPlayerPoolForGame({ gameId, sportKey, date, tzOffsetMinutes });
+      const dailyDateFromGameId = parseDailyGameDateFromId(gameId);
+      playerPool = await getFantasyPlayerPoolForGame({
+        gameId,
+        sportKey,
+        date: dailyDateFromGameId ?? date,
+        tzOffsetMinutes,
+      });
     } else {
       playerPool = await getFantasyPlayerPoolForDate({ date, tzOffsetMinutes, includeStartedGames: false });
     }

@@ -32,6 +32,15 @@ function buildFantasyDailyGameId(date: string): string {
   return `nba-daily-${date}`;
 }
 
+function parseDailyGameDateFromId(gameId: string): string | null {
+  const trimmed = String(gameId ?? "").trim();
+  if (!trimmed.startsWith("nba-daily-")) {
+    return null;
+  }
+  const rawDate = trimmed.slice("nba-daily-".length).trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null;
+}
+
 function formatLocalDateTime(iso: string): string {
   const parsed = new Date(iso);
   if (!Number.isFinite(parsed.getTime())) {
@@ -167,9 +176,10 @@ export function FantasyHome() {
     }
 
     try {
+      const gameDate = parseDailyGameDateFromId(selectedGameId) ?? todayDate;
       const params = new URLSearchParams({
         gameId: selectedGameId,
-        date: todayDate,
+        date: gameDate,
         tzOffsetMinutes: String(new Date().getTimezoneOffset()),
       });
       if (venueId) {
