@@ -3742,5 +3742,174 @@
     "correctAnswer": 1,
     "category": "Animals",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-having-the-longest-neck",
+    "question": "Which animal is known for having the longest neck?",
+    "options": [
+      "Giraffe",
+      "Elephant",
+      "Ostrich",
+      "Camel"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-flightless-bird-is-native-to-the-southern-hemisphere-and-an-excellent-swimmer",
+    "question": "Which flightless bird is native to the Southern Hemisphere and an excellent swimmer?",
+    "options": [
+      "Ostrich",
+      "Emu",
+      "Penguin",
+      "Kiwi"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-bird-is-famous-for-being-able-to-fly-backward",
+    "question": "Which bird is famous for being able to fly backward?",
+    "options": [
+      "Sparrow",
+      "Hummingbird",
+      "Kingfisher",
+      "Swallow"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-highly-intelligent-marine-mammal-is-known-for-its-complex-echolocation-and-social-behaviors",
+    "question": "Which highly intelligent marine mammal is known for its complex echolocation and social behaviors?",
+    "options": [
+      "Seal",
+      "Dolphin",
+      "Manatee",
+      "Walrus"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-large-marsupial-is-native-to-australia-and-known-for-hopping",
+    "question": "Which large marsupial is native to Australia and known for hopping?",
+    "options": [
+      "Koala",
+      "Wombat",
+      "Kangaroo",
+      "Possum"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-term-describes-animals-that-cannot-regulate-their-own-body-temperature-internally-and-rely-on-external-sources",
+    "question": "What term describes animals that cannot regulate their own body temperature internally and rely on external sources?",
+    "options": [
+      "Endothermic",
+      "Homeothermic",
+      "Ectothermic",
+      "Poikilothermic"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-insect-is-crucial-for-pollination-and-known-for-producing-honey",
+    "question": "Which insect is crucial for pollination and known for producing honey?",
+    "options": [
+      "Wasp",
+      "Ant",
+      "Bee",
+      "Fly"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-undergoes-metamorphosis-from-a-tadpole-to-an-adult",
+    "question": "Which animal undergoes metamorphosis from a tadpole to an adult?",
+    "options": [
+      "Fish",
+      "Snake",
+      "Frog",
+      "Lizard"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-mammal-is-known-for-being-extremely-slow-moving-and-spending-most-of-its-life-hanging-upside-down-in-trees",
+    "question": "Which mammal is known for being extremely slow-moving and spending most of its life hanging upside down in trees?",
+    "options": [
+      "Koala",
+      "Sloth",
+      "Panda",
+      "Lemur"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-bird-holds-the-record-for-the-longest-annual-migration",
+    "question": "Which bird holds the record for the longest annual migration?",
+    "options": [
+      "Albatross",
+      "Arctic Tern",
+      "Peregrine Falcon",
+      "Swallow"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-unique-mammal-is-known-for-laying-eggs-instead-of-giving-birth-to-live-young",
+    "question": "Which unique mammal is known for laying eggs instead of giving birth to live young?",
+    "options": [
+      "Opossum",
+      "Platypus",
+      "Anteater",
+      "Armadillo"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-nocturnal-bird-of-prey-is-known-for-its-ability-to-rotate-its-head-nearly-360-degrees",
+    "question": "Which nocturnal bird of prey is known for its ability to rotate its head nearly 360 degrees?",
+    "options": [
+      "Eagle",
+      "Falcon",
+      "Owl",
+      "Hawk"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-ability-to-change-color-to-match-its-surroundings",
+    "question": "Which animal is known for its ability to change color to match its surroundings?",
+    "options": [
+      "Octopus",
+      "Chameleon",
+      "Arctic Fox",
+      "Zebra"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
   }
 ]

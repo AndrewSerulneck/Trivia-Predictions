@@ -3742,5 +3742,161 @@
     "correctAnswer": 2,
     "category": "Science",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-primary-function-of-chlorophyll-in-plants",
+    "question": "What is the primary function of chlorophyll in plants?",
+    "options": [
+      "Absorb carbon dioxide",
+      "Absorb sunlight",
+      "Transport water",
+      "Produce oxygen"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-force-pulls-objects-towards-the-center-of-the-earth",
+    "question": "What force pulls objects towards the center of the Earth?",
+    "options": [
+      "Friction",
+      "Tension",
+      "Gravity",
+      "Magnetism"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-atomic-number-determined-by",
+    "question": "What is the atomic number determined by?",
+    "options": [
+      "Number of neutrons",
+      "Number of protons",
+      "Number of electrons",
+      "Sum of protons and neutrons"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-term-for-the-maximum-displacement-or-distance-moved-by-a-point-on-a-vibrating-body-or-wave-measured-from-its-equilibrium-position",
+    "question": "What is the term for the maximum displacement or distance moved by a point on a vibrating body or wave measured from its equilibrium position?",
+    "options": [
+      "Frequency",
+      "Wavelength",
+      "Amplitude",
+      "Period"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-type-of-rock-is-formed-from-the-compaction-and-cementation-of-sediments",
+    "question": "What type of rock is formed from the compaction and cementation of sediments?",
+    "options": [
+      "Igneous",
+      "Metamorphic",
+      "Sedimentary",
+      "Volcanic"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-primary-function-of-the-hippocampus-in-the-human-brain",
+    "question": "What is the primary function of the hippocampus in the human brain?",
+    "options": [
+      "Regulating breathing",
+      "Processing visual information",
+      "Forming new memories",
+      "Controlling motor skills"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-the-following-is-an-example-of-a-noble-gas",
+    "question": "Which of the following is an example of a noble gas?",
+    "options": [
+      "Oxygen",
+      "Chlorine",
+      "Argon",
+      "Nitrogen"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-concept-describes-the-phenomenon-where-a-changing-magnetic-field-induces-an-electric-current",
+    "question": "What concept describes the phenomenon where a changing magnetic field induces an electric current?",
+    "options": [
+      "Ohm's Law",
+      "Faraday's Law of Induction",
+      "Coulomb's Law",
+      "Kirchhoff's Law"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-hypothetical-boundary-around-a-black-hole-beyond-which-no-light-or-information-can-escape",
+    "question": "What is the name of the hypothetical boundary around a black hole beyond which no light or information can escape?",
+    "options": [
+      "Singularity",
+      "Accretion Disk",
+      "Event Horizon",
+      "Schwarzschild Radius"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-gas-do-humans-primarily-exhale",
+    "question": "What gas do humans primarily exhale?",
+    "options": [
+      "Oxygen",
+      "Nitrogen",
+      "Carbon Dioxide",
+      "Hydrogen"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-phenomenon-explains-why-a-spoon-appears-bent-when-placed-in-a-glass-of-water",
+    "question": "Which phenomenon explains why a spoon appears bent when placed in a glass of water?",
+    "options": [
+      "Diffraction",
+      "Reflection",
+      "Refraction",
+      "Dispersion"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-heaviest-naturally-occurring-element",
+    "question": "What is the heaviest naturally occurring element?",
+    "options": [
+      "Gold",
+      "Uranium",
+      "Platinum",
+      "Plutonium"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
   }
 ]

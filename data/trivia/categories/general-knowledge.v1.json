@@ -3742,5 +3742,174 @@
     "correctAnswer": 2,
     "category": "General Knowledge",
     "difficulty": "easy"
+  },
+  {
+    "slug": "which-continent-is-the-amazon-rainforest-primarily-located-within",
+    "question": "Which continent is the Amazon Rainforest primarily located within?",
+    "options": [
+      "Africa",
+      "Asia",
+      "South America",
+      "Australia"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-famous-post-impressionist-painter-is-known-for-cutting-off-part-of-his-own-ear",
+    "question": "Which famous post-impressionist painter is known for cutting off part of his own ear?",
+    "options": [
+      "Claude Monet",
+      "Paul Cézanne",
+      "Vincent van Gogh",
+      "Edgar Degas"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-does-the-acronym-html-stand-for",
+    "question": "What does the acronym HTML stand for?",
+    "options": [
+      "HyperText Markup Language",
+      "High-Tech Modern Language",
+      "Hyperlink and Text Markup",
+      "Home Tool Markup Language"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-greek-mythology-who-was-the-god-of-the-sea-earthquakes-and-horses",
+    "question": "In Greek mythology, who was the god of the sea, earthquakes, and horses?",
+    "options": [
+      "Zeus",
+      "Hades",
+      "Poseidon",
+      "Apollo"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-british-monarch-reigned-for-over-63-years-giving-her-name-to-an-entire-era",
+    "question": "Which British monarch reigned for over 63 years, giving her name to an entire era?",
+    "options": [
+      "Queen Elizabeth I",
+      "Queen Victoria",
+      "Queen Anne",
+      "Queen Mary I"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-popular-italian-dish-traditionally-consists-of-a-flat-round-base-of-dough-baked-with-toppings",
+    "question": "Which popular Italian dish traditionally consists of a flat, round base of dough baked with toppings?",
+    "options": [
+      "Pasta",
+      "Risotto",
+      "Pizza",
+      "Lasagna"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-largest-desert-in-the-world-excluding-polar-regions",
+    "question": "What is the largest desert in the world, excluding polar regions?",
+    "options": [
+      "Sahara Desert",
+      "Gobi Desert",
+      "Arabian Desert",
+      "Kalahari Desert"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-highest-mountain-in-africa",
+    "question": "What is the name of the highest mountain in Africa?",
+    "options": [
+      "Mount Everest",
+      "Mount Kilimanjaro",
+      "Mount Fuji",
+      "Mount McKinley"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-famous-physicist-developed-the-theory-of-relativity",
+    "question": "Which famous physicist developed the theory of relativity?",
+    "options": [
+      "Isaac Newton",
+      "Albert Einstein",
+      "Stephen Hawking",
+      "Galileo Galilei"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-is-generally-credited-with-inventing-the-world-wide-web",
+    "question": "Who is generally credited with inventing the World Wide Web?",
+    "options": [
+      "Bill Gates",
+      "Steve Jobs",
+      "Tim Berners-Lee",
+      "Mark Zuckerberg"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-ancient-civilization-built-the-city-of-machu-picchu",
+    "question": "Which ancient civilization built the city of Machu Picchu?",
+    "options": [
+      "Aztec",
+      "Maya",
+      "Inca",
+      "Egyptian"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-only-planet-in-our-solar-system-that-rotates-clockwise",
+    "question": "What is the only planet in our solar system that rotates clockwise?",
+    "options": [
+      "Venus",
+      "Mars",
+      "Jupiter",
+      "Saturn"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-gifted-the-statue-of-liberty-to-the-united-states",
+    "question": "Which country gifted the Statue of Liberty to the United States?",
+    "options": [
+      "United Kingdom",
+      "Spain",
+      "France",
+      "Germany"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
   }
 ]

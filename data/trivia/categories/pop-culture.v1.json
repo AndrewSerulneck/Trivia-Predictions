@@ -3755,5 +3755,161 @@
     "correctAnswer": 0,
     "category": "Pop Culture",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-sitcom-is-set-in-new-york-city-and-features-six-friends-monica-chandler-phoebe-rachel-ross-and-joey",
+    "question": "Which sitcom is set in New York City and features six friends: Monica, Chandler, Phoebe, Rachel, Ross, and Joey?",
+    "options": [
+      "Seinfeld",
+      "How I Met Your Mother",
+      "Friends",
+      "The Big Bang Theory"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-singer-is-known-for-hits-like-crazy-in-love-and-single-ladies-put-a-ring-on-it",
+    "question": "Which singer is known for hits like \"Crazy in Love\" and \"Single Ladies (Put a Ring on It)\"?",
+    "options": [
+      "Rihanna",
+      "Beyoncé",
+      "Lady Gaga",
+      "Taylor Swift"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-best-selling-video-game-of-all-time-known-for-its-block-building-gameplay",
+    "question": "What is the best-selling video game of all time, known for its block-building gameplay?",
+    "options": [
+      "Grand Theft Auto V",
+      "Tetris",
+      "Minecraft",
+      "Super Mario Bros."
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-the-game-of-thrones-series-what-is-the-name-of-arya-starks-direwolf",
+    "question": "In the \"Game of Thrones\" series, what is the name of Arya Stark's direwolf?",
+    "options": [
+      "Ghost",
+      "Nymeria",
+      "Summer",
+      "Lady"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animated-character-famously-says-to-infinity-and-beyond",
+    "question": "Which animated character famously says \"To infinity... and beyond!\"?",
+    "options": [
+      "Woody",
+      "Buzz Lightyear",
+      "Shrek",
+      "Lightning McQueen"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "taylor-swift-re-recorded-her-album-fearless-and-released-it-with-what-suffix-in-its-title",
+    "question": "Taylor Swift re-recorded her album \"Fearless\" and released it with what suffix in its title?",
+    "options": [
+      "(Reimagined)",
+      "(Deluxe Edition)",
+      "(Taylor's Version)",
+      "(2.0)"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-tv-show-features-the-characters-dwight-schrute-and-michael-scott-working-at-dunder-mifflin",
+    "question": "Which TV show features the characters Dwight Schrute and Michael Scott working at Dunder Mifflin?",
+    "options": [
+      "Parks and Recreation",
+      "Brooklyn Nine-Nine",
+      "The Office",
+      "Arrested Development"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-short-form-video-platform-known-for-viral-dances-and-challenges",
+    "question": "What is the name of the short-form video platform known for viral dances and challenges?",
+    "options": [
+      "YouTube",
+      "Instagram",
+      "TikTok",
+      "Snapchat"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "before-hugh-jackman-who-originally-played-wolverine-in-the-x-men-films",
+    "question": "Before Hugh Jackman, who originally played Wolverine in the \"X-Men\" films?",
+    "options": [
+      "No one, he was the first",
+      "Scott Eastwood",
+      "Viggo Mortensen",
+      "Russell Crowe"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-iconic-rock-band-released-the-song-bohemian-rhapsody",
+    "question": "Which iconic rock band released the song \"Bohemian Rhapsody\"?",
+    "options": [
+      "Led Zeppelin",
+      "Queen",
+      "The Rolling Stones",
+      "The Beatles"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-highest-award-an-actor-can-win-for-their-performance-in-a-film",
+    "question": "What is the highest award an actor can win for their performance in a film?",
+    "options": [
+      "Emmy Award",
+      "Tony Award",
+      "Grammy Award",
+      "Academy Award"
+    ],
+    "correctAnswer": 3,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-streaming-series-set-in-the-fictional-town-of-hawkins-features-a-group-of-kids-battling-supernatural-forces-from-the-upside-down",
+    "question": "Which streaming series, set in the fictional town of Hawkins, features a group of kids battling supernatural forces from the Upside Down?",
+    "options": [
+      "The Umbrella Academy",
+      "Stranger Things",
+      "Dark",
+      "Locke & Key"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
   }
 ]

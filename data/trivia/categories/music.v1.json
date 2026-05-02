@@ -3742,5 +3742,161 @@
     "correctAnswer": 1,
     "category": "Music",
     "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-popular-music-streaming-service-with-a-green-circular-logo",
+    "question": "What is the name of the popular music streaming service with a green circular logo?",
+    "options": [
+      "Spotify",
+      "Apple Music",
+      "Pandora",
+      "Tidal"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-legendary-guitarist-is-known-for-his-signature-fender-stratocaster-named-blackie",
+    "question": "Which legendary guitarist is known for his signature Fender Stratocaster named 'Blackie'?",
+    "options": [
+      "Jimi Hendrix",
+      "Eric Clapton",
+      "Jimmy Page",
+      "B.B. King"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-music-theory-what-is-a-contrapuntal-compositional-technique-that-involves-a-theme-introduced-by-one-part-and-then-imitated-by-other-parts",
+    "question": "In music theory, what is a contrapuntal compositional technique that involves a theme introduced by one part and then imitated by other parts?",
+    "options": [
+      "Rondo",
+      "Fugue",
+      "Sonata",
+      "Canon"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-pop-superstar-released-the-albums-1989-and-reputation",
+    "question": "Which pop superstar released the albums '1989' and 'Reputation'?",
+    "options": [
+      "Adele",
+      "Beyoncé",
+      "Taylor Swift",
+      "Rihanna"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-instrument-traditionally-plays-the-bass-line-in-a-jazz-big-band",
+    "question": "Which instrument traditionally plays the bass line in a jazz big band?",
+    "options": [
+      "Tuba",
+      "Cello",
+      "Upright Bass",
+      "Bassoon"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-opera-composed-by-georges-bizet-features-the-famous-aria-habanera",
+    "question": "Which opera, composed by Georges Bizet, features the famous aria 'Habanera'?",
+    "options": [
+      "La Traviata",
+      "The Marriage of Figaro",
+      "Carmen",
+      "Aida"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-genre-is-often-characterized-by-heavy-guitar-riffs-strong-drum-beats-and-sometimes-screaming-vocals",
+    "question": "What genre is often characterized by heavy guitar riffs, strong drum beats, and sometimes screaming vocals?",
+    "options": [
+      "Country",
+      "Hip-hop",
+      "Heavy Metal",
+      "Jazz"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-composed-the-famous-four-note-motif-at-the-beginning-of-symphony-no-5",
+    "question": "Who composed the famous four-note motif at the beginning of Symphony No. 5?",
+    "options": [
+      "Mozart",
+      "Beethoven",
+      "Bach",
+      "Haydn"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-american-jazz-trumpeter-and-composer-was-a-primary-developer-of-bebop-and-cool-jazz",
+    "question": "Which American jazz trumpeter and composer was a primary developer of bebop and cool jazz?",
+    "options": [
+      "Louis Armstrong",
+      "Miles Davis",
+      "Dizzy Gillespie",
+      "John Coltrane"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-instrument-typically-has-88-keys",
+    "question": "Which instrument typically has 88 keys?",
+    "options": [
+      "Guitar",
+      "Violin",
+      "Piano",
+      "Trumpet"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-canadian-rapper-released-the-albums-views-and-scorpion",
+    "question": "Which Canadian rapper released the albums 'Views' and 'Scorpion'?",
+    "options": [
+      "Kendrick Lamar",
+      "J. Cole",
+      "Drake",
+      "Post Malone"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-term-for-a-musical-composition-for-a-solo-instrument-or-a-small-ensemble-typically-in-several-movements",
+    "question": "What is the term for a musical composition for a solo instrument or a small ensemble, typically in several movements?",
+    "options": [
+      "Symphony",
+      "Concerto",
+      "Sonata",
+      "Oratorio"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
   }
 ]

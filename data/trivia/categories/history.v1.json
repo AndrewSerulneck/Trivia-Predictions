@@ -3742,5 +3742,174 @@
     "correctAnswer": 1,
     "category": "History",
     "difficulty": "hard"
+  },
+  {
+    "slug": "which-pharaoh-is-most-famous-for-his-golden-burial-mask-and-untouched-tomb-discovered-in-1922",
+    "question": "Which pharaoh is most famous for his golden burial mask and untouched tomb discovered in 1922?",
+    "options": [
+      "Tutankhamun",
+      "Akhenaten",
+      "Ramesses II",
+      "Thutmose III"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-peloponnesian-war-was-primarily-fought-between-which-two-ancient-greek-city-states",
+    "question": "The Peloponnesian War was primarily fought between which two ancient Greek city-states?",
+    "options": [
+      "Athens and Sparta",
+      "Corinth and Thebes",
+      "Argos and Megara",
+      "Delphi and Olympia"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-roman-emperor-made-christianity-the-state-religion-of-the-roman-empire-in-380-ad",
+    "question": "Which Roman emperor made Christianity the state religion of the Roman Empire in 380 AD?",
+    "options": [
+      "Constantine the Great",
+      "Theodosius I",
+      "Diocletian",
+      "Julian the Apostate"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-ancient-civilization-is-credited-with-inventing-paper-gunpowder-and-the-compass",
+    "question": "Which ancient civilization is credited with inventing paper, gunpowder, and the compass?",
+    "options": [
+      "Roman Empire",
+      "Ancient Egypt",
+      "Imperial China",
+      "Persian Empire"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-construction-of-the-suez-canal-connecting-the-mediterranean-sea-to-the-red-sea-was-completed-in-which-century",
+    "question": "The construction of the Suez Canal, connecting the Mediterranean Sea to the Red Sea, was completed in which century?",
+    "options": [
+      "17th century",
+      "18th century",
+      "19th century",
+      "20th century"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-document-signed-in-1776-declared-the-thirteen-american-colonies-independent-from-great-britain",
+    "question": "Which document, signed in 1776, declared the thirteen American colonies independent from Great Britain?",
+    "options": [
+      "The Articles of Confederation",
+      "The U.S. Constitution",
+      "The Declaration of Independence",
+      "The Bill of Rights"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-french-revolution-began-with-the-storming-of-what-prison-fortress-in-paris-on-july-14-1789",
+    "question": "The French Revolution began with the storming of what prison fortress in Paris on July 14, 1789?",
+    "options": [
+      "The Louvre",
+      "The Conciergerie",
+      "The Bastille",
+      "Château d'If"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-was-the-mongol-leader-who-established-the-largest-contiguous-land-empire-in-history",
+    "question": "Who was the Mongol leader who established the largest contiguous land empire in history?",
+    "options": [
+      "Kublai Khan",
+      "Attila the Hun",
+      "Genghis Khan",
+      "Tamerlane"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-fall-of-the-berlin-wall-in-1989-symbolized-the-end-of-which-major-geopolitical-conflict",
+    "question": "The fall of the Berlin Wall in 1989 symbolized the end of which major geopolitical conflict?",
+    "options": [
+      "World War I",
+      "World War II",
+      "The Cold War",
+      "The Vietnam War"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-which-year-did-women-in-the-united-states-gain-the-right-to-vote-with-the-passage-of-the-19th-amendment",
+    "question": "In which year did women in the United States gain the right to vote with the passage of the 19th Amendment?",
+    "options": [
+      "1890",
+      "1905",
+      "1920",
+      "1935"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-treaty-of-versailles-signed-in-1919-officially-ended-which-global-conflict",
+    "question": "The Treaty of Versailles, signed in 1919, officially ended which global conflict?",
+    "options": [
+      "The Franco-Prussian War",
+      "World War I",
+      "The Crimean War",
+      "The Seven Years' War"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-wrote-the-prince-a-16th-century-political-treatise-that-described-how-rulers-acquire-and-maintain-power",
+    "question": "Who wrote 'The Prince,' a 16th-century political treatise that described how rulers acquire and maintain power?",
+    "options": [
+      "Dante Alighieri",
+      "Niccolò Machiavelli",
+      "Thomas More",
+      "Erasmus"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-explorer-is-credited-with-the-first-european-voyage-to-the-americas-in-1492",
+    "question": "Which explorer is credited with the first European voyage to the Americas in 1492?",
+    "options": [
+      "Vasco da Gama",
+      "Ferdinand Magellan",
+      "Christopher Columbus",
+      "Amerigo Vespucci"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
   }
 ]

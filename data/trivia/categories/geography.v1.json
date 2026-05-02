@@ -3742,5 +3742,174 @@
     "correctAnswer": 0,
     "category": "Geography",
     "difficulty": "hard"
+  },
+  {
+    "slug": "which-famous-river-flows-through-london-england",
+    "question": "Which famous river flows through London, England?",
+    "options": [
+      "Seine",
+      "Tiber",
+      "Thames",
+      "Danube"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-highest-peak-in-north-america",
+    "question": "What is the highest peak in North America?",
+    "options": [
+      "Mount Rainier",
+      "Mount Whitney",
+      "Denali (Mount McKinley)",
+      "Mount Logan"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-ocean-separates-europe-and-africa-from-the-americas",
+    "question": "Which ocean separates Europe and Africa from the Americas?",
+    "options": [
+      "Pacific Ocean",
+      "Indian Ocean",
+      "Atlantic Ocean",
+      "Southern Ocean"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-major-city-is-famously-divided-by-the-bosphorus-strait-connecting-two-continents",
+    "question": "Which major city is famously divided by the Bosphorus Strait, connecting two continents?",
+    "options": [
+      "Cairo",
+      "Moscow",
+      "Istanbul",
+      "Athens"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-largest-freshwater-lake-by-volume-in-the-world",
+    "question": "What is the largest freshwater lake by volume in the world?",
+    "options": [
+      "Lake Superior",
+      "Lake Baikal",
+      "Great Slave Lake",
+      "Lake Tanganyika"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-landlocked-country-in-south-america-shares-a-border-with-brazil-argentina-and-paraguay",
+    "question": "Which landlocked country in South America shares a border with Brazil, Argentina, and Paraguay?",
+    "options": [
+      "Bolivia",
+      "Peru",
+      "Ecuador",
+      "Colombia"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-desert-covers-a-large-part-of-southern-africa",
+    "question": "Which desert covers a large part of southern Africa?",
+    "options": [
+      "Gobi Desert",
+      "Kalahari Desert",
+      "Arabian Desert",
+      "Great Victoria Desert"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-strait-connects-the-black-sea-to-the-sea-of-marmara",
+    "question": "Which strait connects the Black Sea to the Sea of Marmara?",
+    "options": [
+      "Strait of Gibraltar",
+      "Bosporus Strait",
+      "Dardanelles Strait",
+      "Suez Canal"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-capital-city-of-italy-is",
+    "question": "The capital city of Italy is...?",
+    "options": [
+      "Milan",
+      "Florence",
+      "Rome",
+      "Venice"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "lake-titicaca-the-highest-navigable-lake-in-the-world-is-shared-by-which-two-south-american-countries",
+    "question": "Lake Titicaca, the highest navigable lake in the world, is shared by which two South American countries?",
+    "options": [
+      "Peru and Bolivia",
+      "Ecuador and Colombia",
+      "Argentina and Chile",
+      "Brazil and Paraguay"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-mountain-range-forms-a-natural-border-between-france-and-spain",
+    "question": "Which mountain range forms a natural border between France and Spain?",
+    "options": [
+      "Alps",
+      "Pyrenees",
+      "Carpathians",
+      "Apennines"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-ring-of-fire-an-area-known-for-frequent-earthquakes-and-volcanic-eruptions-is-primarily-located-around-which-ocean",
+    "question": "The 'Ring of Fire', an area known for frequent earthquakes and volcanic eruptions, is primarily located around which ocean?",
+    "options": [
+      "Atlantic Ocean",
+      "Indian Ocean",
+      "Arctic Ocean",
+      "Pacific Ocean"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-famous-canal-connects-the-atlantic-ocean-to-the-pacific-ocean",
+    "question": "Which famous canal connects the Atlantic Ocean to the Pacific Ocean?",
+    "options": [
+      "Suez Canal",
+      "Panama Canal",
+      "Kiel Canal",
+      "Grand Canal"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
   }
 ]

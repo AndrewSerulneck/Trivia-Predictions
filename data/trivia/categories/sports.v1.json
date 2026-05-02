@@ -3742,5 +3742,161 @@
     "correctAnswer": 3,
     "category": "Sports",
     "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-bases-are-there-on-a-standard-baseball-field-including-home-plate",
+    "question": "How many bases are there on a standard baseball field, including home plate?",
+    "options": [
+      "3",
+      "4",
+      "5",
+      "6"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-maximum-number-of-personal-fouls-a-player-can-accumulate-before-being-ejected-from-a-standard-nba-game",
+    "question": "What is the maximum number of personal fouls a player can accumulate before being ejected from a standard NBA game?",
+    "options": [
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-nfl-team-is-often-referred-to-as-americas-team",
+    "question": "Which NFL team is often referred to as 'America's Team'?",
+    "options": [
+      "Green Bay Packers",
+      "New England Patriots",
+      "Dallas Cowboys",
+      "Pittsburgh Steelers"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-tennis-what-term-is-used-to-describe-a-score-of-zero",
+    "question": "In tennis, what term is used to describe a score of zero?",
+    "options": [
+      "Nil",
+      "Love",
+      "Zero",
+      "Empty"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-swimming-stroke-is-generally-considered-the-fastest-in-competitive-racing",
+    "question": "Which swimming stroke is generally considered the fastest in competitive racing?",
+    "options": [
+      "Backstroke",
+      "Breaststroke",
+      "Butterfly",
+      "Freestyle"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-often-are-the-summer-olympic-games-traditionally-held",
+    "question": "How often are the Summer Olympic Games traditionally held?",
+    "options": [
+      "Every 2 years",
+      "Every 3 years",
+      "Every 4 years",
+      "Every 5 years"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-boxing-what-is-the-term-for-a-punch-that-renders-an-opponent-unable-to-continue-the-match-within-the-referees-ten-count",
+    "question": "In boxing, what is the term for a punch that renders an opponent unable to continue the match within the referee's ten-count?",
+    "options": [
+      "Technical Knockout (TKO)",
+      "Submission",
+      "Decision",
+      "Knockout (KO)"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-most-prestigious-multi-stage-bicycle-race-primarily-held-annually-in-france",
+    "question": "What is the name of the most prestigious multi-stage bicycle race, primarily held annually in France?",
+    "options": [
+      "Giro d'Italia",
+      "Vuelta a España",
+      "Tour de France",
+      "Paris-Roubaix"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-golf-what-is-the-term-for-a-score-of-one-stroke-under-par-on-a-single-hole",
+    "question": "In golf, what is the term for a score of one stroke under par on a single hole?",
+    "options": [
+      "Bogey",
+      "Eagle",
+      "Birdie",
+      "Albatross"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-famous-monza-circuit-known-for-hosting-formula-1-grand-prix-races-is-located-in-which-country",
+    "question": "The famous Monza circuit, known for hosting Formula 1 Grand Prix races, is located in which country?",
+    "options": [
+      "United Kingdom",
+      "Germany",
+      "Italy",
+      "Monaco"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-periods-are-in-a-standard-professional-ice-hockey-game",
+    "question": "How many periods are in a standard professional ice hockey game?",
+    "options": [
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-legendary-baseball-player-surpassed-babe-ruths-career-home-run-record-to-become-the-all-time-leader-before-barry-bonds",
+    "question": "Which legendary baseball player surpassed Babe Ruth's career home run record to become the all-time leader before Barry Bonds?",
+    "options": [
+      "Willie Mays",
+      "Ted Williams",
+      "Hank Aaron",
+      "Frank Robinson"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
   }
 ]
