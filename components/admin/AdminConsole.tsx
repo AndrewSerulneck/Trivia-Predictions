@@ -13,7 +13,7 @@ const AD_PAGE_KEYS: Array<Exclude<AdPageKey, "global">> = ["join", "venue", "tri
 const AD_PAGE_LABEL: Record<AdPageKey, string> = {
   global: "Global",
   join: "Join",
-  venue: "Venue",
+  venue: "Leaderboard",
   trivia: "Trivia",
   "sports-predictions": "Sports Predictions",
   "sports-bingo": "Sports Bingo",

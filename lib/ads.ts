@@ -206,7 +206,12 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string, options?: AdLook
   let sequencePool = roundPool;
   if (requestedSequence && options?.placementKey === "venue-leaderboard-inline") {
     const filteredBySequence = roundPool.filter((row) => Number(row.sequence_index) === requestedSequence);
-    sequencePool = filteredBySequence.length > 0 ? filteredBySequence : roundPool;
+    // Leaderboard inline variants are positional inventory.
+    // Do not fall back to other variants when a specific variant is requested.
+    if (filteredBySequence.length === 0) {
+      return null;
+    }
+    sequencePool = filteredBySequence;
   }
 
   if (requestedSequence && options?.placementKey === "predictions-inline" && sequencePool.length > 0) {
