@@ -202,6 +202,10 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const warmupStartedRef = useRef(false);
 
   useEffect(() => {
+    // If the user just came through the join flow the entry handoff confirms
+    // their credentials were written to localStorage synchronously before
+    // navigation. Skip the redirect guard entirely — there is no invalid state.
+    if (entryHandoffVisibleOnMount) return;
     const storedUserId = getUserId() ?? "";
     const storedVenueId = getVenueId() ?? "";
     if (!storedUserId) return void router.replace(`/?v=${venue.id}`);
