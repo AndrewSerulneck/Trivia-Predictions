@@ -3898,5 +3898,174 @@
     "correctAnswer": 1,
     "category": "Science",
     "difficulty": "hard"
+  },
+  {
+    "slug": "what-type-of-natural-disaster-is-measured-on-the-richter-scale",
+    "question": "What type of natural disaster is measured on the Richter scale?",
+    "options": [
+      "Hurricane",
+      "Tornado",
+      "Earthquake",
+      "Volcanic Eruption"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-does-c-represent-in-einsteins-famous-equation-emc",
+    "question": "What does 'c' represent in Einstein's famous equation E=mc²?",
+    "options": [
+      "Charge",
+      "Constant",
+      "Speed of light",
+      "Coefficient"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-substance-gives-red-blood-cells-their-color-and-carries-oxygen",
+    "question": "What substance gives red blood cells their color and carries oxygen?",
+    "options": [
+      "Plasma",
+      "Platelets",
+      "Hemoglobin",
+      "White Blood Cells"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-process-by-which-a-solid-turns-directly-into-a-gas-without-passing-through-a-liquid-phase",
+    "question": "What is the name of the process by which a solid turns directly into a gas without passing through a liquid phase?",
+    "options": [
+      "Evaporation",
+      "Condensation",
+      "Sublimation",
+      "Melting"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-part-of-the-brain-is-primarily-responsible-for-balance-and-coordination",
+    "question": "Which part of the brain is primarily responsible for balance and coordination?",
+    "options": [
+      "Cerebrum",
+      "Brainstem",
+      "Cerebellum",
+      "Thalamus"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-protons-are-in-an-atom-of-carbon-atomic-number-6",
+    "question": "How many protons are in an atom of carbon (atomic number 6)?",
+    "options": [
+      "12",
+      "6",
+      "3",
+      "0"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-deepest-known-oceanic-trench-on-earth",
+    "question": "What is the deepest known oceanic trench on Earth?",
+    "options": [
+      "Puerto Rico Trench",
+      "Kermadec Trench",
+      "Mariana Trench",
+      "Java Trench"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-nearest-planet-to-the-sun",
+    "question": "What is the nearest planet to the Sun?",
+    "options": [
+      "Earth",
+      "Mars",
+      "Venus",
+      "Mercury"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-chemical-bond-formed-when-atoms-share-electrons",
+    "question": "What is the name of the chemical bond formed when atoms share electrons?",
+    "options": [
+      "Ionic bond",
+      "Metallic bond",
+      "Covalent bond",
+      "Hydrogen bond"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-scientist-developed-the-theory-of-natural-selection",
+    "question": "Which scientist developed the theory of natural selection?",
+    "options": [
+      "Gregor Mendel",
+      "Louis Pasteur",
+      "Charles Darwin",
+      "Albert Einstein"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-fundamental-force-responsible-for-the-decay-of-radioactive-isotopes",
+    "question": "What is the fundamental force responsible for the decay of radioactive isotopes?",
+    "options": [
+      "Strong nuclear force",
+      "Electromagnetic force",
+      "Weak nuclear force",
+      "Gravitational force"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-planet-in-our-solar-system-is-known-for-its-prominent-and-extensive-ring-system",
+    "question": "Which planet in our solar system is known for its prominent and extensive ring system?",
+    "options": [
+      "Mars",
+      "Jupiter",
+      "Saturn",
+      "Uranus"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-primary-function-of-the-large-intestine-in-the-human-digestive-system",
+    "question": "What is the primary function of the large intestine in the human digestive system?",
+    "options": [
+      "To absorb nutrients from food",
+      "To break down proteins",
+      "To absorb water and electrolytes",
+      "To produce digestive enzymes"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
   }
 ]

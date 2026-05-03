@@ -3911,5 +3911,174 @@
     "correctAnswer": 1,
     "category": "Animals",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-ability-to-spin-webs",
+    "question": "Which animal is known for its ability to spin webs?",
+    "options": [
+      "Spider",
+      "Ant",
+      "Bee",
+      "Fly"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-large-land-animal-has-tusks-and-a-trunk",
+    "question": "Which large land animal has tusks and a trunk?",
+    "options": [
+      "Rhinoceros",
+      "Hippopotamus",
+      "Elephant",
+      "Giraffe"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-common-name-for-the-domesticated-animal-known-as-canis-familiaris",
+    "question": "What is the common name for the domesticated animal known as Canis familiaris?",
+    "options": [
+      "Cat",
+      "Dog",
+      "Horse",
+      "Cow"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-marine-mammal-is-known-for-its-extremely-long-tusks",
+    "question": "Which marine mammal is known for its extremely long tusks?",
+    "options": [
+      "Dolphin",
+      "Walrus",
+      "Seal",
+      "Manatee"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-type-of-animal-is-a-feline",
+    "question": "What type of animal is a 'feline'?",
+    "options": [
+      "Dog",
+      "Cat",
+      "Bird",
+      "Fish"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animals-diet-consists-almost-entirely-of-bamboo",
+    "question": "Which animal's diet consists almost entirely of bamboo?",
+    "options": [
+      "Koala",
+      "Panda",
+      "Sloth",
+      "Gorilla"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-famous-for-its-unique-ability-to-play-dead-when-threatened",
+    "question": "Which animal is famous for its unique ability to play dead when threatened?",
+    "options": [
+      "Opossum",
+      "Raccoon",
+      "Skunk",
+      "Fox"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-main-characteristic-of-a-reptile",
+    "question": "What is the main characteristic of a reptile?",
+    "options": [
+      "Feathers",
+      "Fur",
+      "Scales",
+      "Gills"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-type-of-animal-typically-has-a-cloaca-for-excretion-and-reproduction",
+    "question": "Which type of animal typically has a cloaca for excretion and reproduction?",
+    "options": [
+      "Mammals",
+      "Birds",
+      "Fish",
+      "Insects"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-gestation-period-of-an-african-elephant-approximately",
+    "question": "What is the gestation period of an African elephant, approximately?",
+    "options": [
+      "6 months",
+      "12 months",
+      "18 months",
+      "22 months"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-class-of-animals-includes-sea-stars-and-sea-urchins",
+    "question": "Which class of animals includes sea stars and sea urchins?",
+    "options": [
+      "Mollusca",
+      "Arthropoda",
+      "Echinodermata",
+      "Cnidaria"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-is-known-for-being-able-to-regenerate-lost-limbs",
+    "question": "Which animal is known for being able to regenerate lost limbs?",
+    "options": [
+      "Starfish",
+      "Crab",
+      "Lizard",
+      "Earthworm"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-these-animals-is-known-for-its-ability-to-echolocate",
+    "question": "Which of these animals is known for its ability to echolocate?",
+    "options": [
+      "Rabbit",
+      "Bat",
+      "Squirrel",
+      "Deer"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
   }
 ]

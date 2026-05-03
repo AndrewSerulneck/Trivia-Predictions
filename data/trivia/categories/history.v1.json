@@ -3911,5 +3911,161 @@
     "correctAnswer": 2,
     "category": "History",
     "difficulty": "easy"
+  },
+  {
+    "slug": "the-magna-carta-a-charter-of-rights-was-signed-by-king-john-of-england-in-which-year",
+    "question": "The Magna Carta, a charter of rights, was signed by King John of England in which year?",
+    "options": [
+      "1066",
+      "1215",
+      "1492",
+      "1607"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-famously-crossed-the-alps-with-elephants-to-invade-italy-during-the-second-punic-war",
+    "question": "Who famously crossed the Alps with elephants to invade Italy during the Second Punic War?",
+    "options": [
+      "Julius Caesar",
+      "Alexander the Great",
+      "Hannibal Barca",
+      "Spartacus"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-ottoman-empire-which-lasted-for-over-600-years-was-founded-by-osman-i-in-which-century",
+    "question": "The Ottoman Empire, which lasted for over 600 years, was founded by Osman I in which century?",
+    "options": [
+      "11th century",
+      "12th century",
+      "13th century",
+      "14th century"
+    ],
+    "correctAnswer": 3,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-protestant-reformation-was-sparked-in-1517-when-martin-luther-posted-his-ninety-five-theses-in-which-city",
+    "question": "The Protestant Reformation was sparked in 1517 when Martin Luther posted his Ninety-five Theses in which city?",
+    "options": [
+      "Geneva",
+      "Rome",
+      "Wittenberg",
+      "London"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-seven-years-war-often-considered-the-first-true-global-conflict-primarily-involved-great-britain-and-which-other-major-european-power",
+    "question": "The Seven Years' War, often considered the first true global conflict, primarily involved Great Britain and which other major European power?",
+    "options": [
+      "Spain",
+      "France",
+      "Russia",
+      "Austria"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-was-the-primary-author-of-the-declaration-of-independence",
+    "question": "Who was the primary author of the Declaration of Independence?",
+    "options": [
+      "Benjamin Franklin",
+      "John Adams",
+      "Thomas Jefferson",
+      "George Washington"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-meiji-restoration-a-period-of-rapid-modernization-and-industrialization-occurred-in-which-country",
+    "question": "The Meiji Restoration, a period of rapid modernization and industrialization, occurred in which country?",
+    "options": [
+      "China",
+      "Korea",
+      "Japan",
+      "Vietnam"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-battle-in-1815-marked-the-final-defeat-of-napoleon-bonaparte",
+    "question": "Which battle in 1815 marked the final defeat of Napoleon Bonaparte?",
+    "options": [
+      "Battle of Austerlitz",
+      "Battle of Trafalgar",
+      "Battle of Waterloo",
+      "Battle of Leipzig"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-construction-of-the-great-wall-of-china-began-as-early-as-the-7th-century-bc-but-which-dynasty-is-most-associated-with-its-major-expansion-and-consolidation",
+    "question": "The construction of the Great Wall of China began as early as the 7th century BC, but which dynasty is most associated with its major expansion and consolidation?",
+    "options": [
+      "Han Dynasty",
+      "Qin Dynasty",
+      "Ming Dynasty",
+      "Tang Dynasty"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-year-did-the-russian-revolution-leading-to-the-overthrow-of-the-tsarist-regime-primarily-take-place",
+    "question": "In which year did the Russian Revolution, leading to the overthrow of the Tsarist regime, primarily take place?",
+    "options": [
+      "1905",
+      "1917",
+      "1922",
+      "1939"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-berlin-airlift-was-a-major-operation-carried-out-by-western-allies-to-supply-west-berlin-during-a-soviet-blockade-in-what-period",
+    "question": "The Berlin Airlift was a major operation carried out by Western Allies to supply West Berlin during a Soviet blockade in what period?",
+    "options": [
+      "1938-1939",
+      "1948-1949",
+      "1958-1959",
+      "1961-1962"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-what-year-did-the-western-roman-empire-traditionally-come-to-an-end",
+    "question": "In what year did the Western Roman Empire traditionally come to an end?",
+    "options": [
+      "330 AD",
+      "410 AD",
+      "476 AD",
+      "550 AD"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
   }
 ]

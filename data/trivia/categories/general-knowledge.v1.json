@@ -3911,5 +3911,161 @@
     "correctAnswer": 2,
     "category": "General Knowledge",
     "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-days-are-in-a-standard-week",
+    "question": "How many days are in a standard week?",
+    "options": [
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-wrote-the-famous-plays-romeo-and-juliet-and-hamlet",
+    "question": "Who wrote the famous plays \"Romeo and Juliet\" and \"Hamlet\"?",
+    "options": [
+      "Charles Dickens",
+      "William Shakespeare",
+      "Jane Austen",
+      "Mark Twain"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-is-known-for-having-the-most-natural-lakes-in-the-world",
+    "question": "Which country is known for having the most natural lakes in the world?",
+    "options": [
+      "Russia",
+      "Canada",
+      "USA",
+      "China"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-author-wrote-the-dystopian-novels-1984-and-animal-farm",
+    "question": "Which author wrote the dystopian novels \"1984\" and \"Animal Farm\"?",
+    "options": [
+      "Aldous Huxley",
+      "George Orwell",
+      "Ray Bradbury",
+      "H.G. Wells"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-only-letter-in-the-english-alphabet-that-does-not-appear-in-the-name-of-any-us-state",
+    "question": "What is the only letter in the English alphabet that does not appear in the name of any U.S. state?",
+    "options": [
+      "Z",
+      "X",
+      "J",
+      "Q"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-human-organ-is-responsible-for-pumping-blood-throughout-the-body",
+    "question": "Which human organ is responsible for pumping blood throughout the body?",
+    "options": [
+      "Lungs",
+      "Brain",
+      "Heart",
+      "Liver"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-developed-the-theory-of-natural-selection",
+    "question": "Who developed the theory of natural selection?",
+    "options": [
+      "Gregor Mendel",
+      "Charles Darwin",
+      "Louis Pasteur",
+      "Isaac Newton"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-color-is-typically-associated-with-a-stop-sign",
+    "question": "What color is typically associated with a stop sign?",
+    "options": [
+      "Red",
+      "Green",
+      "Blue",
+      "Yellow"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-famous-clock-tower-is-located-in-london-england",
+    "question": "Which famous clock tower is located in London, England?",
+    "options": [
+      "Eiffel Tower",
+      "Big Ben",
+      "Leaning Tower of Pisa",
+      "Empire State Building"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-largest-moon-of-saturn",
+    "question": "What is the largest moon of Saturn?",
+    "options": [
+      "Io",
+      "Europa",
+      "Ganymede",
+      "Titan"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-smallest-independent-state-in-the-world-by-both-area-and-population",
+    "question": "What is the smallest independent state in the world by both area and population?",
+    "options": [
+      "Monaco",
+      "San Marino",
+      "Vatican City",
+      "Nauru"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-is-the-author-of-the-classic-novel-don-quixote",
+    "question": "Who is the author of the classic novel 'Don Quixote'?",
+    "options": [
+      "Gabriel García Márquez",
+      "Miguel de Cervantes",
+      "William Shakespeare",
+      "Victor Hugo"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
   }
 ]

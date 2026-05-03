@@ -3911,5 +3911,161 @@
     "correctAnswer": 1,
     "category": "Pop Culture",
     "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-fictional-african-nation-ruled-by-king-tchalla-in-the-marvel-cinematic-universe",
+    "question": "What is the name of the fictional African nation ruled by King T'Challa in the Marvel Cinematic Universe?",
+    "options": [
+      "Wakanda",
+      "Zamunda",
+      "Genosha",
+      "Latveria"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-popular-sitcom-created-by-larry-david-and-jerry-seinfeld-is-often-described-as-a-show-about-nothing",
+    "question": "Which popular sitcom, created by Larry David and Jerry Seinfeld, is often described as a 'show about nothing'?",
+    "options": [
+      "Seinfeld",
+      "Curb Your Enthusiasm",
+      "Friends",
+      "Arrested Development"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-pop-superstar-is-known-for-her-little-monsters-fanbase-and-hits-like-bad-romance",
+    "question": "Which pop superstar is known for her 'Little Monsters' fanbase and hits like 'Bad Romance'?",
+    "options": [
+      "Lady Gaga",
+      "Katy Perry",
+      "Rihanna",
+      "Ariana Grande"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-protagonist-in-the-legend-of-zelda-video-game-series",
+    "question": "What is the name of the protagonist in 'The Legend of Zelda' video game series?",
+    "options": [
+      "Link",
+      "Zelda",
+      "Ganon",
+      "Navi"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-director-is-known-for-films-like-pulp-fiction-kill-bill-and-django-unchained",
+    "question": "Which director is known for films like 'Pulp Fiction,' 'Kill Bill,' and 'Django Unchained'?",
+    "options": [
+      "Quentin Tarantino",
+      "Martin Scorsese",
+      "Wes Anderson",
+      "Christopher Nolan"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-social-media-platform-allowed-users-to-share-short-looping-videos-and-popularized-the-vine-era-before-its-shutdown",
+    "question": "Which social media platform allowed users to share short, looping videos and popularized the 'Vine' era before its shutdown?",
+    "options": [
+      "Vine",
+      "TikTok",
+      "Snapchat",
+      "Instagram Reels"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-critically-acclaimed-hulu-series-based-on-a-novel-by-margaret-atwood-depicts-a-dystopian-society-where-fertile-women-are-forced-into-servitude",
+    "question": "Which critically acclaimed Hulu series, based on a novel by Margaret Atwood, depicts a dystopian society where fertile women are forced into servitude?",
+    "options": [
+      "The Handmaid's Tale",
+      "The Morning Show",
+      "Yellowjackets",
+      "Severance"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-plays-the-character-of-tony-stark-iron-man-in-the-marvel-cinematic-universe",
+    "question": "Who plays the character of Tony Stark / Iron Man in the Marvel Cinematic Universe?",
+    "options": [
+      "Robert Downey Jr.",
+      "Chris Evans",
+      "Mark Ruffalo",
+      "Jeremy Renner"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-legendary-british-rock-band-released-the-concept-album-the-wall-in-1979",
+    "question": "Which legendary British rock band released the concept album 'The Wall' in 1979?",
+    "options": [
+      "Pink Floyd",
+      "Led Zeppelin",
+      "The Who",
+      "Queen"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-fantasy-novel-series-adapted-into-a-hugely-successful-film-trilogy-features-characters-like-frodo-baggins-and-gandalf",
+    "question": "Which fantasy novel series, adapted into a hugely successful film trilogy, features characters like Frodo Baggins and Gandalf?",
+    "options": [
+      "The Lord of the Rings",
+      "Harry Potter",
+      "Chronicles of Narnia",
+      "A Song of Ice and Fire"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-the-animated-sitcom-the-simpsons-what-is-the-name-of-homers-catchphrase-when-something-bad-happens",
+    "question": "In the animated sitcom 'The Simpsons,' what is the name of Homer's catchphrase when something bad happens?",
+    "options": [
+      "D'oh!",
+      "Woohoo!",
+      "Ay Caramba!",
+      "Excellent!"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-year-did-the-first-star-wars-film-a-new-hope-originally-premiere",
+    "question": "What year did the first 'Star Wars' film, 'A New Hope,' originally premiere?",
+    "options": [
+      "1977",
+      "1980",
+      "1975",
+      "1983"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
   }
 ]

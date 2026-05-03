@@ -3911,5 +3911,161 @@
     "correctAnswer": 1,
     "category": "Geography",
     "difficulty": "medium"
+  },
+  {
+    "slug": "the-suez-canal-connects-which-two-bodies-of-water",
+    "question": "The Suez Canal connects which two bodies of water?",
+    "options": [
+      "Atlantic Ocean and Mediterranean Sea",
+      "Red Sea and Arabian Sea",
+      "Mediterranean Sea and Red Sea",
+      "Persian Gulf and Arabian Sea"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-is-famous-for-its-ancient-pyramids",
+    "question": "Which country is famous for its ancient pyramids?",
+    "options": [
+      "Greece",
+      "Italy",
+      "Egypt",
+      "India"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mount-kilimanjaro-africas-highest-peak-is-located-in-which-country",
+    "question": "Mount Kilimanjaro, Africa's highest peak, is located in which country?",
+    "options": [
+      "Kenya",
+      "Tanzania",
+      "Uganda",
+      "Ethiopia"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-gobi-desert-is-primarily-located-in-which-two-countries",
+    "question": "The Gobi Desert is primarily located in which two countries?",
+    "options": [
+      "India and Pakistan",
+      "China and Mongolia",
+      "Russia and Kazakhstan",
+      "Iran and Afghanistan"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-continent-has-no-permanent-human-population",
+    "question": "Which continent has no permanent human population?",
+    "options": [
+      "Africa",
+      "Australia",
+      "Antarctica",
+      "South America"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-river-is-the-longest-in-south-america",
+    "question": "Which river is the longest in South America?",
+    "options": [
+      "Paraná River",
+      "Magdalena River",
+      "Amazon River",
+      "Orinoco River"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-deepest-oceanic-trench-in-the-world",
+    "question": "What is the deepest oceanic trench in the world?",
+    "options": [
+      "Tonga Trench",
+      "Puerto Rico Trench",
+      "Mariana Trench",
+      "Sunda Trench"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-european-country-is-famous-for-its-extensive-fjords",
+    "question": "Which European country is famous for its extensive fjords?",
+    "options": [
+      "Sweden",
+      "Finland",
+      "Norway",
+      "Denmark"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-atacama-desert-is-primarily-located-in-which-south-american-country",
+    "question": "The Atacama Desert is primarily located in which South American country?",
+    "options": [
+      "Peru",
+      "Argentina",
+      "Chile",
+      "Bolivia"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-the-following-is-the-only-continent-that-lies-in-all-four-hemispheres",
+    "question": "Which of the following is the only continent that lies in all four hemispheres?",
+    "options": [
+      "Asia",
+      "Africa",
+      "South America",
+      "North America"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-major-river-flows-through-the-city-of-paris-france",
+    "question": "Which major river flows through the city of Paris, France?",
+    "options": [
+      "Seine",
+      "Thames",
+      "Rhine",
+      "Danube"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-sahara-desert-the-worlds-largest-hot-desert-is-primarily-located-on-which-continent",
+    "question": "The Sahara Desert, the world's largest hot desert, is primarily located on which continent?",
+    "options": [
+      "Africa",
+      "Asia",
+      "South America",
+      "Australia"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "medium"
   }
 ]

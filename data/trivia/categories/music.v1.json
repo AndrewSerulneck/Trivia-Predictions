@@ -3898,5 +3898,174 @@
     "correctAnswer": 2,
     "category": "Music",
     "difficulty": "hard"
+  },
+  {
+    "slug": "which-artist-is-known-for-the-hit-song-billie-jean",
+    "question": "Which artist is known for the hit song \"Billie Jean\"?",
+    "options": [
+      "Michael Jackson",
+      "Prince",
+      "Stevie Wonder",
+      "Usher"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-year-did-the-beatles-release-their-album-sgt-peppers-lonely-hearts-club-band",
+    "question": "What year did The Beatles release their album \"Sgt. Pepper's Lonely Hearts Club Band\"?",
+    "options": [
+      "1965",
+      "1967",
+      "1969",
+      "1971"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-composer-is-credited-with-inventing-the-12-tone-technique-of-composition",
+    "question": "Which composer is credited with inventing the 12-tone technique of composition?",
+    "options": [
+      "Igor Stravinsky",
+      "Arnold Schoenberg",
+      "Béla Bartók",
+      "Dmitri Shostakovich"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-pop-star-is-often-referred-to-as-the-queen-of-pop",
+    "question": "Which pop star is often referred to as the \"Queen of Pop\"?",
+    "options": [
+      "Mariah Carey",
+      "Whitney Houston",
+      "Madonna",
+      "Janet Jackson"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-band-acdc-originated-in-which-country",
+    "question": "The band AC/DC originated in which country?",
+    "options": [
+      "United States",
+      "United Kingdom",
+      "Australia",
+      "Canada"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-instrument-is-a-brass-instrument-and-often-has-a-slide-mechanism",
+    "question": "Which instrument is a brass instrument and often has a slide mechanism?",
+    "options": [
+      "Trumpet",
+      "Clarinet",
+      "Trombone",
+      "French Horn"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-singer-released-the-album-lemonade-in-2016",
+    "question": "Which singer released the album \"Lemonade\" in 2016?",
+    "options": [
+      "Rihanna",
+      "Adele",
+      "Beyoncé",
+      "Taylor Swift"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-is-primarily-a-percussion-instrument",
+    "question": "Which of these is primarily a percussion instrument?",
+    "options": [
+      "Flute",
+      "Violin",
+      "Drum",
+      "Cello"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-term-for-a-musical-passage-that-consists-of-a-rapidly-repeated-note-or-chord",
+    "question": "What is the term for a musical passage that consists of a rapidly repeated note or chord?",
+    "options": [
+      "Arpeggio",
+      "Tremolo",
+      "Vibrato",
+      "Glissando"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-iconic-music-festival-took-place-in-upstate-new-york-in-august-1969",
+    "question": "Which iconic music festival took place in upstate New York in August 1969?",
+    "options": [
+      "Monterey Pop Festival",
+      "Woodstock Festival",
+      "Live Aid",
+      "Lollapalooza"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-artist-sang-the-hit-song-hello-released-in-2015",
+    "question": "Which artist sang the hit song \"Hello\" released in 2015?",
+    "options": [
+      "Adele",
+      "Sam Smith",
+      "Ed Sheeran",
+      "Ariana Grande"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-german-born-composer-known-for-his-oratorios-spent-most-of-his-adult-life-in-england",
+    "question": "Which German-born composer, known for his oratorios, spent most of his adult life in England?",
+    "options": [
+      "Johann Sebastian Bach",
+      "George Frideric Handel",
+      "Felix Mendelssohn",
+      "Johannes Brahms"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-band-released-the-iconic-album-the-dark-side-of-the-moon",
+    "question": "Which band released the iconic album 'The Dark Side of the Moon'?",
+    "options": [
+      "Led Zeppelin",
+      "Queen",
+      "Pink Floyd",
+      "The Rolling Stones"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
   }
 ]

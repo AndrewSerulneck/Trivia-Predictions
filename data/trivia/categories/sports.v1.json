@@ -3898,5 +3898,174 @@
     "correctAnswer": 2,
     "category": "Sports",
     "difficulty": "hard"
+  },
+  {
+    "slug": "who-currently-holds-the-record-for-the-most-career-points-in-nba-history",
+    "question": "Who currently holds the record for the most career points in NBA history?",
+    "options": [
+      "Kareem Abdul-Jabbar",
+      "Michael Jordan",
+      "LeBron James",
+      "Karl Malone"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-has-won-the-most-fifa-world-cup-titles",
+    "question": "Which country has won the most FIFA World Cup titles?",
+    "options": [
+      "Germany",
+      "Italy",
+      "Brazil",
+      "Argentina"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-do-the-five-rings-on-the-olympic-flag-represent",
+    "question": "What do the five rings on the Olympic flag represent?",
+    "options": [
+      "Five continents",
+      "Five major sports",
+      "Five ancient gods",
+      "Five values of sport"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-quarterback-has-won-the-most-super-bowls",
+    "question": "Which quarterback has won the most Super Bowls?",
+    "options": [
+      "Peyton Manning",
+      "Joe Montana",
+      "Tom Brady",
+      "Terry Bradshaw"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-grand-slam-tennis-tournament-is-played-on-grass-courts",
+    "question": "Which Grand Slam tennis tournament is played on grass courts?",
+    "options": [
+      "French Open",
+      "US Open",
+      "Australian Open",
+      "Wimbledon"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-prestigious-golf-tournament-held-annually-at-augusta-national-golf-club",
+    "question": "What is the name of the prestigious golf tournament held annually at Augusta National Golf Club?",
+    "options": [
+      "The Open Championship",
+      "US Open",
+      "The Masters",
+      "PGA Championship"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-formula-1-driver-is-tied-with-michael-schumacher-for-the-most-world-championships",
+    "question": "Which Formula 1 driver is tied with Michael Schumacher for the most World Championships?",
+    "options": [
+      "Sebastian Vettel",
+      "Juan Manuel Fangio",
+      "Alain Prost",
+      "Lewis Hamilton"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-mlb-player-holds-the-record-for-the-most-consecutive-games-played",
+    "question": "Which MLB player holds the record for the most consecutive games played?",
+    "options": [
+      "Lou Gehrig",
+      "Hank Aaron",
+      "Cal Ripken Jr.",
+      "Derek Jeter"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-weight-division-is-typically-associated-with-legendary-boxers-like-muhammad-ali-and-mike-tyson",
+    "question": "What weight division is typically associated with legendary boxers like Muhammad Ali and Mike Tyson?",
+    "options": [
+      "Lightweight",
+      "Welterweight",
+      "Middleweight",
+      "Heavyweight"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-player-is-widely-considered-the-greatest-hockey-player-of-all-time-and-holds-numerous-nhl-scoring-records",
+    "question": "Which player is widely considered the greatest hockey player of all time and holds numerous NHL scoring records?",
+    "options": [
+      "Sidney Crosby",
+      "Bobby Orr",
+      "Wayne Gretzky",
+      "Gordie Howe"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-jamaican-sprinter-holds-the-world-record-in-both-the-100m-and-200m-dashes",
+    "question": "Which Jamaican sprinter holds the world record in both the 100m and 200m dashes?",
+    "options": [
+      "Tyson Gay",
+      "Yohan Blake",
+      "Asafa Powell",
+      "Usain Bolt"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-color-of-the-jersey-worn-by-the-leader-of-the-general-classification-in-the-tour-de-france",
+    "question": "What is the color of the jersey worn by the leader of the general classification in the Tour de France?",
+    "options": [
+      "Green",
+      "Polka Dot",
+      "Yellow",
+      "White"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-term-is-used-to-refer-to-a-score-of-zero-in-tennis",
+    "question": "What term is used to refer to a score of zero in tennis?",
+    "options": [
+      "Love",
+      "Nil",
+      "Zero",
+      "Empty"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "easy"
   }
 ]
