@@ -43,7 +43,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ ok: true, entries: [] });
     }
 
-    const refreshProgress = normalizeBoolean(searchParams.get("refreshProgress"), true);
+    const refreshProgress = normalizeBoolean(searchParams.get("refreshProgress"), false);
     if (refreshProgress) {
       await refreshFantasyProgress({ userId, limit: 200 });
     }

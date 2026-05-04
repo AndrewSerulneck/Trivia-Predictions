@@ -471,23 +471,23 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
         />
 
         <aside
-          className={`absolute inset-y-0 left-0 w-72 max-w-[86vw] border-r-2 border-slate-900 bg-[#fff7ea] px-4 py-4 shadow-xl transition-transform duration-200 ${
+          className={`absolute inset-y-0 left-0 w-[22rem] max-w-[92vw] border-r-2 border-slate-900 bg-[#fff7ea] px-5 py-5 shadow-xl transition-transform duration-200 ${
             isMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-base font-black tracking-wide text-slate-900">Menu</h3>
+            <h3 className="text-xl font-black tracking-wide text-slate-900">Menu</h3>
             <button
               type="button"
               onClick={() => setIsMenuOpen(false)}
-              className="rounded-md border-2 border-slate-900 bg-white px-2 py-1 text-sm font-semibold text-slate-900 shadow-[2px_2px_0_#0f172a]"
+              className="rounded-md border-2 border-slate-900 bg-white px-3 py-1.5 text-base font-semibold text-slate-900 shadow-[2px_2px_0_#0f172a]"
             >
               Close
             </button>
           </div>
 
           <nav aria-label="Primary navigation">
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {menuItems.map((item) => {
                 const active = isActiveMenuPath(pathname, item.href);
                 return (
@@ -498,14 +498,14 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
                         setIsMenuOpen(false);
                         router.push(item.href);
                       }}
-                      className={`w-full rounded-lg border-2 px-3 py-2.5 text-left shadow-[2px_2px_0_#0f172a] ${
+                      className={`w-full rounded-lg border-2 px-4 py-3.5 text-left shadow-[2px_2px_0_#0f172a] ${
                         active
                           ? "border-slate-900 bg-slate-900 text-white"
                           : "border-slate-900 bg-white text-slate-900"
                       }`}
                     >
-                      <div className="text-sm font-black">{item.label}</div>
-                      <div className={`mt-0.5 text-xs ${active ? "text-slate-200" : "text-slate-600"}`}>
+                      <div className="text-lg font-black leading-tight">{item.label}</div>
+                      <div className={`mt-1 text-sm leading-snug ${active ? "text-slate-200" : "text-slate-600"}`}>
                         {item.description}
                       </div>
                     </button>

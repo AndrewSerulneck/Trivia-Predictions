@@ -15,8 +15,8 @@ export default async function VenuePage({
   }
 
   return (
-    <PageShell title="" noContainer lockViewport showPageTitle={false} showBranding={false} showAlerts>
-      <div className="h-full w-full overflow-hidden">
+    <PageShell title="" noContainer showPageTitle={false} showBranding={false} showAlerts>
+      <div className="min-h-0 w-full overflow-x-hidden">
         <VenueHubClient venue={venue} />
       </div>
     </PageShell>

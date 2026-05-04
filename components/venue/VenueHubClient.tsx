@@ -34,7 +34,7 @@ type ChallengesBadgePayload = {
   }>;
 };
 
-type HomeScreenIndex = 0 | 1;
+type HomeScreenIndex = 0 | 1 | 2;
 
 const GAME_ICON_BG_BY_KEY: Record<VenueGameKey, string> = {
   trivia: "bg-[linear-gradient(138deg,#0ea5e9_0%,#2563eb_45%,#7c3aed_100%)]",
@@ -52,7 +52,7 @@ const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
   predictions: ["Hightop", "Predictions™"],
 };
 
-const SWIPE_SCREEN_COUNT = 2;
+const SWIPE_SCREEN_COUNT = 3;
 const SWIPE_TRIGGER_PX = 10;
 const SWIPE_FLICK_TRIGGER_PX = 8;
 const SWIPE_FLICK_MAX_DURATION_MS = 220;
@@ -82,6 +82,26 @@ function pathMatches(expectedPath: string, candidatePath: string): boolean {
     return true;
   }
   return candidatePath === expectedPath || candidatePath.startsWith(`${expectedPath}/`);
+}
+
+const venueDebugEnabled =
+  process.env.NODE_ENV === "development" &&
+  typeof window !== "undefined" &&
+  (() => {
+    try {
+      const search = new URLSearchParams(window.location.search);
+      return search.get("tpDebug") === "1";
+    } catch {
+      return false;
+    }
+  })();
+
+function venueDebugLog(message: string, details?: Record<string, unknown>) {
+  if (!venueDebugEnabled) {
+    return;
+  }
+  // eslint-disable-next-line no-console
+  console.log(`[tp-debug][venue-home] ${message}`, details ?? {});
 }
 
 function TriviaGlyph({ className = "h-10 w-10" }: { className?: string }) {
@@ -191,27 +211,56 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     bootstrapSnapshot?.weeklyPrizeDescription ?? "Top the leaderboard by week end to earn this venue's reward."
   );
   const [weeklyPrizePoints, setWeeklyPrizePoints] = useState(bootstrapSnapshot?.weeklyPrizePoints ?? 0);
+  const [isWeeklyPrizeLoading, setIsWeeklyPrizeLoading] = useState(!bootstrapSnapshot?.weeklyPrizeTitle);
+  const [weeklyPrizeError, setWeeklyPrizeError] = useState("");
+  const [isBadgeLoading, setIsBadgeLoading] = useState(!bootstrapSnapshot?.homeBadgeCounts);
+  const [badgeError, setBadgeError] = useState("");
   const [activeScreen, setActiveScreen] = useState<HomeScreenIndex>(0);
   const [homeRevealComplete, setHomeRevealComplete] = useState(!entryHandoffVisibleOnMount);
   const venueReadyDispatchedRef = useRef(false);
   const swipeViewportRef = useRef<HTMLDivElement | null>(null);
+  const activeScreenRef = useRef<HomeScreenIndex>(0);
+  const viewportWidthRef = useRef(0);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
   const touchStartAtRef = useRef<number | null>(null);
   const warmupPromiseRef = useRef<Promise<void> | null>(null);
   const warmupStartedRef = useRef(false);
 
+  const hasUserTokenInCookie = useCallback((): boolean => {
+    if (typeof document === "undefined") return false;
+    try {
+      return document.cookie.split(";").some((chunk) => chunk.trim().startsWith("tp_user_id="));
+    } catch {
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     // If the user just came through the join flow the entry handoff confirms
     // their credentials were written to localStorage synchronously before
     // navigation. Skip the redirect guard entirely — there is no invalid state.
     if (entryHandoffVisibleOnMount) return;
-    const storedUserId = getUserId() ?? "";
-    const storedVenueId = getVenueId() ?? "";
-    if (!storedUserId) return void router.replace(`/?v=${venue.id}`);
-    if (storedVenueId !== venue.id) router.replace(`/?v=${venue.id}`);
+    const storedUserId = (getUserId() ?? "").trim();
+    const storedVenueId = (getVenueId() ?? "").trim();
+    if (storedUserId) {
+      if (storedVenueId && storedVenueId !== venue.id) router.replace(`/?v=${venue.id}`);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      const lateUserId = (getUserId() ?? "").trim();
+      const lateVenueId = (getVenueId() ?? "").trim();
+      if (lateUserId) {
+        if (lateVenueId && lateVenueId !== venue.id) router.replace(`/?v=${venue.id}`);
+        return;
+      }
+      if (!hasUserTokenInCookie()) {
+        router.replace(`/?v=${venue.id}`);
+      }
+    }, 2200);
+    return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [hasUserTokenInCookie, venue.id]);
 
   const venueDisplayName = getVenueDisplayName(venue as any);
 
@@ -290,6 +339,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       left: viewport.clientWidth * nextIndex,
       behavior: "smooth",
     });
+    activeScreenRef.current = nextIndex as HomeScreenIndex;
   }, []);
 
   const onSwipeTouchStart = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
@@ -321,12 +371,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       const passesDirectionalRatio = absDx >= absDy * SWIPE_DIRECTION_RATIO;
       if ((!isQuickFlick && absDx < SWIPE_TRIGGER_PX) || (!isQuickFlick && !passesDirectionalRatio)) return;
 
-      if (dx < 0 && activeScreen === 0) {
-        goToScreen(1);
+      if (dx < 0) {
+        goToScreen((activeScreen + 1) as HomeScreenIndex);
         return;
       }
-      if (dx > 0 && activeScreen === 1) {
-        goToScreen(0);
+      if (dx > 0) {
+        goToScreen((activeScreen - 1) as HomeScreenIndex);
       }
     },
     [activeScreen, goToScreen]
@@ -357,8 +407,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     const userId = (getUserId() ?? "").trim();
     if (!userId) {
       setHomeBadgeCounts({});
+      setIsBadgeLoading(false);
       return;
     }
+    setIsBadgeLoading(true);
+    setBadgeError("");
     try {
       const results = await Promise.allSettled([
         fetch(`/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=true`, { cache: "no-store" })
@@ -380,7 +433,35 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         ? (challengesPayload.challenges ?? []).filter((ch) => ch.status === "pending" && ch.receiverUserId === userId).length
         : 0;
       setHomeBadgeCounts({ bingo: activeBingoCount, pickem: pendingPickEmCount, fantasy: pendingFantasyCount });
-    } catch {}
+    } catch {
+      setBadgeError("Offline: badge counts unavailable.");
+    } finally {
+      setIsBadgeLoading(false);
+    }
+  }, []);
+
+  const loadWeeklyPrize = useCallback(async () => {
+    const venueId = getVenueId() ?? "";
+    if (!venueId) {
+      setIsWeeklyPrizeLoading(false);
+      return;
+    }
+    setIsWeeklyPrizeLoading(true);
+    setWeeklyPrizeError("");
+    try {
+      const prizeRes = await fetch(`/api/prizes?venueId=${encodeURIComponent(venueId)}`, { cache: "no-store" });
+      const prizeBody = await prizeRes.json().catch(() => null);
+      if (!prizeBody?.ok || !prizeBody.weeklyPrize) {
+        throw new Error("Prize unavailable.");
+      }
+      setWeeklyPrizeTitle(String(prizeBody.weeklyPrize.prizeTitle ?? "Weekly Venue Champion Prize"));
+      setWeeklyPrizeDescription(String(prizeBody.weeklyPrize.prizeDescription ?? "Top the leaderboard by week end to earn this venue's reward."));
+      setWeeklyPrizePoints(Math.max(0, Number(prizeBody.weeklyPrize.rewardPoints ?? 0)));
+    } catch {
+      setWeeklyPrizeError("Offline: weekly prize unavailable.");
+    } finally {
+      setIsWeeklyPrizeLoading(false);
+    }
   }, []);
 
   const runWarmup = useCallback(async () => {
@@ -421,20 +502,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       try {
         await fetch("/api/pickem/sports", { cache: "no-store" });
       } catch {}
-      try {
-        const prizeRes = await fetch(`/api/prizes?venueId=${encodeURIComponent(venueId)}`, { cache: "no-store" });
-        const prizeBody = await prizeRes.json().catch(() => null);
-        if (prizeBody?.ok && prizeBody.weeklyPrize) {
-          setWeeklyPrizeTitle(String(prizeBody.weeklyPrize.prizeTitle ?? "Weekly Venue Champion Prize"));
-          setWeeklyPrizeDescription(String(prizeBody.weeklyPrize.prizeDescription ?? "Top the leaderboard by week end to earn this venue's reward."));
-          setWeeklyPrizePoints(Math.max(0, Number(prizeBody.weeklyPrize.rewardPoints ?? 0)));
-        }
-      } catch {}
-      await loadHomeBadges();
+      await Promise.allSettled([loadWeeklyPrize(), loadHomeBadges()]);
     })();
     warmupPromiseRef.current = p;
     return p;
-  }, [loadHomeBadges]);
+  }, [loadHomeBadges, loadWeeklyPrize]);
 
   useEffect(() => {
     if (triviaUnlockSeconds <= 0) return;
@@ -460,11 +532,15 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     const viewport = swipeViewportRef.current;
     if (!viewport || typeof window === "undefined") return;
     let rafId: number | null = null;
+    let resizeTimeoutId: number | null = null;
     const measureActiveScreen = () => {
       const width = Math.max(1, viewport.clientWidth);
       const rawIndex = viewport.scrollLeft / width;
       const next = clamp(Math.round(rawIndex), 0, SWIPE_SCREEN_COUNT - 1) as HomeScreenIndex;
-      setActiveScreen(next);
+      if (next !== activeScreenRef.current) {
+        activeScreenRef.current = next;
+        setActiveScreen(next);
+      }
     };
     const onScroll = () => {
       if (rafId !== null) return;
@@ -473,22 +549,59 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         measureActiveScreen();
       });
     };
-    const onResize = () => {
-      const nextLeft = viewport.clientWidth * activeScreen;
-      viewport.scrollTo({ left: nextLeft });
+    const handleResize = () => {
+      const width = Math.max(1, viewport.clientWidth);
+      const previousWidth = viewportWidthRef.current;
+      viewportWidthRef.current = width;
+      const delta = previousWidth > 0 ? Math.abs(width - previousWidth) : width;
+      if (previousWidth > 0 && delta < 8) {
+        venueDebugLog("resize ignored: tiny width delta", {
+          width,
+          previousWidth,
+          delta,
+        });
+        return;
+      }
+      const nextLeft = width * activeScreenRef.current;
+      venueDebugLog("resize apply", {
+        width,
+        previousWidth,
+        delta,
+        activeScreen: activeScreenRef.current,
+        nextLeft,
+        currentLeft: viewport.scrollLeft,
+      });
+      if (Math.abs(viewport.scrollLeft - nextLeft) > 2) {
+        viewport.scrollTo({ left: nextLeft });
+      }
       measureActiveScreen();
     };
+    const onResize = () => {
+      if (resizeTimeoutId !== null) {
+        window.clearTimeout(resizeTimeoutId);
+      }
+      resizeTimeoutId = window.setTimeout(() => {
+        resizeTimeoutId = null;
+        handleResize();
+      }, 120);
+    };
+    viewportWidthRef.current = Math.max(1, viewport.clientWidth);
+    venueDebugLog("swipe viewport effect mounted", {
+      width: viewportWidthRef.current,
+      scrollLeft: viewport.scrollLeft,
+    });
     measureActiveScreen();
     viewport.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onResize);
-    window.addEventListener("orientationchange", onResize);
+    window.addEventListener("resize", onResize, { passive: true });
+    window.addEventListener("orientationchange", onResize, { passive: true });
     return () => {
       if (rafId !== null) window.cancelAnimationFrame(rafId);
+      if (resizeTimeoutId !== null) window.clearTimeout(resizeTimeoutId);
       viewport.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("orientationchange", onResize);
     };
-  }, [activeScreen]);
+  }, []);
 
   useEffect(() => {
     if (!homeRevealComplete) return;
@@ -564,7 +677,9 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   }, [dismissedBadgeGames, homeBadgeCounts, triviaUnlockCountdown]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+    <div
+      className="fixed inset-x-0 bottom-0 top-[calc(env(safe-area-inset-top)+4.35rem)] z-10 flex min-h-0 flex-col overflow-hidden isolation-isolate [contain:layout_size] sm:top-[calc(env(safe-area-inset-top)+5.1rem)]"
+    >
       <section className="relative shrink-0 px-2 pb-3">
         <div className="relative min-h-[7.2rem] overflow-hidden rounded-[1.4rem] border-[2px] border-[#cbd5e1]/70 bg-[linear-gradient(172deg,#2f241d_0%,#2a1f19_45%,#211712_100%)] p-[18px] shadow-[0_8px_0_rgba(15,23,42,0.28),0_12px_24px_rgba(15,23,42,0.26)]">
           <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(14deg,rgba(255,255,255,0.03)_0px,rgba(255,255,255,0.03)_2px,rgba(255,255,255,0)_2px,rgba(255,255,255,0)_9px)]" />
@@ -589,14 +704,15 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         <div className="relative z-20 mt-4 flex items-center justify-center gap-2">
           <button type="button" onClick={() => goToScreen(0)} className={`tp-clean-button rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${activeScreen === 0 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-pressed={activeScreen === 0}>Games</button>
           <button type="button" onClick={() => goToScreen(1)} className={`tp-clean-button rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${activeScreen === 1 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-pressed={activeScreen === 1}>Leaderboard</button>
+          <button type="button" onClick={() => goToScreen(2)} className={`tp-clean-button rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${activeScreen === 2 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-pressed={activeScreen === 2}>Prizes</button>
         </div>
       </section>
 
-      <div className="relative min-h-0 flex-1 overflow-hidden">
-        <div ref={swipeViewportRef} onTouchStart={onSwipeTouchStart} onTouchEnd={onSwipeTouchEnd} className="flex h-full w-full touch-pan-y snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Venue home screens">
-          <section className="relative h-full w-full shrink-0 snap-start overflow-y-auto px-3 pb-3 pt-1">
+      <div className="relative min-h-0 flex-1 overflow-x-hidden">
+        <div ref={swipeViewportRef} onTouchStart={onSwipeTouchStart} onTouchEnd={onSwipeTouchEnd} className="h-full flex w-full touch-pan-y snap-x snap-proximity overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Venue home screens">
+          <section className="relative flex min-h-0 w-full shrink-0 snap-start flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-3 pb-3 pt-1">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(14,165,233,0.3)_0%,rgba(14,165,233,0)_36%),radial-gradient(circle_at_84%_22%,rgba(251,146,60,0.35)_0%,rgba(251,146,60,0)_35%),radial-gradient(circle_at_52%_84%,rgba(236,72,153,0.3)_0%,rgba(236,72,153,0)_43%)]" />
-            <div className="relative mx-auto w-full max-w-[24rem] pt-1">
+            <div className="relative mx-auto min-h-0 w-full max-w-[24rem] flex-1 pt-1">
               <div className="grid w-full grid-cols-2 gap-3 pb-2 sm:gap-4">
                 {homeCards.map((card) => {
                   const isOpening = pendingDestination === card.key;
@@ -620,22 +736,20 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
             </div>
             {triviaUnlockCountdown > 0 ? <div className="mx-auto mt-2 max-w-[22rem] rounded-full border border-amber-200/80 bg-amber-100/95 px-3 py-1.5 text-center text-[11px] font-black tracking-[0.08em] text-amber-900">Trivia unlocks in {formatCountdown(triviaUnlockCountdown)}</div> : null}
             {triviaGateNotice ? <div className="mx-auto mt-2 max-w-[22rem] rounded-xl border border-rose-200/80 bg-rose-100/95 px-3 py-2 text-center text-xs font-semibold text-rose-900">{triviaGateNotice}</div> : null}
+            {isBadgeLoading ? <div className="mx-auto mt-2 max-w-[22rem] rounded-full border border-slate-200/80 bg-slate-50/90 px-3 py-1.5 text-center text-[11px] font-semibold text-slate-700">Loading activity badges...</div> : null}
+            {badgeError ? (
+              <button
+                type="button"
+                onClick={() => void loadHomeBadges()}
+                className="mx-auto mt-2 block max-w-[22rem] rounded-full border border-slate-300 bg-white/90 px-3 py-1.5 text-center text-[11px] font-semibold text-slate-800"
+              >
+                {badgeError} Tap to retry
+              </button>
+            ) : null}
           </section>
 
-          <section className="h-full w-full shrink-0 snap-start overflow-y-auto px-3 pb-3 pt-1">
+          <section className="w-full shrink-0 snap-start overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-3 pb-3 pt-1">
             <div className="mx-auto w-full max-w-[26rem] space-y-3">
-              <div className="relative overflow-hidden rounded-[1.4rem] border-[3px] border-[#0f172a]/80 bg-[linear-gradient(146deg,#0f766e_0%,#06b6d4_50%,#22d3ee_100%)] p-3 shadow-[0_8px_0_rgba(15,23,42,0.35)]">
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_86%_10%,rgba(254,240,138,0.35)_0%,rgba(254,240,138,0)_34%)]" />
-                <div className="relative flex items-start gap-2">
-                  <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/70 bg-white/25 shadow-[0_2px_8px_rgba(2,6,23,0.35)]"><TrophyGlyph className="h-10 w-10 scale-[4]" /></div>
-                  <div className="min-w-0">
-                    <div className="text-[11px] font-black uppercase tracking-[0.14em] text-cyan-50">This Week&apos;s Prize</div>
-                    <div className="text-base font-black leading-tight text-white">{weeklyPrizeTitle}</div>
-                    <div className="text-xs text-cyan-50/95">{weeklyPrizeDescription}</div>
-                    {weeklyPrizePoints > 0 ? <div className="mt-1 text-xs font-black text-amber-100">Bonus reward: +{weeklyPrizePoints} points</div> : null}
-                  </div>
-                </div>
-              </div>
               <div className="rounded-[1.6rem] border-[3px] border-[#3b2412] bg-[#4a2e18] p-3 shadow-[0_8px_0_rgba(15,23,42,0.3)]">
                 <div className="inline-flex rounded-xl border-2 border-[#3b2412] bg-[#1f5136] px-3 py-1.5 shadow-[0_2px_0_rgba(0,0,0,0.25)]">
                   <h3 className="text-2xl font-semibold text-[#ecf8f1] [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.45)]">Leaderboard</h3>
@@ -646,6 +760,46 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                     initialEntries={leaderboardInitialEntries}
                     isEnabled={homeRevealComplete}
                   />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="w-full shrink-0 snap-start overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-3 pb-3 pt-1">
+            <div className="mx-auto w-full max-w-[26rem] space-y-3">
+              <div className="rounded-[1.6rem] border-[3px] border-[#3b2412] bg-[#4a2e18] p-3 shadow-[0_8px_0_rgba(15,23,42,0.3)]">
+                <div className="inline-flex rounded-xl border-2 border-[#3b2412] bg-[#1f5136] px-3 py-1.5 shadow-[0_2px_0_rgba(0,0,0,0.25)]">
+                  <h3 className="text-2xl font-semibold text-[#ecf8f1] [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.45)]">Prizes</h3>
+                </div>
+                <div className="mt-3 relative overflow-hidden rounded-[1.4rem] border-[3px] border-[#0f172a]/80 bg-[linear-gradient(146deg,#0f766e_0%,#06b6d4_50%,#22d3ee_100%)] p-3 shadow-[0_8px_0_rgba(15,23,42,0.35)]">
+                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_86%_10%,rgba(254,240,138,0.35)_0%,rgba(254,240,138,0)_34%)]" />
+                  <div className="relative flex items-start gap-2">
+                    <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/70 bg-white/25 shadow-[0_2px_8px_rgba(2,6,23,0.35)]"><TrophyGlyph className="h-10 w-10 scale-[4]" /></div>
+                    <div className="min-w-0">
+                      <div className="text-[11px] font-black uppercase tracking-[0.14em] text-cyan-50">This Week&apos;s Prize</div>
+                      {isWeeklyPrizeLoading ? (
+                        <div className="space-y-1.5 pt-1">
+                          <div className="h-4 w-44 animate-pulse rounded bg-white/30" />
+                          <div className="h-3 w-56 animate-pulse rounded bg-white/20" />
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-base font-black leading-tight text-white">{weeklyPrizeTitle}</div>
+                          <div className="text-xs text-cyan-50/95">{weeklyPrizeDescription}</div>
+                          {weeklyPrizePoints > 0 ? <div className="mt-1 text-xs font-black text-amber-100">Bonus reward: +{weeklyPrizePoints} points</div> : null}
+                          {weeklyPrizeError ? (
+                            <button
+                              type="button"
+                              onClick={() => void loadWeeklyPrize()}
+                              className="mt-2 rounded-md border border-cyan-100/80 bg-cyan-50/20 px-2 py-1 text-[11px] font-black uppercase tracking-[0.08em] text-cyan-50"
+                            >
+                              {weeklyPrizeError} Tap to retry
+                            </button>
+                          ) : null}
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

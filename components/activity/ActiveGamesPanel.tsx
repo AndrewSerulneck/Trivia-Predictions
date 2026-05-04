@@ -297,7 +297,7 @@ export function ActiveGamesPanel() {
     [unclaimedBingoCards]
   );
   const unclaimedPickEmPoints = useMemo(
-    () => unclaimedPickEmRewards.reduce((sum, pick) => sum + Math.max(0, Number(pick.rewardPoints ?? 50)), 0),
+    () => unclaimedPickEmRewards.reduce((sum, pick) => sum + Math.max(0, Number(pick.rewardPoints ?? 10)), 0),
     [unclaimedPickEmRewards]
   );
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 import type { FantasyEntry, FantasyGame, FantasyLeaderboardEntry, FantasyPlayerPoolItem } from "@/lib/fantasy";
+import { useLivePlayerStats } from "@/lib/hooks/useLivePlayerStats";
 
 type GamesPayload = {
   ok: boolean;
@@ -69,7 +70,7 @@ function toStatusLabel(status: FantasyEntry["status"] | FantasyGame["status"]): 
 }
 
 function computeFantasyClaimablePoints(entry: Pick<FantasyEntry, "points">): number {
-  return Math.max(0, Math.round(Number(entry.points ?? 0) * 10));
+  return Math.max(0, Math.round(Number(entry.points ?? 0)));
 }
 
 function normalizePlayerKey(value: string): string {
@@ -81,6 +82,46 @@ function normalizePlayerKey(value: string): string {
     .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function tokenizePlayerName(value: string): string[] {
+  const normalized = normalizePlayerKey(value);
+  return normalized ? normalized.split(" ").filter(Boolean) : [];
+}
+
+function namesLikelyMatch(left: string, right: string): boolean {
+  const leftTokens = tokenizePlayerName(left);
+  const rightTokens = tokenizePlayerName(right);
+  if (leftTokens.length === 0 || rightTokens.length === 0) {
+    return false;
+  }
+  const leftNormalized = leftTokens.join(" ");
+  const rightNormalized = rightTokens.join(" ");
+  if (leftNormalized === rightNormalized) {
+    return true;
+  }
+  if (
+    leftTokens.length === 2 &&
+    rightTokens.length === 2 &&
+    leftTokens[0] === rightTokens[1] &&
+    leftTokens[1] === rightTokens[0]
+  ) {
+    return true;
+  }
+
+  const rightSet = new Set(rightTokens);
+  const sharedLong = leftTokens.filter((token) => token.length >= 3 && rightSet.has(token));
+  if (sharedLong.length === 0) {
+    return false;
+  }
+
+  const sharedSet = new Set(sharedLong);
+  const leftRemainder = leftTokens.filter((token) => !sharedSet.has(token));
+  const rightRemainder = rightTokens.filter((token) => !sharedSet.has(token));
+  if (leftRemainder.length === 0 || rightRemainder.length === 0) {
+    return true;
+  }
+  return leftRemainder[0]?.charAt(0) === rightRemainder[0]?.charAt(0);
 }
 
 export function FantasyHome() {
@@ -162,9 +203,7 @@ export function FantasyHome() {
       setEntries([]);
       setErrorMessage(error instanceof Error ? error.message : "Failed to load fantasy entries.");
     } finally {
-      if (showLoading) {
-        setLoadingEntries(false);
-      }
+      setLoadingEntries(false);
     }
   }, [userId]);
 
@@ -214,7 +253,8 @@ export function FantasyHome() {
     if (!userId) {
       return;
     }
-    void loadEntries(true);
+    void loadEntries(false);
+    void loadEntries(true, false);
   }, [loadEntries, userId]);
 
   useEffect(() => {
@@ -293,6 +333,57 @@ export function FantasyHome() {
     [trackedEntry, trackedEntryClaimablePoints]
   );
   const hasResolvedEntries = !loadingEntries;
+  const liveStatPlayerNames = useMemo(() => trackedEntry?.lineup ?? [], [trackedEntry]);
+  const { rows: liveStatRows, loading: liveStatsLoading, error: liveStatsError } = useLivePlayerStats({
+    enabled: Boolean(trackedEntry && (trackedEntry.status === "live" || trackedEntry.status === "pending")),
+  });
+  const livePointsByPlayer = useMemo(() => {
+    const next = new Map<string, number>();
+    if (liveStatPlayerNames.length === 0) {
+      return next;
+    }
+    for (const playerName of liveStatPlayerNames) {
+      const rowsForPlayer = liveStatRows.filter((row) => namesLikelyMatch(playerName, row.player_name));
+      if (rowsForPlayer.length === 0) {
+        continue;
+      }
+      const latestByGame = new Map<string, (typeof liveStatRows)[number]>();
+      for (const row of rowsForPlayer) {
+        const gameId = String(row.game_id ?? "").trim();
+        if (!gameId) {
+          continue;
+        }
+        const previous = latestByGame.get(gameId);
+        if (!previous) {
+          latestByGame.set(gameId, row);
+          continue;
+        }
+        const nextTs = Date.parse(String(row.source_updated_at ?? ""));
+        const previousTs = Date.parse(String(previous.source_updated_at ?? ""));
+        if (Number.isFinite(nextTs) && (!Number.isFinite(previousTs) || nextTs > previousTs)) {
+          latestByGame.set(gameId, row);
+        }
+      }
+      const points = Array.from(latestByGame.values()).reduce((sum, row) => sum + Number(row.total_fantasy_points ?? 0), 0);
+      if (Number.isFinite(points)) {
+        next.set(playerName, Number(points.toFixed(2)));
+      }
+    }
+    return next;
+  }, [liveStatPlayerNames, liveStatRows]);
+  const liveTrackedEntryPoints = useMemo(() => {
+    if (!trackedEntry) {
+      return 0;
+    }
+    const total = trackedEntry.lineup.reduce((sum, playerName) => {
+      const points = livePointsByPlayer.get(playerName);
+      if (typeof points === "number" && Number.isFinite(points)) {
+        return sum + points;
+      }
+      return sum + Number(trackedEntry.scoreBreakdown[playerName] ?? 0);
+    }, 0);
+    return Number.isFinite(total) ? total : Number(trackedEntry.points ?? 0);
+  }, [livePointsByPlayer, trackedEntry]);
 
   useEffect(() => {
     if (!selectedGameId) {
@@ -544,7 +635,6 @@ export function FantasyHome() {
               <p className="text-sm font-semibold text-emerald-900">Final fantasy score summary</p>
               <div className="mt-2 rounded-md border border-emerald-200 bg-white px-3 py-2 text-xs text-emerald-900">
                 <p>Base fantasy score: {trackedEntryBasePoints.toFixed(2)} pts</p>
-                <p>Multiplier: x10</p>
                 <p className="font-semibold">Total to collect: {trackedEntryClaimablePoints} points</p>
               </div>
               <button
@@ -564,11 +654,12 @@ export function FantasyHome() {
               <div className="mt-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-semibold text-slate-900">Live Points</p>
-                  <p className="text-sm font-black text-slate-900">{trackedEntry.points.toFixed(2)} pts</p>
+                  <p className="text-sm font-black text-slate-900">{liveTrackedEntryPoints.toFixed(2)} pts</p>
                 </div>
                 <ul className="mt-2 space-y-1">
                   {trackedEntry.lineup.map((playerName) => {
-                    const playerPoints = Number(trackedEntry.scoreBreakdown[playerName] ?? 0);
+                    const livePoints = livePointsByPlayer.get(playerName);
+                    const playerPoints = typeof livePoints === "number" ? livePoints : Number(trackedEntry.scoreBreakdown[playerName] ?? 0);
                     return (
                       <li key={`${trackedEntry.id}-${playerName}`} className="flex items-center justify-between gap-2 text-xs text-slate-700">
                         <span className="font-medium text-slate-800">{playerName}</span>
@@ -578,6 +669,8 @@ export function FantasyHome() {
                   })}
                 </ul>
               </div>
+              {liveStatsError ? <p className="mt-2 text-[11px] text-rose-700">Live stats feed unavailable right now.</p> : null}
+              {liveStatsLoading ? <p className="mt-2 text-[11px] text-slate-600">Syncing live stats...</p> : null}
               {hasLiveEntry ? (
                 <p className="mt-2 text-[11px] font-semibold text-emerald-800">Live game detected. Updating every 5 seconds.</p>
               ) : (

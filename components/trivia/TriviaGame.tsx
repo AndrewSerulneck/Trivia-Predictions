@@ -35,7 +35,7 @@ type SubmitResponse = {
 };
 
 const QUESTION_TIME_LIMIT_SECONDS = 15;
-const POINTS_PER_CORRECT = 10;
+const POINTS_PER_CORRECT = 2;
 const QUESTIONS_PER_ROUND = 15;
 const ROUND_LIMIT_PER_WINDOW = 3;
 const PRE_ROUND_COUNTDOWN_START = 3;
@@ -828,9 +828,9 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         setRewardPulse("⚡ Time out, keep going");
         setShowRewardPulse(true);
       } else if (localWasCorrect) {
-        setFeedback("Correct! +10 points added to your profile.");
+        setFeedback(`Correct! +${POINTS_PER_CORRECT} points added to your profile.`);
         setFeedbackKind("correct");
-        setRewardPulse("🎉 Correct +10");
+        setRewardPulse(`🎉 Correct +${POINTS_PER_CORRECT}`);
         setShowRewardPulse(true);
         triggerHaptic([20, 50, 20]);
       } else {
@@ -877,10 +877,14 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         }
 
         if (wasCorrect) {
-          setRewardPulse(payload.result.saved ? "🔥 +10 points saved" : "🔥 +10 points recorded");
+          setRewardPulse(
+            payload.result.saved
+              ? `🔥 +${POINTS_PER_CORRECT} points saved`
+              : `🔥 +${POINTS_PER_CORRECT} points recorded`
+          );
           setShowRewardPulse(true);
           triggerHaptic([35, 35, 35]);
-          setFeedback("Correct! +10 points added to your profile.");
+          setFeedback(`Correct! +${POINTS_PER_CORRECT} points added to your profile.`);
           setFeedbackKind("correct");
           setCorrectAnswers((value) => value + 1);
           triggerPointsFlow(answerIndex);

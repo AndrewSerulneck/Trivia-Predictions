@@ -9,6 +9,40 @@ import { hasResumableSession } from "@/lib/gameResume";
 import { GameRuleCardPanel, GAME_CARD_BG_BY_KEY } from "@/components/venue/GameIdentityPanel";
 import { PageShell } from "@/components/ui/PageShell";
 
+function recoverGamePageScrollState() {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  const body = document.body;
+  const root = document.documentElement;
+  const appRoot = document.getElementById("__next") ?? document.getElementById("root");
+
+  body.classList.remove("tp-modal-open", "tp-popup-open");
+  root.classList.remove("tp-modal-open", "tp-popup-open");
+  appRoot?.classList.remove("tp-modal-open", "tp-popup-open");
+
+  body.style.position = "";
+  body.style.top = "";
+  body.style.left = "";
+  body.style.right = "";
+  body.style.width = "";
+  body.style.height = "";
+  body.style.overflow = "";
+  body.style.touchAction = "";
+
+  root.style.height = "";
+  root.style.overflow = "";
+  root.style.touchAction = "";
+
+  if (appRoot instanceof HTMLElement) {
+    appRoot.style.position = "";
+    appRoot.style.height = "";
+    appRoot.style.maxHeight = "";
+    appRoot.style.overflow = "";
+  }
+}
+
 export function GameLandingExperience({
   gameKey,
   playLabel = "Play",
@@ -30,7 +64,6 @@ export function GameLandingExperience({
   const [isPlaying, setIsPlaying] = useState(initialPlaying);
   const [rulesExiting, setRulesExiting] = useState(false);
   const [isResumeCheckPending, setIsResumeCheckPending] = useState(!initialPlaying && autoResume);
-  const showTriviaTopNav = gameKey === "trivia" && isPlaying;
   const playTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -61,6 +94,37 @@ export function GameLandingExperience({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (gameKey !== "pickem") {
+      return;
+    }
+
+    const body = document.body;
+    const root = document.documentElement;
+    body.classList.add("tp-pickem-force-scroll");
+    root.classList.add("tp-pickem-force-scroll");
+
+    recoverGamePageScrollState();
+    const frame = window.requestAnimationFrame(() => {
+      recoverGamePageScrollState();
+    });
+    const timer = window.setTimeout(() => {
+      recoverGamePageScrollState();
+    }, 220);
+    // Guard against stale popup/modal lock classes that can linger across transitions on mobile.
+    const interval = window.setInterval(() => {
+      recoverGamePageScrollState();
+    }, 1200);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+      window.clearInterval(interval);
+      body.classList.remove("tp-pickem-force-scroll");
+      root.classList.remove("tp-pickem-force-scroll");
+    };
+  }, [gameKey]);
 
   const handlePlayClick = useCallback(() => {
     if (playHref) {
@@ -97,19 +161,22 @@ export function GameLandingExperience({
   return (
     <div
       data-venue-game-surface
-      className={`tp-game-page fixed inset-0 z-[70] min-h-[100dvh] w-screen overflow-x-hidden ${
-        isPlaying ? "overflow-y-auto" : "overflow-y-hidden"
-      } ${GAME_CARD_BG_BY_KEY[gameKey]}`}
+      className="tp-game-page relative z-[70] min-h-[100dvh] w-full overflow-x-hidden"
     >
-      <PageShell
-        title=""
-        showPageTitle={false}
-        showUserStatus={showTriviaTopNav}
-        showAlerts={showTriviaTopNav}
-        noContainer
-      >
-        {isPlaying ? (
-          <div className="animate-tp-surface-enter relative min-h-full px-2 py-2 sm:px-3 sm:py-3">
+      <div aria-hidden className={`pointer-events-none fixed inset-0 z-0 ${GAME_CARD_BG_BY_KEY[gameKey]}`} />
+      <div className="relative z-10">
+        <PageShell
+          title=""
+          showPageTitle={false}
+          showUserStatus
+          showAlerts
+          noContainer
+        >
+          {isPlaying ? (
+            <div
+              className="animate-tp-surface-enter relative z-10 min-h-[100dvh] px-2 py-2 touch-pan-y sm:px-3 sm:py-3"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
             {showPlayingBackButton ? (
               <div className="sticky top-2 z-30 mb-2">
                 <button
@@ -125,43 +192,44 @@ export function GameLandingExperience({
               </div>
             ) : null}
             {children}
-          </div>
-        ) : isResumeCheckPending ? (
-          <div className="flex h-full min-h-[60dvh] items-center justify-center px-4">
-            <div className="rounded-xl border border-slate-200 bg-white/85 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
-              Restoring your active game...
             </div>
-          </div>
-        ) : (
-          <div className={`mx-auto flex h-full min-h-0 w-full max-w-[28rem] flex-col px-1.5 pb-[max(env(safe-area-inset-bottom,0px),6px)] pt-1.5 sm:px-2 sm:pt-2 ${rulesExiting ? "animate-tp-surface-exit" : ""}`}>
-            <div className="flex min-h-0 flex-1 items-center justify-center">
-              <div
-                className="aspect-[3/4.9]"
-                style={{ width: "min(95vw, 22.5rem, calc((100dvh - 5.75rem) * 0.6122449))" }}
-              >
-                <GameRuleCardPanel gameKey={gameKey} layout="landing" className="h-full w-full" />
+          ) : isResumeCheckPending ? (
+            <div className="flex h-full min-h-[60dvh] items-center justify-center px-4">
+              <div className="rounded-xl border border-slate-200 bg-white/85 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
+                Restoring your active game...
               </div>
             </div>
-            <div className="grid shrink-0 grid-cols-2 gap-2 pt-3 sm:pt-4">
-              <button
-                type="button"
-                onClick={backToVenue}
-                className="tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-emerald-500 px-3 py-2 text-base font-black text-white"
-              >
-                Close
-              </button>
-              <button
-                type="button"
-                onClick={handlePlayClick}
-                disabled={rulesExiting}
-                className="tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-blue-700 px-3 py-2 text-base font-black text-white"
-              >
-                {playLabel}
-              </button>
+          ) : (
+            <div className={`mx-auto flex h-full min-h-0 w-full max-w-[28rem] flex-col px-1.5 pb-[max(env(safe-area-inset-bottom,0px),6px)] pt-1.5 sm:px-2 sm:pt-2 ${rulesExiting ? "animate-tp-surface-exit" : ""}`}>
+              <div className="flex min-h-0 flex-1 items-center justify-center">
+                <div
+                  className="aspect-[3/4.9]"
+                  style={{ width: "min(95vw, 22.5rem, calc((100dvh - 5.75rem) * 0.6122449))" }}
+                >
+                  <GameRuleCardPanel gameKey={gameKey} layout="landing" className="h-full w-full" />
+                </div>
+              </div>
+              <div className="grid shrink-0 grid-cols-2 gap-2 pt-3 sm:pt-4">
+                <button
+                  type="button"
+                  onClick={backToVenue}
+                  className="tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-emerald-500 px-3 py-2 text-base font-black text-white"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePlayClick}
+                  disabled={rulesExiting}
+                  className="tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-blue-700 px-3 py-2 text-base font-black text-white"
+                >
+                  {playLabel}
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-      </PageShell>
+          )}
+        </PageShell>
+      </div>
     </div>
   );
 }

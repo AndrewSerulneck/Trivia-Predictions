@@ -1,17 +1,26 @@
 import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { apiSportsGet } from "@/lib/apisports";
 
 const ODDS_API_BASE_URL = process.env.ODDS_API_BASE_URL ?? "https://api.the-odds-api.com/v4";
 const ODDS_API_KEY = process.env.ODDS_API_KEY?.trim() ?? "";
 const BALLDONTLIE_API_BASE_URL = process.env.BALLDONTLIE_API_BASE_URL ?? "https://api.balldontlie.io";
 const BALLDONTLIE_API_KEY = process.env.BALLDONTLIE_API_KEY?.trim() ?? "";
+const APISPORTS_NBA_BASE_URL = process.env.APISPORTS_NBA_BASE_URL?.trim() ?? "https://v2.nba.api-sports.io";
+const APISPORTS_API_KEY = process.env.APISPORTS_API_KEY?.trim() ?? "";
+const APISPORTS_NBA_BASE_URL_FALLBACKS = ["https://v2.nba.api-sports.io", "https://v1.basketball.api-sports.io"] as const;
 const FANTASY_SPORT_KEY = "basketball_nba";
 const FANTASY_NFL_SPORT_KEY = "americanfootball_nfl";
 const FANTASY_LINEUP_SIZE = 5;
-const FANTASY_POINTS_MULTIPLIER = Math.max(1, Number.parseInt(process.env.FANTASY_POINTS_MULTIPLIER ?? "10", 10) || 10);
+const FANTASY_POINTS_MULTIPLIER = Math.max(1, Number.parseInt(process.env.FANTASY_POINTS_MULTIPLIER ?? "1", 10) || 1);
 const FANTASY_PLAYER_POOL_LIMIT = 30;
 const FANTASY_SCORES_DAYS_FROM = 2;
+const FANTASY_LIVE_STATS_LOOKBACK_MS = 48 * 60 * 60 * 1000;
+const FANTASY_USE_DIRECT_APISPORTS_SCORING =
+  String(process.env.FANTASY_USE_DIRECT_APISPORTS_SCORING ?? "")
+    .trim()
+    .toLowerCase() === "true";
 const FANTASY_TABLES_MISSING_ERROR =
   "Fantasy tables are not installed in this Supabase project yet. Run migration supabase/migrations/20260428184500_add_fantasy_entries.sql.";
 
@@ -100,6 +109,19 @@ type BallDontLieListResponse<T> = {
   };
 };
 
+type ApiSportsNbaGame = Record<string, unknown>;
+type ApiSportsNbaPlayerStat = Record<string, unknown>;
+
+type CacheEntry<T> = {
+  expiresAt: number;
+  value: T;
+};
+
+const apiSportsGamesCache = new Map<string, CacheEntry<ApiSportsNbaGame[]>>();
+const apiSportsPlayerStatsCache = new Map<string, CacheEntry<ApiSportsNbaPlayerStat[]>>();
+const APISPORTS_GAMES_TTL_MS = 15_000;
+const APISPORTS_PLAYER_STATS_TTL_MS = 10_000;
+
 type FantasyEntryRow = {
   id: string;
   user_id: string;
@@ -119,6 +141,15 @@ type FantasyEntryRow = {
   settled_at: string | null;
   created_at: string;
   updated_at: string;
+};
+
+type LivePlayerStatRow = {
+  game_id: string;
+  player_name: string;
+  team_name: string;
+  game_status: string;
+  total_fantasy_points: number;
+  source_updated_at: string;
 };
 
 export type FantasyGame = {
@@ -257,6 +288,49 @@ function normalizeNameKey(value: string): string {
     .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function tokenizeName(value: string): string[] {
+  const normalized = normalizeNameKey(value);
+  return normalized ? normalized.split(" ").filter(Boolean) : [];
+}
+
+function namesLikelyMatch(left: string, right: string): boolean {
+  const leftTokens = tokenizeName(left);
+  const rightTokens = tokenizeName(right);
+  if (leftTokens.length === 0 || rightTokens.length === 0) {
+    return false;
+  }
+
+  const leftNormalized = leftTokens.join(" ");
+  const rightNormalized = rightTokens.join(" ");
+  if (leftNormalized === rightNormalized) {
+    return true;
+  }
+
+  if (
+    leftTokens.length === 2 &&
+    rightTokens.length === 2 &&
+    leftTokens[0] === rightTokens[1] &&
+    leftTokens[1] === rightTokens[0]
+  ) {
+    return true;
+  }
+
+  const rightSet = new Set(rightTokens);
+  const sharedLong = leftTokens.filter((token) => token.length >= 3 && rightSet.has(token));
+  if (sharedLong.length === 0) {
+    return false;
+  }
+
+  const sharedSet = new Set(sharedLong);
+  const leftRemainder = leftTokens.filter((token) => !sharedSet.has(token));
+  const rightRemainder = rightTokens.filter((token) => !sharedSet.has(token));
+  if (leftRemainder.length === 0 || rightRemainder.length === 0) {
+    return true;
+  }
+
+  return leftRemainder[0]?.charAt(0) === rightRemainder[0]?.charAt(0);
 }
 
 function toGameLabel(homeTeam: string, awayTeam: string): string {
@@ -1155,6 +1229,286 @@ function computeFantasyRewardPoints(totalFantasyPoints: number): number {
   return Math.max(0, Math.round(safe * FANTASY_POINTS_MULTIPLIER));
 }
 
+function isFinalGameStatus(value: string): boolean {
+  const status = String(value ?? "").trim().toUpperCase();
+  return status === "FT" || status === "AOT" || status === "FINAL" || status === "COMPLETED";
+}
+
+async function loadRecentLivePlayerStatsRows(): Promise<LivePlayerStatRow[]> {
+  if (!supabaseAdmin) {
+    return [];
+  }
+  const sinceIso = new Date(Date.now() - FANTASY_LIVE_STATS_LOOKBACK_MS).toISOString();
+  const { data, error } = await supabaseAdmin
+    .from("live_player_stats")
+    .select("game_id, player_name, team_name, game_status, total_fantasy_points, source_updated_at")
+    .eq("league_name", "NBA")
+    .gte("source_updated_at", sinceIso)
+    .order("source_updated_at", { ascending: false })
+    .limit(4000);
+  if (error || !Array.isArray(data)) {
+    return [];
+  }
+  return data as LivePlayerStatRow[];
+}
+
+function getLatestRowsByGameId(rows: LivePlayerStatRow[]): LivePlayerStatRow[] {
+  const byGameId = new Map<string, LivePlayerStatRow>();
+  for (const row of rows) {
+    const gameId = String(row.game_id ?? "").trim();
+    if (!gameId) {
+      continue;
+    }
+    const previous = byGameId.get(gameId);
+    if (!previous) {
+      byGameId.set(gameId, row);
+      continue;
+    }
+    const nextTs = Date.parse(String(row.source_updated_at ?? ""));
+    const previousTs = Date.parse(String(previous.source_updated_at ?? ""));
+    if (Number.isFinite(nextTs) && (!Number.isFinite(previousTs) || nextTs > previousTs)) {
+      byGameId.set(gameId, row);
+    }
+  }
+  return Array.from(byGameId.values());
+}
+
+function computeFantasyFromLiveStats(
+  entry: FantasyEntryRow,
+  recentLiveRows: LivePlayerStatRow[]
+): {
+  status: FantasyEntryStatus;
+  totalPoints: number;
+  breakdown: Record<string, number>;
+} | null {
+  const lineup = parseLineup(entry.lineup);
+  if (lineup.length === 0) {
+    return null;
+  }
+
+  const startsAtMs = Date.parse(entry.starts_at);
+  const hasDailyGameId = Boolean(parseFantasyDailyGameId(entry.game_id));
+  const breakdown: Record<string, number> = {};
+  let totalPoints = 0;
+  let playersWithRows = 0;
+  let sawNonFinalStatus = false;
+
+  const entryTeamNames = new Set(
+    [entry.home_team, entry.away_team]
+      .map((teamName) => String(teamName ?? "").trim())
+      .filter(Boolean)
+      .map((teamName) => normalizeTeamKey(teamName))
+  );
+
+  for (const playerName of lineup) {
+    const filteredRows = recentLiveRows.filter((row) => {
+      if (!namesLikelyMatch(playerName, String(row.player_name ?? ""))) {
+        return false;
+      }
+      const rowTs = Date.parse(String(row.source_updated_at ?? ""));
+      if (Number.isFinite(startsAtMs) && Number.isFinite(rowTs)) {
+        // Keep rows within a broad window around the tracked slate/game start.
+        if (rowTs < startsAtMs - 18 * 60 * 60 * 1000 || rowTs > Date.now() + 2 * 60 * 60 * 1000) {
+          return false;
+        }
+      }
+      if (!hasDailyGameId && entryTeamNames.size > 0) {
+        const teamKey = normalizeTeamKey(String(row.team_name ?? ""));
+        if (teamKey && !entryTeamNames.has(teamKey)) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    if (filteredRows.length === 0) {
+      breakdown[playerName] = 0;
+      continue;
+    }
+
+    playersWithRows += 1;
+    const latestByGame = getLatestRowsByGameId(filteredRows);
+    const playerPoints = latestByGame.reduce((sum, row) => sum + Number(row.total_fantasy_points ?? 0), 0);
+    breakdown[playerName] = Number(playerPoints.toFixed(2));
+    totalPoints += breakdown[playerName];
+
+    if (!latestByGame.every((row) => isFinalGameStatus(row.game_status))) {
+      sawNonFinalStatus = true;
+    }
+  }
+
+  const nowMs = Date.now();
+  const existingStatus = entry.status;
+  const nextStatus: FantasyEntryStatus =
+    playersWithRows === lineup.length && !sawNonFinalStatus && playersWithRows > 0
+      ? "final"
+      : playersWithRows > 0 || (Number.isFinite(startsAtMs) && nowMs >= startsAtMs)
+      ? "live"
+      : existingStatus === "live" && playersWithRows === 0
+      ? "live"
+      : "pending";
+
+  return {
+    status: nextStatus,
+    totalPoints: Number(totalPoints.toFixed(2)),
+    breakdown,
+  };
+}
+
+function isApiSportsConfigured(): boolean {
+  return Boolean(APISPORTS_NBA_BASE_URL && APISPORTS_API_KEY);
+}
+
+function getApiSportsBaseCandidates(): string[] {
+  const candidates = [APISPORTS_NBA_BASE_URL, ...APISPORTS_NBA_BASE_URL_FALLBACKS]
+    .map((value) => String(value ?? "").trim().replace(/\/+$/, ""))
+    .filter(Boolean);
+  return Array.from(new Set(candidates));
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return {};
+}
+
+function getPath(source: unknown, path: string[]): unknown {
+  let current: unknown = source;
+  for (const key of path) {
+    if (!current || typeof current !== "object" || Array.isArray(current)) {
+      return undefined;
+    }
+    current = (current as Record<string, unknown>)[key];
+  }
+  return current;
+}
+
+function parseApiSportsResponseRows(json: unknown): Record<string, unknown>[] {
+  const root = asRecord(json);
+  const rows = root.response;
+  if (!Array.isArray(rows)) {
+    return [];
+  }
+  return rows.map((row) => asRecord(row));
+}
+
+function parseNumber(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string") {
+    const parsed = Number.parseFloat(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  return 0;
+}
+
+function pickFirstNumber(row: Record<string, unknown>, pathOptions: string[][]): number {
+  for (const path of pathOptions) {
+    const value = getPath(row, path);
+    const parsed = parseNumber(value);
+    if (Number.isFinite(parsed) && parsed !== 0) {
+      return parsed;
+    }
+  }
+  return 0;
+}
+
+function parseApiSportsGameStartMs(game: ApiSportsNbaGame): number {
+  const iso = String(getPath(game, ["date", "start"]) ?? "").trim();
+  const parsed = Date.parse(iso);
+  return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
+}
+
+function getApiSportsGameTeamName(game: ApiSportsNbaGame, side: "home" | "away"): string {
+  if (side === "home") {
+    return String(getPath(game, ["teams", "home", "name"]) ?? "").trim();
+  }
+  return String(getPath(game, ["teams", "visitors", "name"]) ?? getPath(game, ["teams", "away", "name"]) ?? "").trim();
+}
+
+function getApiSportsGameId(game: ApiSportsNbaGame): string {
+  return String(getPath(game, ["id"]) ?? "").trim();
+}
+
+function isApiSportsGameFinal(game: ApiSportsNbaGame): boolean {
+  const longStatus = String(getPath(game, ["status", "long"]) ?? "").trim().toLowerCase();
+  const shortStatus = String(getPath(game, ["status", "short"]) ?? "").trim().toLowerCase();
+  return (
+    longStatus.startsWith("finished") ||
+    longStatus.startsWith("completed") ||
+    longStatus.startsWith("final") ||
+    shortStatus === "ft" ||
+    shortStatus === "aot"
+  );
+}
+
+async function fetchApiSportsNbaGamesByDate(dateIso: string): Promise<ApiSportsNbaGame[]> {
+  if (!isApiSportsConfigured()) {
+    return [];
+  }
+  const cacheKey = `games:${dateIso}`;
+  const cached = apiSportsGamesCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+  for (const baseUrl of getApiSportsBaseCandidates()) {
+    const result = await apiSportsGet(baseUrl, `/games?date=${encodeURIComponent(dateIso)}`, APISPORTS_API_KEY);
+    if (!result.ok) {
+      continue;
+    }
+    const rows = parseApiSportsResponseRows(result.json);
+    if (rows.length > 0) {
+      apiSportsGamesCache.set(cacheKey, { value: rows, expiresAt: Date.now() + APISPORTS_GAMES_TTL_MS });
+      return rows;
+    }
+  }
+  return [];
+}
+
+async function fetchApiSportsNbaPlayerStats(gameId: string): Promise<ApiSportsNbaPlayerStat[]> {
+  if (!isApiSportsConfigured()) {
+    return [];
+  }
+  const cacheKey = `stats:${gameId}`;
+  const cached = apiSportsPlayerStatsCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+  const paths = [
+    `/players/statistics?game=${encodeURIComponent(gameId)}`,
+    `/players/statistics?id=${encodeURIComponent(gameId)}`,
+    `/games/statistics/players?id=${encodeURIComponent(gameId)}`,
+    `/games/statistics/players?ids=${encodeURIComponent(gameId)}`,
+  ];
+
+  for (const baseUrl of getApiSportsBaseCandidates()) {
+    for (const path of paths) {
+      const result = await apiSportsGet(baseUrl, path, APISPORTS_API_KEY);
+      if (!result.ok) {
+        continue;
+      }
+      const rows = parseApiSportsResponseRows(result.json);
+      if (rows.length > 0) {
+        apiSportsPlayerStatsCache.set(cacheKey, { value: rows, expiresAt: Date.now() + APISPORTS_PLAYER_STATS_TTL_MS });
+        return rows;
+      }
+    }
+  }
+  return [];
+}
+
+function extractApiSportsPlayerName(row: ApiSportsNbaPlayerStat): string {
+  const first = String(getPath(row, ["player", "firstname"]) ?? getPath(row, ["player", "first_name"]) ?? "").trim();
+  const last = String(getPath(row, ["player", "lastname"]) ?? getPath(row, ["player", "last_name"]) ?? "").trim();
+  const full = String(getPath(row, ["player", "name"]) ?? "").trim();
+  const combined = `${first} ${last}`.trim();
+  return combined || full;
+}
+
 function getBallDontLieGameTimestamp(game: BallDontLieGame): number {
   const primary = String(game.datetime ?? "").trim();
   if (primary) {
@@ -1200,17 +1554,234 @@ function findBestBallDontLieGame(entry: FantasyEntryRow, games: BallDontLieGame[
   return matching[0] ?? null;
 }
 
+function pickBestMatchingApiSportsGame(entry: FantasyEntryRow, games: ApiSportsNbaGame[]): ApiSportsNbaGame | null {
+  const matching = games.filter((game) => {
+    const home = getApiSportsGameTeamName(game, "home");
+    const away = getApiSportsGameTeamName(game, "away");
+    return teamsMatch(home, entry.home_team) && teamsMatch(away, entry.away_team);
+  });
+
+  if (matching.length === 0) {
+    return null;
+  }
+
+  const targetStart = Date.parse(entry.starts_at);
+  matching.sort((left, right) => {
+    const leftDelta = Math.abs(parseApiSportsGameStartMs(left) - targetStart);
+    const rightDelta = Math.abs(parseApiSportsGameStartMs(right) - targetStart);
+    return leftDelta - rightDelta;
+  });
+
+  return matching[0] ?? null;
+}
+
 function isBallDontLieGameFinal(status: string): boolean {
   return status.trim().toLowerCase().startsWith("final");
 }
 
-function buildMatchupKey(homeTeam: string, awayTeam: string): string {
-  const home = getTeamIdentityKey(homeTeam);
-  const away = getTeamIdentityKey(awayTeam);
-  if (!home || !away) {
-    return "";
+async function fetchApiSportsStatsForEntry(entry: FantasyEntryRow): Promise<{
+  status: FantasyEntryStatus;
+  totalPoints: number;
+  breakdown: Record<string, number>;
+}> {
+  const dailyDate = parseFantasyDailyGameId(entry.game_id);
+  if (dailyDate) {
+    return fetchApiSportsStatsForDailyEntry(entry, dailyDate);
   }
-  return `${away}::${home}`;
+
+  const startsAt = Date.parse(entry.starts_at);
+  if (!Number.isFinite(startsAt) || !isApiSportsConfigured()) {
+    return { status: entry.status, totalPoints: Number(entry.points ?? 0), breakdown: parseScoreBreakdown(entry.score_breakdown) };
+  }
+
+  const dates = [
+    new Date(startsAt - 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    new Date(startsAt).toISOString().slice(0, 10),
+    new Date(startsAt + 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+  ];
+
+  const games: ApiSportsNbaGame[] = [];
+  for (const date of dates) {
+    const rows = await fetchApiSportsNbaGamesByDate(date);
+    for (const row of rows) {
+      games.push(row);
+    }
+  }
+
+  const matchedGame = pickBestMatchingApiSportsGame(entry, games);
+  if (!matchedGame) {
+    return { status: entry.status, totalPoints: Number(entry.points ?? 0), breakdown: parseScoreBreakdown(entry.score_breakdown) };
+  }
+
+  const apiSportsGameId = getApiSportsGameId(matchedGame);
+  if (!apiSportsGameId) {
+    return { status: entry.status, totalPoints: Number(entry.points ?? 0), breakdown: parseScoreBreakdown(entry.score_breakdown) };
+  }
+
+  const stats = await fetchApiSportsNbaPlayerStats(apiSportsGameId);
+  if (stats.length === 0) {
+    const startsAtMs = Date.parse(entry.starts_at);
+    const nowMs = Date.now();
+    const fallbackStatus: FantasyEntryStatus = isApiSportsGameFinal(matchedGame)
+      ? "final"
+      : Number.isFinite(startsAtMs) && nowMs >= startsAtMs
+      ? "live"
+      : entry.status;
+    return {
+      status: fallbackStatus,
+      totalPoints: Number(entry.points ?? 0),
+      breakdown: parseScoreBreakdown(entry.score_breakdown),
+    };
+  }
+  const statsByPlayer = new Map<string, number>();
+  for (const raw of stats) {
+    const row = asRecord(raw);
+    const playerName = extractApiSportsPlayerName(row);
+    if (!playerName) {
+      continue;
+    }
+    const key = normalizeNameKey(playerName);
+    if (!key) {
+      continue;
+    }
+    const points = computeFantasyPoints({
+      pts: pickFirstNumber(row, [["points"], ["statistics", "points"], ["stats", "points"], ["pts"]]),
+      reb: pickFirstNumber(row, [["totReb"], ["rebounds", "total"], ["rebounds"], ["reb"], ["statistics", "totReb"], ["statistics", "rebounds", "total"], ["statistics", "rebounds"], ["stats", "rebounds", "total"], ["stats", "rebounds"]]),
+      ast: pickFirstNumber(row, [["assists"], ["ast"], ["statistics", "assists"], ["stats", "assists"]]),
+      stl: pickFirstNumber(row, [["steals"], ["stl"], ["statistics", "steals"], ["stats", "steals"]]),
+      blk: pickFirstNumber(row, [["blocks"], ["blk"], ["statistics", "blocks"], ["stats", "blocks"]]),
+      turnover: pickFirstNumber(row, [["turnovers"], ["turnover"], ["to"], ["ball_losses"], ["statistics", "turnovers"], ["statistics", "ball_losses"], ["stats", "turnovers"]]),
+    });
+
+    const current = statsByPlayer.get(key) ?? 0;
+    statsByPlayer.set(key, Number((current + points).toFixed(2)));
+  }
+
+  const lineup = parseLineup(entry.lineup);
+  const breakdown: Record<string, number> = {};
+  let totalPoints = 0;
+  for (const playerName of lineup) {
+    const key = normalizeNameKey(playerName);
+    const playerPoints = Number((statsByPlayer.get(key) ?? 0).toFixed(2));
+    breakdown[playerName] = playerPoints;
+    totalPoints += playerPoints;
+  }
+
+  const nowMs = Date.now();
+  const status: FantasyEntryStatus = isApiSportsGameFinal(matchedGame)
+    ? "final"
+    : nowMs >= startsAt
+    ? "live"
+    : "pending";
+
+  return {
+    status,
+    totalPoints: Number(totalPoints.toFixed(2)),
+    breakdown,
+  };
+}
+
+async function fetchApiSportsStatsForDailyEntry(
+  entry: FantasyEntryRow,
+  slateDate: string
+): Promise<{
+  status: FantasyEntryStatus;
+  totalPoints: number;
+  breakdown: Record<string, number>;
+}> {
+  if (!isApiSportsConfigured()) {
+    return { status: entry.status, totalPoints: Number(entry.points ?? 0), breakdown: parseScoreBreakdown(entry.score_breakdown) };
+  }
+
+  const parsedDate = parseDateString(slateDate);
+  if (!parsedDate) {
+    return { status: entry.status, totalPoints: Number(entry.points ?? 0), breakdown: parseScoreBreakdown(entry.score_breakdown) };
+  }
+
+  const slateStart = new Date(Date.UTC(parsedDate.year, parsedDate.month - 1, parsedDate.day, 0, 0, 0, 0));
+  const dates = [
+    new Date(slateStart.getTime() - 24 * 60 * 60 * 1000),
+    slateStart,
+    new Date(slateStart.getTime() + 24 * 60 * 60 * 1000),
+  ].map((d) => d.toISOString().slice(0, 10));
+
+  const gameRowsByDate = await Promise.all(dates.map((date) => fetchApiSportsNbaGamesByDate(date)));
+  const allGames: ApiSportsNbaGame[] = gameRowsByDate.flat();
+
+  const statsByPlayer = new Map<string, number>();
+  const gameIds = Array.from(
+    new Set(
+      allGames
+        .map((game) => getApiSportsGameId(game))
+        .map((value) => value.trim())
+        .filter(Boolean)
+    )
+  );
+  const statsBatches = await Promise.all(gameIds.map((gameId) => fetchApiSportsNbaPlayerStats(gameId)));
+  const hasAnyStatsRows = statsBatches.some((rows) => rows.length > 0);
+  if (!hasAnyStatsRows) {
+    const startsAtMs = Date.parse(entry.starts_at);
+    const nowMs = Date.now();
+    const fallbackStatus: FantasyEntryStatus = allGames.length > 0 && allGames.every((game) => isApiSportsGameFinal(game))
+      ? "final"
+      : Number.isFinite(startsAtMs) && nowMs >= startsAtMs
+      ? "live"
+      : entry.status;
+    return {
+      status: fallbackStatus,
+      totalPoints: Number(entry.points ?? 0),
+      breakdown: parseScoreBreakdown(entry.score_breakdown),
+    };
+  }
+  for (const rows of statsBatches) {
+    for (const raw of rows) {
+      const row = asRecord(raw);
+      const playerName = extractApiSportsPlayerName(row);
+      if (!playerName) {
+        continue;
+      }
+      const key = normalizeNameKey(playerName);
+      if (!key) {
+        continue;
+      }
+      const points = computeFantasyPoints({
+        pts: pickFirstNumber(row, [["points"], ["statistics", "points"], ["stats", "points"], ["pts"]]),
+        reb: pickFirstNumber(row, [["totReb"], ["rebounds", "total"], ["rebounds"], ["reb"], ["statistics", "totReb"], ["statistics", "rebounds", "total"], ["statistics", "rebounds"], ["stats", "rebounds", "total"], ["stats", "rebounds"]]),
+        ast: pickFirstNumber(row, [["assists"], ["ast"], ["statistics", "assists"], ["stats", "assists"]]),
+        stl: pickFirstNumber(row, [["steals"], ["stl"], ["statistics", "steals"], ["stats", "steals"]]),
+        blk: pickFirstNumber(row, [["blocks"], ["blk"], ["statistics", "blocks"], ["stats", "blocks"]]),
+        turnover: pickFirstNumber(row, [["turnovers"], ["turnover"], ["to"], ["ball_losses"], ["statistics", "turnovers"], ["statistics", "ball_losses"], ["stats", "turnovers"]]),
+      });
+      const current = statsByPlayer.get(key) ?? 0;
+      statsByPlayer.set(key, Number((current + points).toFixed(2)));
+    }
+  }
+
+  const lineup = parseLineup(entry.lineup);
+  const breakdown: Record<string, number> = {};
+  let totalPoints = 0;
+  for (const playerName of lineup) {
+    const key = normalizeNameKey(playerName);
+    const playerPoints = Number((statsByPlayer.get(key) ?? 0).toFixed(2));
+    breakdown[playerName] = playerPoints;
+    totalPoints += playerPoints;
+  }
+
+  const startsAtMs = Date.parse(entry.starts_at);
+  const nowMs = Date.now();
+  const anyLineupPoints = Object.values(breakdown).some((value) => Number(value) > 0);
+  const allGamesFinal = allGames.length > 0 && allGames.every((game) => isApiSportsGameFinal(game));
+  const status: FantasyEntryStatus = allGamesFinal
+    ? "final"
+    : anyLineupPoints || (Number.isFinite(startsAtMs) && nowMs >= startsAtMs)
+    ? "live"
+    : "pending";
+
+  return {
+    status,
+    totalPoints: Number(totalPoints.toFixed(2)),
+    breakdown,
+  };
 }
 
 async function fetchBallDontLieStatsForDailyEntry(
@@ -1238,22 +1809,14 @@ async function fetchBallDontLieStatsForDailyEntry(
   gamesQuery.set("per_page", "200");
 
   const allGames = await fetchBallDontLieList<BallDontLieGame>("/v1/games", gamesQuery);
-  const scheduledGames = await listFantasyGames({ date: slateDate, tzOffsetMinutes: 0, limit: 40 });
-  const scheduledMatchups = new Set(
-    scheduledGames
-      .map((game) => buildMatchupKey(game.homeTeam, game.awayTeam))
-      .map((value) => value.trim())
-      .filter(Boolean)
-  );
-
-  const matchingGames = allGames.filter((game) => {
-    const home = getBallDontLieTeamDisplay(game.home_team);
-    const away = getBallDontLieTeamDisplay(game.visitor_team);
-    const matchupKey = buildMatchupKey(home, away);
-    return Boolean(matchupKey) && scheduledMatchups.has(matchupKey);
-  });
-
-  const gameIds = matchingGames.map((game) => game.id).filter((value): value is number => typeof value === "number");
+  const gameIds = allGames.map((game) => game.id).filter((value): value is number => typeof value === "number");
+  const gameFinalById = new Map<number, boolean>();
+  for (const game of allGames) {
+    if (typeof game.id !== "number") {
+      continue;
+    }
+    gameFinalById.set(game.id, isBallDontLieGameFinal(String(game.status ?? "")));
+  }
 
   let stats: BallDontLieStat[] = [];
   if (gameIds.length > 0) {
@@ -1266,6 +1829,7 @@ async function fetchBallDontLieStatsForDailyEntry(
   }
 
   const statsByPlayer = new Map<string, number>();
+  const gameIdsByPlayerKey = new Map<string, Set<number>>();
   for (const row of stats) {
     const first = String(row.player?.first_name ?? "").trim();
     const last = String(row.player?.last_name ?? "").trim();
@@ -1286,28 +1850,42 @@ async function fetchBallDontLieStatsForDailyEntry(
 
     const current = statsByPlayer.get(key) ?? 0;
     statsByPlayer.set(key, Number((current + points).toFixed(2)));
+
+    const statGameId = typeof row.game?.id === "number" ? row.game.id : null;
+    if (statGameId !== null) {
+      const existing = gameIdsByPlayerKey.get(key) ?? new Set<number>();
+      existing.add(statGameId);
+      gameIdsByPlayerKey.set(key, existing);
+    }
   }
 
   const lineup = parseLineup(entry.lineup);
   const breakdown: Record<string, number> = {};
   let totalPoints = 0;
+  const lineupGameIds = new Set<number>();
 
   for (const playerName of lineup) {
     const key = normalizeNameKey(playerName);
     const playerPoints = Number((statsByPlayer.get(key) ?? 0).toFixed(2));
     breakdown[playerName] = playerPoints;
     totalPoints += playerPoints;
+
+    const gameIdsForPlayer = gameIdsByPlayerKey.get(key);
+    if (gameIdsForPlayer) {
+      for (const gameId of gameIdsForPlayer) {
+        lineupGameIds.add(gameId);
+      }
+    }
   }
 
-  const allScheduledFinal =
-    scheduledMatchups.size > 0 &&
-    matchingGames.length >= scheduledMatchups.size &&
-    matchingGames.every((game) => isBallDontLieGameFinal(String(game.status ?? "")));
   const startsAtMs = Date.parse(entry.starts_at);
   const nowMs = Date.now();
-  const status: FantasyEntryStatus = allScheduledFinal
+  const allLineupGamesFinal =
+    lineupGameIds.size > 0 &&
+    Array.from(lineupGameIds).every((gameId) => gameFinalById.get(gameId) === true);
+  const status: FantasyEntryStatus = allLineupGamesFinal
     ? "final"
-    : Number.isFinite(startsAtMs) && nowMs >= startsAtMs
+    : lineupGameIds.size > 0 || (Number.isFinite(startsAtMs) && nowMs >= startsAtMs)
     ? "live"
     : "pending";
 
@@ -1447,6 +2025,8 @@ export async function refreshFantasyProgress(params?: {
     return { scanned: 0, updated: 0, finalized: 0, rewardedGames: 0 };
   }
 
+  const recentLiveRows = await loadRecentLivePlayerStatsRows();
+
   let updated = 0;
   let finalized = 0;
   for (const entry of entries) {
@@ -1456,10 +2036,15 @@ export async function refreshFantasyProgress(params?: {
       breakdown: parseScoreBreakdown(entry.score_breakdown),
     };
 
-    try {
-      next = await fetchBallDontLieStatsForEntry(entry);
-    } catch {
-      continue;
+    const fromLiveTable = computeFantasyFromLiveStats(entry, recentLiveRows);
+    if (fromLiveTable) {
+      next = fromLiveTable;
+    } else if (FANTASY_USE_DIRECT_APISPORTS_SCORING) {
+      try {
+        next = await fetchApiSportsStatsForEntry(entry);
+      } catch {
+        continue;
+      }
     }
 
     const existingBreakdown = parseScoreBreakdown(entry.score_breakdown);

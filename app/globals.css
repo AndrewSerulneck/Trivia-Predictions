@@ -6,6 +6,7 @@
 
 :root {
   color-scheme: light;
+  --tp-vh: 100svh;
   --tp-ink: #1f2a36;
   --tp-cream: #f7ede0;
   --tp-gold: #d89a4f;
@@ -24,6 +25,10 @@ body {
   font-family: "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   @apply text-slate-900 antialiased;
   overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable both-edges;
+  overflow-anchor: none;
+  overscroll-behavior-y: none;
   text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
   background:
@@ -39,6 +44,9 @@ body {
 
 html {
   overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable both-edges;
+  overflow-anchor: none;
   text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
   background:
@@ -111,6 +119,16 @@ body.tp-popup-open {
   overflow: hidden !important;
   overscroll-behavior: none !important;
   touch-action: none !important;
+}
+
+/* Emergency unlock path for Pick 'Em: if stale scroll-lock styles linger,
+   this class wins and restores vertical document scrolling. */
+html.tp-pickem-force-scroll,
+body.tp-pickem-force-scroll {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior-y: auto !important;
+  touch-action: pan-y !important;
 }
 
 ::view-transition-group(root),

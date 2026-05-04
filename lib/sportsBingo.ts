@@ -10,7 +10,7 @@ const BALLDONTLIE_API_KEY = process.env.BALLDONTLIE_API_KEY?.trim() ?? "";
 const APISPORTS_API_KEY = process.env.APISPORTS_API_KEY?.trim() ?? "";
 const APISPORTS_NBA_BASE_URL = process.env.APISPORTS_NBA_BASE_URL?.trim() ?? "";
 const DEFAULT_SPORT_KEY = "basketball_nba";
-const BINGO_REWARD_POINTS = Number.parseInt(process.env.BINGO_REWARD_POINTS ?? "100", 10);
+const BINGO_REWARD_POINTS = Number.parseInt(process.env.BINGO_REWARD_POINTS ?? "50", 10);
 const BOARD_TARGET_WIN_RATE = Number.parseFloat(process.env.BINGO_BOARD_TARGET_WIN_RATE ?? "0.20");
 const BOARD_TARGET_TOLERANCE = Number.parseFloat(process.env.BINGO_BOARD_TARGET_TOLERANCE ?? "0.04");
 const BOARD_SIMULATION_TRIALS = Number.parseInt(process.env.BINGO_BOARD_SIM_TRIALS ?? "2500", 10);
@@ -1115,7 +1115,13 @@ function getApiSportsGameId(game: ApiSportsNbaGame): string {
 
 function isApiSportsGameFinal(game: ApiSportsNbaGame): boolean {
   const statusText = String(getPath(game, ["status", "long"]) ?? getPath(game, ["status", "short"]) ?? "").trim().toLowerCase();
-  return statusText.startsWith("final") || statusText === "ft" || statusText === "aot";
+  return (
+    statusText.startsWith("final") ||
+    statusText.startsWith("finish") ||
+    statusText.startsWith("complete") ||
+    statusText === "ft" ||
+    statusText === "aot"
+  );
 }
 
 function pickBestMatchingApiSportsGame(card: SportsBingoCardRow, games: ApiSportsNbaGame[]): ApiSportsNbaGame | null {
@@ -3554,20 +3560,17 @@ function evaluateResolver(
   if (resolver.kind === "replacement_auto") {
     return { status: "void", resolved: true };
   }
+  const hasGameScore = home !== null && away !== null;
 
-  if (home === null || away === null) {
-    if (completed) {
-      return { status: "void", resolved: true };
-    }
-    return { status: "pending", resolved: false };
-  }
-
-  const teamScore = (team: TeamSide) => (team === "home" ? home : away);
-  const opponentScore = (team: TeamSide) => (team === "home" ? away : home);
-  const totalScore = home + away;
+  const teamScore = (team: TeamSide) => (team === "home" ? (home ?? 0) : (away ?? 0));
+  const opponentScore = (team: TeamSide) => (team === "home" ? (away ?? 0) : (home ?? 0));
+  const totalScore = (home ?? 0) + (away ?? 0);
 
   switch (resolver.kind) {
     case "moneyline":
+      if (!hasGameScore) {
+        return { status: "pending", resolved: false };
+      }
       if (!completed) {
         return { status: "pending", resolved: false };
       }
@@ -3579,6 +3582,9 @@ function evaluateResolver(
         resolved: true,
       };
     case "spread_more_than":
+      if (!hasGameScore) {
+        return { status: "pending", resolved: false };
+      }
       if (!completed) {
         return { status: "pending", resolved: false };
       }
@@ -3587,6 +3593,9 @@ function evaluateResolver(
         resolved: true,
       };
     case "spread_keep_close":
+      if (!hasGameScore) {
+        return { status: "pending", resolved: false };
+      }
       if (!completed) {
         return { status: "pending", resolved: false };
       }
@@ -3595,6 +3604,9 @@ function evaluateResolver(
         resolved: true,
       };
     case "game_total_over":
+      if (!hasGameScore) {
+        return { status: "pending", resolved: false };
+      }
       if (totalScore > resolver.line) {
         return { status: "hit", resolved: true };
       }
@@ -3603,6 +3615,12 @@ function evaluateResolver(
       }
       return { status: "pending", resolved: false };
     case "game_total_under":
+      if (hasGameScore && totalScore >= resolver.line) {
+        return { status: "miss", resolved: true };
+      }
+      if (!hasGameScore) {
+        return { status: "pending", resolved: false };
+      }
       if (!completed) {
         return { status: "pending", resolved: false };
       }
@@ -3611,6 +3629,9 @@ function evaluateResolver(
         resolved: true,
       };
     case "team_total_over": {
+      if (!hasGameScore) {
+        return { status: "pending", resolved: false };
+      }
       const score = teamScore(resolver.team);
       if (score > resolver.line) {
         return { status: "hit", resolved: true };
@@ -3621,6 +3642,12 @@ function evaluateResolver(
       return { status: "pending", resolved: false };
     }
     case "team_total_under": {
+      if (hasGameScore && teamScore(resolver.team) >= resolver.line) {
+        return { status: "miss", resolved: true };
+      }
+      if (!hasGameScore) {
+        return { status: "pending", resolved: false };
+      }
       if (!completed) {
         return { status: "pending", resolved: false };
       }
@@ -3672,6 +3699,9 @@ function evaluateResolver(
           return { status: "miss", resolved: true };
         }
         return { status: "pending", resolved: false };
+      }
+      if (value >= resolver.line) {
+        return { status: "miss", resolved: true };
       }
       if (completed || nbaStatsSnapshot.finalized) {
         return { status: value < resolver.line ? "hit" : "miss", resolved: true };
@@ -3814,26 +3844,34 @@ function evaluateResolver(
       return { status: "pending", resolved: false };
     }
     case "nba_player_perfect_ft": {
-      // Resolves only at game end; requires fta >= 3 and ftm == fta.
+      // Misses immediately on first missed FT attempt.
       if (!nbaStatsSnapshot) {
         if (!completed) return { status: "pending", resolved: false };
         return { status: "miss", resolved: true };
       }
-      if (!completed && !nbaStatsSnapshot.finalized) return { status: "pending", resolved: false };
       const line = findNBAPlayerStatLine(nbaStatsSnapshot, resolver.player);
-      if (!line) return { status: "miss", resolved: true };
+      if (!line) {
+        if (!completed && !nbaStatsSnapshot.finalized) return { status: "pending", resolved: false };
+        return { status: "miss", resolved: true };
+      }
+      if (line.fta > line.ftm) return { status: "miss", resolved: true };
+      if (!completed && !nbaStatsSnapshot.finalized) return { status: "pending", resolved: false };
       if (line.fta < 3) return { status: "miss", resolved: true };
       return { status: line.ftm === line.fta ? "hit" : "miss", resolved: true };
     }
     case "nba_player_perfect_fg": {
-      // Resolves only at game end; requires fga >= 4 and fgm == fga.
+      // Misses immediately on first missed FG attempt.
       if (!nbaStatsSnapshot) {
         if (!completed) return { status: "pending", resolved: false };
         return { status: "miss", resolved: true };
       }
-      if (!completed && !nbaStatsSnapshot.finalized) return { status: "pending", resolved: false };
       const line = findNBAPlayerStatLine(nbaStatsSnapshot, resolver.player);
-      if (!line) return { status: "miss", resolved: true };
+      if (!line) {
+        if (!completed && !nbaStatsSnapshot.finalized) return { status: "pending", resolved: false };
+        return { status: "miss", resolved: true };
+      }
+      if (line.fga > line.fgm) return { status: "miss", resolved: true };
+      if (!completed && !nbaStatsSnapshot.finalized) return { status: "pending", resolved: false };
       if (line.fga < 4) return { status: "miss", resolved: true };
       return { status: line.fgm === line.fga ? "hit" : "miss", resolved: true };
     }
@@ -3857,9 +3895,10 @@ function evaluateResolver(
         if (!completed) return { status: "pending", resolved: false };
         return { status: "miss", resolved: true };
       }
-      if (!completed && !nbaStatsSnapshot.finalized) return { status: "pending", resolved: false };
       const line = findNBAPlayerStatLine(nbaStatsSnapshot, resolver.player);
       if (!line) return { status: "miss", resolved: true };
+      if (line.turnover > 0) return { status: "miss", resolved: true };
+      if (!completed && !nbaStatsSnapshot.finalized) return { status: "pending", resolved: false };
       return { status: line.turnover === 0 ? "hit" : "miss", resolved: true };
     }
     case "nba_team_has_double_double": {
@@ -3888,8 +3927,9 @@ function evaluateResolver(
         if (!completed) return { status: "pending", resolved: false };
         return { status: "miss", resolved: true };
       }
-      if (!completed && !nbaStatsSnapshot.finalized) return { status: "pending", resolved: false };
       const agg = buildNBATeamAggregates(nbaStatsSnapshot, resolver.team);
+      if (agg.totalTurnovers > resolver.threshold) return { status: "miss", resolved: true };
+      if (!completed && !nbaStatsSnapshot.finalized) return { status: "pending", resolved: false };
       return { status: agg.totalTurnovers <= resolver.threshold ? "hit" : "miss", resolved: true };
     }
     case "nba_team_outrebounds": {
@@ -3961,6 +4001,30 @@ function computeCardSignals(squares: SportsBingoCardSquare[]): {
 
 function asArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
+}
+
+function isResolverEligibleForVoidRegrade(resolver: SportsBingoResolver): boolean {
+  switch (resolver.kind) {
+    case "player_prop":
+    case "nba_player_stat_at_least":
+    case "nba_player_double_double":
+    case "team_triple_double":
+    case "any_triple_double":
+    case "nba_team_stat_at_least":
+    case "nba_team_players_scored_at_least":
+    case "nba_player_triple_double":
+    case "nba_player_perfect_ft":
+    case "nba_player_perfect_fg":
+    case "nba_player_triple_threat":
+    case "nba_player_zero_turnovers":
+    case "nba_team_has_double_double":
+    case "nba_team_three_pt_scorers":
+    case "nba_team_turnovers_at_most":
+    case "nba_team_outrebounds":
+      return true;
+    default:
+      return false;
+  }
 }
 
 async function getScoresBySportKey(sportKey: string): Promise<Map<string, ScoreSnapshot>> {
@@ -4163,12 +4227,11 @@ export async function refreshSportsBingoProgress(params: {
         continue;
       }
 
-      if (square.status !== "pending") {
-        continue;
-      }
-
       const resolver = parseResolver(square.resolver);
       if (!resolver) {
+        if (square.status !== "pending") {
+          continue;
+        }
         const { data, error } = await supabaseAdmin!
           .from("sports_bingo_squares")
           .update({ status: "void", resolved_at: new Date().toISOString() })
@@ -4183,8 +4246,25 @@ export async function refreshSportsBingoProgress(params: {
         continue;
       }
 
+      if (square.status !== "pending" && !(square.status === "void" && isResolverEligibleForVoidRegrade(resolver))) {
+        continue;
+      }
+
       const evaluation = evaluateResolver(resolver, effectiveScore, nbaStatsSnapshot);
       if (evaluation.status === "pending" && !mustForceFinalize) {
+        if (square.status === "void" && isResolverEligibleForVoidRegrade(resolver)) {
+          const { data, error } = await supabaseAdmin!
+            .from("sports_bingo_squares")
+            .update({ status: "pending", resolved_at: null })
+            .eq("id", square.id)
+            .select("id, card_id, square_index, label, resolver, probability, is_free, status, created_at, resolved_at")
+            .single<SportsBingoSquareRow>();
+          if (error || !data) {
+            throw new Error(error?.message ?? "Failed to reopen Bingo square for regrading.");
+          }
+          squares[index] = data;
+          updatedSquares += 1;
+        }
         continue;
       }
 

@@ -13,6 +13,7 @@ type GlobalTransitionHideDetail = {
 
 const TARGET_PATH_MATCH_TIMEOUT_MS = 18000;
 const OVERLAY_HARD_TIMEOUT_MS = 25000;
+const OVERLAY_FADE_OUT_MS = 620;
 
 function pathMatches(expectedPath: string, candidatePath: string): boolean {
   if (!expectedPath) {
@@ -29,6 +30,7 @@ export function GlobalTransitionOverlay() {
   const isFadingOutRef = useRef(false);
   const pathMatchSafetyTimerRef = useRef<number | null>(null);
   const hardSafetyTimerRef = useRef<number | null>(null);
+  const fadeOutSafetyTimerRef = useRef<number | null>(null);
 
   const clearSafetyTimers = useCallback(() => {
     if (pathMatchSafetyTimerRef.current !== null && typeof window !== "undefined") {
@@ -39,7 +41,25 @@ export function GlobalTransitionOverlay() {
       window.clearTimeout(hardSafetyTimerRef.current);
       hardSafetyTimerRef.current = null;
     }
+    if (fadeOutSafetyTimerRef.current !== null && typeof window !== "undefined") {
+      window.clearTimeout(fadeOutSafetyTimerRef.current);
+      fadeOutSafetyTimerRef.current = null;
+    }
   }, []);
+
+  const finalizeOverlay = useCallback(() => {
+    clearSafetyTimers();
+    visibleRef.current = false;
+    isFadingOutRef.current = false;
+    setVisible(false);
+    setIsFadingOut(false);
+    const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+    window.dispatchEvent(
+      new CustomEvent("tp:global-transition-overlay-hidden", {
+        detail: { path: currentPath },
+      })
+    );
+  }, [clearSafetyTimers]);
 
   const startFadeOut = useCallback(() => {
     if (isFadingOutRef.current) {
@@ -48,7 +68,15 @@ export function GlobalTransitionOverlay() {
     clearSafetyTimers();
     isFadingOutRef.current = true;
     setIsFadingOut(true);
-  }, [clearSafetyTimers]);
+    if (typeof window !== "undefined") {
+      fadeOutSafetyTimerRef.current = window.setTimeout(() => {
+        if (!visibleRef.current) {
+          return;
+        }
+        finalizeOverlay();
+      }, OVERLAY_FADE_OUT_MS + 350);
+    }
+  }, [clearSafetyTimers, finalizeOverlay]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -165,19 +193,11 @@ export function GlobalTransitionOverlay() {
         if (!isFadingOut) {
           return;
         }
-        clearSafetyTimers();
-        visibleRef.current = false;
-        isFadingOutRef.current = false;
-        setVisible(false);
-        setIsFadingOut(false);
-        const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
-        window.dispatchEvent(
-          new CustomEvent("tp:global-transition-overlay-hidden", {
-            detail: { path: currentPath },
-          })
-        );
+        finalizeOverlay();
       }}
-      className="pointer-events-auto fixed inset-0 z-[6500] flex items-center justify-center bg-[#030712] will-change-[opacity] [transform:translateZ(0)]"
+      className={`fixed inset-0 z-[6500] flex items-center justify-center bg-[#030712] will-change-[opacity] [transform:translateZ(0)] ${
+        isFadingOut ? "pointer-events-none" : "pointer-events-auto"
+      }`}
     >
       <div className="relative flex w-full max-w-sm flex-col items-center justify-center px-8 [perspective:1000px]">
         <div className="absolute inset-x-10 top-1/2 h-24 -translate-y-1/2 rounded-full bg-cyan-400/25 blur-3xl" />

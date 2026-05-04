@@ -116,6 +116,7 @@ type OddsScoreEvent = {
 
 type NormalizedOddsEvent = {
   id: string;
+  oddsEventId: string;
   sportKey: string;
   league: string;
   startsAt: string;
@@ -127,10 +128,11 @@ const ODDS_API_BASE_URL = process.env.ODDS_API_BASE_URL ?? "https://api.the-odds
 const ODDS_API_KEY = process.env.ODDS_API_KEY?.trim() ?? "";
 const ODDS_SCORES_DAYS_FROM = Math.max(1, Math.min(3, Number.parseInt(process.env.ODDS_API_SCORES_DAYS ?? "3", 10) || 3));
 const PICKEM_LOCK_GRACE_MS = 0;
+const PICKEM_DAILY_PICK_LIMIT = 10;
 const SPORTS_CATALOG_CACHE_MS = 5 * 60 * 1000;
 const PICKEM_TABLES_MISSING_ERROR =
   "Pick 'Em tables are not installed in this Supabase project yet. Run migration supabase/migrations/20260427113000_add_pickem_tables.sql.";
-const PICKEM_REWARD_POINTS = 50;
+const PICKEM_REWARD_POINTS = 10;
 const PICKEM_PICK_SELECT =
   "id, user_id, venue_id, sport_slug, sport_key, league, game_id, game_label, home_team, away_team, starts_at, selected_team, selected_side, status, home_score, away_score, created_at, updated_at, resolved_at, reward_points, reward_claimed_at";
 
@@ -180,8 +182,8 @@ const PICKEM_SPORTS: PickEmSportOption[] = [
     slug: "nfl",
     label: "NFL",
     subtitle: "National Football League",
-    isInSeason: false,
-    isClickable: false,
+    isInSeason: true,
+    isClickable: true,
     sportKeys: ["americanfootball_nfl"],
   },
 ];
@@ -211,6 +213,17 @@ function isMissingPickEmTablesError(error: { code?: string; message?: string } |
 
 function normalizeTeamKey(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "").trim();
+}
+
+function buildPickEmGameId(params: {
+  oddsEventId: string;
+  startsAt: string;
+  homeTeam: string;
+  awayTeam: string;
+}): string {
+  const home = normalizeTeamKey(params.homeTeam);
+  const away = normalizeTeamKey(params.awayTeam);
+  return `${params.oddsEventId}__${params.startsAt}__${home}__${away}`;
 }
 
 function normalizeLeagueLabel(value: string): string {
@@ -494,7 +507,13 @@ async function fetchOddsEventsForSportKey(
     }
 
     events.push({
-      id,
+      id: buildPickEmGameId({
+        oddsEventId: id,
+        startsAt: new Date(startsTs).toISOString(),
+        homeTeam,
+        awayTeam,
+      }),
+      oddsEventId: id,
       sportKey,
       league: leagueLabel,
       startsAt: new Date(startsTs).toISOString(),
@@ -676,12 +695,18 @@ export function listPickEmSports(): PickEmSport[] {
 export async function listPickEmGames(params: {
   sportSlug: string;
   date?: string;
+  weekStartDate?: string;
   tzOffsetMinutes?: number | string;
   userId?: string;
-}): Promise<{ sport: PickEmSport; date: string; games: PickEmGame[] }> {
+}): Promise<{ sport: PickEmSport; date: string; games: PickEmGame[]; weekOptions?: Array<{ label: string; value: string }>; selectedWeekStartDate?: string }> {
   const sport = getSportOrThrow(params.sportSlug);
   const tzOffsetMinutes = parseTimezoneOffset(params.tzOffsetMinutes);
-  const { date, fromIso, toIso } = buildUtcRangeForLocalDay(params.date, tzOffsetMinutes);
+  const dayRange = buildUtcRangeForLocalDay(params.date, tzOffsetMinutes);
+  let date = dayRange.date;
+  let fromIso = dayRange.fromIso;
+  let toIso = dayRange.toIso;
+  let weekOptions: Array<{ label: string; value: string }> = [];
+  let selectedWeekStartDate: string | undefined;
 
   const sportKeys = await getSportKeysForSlug(sport.slug);
   if (sportKeys.length === 0 || !ODDS_API_KEY) {
@@ -695,10 +720,74 @@ export async function listPickEmGames(params: {
       },
       date,
       games: [],
+      weekOptions,
+      selectedWeekStartDate,
     };
   }
 
   const leagueTitles = await getLeagueTitlesBySportKey();
+
+  if (sport.slug === "nfl") {
+    const nflKey = sportKeys[0];
+    if (nflKey) {
+      const now = Date.now();
+      const horizonToIso = new Date(now + 140 * 24 * 60 * 60 * 1000).toISOString();
+      const horizonFromIso = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const nflEvents = await fetchOddsEventsForSportKey(
+        nflKey,
+        horizonFromIso,
+        horizonToIso,
+        leagueTitles.get(nflKey) ?? normalizeLeagueLabel(nflKey)
+      );
+
+      const weekStartMsSet = new Set<number>();
+      for (const event of nflEvents) {
+        const startsAtMs = Date.parse(event.startsAt);
+        if (!Number.isFinite(startsAtMs)) continue;
+        const dateUtc = new Date(startsAtMs);
+        const day = dateUtc.getUTCDay();
+        const daysSinceThursday = (day - 4 + 7) % 7;
+        const weekStartMs = Date.UTC(
+          dateUtc.getUTCFullYear(),
+          dateUtc.getUTCMonth(),
+          dateUtc.getUTCDate() - daysSinceThursday,
+          0,
+          0,
+          0,
+          0
+        );
+        weekStartMsSet.add(weekStartMs);
+      }
+
+      const sortedWeekStarts = [...weekStartMsSet.values()].sort((a, b) => a - b);
+      const futureWeekStarts = sortedWeekStarts.filter((ms) => ms > now);
+      const fallbackWeekMs = sortedWeekStarts.find((ms) => ms > now) ?? sortedWeekStarts[sortedWeekStarts.length - 1] ?? null;
+      const requestedWeekMs = parseDateString(params.weekStartDate)
+        ? Date.parse(`${params.weekStartDate}T00:00:00.000Z`)
+        : Number.NaN;
+      const chosenWeekMs =
+        Number.isFinite(requestedWeekMs) && sortedWeekStarts.some((ms) => ms === requestedWeekMs)
+          ? requestedWeekMs
+          : fallbackWeekMs;
+
+      weekOptions = futureWeekStarts.map((ms, index) => {
+        const start = new Date(ms);
+        const end = new Date(ms + 6 * 24 * 60 * 60 * 1000);
+        const label = `Week ${index + 1} (${start.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" })} - ${end.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" })})`;
+        const value = start.toISOString().slice(0, 10);
+        return { label, value };
+      });
+
+      if (chosenWeekMs !== null) {
+        const startIso = new Date(chosenWeekMs).toISOString();
+        const endIso = new Date(chosenWeekMs + 7 * 24 * 60 * 60 * 1000 - 1).toISOString();
+        fromIso = startIso;
+        toIso = endIso;
+        date = startIso.slice(0, 10);
+        selectedWeekStartDate = startIso.slice(0, 10);
+      }
+    }
+  }
 
   const [eventsSettled, scoresSettled, picksByGameId] = await Promise.all([
     Promise.allSettled(
@@ -755,23 +844,43 @@ export async function listPickEmGames(params: {
         continue;
       }
 
-      if (!eventsById.has(id)) {
-        eventsById.set(id, {
-          id,
-          sportKey,
-          league: leagueTitles.get(sportKey) ?? normalizeLeagueLabel(scoreEvent.sport_title ?? sportKey),
-          startsAt: new Date(startsTs).toISOString(),
-          homeTeam,
-          awayTeam,
-        });
+      const startsAtIso = new Date(startsTs).toISOString();
+      const gameId = buildPickEmGameId({
+        oddsEventId: id,
+        startsAt: startsAtIso,
+        homeTeam,
+        awayTeam,
+      });
+      if (eventsById.has(gameId)) {
+        continue;
       }
+      eventsById.set(gameId, {
+        id: gameId,
+        oddsEventId: id,
+        sportKey,
+        league: leagueTitles.get(sportKey) ?? normalizeLeagueLabel(scoreEvent.sport_title ?? sportKey),
+        startsAt: startsAtIso,
+        homeTeam,
+        awayTeam,
+      });
+    }
+  }
+
+  const scoreByGameId = new Map<string, OddsScoreEvent>();
+  for (const event of eventsById.values()) {
+    const scoreMap = scoresBySportKey.get(event.sportKey);
+    if (!scoreMap) {
+      continue;
+    }
+    const scoreEvent = scoreMap.get(event.oddsEventId);
+    if (scoreEvent) {
+      scoreByGameId.set(event.id, scoreEvent);
     }
   }
 
   const games: PickEmGame[] = [];
   for (const event of eventsById.values()) {
-    const scoreMap = scoresBySportKey.get(event.sportKey);
-    const scoreEvent = scoreMap?.get(event.id);
+    const scoreEvent = scoreByGameId.get(event.id);
 
     const homeScore = getTeamScore(scoreEvent?.scores, event.homeTeam);
     const awayScore = getTeamScore(scoreEvent?.scores, event.awayTeam);
@@ -784,7 +893,7 @@ export async function listPickEmGames(params: {
       status = "live";
     }
 
-    const pick = picksByGameId.get(event.id);
+    const pick = picksByGameId.get(event.id) ?? picksByGameId.get(event.oddsEventId);
 
     games.push({
       id: event.id,
@@ -825,6 +934,8 @@ export async function listPickEmGames(params: {
     },
     date,
     games,
+    weekOptions,
+    selectedWeekStartDate,
   };
 }
 
@@ -835,6 +946,7 @@ export async function submitPickEmPick(params: {
   gameId: string;
   pickTeam: string;
   date?: string;
+  weekStartDate?: string;
   tzOffsetMinutes?: number | string;
 }): Promise<PickEmPick> {
   if (!supabaseAdmin) {
@@ -860,6 +972,7 @@ export async function submitPickEmPick(params: {
   const gameList = await listPickEmGames({
     sportSlug,
     date: params.date,
+    weekStartDate: params.weekStartDate,
     tzOffsetMinutes,
     userId,
   });
@@ -924,6 +1037,26 @@ export async function submitPickEmPick(params: {
     return mapPickRow(data);
   }
 
+  const localGameDate = toLocalDateKey(game.startsAt, tzOffsetMinutes);
+  const dailyRange = buildUtcRangeForLocalDay(localGameDate || undefined, tzOffsetMinutes);
+  const { count: existingCount, error: countError } = await supabaseAdmin
+    .from("pickem_picks")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .gte("starts_at", dailyRange.fromIso)
+    .lte("starts_at", dailyRange.toIso);
+
+  if (countError) {
+    if (isMissingPickEmTablesError(countError)) {
+      throw new Error(PICKEM_TABLES_MISSING_ERROR);
+    }
+    throw new Error(countError.message ?? "Failed to validate daily Pick 'Em limit.");
+  }
+
+  if ((existingCount ?? 0) >= PICKEM_DAILY_PICK_LIMIT) {
+    throw new Error(`Daily pick limit reached (${PICKEM_DAILY_PICK_LIMIT}).`);
+  }
+
   const { data, error } = await supabaseAdmin
     .from("pickem_picks")
     .insert({
@@ -956,6 +1089,58 @@ export async function submitPickEmPick(params: {
   }
 
   return mapPickRow(data);
+}
+
+export async function clearPickEmPick(params: {
+  userId: string;
+  gameId: string;
+}): Promise<{ cleared: boolean }> {
+  if (!supabaseAdmin) {
+    throw new Error("Supabase admin client is not configured.");
+  }
+
+  const userId = String(params.userId ?? "").trim();
+  const gameId = String(params.gameId ?? "").trim();
+  if (!userId || !gameId) {
+    throw new Error("userId and gameId are required.");
+  }
+
+  const { data: existing, error: existingError } = await supabaseAdmin
+    .from("pickem_picks")
+    .select("id, starts_at, status")
+    .eq("user_id", userId)
+    .eq("game_id", gameId)
+    .maybeSingle<{ id: string; starts_at: string; status: PickEmPickStatus }>();
+
+  if (existingError) {
+    if (isMissingPickEmTablesError(existingError)) {
+      throw new Error(PICKEM_TABLES_MISSING_ERROR);
+    }
+    throw new Error(existingError.message ?? "Failed to verify existing Pick 'Em pick.");
+  }
+
+  if (!existing) {
+    return { cleared: false };
+  }
+
+  const startsAtMs = new Date(existing.starts_at).getTime();
+  if (!Number.isFinite(startsAtMs) || Date.now() >= startsAtMs + PICKEM_LOCK_GRACE_MS) {
+    throw new Error("This pick is locked because the game has started.");
+  }
+
+  if (existing.status !== "pending") {
+    throw new Error("This pick can no longer be modified.");
+  }
+
+  const { error: deleteError } = await supabaseAdmin.from("pickem_picks").delete().eq("id", existing.id);
+  if (deleteError) {
+    if (isMissingPickEmTablesError(deleteError)) {
+      throw new Error(PICKEM_TABLES_MISSING_ERROR);
+    }
+    throw new Error(deleteError.message ?? "Failed to clear Pick 'Em pick.");
+  }
+
+  return { cleared: true };
 }
 
 export async function listUserPickEmPicks(params: {

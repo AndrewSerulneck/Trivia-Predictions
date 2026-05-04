@@ -1,0 +1,4 @@
+project_id = "pkmxupsayzshvpirkaav"
+
+[functions.sync-live-player-stats]
+verify_jwt = false

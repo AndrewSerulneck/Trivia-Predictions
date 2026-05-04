@@ -14,6 +14,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const sportSlug = (searchParams.get("sportSlug") ?? "nba").trim().toLowerCase();
     const date = (searchParams.get("date") ?? "").trim();
+    const weekStartDate = (searchParams.get("weekStartDate") ?? "").trim();
     const userId = (searchParams.get("userId") ?? "").trim();
     const tzOffsetMinutes = searchParams.get("tzOffsetMinutes") ?? undefined;
     const refreshSettlement = normalizeBoolean(searchParams.get("refreshSettlement"), true);
@@ -26,6 +27,7 @@ export async function GET(request: Request) {
     const result = await listPickEmGames({
       sportSlug,
       date,
+      weekStartDate: weekStartDate || undefined,
       userId: userId || undefined,
       tzOffsetMinutes,
     });

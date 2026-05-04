@@ -84,10 +84,6 @@ export function LeaderboardTable({
     [currentUserId, entries]
   );
 
-  if (errorMessage) {
-    return <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">{errorMessage}</div>;
-  }
-
   if (isLoading && entries.length === 0) {
     return (
       <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
@@ -106,6 +102,18 @@ export function LeaderboardTable({
 
   return (
     <div className="space-y-2">
+      {errorMessage ? (
+        <div className="flex items-center justify-between gap-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900">
+          <span>{errorMessage}</span>
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="rounded border border-amber-400 bg-white px-2 py-1 font-semibold text-amber-900"
+          >
+            Retry
+          </button>
+        </div>
+      ) : null}
       {currentUserRank ? (
         <div className="inline-flex rounded-xl border-2 border-[#3b2412] bg-[#1f5136] px-3 py-1.5 shadow-[0_2px_0_rgba(0,0,0,0.25)]">
           <p className="text-base font-semibold text-[#ecf8f1] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">

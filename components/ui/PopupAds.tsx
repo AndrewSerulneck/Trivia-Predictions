@@ -287,6 +287,14 @@ export function PopupAds() {
         window.clearTimeout(resetTimer);
       };
     }
+    // Venue home is highly sensitive to scroll/viewport locks on mobile.
+    // Suppress auto popup entry ads on venue routes to prevent layout thrash.
+    if (pageKey === "venue") {
+      setLandingPopupGate(false);
+      return () => {
+        window.clearTimeout(resetTimer);
+      };
+    }
     if (isVenueTransitionGateActive()) {
       setLandingPopupGate(false);
       return () => {
@@ -300,11 +308,7 @@ export function PopupAds() {
     let cancelled = false;
     void (async () => {
       try {
-        if (pageKey === "venue") {
-          await waitForVenueHomeReady(pathname);
-        } else {
-          await waitForWindowLoadReady();
-        }
+        await waitForWindowLoadReady();
         if (cancelled || isVenueTransitionGateActive()) {
           setLandingPopupGate(false);
           return;
@@ -334,7 +338,7 @@ export function PopupAds() {
 
   useEffect(() => {
     const pageKey = resolvePageKey(pathname);
-    if (!pageKey || pathname.startsWith("/admin")) {
+    if (!pageKey || pathname.startsWith("/admin") || pageKey === "venue") {
       return;
     }
 

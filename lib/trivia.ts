@@ -25,6 +25,7 @@ type UserRow = {
 const MAX_CANDIDATE_QUESTIONS = 2000;
 const TRIVIA_LIMIT_PER_WINDOW = 45;
 const WINDOW_MS = 60 * 60 * 1000;
+const TRIVIA_POINTS_PER_CORRECT = 2;
 
 export type TriviaQuota = {
   limit: number;
@@ -421,7 +422,7 @@ export async function submitTriviaAnswer(params: {
           .eq("id", params.userId)
           .maybeSingle<{ points: number }>();
 
-        const nextPoints = (userData?.points ?? 0) + 10;
+        const nextPoints = (userData?.points ?? 0) + TRIVIA_POINTS_PER_CORRECT;
         await supabaseAdmin.from("users").update({ points: nextPoints }).eq("id", params.userId);
       }
     }

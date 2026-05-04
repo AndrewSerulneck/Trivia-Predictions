@@ -27,6 +27,9 @@ export function ScrollRecoverySentinel() {
   const pathname = usePathname();
 
   useEffect(() => {
+    if (pathname?.startsWith("/venue/")) {
+      return;
+    }
     recoverScrollableState();
     const timer = window.setTimeout(() => {
       recoverScrollableState();

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { claimPickEmReward, listUserPickEmPicks, settlePendingPickEmPicks, submitPickEmPick } from "@/lib/pickem";
+import { claimPickEmReward, clearPickEmPick, listUserPickEmPicks, settlePendingPickEmPicks, submitPickEmPick } from "@/lib/pickem";
 
 function normalizeBoolean(value: string | null, fallback: boolean): boolean {
   const normalized = String(value ?? "").trim().toLowerCase();
@@ -26,7 +26,8 @@ function toClientErrorStatus(message: string): number {
     normalized.includes("locked") ||
     normalized.includes("already") ||
     normalized.includes("coming soon") ||
-    normalized.includes("must match")
+    normalized.includes("must match") ||
+    normalized.includes("limit")
   ) {
     return 400;
   }
@@ -80,6 +81,7 @@ export async function POST(request: Request) {
       pickTeam?: string;
       pickId?: string;
       date?: string;
+      weekStartDate?: string;
       tzOffsetMinutes?: number | string;
     };
 
@@ -92,6 +94,13 @@ export async function POST(request: Request) {
 
       return NextResponse.json({ ok: true, result });
     }
+    if (action === "clear") {
+      const result = await clearPickEmPick({
+        userId: String(body.userId ?? "").trim(),
+        gameId: String(body.gameId ?? "").trim(),
+      });
+      return NextResponse.json({ ok: true, result });
+    }
 
     const pick = await submitPickEmPick({
       userId: String(body.userId ?? "").trim(),
@@ -100,6 +109,7 @@ export async function POST(request: Request) {
       gameId: String(body.gameId ?? "").trim(),
       pickTeam: String(body.pickTeam ?? "").trim(),
       date: String(body.date ?? "").trim() || undefined,
+      weekStartDate: String(body.weekStartDate ?? "").trim() || undefined,
       tzOffsetMinutes: body.tzOffsetMinutes,
     });
 

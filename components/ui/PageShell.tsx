@@ -43,9 +43,16 @@ export function PageShell({
   const shellGapClass = "gap-3";
 
   const shellHeightClass = lockViewport ? "h-[100svh] min-h-[100svh] max-h-[100svh] overflow-hidden" : "min-h-[100dvh] overflow-x-hidden";
+  const shellStyle = lockViewport
+    ? {
+        height: "var(--tp-vh, 100svh)",
+        minHeight: "var(--tp-vh, 100svh)",
+        maxHeight: "var(--tp-vh, 100svh)",
+      }
+    : undefined;
 
   return (
-    <div className={`tp-page-shell flex flex-col ${shellHeightClass} ${shellGapClass}`}>
+    <div className={`tp-page-shell flex flex-col ${shellHeightClass} ${shellGapClass}`} style={shellStyle}>
       {useCompactTopNav ? (
         <header className="tp-page-header tp-page-header-compact fixed inset-x-0 top-0 z-[1000] w-full max-w-none overflow-visible px-0 pb-0 pt-0">
           <div className="w-full max-w-none box-border px-0 pt-[max(env(safe-area-inset-top),0px)]">

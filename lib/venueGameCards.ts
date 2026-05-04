@@ -20,7 +20,7 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
       "-15 questions per round",
       "-15 seconds per question",
       "-3 rounds per hour",
-      "-10 points per correct answer",
+      "-2 points per correct answer",
     ],
   },
   {
@@ -70,7 +70,7 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
       "-Bingo cards feature specific player stats and game scores",
       "-Watch live as squares update in real-time.",
       "-Up to 4 active boards at a time",
-      "-100 points for boards that hit Bingo",
+      "-50 points for boards that hit Bingo",
       "-Click \"Collect Points\" to claim your reward",
     ],
   },

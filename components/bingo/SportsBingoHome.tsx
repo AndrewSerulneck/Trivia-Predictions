@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { PointerEvent as ReactPointerEvent, TouchEvent as ReactTouchEvent } from "react";
+import type { TouchEvent as ReactTouchEvent } from "react";
 import { getUserId } from "@/lib/storage";
 import { consumeBingoPrefetchCache } from "@/lib/bingoPrefetchCache";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
@@ -100,12 +100,30 @@ function getCardSquareStyle(status: BingoCardSquare["status"], isFree: boolean):
     return "border-emerald-200 bg-emerald-100 text-emerald-800";
   }
   if (status === "hit") {
-    return "border-cyan-300 bg-cyan-500 text-white";
+    return "border-emerald-300 bg-emerald-500 text-white";
   }
   if (status === "miss") {
     return "border-rose-200 bg-rose-100 text-rose-700";
   }
   return "border-slate-200 bg-white text-slate-700";
+}
+
+function renderSquareStatusGlyph(square: BingoCardSquare) {
+  if (square.isFree || square.status === "hit") {
+    return (
+      <span className="absolute right-1 top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-700 text-[10px] font-black text-white">
+        ✓
+      </span>
+    );
+  }
+  if (square.status === "miss") {
+    return (
+      <span className="absolute right-1 top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white">
+        ✕
+      </span>
+    );
+  }
+  return null;
 }
 
 function toCardSquareKey(cardId: string, squareIndex: number): string {
@@ -237,11 +255,12 @@ function renderCompactGrid(
           <div
             key={index}
             title={square.label}
-            className={`flex h-10 items-center justify-center rounded-md border px-1 text-center text-[9px] font-semibold leading-tight ${getCardSquareStyle(
+            className={`relative flex h-10 items-center justify-center rounded-md border px-1 text-center text-[9px] font-semibold leading-tight ${getCardSquareStyle(
               square.status,
               isFree
             )} ${shouldPop ? "bingo-square-pop ring-2 ring-cyan-400 shadow-[0_0_8px_2px_rgba(34,211,238,0.45)]" : ""}`}
           >
+            {renderSquareStatusGlyph(square)}
             {isFree ? "FREE" : shortenLabel(square.label)}
           </div>
         );
@@ -274,11 +293,12 @@ function renderExpandedGrid(
           return (
             <div
               key={index}
-              className={`flex min-h-[72px] items-center justify-center rounded-lg border px-1.5 py-1.5 text-center text-[10px] font-semibold leading-tight sm:min-h-[82px] sm:px-2 sm:py-2 sm:text-[11px] ${getCardSquareStyle(
+              className={`relative flex min-h-[72px] items-center justify-center rounded-lg border px-1.5 py-1.5 text-center text-[10px] font-semibold leading-tight sm:min-h-[82px] sm:px-2 sm:py-2 sm:text-[11px] ${getCardSquareStyle(
                 square.status,
                 isFree
               )} ${shouldPop ? "bingo-square-pop ring-2 ring-cyan-400 shadow-[0_0_8px_2px_rgba(34,211,238,0.45)]" : ""}`}
             >
+              {renderSquareStatusGlyph(square)}
               {isFree ? "FREE" : square.label}
             </div>
           );
@@ -329,51 +349,17 @@ export function SportsBingoHome() {
   const [loadingCards, setLoadingCards] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [claimingCardId, setClaimingCardId] = useState("");
-  const [pressedCardId, setPressedCardId] = useState("");
+  const [expandedActiveCardId, setExpandedActiveCardId] = useState("");
   const [expandedFinalCardId, setExpandedFinalCardId] = useState("");
   const [recentlyUpdatedSquareKeys, setRecentlyUpdatedSquareKeys] = useState<Set<string>>(new Set());
   const [showBoardLimitMessage, setShowBoardLimitMessage] = useState(false);
   const prefetchUsedRef = useRef(false);
-  const pressedPointerIdRef = useRef<number | null>(null);
-  const pressedStartXRef = useRef<number | null>(null);
-  const pressedStartYRef = useRef<number | null>(null);
-  const pressedFallbackTimerRef = useRef<number | null>(null);
   const clearSquarePopTimerRef = useRef<number | null>(null);
   const kickoffRefreshTimerRef = useRef<number | null>(null);
   const swipeViewportRef = useRef<HTMLDivElement | null>(null);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
   const [activeScreen, setActiveScreen] = useState<BingoScreenIndex>(0);
-
-  const clearPressedCard = useCallback(() => {
-    pressedPointerIdRef.current = null;
-    pressedStartXRef.current = null;
-    pressedStartYRef.current = null;
-    if (pressedFallbackTimerRef.current) {
-      window.clearTimeout(pressedFallbackTimerRef.current);
-      pressedFallbackTimerRef.current = null;
-    }
-    setPressedCardId("");
-  }, []);
-
-  const startPointerHold = useCallback(
-    (cardId: string, event: ReactPointerEvent<HTMLLIElement>) => {
-      if (event.pointerType === "mouse" && event.button !== 0) {
-        return;
-      }
-      pressedPointerIdRef.current = event.pointerId;
-      pressedStartXRef.current = event.clientX;
-      pressedStartYRef.current = event.clientY;
-      setPressedCardId(cardId);
-      if (pressedFallbackTimerRef.current) {
-        window.clearTimeout(pressedFallbackTimerRef.current);
-      }
-      pressedFallbackTimerRef.current = window.setTimeout(() => {
-        clearPressedCard();
-      }, 2500);
-    },
-    [clearPressedCard]
-  );
 
   useEffect(() => {
     setUserId(getUserId() ?? "");
@@ -408,9 +394,8 @@ export function SportsBingoHome() {
       window.cancelAnimationFrame(rafId);
       window.clearTimeout(timeoutId);
       window.removeEventListener("pageshow", onPageShow);
-      clearPressedCard();
     };
-  }, [clearPressedCard]);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -419,9 +404,6 @@ export function SportsBingoHome() {
       }
       if (kickoffRefreshTimerRef.current) {
         window.clearTimeout(kickoffRefreshTimerRef.current);
-      }
-      if (pressedFallbackTimerRef.current) {
-        window.clearTimeout(pressedFallbackTimerRef.current);
       }
     };
   }, []);
@@ -494,62 +476,6 @@ export function SportsBingoHome() {
   useEffect(() => {
     void loadCards();
   }, [loadCards]);
-
-  useEffect(() => {
-    if (!pressedCardId) {
-      pressedPointerIdRef.current = null;
-      pressedStartXRef.current = null;
-      pressedStartYRef.current = null;
-      if (pressedFallbackTimerRef.current) {
-        window.clearTimeout(pressedFallbackTimerRef.current);
-        pressedFallbackTimerRef.current = null;
-      }
-    }
-  }, [pressedCardId]);
-
-  useEffect(() => {
-    const MOVE_CANCEL_THRESHOLD_PX = 12;
-
-    const handlePointerMove = (event: PointerEvent) => {
-      if (!pressedCardId) {
-        return;
-      }
-      const trackedPointerId = pressedPointerIdRef.current;
-      if (trackedPointerId === null || event.pointerId !== trackedPointerId) {
-        return;
-      }
-      const startX = pressedStartXRef.current;
-      const startY = pressedStartYRef.current;
-      if (startX === null || startY === null) {
-        return;
-      }
-      const movedX = Math.abs(event.clientX - startX);
-      const movedY = Math.abs(event.clientY - startY);
-      if (movedX >= MOVE_CANCEL_THRESHOLD_PX || movedY >= MOVE_CANCEL_THRESHOLD_PX) {
-        clearPressedCard();
-      }
-    };
-
-    window.addEventListener("pointerup", clearPressedCard);
-    window.addEventListener("pointercancel", clearPressedCard);
-    window.addEventListener("pointermove", handlePointerMove, { passive: true });
-    window.addEventListener("touchcancel", clearPressedCard, { passive: true });
-    window.addEventListener("scroll", clearPressedCard, { passive: true });
-    window.addEventListener("blur", clearPressedCard);
-    window.addEventListener("pagehide", clearPressedCard);
-    document.addEventListener("visibilitychange", clearPressedCard);
-
-    return () => {
-      window.removeEventListener("pointerup", clearPressedCard);
-      window.removeEventListener("pointercancel", clearPressedCard);
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("touchcancel", clearPressedCard);
-      window.removeEventListener("scroll", clearPressedCard);
-      window.removeEventListener("blur", clearPressedCard);
-      window.removeEventListener("pagehide", clearPressedCard);
-      document.removeEventListener("visibilitychange", clearPressedCard);
-    };
-  }, [clearPressedCard, pressedCardId]);
 
   const goToScreen = useCallback((screen: BingoScreenIndex) => {
     const viewport = swipeViewportRef.current;
@@ -684,9 +610,9 @@ export function SportsBingoHome() {
     return nextStart;
   }, [activeCards]);
   const settledCards = finalizedCards;
-  const pressedCard = useMemo(
-    () => activeCards.find((card) => card.id === pressedCardId) ?? null,
-    [activeCards, pressedCardId]
+  const expandedActiveCard = useMemo(
+    () => activeCards.find((card) => card.id === expandedActiveCardId) ?? null,
+    [activeCards, expandedActiveCardId]
   );
   const expandedFinalCard = useMemo(
     () => settledCards.find((card) => card.id === expandedFinalCardId) ?? null,
@@ -877,7 +803,7 @@ export function SportsBingoHome() {
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-base font-semibold text-slate-900">Active Boards</h2>
             </div>
-            <p className="mt-2 text-base font-bold text-slate-700">Press down on a board to expand it!</p>
+            <p className="mt-2 text-base font-bold text-slate-700">Tap a board to expand it.</p>
             {loadingCards ? (
               <LoadingState label="Loading your cards..." />
             ) : activeCards.length === 0 ? (
@@ -887,23 +813,13 @@ export function SportsBingoHome() {
             ) : (
               <ul className="mt-3 space-y-3">
                 {activeCards.map((card) => {
-                  const isPressed = pressedCardId === card.id;
                   return (
                     <li
                       key={card.id}
-                      onPointerDown={(event) => {
-                        startPointerHold(card.id, event);
+                      onClick={() => {
+                        setExpandedActiveCardId(card.id);
                       }}
-                      onPointerUp={clearPressedCard}
-                      onPointerCancel={clearPressedCard}
-                      onPointerLeave={(event) => {
-                        if (event.pointerType === "mouse") {
-                          clearPressedCard();
-                        }
-                      }}
-                      className={`rounded-xl border border-slate-200 bg-slate-50 p-3 transition-all ${
-                        isPressed ? "shadow-md shadow-slate-300/60 ring-2 ring-cyan-300/60" : ""
-                      }`}
+                      className="cursor-pointer rounded-xl border border-slate-200 bg-slate-50 p-3 transition-all hover:shadow-md hover:shadow-slate-300/60"
                       style={{
                         touchAction: "pan-y",
                         WebkitTouchCallout: "none",
@@ -973,7 +889,7 @@ export function SportsBingoHome() {
                               }}
                               className="pointer-events-auto inline-flex min-h-[44px] items-center rounded-full bg-gradient-to-r from-emerald-700 to-teal-600 px-4 py-2 text-sm font-semibold text-white transition-all active:scale-95 disabled:opacity-60"
                             >
-                              {claimingCardId === card.id ? "Claiming..." : "Claim Reward"}
+                              {claimingCardId === card.id ? "Collecting..." : "Collect Points"}
                             </button>
                           </div>
                         </>
@@ -1001,15 +917,31 @@ export function SportsBingoHome() {
         </div>
       </div>
 
-      {pressedCard ? (
-        <div className="pointer-events-none fixed inset-0 z-[90] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-950/35" />
+      {expandedActiveCard ? (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
+          <button
+            type="button"
+            aria-label="Close active board view"
+            className="absolute inset-0 bg-slate-950/35"
+            onClick={() => {
+              setExpandedActiveCardId("");
+            }}
+          />
           <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-2xl border border-cyan-300 bg-white p-3 shadow-2xl shadow-slate-900/40">
-            <p className="text-center text-sm font-semibold text-slate-900">{pressedCard.gameLabel}</p>
-            <p className="mb-2 mt-1 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-cyan-700">
-              Expanded Board Preview
-            </p>
-            {renderExpandedGrid(pressedCard.id, pressedCard.squares, recentlyUpdatedSquareKeys)}
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-slate-900">{expandedActiveCard.gameLabel}</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setExpandedActiveCardId("");
+                }}
+                className="tp-clean-button inline-flex min-h-[32px] items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700"
+              >
+                Close
+              </button>
+            </div>
+            <p className="mb-2 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-cyan-700">Active Board</p>
+            {renderExpandedGrid(expandedActiveCard.id, expandedActiveCard.squares, recentlyUpdatedSquareKeys)}
           </div>
         </div>
       ) : null}
