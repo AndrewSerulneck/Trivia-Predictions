@@ -4067,5 +4067,161 @@
     "correctAnswer": 0,
     "category": "Sports",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-maximum-number-of-players-allowed-on-a-soccer-football-team-on-the-field-at-one-time",
+    "question": "What is the maximum number of players allowed on a soccer (football) team on the field at one time?",
+    "options": [
+      "9",
+      "10",
+      "11",
+      "12"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-championship-game-of-the-national-football-league-nfl-in-the-united-states",
+    "question": "What is the name of the championship game of the National Football League (NFL) in the United States?",
+    "options": [
+      "World Series",
+      "Stanley Cup",
+      "Super Bowl",
+      "NBA Finals"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-it-called-when-a-tennis-player-wins-all-four-grand-slam-tournaments-in-a-calendar-year",
+    "question": "What is it called when a tennis player wins all four Grand Slam tournaments in a calendar year?",
+    "options": [
+      "Triple Crown",
+      "Grand Slam",
+      "Golden Slam",
+      "Super Slam"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-a-score-of-one-stroke-under-par-on-a-single-hole-in-golf-called",
+    "question": "What is a score of one stroke under par on a single hole in golf called?",
+    "options": [
+      "Eagle",
+      "Birdie",
+      "Bogey",
+      "Albatross"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-which-country-does-the-famous-giro-ditalia-cycling-race-primarily-take-place",
+    "question": "In which country does the famous 'Giro d'Italia' cycling race primarily take place?",
+    "options": [
+      "France",
+      "Spain",
+      "Italy",
+      "Belgium"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-term-for-a-boxing-match-ending-when-one-boxer-is-knocked-unconscious-and-cannot-continue",
+    "question": "What is the term for a boxing match ending when one boxer is knocked unconscious and cannot continue?",
+    "options": [
+      "TKO",
+      "Decision",
+      "Draw",
+      "KO"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-ancient-greek-city-were-the-original-olympic-games-held",
+    "question": "In which ancient Greek city were the original Olympic Games held?",
+    "options": [
+      "Athens",
+      "Rome",
+      "Sparta",
+      "Olympia"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-points-are-awarded-for-a-try-in-rugby-union",
+    "question": "How many points are awarded for a 'try' in rugby union?",
+    "options": [
+      "3",
+      "5",
+      "7",
+      "10"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-swimming-stroke-is-characterized-by-a-simultaneous-arm-recovery-over-the-water-and-a-dolphin-kick",
+    "question": "Which swimming stroke is characterized by a simultaneous arm recovery over the water and a dolphin kick?",
+    "options": [
+      "Freestyle",
+      "Backstroke",
+      "Breaststroke",
+      "Butterfly"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-formula-1-circuit-is-known-for-its-famous-eau-rouge-corner",
+    "question": "Which Formula 1 circuit is known for its famous 'Eau Rouge' corner?",
+    "options": [
+      "Monza",
+      "Silverstone",
+      "Spa-Francorchamps",
+      "Monaco"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-type-of-surface-is-the-australian-open-tennis-tournament-played-on",
+    "question": "What type of surface is the Australian Open tennis tournament played on?",
+    "options": [
+      "Clay",
+      "Grass",
+      "Hardcourt",
+      "Carpet"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-which-year-were-the-first-modern-olympic-games-held",
+    "question": "In which year were the first modern Olympic Games held?",
+    "options": [
+      "1892",
+      "1896",
+      "1900",
+      "1904"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
   }
 ]

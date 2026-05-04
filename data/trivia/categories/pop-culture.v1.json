@@ -4067,5 +4067,161 @@
     "correctAnswer": 0,
     "category": "Pop Culture",
     "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-wizard-who-guides-harry-potter-in-the-hogwarts-school-of-witchcraft-and-wizardry",
+    "question": "What is the name of the wizard who guides Harry Potter in the Hogwarts School of Witchcraft and Wizardry?",
+    "options": [
+      "Albus Dumbledore",
+      "Severus Snape",
+      "Lord Voldemort",
+      "Rubeus Hagrid"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-artist-famously-broke-streaming-records-with-her-2022-album-midnights",
+    "question": "Which artist famously broke streaming records with her 2022 album 'Midnights'?",
+    "options": [
+      "Billie Eilish",
+      "Olivia Rodrigo",
+      "Dua Lipa",
+      "Taylor Swift"
+    ],
+    "correctAnswer": 3,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animated-sitcom-features-a-family-consisting-of-peter-lois-meg-chris-and-stewie-griffin",
+    "question": "Which animated sitcom features a family consisting of Peter, Lois, Meg, Chris, and Stewie Griffin?",
+    "options": [
+      "The Simpsons",
+      "Futurama",
+      "Family Guy",
+      "American Dad!"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-protagonist-in-the-2018-playstation-4-game-god-of-war",
+    "question": "What is the name of the protagonist in the 2018 PlayStation 4 game 'God of War'?",
+    "options": [
+      "Kratos",
+      "Atreus",
+      "Zeus",
+      "Thor"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-directed-the-critically-acclaimed-2019-film-parasite-which-won-the-academy-award-for-best-picture",
+    "question": "Who directed the critically acclaimed 2019 film 'Parasite,' which won the Academy Award for Best Picture?",
+    "options": [
+      "Bong Joon-ho",
+      "Quentin Tarantino",
+      "Martin Scorsese",
+      "Christopher Nolan"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-short-form-video-platform-became-widely-popular-in-the-late-2010s-and-early-2020s",
+    "question": "What short-form video platform became widely popular in the late 2010s and early 2020s?",
+    "options": [
+      "Facebook",
+      "Instagram",
+      "Twitter",
+      "TikTok"
+    ],
+    "correctAnswer": 3,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-k-pop-group-is-known-for-hits-like-dynamite-and-has-a-massive-global-fanbase-known-as-the-army",
+    "question": "Which K-pop group is known for hits like 'Dynamite' and has a massive global fanbase known as the ARMY?",
+    "options": [
+      "EXO",
+      "NCT",
+      "BTS",
+      "BLACKPINK"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-the-tv-series-game-of-thrones-what-is-the-sigil-of-house-stark",
+    "question": "In the TV series 'Game of Thrones,' what is the sigil of House Stark?",
+    "options": [
+      "A lion",
+      "A dragon",
+      "A direwolf",
+      "A stag"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-actor-is-known-for-playing-the-role-of-captain-jack-sparrow-in-the-pirates-of-the-caribbean-film-series",
+    "question": "Which actor is known for playing the role of Captain Jack Sparrow in the 'Pirates of the Caribbean' film series?",
+    "options": [
+      "Orlando Bloom",
+      "Johnny Depp",
+      "Geoffrey Rush",
+      "Keira Knightley"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-nintendo-console-introduced-motion-controlled-gaming-to-a-wide-audience",
+    "question": "What Nintendo console introduced motion-controlled gaming to a wide audience?",
+    "options": [
+      "Nintendo 64",
+      "GameCube",
+      "Wii",
+      "Switch"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-legendary-musician-is-often-referred-to-as-the-king-of-pop",
+    "question": "Which legendary musician is often referred to as 'The King of Pop'?",
+    "options": [
+      "Prince",
+      "Elvis Presley",
+      "Michael Jackson",
+      "James Brown"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-dystopian-young-adult-novel-series-featuring-katniss-everdeen",
+    "question": "What is the name of the dystopian young adult novel series featuring Katniss Everdeen?",
+    "options": [
+      "Divergent",
+      "The Maze Runner",
+      "The Hunger Games",
+      "Twilight"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
   }
 ]

@@ -4080,5 +4080,161 @@
     "correctAnswer": 1,
     "category": "Animals",
     "difficulty": "easy"
+  },
+  {
+    "slug": "which-insect-is-known-for-producing-honey",
+    "question": "Which insect is known for producing honey?",
+    "options": [
+      "Ant",
+      "Wasp",
+      "Bee",
+      "Fly"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-mammal-is-known-for-its-ability-to-fly",
+    "question": "Which mammal is known for its ability to fly?",
+    "options": [
+      "Squirrel",
+      "Bat",
+      "Flying Squirrel",
+      "Sugar Glider"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-marine-creature-is-famous-for-having-three-hearts",
+    "question": "Which marine creature is famous for having three hearts?",
+    "options": [
+      "Dolphin",
+      "Shark",
+      "Octopus",
+      "Jellyfish"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-bird-is-the-only-known-to-be-able-to-fly-backward",
+    "question": "Which bird is the only known to be able to fly backward?",
+    "options": [
+      "Sparrow",
+      "Eagle",
+      "Hummingbird",
+      "Pigeon"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-large-land-animal-has-the-highest-blood-pressure",
+    "question": "Which large land animal has the highest blood pressure?",
+    "options": [
+      "Elephant",
+      "Rhinoceros",
+      "Giraffe",
+      "Hippopotamus"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-type-of-snake-is-the-longest-venomous-snake-in-the-world",
+    "question": "Which type of snake is the longest venomous snake in the world?",
+    "options": [
+      "Black Mamba",
+      "Taipan",
+      "King Cobra",
+      "Rattlesnake"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-large-cat-is-known-for-its-black-stripes-on-an-orange-coat",
+    "question": "Which large cat is known for its black stripes on an orange coat?",
+    "options": [
+      "Lion",
+      "Tiger",
+      "Leopard",
+      "Cheetah"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-a-group-of-wolves-called",
+    "question": "What is a group of wolves called?",
+    "options": [
+      "Herd",
+      "Pack",
+      "Pride",
+      "Swarm"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-has-the-longest-known-lifespan-among-all-vertebrates",
+    "question": "Which animal has the longest known lifespan among all vertebrates?",
+    "options": [
+      "Bowhead Whale",
+      "Greenland Shark",
+      "Galapagos Tortoise",
+      "Lake Sturgeon"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-do-you-call-a-baby-goat",
+    "question": "What do you call a baby goat?",
+    "options": [
+      "Kid",
+      "Calf",
+      "Fawn",
+      "Cub"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-marsupial-is-native-to-australia-and-known-for-its-powerful-hind-legs-and-tail",
+    "question": "Which marsupial is native to Australia and known for its powerful hind legs and tail?",
+    "options": [
+      "Koala",
+      "Wombat",
+      "Kangaroo",
+      "Possum"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-bird-lays-the-largest-egg-relative-to-its-own-body-size",
+    "question": "Which bird lays the largest egg relative to its own body size?",
+    "options": [
+      "Ostrich",
+      "Kiwi",
+      "Hummingbird",
+      "Chicken"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
   }
 ]

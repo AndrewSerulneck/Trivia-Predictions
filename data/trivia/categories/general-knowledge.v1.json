@@ -4067,5 +4067,174 @@
     "correctAnswer": 1,
     "category": "General Knowledge",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-continent-is-the-sahara-desert-primarily-located-on",
+    "question": "Which continent is the Sahara Desert primarily located on?",
+    "options": [
+      "Asia",
+      "Africa",
+      "South America",
+      "Australia"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-our-home-galaxy",
+    "question": "What is the name of our home galaxy?",
+    "options": [
+      "Andromeda",
+      "Triangulum",
+      "Whirlpool",
+      "Milky Way"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-wrote-the-classic-novel-to-kill-a-mockingbird",
+    "question": "Who wrote the classic novel 'To Kill a Mockingbird'?",
+    "options": [
+      "Harper Lee",
+      "F. Scott Fitzgerald",
+      "Ernest Hemingway",
+      "Jane Austen"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-often-referred-to-as-the-king-of-the-jungle",
+    "question": "Which animal is often referred to as the 'king of the jungle'?",
+    "options": [
+      "Tiger",
+      "Elephant",
+      "Lion",
+      "Bear"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-is-credited-with-inventing-the-telephone",
+    "question": "Who is credited with inventing the telephone?",
+    "options": [
+      "Thomas Edison",
+      "Alexander Graham Bell",
+      "Nikola Tesla",
+      "Isaac Newton"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-artist-painted-the-mona-lisa",
+    "question": "Which artist painted the Mona Lisa?",
+    "options": [
+      "Vincent van Gogh",
+      "Pablo Picasso",
+      "Leonardo da Vinci",
+      "Claude Monet"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-greek-mythology-who-is-the-king-of-the-gods",
+    "question": "In Greek mythology, who is the king of the gods?",
+    "options": [
+      "Hades",
+      "Poseidon",
+      "Zeus",
+      "Apollo"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-is-the-largest-ocean-on-earth",
+    "question": "Which is the largest ocean on Earth?",
+    "options": [
+      "Atlantic Ocean",
+      "Indian Ocean",
+      "Southern Ocean",
+      "Pacific Ocean"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-is-credited-with-inventing-the-movable-type-printing-press",
+    "question": "Who is credited with inventing the movable type printing press?",
+    "options": [
+      "Johannes Gutenberg",
+      "Leonardo da Vinci",
+      "Isaac Newton",
+      "Thomas Edison"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-is-home-to-the-great-barrier-reef",
+    "question": "Which country is home to the Great Barrier Reef?",
+    "options": [
+      "Australia",
+      "Brazil",
+      "Mexico",
+      "Canada"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-unit-of-electric-current",
+    "question": "What is the unit of electric current?",
+    "options": [
+      "Volt",
+      "Ampere",
+      "Ohm",
+      "Watt"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-wrote-the-novel-one-hundred-years-of-solitude",
+    "question": "Who wrote the novel 'One Hundred Years of Solitude'?",
+    "options": [
+      "Mario Vargas Llosa",
+      "Gabriel García Márquez",
+      "Jorge Luis Borges",
+      "Isabel Allende"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-fruit-is-known-for-being-rich-in-vitamin-c-and-often-associated-with-scurvy-prevention",
+    "question": "Which fruit is known for being rich in Vitamin C and often associated with scurvy prevention?",
+    "options": [
+      "Banana",
+      "Apple",
+      "Orange",
+      "Grape"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
   }
 ]

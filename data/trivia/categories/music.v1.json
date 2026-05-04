@@ -4067,5 +4067,174 @@
     "correctAnswer": 2,
     "category": "Music",
     "difficulty": "medium"
+  },
+  {
+    "slug": "what-artist-is-known-as-the-king-of-rock-and-roll",
+    "question": "What artist is known as the \"King of Rock and Roll\"?",
+    "options": [
+      "Elvis Presley",
+      "Chuck Berry",
+      "Little Richard",
+      "Jerry Lee Lewis"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-composed-the-famous-four-seasons-violin-concertos",
+    "question": "Who composed the famous \"Four Seasons\" violin concertos?",
+    "options": [
+      "Johann Sebastian Bach",
+      "Antonio Vivaldi",
+      "Wolfgang Amadeus Mozart",
+      "Ludwig van Beethoven"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-band-released-the-album-nevermind-featuring-the-hit-smells-like-teen-spirit",
+    "question": "Which band released the album 'Nevermind' featuring the hit \"Smells Like Teen Spirit\"?",
+    "options": [
+      "Pearl Jam",
+      "Soundgarden",
+      "Nirvana",
+      "Alice in Chains"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-a-composition-for-three-voices-or-instruments-called",
+    "question": "What is a composition for three voices or instruments called?",
+    "options": [
+      "Duet",
+      "Trio",
+      "Quartet",
+      "Quintet"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-sang-the-1990s-hit-i-will-always-love-you-famously-covered-by-whitney-houston",
+    "question": "Who sang the 1990s hit \"I Will Always Love You,\" famously covered by Whitney Houston?",
+    "options": [
+      "Mariah Carey",
+      "Celine Dion",
+      "Dolly Parton",
+      "Aretha Franklin"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-city-is-the-grand-ole-opry-a-famous-country-music-venue-located",
+    "question": "In which city is the Grand Ole Opry, a famous country music venue, located?",
+    "options": [
+      "Memphis",
+      "Nashville",
+      "Austin",
+      "New Orleans"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-artist-is-known-for-pioneering-the-genre-of-reggae-music",
+    "question": "Which artist is known for pioneering the genre of Reggae music?",
+    "options": [
+      "Peter Tosh",
+      "Jimmy Cliff",
+      "Bob Marley",
+      "Toots Hibbert"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-term-for-the-speed-at-which-a-piece-of-music-is-played",
+    "question": "What is the term for the speed at which a piece of music is played?",
+    "options": [
+      "Pitch",
+      "Timbre",
+      "Tempo",
+      "Dynamics"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-musical-artist-won-an-academy-award-for-best-original-song-for-lose-yourself-from-the-movie-8-mile",
+    "question": "Which musical artist won an Academy Award for Best Original Song for \"Lose Yourself\" from the movie 8 Mile?",
+    "options": [
+      "Jay-Z",
+      "Dr. Dre",
+      "Eminem",
+      "50 Cent"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-band-u2-originated-in-which-country",
+    "question": "The band U2 originated in which country?",
+    "options": [
+      "England",
+      "Scotland",
+      "Ireland",
+      "United States"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-common-name-for-ludwig-van-beethovens-symphony-no-5",
+    "question": "What is the common name for Ludwig van Beethoven's Symphony No. 5?",
+    "options": [
+      "Eroica Symphony",
+      "Pastoral Symphony",
+      "Choral Symphony",
+      "Fate Symphony"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-artist-released-the-single-old-town-road-that-famously-blended-country-and-hip-hop",
+    "question": "Which artist released the single \"Old Town Road\" that famously blended country and hip-hop?",
+    "options": [
+      "Post Malone",
+      "Lil Nas X",
+      "DaBaby",
+      "Travis Scott"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-british-rock-band-released-the-epic-song-bohemian-rhapsody",
+    "question": "Which British rock band released the epic song \"Bohemian Rhapsody\"?",
+    "options": [
+      "Led Zeppelin",
+      "The Rolling Stones",
+      "Queen",
+      "The Who"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
   }
 ]

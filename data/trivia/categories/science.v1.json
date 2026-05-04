@@ -4067,5 +4067,161 @@
     "correctAnswer": 2,
     "category": "Science",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-power-source-of-the-cell-generating-most-of-the-supply-of-adenosine-triphosphate-atp",
+    "question": "What is the power source of the cell, generating most of the supply of adenosine triphosphate (ATP)?",
+    "options": [
+      "Nucleus",
+      "Ribosome",
+      "Mitochondrion",
+      "Endoplasmic Reticulum"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-celestial-body-is-known-as-earths-sister-planet-due-to-its-similar-size-and-mass",
+    "question": "Which celestial body is known as Earth's \"sister planet\" due to its similar size and mass?",
+    "options": [
+      "Mars",
+      "Jupiter",
+      "Venus",
+      "Mercury"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-principle-states-that-an-object-submerged-in-a-fluid-experiences-an-upward-buoyant-force-equal-to-the-weight-of-the-fluid-displaced-by-the-object",
+    "question": "What principle states that an object submerged in a fluid experiences an upward buoyant force equal to the weight of the fluid displaced by the object?",
+    "options": [
+      "Bernoulli's Principle",
+      "Pascal's Principle",
+      "Archimedes' Principle",
+      "Newton's Third Law"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-gland-in-the-human-brain-is-often-referred-to-as-the-master-gland-because-it-produces-hormones-that-control-many-other-endocrine-glands",
+    "question": "Which gland in the human brain is often referred to as the \"master gland\" because it produces hormones that control many other endocrine glands?",
+    "options": [
+      "Thyroid gland",
+      "Adrenal gland",
+      "Pituitary gland",
+      "Pancreas"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-type-of-reaction-involves-the-breaking-down-of-a-compound-into-simpler-substances-often-by-heat",
+    "question": "What type of reaction involves the breaking down of a compound into simpler substances, often by heat?",
+    "options": [
+      "Synthesis",
+      "Decomposition",
+      "Single Displacement",
+      "Combustion"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-phenomenon-describes-the-bending-of-light-as-it-passes-from-one-medium-to-another-such-as-from-air-to-water",
+    "question": "What phenomenon describes the bending of light as it passes from one medium to another, such as from air to water?",
+    "options": [
+      "Reflection",
+      "Diffraction",
+      "Refraction",
+      "Absorption"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-major-organ-is-responsible-for-filtering-blood-and-producing-urine",
+    "question": "Which major organ is responsible for filtering blood and producing urine?",
+    "options": [
+      "Liver",
+      "Spleen",
+      "Kidney",
+      "Pancreas"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-si-unit-for-measuring-electric-current",
+    "question": "What is the SI unit for measuring electric current?",
+    "options": [
+      "Volt",
+      "Ohm",
+      "Watt",
+      "Ampere"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-state-of-matter-has-a-definite-volume-but-no-definite-shape",
+    "question": "Which state of matter has a definite volume but no definite shape?",
+    "options": [
+      "Solid",
+      "Liquid",
+      "Gas",
+      "Plasma"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-process-called-when-a-solid-turns-directly-into-a-gas-without-becoming-a-liquid-first",
+    "question": "What is the process called when a solid turns directly into a gas without becoming a liquid first?",
+    "options": [
+      "Melting",
+      "Evaporation",
+      "Condensation",
+      "Sublimation"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-theoretical-particle-that-mediates-the-gravitational-force",
+    "question": "What is the theoretical particle that mediates the gravitational force?",
+    "options": [
+      "Photon",
+      "Gluon",
+      "Graviton",
+      "Boson"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-ph-value-indicates-a-neutral-solution",
+    "question": "What pH value indicates a neutral solution?",
+    "options": [
+      "0",
+      "7",
+      "14",
+      "1"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "easy"
   }
 ]

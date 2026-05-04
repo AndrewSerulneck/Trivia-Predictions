@@ -4067,5 +4067,174 @@
     "correctAnswer": 2,
     "category": "History",
     "difficulty": "medium"
+  },
+  {
+    "slug": "who-was-the-first-female-pharaoh-of-ancient-egypt-to-rule-with-the-full-powers-of-the-position",
+    "question": "Who was the first female pharaoh of ancient Egypt to rule with the full powers of the position?",
+    "options": [
+      "Cleopatra VII",
+      "Nefertiti",
+      "Hatshepsut",
+      "Twosret"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-roman-general-was-appointed-dictator-for-life-before-his-assassination-in-44-bc",
+    "question": "Which Roman general was appointed dictator for life before his assassination in 44 BC?",
+    "options": [
+      "Augustus",
+      "Julius Caesar",
+      "Pompey",
+      "Sulla"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-assassination-of-archduke-franz-ferdinand-in-1914-is-widely-considered-the-immediate-trigger-for-which-major-conflict",
+    "question": "The assassination of Archduke Franz Ferdinand in 1914 is widely considered the immediate trigger for which major conflict?",
+    "options": [
+      "World War II",
+      "The Crimean War",
+      "The Franco-Prussian War",
+      "World War I"
+    ],
+    "correctAnswer": 3,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-pivotal-event-in-1773-involved-american-colonists-protesting-british-taxation-by-dumping-tea-into-boston-harbor",
+    "question": "What pivotal event in 1773 involved American colonists protesting British taxation by dumping tea into Boston Harbor?",
+    "options": [
+      "The Boston Massacre",
+      "The Stamp Act Riots",
+      "The Boston Tea Party",
+      "The Battle of Bunker Hill"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-ancient-greek-philosopher-is-known-for-his-method-of-questioning-to-stimulate-critical-thinking-and-was-later-sentenced-to-death-for-corrupting-the-youth",
+    "question": "Which ancient Greek philosopher is known for his method of questioning to stimulate critical thinking and was later sentenced to death for corrupting the youth?",
+    "options": [
+      "Aristotle",
+      "Plato",
+      "Socrates",
+      "Pythagoras"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-invention-by-james-watt-significantly-improved-the-efficiency-of-the-steam-engine-during-the-industrial-revolution",
+    "question": "Which invention by James Watt significantly improved the efficiency of the steam engine during the Industrial Revolution?",
+    "options": [
+      "The Spinning Jenny",
+      "The Power Loom",
+      "The Rotary Steam Engine",
+      "The Cotton Gin"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-iron-curtain-was-a-term-coined-by-winston-churchill-to-describe-the-division-between-western-europe-and-the-soviet-bloc-during-which-era",
+    "question": "The 'Iron Curtain' was a term coined by Winston Churchill to describe the division between Western Europe and the Soviet bloc during which era?",
+    "options": [
+      "World War I",
+      "The Cold War",
+      "The Napoleonic Wars",
+      "The Victorian Era"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-painted-the-mona-lisa-and-the-last-supper-during-the-high-renaissance",
+    "question": "Who painted the Mona Lisa and The Last Supper during the High Renaissance?",
+    "options": [
+      "Michelangelo",
+      "Raphael",
+      "Donatello",
+      "Leonardo da Vinci"
+    ],
+    "correctAnswer": 3,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-battle-of-cannae-a-major-roman-defeat-occurred-during-which-conflict",
+    "question": "The Battle of Cannae, a major Roman defeat, occurred during which conflict?",
+    "options": [
+      "The Punic Wars",
+      "The Gallic Wars",
+      "The Social War",
+      "The Mithridatic Wars"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-portuguese-explorer-is-credited-with-leading-the-first-expedition-to-circumnavigate-the-earth-though-he-died-during-the-journey",
+    "question": "Which Portuguese explorer is credited with leading the first expedition to circumnavigate the Earth, though he died during the journey?",
+    "options": [
+      "Vasco da Gama",
+      "Christopher Columbus",
+      "Ferdinand Magellan",
+      "Bartolomeu Dias"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "operation-overlord-is-the-codename-for-which-major-world-war-ii-invasion-that-began-on-june-6-1944",
+    "question": "Operation Overlord is the codename for which major World War II invasion that began on June 6, 1944?",
+    "options": [
+      "The Battle of the Bulge",
+      "The Invasion of Poland",
+      "D-Day",
+      "The Battle of Stalingrad"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-enlightenment-philosopher-proposed-the-concept-of-separation-of-powers-within-government-influencing-many-modern-constitutions",
+    "question": "Which Enlightenment philosopher proposed the concept of 'separation of powers' within government, influencing many modern constitutions?",
+    "options": [
+      "Jean-Jacques Rousseau",
+      "Voltaire",
+      "John Locke",
+      "Baron de Montesquieu"
+    ],
+    "correctAnswer": 3,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-invention-of-gunpowder-is-traditionally-attributed-to-which-ancient-civilization",
+    "question": "The invention of gunpowder is traditionally attributed to which ancient civilization?",
+    "options": [
+      "India",
+      "Egypt",
+      "China",
+      "Greece"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
   }
 ]

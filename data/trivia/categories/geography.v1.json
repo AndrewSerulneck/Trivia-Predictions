@@ -4067,5 +4067,174 @@
     "correctAnswer": 0,
     "category": "Geography",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-city-is-the-capital-of-canada",
+    "question": "Which city is the capital of Canada?",
+    "options": [
+      "Toronto",
+      "Vancouver",
+      "Montreal",
+      "Ottawa"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-river-flows-through-egypt-and-is-often-called-the-cradle-of-civilization",
+    "question": "Which river flows through Egypt and is often called the 'cradle of civilization'?",
+    "options": [
+      "Amazon River",
+      "Nile River",
+      "Mississippi River",
+      "Yangtze River"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-large-island-nation-is-located-off-the-southeast-coast-of-africa",
+    "question": "Which large island nation is located off the southeast coast of Africa?",
+    "options": [
+      "Sri Lanka",
+      "New Zealand",
+      "Madagascar",
+      "Cuba"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-the-following-is-the-largest-freshwater-lake-by-surface-area-in-the-world",
+    "question": "Which of the following is the largest freshwater lake by surface area in the world?",
+    "options": [
+      "Lake Victoria",
+      "Lake Huron",
+      "Lake Superior",
+      "Lake Michigan"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-a-narrow-strip-of-land-connecting-two-larger-landmasses-with-water-on-either-side",
+    "question": "What is a narrow strip of land connecting two larger landmasses, with water on either side?",
+    "options": [
+      "Peninsula",
+      "Archipelago",
+      "Isthmus",
+      "Strait"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-landlocked-european-country-is-known-for-its-neutrality-and-banking-industry",
+    "question": "Which landlocked European country is known for its neutrality and banking industry?",
+    "options": [
+      "Belgium",
+      "Austria",
+      "Switzerland",
+      "Denmark"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-major-mountain-range-runs-along-the-western-coast-of-south-america",
+    "question": "Which major mountain range runs along the western coast of South America?",
+    "options": [
+      "Rocky Mountains",
+      "Andes Mountains",
+      "Atlas Mountains",
+      "Appalachian Mountains"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-ancient-city-of-petra-known-for-its-rock-cut-architecture-is-located-in-which-modern-country",
+    "question": "The ancient city of Petra, known for its rock-cut architecture, is located in which modern country?",
+    "options": [
+      "Egypt",
+      "Israel",
+      "Jordan",
+      "Syria"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-term-describes-a-treeless-polar-desert-region-characterized-by-permafrost",
+    "question": "Which term describes a treeless polar desert region characterized by permafrost?",
+    "options": [
+      "Savanna",
+      "Taiga",
+      "Tundra",
+      "Steppe"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-mountain-is-the-highest-peak-in-africa",
+    "question": "Which mountain is the highest peak in Africa?",
+    "options": [
+      "Mount Kenya",
+      "Mount Kilimanjaro",
+      "Mount Elgon",
+      "Ras Dashen"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-great-barrier-reef-the-worlds-largest-coral-reef-system-is-located-off-the-coast-of-which-country",
+    "question": "The Great Barrier Reef, the world's largest coral reef system, is located off the coast of which country?",
+    "options": [
+      "Indonesia",
+      "Australia",
+      "Philippines",
+      "New Zealand"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-is-the-largest-island-in-the-mediterranean-sea",
+    "question": "Which of these is the largest island in the Mediterranean Sea?",
+    "options": [
+      "Cyprus",
+      "Crete",
+      "Sicily",
+      "Sardinia"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-namib-desert-known-for-its-towering-red-sand-dunes-is-primarily-located-in-which-african-country",
+    "question": "The Namib Desert, known for its towering red sand dunes, is primarily located in which African country?",
+    "options": [
+      "Botswana",
+      "Namibia",
+      "South Africa",
+      "Angola"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
   }
 ]
