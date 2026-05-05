@@ -136,6 +136,14 @@ function chooseWeightedAdBySequence(rows: AdvertisementRow[], sequenceIndex: num
   return rows[rows.length - 1] ?? null;
 }
 
+function isMustServePopup(row: AdvertisementRow): boolean {
+  const weight = Number.isFinite(Number(row.delivery_weight)) ? Math.max(1, Number(row.delivery_weight)) : 1;
+  const cooldown = Number.isFinite(Number(row.popup_cooldown_seconds))
+    ? Math.max(0, Math.round(Number(row.popup_cooldown_seconds)))
+    : 180;
+  return weight >= 100 && cooldown === 0;
+}
+
 type AdLookupOptions = Partial<AdPlacementMeta> & {
   excludeAdIds?: string[];
   allowAnyVenue?: boolean;
@@ -217,6 +225,16 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string, options?: AdLook
   if (requestedSequence && options?.placementKey === "predictions-inline" && sequencePool.length > 0) {
     const weightedRow = chooseWeightedAdBySequence(sequencePool, requestedSequence);
     return weightedRow ? mapAdRow(weightedRow) : null;
+  }
+
+  // Hard guarantee path: popup ads configured with 100 weight and 0s cooldown
+  // must always serve whenever their trigger query matches.
+  if (options?.adType === "popup") {
+    const mustServePool = sequencePool.filter(isMustServePopup);
+    if (mustServePool.length > 0) {
+      const chosen = mustServePool[0] ?? null;
+      return chosen ? mapAdRow(chosen) : null;
+    }
   }
 
   const pickedRow = chooseWeightedRandomAd(sequencePool);

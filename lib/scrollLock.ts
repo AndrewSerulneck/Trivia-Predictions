@@ -197,3 +197,31 @@ export function forceRecoverDocumentScroll(): void {
   state.fixedSnapshot = null;
   forceUnlockDocumentScrollState();
 }
+
+export function hardRecoverDocumentScroll(): void {
+  const state = getState();
+  if (!state || typeof document === "undefined") {
+    return;
+  }
+  state.owners = {};
+  state.fixedSnapshot = null;
+  forceUnlockDocumentScrollState();
+
+  const body = document.body;
+  const root = document.documentElement;
+  body.classList.remove("tp-pickem-force-scroll");
+  root.classList.remove("tp-pickem-force-scroll");
+
+  body.style.overflowX = "hidden";
+  body.style.overflowY = "auto";
+  body.style.position = "";
+  body.style.top = "";
+  body.style.left = "";
+  body.style.right = "";
+  body.style.width = "";
+  body.style.touchAction = "manipulation";
+
+  root.style.overflowX = "hidden";
+  root.style.overflowY = "auto";
+  root.style.touchAction = "manipulation";
+}

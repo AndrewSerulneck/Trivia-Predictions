@@ -22,6 +22,10 @@ type PopupState = {
   ad: Advertisement;
 };
 
+type PopupGuaranteeMeta = {
+  guaranteed: boolean;
+};
+
 function resolvePageKey(pathname: string | null): AdPageKey | null {
   if (!pathname || pathname === "/" || pathname === "/join") {
     return "join";
@@ -41,12 +45,20 @@ function resolvePageKey(pathname: string | null): AdPageKey | null {
   return null;
 }
 
-function readLastShownAt(trigger: PopupTrigger): number {
+function cooldownStorageKey(trigger: PopupTrigger, roundNumber?: number): string {
+  if (trigger === "popup-round-end" && Number.isFinite(roundNumber)) {
+    const safeRound = Math.max(1, Math.min(3, Math.round(Number(roundNumber))));
+    return `tp:popup-last-shown:${trigger}:r${safeRound}`;
+  }
+  return `tp:popup-last-shown:${trigger}`;
+}
+
+function readLastShownAt(trigger: PopupTrigger, roundNumber?: number): number {
   if (typeof window === "undefined") {
     return 0;
   }
   try {
-    const value = window.sessionStorage.getItem(`tp:popup-last-shown:${trigger}`);
+    const value = window.sessionStorage.getItem(cooldownStorageKey(trigger, roundNumber));
     const parsed = Number.parseInt(value ?? "", 10);
     return Number.isFinite(parsed) ? parsed : 0;
   } catch {
@@ -54,12 +66,12 @@ function readLastShownAt(trigger: PopupTrigger): number {
   }
 }
 
-function writeLastShownAt(trigger: PopupTrigger, timestamp: number): void {
+function writeLastShownAt(trigger: PopupTrigger, timestamp: number, roundNumber?: number): void {
   if (typeof window === "undefined") {
     return;
   }
   try {
-    window.sessionStorage.setItem(`tp:popup-last-shown:${trigger}`, String(timestamp));
+    window.sessionStorage.setItem(cooldownStorageKey(trigger, roundNumber), String(timestamp));
   } catch {
     // Ignore session storage failures.
   }
@@ -148,6 +160,7 @@ export function PopupAds() {
   const pathname = usePathname();
   const popupOwnerId = useId();
   const [popup, setPopup] = useState<PopupState | null>(null);
+  const guaranteeMetaRef = useRef<PopupGuaranteeMeta>({ guaranteed: false });
   const scrollTriggeredRef = useRef<Record<string, boolean>>({});
   const dismissedByTriggerRef = useRef<Record<PopupTrigger, boolean>>({
     "popup-on-entry": false,
@@ -157,6 +170,7 @@ export function PopupAds() {
   const popupOpenRef = useRef(false);
   const popupOpeningRef = useRef(false);
   const pageReadyRef = useRef(false);
+  const pendingRoundPopupQueueRef = useRef<number[]>([]);
 
   useEffect(() => {
     popupOpenRef.current = Boolean(popup?.open);
@@ -215,12 +229,14 @@ export function PopupAds() {
         if (!ad) {
           return false;
         }
+        const guaranteed = Number(ad.deliveryWeight ?? 0) >= 100 && Number(ad.popupCooldownSeconds ?? 0) <= 0;
+        guaranteeMetaRef.current = { guaranteed };
 
         const cooldownSeconds = Number.isFinite(ad.popupCooldownSeconds)
           ? Math.max(0, Math.round(ad.popupCooldownSeconds))
           : 180;
         const now = Date.now();
-        const lastShownAt = readLastShownAt(trigger);
+        const lastShownAt = readLastShownAt(trigger, options.roundNumber);
         if (cooldownSeconds > 0 && lastShownAt > 0 && now - lastShownAt < cooldownSeconds * 1000) {
           return false;
         }
@@ -229,12 +245,12 @@ export function PopupAds() {
           return false;
         }
 
-        const hasPriority = requestAdTier("popup", popupOwnerId);
+        const hasPriority = guaranteed ? true : requestAdTier("popup", popupOwnerId);
         if (!hasPriority) {
           return false;
         }
 
-        writeLastShownAt(trigger, now);
+        writeLastShownAt(trigger, now, options.roundNumber);
         popupOpenRef.current = true;
         setPopup({
           open: true,
@@ -253,7 +269,10 @@ export function PopupAds() {
 
   const closePopup = useCallback(() => {
     if (popup) {
-      dismissedByTriggerRef.current[popup.trigger] = true;
+      const shouldSuppressTrigger = popup.trigger !== "popup-round-end";
+      if (shouldSuppressTrigger) {
+        dismissedByTriggerRef.current[popup.trigger] = true;
+      }
       if (popup.trigger === "popup-on-entry") {
         // Avoid showing a second popup immediately after dismissing entry popup.
         dismissedByTriggerRef.current["popup-on-scroll"] = true;
@@ -262,7 +281,10 @@ export function PopupAds() {
     }
     popupOpenRef.current = false;
     popupOpeningRef.current = false;
-    releaseAdTier(popupOwnerId);
+    if (!guaranteeMetaRef.current.guaranteed) {
+      releaseAdTier(popupOwnerId);
+    }
+    guaranteeMetaRef.current = { guaranteed: false };
     setPopup((prev) => (prev ? { ...prev, open: false } : prev));
   }, [popup, popupOwnerId]);
 
@@ -288,21 +310,6 @@ export function PopupAds() {
         window.clearTimeout(resetTimer);
       };
     }
-    // Venue home is highly sensitive to scroll/viewport locks on mobile.
-    // Suppress auto popup entry ads on venue routes to prevent layout thrash.
-    if (pageKey === "venue") {
-      setLandingPopupGate(false);
-      return () => {
-        window.clearTimeout(resetTimer);
-      };
-    }
-    if (isVenueTransitionGateActive()) {
-      setLandingPopupGate(false);
-      return () => {
-        window.clearTimeout(resetTimer);
-      };
-    }
-
     pageReadyRef.current = false;
     setLandingPopupGate(true);
 
@@ -310,6 +317,24 @@ export function PopupAds() {
     void (async () => {
       try {
         await waitForWindowLoadReady();
+        if (cancelled) {
+          setLandingPopupGate(false);
+          return;
+        }
+        // Never allow venue-page popups to "catch up" after a game-card tap
+        // starts a transition gate; that can block entering trivia.
+        if (pageKey === "venue" && isVenueTransitionGateActive()) {
+          setLandingPopupGate(false);
+          return;
+        }
+        // Trivia landing popups may race with initial transition completion.
+        // Wait briefly only on trivia routes.
+        if (pageKey === "trivia") {
+          const gateStart = Date.now();
+          while (!cancelled && isVenueTransitionGateActive() && Date.now() - gateStart < 7000) {
+            await wait(120);
+          }
+        }
         if (cancelled || isVenueTransitionGateActive()) {
           setLandingPopupGate(false);
           return;
@@ -339,7 +364,7 @@ export function PopupAds() {
 
   useEffect(() => {
     const pageKey = resolvePageKey(pathname);
-    if (!pageKey || pathname.startsWith("/admin") || pageKey === "venue") {
+    if (!pageKey || pathname.startsWith("/admin")) {
       return;
     }
 
@@ -383,16 +408,55 @@ export function PopupAds() {
     const onRoundComplete = (event: Event) => {
       const detail = (event as CustomEvent<{ roundNumber?: number }>).detail;
       const roundNumber = Number.isFinite(detail?.roundNumber) ? Math.round(Number(detail?.roundNumber)) : undefined;
+      const requestedRound = roundNumber && roundNumber >= 1 && roundNumber <= 3 ? roundNumber : undefined;
+      if (requestedRound) {
+        pendingRoundPopupQueueRef.current = pendingRoundPopupQueueRef.current.filter((value) => value !== requestedRound);
+      }
       void showPopup("popup-round-end", {
         pageKey: "trivia",
         displayTrigger: "round-end",
-        roundNumber,
+        roundNumber: requestedRound,
+      }).then((opened) => {
+        if (!opened && requestedRound) {
+          pendingRoundPopupQueueRef.current.push(requestedRound);
+        }
       });
     };
 
     window.addEventListener("tp:trivia-round-complete", onRoundComplete as EventListener);
     return () => {
       window.removeEventListener("tp:trivia-round-complete", onRoundComplete as EventListener);
+    };
+  }, [pathname, showPopup]);
+
+  useEffect(() => {
+    const pageKey = resolvePageKey(pathname);
+    if (pageKey !== "trivia" || pathname?.startsWith("/admin")) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      if (popupOpenRef.current || popupOpeningRef.current || isVenueTransitionGateActive()) {
+        return;
+      }
+      const nextRound = pendingRoundPopupQueueRef.current.shift();
+      if (!nextRound) {
+        return;
+      }
+      void showPopup("popup-round-end", {
+        pageKey: "trivia",
+        displayTrigger: "round-end",
+        roundNumber: nextRound,
+      }).then((opened) => {
+        if (!opened) {
+          pendingRoundPopupQueueRef.current.push(nextRound);
+        }
+      });
+    }, 300);
+
+    return () => {
+      window.clearInterval(intervalId);
+      pendingRoundPopupQueueRef.current = [];
     };
   }, [pathname, showPopup]);
 

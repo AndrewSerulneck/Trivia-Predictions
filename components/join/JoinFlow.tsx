@@ -1,17 +1,35 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { PageShell } from "@/components/ui/PageShell";
+import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import {
   createUserProfile,
-  ensureAnonymousSession,
+  signInAnonymously,
+  signOut,
   validatePin,
   validateUsername,
 } from "@/lib/auth";
 import { calculateDistanceMeters, getBestCurrentLocation, getCurrentLocation } from "@/lib/geolocation";
-import { getUserId, getVenueId, saveUserId, saveUsername, saveVenueId } from "@/lib/storage";
+import {
+  getUserId,
+  getVenueId,
+  saveUserId,
+  saveUsername,
+  saveVenueId,
+} from "@/lib/storage";
+import {
+  abortActiveAuthRequests,
+  beginAuthRequest,
+  clearLoginInProgress,
+  clearSelectedVenueLock,
+  endAuthRequest,
+  hardClearAuthAndCachePreserveVenue,
+  setSelectedVenueLock,
+  setLoginInProgress,
+} from "@/lib/authFastPath";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { getVenueById, listVenues } from "@/lib/venues";
 import { writeWarmPredictionsCache, writeWarmTriviaCache } from "@/lib/warmupCache";
@@ -30,6 +48,7 @@ import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
 type JoinPanel = "venue-list" | "venue-login";
+type AuthLoginState = "idle" | "authenticating" | "verifying" | "navigating" | "error";
 
 type LeaderboardPayload = {
   ok?: boolean;
@@ -131,6 +150,7 @@ const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig
 
 const ACCESS_DISTANCE_METERS = 200;
 const PRELOAD_FETCH_TIMEOUT_MS = 4500;
+const LOGIN_WATCHDOG_TIMEOUT_MS = 30000;
 
 function getGeofenceThresholdMeters(venueRadius: number, accuracy?: number): number {
   const normalizedVenueRadius = Number.isFinite(venueRadius) ? Math.max(0, Math.round(venueRadius)) : 0;
@@ -156,6 +176,8 @@ const ONBOARDING_PANEL_VARIANTS = {
 
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const { state: authSessionState, refresh: refreshAuthSession } = useAuthSession();
   const venueParam = initialVenueId.trim();
 
   const [status, setStatus] = useState<Status>("loading");
@@ -175,8 +197,15 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [isScanningQr, setIsScanningQr] = useState(false);
   const [scanNotice, setScanNotice] = useState("");
   const [isOptimisticallyEntering, setIsOptimisticallyEntering] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
+  const [authLoginState, setAuthLoginState] = useState<AuthLoginState>("idle");
+  const [connectionRetryMessage, setConnectionRetryMessage] = useState("");
   const [pendingVenueSelectionId, setPendingVenueSelectionId] = useState<string | null>(null);
   const autoVerificationAttemptedRef = useRef(false);
+  const loginAttemptIdRef = useRef(0);
+  const loginAbortRef = useRef<AbortController | null>(null);
+  const loginWatchdogRef = useRef<number | null>(null);
+  const navigationFallbackRef = useRef<number | null>(null);
   const scanVideoRef = useRef<HTMLVideoElement | null>(null);
   const scanStreamRef = useRef<MediaStream | null>(null);
   const scanRafRef = useRef<number | null>(null);
@@ -280,8 +309,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           return;
         }
 
-        void ensureAnonymousSession();
-
         if (!DISABLE_GEOFENCE_FOR_TESTING) {
           setLocationLoading(true);
           try {
@@ -334,6 +361,108 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
     void load();
   }, [venueParam]);
+
+  const clearLoginWatchdog = useCallback(() => {
+    if (loginWatchdogRef.current !== null) {
+      window.clearTimeout(loginWatchdogRef.current);
+      loginWatchdogRef.current = null;
+    }
+  }, []);
+
+  const clearNavigationFallback = useCallback(() => {
+    if (navigationFallbackRef.current !== null) {
+      window.clearTimeout(navigationFallbackRef.current);
+      navigationFallbackRef.current = null;
+    }
+  }, []);
+
+  const abortInFlightLogin = useCallback(() => {
+    abortActiveAuthRequests();
+    if (loginAbortRef.current) {
+      loginAbortRef.current.abort();
+      loginAbortRef.current = null;
+    }
+    clearLoginWatchdog();
+    clearNavigationFallback();
+  }, [clearLoginWatchdog, clearNavigationFallback]);
+
+  const forceNavigateToVenue = useCallback(
+    (venueId: string, userId?: string) => {
+      const safeVenueId = venueId.trim();
+      if (!safeVenueId) {
+        return;
+      }
+      const target = `/venue/${encodeURIComponent(safeVenueId)}`;
+      const targetWithEntry = userId
+        ? `${target}?entryUser=${encodeURIComponent(userId)}&entryVenue=${encodeURIComponent(
+            safeVenueId
+          )}&entryAt=${Date.now()}`
+        : target;
+
+      setSelectedVenueLock(safeVenueId);
+      setLoginInProgress(safeVenueId);
+      clearNavigationFallback();
+      router.replace(targetWithEntry);
+
+      navigationFallbackRef.current = window.setTimeout(() => {
+        const currentPath = window.location.pathname;
+        if (!currentPath.startsWith(target)) {
+          window.location.assign(targetWithEntry);
+        }
+      }, 2000);
+    },
+    [clearNavigationFallback, router]
+  );
+
+  const preflightVenueHomeCriticalData = useCallback(
+    async (params: { userId: string; venueId: string; signal: AbortSignal }) => {
+      const { userId, venueId, signal } = params;
+      const response = await fetch(
+        `/api/users/summary?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venueId)}`,
+        {
+          cache: "no-store",
+          signal,
+        }
+      );
+      const payload = (await response.json().catch(() => null)) as
+        | {
+            ok?: boolean;
+            profile?: {
+              venueId?: string;
+            } | null;
+          }
+        | null;
+      if (!response.ok || !payload?.ok || !payload.profile) {
+        throw new Error("Unable to verify your venue profile. Please try logging in again.");
+      }
+      if (String(payload.profile.venueId ?? "").trim() !== venueId) {
+        throw new Error("Your profile is linked to a different venue. Please try again.");
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!venueParam) {
+      return;
+    }
+    if (status === "saving" || authLoginState === "navigating") {
+      return;
+    }
+    if (!authSessionState.tokenVerified) {
+      return;
+    }
+    if ((authSessionState.venueId ?? "").trim() !== venueParam) {
+      return;
+    }
+    forceNavigateToVenue(venueParam);
+  }, [authLoginState, authSessionState.tokenVerified, authSessionState.venueId, forceNavigateToVenue, status, venueParam]);
+
+  useEffect(() => {
+    if (!pathname?.startsWith("/join") && pathname !== "/") {
+      clearNavigationFallback();
+    }
+  }, [clearNavigationFallback, pathname]);
 
   const verifyVenueAccess = useCallback(
     async (selectedVenue: Venue) => {
@@ -406,10 +535,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setIsTransitioning(false);
       setIsOptimisticallyEntering(false);
       setStatus("ready");
-
-      if (isSupabaseConfigured) {
-        void ensureAnonymousSession();
-      }
 
       void verifyVenueAccess(selectedVenue).finally(() => {
         setPendingVenueSelectionId((current) => (current === selectedVenue.id ? null : current));
@@ -614,6 +739,13 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   }, [stopScanLoop]);
 
   useEffect(() => {
+    return () => {
+      abortInFlightLogin();
+      clearNavigationFallback();
+    };
+  }, [abortInFlightLogin, clearNavigationFallback]);
+
+  useEffect(() => {
     if (!venue) {
       return;
     }
@@ -745,6 +877,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const createProfile = async () => {
     if (!venue) return;
     setErrorMessage("");
+    setConnectionRetryMessage("");
     if (!validateUsername(username)) {
       setErrorMessage("Username is required.");
       return;
@@ -769,51 +902,128 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       );
     }
 
+    // Step 1: abort any previous in-flight login — activeLoginController is now null.
+    abortInFlightLogin();
+
+    const attemptId = loginAttemptIdRef.current + 1;
+    loginAttemptIdRef.current = attemptId;
+
+    // Step 2: hard-clear client state BEFORE creating the new controller.
+    // abortActiveAuthRequests inside is a no-op since we nulled it in step 1,
+    // so the controller we create next is never inadvertently aborted by this call.
+    hardClearAuthAndCachePreserveVenue(venue.id);
+
+    // Step 3: create a fresh, unaborted controller for this attempt.
+    const loginController = beginAuthRequest();
+    loginAbortRef.current = loginController;
+    clearLoginWatchdog();
+
+    setAuthLoginState("authenticating");
     setIsTransitioning(true);
     setIsOptimisticallyEntering(true);
     setStatus("saving");
+    setIsAuthLoading(true);
     setLocationNotice("Joining venue...");
+
+    loginWatchdogRef.current = window.setTimeout(() => {
+      if (loginAttemptIdRef.current !== attemptId) {
+        return;
+      }
+      // Abort the stuck request and surface a retry prompt; don't blow away the page.
+      if (loginAbortRef.current) {
+        loginAbortRef.current.abort();
+      }
+      setConnectionRetryMessage(
+        "Connection is slow. Your venue is still selected — tap Enter Game to retry."
+      );
+    }, LOGIN_WATCHDOG_TIMEOUT_MS);
 
     let didNavigate = false;
     try {
-      // Ensure fallback demo venues exist server-side before user profile insert.
-      void fetch("/api/join/ensure-venue", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ venueId: venue.id }),
-      });
+      // Run signOut and the profile API call in parallel — the API uses supabaseAdmin
+      // and has no dependency on the client-side Supabase session.
+      const [, user] = await Promise.all([
+        signOut().catch(() => {}),
+        createUserProfile({
+          username,
+          venueId: venue.id,
+          selectedVenueId: venue.id,
+          pin,
+          signal: loginController.signal,
+        }),
+      ]);
 
-      const user = await createUserProfile({
-        username,
-        venueId: venue.id,
-        pin,
-      });
+      if (loginAttemptIdRef.current !== attemptId || loginController.signal.aborted) {
+        return;
+      }
+      if (String(user.venueId ?? "").trim() !== venue.id) {
+        throw new Error("Session venue mismatch detected. Please try again.");
+      }
 
       saveVenueId(venue.id);
       saveUsername(user.username);
       saveUserId(user.id);
+      setSelectedVenueLock(venue.id);
+      setLoginInProgress(venue.id);
+      refreshAuthSession();
       setVenueHomeRouteIntent({ venueId: venue.id });
       setVenueHomeEntryHandoff({ venueId: venue.id, userId: user.id });
-      // Navigate immediately so the loading overlay has maximum runway before
-      // its safety timeout. Preload runs in the background; VenueHubClient's
-      // warmup handles the null-bootstrap case when preload hasn't finished.
+
+      // Establish a fresh anonymous Supabase session for the venue home page
+      // before navigating so client-side queries have auth context.
+      await signInAnonymously().catch(() => {});
+
+      setAuthLoginState("navigating");
       didNavigate = true;
-      router.push(
-        `/venue/${venue.id}?entryUser=${encodeURIComponent(user.id)}&entryVenue=${encodeURIComponent(
-          venue.id
-        )}&entryAt=${Date.now()}`
-      );
+      const hardTarget = `/venue/${encodeURIComponent(venue.id)}?entryUser=${encodeURIComponent(
+        user.id
+      )}&entryVenue=${encodeURIComponent(venue.id)}&entryAt=${Date.now()}`;
+      window.location.assign(hardTarget);
+      void preflightVenueHomeCriticalData({
+        userId: user.id,
+        venueId: venue.id,
+        signal: loginController.signal,
+      }).catch(() => {});
       void preloadVenueHome(venue, user.id).catch(() => {});
     } catch (error) {
+      if (loginAttemptIdRef.current !== attemptId) {
+        return;
+      }
+      if (error instanceof Error && error.message === "Login request was canceled.") {
+        return;
+      }
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
       }
-      setErrorMessage(getErrorMessage(error, "Failed to create profile."));
+      setAuthLoginState("error");
+      const message = getErrorMessage(error, "Failed to create profile.");
+      if (message === "Join request timed out. Please try again.") {
+        setConnectionRetryMessage(
+          "Connection is slow. Venue is still selected, and you can retry now without starting over."
+        );
+      } else {
+        setErrorMessage(message);
+      }
     } finally {
+      if (loginAttemptIdRef.current === attemptId) {
+        loginAbortRef.current = null;
+        endAuthRequest(loginController);
+        clearLoginWatchdog();
+        setIsAuthLoading(false);
+      }
       if (!didNavigate) {
+        // Always dismiss the global transition overlay on abort or error.
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
+        }
+        clearLoginInProgress();
+        clearSelectedVenueLock();
         setIsOptimisticallyEntering(false);
         setIsTransitioning(false);
         setStatus("ready");
+        if (loginAttemptIdRef.current === attemptId) {
+          setAuthLoginState("idle");
+        }
       }
     }
   };
@@ -829,6 +1039,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           {errorMessage && (
             <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-rose-700">
               {errorMessage}
+            </div>
+          )}
+          {connectionRetryMessage && (
+            <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900">
+              {connectionRetryMessage}
             </div>
           )}
 
@@ -878,6 +1093,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                       value={username}
                       onChange={(event) => setUsername(event.target.value)}
                       placeholder="Your username"
+                      autoComplete="username"
                       className="w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-slate-600"
                     />
                     <input
@@ -895,10 +1111,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                     <button
                       type="button"
                       onClick={createProfile}
-                      disabled={!canCreate || status === "saving" || isTransitioning}
+                      disabled={!canCreate || status === "saving" || isTransitioning || isAuthLoading}
                       className={`${JOIN_BUTTON_POP_CLASS} inline-flex min-h-[42px] items-center rounded-full bg-gradient-to-r from-blue-700 to-cyan-600 px-4 py-2 font-medium text-white disabled:opacity-60`}
                     >
-                      {status === "saving" || isTransitioning ? "Entering venue..." : "Enter Game"}
+                      {isAuthLoading
+                        ? authLoginState === "authenticating"
+                          ? "Authenticating..."
+                          : authLoginState === "verifying"
+                            ? "Verifying venue access..."
+                            : "Entering venue..."
+                        : "Enter Game"}
                     </button>
                     {isOptimisticallyEntering ? (
                       <div className="rounded-xl border border-cyan-200 bg-cyan-50/80 p-3 text-sm text-cyan-900">

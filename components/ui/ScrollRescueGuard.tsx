@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { forceRecoverDocumentScroll, hasActiveScrollLocks } from "@/lib/scrollLock";
+import {
+  forceRecoverDocumentScroll,
+  hardRecoverDocumentScroll,
+  hasActiveScrollLocks,
+} from "@/lib/scrollLock";
 
 function hasVisibleScrollLockUI(): boolean {
   return Boolean(document.querySelector("[data-tp-scroll-lock='active']"));
@@ -59,6 +63,10 @@ export function ScrollRescueGuard() {
     x: number;
     y: number;
   }>({ active: false, x: 0, y: 0 });
+  const stallProbeRef = useRef<{
+    rafId: number | null;
+    lastAttemptAt: number;
+  }>({ rafId: null, lastAttemptAt: 0 });
 
   useEffect(() => {
     const ensureUnlockedWhenAppropriate = () => {
@@ -69,6 +77,49 @@ export function ScrollRescueGuard() {
         return;
       }
       forceRecoverDocumentScroll();
+    };
+
+    const clearProbe = () => {
+      if (stallProbeRef.current.rafId !== null) {
+        window.cancelAnimationFrame(stallProbeRef.current.rafId);
+        stallProbeRef.current.rafId = null;
+      }
+    };
+
+    const probeForStallAndRecover = (deltaY: number) => {
+      clearProbe();
+      if (hasActiveScrollLocks() && hasVisibleScrollLockUI()) {
+        return;
+      }
+      const before = window.scrollY;
+      const doc = document.documentElement;
+      const body = document.body;
+      const startedAt = performance.now();
+      stallProbeRef.current.lastAttemptAt = startedAt;
+
+      const tick = (frame: number) => {
+        if (stallProbeRef.current.lastAttemptAt !== startedAt) {
+          return;
+        }
+        const moved = Math.abs(window.scrollY - before) > 0.5;
+        if (moved) {
+          stallProbeRef.current.rafId = null;
+          return;
+        }
+        if (frame >= 2) {
+          const rootLocked = rootLooksScrollLocked(doc, body);
+          const canScroll = canScrollDocumentInDirection(deltaY);
+          if (rootLocked || canScroll) {
+            hardRecoverDocumentScroll();
+            // Retry the intended movement after forced unlock.
+            window.scrollBy({ top: deltaY, left: 0, behavior: "auto" });
+          }
+          stallProbeRef.current.rafId = null;
+          return;
+        }
+        stallProbeRef.current.rafId = window.requestAnimationFrame(() => tick(frame + 1));
+      };
+      stallProbeRef.current.rafId = window.requestAnimationFrame(() => tick(1));
     };
 
     const handleWheel = (event: WheelEvent) => {
@@ -93,7 +144,10 @@ export function ScrollRescueGuard() {
         if (Math.abs(window.scrollY - before) > 0.5 && event.cancelable) {
           event.preventDefault();
         }
+        probeForStallAndRecover(deltaY);
+        return;
       }
+      probeForStallAndRecover(deltaY);
     };
 
     const handleTouchStart = (event: TouchEvent) => {
@@ -142,7 +196,10 @@ export function ScrollRescueGuard() {
         if (Math.abs(window.scrollY - before) > 0.5 && event.cancelable) {
           event.preventDefault();
         }
+        probeForStallAndRecover(deltaY);
+        return;
       }
+      probeForStallAndRecover(deltaY);
     };
 
     const handleTouchEnd = () => {
@@ -151,6 +208,7 @@ export function ScrollRescueGuard() {
 
     const handlePointerCancel = () => {
       touchTrackingRef.current.active = false;
+      clearProbe();
     };
 
     window.addEventListener("wheel", handleWheel, { passive: false, capture: true });
@@ -169,8 +227,21 @@ export function ScrollRescueGuard() {
       window.removeEventListener("touchcancel", handleTouchEnd, { capture: true } as EventListenerOptions);
       window.removeEventListener("pointercancel", handlePointerCancel, { capture: true } as EventListenerOptions);
       window.removeEventListener("blur", handlePointerCancel);
+      clearProbe();
     };
   }, []);
 
   return null;
+}
+
+function rootLooksScrollLocked(root: HTMLElement, body: HTMLElement): boolean {
+  const rootStyle = window.getComputedStyle(root);
+  const bodyStyle = window.getComputedStyle(body);
+  return (
+    rootStyle.overflowY === "hidden" ||
+    bodyStyle.overflowY === "hidden" ||
+    rootStyle.touchAction === "none" ||
+    bodyStyle.touchAction === "none" ||
+    bodyStyle.position === "fixed"
+  );
 }

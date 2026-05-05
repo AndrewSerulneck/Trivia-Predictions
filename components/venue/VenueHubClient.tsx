@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation";
 import type { Venue, LeaderboardEntry } from "@/types";
 import { getUserId, getVenueId, saveUserId, saveVenueId, clearVenueSession } from "@/lib/storage";
+import { clearLoginInProgress } from "@/lib/authFastPath";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
 import { writeWarmTriviaCache, writeWarmPredictionsCache } from "@/lib/warmupCache";
 import {
@@ -12,6 +13,7 @@ import {
   hasRecentVenueHomeRouteIntent,
   type HomeBadgeCounts,
   type TriviaQuotaSnapshot,
+  type VenueHomeBootstrapSnapshot,
 } from "@/lib/venueHomeBootstrap";
 import { VENUE_GAME_CARD_BY_KEY, VENUE_HOME_GAME_KEYS, type VenueGameKey } from "@/lib/venueGameCards";
 import { runVenueGameOpenTransition } from "@/lib/venueGameTransition";
@@ -33,6 +35,13 @@ type ChallengesBadgePayload = {
     status?: string;
     receiverUserId?: string;
   }>;
+};
+
+type UserSummaryPayload = {
+  ok?: boolean;
+  profile?: {
+    venueId?: string;
+  } | null;
 };
 
 type HomeScreenIndex = 0 | 1 | 2;
@@ -61,6 +70,8 @@ const SWIPE_FLICK_MAX_DURATION_MS = 220;
 const SWIPE_DIRECTION_RATIO = 0.45;
 const FETCH_TIMEOUT_MS = 4500;
 const ARRIVAL_CORE_MAX_WAIT_MS = 2800;
+const ARRIVAL_WATCHDOG_TIMEOUT_MS = 8000;
+const ARRIVAL_RECOVERY_ATTEMPT_KEY = "tp:venue-arrival-recovery-attempt";
 
 function formatCountdown(seconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(seconds));
@@ -196,60 +207,39 @@ function GameGlyph({ gameKey }: { gameKey: VenueGameKey }) {
 
 function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; initialEntries?: LeaderboardEntry[] }) {
   const router = useRouter();
-  const initialUserId = useMemo(() => {
-    if (typeof window === "undefined") {
-      return "";
-    }
-    return (getUserId() ?? "").trim();
-  }, []);
-  const bootstrapSnapshotRef = useRef(
-    initialUserId
-      ? consumeVenueHomeBootstrap({
-          venueId: venue.id,
-          userId: initialUserId,
-        })
-      : null
-  );
-  const bootstrapSnapshot = bootstrapSnapshotRef.current;
-  const entryHandoffVisibleOnMount = useMemo(() => {
-    if (!initialUserId) {
-      return false;
-    }
-    return consumeVenueHomeEntryHandoff({
-      venueId: venue.id,
-      userId: initialUserId,
-    });
-  }, [initialUserId, venue.id]);
-  const shouldRunArrivalFlow = entryHandoffVisibleOnMount || !bootstrapSnapshot;
+  // Bootstrap snapshot and entry handoff are read from sessionStorage ONLY after
+  // mount (in useEffect). Reading them during render would produce different values
+  // on the server (no sessionStorage) vs. the client, causing a hydration mismatch.
+  const bootstrapSnapshotRef = useRef<VenueHomeBootstrapSnapshot | null>(null);
+  const entryHandoffRef = useRef(false);
   const [pendingDestination, setPendingDestination] = useState<VenueGameKey | null>(null);
-  const [triviaQuota, setTriviaQuota] = useState<TriviaQuotaSnapshot | null>(bootstrapSnapshot?.triviaQuota ?? null);
-  const [triviaUnlockSeconds, setTriviaUnlockSeconds] = useState(() => {
-    const quota = bootstrapSnapshot?.triviaQuota ?? null;
-    const isLocked = Boolean(quota && !quota.isAdminBypass && quota.questionsRemaining <= 0);
-    return isLocked ? Math.max(0, Math.floor(quota?.windowSecondsRemaining ?? 0)) : 0;
-  });
+  // All state below is initialized to server-safe "no bootstrap" defaults.
+  // The useEffect at the top of the effect list reads sessionStorage and corrects
+  // these values on the client immediately after mount.
+  const [triviaQuota, setTriviaQuota] = useState<TriviaQuotaSnapshot | null>(null);
+  const [triviaUnlockSeconds, setTriviaUnlockSeconds] = useState(0);
   const [triviaGateNotice, setTriviaGateNotice] = useState("");
-  const [homeBadgeCounts, setHomeBadgeCounts] = useState<HomeBadgeCounts>(bootstrapSnapshot?.homeBadgeCounts ?? {});
+  const [homeBadgeCounts, setHomeBadgeCounts] = useState<HomeBadgeCounts>({});
   const [dismissedBadgeGames, setDismissedBadgeGames] = useState<Set<VenueGameKey>>(new Set());
-  const [weeklyPrizeTitle, setWeeklyPrizeTitle] = useState(
-    bootstrapSnapshot?.weeklyPrizeTitle ?? "Weekly Venue Champion Prize"
-  );
+  const [weeklyPrizeTitle, setWeeklyPrizeTitle] = useState("Weekly Venue Champion Prize");
   const [weeklyPrizeDescription, setWeeklyPrizeDescription] = useState(
-    bootstrapSnapshot?.weeklyPrizeDescription ?? "Top the leaderboard by week end to earn this venue's reward."
+    "Top the leaderboard by week end to earn this venue's reward."
   );
-  const [weeklyPrizePoints, setWeeklyPrizePoints] = useState(bootstrapSnapshot?.weeklyPrizePoints ?? 0);
-  const [isWeeklyPrizeLoading, setIsWeeklyPrizeLoading] = useState(!bootstrapSnapshot?.weeklyPrizeTitle);
+  const [weeklyPrizePoints, setWeeklyPrizePoints] = useState(0);
+  const [isWeeklyPrizeLoading, setIsWeeklyPrizeLoading] = useState(true);
   const [weeklyPrizeError, setWeeklyPrizeError] = useState("");
-  const [isBadgeLoading, setIsBadgeLoading] = useState(!bootstrapSnapshot?.homeBadgeCounts);
+  const [isBadgeLoading, setIsBadgeLoading] = useState(true);
   const [badgeError, setBadgeError] = useState("");
+  const [leaderboardBootstrapEntries, setLeaderboardBootstrapEntries] = useState<LeaderboardEntry[]>([]);
   const [activeScreen, setActiveScreen] = useState<HomeScreenIndex>(0);
-  const [homeRevealComplete, setHomeRevealComplete] = useState(!shouldRunArrivalFlow);
-  const [arrivalStage, setArrivalStage] = useState<VenueArrivalStage>(shouldRunArrivalFlow ? "identity" : "ready");
-  const [arrivalProgress, setArrivalProgress] = useState(shouldRunArrivalFlow ? 8 : 100);
+  const [homeRevealComplete, setHomeRevealComplete] = useState(true);
+  // Arrival flow always runs initially (consistent with SSR); corrected after mount.
+  const [arrivalStage, setArrivalStage] = useState<VenueArrivalStage>("identity");
+  const [arrivalProgress, setArrivalProgress] = useState(8);
   const [arrivalStatusText, setArrivalStatusText] = useState("Securing your venue access...");
-  const [arrivalOverlayCleared, setArrivalOverlayCleared] = useState(!entryHandoffVisibleOnMount);
-  const [arrivalCoreReady, setArrivalCoreReady] = useState(!shouldRunArrivalFlow || Boolean(bootstrapSnapshot));
-  const [arrivalInProgress, setArrivalInProgress] = useState(shouldRunArrivalFlow);
+  const [arrivalOverlayCleared, setArrivalOverlayCleared] = useState(true);
+  const [arrivalCoreReady, setArrivalCoreReady] = useState(false);
+  const [arrivalInProgress, setArrivalInProgress] = useState(true);
   const venueReadyDispatchedRef = useRef(false);
   const swipeViewportRef = useRef<HTMLDivElement | null>(null);
   const activeScreenRef = useRef<HomeScreenIndex>(0);
@@ -292,11 +282,69 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     router.replace(cleanPath);
   }, [router, venue.id]);
 
+  // This effect runs first on mount and must be declared before any effect that
+  // reads entryHandoffRef or bootstrapSnapshotRef.
   useEffect(() => {
-    // If the user just came through the join flow the entry handoff confirms
-    // their credentials were written to localStorage synchronously before
-    // navigation. Skip the redirect guard entirely — there is no invalid state.
-    if (entryHandoffVisibleOnMount) return;
+    const userId = (getUserId() ?? "").trim();
+    if (!userId) {
+      setArrivalOverlayCleared(true);
+      return;
+    }
+
+    const snapshot = consumeVenueHomeBootstrap({ venueId: venue.id, userId });
+    const handoff = consumeVenueHomeEntryHandoff({ venueId: venue.id, userId });
+
+    bootstrapSnapshotRef.current = snapshot;
+    entryHandoffRef.current = handoff;
+
+    if (snapshot) {
+      setTriviaQuota(snapshot.triviaQuota ?? null);
+      const quota = snapshot.triviaQuota ?? null;
+      const isLocked = Boolean(quota && !quota.isAdminBypass && quota.questionsRemaining <= 0);
+      setTriviaUnlockSeconds(isLocked ? Math.max(0, Math.floor(quota?.windowSecondsRemaining ?? 0)) : 0);
+      setHomeBadgeCounts(snapshot.homeBadgeCounts ?? {});
+      setWeeklyPrizeTitle(snapshot.weeklyPrizeTitle ?? "Weekly Venue Champion Prize");
+      setWeeklyPrizeDescription(
+        snapshot.weeklyPrizeDescription ?? "Top the leaderboard by week end to earn this venue's reward."
+      );
+      setWeeklyPrizePoints(snapshot.weeklyPrizePoints ?? 0);
+      if (snapshot.weeklyPrizeTitle) setIsWeeklyPrizeLoading(false);
+      if (snapshot.homeBadgeCounts) setIsBadgeLoading(false);
+      if (snapshot.leaderboardEntries && snapshot.leaderboardEntries.length > 0) {
+        setLeaderboardBootstrapEntries(snapshot.leaderboardEntries);
+      }
+      setArrivalCoreReady(true);
+    }
+
+    if (!handoff) {
+      setArrivalOverlayCleared(true);
+      return;
+    }
+
+    // Fresh login: wait for the join-flow's global transition overlay to clear.
+    const expectedPath = window.location.pathname;
+    const onOverlayHidden = (event: Event) => {
+      const detail = (event as CustomEvent<{ path?: string } | undefined>).detail;
+      const hiddenPath = String(detail?.path ?? "").trim();
+      if (!pathMatches(expectedPath, hiddenPath)) return;
+      setArrivalOverlayCleared(true);
+    };
+    window.addEventListener("tp:global-transition-overlay-hidden", onOverlayHidden as EventListener);
+    const fallbackTimer = window.setTimeout(() => {
+      setArrivalOverlayCleared(true);
+    }, 2500);
+
+    return () => {
+      window.removeEventListener("tp:global-transition-overlay-hidden", onOverlayHidden as EventListener);
+      window.clearTimeout(fallbackTimer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [venue.id]);
+
+  useEffect(() => {
+    // entryHandoffRef is set by the bootstrap effect above, which runs first.
+    // Skip the redirect guard entirely when the user just came through the join flow.
+    if (entryHandoffRef.current) return;
     if (hasRecentVenueHomeRouteIntent({ venueId: venue.id, maxAgeMs: 30000 })) {
       return;
     }
@@ -327,34 +375,10 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const venueDisplayName = getVenueDisplayName(venue as any);
 
   useEffect(() => {
-    if (!entryHandoffVisibleOnMount || typeof window === "undefined") {
-      setArrivalOverlayCleared(true);
-      return;
-    }
-    const expectedPath = window.location.pathname;
-    const onOverlayHidden = (event: Event) => {
-      const detail = (event as CustomEvent<{ path?: string } | undefined>).detail;
-      const hiddenPath = String(detail?.path ?? "").trim();
-      if (!pathMatches(expectedPath, hiddenPath)) {
-        return;
-      }
-      setArrivalOverlayCleared(true);
-    };
-    window.addEventListener("tp:global-transition-overlay-hidden", onOverlayHidden as EventListener);
-    const fallbackTimer = window.setTimeout(() => {
-      setArrivalOverlayCleared(true);
-    }, 2500);
-
-    return () => {
-      window.removeEventListener("tp:global-transition-overlay-hidden", onOverlayHidden as EventListener);
-      window.clearTimeout(fallbackTimer);
-    };
-  }, [entryHandoffVisibleOnMount]);
-
-  useEffect(() => {
     if (venueReadyDispatchedRef.current || typeof window === "undefined" || !homeRevealComplete) {
       return;
     }
+    clearLoginInProgress();
     venueReadyDispatchedRef.current = true;
     const rafId = window.requestAnimationFrame(() => {
       try {
@@ -465,6 +489,22 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       return null;
     }
   }, []);
+
+  const verifyActiveVenueSession = useCallback(async (): Promise<boolean> => {
+    const userId = (getUserId() ?? "").trim();
+    const venueId = (getVenueId() ?? "").trim();
+    if (!userId || !venueId || venueId !== venue.id) {
+      return false;
+    }
+    const payload = await fetchJsonWithTimeout<UserSummaryPayload>(
+      `/api/users/summary?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venue.id)}`,
+      3600
+    );
+    if (!payload?.ok || !payload.profile) {
+      return false;
+    }
+    return String(payload.profile.venueId ?? "").trim() === venue.id;
+  }, [venue.id]);
 
   const loadHomeBadges = useCallback(async () => {
     const userId = (getUserId() ?? "").trim();
@@ -591,6 +631,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       setArrivalProgress(42);
       setArrivalStatusText("Loading your venue dashboard...");
       if (!bootstrapSnapshotRef.current) {
+        const sessionValid = await verifyActiveVenueSession();
+        if (!sessionValid) {
+          clearVenueSession();
+          router.replace(`/?v=${encodeURIComponent(venue.id)}`);
+          return;
+        }
         const coreLoadPromise = Promise.allSettled([loadTriviaQuota(), loadHomeBadges()]);
         await Promise.race([coreLoadPromise, wait(ARRIVAL_CORE_MAX_WAIT_MS)]);
         void coreLoadPromise.catch(() => {});
@@ -627,7 +673,39 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     return () => {
       cancelled = true;
     };
-  }, [arrivalInProgress, loadHomeBadges, loadTriviaQuota, runWarmup]);
+  }, [arrivalInProgress, loadHomeBadges, loadTriviaQuota, router, runWarmup, venue.id, verifyActiveVenueSession]);
+
+  useEffect(() => {
+    if (!arrivalInProgress) {
+      try {
+        window.sessionStorage.removeItem(ARRIVAL_RECOVERY_ATTEMPT_KEY);
+      } catch {
+        // Ignore storage failures.
+      }
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      let recoveryAttempts = 0;
+      try {
+        recoveryAttempts = Number(window.sessionStorage.getItem(ARRIVAL_RECOVERY_ATTEMPT_KEY) ?? "0") || 0;
+        window.sessionStorage.setItem(ARRIVAL_RECOVERY_ATTEMPT_KEY, String(recoveryAttempts + 1));
+      } catch {
+        recoveryAttempts = 0;
+      }
+
+      const userId = (getUserId() ?? "").trim();
+      const venueId = (getVenueId() ?? "").trim();
+      if (recoveryAttempts < 1 && userId && venueId === venue.id) {
+        window.location.replace(`/venue/${encodeURIComponent(venue.id)}?recoverAt=${Date.now()}`);
+        return;
+      }
+      clearVenueSession();
+      router.replace(`/?v=${encodeURIComponent(venue.id)}`);
+    }, ARRIVAL_WATCHDOG_TIMEOUT_MS);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [arrivalInProgress, router, venue.id]);
 
   useEffect(() => {
     if (!arrivalInProgress) {
@@ -798,10 +876,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   );
 
   const homeCards = useMemo(() => VENUE_HOME_GAME_KEYS.map((key) => VENUE_GAME_CARD_BY_KEY[key]), []);
-  const leaderboardInitialEntries =
-    bootstrapSnapshot?.leaderboardEntries && bootstrapSnapshot.leaderboardEntries.length > 0
-      ? bootstrapSnapshot.leaderboardEntries
-      : initialEntries;
+  const leaderboardInitialEntries = leaderboardBootstrapEntries.length > 0 ? leaderboardBootstrapEntries : initialEntries;
   const triviaIsLocked = Boolean(triviaQuota && !triviaQuota.isAdminBypass && triviaQuota.questionsRemaining <= 0);
   const triviaUnlockCountdown = triviaUnlockSeconds > 0 ? triviaUnlockSeconds : triviaIsLocked ? Math.max(0, Math.floor(triviaQuota?.windowSecondsRemaining ?? 0)) : 0;
 
@@ -816,35 +891,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     return badges;
   }, [dismissedBadgeGames, homeBadgeCounts, triviaUnlockCountdown]);
 
-  if (!homeRevealComplete) {
-    return (
-      <div className="fixed inset-x-0 bottom-0 top-[calc(env(safe-area-inset-top)+4.35rem)] z-10 flex min-h-0 flex-col items-center justify-center overflow-hidden px-4 sm:top-[calc(env(safe-area-inset-top)+5.1rem)]">
-        <div className="w-full max-w-sm rounded-[1.35rem] border-[2px] border-slate-900/70 bg-[linear-gradient(168deg,#f8fafc_0%,#e2e8f0_100%)] p-5 shadow-[0_12px_28px_rgba(15,23,42,0.28)]">
-          <p className="text-center text-xs font-black uppercase tracking-[0.14em] text-slate-700">Entering Venue Home</p>
-          <h2 className="mt-2 text-center text-[1.3rem] font-black text-slate-900">{venueDisplayName}</h2>
-          <p className="mt-2 text-center text-sm text-slate-700">{arrivalStatusText}</p>
-          <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
-            <span
-              className="block h-full rounded-full bg-[linear-gradient(90deg,#0ea5e9_0%,#2563eb_48%,#7c3aed_100%)] transition-[width] duration-500 ease-out"
-              style={{ width: `${Math.max(8, Math.min(100, arrivalProgress))}%` }}
-            />
-          </div>
-          <div className="mt-3 flex items-center justify-between text-[11px] font-semibold text-slate-600">
-            <span className={arrivalStage === "identity" ? "text-blue-700" : ""}>Session</span>
-            <span className={arrivalStage === "core" ? "text-blue-700" : ""}>Core Data</span>
-            <span className={arrivalStage === "warmup" ? "text-blue-700" : ""}>Game Warmup</span>
-            <span className={arrivalStage === "ready" ? "text-blue-700" : ""}>Ready</span>
-          </div>
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <div className="h-14 animate-pulse rounded-xl border border-slate-200 bg-white/85" />
-            <div className="h-14 animate-pulse rounded-xl border border-slate-200 bg-white/85" />
-            <div className="h-14 animate-pulse rounded-xl border border-slate-200 bg-white/85" />
-            <div className="h-14 animate-pulse rounded-xl border border-slate-200 bg-white/85" />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const showFastPathSkeleton = arrivalInProgress && !arrivalCoreReady;
 
   return (
     <div
@@ -882,6 +929,14 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         <div ref={swipeViewportRef} onTouchStart={onSwipeTouchStart} onTouchEnd={onSwipeTouchEnd} className="h-full flex w-full touch-pan-y snap-x snap-proximity overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Venue home screens">
           <section className="relative flex min-h-0 w-full shrink-0 snap-start flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-3 pb-3 pt-1">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(14,165,233,0.3)_0%,rgba(14,165,233,0)_36%),radial-gradient(circle_at_84%_22%,rgba(251,146,60,0.35)_0%,rgba(251,146,60,0)_35%),radial-gradient(circle_at_52%_84%,rgba(236,72,153,0.3)_0%,rgba(236,72,153,0)_43%)]" />
+            {showFastPathSkeleton ? (
+              <div className="mx-auto mb-2 w-full max-w-[24rem] rounded-2xl border border-cyan-200/80 bg-cyan-50/85 px-3 py-2 text-center text-xs font-semibold text-cyan-900">
+                <p>{arrivalStatusText}</p>
+                <p className="mt-0.5 text-[11px] uppercase tracking-[0.08em] text-cyan-800/90">
+                  {arrivalStage} · {Math.round(arrivalProgress)}%
+                </p>
+              </div>
+            ) : null}
             <div className="relative mx-auto min-h-0 w-full max-w-[24rem] flex-1 pt-1">
               <div className="grid w-full grid-cols-2 gap-3 pb-2 sm:gap-4">
                 {homeCards.map((card) => {

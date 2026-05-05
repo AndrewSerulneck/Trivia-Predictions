@@ -1038,7 +1038,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         const prior = Number.parseInt(window.sessionStorage.getItem(storageKey) ?? "0", 10);
         const next = Math.max(0, Number.isFinite(prior) ? prior : 0) + 1;
         window.sessionStorage.setItem(storageKey, String(next));
-        roundNumber = next;
+        roundNumber = ((next - 1) % 3) + 1;
       } catch {
         roundNumber = 1;
       }

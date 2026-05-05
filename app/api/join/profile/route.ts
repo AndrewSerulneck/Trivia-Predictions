@@ -7,6 +7,7 @@ type CreateProfileBody = {
   username?: string;
   venueId?: string;
   pin?: string;
+  selectedVenueId?: string;
 };
 
 type UserRow = {
@@ -58,6 +59,9 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as CreateProfileBody;
   const username = (body.username ?? "").trim();
   const venueId = (body.venueId ?? "").trim();
+  const selectedVenueFromBody = (body.selectedVenueId ?? "").trim();
+  const selectedVenueFromHeader = (request.headers.get("x-selected-venue-id") ?? "").trim();
+  const selectedVenueId = selectedVenueFromBody || selectedVenueFromHeader || venueId;
   const pin = normalizePin(body.pin ?? "");
 
   if (!username) {
@@ -65,6 +69,9 @@ export async function POST(request: Request) {
   }
   if (!venueId) {
     return NextResponse.json({ ok: false, error: "Venue is required." }, { status: 400 });
+  }
+  if (selectedVenueId && selectedVenueId !== venueId) {
+    return NextResponse.json({ ok: false, error: "Venue selection mismatch. Please retry login." }, { status: 409 });
   }
   if (!/^\d{4}$/.test(pin)) {
     return NextResponse.json({ ok: false, error: "PIN must be exactly 4 digits." }, { status: 400 });

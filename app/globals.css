@@ -28,7 +28,7 @@ body {
   overflow-y: auto;
   scrollbar-gutter: stable both-edges;
   overflow-anchor: none;
-  overscroll-behavior-y: none;
+  overscroll-behavior-y: auto;
   text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
   background:
@@ -111,14 +111,14 @@ html.tp-modal-open,
 body.tp-modal-open {
   overflow: hidden;
   overscroll-behavior: none;
-  touch-action: none;
+  touch-action: manipulation;
 }
 
 html.tp-popup-open,
 body.tp-popup-open {
   overflow: hidden !important;
   overscroll-behavior: none !important;
-  touch-action: none !important;
+  touch-action: manipulation !important;
 }
 
 /* Emergency unlock path for Pick 'Em: if stale scroll-lock styles linger,

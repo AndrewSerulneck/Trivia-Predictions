@@ -4,6 +4,9 @@ const STORAGE_KEYS = {
   userId: "tp:user-id",
 };
 
+export const AUTH_STATE_CHANGED_EVENT = "tp:auth-state-changed";
+export const AUTH_STATE_RESET_EVENT = "tp:auth-state-reset";
+
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 const memoryStore: Record<string, string> = {};
 
@@ -65,10 +68,22 @@ function clearCookie(name: string): void {
   document.cookie = `${safeName}=; Max-Age=0; Path=/; SameSite=Lax`;
 }
 
+function dispatchAuthStateEvent(type: string): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.dispatchEvent(new CustomEvent(type));
+  } catch {
+    // Ignore event dispatch failures.
+  }
+}
+
 export function saveVenueId(venueId: string): void {
   memoryStore[STORAGE_KEYS.venueId] = venueId;
   writeLocalStorage(STORAGE_KEYS.venueId, venueId);
   setCookie("tp_venue_id", venueId);
+  dispatchAuthStateEvent(AUTH_STATE_CHANGED_EVENT);
 }
 
 export function getVenueId(): string | null {
@@ -82,6 +97,7 @@ export function getVenueId(): string | null {
 export function saveUsername(username: string): void {
   memoryStore[STORAGE_KEYS.username] = username;
   writeLocalStorage(STORAGE_KEYS.username, username);
+  dispatchAuthStateEvent(AUTH_STATE_CHANGED_EVENT);
 }
 
 export function getUsername(): string | null {
@@ -94,6 +110,7 @@ export function saveUserId(userId: string): void {
   memoryStore[STORAGE_KEYS.userId] = userId;
   writeLocalStorage(STORAGE_KEYS.userId, userId);
   setCookie("tp_user_id", userId);
+  dispatchAuthStateEvent(AUTH_STATE_CHANGED_EVENT);
 }
 
 export function getUserId(): string | null {
@@ -105,12 +122,29 @@ export function getUserId(): string | null {
 }
 
 export function clearVenueSession(): void {
+  clearClientState();
+}
+
+export function clearClientState(): void {
   delete memoryStore[STORAGE_KEYS.venueId];
   delete memoryStore[STORAGE_KEYS.username];
   delete memoryStore[STORAGE_KEYS.userId];
-  removeLocalStorage(STORAGE_KEYS.venueId);
-  removeLocalStorage(STORAGE_KEYS.username);
-  removeLocalStorage(STORAGE_KEYS.userId);
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.clear();
+    } catch {
+      removeLocalStorage(STORAGE_KEYS.venueId);
+      removeLocalStorage(STORAGE_KEYS.username);
+      removeLocalStorage(STORAGE_KEYS.userId);
+    }
+    try {
+      window.sessionStorage.clear();
+    } catch {
+      // Ignore session storage clear failures.
+    }
+  }
   clearCookie("tp_venue_id");
   clearCookie("tp_user_id");
+  dispatchAuthStateEvent(AUTH_STATE_RESET_EVENT);
+  dispatchAuthStateEvent(AUTH_STATE_CHANGED_EVENT);
 }

@@ -10,7 +10,7 @@ type UserProfileRow = {
   created_at: string;
 };
 
-const JOIN_PROFILE_REQUEST_TIMEOUT_MS = 12000;
+const JOIN_PROFILE_REQUEST_TIMEOUT_MS = 25000;
 
 function mapUserProfileRow(row: UserProfileRow): User {
   return {
@@ -59,20 +59,15 @@ export async function ensureAnonymousSession(): Promise<string> {
     throw new Error("Supabase is not configured.");
   }
 
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError) {
-    throw sessionError;
-  }
-
-  const sessionUserId = sessionData.session?.user?.id;
-  if (sessionUserId) {
-    return sessionUserId;
-  }
+  // Clear-first pattern to avoid stale/ghost session conflicts on shared devices.
+  await supabase.auth.signOut();
+  console.log("[Auth] Session Cleared");
 
   const { data, error } = await supabase.auth.signInAnonymously();
   if (error) {
     throw error;
   }
+  console.log("[Auth] Anonymous Session Created");
 
   const authUserId = data.user?.id;
   if (!authUserId) {
@@ -86,8 +81,11 @@ export async function createUserProfile(params: {
   username: string;
   venueId: string;
   pin: string;
+  signal?: AbortSignal;
+  selectedVenueId?: string;
 }): Promise<User> {
-  if (!supabase) {
+  if (!supabase || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    console.error("[Auth] Environment Config Error: Supabase URL missing.");
     throw new Error("Supabase is not configured.");
   }
 
@@ -100,41 +98,62 @@ export async function createUserProfile(params: {
     throw new Error("PIN must be exactly 4 digits.");
   }
 
-  await ensureAnonymousSession();
-
-  const controller = new AbortController();
+  const selectedVenueId = String(params.selectedVenueId ?? params.venueId).trim();
+  const timeoutController = new AbortController();
   const timeoutId = globalThis.setTimeout(() => {
-    controller.abort();
+    timeoutController.abort();
   }, JOIN_PROFILE_REQUEST_TIMEOUT_MS);
+  const externalSignal = params.signal;
+  const forwardAbort = () => {
+    timeoutController.abort();
+  };
+  externalSignal?.addEventListener("abort", forwardAbort, { once: true });
   let response: Response;
   try {
     response = await fetch("/api/join/profile", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "X-Selected-Venue-Id": selectedVenueId,
       },
       body: JSON.stringify({
         username,
         venueId: params.venueId,
         pin,
+        selectedVenueId,
       }),
-      signal: controller.signal,
+      signal: timeoutController.signal,
     });
   } catch (error) {
     if (isAbortError(error)) {
+      if (externalSignal?.aborted) {
+        throw new Error("Login request was canceled.");
+      }
       throw new Error("Join request timed out. Please try again.");
     }
     throw error;
   } finally {
     globalThis.clearTimeout(timeoutId);
+    externalSignal?.removeEventListener("abort", forwardAbort);
   }
 
-  const payload = (await response.json().catch(() => ({}))) as {
+  const rawBody = await response.text().catch(() => "");
+  let payload = {} as {
     ok?: boolean;
     error?: string;
     user?: User;
   };
+  try {
+    payload = rawBody ? (JSON.parse(rawBody) as typeof payload) : {};
+  } catch {
+    payload = {};
+  }
   if (!response.ok || !payload.ok || !payload.user) {
+    console.error("[Auth] Profile Create Failed", {
+      status: response.status,
+      body: rawBody,
+      error: payload.error ?? null,
+    });
     throw new Error(payload.error ?? "Failed to enter game.");
   }
   return payload.user;

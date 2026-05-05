@@ -32,10 +32,36 @@ function isPublicPath(pathname: string): boolean {
   return false;
 }
 
+function getVenueIdFromPath(pathname: string): string {
+  const match = pathname.match(/^\/venue\/([^/?#]+)/i);
+  return match?.[1] ? decodeURIComponent(match[1]).trim() : "";
+}
+
+function hasValidEntryHandoff(request: NextRequest, venueId: string): boolean {
+  const entryUser = (request.nextUrl.searchParams.get("entryUser") ?? "").trim();
+  const entryVenue = (request.nextUrl.searchParams.get("entryVenue") ?? "").trim();
+  const entryAt = Number(request.nextUrl.searchParams.get("entryAt") ?? "");
+  if (!entryUser || !entryVenue || !venueId) {
+    return false;
+  }
+  if (entryVenue !== venueId) {
+    return false;
+  }
+  if (!Number.isFinite(entryAt)) {
+    return false;
+  }
+  return Date.now() - entryAt <= 60_000;
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (isPublicPath(pathname)) {
+    return NextResponse.next();
+  }
+
+  const venueIdFromPath = getVenueIdFromPath(pathname);
+  if (venueIdFromPath && hasValidEntryHandoff(request, venueIdFromPath)) {
     return NextResponse.next();
   }
 
@@ -46,6 +72,9 @@ export function proxy(request: NextRequest) {
   }
 
   const redirectUrl = new URL("/", request.url);
+  if (venueIdFromPath) {
+    redirectUrl.searchParams.set("v", venueIdFromPath);
+  }
   return NextResponse.redirect(redirectUrl);
 }
 
