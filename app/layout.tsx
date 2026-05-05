@@ -3,6 +3,7 @@ import { PopupAds } from "@/components/ui/PopupAds";
 import { MobileAdhesionAd } from "@/components/ui/MobileAdhesionAd";
 import { GlobalTransitionOverlay } from "@/components/ui/GlobalTransitionOverlay";
 import { ScrollRecoverySentinel } from "@/components/ui/ScrollRecoverySentinel";
+import { ScrollRescueGuard } from "@/components/ui/ScrollRescueGuard";
 import { ViewportHeightSync } from "@/components/ui/ViewportHeightSync";
 import { LayoutDebugProbe } from "@/components/ui/LayoutDebugProbe";
 import "./globals.css";
@@ -44,6 +45,7 @@ export default async function RootLayout({
           </footer>
         </div>
         <ScrollRecoverySentinel />
+        <ScrollRescueGuard />
         <ViewportHeightSync />
         <LayoutDebugProbe />
         <GlobalTransitionOverlay />

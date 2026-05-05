@@ -203,6 +203,7 @@ function createFireworkToken(pool: readonly string[]): FireworkToken {
 export function TriviaGame({ questions: initialQuestions = [] }: { questions?: TriviaQuestion[] }) {
   const router = useRouter();
   const gameRootRef = useRef<HTMLDivElement>(null);
+  const nextQuestionButtonRef = useRef<HTMLButtonElement>(null);
   const [questions, setQuestions] = useState<TriviaQuestion[]>(initialQuestions);
   const [loadingQuestions, setLoadingQuestions] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -738,6 +739,22 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     secondsRemaining,
     selectedAnswer,
   ]);
+
+  useEffect(() => {
+    if (selectedAnswer === null) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      nextQuestionButtonRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "nearest",
+      });
+    }, 40);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [selectedAnswer, feedback]);
 
   useEffect(() => {
     if (!isRoundStarted || finished || selectedAnswer !== null) {
@@ -1304,7 +1321,10 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   }
 
   return (
-    <div ref={gameRootRef} className="relative flex h-full min-h-0 flex-col gap-2 overflow-x-hidden overflow-y-auto px-0.5 pb-1">
+    <div
+      ref={gameRootRef}
+      className="relative flex h-full min-h-0 flex-col gap-2 overflow-x-hidden overflow-y-auto px-0.5 pb-[max(env(safe-area-inset-bottom),0.5rem)]"
+    >
       {feedbackFlash ? (
         <div
           aria-hidden="true"
@@ -1423,7 +1443,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         </div>
       </div>
 
-      <div className="mt-auto space-y-1.5 pt-0.5 sm:space-y-2.5 sm:pt-1">
+      <div className="sticky bottom-0 z-40 -mx-0.5 mt-auto space-y-1.5 border-t border-cyan-200/35 bg-[linear-gradient(180deg,rgba(2,6,23,0)_0%,rgba(2,6,23,0.72)_18%,rgba(2,6,23,0.92)_100%)] px-1 py-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 backdrop-blur-[1px] sm:space-y-2.5">
         {feedback ? (
           <div
             className={`rounded-xl border-2 p-1.5 text-sm font-semibold leading-snug shadow-[2px_2px_0_#0f172a] sm:rounded-2xl sm:border-4 sm:p-2 sm:shadow-[5px_5px_0_#0f172a] ${
@@ -1439,6 +1459,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         ) : null}
 
         <button
+          ref={nextQuestionButtonRef}
           type="button"
           onMouseDown={() => triggerHaptic(14)}
           onClick={nextQuestion}
