@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Venue, LeaderboardEntry } from "@/types";
-import { getUserId, getVenueId, clearVenueSession } from "@/lib/storage";
+import { getUserId, getVenueId, saveUserId, saveVenueId, clearVenueSession } from "@/lib/storage";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
 import { writeWarmTriviaCache, writeWarmPredictionsCache } from "@/lib/warmupCache";
 import {
@@ -59,6 +59,8 @@ const SWIPE_TRIGGER_PX = 10;
 const SWIPE_FLICK_TRIGGER_PX = 8;
 const SWIPE_FLICK_MAX_DURATION_MS = 220;
 const SWIPE_DIRECTION_RATIO = 0.45;
+const FETCH_TIMEOUT_MS = 4500;
+const ARRIVAL_CORE_MAX_WAIT_MS = 2800;
 
 function formatCountdown(seconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(seconds));
@@ -84,6 +86,21 @@ function wait(ms: number): Promise<void> {
     const safeMs = Math.max(0, Math.floor(ms));
     window.setTimeout(resolve, safeMs);
   });
+}
+
+async function fetchJsonWithTimeout<T>(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<T | null> {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => {
+    controller.abort();
+  }, Math.max(300, Math.floor(timeoutMs)));
+  try {
+    const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+    return (await response.json().catch(() => null)) as T | null;
+  } catch {
+    return null;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 }
 
 function pathMatches(expectedPath: string, candidatePath: string): boolean {
@@ -253,6 +270,29 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const params = new URLSearchParams(window.location.search);
+    const entryUser = (params.get("entryUser") ?? "").trim();
+    const entryVenue = (params.get("entryVenue") ?? "").trim();
+    if (!entryUser) {
+      return;
+    }
+    if (entryVenue && entryVenue !== venue.id) {
+      return;
+    }
+
+    // URL handoff fallback: if storage/cookie writes were flaky on join,
+    // recover identity here before redirect checks run.
+    saveUserId(entryUser);
+    saveVenueId(venue.id);
+
+    const cleanPath = `/venue/${encodeURIComponent(venue.id)}`;
+    router.replace(cleanPath);
+  }, [router, venue.id]);
+
+  useEffect(() => {
     // If the user just came through the join flow the entry handoff confirms
     // their credentials were written to localStorage synchronously before
     // navigation. Skip the redirect guard entirely — there is no invalid state.
@@ -412,9 +452,10 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       return null;
     }
     try {
-      const response = await fetch(`/api/trivia/quota?userId=${encodeURIComponent(userId)}`, { cache: "no-store" });
-      const payload = (await response.json()) as { ok: boolean; quota?: TriviaQuotaSnapshot | null };
-      if (!payload.ok) return null;
+      const payload = await fetchJsonWithTimeout<{ ok?: boolean; quota?: TriviaQuotaSnapshot | null }>(
+        `/api/trivia/quota?userId=${encodeURIComponent(userId)}`
+      );
+      if (!payload?.ok) return null;
       const nextQuota = payload.quota ?? null;
       setTriviaQuota(nextQuota);
       const isLocked = Boolean(nextQuota && !nextQuota.isAdminBypass && nextQuota.questionsRemaining <= 0);
@@ -436,15 +477,15 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     setBadgeError("");
     try {
       const results = await Promise.allSettled([
-        fetch(`/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=true`, { cache: "no-store" })
-          .then((r) => r.json() as Promise<BingoBadgePayload>)
-          .catch((): BingoBadgePayload => ({ ok: false })),
-        fetch(`/api/pickem/picks?userId=${encodeURIComponent(userId)}&includeSettled=true&limit=200`, { cache: "no-store" })
-          .then((r) => r.json() as Promise<PickEmBadgePayload>)
-          .catch((): PickEmBadgePayload => ({ ok: false })),
-        fetch(`/api/challenges?userId=${encodeURIComponent(userId)}&includeResolved=true`, { cache: "no-store" })
-          .then((r) => r.json() as Promise<ChallengesBadgePayload>)
-          .catch((): ChallengesBadgePayload => ({ ok: false })),
+        fetchJsonWithTimeout<BingoBadgePayload>(
+          `/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=true`
+        ).then((payload) => payload ?? ({ ok: false } as BingoBadgePayload)),
+        fetchJsonWithTimeout<PickEmBadgePayload>(
+          `/api/pickem/picks?userId=${encodeURIComponent(userId)}&includeSettled=true&limit=200`
+        ).then((payload) => payload ?? ({ ok: false } as PickEmBadgePayload)),
+        fetchJsonWithTimeout<ChallengesBadgePayload>(
+          `/api/challenges?userId=${encodeURIComponent(userId)}&includeResolved=true`
+        ).then((payload) => payload ?? ({ ok: false } as ChallengesBadgePayload)),
       ]);
       const bingoPayload = results[0].status === "fulfilled" ? results[0].value : { ok: false as const };
       const pickEmPayload = results[1].status === "fulfilled" ? results[1].value : { ok: false as const };
@@ -471,8 +512,9 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     setIsWeeklyPrizeLoading(true);
     setWeeklyPrizeError("");
     try {
-      const prizeRes = await fetch(`/api/prizes?venueId=${encodeURIComponent(venueId)}`, { cache: "no-store" });
-      const prizeBody = await prizeRes.json().catch(() => null);
+      const prizeBody = await fetchJsonWithTimeout<{ ok?: boolean; weeklyPrize?: { prizeTitle?: string; prizeDescription?: string; rewardPoints?: number } | null }>(
+        `/api/prizes?venueId=${encodeURIComponent(venueId)}`
+      );
       if (!prizeBody?.ok || !prizeBody.weeklyPrize) {
         throw new Error("Prize unavailable.");
       }
@@ -494,12 +536,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     const p = (async () => {
       let warmedTriviaQuota: TriviaQuotaSnapshot | null = null;
       try {
-        const [tRes, tQuotaRes] = await Promise.all([
-          fetch(`/api/trivia?userId=${encodeURIComponent(userId)}`, { cache: "no-store" }),
-          fetch(`/api/trivia/quota?userId=${encodeURIComponent(userId)}`, { cache: "no-store" }),
+        const [body, quotaBody] = await Promise.all([
+          fetchJsonWithTimeout<{ ok?: boolean; questions?: unknown[] }>(`/api/trivia?userId=${encodeURIComponent(userId)}`),
+          fetchJsonWithTimeout<{ ok?: boolean; quota?: TriviaQuotaSnapshot | null }>(
+            `/api/trivia/quota?userId=${encodeURIComponent(userId)}`
+          ),
         ]);
-        const body = await tRes.json().catch(() => null);
-        const quotaBody = (await tQuotaRes.json().catch(() => null)) as { ok?: boolean; quota?: TriviaQuotaSnapshot | null } | null;
         if (quotaBody?.ok) {
           warmedTriviaQuota = quotaBody.quota ?? null;
           setTriviaQuota(warmedTriviaQuota);
@@ -508,13 +550,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         }
         if (body?.ok && Array.isArray(body.questions)) {
           try {
-            writeWarmTriviaCache({ userId, venueId, questions: body.questions, quota: warmedTriviaQuota });
+            writeWarmTriviaCache({ userId, venueId, questions: body.questions as any, quota: warmedTriviaQuota });
           } catch {}
         }
       } catch {}
       try {
-        const pr = await fetch("/api/predictions?page=1&pageSize=24&excludeSensitive=false", { cache: "no-store" });
-        const pb = await pr.json().catch(() => null);
+        const pb = await fetchJsonWithTimeout<any>("/api/predictions?page=1&pageSize=24&excludeSensitive=false");
         if (pb?.ok) {
           try {
             writeWarmPredictionsCache({ venueId, payload: pb });
@@ -522,7 +563,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         }
       } catch {}
       try {
-        await fetch("/api/pickem/sports", { cache: "no-store" });
+        await fetchJsonWithTimeout<{ ok?: boolean }>("/api/pickem/sports");
       } catch {}
       await Promise.allSettled([loadWeeklyPrize(), loadHomeBadges()]);
     })();
@@ -550,7 +591,9 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       setArrivalProgress(42);
       setArrivalStatusText("Loading your venue dashboard...");
       if (!bootstrapSnapshotRef.current) {
-        await Promise.allSettled([loadTriviaQuota(), loadHomeBadges()]);
+        const coreLoadPromise = Promise.allSettled([loadTriviaQuota(), loadHomeBadges()]);
+        await Promise.race([coreLoadPromise, wait(ARRIVAL_CORE_MAX_WAIT_MS)]);
+        void coreLoadPromise.catch(() => {});
       } else {
         await wait(260);
       }

@@ -798,7 +798,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       // its safety timeout. Preload runs in the background; VenueHubClient's
       // warmup handles the null-bootstrap case when preload hasn't finished.
       didNavigate = true;
-      router.push(`/venue/${venue.id}`);
+      router.push(
+        `/venue/${venue.id}?entryUser=${encodeURIComponent(user.id)}&entryVenue=${encodeURIComponent(
+          venue.id
+        )}&entryAt=${Date.now()}`
+      );
       void preloadVenueHome(venue, user.id).catch(() => {});
     } catch (error) {
       if (typeof window !== "undefined") {

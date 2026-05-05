@@ -5,6 +5,7 @@ const STORAGE_KEYS = {
 };
 
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
+const memoryStore: Record<string, string> = {};
 
 function readLocalStorage(key: string): string | null {
   if (typeof window === "undefined") return null;
@@ -13,6 +14,24 @@ function readLocalStorage(key: string): string | null {
   } catch {
     return null;
   }
+}
+
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const safeName = encodeURIComponent(name);
+  const cookies = document.cookie ? document.cookie.split(";") : [];
+  for (const chunk of cookies) {
+    const [rawKey, ...valueParts] = chunk.trim().split("=");
+    if (rawKey !== safeName) {
+      continue;
+    }
+    try {
+      return decodeURIComponent(valueParts.join("="));
+    } catch {
+      return valueParts.join("=");
+    }
+  }
+  return null;
 }
 
 function writeLocalStorage(key: string, value: string): void {
@@ -47,32 +66,48 @@ function clearCookie(name: string): void {
 }
 
 export function saveVenueId(venueId: string): void {
+  memoryStore[STORAGE_KEYS.venueId] = venueId;
   writeLocalStorage(STORAGE_KEYS.venueId, venueId);
   setCookie("tp_venue_id", venueId);
 }
 
 export function getVenueId(): string | null {
-  return readLocalStorage(STORAGE_KEYS.venueId);
+  const memoryValue = memoryStore[STORAGE_KEYS.venueId];
+  if (memoryValue) return memoryValue;
+  const localValue = readLocalStorage(STORAGE_KEYS.venueId);
+  if (localValue) return localValue;
+  return readCookie("tp_venue_id");
 }
 
 export function saveUsername(username: string): void {
+  memoryStore[STORAGE_KEYS.username] = username;
   writeLocalStorage(STORAGE_KEYS.username, username);
 }
 
 export function getUsername(): string | null {
+  const memoryValue = memoryStore[STORAGE_KEYS.username];
+  if (memoryValue) return memoryValue;
   return readLocalStorage(STORAGE_KEYS.username);
 }
 
 export function saveUserId(userId: string): void {
+  memoryStore[STORAGE_KEYS.userId] = userId;
   writeLocalStorage(STORAGE_KEYS.userId, userId);
   setCookie("tp_user_id", userId);
 }
 
 export function getUserId(): string | null {
-  return readLocalStorage(STORAGE_KEYS.userId);
+  const memoryValue = memoryStore[STORAGE_KEYS.userId];
+  if (memoryValue) return memoryValue;
+  const localValue = readLocalStorage(STORAGE_KEYS.userId);
+  if (localValue) return localValue;
+  return readCookie("tp_user_id");
 }
 
 export function clearVenueSession(): void {
+  delete memoryStore[STORAGE_KEYS.venueId];
+  delete memoryStore[STORAGE_KEYS.username];
+  delete memoryStore[STORAGE_KEYS.userId];
   removeLocalStorage(STORAGE_KEYS.venueId);
   removeLocalStorage(STORAGE_KEYS.username);
   removeLocalStorage(STORAGE_KEYS.userId);
