@@ -9,6 +9,7 @@ import { writeWarmTriviaCache, writeWarmPredictionsCache } from "@/lib/warmupCac
 import {
   consumeVenueHomeBootstrap,
   consumeVenueHomeEntryHandoff,
+  hasRecentVenueHomeRouteIntent,
   type HomeBadgeCounts,
   type TriviaQuotaSnapshot,
 } from "@/lib/venueHomeBootstrap";
@@ -35,6 +36,7 @@ type ChallengesBadgePayload = {
 };
 
 type HomeScreenIndex = 0 | 1 | 2;
+type VenueArrivalStage = "identity" | "core" | "warmup" | "ready";
 
 const GAME_ICON_BG_BY_KEY: Record<VenueGameKey, string> = {
   trivia: "bg-[linear-gradient(138deg,#0ea5e9_0%,#2563eb_45%,#7c3aed_100%)]",
@@ -75,6 +77,13 @@ function formatBadgeCount(value: number): string {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    const safeMs = Math.max(0, Math.floor(ms));
+    window.setTimeout(resolve, safeMs);
+  });
 }
 
 function pathMatches(expectedPath: string, candidatePath: string): boolean {
@@ -194,6 +203,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       userId: initialUserId,
     });
   }, [initialUserId, venue.id]);
+  const shouldRunArrivalFlow = entryHandoffVisibleOnMount || !bootstrapSnapshot;
   const [pendingDestination, setPendingDestination] = useState<VenueGameKey | null>(null);
   const [triviaQuota, setTriviaQuota] = useState<TriviaQuotaSnapshot | null>(bootstrapSnapshot?.triviaQuota ?? null);
   const [triviaUnlockSeconds, setTriviaUnlockSeconds] = useState(() => {
@@ -216,7 +226,13 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const [isBadgeLoading, setIsBadgeLoading] = useState(!bootstrapSnapshot?.homeBadgeCounts);
   const [badgeError, setBadgeError] = useState("");
   const [activeScreen, setActiveScreen] = useState<HomeScreenIndex>(0);
-  const [homeRevealComplete, setHomeRevealComplete] = useState(!entryHandoffVisibleOnMount);
+  const [homeRevealComplete, setHomeRevealComplete] = useState(!shouldRunArrivalFlow);
+  const [arrivalStage, setArrivalStage] = useState<VenueArrivalStage>(shouldRunArrivalFlow ? "identity" : "ready");
+  const [arrivalProgress, setArrivalProgress] = useState(shouldRunArrivalFlow ? 8 : 100);
+  const [arrivalStatusText, setArrivalStatusText] = useState("Securing your venue access...");
+  const [arrivalOverlayCleared, setArrivalOverlayCleared] = useState(!entryHandoffVisibleOnMount);
+  const [arrivalCoreReady, setArrivalCoreReady] = useState(!shouldRunArrivalFlow || Boolean(bootstrapSnapshot));
+  const [arrivalInProgress, setArrivalInProgress] = useState(shouldRunArrivalFlow);
   const venueReadyDispatchedRef = useRef(false);
   const swipeViewportRef = useRef<HTMLDivElement | null>(null);
   const activeScreenRef = useRef<HomeScreenIndex>(0);
@@ -241,6 +257,9 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     // their credentials were written to localStorage synchronously before
     // navigation. Skip the redirect guard entirely — there is no invalid state.
     if (entryHandoffVisibleOnMount) return;
+    if (hasRecentVenueHomeRouteIntent({ venueId: venue.id, maxAgeMs: 30000 })) {
+      return;
+    }
     const storedUserId = (getUserId() ?? "").trim();
     const storedVenueId = (getVenueId() ?? "").trim();
     if (storedUserId) {
@@ -248,6 +267,9 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       return;
     }
     const timer = window.setTimeout(() => {
+      if (hasRecentVenueHomeRouteIntent({ venueId: venue.id, maxAgeMs: 30000 })) {
+        return;
+      }
       const lateUserId = (getUserId() ?? "").trim();
       const lateVenueId = (getVenueId() ?? "").trim();
       if (lateUserId) {
@@ -257,7 +279,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       if (!hasUserTokenInCookie()) {
         router.replace(`/?v=${venue.id}`);
       }
-    }, 2200);
+    }, 5000);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasUserTokenInCookie, venue.id]);
@@ -266,7 +288,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
 
   useEffect(() => {
     if (!entryHandoffVisibleOnMount || typeof window === "undefined") {
-      setHomeRevealComplete(true);
+      setArrivalOverlayCleared(true);
       return;
     }
     const expectedPath = window.location.pathname;
@@ -276,12 +298,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       if (!pathMatches(expectedPath, hiddenPath)) {
         return;
       }
-      setHomeRevealComplete(true);
+      setArrivalOverlayCleared(true);
     };
     window.addEventListener("tp:global-transition-overlay-hidden", onOverlayHidden as EventListener);
     const fallbackTimer = window.setTimeout(() => {
-      setHomeRevealComplete(true);
-    }, 1800);
+      setArrivalOverlayCleared(true);
+    }, 2500);
 
     return () => {
       window.removeEventListener("tp:global-transition-overlay-hidden", onOverlayHidden as EventListener);
@@ -290,7 +312,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   }, [entryHandoffVisibleOnMount]);
 
   useEffect(() => {
-    if (venueReadyDispatchedRef.current || typeof window === "undefined") {
+    if (venueReadyDispatchedRef.current || typeof window === "undefined" || !homeRevealComplete) {
       return;
     }
     venueReadyDispatchedRef.current = true;
@@ -312,7 +334,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     return () => {
       window.cancelAnimationFrame(rafId);
     };
-  }, []);
+  }, [homeRevealComplete]);
 
   const triggerPulse = () => {
     if (typeof navigator === "undefined" || !("vibrate" in navigator)) return;
@@ -509,6 +531,81 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   }, [loadHomeBadges, loadWeeklyPrize]);
 
   useEffect(() => {
+    if (!arrivalInProgress) {
+      return;
+    }
+    let cancelled = false;
+
+    const loadArrivalPipeline = async () => {
+      const startTime = Date.now();
+      setArrivalStage("identity");
+      setArrivalProgress(14);
+      setArrivalStatusText("Checking your player session...");
+      await wait(220);
+      if (cancelled) {
+        return;
+      }
+
+      setArrivalStage("core");
+      setArrivalProgress(42);
+      setArrivalStatusText("Loading your venue dashboard...");
+      if (!bootstrapSnapshotRef.current) {
+        await Promise.allSettled([loadTriviaQuota(), loadHomeBadges()]);
+      } else {
+        await wait(260);
+      }
+      if (cancelled) {
+        return;
+      }
+
+      setArrivalCoreReady(true);
+      setArrivalStage("warmup");
+      setArrivalProgress(74);
+      setArrivalStatusText("Warming up games and scores...");
+      if (!warmupStartedRef.current) {
+        warmupStartedRef.current = true;
+        void runWarmup();
+      }
+
+      const elapsed = Date.now() - startTime;
+      if (elapsed < 1200) {
+        await wait(1200 - elapsed);
+      }
+      if (cancelled) {
+        return;
+      }
+
+      setArrivalProgress(92);
+      setArrivalStatusText("Finalizing your venue home...");
+    };
+
+    void loadArrivalPipeline();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [arrivalInProgress, loadHomeBadges, loadTriviaQuota, runWarmup]);
+
+  useEffect(() => {
+    if (!arrivalInProgress) {
+      return;
+    }
+    if (!arrivalCoreReady || !arrivalOverlayCleared) {
+      return;
+    }
+    const revealTimer = window.setTimeout(() => {
+      setArrivalStage("ready");
+      setArrivalProgress(100);
+      setArrivalStatusText("Venue ready.");
+      setArrivalInProgress(false);
+      setHomeRevealComplete(true);
+    }, 180);
+    return () => {
+      window.clearTimeout(revealTimer);
+    };
+  }, [arrivalCoreReady, arrivalInProgress, arrivalOverlayCleared]);
+
+  useEffect(() => {
     if (triviaUnlockSeconds <= 0) return;
     const timer = window.setTimeout(() => setTriviaUnlockSeconds((value) => Math.max(0, value - 1)), 1000);
     return () => window.clearTimeout(timer);
@@ -675,6 +772,36 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     for (const dismissedGame of dismissedBadgeGames) badges.delete(dismissedGame);
     return badges;
   }, [dismissedBadgeGames, homeBadgeCounts, triviaUnlockCountdown]);
+
+  if (!homeRevealComplete) {
+    return (
+      <div className="fixed inset-x-0 bottom-0 top-[calc(env(safe-area-inset-top)+4.35rem)] z-10 flex min-h-0 flex-col items-center justify-center overflow-hidden px-4 sm:top-[calc(env(safe-area-inset-top)+5.1rem)]">
+        <div className="w-full max-w-sm rounded-[1.35rem] border-[2px] border-slate-900/70 bg-[linear-gradient(168deg,#f8fafc_0%,#e2e8f0_100%)] p-5 shadow-[0_12px_28px_rgba(15,23,42,0.28)]">
+          <p className="text-center text-xs font-black uppercase tracking-[0.14em] text-slate-700">Entering Venue Home</p>
+          <h2 className="mt-2 text-center text-[1.3rem] font-black text-slate-900">{venueDisplayName}</h2>
+          <p className="mt-2 text-center text-sm text-slate-700">{arrivalStatusText}</p>
+          <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
+            <span
+              className="block h-full rounded-full bg-[linear-gradient(90deg,#0ea5e9_0%,#2563eb_48%,#7c3aed_100%)] transition-[width] duration-500 ease-out"
+              style={{ width: `${Math.max(8, Math.min(100, arrivalProgress))}%` }}
+            />
+          </div>
+          <div className="mt-3 flex items-center justify-between text-[11px] font-semibold text-slate-600">
+            <span className={arrivalStage === "identity" ? "text-blue-700" : ""}>Session</span>
+            <span className={arrivalStage === "core" ? "text-blue-700" : ""}>Core Data</span>
+            <span className={arrivalStage === "warmup" ? "text-blue-700" : ""}>Game Warmup</span>
+            <span className={arrivalStage === "ready" ? "text-blue-700" : ""}>Ready</span>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="h-14 animate-pulse rounded-xl border border-slate-200 bg-white/85" />
+            <div className="h-14 animate-pulse rounded-xl border border-slate-200 bg-white/85" />
+            <div className="h-14 animate-pulse rounded-xl border border-slate-200 bg-white/85" />
+            <div className="h-14 animate-pulse rounded-xl border border-slate-200 bg-white/85" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

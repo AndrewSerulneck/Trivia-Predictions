@@ -16,6 +16,7 @@ import { isSupabaseConfigured } from "@/lib/supabase";
 import { getVenueById, listVenues } from "@/lib/venues";
 import { writeWarmPredictionsCache, writeWarmTriviaCache } from "@/lib/warmupCache";
 import {
+  setVenueHomeRouteIntent,
   setVenueHomeEntryHandoff,
   writeVenueHomeBootstrap,
   type HomeBadgeCounts,
@@ -791,6 +792,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       saveVenueId(venue.id);
       saveUsername(user.username);
       saveUserId(user.id);
+      setVenueHomeRouteIntent({ venueId: venue.id });
       setVenueHomeEntryHandoff({ venueId: venue.id, userId: user.id });
       // Navigate immediately so the loading overlay has maximum runway before
       // its safety timeout. Preload runs in the background; VenueHubClient's
@@ -895,7 +897,15 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                       {status === "saving" || isTransitioning ? "Entering venue..." : "Enter Game"}
                     </button>
                     {isOptimisticallyEntering ? (
-                      <p className="text-sm text-slate-600">Taking you to your venue now...</p>
+                      <div className="rounded-xl border border-cyan-200 bg-cyan-50/80 p-3 text-sm text-cyan-900">
+                        <p className="font-semibold">Loading your venue home...</p>
+                        <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-cyan-100">
+                          <span className="block h-full w-1/2 animate-pulse rounded-full bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500" />
+                        </div>
+                        <p className="mt-2 text-xs text-cyan-800">
+                          Your account is confirmed. We are preparing games, leaderboard, and rewards.
+                        </p>
+                      </div>
                     ) : null}
                   </div>
                 </motion.div>

@@ -25,6 +25,7 @@ export type VenueHomeBootstrapSnapshot = {
 
 const BOOTSTRAP_TTL_MS = 2 * 60 * 1000;
 const ENTRY_HANDOFF_KEY = "tp:venue-home-entry-handoff";
+const ROUTE_INTENT_KEY = "tp:venue-home-route-intent";
 
 function bootstrapKey(venueId: string, userId: string): string {
   return `tp:venue-home-bootstrap:${venueId}:${userId}`;
@@ -70,6 +71,11 @@ function removeSessionStorage(key: string): void {
 type VenueHomeEntryHandoff = {
   venueId: string;
   userId: string;
+  createdAt: number;
+};
+
+type VenueHomeRouteIntent = {
+  venueId: string;
   createdAt: number;
 };
 
@@ -146,4 +152,36 @@ export function consumeVenueHomeEntryHandoff(params: {
     return false;
   }
   return handoff.venueId === venueId && handoff.userId === userId;
+}
+
+export function setVenueHomeRouteIntent(params: { venueId: string }): void {
+  const venueId = params.venueId.trim();
+  if (!venueId) {
+    return;
+  }
+  const intent: VenueHomeRouteIntent = {
+    venueId,
+    createdAt: Date.now(),
+  };
+  writeSessionStorage(ROUTE_INTENT_KEY, intent);
+}
+
+export function hasRecentVenueHomeRouteIntent(params: {
+  venueId: string;
+  maxAgeMs?: number;
+}): boolean {
+  const venueId = params.venueId.trim();
+  if (!venueId) {
+    return false;
+  }
+  const intent = readSessionStorage<VenueHomeRouteIntent>(ROUTE_INTENT_KEY);
+  if (!intent) {
+    return false;
+  }
+  const maxAgeMs = Math.max(500, Math.floor(params.maxAgeMs ?? 30000));
+  if (Date.now() - intent.createdAt > maxAgeMs) {
+    removeSessionStorage(ROUTE_INTENT_KEY);
+    return false;
+  }
+  return intent.venueId === venueId;
 }
