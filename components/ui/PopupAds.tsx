@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { getVenueId } from "@/lib/storage";
 import { isVenueTransitionGateActive } from "@/lib/venueGameTransition";
 import { releaseAdTier, requestAdTier, setLandingPopupGate } from "@/components/ui/adPriority";
+import { setScrollLock } from "@/lib/scrollLock";
 import type { Advertisement, AdPageKey } from "@/types";
 
 type PopupTrigger = "popup-on-entry" | "popup-on-scroll" | "popup-round-end";
@@ -413,68 +414,11 @@ export function PopupAds() {
   }, [closePopup, popup?.open]);
 
   useEffect(() => {
-    if (!popup?.open || typeof window === "undefined") {
-      return;
-    }
-
-    const body = document.body;
-    const root = document.documentElement;
-    const scrollY = window.scrollY;
-    const prevBodyPosition = body.style.position;
-    const prevBodyTop = body.style.top;
-    const prevBodyLeft = body.style.left;
-    const prevBodyRight = body.style.right;
-    const prevBodyWidth = body.style.width;
-    const prevBodyOverflow = body.style.overflow;
-    const prevRootOverflow = root.style.overflow;
-
-    body.classList.add("tp-popup-open");
-    root.classList.add("tp-popup-open");
-
-    // Hard lock scrolling while popup is open (especially for iOS Safari).
-    body.style.position = "fixed";
-    body.style.top = `-${scrollY}px`;
-    body.style.left = "0";
-    body.style.right = "0";
-    body.style.width = "100%";
-    body.style.overflow = "hidden";
-    root.style.overflow = "hidden";
-
+    setScrollLock(`popup-ad:${popupOwnerId}`, Boolean(popup?.open), "popup");
     return () => {
-      body.classList.remove("tp-popup-open");
-      root.classList.remove("tp-popup-open");
-
-      body.style.position = prevBodyPosition;
-      body.style.top = prevBodyTop;
-      body.style.left = prevBodyLeft;
-      body.style.right = prevBodyRight;
-      body.style.width = prevBodyWidth;
-      body.style.overflow = prevBodyOverflow;
-      root.style.overflow = prevRootOverflow;
-
-      window.scrollTo(0, scrollY);
+      setScrollLock(`popup-ad:${popupOwnerId}`, false);
     };
-  }, [popup?.open]);
-
-  useEffect(() => {
-    // Safety cleanup in case popup unmounts during route transitions.
-    return () => {
-      if (typeof window === "undefined") {
-        return;
-      }
-      const body = document.body;
-      const root = document.documentElement;
-      body.classList.remove("tp-popup-open");
-      root.classList.remove("tp-popup-open");
-      body.style.position = "";
-      body.style.top = "";
-      body.style.left = "";
-      body.style.right = "";
-      body.style.width = "";
-      body.style.overflow = "";
-      root.style.overflow = "";
-    };
-  }, []);
+  }, [popup?.open, popupOwnerId]);
 
   useEffect(() => {
     return () => {
@@ -497,6 +441,7 @@ export function PopupAds() {
 
   return (
     <div
+      data-tp-scroll-lock="active"
       className="pointer-events-auto fixed inset-0 z-[5000] flex items-center justify-center bg-slate-900/30 p-2"
       style={{
         top: 0,

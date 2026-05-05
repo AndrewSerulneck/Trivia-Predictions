@@ -6,34 +6,15 @@ import { getVenueId } from "@/lib/storage";
 import { type VenueGameKey } from "@/lib/venueGameCards";
 import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
 import { hasResumableSession } from "@/lib/gameResume";
+import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
 import { GameRuleCardPanel, GAME_CARD_BG_BY_KEY } from "@/components/venue/GameIdentityPanel";
 import { PageShell } from "@/components/ui/PageShell";
 
 function recoverGamePageScrollState() {
-  if (typeof document === "undefined") {
-    return;
-  }
-
-  const body = document.body;
-  const root = document.documentElement;
+  forceRecoverDocumentScroll();
+  if (typeof document === "undefined") return;
   const appRoot = document.getElementById("__next") ?? document.getElementById("root");
-
-  body.classList.remove("tp-modal-open", "tp-popup-open");
-  root.classList.remove("tp-modal-open", "tp-popup-open");
   appRoot?.classList.remove("tp-modal-open", "tp-popup-open");
-
-  body.style.position = "";
-  body.style.top = "";
-  body.style.left = "";
-  body.style.right = "";
-  body.style.width = "";
-  body.style.height = "";
-  body.style.overflow = "";
-  body.style.touchAction = "";
-
-  root.style.height = "";
-  root.style.overflow = "";
-  root.style.touchAction = "";
 
   if (appRoot instanceof HTMLElement) {
     appRoot.style.position = "";

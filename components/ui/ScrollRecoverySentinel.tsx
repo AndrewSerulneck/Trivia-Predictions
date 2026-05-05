@@ -2,40 +2,71 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { forceRecoverDocumentScroll, hasActiveScrollLocks } from "@/lib/scrollLock";
 
 function recoverScrollableState() {
   if (typeof document === "undefined") {
     return;
   }
+  forceRecoverDocumentScroll();
+}
 
-  const body = document.body;
-  const root = document.documentElement;
+function hasVisibleScrollLockUI(): boolean {
+  if (typeof document === "undefined") {
+    return false;
+  }
+  return Boolean(document.querySelector("[data-tp-scroll-lock='active']"));
+}
 
-  body.classList.remove("tp-modal-open", "tp-popup-open");
-  root.classList.remove("tp-modal-open", "tp-popup-open");
-
-  body.style.position = "";
-  body.style.top = "";
-  body.style.left = "";
-  body.style.right = "";
-  body.style.width = "";
-  body.style.overflow = "auto";
-  root.style.overflow = "auto";
+function auditAndRecoverStaleLocks(): void {
+  const hasVisibleUI = hasVisibleScrollLockUI();
+  const hasLockState = hasActiveScrollLocks();
+  if (hasVisibleUI) {
+    return;
+  }
+  if (!hasLockState) {
+    recoverScrollableState();
+    return;
+  }
+  recoverScrollableState();
 }
 
 export function ScrollRecoverySentinel() {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (pathname?.startsWith("/venue/")) {
-      return;
-    }
-    recoverScrollableState();
+    auditAndRecoverStaleLocks();
     const timer = window.setTimeout(() => {
-      recoverScrollableState();
+      auditAndRecoverStaleLocks();
     }, 120);
+    const secondTimer = window.setTimeout(() => {
+      auditAndRecoverStaleLocks();
+    }, 900);
+    const intervalId = window.setInterval(() => {
+      auditAndRecoverStaleLocks();
+    }, 1800);
+    const onPageShow = () => {
+      auditAndRecoverStaleLocks();
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        auditAndRecoverStaleLocks();
+      }
+    };
+    const onFocus = () => {
+      auditAndRecoverStaleLocks();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("focus", onFocus);
+
     return () => {
       window.clearTimeout(timer);
+      window.clearTimeout(secondTimer);
+      window.clearInterval(intervalId);
+      window.removeEventListener("pageshow", onPageShow);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("focus", onFocus);
     };
   }, [pathname]);
 

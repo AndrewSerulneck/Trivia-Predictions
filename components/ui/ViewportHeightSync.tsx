@@ -15,9 +15,6 @@ function readViewportHeight(): number {
 export function ViewportHeightSync() {
   const pathname = usePathname();
   useEffect(() => {
-    if (pathname?.startsWith("/venue/")) {
-      return;
-    }
     let rafId: number | null = null;
     let timeoutId: number | null = null;
     let lastAppliedHeight = 0;

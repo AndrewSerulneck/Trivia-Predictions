@@ -1,10 +1,11 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { CoinFXCanvas } from "@/components/ui/CoinFXCanvas";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { getUserId, getUsername, getVenueId } from "@/lib/storage";
+import { setScrollLock } from "@/lib/scrollLock";
 
 type SummaryPayload = {
   ok: boolean;
@@ -84,6 +85,7 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
   const [pointsBurstVisible, setPointsBurstVisible] = useState(false);
   const [pointsBurstToken, setPointsBurstToken] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const scrollLockOwnerId = useId();
   const storedVenueId = useSyncExternalStore(
     () => () => {},
     () => (getVenueId() ?? "").trim(),
@@ -299,16 +301,14 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
 
   useEffect(() => {
     if (compact || isJoinRoute) {
+      setScrollLock(`user-status-menu:${scrollLockOwnerId}`, false);
       return;
     }
-
-    document.body.classList.toggle("tp-modal-open", isMenuOpen);
-    document.documentElement.classList.toggle("tp-modal-open", isMenuOpen);
+    setScrollLock(`user-status-menu:${scrollLockOwnerId}`, isMenuOpen, "modal");
     return () => {
-      document.body.classList.remove("tp-modal-open");
-      document.documentElement.classList.remove("tp-modal-open");
+      setScrollLock(`user-status-menu:${scrollLockOwnerId}`, false);
     };
-  }, [compact, isJoinRoute, isMenuOpen]);
+  }, [compact, isJoinRoute, isMenuOpen, scrollLockOwnerId]);
 
   if (isJoinRoute) {
     return null;
@@ -458,6 +458,7 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
       ) : null}
 
       <div
+        data-tp-scroll-lock={isMenuOpen ? "active" : undefined}
         className={`fixed inset-0 z-[1200] ${isMenuOpen ? "pointer-events-auto" : "pointer-events-none"}`}
         aria-hidden={!isMenuOpen}
       >

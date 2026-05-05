@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useId, useState, useSyncExternalStore } from "react";
 import { getVenueId } from "@/lib/storage";
 import { APP_PAGE_NAMES } from "@/lib/pageNames";
+import { setScrollLock } from "@/lib/scrollLock";
 
 const NAV_ITEMS = [
   { href: "/", label: APP_PAGE_NAMES.join },
@@ -37,6 +38,7 @@ function getVenueIdFromPathname(pathname: string): string {
 export function LeftHamburgerNav() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const scrollLockOwnerId = useId();
   const storedVenueId = useSyncExternalStore(
     () => () => {},
     () => (getVenueId() ?? "").trim(),
@@ -58,13 +60,11 @@ export function LeftHamburgerNav() {
       return;
     }
 
-    document.body.classList.toggle("tp-modal-open", isOpen);
-    document.documentElement.classList.toggle("tp-modal-open", isOpen);
+    setScrollLock(`left-hamburger:${scrollLockOwnerId}`, isOpen, "modal");
     return () => {
-      document.body.classList.remove("tp-modal-open");
-      document.documentElement.classList.remove("tp-modal-open");
+      setScrollLock(`left-hamburger:${scrollLockOwnerId}`, false);
     };
-  }, [isOpen]);
+  }, [isOpen, scrollLockOwnerId]);
 
   const isJoinPage = pathname === "/";
   const isTriviaPage = pathname === "/trivia";
@@ -86,6 +86,7 @@ export function LeftHamburgerNav() {
       </button>
 
       <div
+        data-tp-scroll-lock={isOpen ? "active" : undefined}
         className={`fixed inset-0 z-50 md:hidden ${isOpen ? "pointer-events-auto" : "pointer-events-none"}`}
         aria-hidden={!isOpen}
       >

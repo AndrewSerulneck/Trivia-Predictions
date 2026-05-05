@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { TouchEvent as ReactTouchEvent } from "react";
 import { getUserId } from "@/lib/storage";
 import { consumeBingoPrefetchCache } from "@/lib/bingoPrefetchCache";
+import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 
 type BingoCardSquare = {
@@ -315,23 +316,7 @@ function clampScreen(value: number): BingoScreenIndex {
 }
 
 function recoverBingoPageScrollState() {
-  if (typeof document === "undefined") {
-    return;
-  }
-
-  const body = document.body;
-  const root = document.documentElement;
-
-  body.classList.remove("tp-modal-open", "tp-popup-open");
-  root.classList.remove("tp-modal-open", "tp-popup-open");
-
-  body.style.position = "";
-  body.style.top = "";
-  body.style.left = "";
-  body.style.right = "";
-  body.style.width = "";
-  body.style.overflow = "unset";
-  root.style.overflow = "unset";
+  forceRecoverDocumentScroll();
 }
 
 function LoadingState({ label }: { label: string }) {
