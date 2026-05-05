@@ -4236,5 +4236,135 @@
     "correctAnswer": 2,
     "category": "General Knowledge",
     "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-colors-are-in-a-traditional-rainbow",
+    "question": "How many colors are in a traditional rainbow?",
+    "options": [
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-formulated-the-laws-of-motion-and-universal-gravitation",
+    "question": "Who formulated the laws of motion and universal gravitation?",
+    "options": [
+      "Galileo Galilei",
+      "Nikola Tesla",
+      "Isaac Newton",
+      "Albert Einstein"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-main-ingredient-in-the-popular-mexican-dip-guacamole",
+    "question": "What is the main ingredient in the popular Mexican dip, guacamole?",
+    "options": [
+      "Tomato",
+      "Avocado",
+      "Onion",
+      "Lime"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-city-hosted-the-summer-olympic-games-in-the-year-2000",
+    "question": "Which city hosted the Summer Olympic Games in the year 2000?",
+    "options": [
+      "Athens",
+      "Beijing",
+      "Sydney",
+      "Atlanta"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-only-letter-in-the-english-alphabet-that-is-not-present-in-the-name-of-any-us-state",
+    "question": "What is the only letter in the English alphabet that is not present in the name of any U.S. state?",
+    "options": [
+      "X",
+      "Q",
+      "Z",
+      "J"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-novel-begins-with-the-line-it-was-the-best-of-times-it-was-the-worst-of-times",
+    "question": "Which novel begins with the line 'It was the best of times, it was the worst of times'?",
+    "options": [
+      "Great Expectations",
+      "Pride and Prejudice",
+      "A Tale of Two Cities",
+      "Wuthering Heights"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-what-year-did-the-titanic-sink",
+    "question": "In what year did the Titanic sink?",
+    "options": [
+      "1905",
+      "1912",
+      "1918",
+      "1923"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-continent-is-the-sahara-desert-primarily-located-in",
+    "question": "Which continent is the Sahara Desert primarily located in?",
+    "options": [
+      "Asia",
+      "Africa",
+      "South America",
+      "Australia"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-famous-ancient-city-was-buried-by-the-eruption-of-mount-vesuvius-in-79-ad",
+    "question": "Which famous ancient city was buried by the eruption of Mount Vesuvius in 79 AD?",
+    "options": [
+      "Rome",
+      "Pompeii",
+      "Athens",
+      "Carthage"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-century-was-the-movable-type-printing-press-invented-in-europe",
+    "question": "In which century was the movable type printing press invented in Europe?",
+    "options": [
+      "14th century",
+      "15th century",
+      "16th century",
+      "17th century"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
   }
 ]

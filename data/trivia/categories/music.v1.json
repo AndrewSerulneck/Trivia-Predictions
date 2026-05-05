@@ -4236,5 +4236,161 @@
     "correctAnswer": 2,
     "category": "Music",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-instrument-typically-has-88-keys",
+    "question": "What instrument typically has 88 keys?",
+    "options": [
+      "Violin",
+      "Trumpet",
+      "Piano",
+      "Guitar"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-recorded-the-hit-song-single-ladies-put-a-ring-on-it",
+    "question": "Who recorded the hit song \"Single Ladies (Put a Ring on It)\"?",
+    "options": [
+      "Rihanna",
+      "Beyoncé",
+      "Adele",
+      "Lady Gaga"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-member-of-the-beatles-was-known-for-his-songwriting-contributions-like-yesterday-and-hey-jude",
+    "question": "Which member of The Beatles was known for his songwriting contributions like \"Yesterday\" and \"Hey Jude\"?",
+    "options": [
+      "John Lennon",
+      "George Harrison",
+      "Ringo Starr",
+      "Paul McCartney"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-music-notation-what-does-pp-indicate",
+    "question": "In music notation, what does 'pp' indicate?",
+    "options": [
+      "Play very fast",
+      "Play very softly",
+      "Play very loudly",
+      "Play with passion"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-progressive-rock-band-released-the-concept-album-2112",
+    "question": "Which progressive rock band released the concept album \"2112\"?",
+    "options": [
+      "Yes",
+      "Genesis",
+      "Rush",
+      "King Crimson"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-pop-superstar-is-known-for-hits-like-thriller-and-billie-jean",
+    "question": "Which pop superstar is known for hits like \"Thriller\" and \"Billie Jean\"?",
+    "options": [
+      "Prince",
+      "Stevie Wonder",
+      "Michael Jackson",
+      "Lionel Richie"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-year-did-mtv-launch-fundamentally-changing-the-music-industry",
+    "question": "What year did MTV launch, fundamentally changing the music industry?",
+    "options": [
+      "1978",
+      "1981",
+      "1985",
+      "1990"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-theremin-is-unique-among-musical-instruments-for-being-played-without-physical-contact-which-early-electronic-music-pioneer-is-often-associated-with-its-development",
+    "question": "The theremin is unique among musical instruments for being played without physical contact. Which early electronic music pioneer is often associated with its development?",
+    "options": [
+      "Robert Moog",
+      "Leon Theremin",
+      "Brian Eno",
+      "John Cage"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-a-group-of-musicians-who-play-together-called",
+    "question": "What is a group of musicians who play together called?",
+    "options": [
+      "A solo",
+      "A duet",
+      "A band",
+      "A choir"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "from-which-city-did-the-grunge-music-scene-primarily-emerge-in-the-late-1980s-and-early-1990s",
+    "question": "From which city did the grunge music scene primarily emerge in the late 1980s and early 1990s?",
+    "options": [
+      "Los Angeles",
+      "New York City",
+      "London",
+      "Seattle"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-jazz-saxophonist-released-the-highly-influential-album-a-love-supreme-in-1965",
+    "question": "Which jazz saxophonist released the highly influential album \"A Love Supreme\" in 1965?",
+    "options": [
+      "Miles Davis",
+      "Charlie Parker",
+      "John Coltrane",
+      "Thelonious Monk"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-album-is-widely-recognized-as-the-best-selling-album-of-all-time",
+    "question": "Which album is widely recognized as the best-selling album of all time?",
+    "options": [
+      "Thriller by Michael Jackson",
+      "Back in Black by AC/DC",
+      "The Dark Side of the Moon by Pink Floyd",
+      "Their Greatest Hits (1971–1975) by Eagles"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "medium"
   }
 ]

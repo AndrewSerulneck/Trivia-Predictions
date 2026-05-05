@@ -4223,5 +4223,174 @@
     "correctAnswer": 1,
     "category": "Science",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-primary-gas-that-plants-absorb-from-the-atmosphere-for-photosynthesis",
+    "question": "What is the primary gas that plants absorb from the atmosphere for photosynthesis?",
+    "options": [
+      "Oxygen",
+      "Nitrogen",
+      "Carbon Dioxide",
+      "Hydrogen"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-type-of-star-is-our-sun",
+    "question": "Which type of star is our Sun?",
+    "options": [
+      "Red Giant",
+      "White Dwarf",
+      "Yellow Dwarf",
+      "Neutron Star"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-noble-gas-is-the-most-abundant-in-earths-atmosphere",
+    "question": "Which noble gas is the most abundant in Earth's atmosphere?",
+    "options": [
+      "Helium",
+      "Neon",
+      "Argon",
+      "Krypton"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-phenomenon-causes-the-sky-to-appear-blue",
+    "question": "What phenomenon causes the sky to appear blue?",
+    "options": [
+      "Refraction",
+      "Diffraction",
+      "Scattering",
+      "Absorption"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-nucleic-acid-carries-genetic-instructions-for-the-development-and-functioning-of-all-known-living-organisms",
+    "question": "Which nucleic acid carries genetic instructions for the development and functioning of all known living organisms?",
+    "options": [
+      "RNA",
+      "Protein",
+      "DNA",
+      "Amino Acid"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-term-for-a-substance-that-speeds-up-a-chemical-reaction-without-being-consumed-in-the-process",
+    "question": "What is the term for a substance that speeds up a chemical reaction without being consumed in the process?",
+    "options": [
+      "Inhibitor",
+      "Reactant",
+      "Catalyst",
+      "Solvent"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-primary-pigment-in-plants-that-absorbs-sunlight-for-photosynthesis",
+    "question": "What is the primary pigment in plants that absorbs sunlight for photosynthesis?",
+    "options": [
+      "Carotene",
+      "Xanthophyll",
+      "Anthocyanin",
+      "Chlorophyll"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-fundamental-force-is-responsible-for-holding-atomic-nuclei-together",
+    "question": "Which fundamental force is responsible for holding atomic nuclei together?",
+    "options": [
+      "Gravitational force",
+      "Electromagnetic force",
+      "Strong nuclear force",
+      "Weak nuclear force"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-gas-is-primarily-responsible-for-the-greenhouse-effect-on-earth",
+    "question": "Which gas is primarily responsible for the greenhouse effect on Earth?",
+    "options": [
+      "Oxygen",
+      "Nitrogen",
+      "Carbon Dioxide",
+      "Argon"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-property-of-a-wave-is-measured-in-hertz-hz",
+    "question": "What property of a wave is measured in Hertz (Hz)?",
+    "options": [
+      "Amplitude",
+      "Wavelength",
+      "Frequency",
+      "Speed"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-study-of-fungi-called",
+    "question": "What is the study of fungi called?",
+    "options": [
+      "Zoology",
+      "Botany",
+      "Mycology",
+      "Geology"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-largest-planet-in-our-solar-system-by-mass-and-volume",
+    "question": "What is the largest planet in our solar system by mass and volume?",
+    "options": [
+      "Mars",
+      "Jupiter",
+      "Saturn",
+      "Neptune"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-hardest-substance-in-the-human-body",
+    "question": "What is the hardest substance in the human body?",
+    "options": [
+      "Bone",
+      "Cartilage",
+      "Enamel",
+      "Dentin"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
   }
 ]

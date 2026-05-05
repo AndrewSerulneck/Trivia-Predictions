@@ -4236,5 +4236,174 @@
     "correctAnswer": 1,
     "category": "Animals",
     "difficulty": "hard"
+  },
+  {
+    "slug": "which-creature-has-the-largest-brain-relative-to-its-body-size",
+    "question": "Which creature has the largest brain relative to its body size?",
+    "options": [
+      "Human",
+      "Sperm Whale",
+      "Shrew",
+      "Dolphin"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-these-animals-is-a-monotreme-meaning-it-lays-eggs-but-nurses-its-young-with-milk",
+    "question": "Which of these animals is a monotreme, meaning it lays eggs but nurses its young with milk?",
+    "options": [
+      "Platypus",
+      "Opossum",
+      "Koala",
+      "Wombat"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-the-fastest-land-animal",
+    "question": "Which animal is the fastest land animal?",
+    "options": [
+      "Lion",
+      "Cheetah",
+      "Gazelle",
+      "Horse"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-bird-has-the-largest-wingspan",
+    "question": "Which bird has the largest wingspan?",
+    "options": [
+      "Ostrich",
+      "Bald Eagle",
+      "Wandering Albatross",
+      "Andean Condor"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-can-regenerate-its-lost-limbs-heart-and-even-parts-of-its-brain",
+    "question": "Which animal can regenerate its lost limbs, heart, and even parts of its brain?",
+    "options": [
+      "Starfish",
+      "Salamander",
+      "Axolotl",
+      "Earthworm"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-has-fingerprints-almost-identical-to-humans-making-them-difficult-to-distinguish-even-under-a-microscope",
+    "question": "Which animal has fingerprints almost identical to humans, making them difficult to distinguish even under a microscope?",
+    "options": [
+      "Chimpanzee",
+      "Gorilla",
+      "Koala",
+      "Orangutan"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-has-the-longest-gestation-period-among-all-mammals",
+    "question": "Which animal has the longest gestation period among all mammals?",
+    "options": [
+      "Elephant",
+      "Blue Whale",
+      "Giraffe",
+      "Rhinoceros"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-can-survive-the-vacuum-of-space-extreme-radiation-and-dehydration-earning-it-the-nickname-water-bear",
+    "question": "Which animal can survive the vacuum of space, extreme radiation, and dehydration, earning it the nickname 'water bear'?",
+    "options": [
+      "Tardigrade",
+      "Cockroach",
+      "Desert Beetle",
+      "Scorpion"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-is-known-to-be-able-to-sleep-for-up-to-three-years-at-a-time",
+    "question": "Which animal is known to be able to sleep for up to three years at a time?",
+    "options": [
+      "Bear",
+      "Snail",
+      "Bat",
+      "Snake"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-largest-species-of-shark",
+    "question": "What is the largest species of shark?",
+    "options": [
+      "Great White Shark",
+      "Hammerhead Shark",
+      "Whale Shark",
+      "Tiger Shark"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-can-extend-its-tongue-to-a-length-twice-its-body-size",
+    "question": "Which animal can extend its tongue to a length twice its body size?",
+    "options": [
+      "Frog",
+      "Anteater",
+      "Chameleon",
+      "Woodpecker"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-a-group-of-crows-commonly-called",
+    "question": "What is a group of crows commonly called?",
+    "options": [
+      "A parliament",
+      "A murder",
+      "A gaggle",
+      "A school"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-scientifically-known-for-its-biological-immortality-capable-of-reverting-to-an-earlier-life-stage",
+    "question": "Which animal is scientifically known for its biological immortality, capable of reverting to an earlier life stage?",
+    "options": [
+      "Greenland Shark",
+      "Bowhead Whale",
+      "Turritopsis dohrnii",
+      "Hydra"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
   }
 ]

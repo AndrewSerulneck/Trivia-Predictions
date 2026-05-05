@@ -4236,5 +4236,161 @@
     "correctAnswer": 2,
     "category": "History",
     "difficulty": "medium"
+  },
+  {
+    "slug": "the-magna-carta-a-foundational-document-in-english-law-was-signed-in-which-year",
+    "question": "The Magna Carta, a foundational document in English law, was signed in which year?",
+    "options": [
+      "1066",
+      "1215",
+      "1492",
+      "1607"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-dynasty-was-responsible-for-building-the-forbidden-city-in-beijing",
+    "question": "Which dynasty was responsible for building the Forbidden City in Beijing?",
+    "options": [
+      "Han Dynasty",
+      "Tang Dynasty",
+      "Ming Dynasty",
+      "Qing Dynasty"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-ancient-civilization-constructed-the-great-pyramids-of-giza",
+    "question": "Which ancient civilization constructed the Great Pyramids of Giza?",
+    "options": [
+      "Roman",
+      "Greek",
+      "Egyptian",
+      "Mayan"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-led-the-carthaginian-army-against-rome-in-the-second-punic-war",
+    "question": "Who led the Carthaginian army against Rome in the Second Punic War?",
+    "options": [
+      "Scipio Africanus",
+      "Julius Caesar",
+      "Hannibal Barca",
+      "Alexander the Great"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-what-year-did-christopher-columbus-first-reach-the-americas",
+    "question": "In what year did Christopher Columbus first reach the Americas?",
+    "options": [
+      "1453",
+      "1492",
+      "1517",
+      "1607"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-edict-of-nantes-which-granted-rights-to-protestants-in-france-was-revoked-by-which-french-king",
+    "question": "The Edict of Nantes, which granted rights to Protestants in France, was revoked by which French king?",
+    "options": [
+      "Louis XIII",
+      "Louis XIV",
+      "Henry IV",
+      "Francis I"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-treaty-of-westphalia-signed-in-1648-brought-an-end-to-which-major-european-conflict",
+    "question": "The Treaty of Westphalia, signed in 1648, brought an end to which major European conflict?",
+    "options": [
+      "The War of the Roses",
+      "The Thirty Years' War",
+      "The Seven Years' War",
+      "The Napoleonic Wars"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-fall-of-the-berlin-wall-a-major-event-symbolizing-the-end-of-the-cold-war-occurred-in-what-year",
+    "question": "The fall of the Berlin Wall, a major event symbolizing the end of the Cold War, occurred in what year?",
+    "options": [
+      "1979",
+      "1989",
+      "1991",
+      "2001"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-explorer-is-credited-with-being-the-first-european-to-sight-the-pacific-ocean-from-the-american-continent",
+    "question": "Which explorer is credited with being the first European to sight the Pacific Ocean from the American continent?",
+    "options": [
+      "Ferdinand Magellan",
+      "Vasco Núñez de Balboa",
+      "Hernán Cortés",
+      "Francisco Pizarro"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-meiji-restoration-in-japan-involved-the-restoration-of-imperial-rule-and-the-end-of-which-feudal-military-government",
+    "question": "The Meiji Restoration in Japan involved the restoration of imperial rule and the end of which feudal military government?",
+    "options": [
+      "Kamakura Shogunate",
+      "Ashikaga Shogunate",
+      "Tokugawa Shogunate",
+      "Heian Period"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-was-the-first-female-pharaoh-of-ancient-egypt-to-rule-with-the-full-authority-of-the-title",
+    "question": "Who was the first female pharaoh of ancient Egypt to rule with the full authority of the title?",
+    "options": [
+      "Hatshepsut",
+      "Cleopatra VII",
+      "Nefertiti",
+      "Sobekneferu"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-assassination-of-archduke-franz-ferdinand-a-key-event-leading-to-world-war-i-took-place-in-which-city",
+    "question": "The assassination of Archduke Franz Ferdinand, a key event leading to World War I, took place in which city?",
+    "options": [
+      "Sarajevo",
+      "Vienna",
+      "Belgrade",
+      "Prague"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
   }
 ]

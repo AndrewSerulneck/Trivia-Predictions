@@ -4223,5 +4223,174 @@
     "correctAnswer": 2,
     "category": "Pop Culture",
     "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-yellow-pill-shaped-creatures-who-serve-gru-in-the-despicable-me-film-franchise",
+    "question": "What is the name of the yellow, pill-shaped creatures who serve Gru in the \"Despicable Me\" film franchise?",
+    "options": [
+      "Pillows",
+      "Minions",
+      "Fuzzballs",
+      "Goblins"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-popular-1990s-sitcom-is-set-in-new-york-city-and-features-six-friends-living-in-apartments-across-the-hall-from-each-other",
+    "question": "Which popular 1990s sitcom is set in New York City and features six friends living in apartments across the hall from each other?",
+    "options": [
+      "Seinfeld",
+      "Friends",
+      "Frasier",
+      "Cheers"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-performed-the-iconic-super-bowl-lvii-halftime-show-in-2023-revealing-her-second-pregnancy-during-the-performance",
+    "question": "Who performed the iconic Super Bowl LVII halftime show in 2023, revealing her second pregnancy during the performance?",
+    "options": [
+      "Beyoncé",
+      "Rihanna",
+      "Adele",
+      "Lady Gaga"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-acclaimed-director-is-known-for-his-distinct-non-linear-storytelling-and-films-like-pulp-fiction-and-kill-bill",
+    "question": "Which acclaimed director is known for his distinct non-linear storytelling and films like \"Pulp Fiction\" and \"Kill Bill\"?",
+    "options": [
+      "Steven Spielberg",
+      "Quentin Tarantino",
+      "Martin Scorsese",
+      "Christopher Nolan"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "before-becoming-a-major-film-star-chris-pratt-was-widely-known-for-his-comedic-role-as-andy-dwyer-in-which-tv-series",
+    "question": "Before becoming a major film star, Chris Pratt was widely known for his comedic role as Andy Dwyer in which TV series?",
+    "options": [
+      "The Office",
+      "Parks and Recreation",
+      "Community",
+      "30 Rock"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-main-protagonist-in-nintendos-the-legend-of-zelda-video-game-series",
+    "question": "What is the name of the main protagonist in Nintendo's \"The Legend of Zelda\" video game series?",
+    "options": [
+      "Zelda",
+      "Ganon",
+      "Link",
+      "Marth"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-social-media-platform-is-primarily-known-for-its-disappearing-photo-and-video-messages-often-called-snaps",
+    "question": "Which social media platform is primarily known for its disappearing photo and video messages, often called \"snaps\"?",
+    "options": [
+      "Instagram",
+      "Twitter",
+      "Snapchat",
+      "Facebook"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "often-referred-to-as-the-queen-of-pop-which-artist-has-iconic-hits-such-as-like-a-virgin-and-material-girl",
+    "question": "Often referred to as the 'Queen of Pop,' which artist has iconic hits such as \"Like a Virgin\" and \"Material Girl\"?",
+    "options": [
+      "Whitney Houston",
+      "Mariah Carey",
+      "Madonna",
+      "Janet Jackson"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-the-critically-acclaimed-tv-drama-breaking-bad-what-alias-does-high-school-chemistry-teacher-walter-white-adopt",
+    "question": "In the critically acclaimed TV drama \"Breaking Bad,\" what alias does high school chemistry teacher Walter White adopt?",
+    "options": [
+      "Scarface",
+      "Heisenberg",
+      "The Cleaner",
+      "The Professor"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-is-the-author-of-the-globally-successful-harry-potter-book-series",
+    "question": "Who is the author of the globally successful \"Harry Potter\" book series?",
+    "options": [
+      "Suzanne Collins",
+      "Stephenie Meyer",
+      "J.K. Rowling",
+      "Rick Riordan"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-the-marvel-cinematic-universe-what-is-the-name-of-the-technologically-advanced-fictional-african-nation-ruled-by-black-panther",
+    "question": "In the Marvel Cinematic Universe, what is the name of the technologically advanced, fictional African nation ruled by Black Panther?",
+    "options": [
+      "Genosha",
+      "Latveria",
+      "Wakanda",
+      "Themyscira"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-actress-starred-as-katniss-everdeen-in-the-hunger-games-film-series",
+    "question": "Which actress starred as Katniss Everdeen in \"The Hunger Games\" film series?",
+    "options": [
+      "Shailene Woodley",
+      "Emma Stone",
+      "Jennifer Lawrence",
+      "Saoirse Ronan"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-hbo-drama-series-focuses-on-the-powerful-and-dysfunctional-roy-family-owners-of-a-global-media-and-entertainment-conglomerate",
+    "question": "Which HBO drama series focuses on the powerful and dysfunctional Roy family, owners of a global media and entertainment conglomerate?",
+    "options": [
+      "Billions",
+      "House of Cards",
+      "Succession",
+      "The Crown"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "hard"
   }
 ]

@@ -4223,5 +4223,174 @@
     "correctAnswer": 1,
     "category": "Sports",
     "difficulty": "medium"
+  },
+  {
+    "slug": "in-baseball-what-is-it-called-when-a-batter-hits-the-ball-out-of-the-playing-field-in-fair-territory-resulting-in-an-automatic-run",
+    "question": "In baseball, what is it called when a batter hits the ball out of the playing field in fair territory, resulting in an automatic run?",
+    "options": [
+      "Home Run",
+      "Grand Slam",
+      "Strikeout",
+      "Foul Ball"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-term-for-completing-a-golf-hole-in-a-single-stroke",
+    "question": "What is the term for completing a golf hole in a single stroke?",
+    "options": [
+      "Birdie",
+      "Eagle",
+      "Albatross",
+      "Hole-in-one"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-of-the-following-is-one-of-cyclings-three-grand-tours-commonly-known-as-la-vuelta",
+    "question": "Which of the following is one of cycling's three Grand Tours, commonly known as 'La Vuelta'?",
+    "options": [
+      "Tour de France",
+      "Giro d'Italia",
+      "Vuelta a España",
+      "Paris-Roubaix"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-final-event-contested-in-the-mens-decathlon",
+    "question": "What is the final event contested in the men's decathlon?",
+    "options": [
+      "Javelin Throw",
+      "Pole Vault",
+      "Discus Throw",
+      "1500m Run"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-ice-hockey-what-is-the-term-for-a-single-player-scoring-three-goals-in-one-game",
+    "question": "In ice hockey, what is the term for a single player scoring three goals in one game?",
+    "options": [
+      "Hat trick",
+      "Power play",
+      "Slap shot",
+      "Face-off"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-rounds-are-typically-contested-in-a-professional-boxing-championship-match",
+    "question": "How many rounds are typically contested in a professional boxing championship match?",
+    "options": [
+      "8 rounds",
+      "10 rounds",
+      "12 rounds",
+      "15 rounds"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-the-four-grand-slam-tennis-tournaments-is-uniquely-played-on-clay-courts",
+    "question": "Which of the four Grand Slam tennis tournaments is uniquely played on clay courts?",
+    "options": [
+      "Australian Open",
+      "Wimbledon",
+      "US Open",
+      "French Open"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-driver-holds-the-record-for-the-most-formula-1-world-drivers-championships-tied-with-michael-schumacher",
+    "question": "Which driver holds the record for the most Formula 1 World Drivers' Championships, tied with Michael Schumacher?",
+    "options": [
+      "Juan Manuel Fangio",
+      "Ayrton Senna",
+      "Lewis Hamilton",
+      "Sebastian Vettel"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-premier-international-rugby-union-competition-contested-every-four-years",
+    "question": "What is the name of the premier international rugby union competition, contested every four years?",
+    "options": [
+      "Six Nations Championship",
+      "The Rugby Championship",
+      "Rugby World Cup",
+      "Super Rugby"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-maximum-possible-break-in-a-single-frame-of-snooker-assuming-no-foul-and-subsequent-free-ball",
+    "question": "What is the maximum possible break in a single frame of snooker, assuming no foul and subsequent free ball?",
+    "options": [
+      "147 points",
+      "155 points",
+      "137 points",
+      "129 points"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-players-are-on-the-court-for-one-team-in-a-standard-basketball-game",
+    "question": "How many players are on the court for one team in a standard basketball game?",
+    "options": [
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-country-won-the-first-fifa-world-cup-in-1930",
+    "question": "Which country won the first FIFA World Cup in 1930?",
+    "options": [
+      "Brazil",
+      "Italy",
+      "Uruguay",
+      "Argentina"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-is-the-only-athlete-to-win-eight-gold-medals-at-a-single-olympic-games",
+    "question": "Who is the only athlete to win eight gold medals at a single Olympic Games?",
+    "options": [
+      "Michael Phelps",
+      "Usain Bolt",
+      "Carl Lewis",
+      "Mark Spitz"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "hard"
   }
 ]

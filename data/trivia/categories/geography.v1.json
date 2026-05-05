@@ -4236,5 +4236,161 @@
     "correctAnswer": 1,
     "category": "Geography",
     "difficulty": "medium"
+  },
+  {
+    "slug": "the-grand-canyon-is-primarily-located-in-which-us-state",
+    "question": "The Grand Canyon is primarily located in which U.S. state?",
+    "options": [
+      "California",
+      "Utah",
+      "Arizona",
+      "Nevada"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-river-is-considered-the-longest-in-south-america-and-second-longest-globally",
+    "question": "Which river is considered the longest in South America and second-longest globally?",
+    "options": [
+      "Orinoco River",
+      "Paraná River",
+      "Amazon River",
+      "Magdalena River"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-gobi-desert-spans-parts-of-which-two-countries",
+    "question": "The Gobi Desert spans parts of which two countries?",
+    "options": [
+      "China and India",
+      "Russia and Kazakhstan",
+      "Mongolia and China",
+      "Iran and Afghanistan"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-deepest-lake-in-the-world",
+    "question": "What is the deepest lake in the world?",
+    "options": [
+      "Lake Superior",
+      "Lake Baikal",
+      "Lake Tanganyika",
+      "Crater Lake"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-strait-of-hormuz-is-a-strategically-important-waterway-connecting-the-persian-gulf-with-which-other-body-of-water",
+    "question": "The Strait of Hormuz is a strategically important waterway connecting the Persian Gulf with which other body of water?",
+    "options": [
+      "Red Sea",
+      "Arabian Sea",
+      "Gulf of Oman",
+      "Mediterranean Sea"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-carpathian-mountains-are-a-major-mountain-range-primarily-located-in-which-region-of-europe",
+    "question": "The Carpathian Mountains are a major mountain range primarily located in which region of Europe?",
+    "options": [
+      "Western Europe",
+      "Southern Europe",
+      "Central and Eastern Europe",
+      "Northern Europe"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-bay-is-widely-considered-the-largest-in-the-world-by-surface-area",
+    "question": "Which bay is widely considered the largest in the world by surface area?",
+    "options": [
+      "Chesapeake Bay",
+      "Bay of Bengal",
+      "Hudson Bay",
+      "Persian Gulf"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-international-date-line-mostly-follows-which-line-of-longitude",
+    "question": "The International Date Line mostly follows which line of longitude?",
+    "options": [
+      "0 degrees",
+      "90 degrees East",
+      "180 degrees",
+      "90 degrees West"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-major-desert-is-known-for-being-the-largest-hot-desert-in-the-world",
+    "question": "Which major desert is known for being the largest hot desert in the world?",
+    "options": [
+      "Gobi Desert",
+      "Sahara Desert",
+      "Arabian Desert",
+      "Kalahari Desert"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-falkland-islands-a-disputed-territory-are-located-in-which-ocean",
+    "question": "The Falkland Islands, a disputed territory, are located in which ocean?",
+    "options": [
+      "Atlantic Ocean",
+      "Pacific Ocean",
+      "Indian Ocean",
+      "Southern Ocean"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-european-country-is-known-as-the-land-of-a-thousand-lakes",
+    "question": "Which European country is known as the \"Land of a Thousand Lakes\"?",
+    "options": [
+      "Norway",
+      "Sweden",
+      "Finland",
+      "Russia"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-canal-connects-the-atlantic-ocean-and-the-pacific-ocean",
+    "question": "Which canal connects the Atlantic Ocean and the Pacific Ocean?",
+    "options": [
+      "Suez Canal",
+      "Panama Canal",
+      "Kiel Canal",
+      "Grand Canal"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
   }
 ]
