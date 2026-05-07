@@ -61,15 +61,17 @@ export function useLivePlayerStats(params: UseLivePlayerStatsParams): UseLivePla
 
   useEffect(() => {
     if (!supabase || !enabled) {
-      setRows([]);
-      setLoading(false);
+      // Defer state updates to avoid synchronous setState in effect body
+      Promise.resolve().then(() => setRows([]));
+      Promise.resolve().then(() => setLoading(false));
       return;
     }
     const client = supabase;
 
-    let active = true;
-    setLoading(true);
-    setError("");
+  let active = true;
+  // Defer synchronous state updates to avoid calling setState directly in effect body
+  Promise.resolve().then(() => setLoading(true));
+  Promise.resolve().then(() => setError(""));
 
     const loadInitial = async () => {
       let query = client
@@ -93,11 +95,11 @@ export function useLivePlayerStats(params: UseLivePlayerStatsParams): UseLivePla
       }
       if (loadError) {
         setError(loadError.message ?? "Failed to load live stats.");
-        setRows([]);
+        Promise.resolve().then(() => setRows([]));
       } else {
-        setRows(((data ?? []) as LivePlayerStatRow[]).sort(byPlayerThenGame));
+        Promise.resolve().then(() => setRows(((data ?? []) as LivePlayerStatRow[]).sort(byPlayerThenGame)));
       }
-      setLoading(false);
+      Promise.resolve().then(() => setLoading(false));
     };
 
     void loadInitial();

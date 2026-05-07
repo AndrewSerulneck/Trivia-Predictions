@@ -94,7 +94,7 @@ export function LayoutDebugProbe() {
     }
 
     const logSnapshot = (reason: string) => {
-      // eslint-disable-next-line no-console
+       
       console.log(`${DEBUG_PREFIX} ${reason}`, collectSnapshot());
     };
 
@@ -135,7 +135,7 @@ export function LayoutDebugProbe() {
         }
         const element = record.target as HTMLElement;
         const attrName = record.attributeName ?? "unknown";
-        // eslint-disable-next-line no-console
+         
         console.log(`${DEBUG_PREFIX} mutation:${element.tagName.toLowerCase()}.${attrName}`, {
           className: element.className,
           style: element.getAttribute("style"),
@@ -148,7 +148,7 @@ export function LayoutDebugProbe() {
         attributes: true,
         attributeFilter: ["class", "style"],
       });
-      // eslint-disable-next-line no-console
+       
       console.log(`${DEBUG_PREFIX} observing:${target.name}`);
     }
 
@@ -162,7 +162,7 @@ export function LayoutDebugProbe() {
       window.removeEventListener("scroll", onScroll);
       window.visualViewport?.removeEventListener("resize", onVvResize);
       window.visualViewport?.removeEventListener("scroll", onVvScroll);
-      // eslint-disable-next-line no-console
+       
       console.log(`${DEBUG_PREFIX} unmounted`);
     };
   }, [pathname]);

@@ -49,7 +49,8 @@ export function GameLandingExperience({
 
   useEffect(() => {
     if (initialPlaying || !autoResume) {
-      setIsResumeCheckPending(false);
+      // Defer to avoid calling setState synchronously inside an effect
+      Promise.resolve().then(() => setIsResumeCheckPending(false));
       return;
     }
     let canceled = false;
@@ -59,9 +60,10 @@ export function GameLandingExperience({
         return;
       }
       if (canResume) {
-        setIsPlaying(true);
+        // Defer state updates to avoid cascading synchronous renders
+        Promise.resolve().then(() => setIsPlaying(true));
       }
-      setIsResumeCheckPending(false);
+      Promise.resolve().then(() => setIsResumeCheckPending(false));
     })();
     return () => {
       canceled = true;

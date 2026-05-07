@@ -138,7 +138,7 @@ function venueDebugLog(message: string, details?: Record<string, unknown>) {
   if (!venueDebugEnabled) {
     return;
   }
-  // eslint-disable-next-line no-console
+   
   console.log(`[tp-debug][venue-home] ${message}`, details ?? {});
 }
 
@@ -338,7 +338,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       window.removeEventListener("tp:global-transition-overlay-hidden", onOverlayHidden as EventListener);
       window.clearTimeout(fallbackTimer);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [venue.id]);
 
   useEffect(() => {
