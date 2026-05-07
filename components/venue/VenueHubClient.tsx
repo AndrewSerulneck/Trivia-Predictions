@@ -809,7 +809,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         setPendingDestination(null);
       }
     },
-    [loadTriviaQuota, router, triviaUnlockSeconds]
+  [loadTriviaQuota, router, triviaUnlockSeconds, triviaQuota]
   );
 
   const homeCards = useMemo(() => VENUE_HOME_GAME_KEYS.map((key) => VENUE_GAME_CARD_BY_KEY[key]), []);

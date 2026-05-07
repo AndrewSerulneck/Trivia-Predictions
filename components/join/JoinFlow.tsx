@@ -360,7 +360,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     };
 
     void load();
-  }, [venueParam]);
+  }, [venueParam, router]);
 
   const clearLoginWatchdog = useCallback(() => {
     if (loginWatchdogRef.current !== null) {
