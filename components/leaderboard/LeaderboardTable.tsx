@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getUserId } from "@/lib/storage";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { Fragment } from "react";
@@ -11,6 +11,25 @@ type LeaderboardPayload = {
   entries?: LeaderboardEntry[];
   error?: string;
 };
+
+function areEntriesEqual(a: LeaderboardEntry[], b: LeaderboardEntry[]): boolean {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+  for (let index = 0; index < a.length; index += 1) {
+    const left = a[index];
+    const right = b[index];
+    if (!left || !right) return false;
+    if (
+      left.userId !== right.userId ||
+      left.username !== right.username ||
+      left.rank !== right.rank ||
+      left.points !== right.points
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
 
 function rankBadge(rank: number): string {
   if (rank === 1) return "1st";
@@ -34,10 +53,14 @@ export function LeaderboardTable({
   const [errorMessage, setErrorMessage] = useState("");
   const [currentUserId, setCurrentUserId] = useState("");
   const [isLoading, setIsLoading] = useState(isEnabled && initialEntries.length === 0);
+  const hydratedVenueRef = useRef("");
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (options?: { silent?: boolean }) => {
     if (!venueId) return;
-    setIsLoading(true);
+    const silent = Boolean(options?.silent);
+    if (!silent) {
+      setIsLoading(true);
+    }
 
     try {
       const response = await fetch(`/api/leaderboard?venue=${encodeURIComponent(venueId)}`, {
@@ -47,29 +70,45 @@ export function LeaderboardTable({
       if (!payload.ok) {
         throw new Error(payload.error ?? "Failed to load leaderboard.");
       }
-      setEntries(payload.entries ?? []);
+      const nextEntries = payload.entries ?? [];
+      setEntries((current) => (areEntriesEqual(current, nextEntries) ? current : nextEntries));
       setErrorMessage("");
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Failed to load leaderboard.");
     } finally {
-      setIsLoading(false);
+      if (!silent) {
+        setIsLoading(false);
+      }
     }
   }, [venueId]);
+
+  useEffect(() => {
+    setCurrentUserId(getUserId() ?? "");
+  }, []);
+
+  useEffect(() => {
+    if (!isEnabled || !venueId) {
+      return;
+    }
+    if (hydratedVenueRef.current !== venueId) {
+      hydratedVenueRef.current = venueId;
+      setEntries(initialEntries);
+      setIsLoading(initialEntries.length === 0);
+    }
+  }, [initialEntries, isEnabled, venueId]);
 
   useEffect(() => {
     if (!isEnabled) {
       return;
     }
-    setCurrentUserId(getUserId() ?? "");
-    setEntries(initialEntries);
-    void load();
+    void load({ silent: entries.length > 0 });
 
     const interval = window.setInterval(() => {
-      void load();
+      void load({ silent: true });
     }, 20000);
 
     const refreshOnPointsUpdate = () => {
-      void load();
+      void load({ silent: true });
     };
     window.addEventListener("tp:points-updated", refreshOnPointsUpdate as EventListener);
 
@@ -77,7 +116,7 @@ export function LeaderboardTable({
       window.clearInterval(interval);
       window.removeEventListener("tp:points-updated", refreshOnPointsUpdate as EventListener);
     };
-  }, [isEnabled, venueId, initialEntries, load]);
+  }, [entries.length, isEnabled, load]);
 
   const currentUserRank = useMemo(
     () => entries.find((entry) => entry.userId === currentUserId)?.rank ?? null,

@@ -98,8 +98,14 @@ export async function POST(request: Request) {
           sequenceIndex?: number;
           venueId?: string;
           venueIds?: string[];
+          targetAllVenues?: boolean;
+          targetCities?: string[];
+          targetZipCodes?: string[];
+          targetCounties?: string[];
+          targetStates?: string[];
+          targetRegions?: string[];
           advertiserName: string;
-          deliveryWeight?: number;
+          frequencyInterval?: number;
           imageUrl: string;
           clickUrl: string;
           altText: string;
@@ -159,8 +165,14 @@ export async function POST(request: Request) {
         sequenceIndex: body.sequenceIndex,
         venueId: body.venueId,
         venueIds: body.venueIds,
+        targetAllVenues: body.targetAllVenues,
+        targetCities: body.targetCities,
+        targetZipCodes: body.targetZipCodes,
+        targetCounties: body.targetCounties,
+        targetStates: body.targetStates,
+        targetRegions: body.targetRegions,
         advertiserName: body.advertiserName,
-        deliveryWeight: body.deliveryWeight,
+        frequencyInterval: body.frequencyInterval,
         imageUrl: body.imageUrl,
         clickUrl: body.clickUrl,
         altText: body.altText,
@@ -296,8 +308,14 @@ export async function PATCH(request: Request) {
           sequenceIndex?: number;
           venueId?: string;
           venueIds?: string[];
+          targetAllVenues?: boolean;
+          targetCities?: string[];
+          targetZipCodes?: string[];
+          targetCounties?: string[];
+          targetStates?: string[];
+          targetRegions?: string[];
           advertiserName: string;
-          deliveryWeight?: number;
+          frequencyInterval?: number;
           imageUrl: string;
           clickUrl: string;
           altText: string;
@@ -346,8 +364,14 @@ export async function PATCH(request: Request) {
         sequenceIndex: body.sequenceIndex,
         venueId: body.venueId,
         venueIds: body.venueIds,
+        targetAllVenues: body.targetAllVenues,
+        targetCities: body.targetCities,
+        targetZipCodes: body.targetZipCodes,
+        targetCounties: body.targetCounties,
+        targetStates: body.targetStates,
+        targetRegions: body.targetRegions,
         advertiserName: body.advertiserName,
-        deliveryWeight: body.deliveryWeight,
+        frequencyInterval: body.frequencyInterval,
         imageUrl: body.imageUrl,
         clickUrl: body.clickUrl,
         altText: body.altText,

@@ -1234,6 +1234,34 @@ function isFinalGameStatus(value: string): boolean {
   return status === "FT" || status === "AOT" || status === "FINAL" || status === "COMPLETED";
 }
 
+function isStartedGameStatus(value: string): boolean {
+  const status = String(value ?? "").trim().toUpperCase();
+  if (!status) {
+    return false;
+  }
+  if (isFinalGameStatus(status)) {
+    return true;
+  }
+
+  const notStartedStatuses = new Set([
+    "NS",
+    "NOT STARTED",
+    "SCHEDULED",
+    "PREGAME",
+    "PRE-GAME",
+    "POSTPONED",
+    "CANCELED",
+    "CANCELLED",
+  ]);
+
+  if (notStartedStatuses.has(status)) {
+    return false;
+  }
+
+  const startedIndicators = ["Q1", "Q2", "Q3", "Q4", "OT", "HT", "HALF", "LIVE", "IN PLAY", "IN_PROGRESS"];
+  return startedIndicators.some((indicator) => status.includes(indicator));
+}
+
 async function loadRecentLivePlayerStatsRows(): Promise<LivePlayerStatRow[]> {
   if (!supabaseAdmin) {
     return [];
@@ -1302,6 +1330,9 @@ function computeFantasyFromLiveStats(
 
   for (const playerName of lineup) {
     const filteredRows = recentLiveRows.filter((row) => {
+      if (!isStartedGameStatus(row.game_status)) {
+        return false;
+      }
       if (!namesLikelyMatch(playerName, String(row.player_name ?? ""))) {
         return false;
       }
@@ -1338,13 +1369,10 @@ function computeFantasyFromLiveStats(
   }
 
   const nowMs = Date.now();
-  const existingStatus = entry.status;
   const nextStatus: FantasyEntryStatus =
     playersWithRows === lineup.length && !sawNonFinalStatus && playersWithRows > 0
       ? "final"
       : playersWithRows > 0 || (Number.isFinite(startsAtMs) && nowMs >= startsAtMs)
-      ? "live"
-      : existingStatus === "live" && playersWithRows === 0
       ? "live"
       : "pending";
 
@@ -2026,6 +2054,8 @@ export async function refreshFantasyProgress(params?: {
   }
 
   const recentLiveRows = await loadRecentLivePlayerStatsRows();
+  const nowMs = Date.now();
+  const STALE_RECONCILE_AFTER_MS = 4 * 60 * 60 * 1000;
 
   let updated = 0;
   let finalized = 0;
@@ -2037,14 +2067,43 @@ export async function refreshFantasyProgress(params?: {
     };
 
     const fromLiveTable = computeFantasyFromLiveStats(entry, recentLiveRows);
+    const startsAtMs = Date.parse(entry.starts_at);
+    const isStarted = Number.isFinite(startsAtMs) && nowMs >= startsAtMs;
+    const isStale = isStarted && Number.isFinite(startsAtMs) && nowMs - startsAtMs >= STALE_RECONCILE_AFTER_MS;
     if (fromLiveTable) {
       next = fromLiveTable;
+    }
+
+    // Reconcile against authoritative game status/stat sources when live-table
+    // data is missing or stale. This prevents entries from getting stuck in
+    // pending/live across day boundaries.
+    let fallbackApplied = false;
+    if (!fromLiveTable || isStale || (fromLiveTable.status !== "final" && isStale)) {
+      try {
+        const fallback = await fetchBallDontLieStatsForEntry(entry);
+        // Prefer fallback when it can finalize, or when live-table data is absent.
+        if (!fromLiveTable || fallback.status === "final" || isStale) {
+          next = fallback;
+          fallbackApplied = true;
+        }
+      } catch {
+        // Ignore fallback failures and proceed with best-known next value.
+      }
     } else if (FANTASY_USE_DIRECT_APISPORTS_SCORING) {
       try {
         next = await fetchApiSportsStatsForEntry(entry);
       } catch {
-        continue;
+        // Ignore direct-source failures and proceed with best-known next value.
       }
+    }
+
+    // Safety net: stale entries should never remain pending/live forever.
+    if (isStale && next.status !== "final" && !fallbackApplied) {
+      next = {
+        status: "final",
+        totalPoints: Number(entry.points ?? 0),
+        breakdown: parseScoreBreakdown(entry.score_breakdown),
+      };
     }
 
     const existingBreakdown = parseScoreBreakdown(entry.score_breakdown);

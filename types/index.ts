@@ -182,8 +182,15 @@ export interface Advertisement {
   sequenceIndex?: number;
   venueId?: string;
   venueIds?: string[];
+  targetAllVenues?: boolean;
+  targetCities?: string[];
+  targetZipCodes?: string[];
+  targetCounties?: string[];
+  targetStates?: string[];
+  targetRegions?: string[];
   advertiserName: string;
-  deliveryWeight: number;
+  /** How often the ad is served: 1 = every load, N = every Nth load (modulo counter). */
+  frequencyInterval: number;
   imageUrl: string;
   clickUrl: string;
   altText: string;

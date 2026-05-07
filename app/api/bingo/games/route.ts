@@ -6,10 +6,12 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const sportKey = (searchParams.get("sportKey") ?? "basketball_nba").trim();
     const includeLocked = (searchParams.get("includeLocked") ?? "true").trim().toLowerCase();
+    const tzOffsetMinutes = searchParams.get("tzOffsetMinutes") ?? undefined;
 
     const games = await listSportsBingoGames({
       sportKey,
       includeLocked: includeLocked === "1" || includeLocked === "true" || includeLocked === "yes",
+      tzOffsetMinutes,
     });
 
     return NextResponse.json({

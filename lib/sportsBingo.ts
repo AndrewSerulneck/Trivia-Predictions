@@ -3118,18 +3118,38 @@ function generateBoardForGame(game: SportsBingoGame, candidates: SportsBingoSqua
 export async function listSportsBingoGames(params: {
   sportKey?: string;
   includeLocked?: boolean;
+  tzOffsetMinutes?: number | string;
 } = {}): Promise<SportsBingoGame[]> {
   const sportKey = (params.sportKey ?? DEFAULT_SPORT_KEY).trim() || DEFAULT_SPORT_KEY;
   const includeLocked = Boolean(params.includeLocked);
+  const parsedOffset = Number.parseInt(String(params.tzOffsetMinutes ?? ""), 10);
+  const tzOffsetMinutes = Number.isFinite(parsedOffset) ? Math.max(-14 * 60, Math.min(14 * 60, parsedOffset)) : new Date().getTimezoneOffset();
+  const now = Date.now();
+  const todayLocalMs = now - tzOffsetMinutes * 60_000;
+  const todayLocalDate = new Date(todayLocalMs);
+  const todayLocalKey = `${todayLocalDate.getUTCFullYear()}-${String(todayLocalDate.getUTCMonth() + 1).padStart(2, "0")}-${String(
+    todayLocalDate.getUTCDate()
+  ).padStart(2, "0")}`;
 
   const catalog = await getGameCatalog(sportKey);
-  const now = Date.now();
 
   return catalog
     .map((entry) => ({
       ...entry.game,
       isLocked: +new Date(entry.game.startsAt) <= now,
     }))
+    .filter((game) => {
+      const startsAtMs = +new Date(game.startsAt);
+      if (!Number.isFinite(startsAtMs)) {
+        return false;
+      }
+      const localMs = startsAtMs - tzOffsetMinutes * 60_000;
+      const localDate = new Date(localMs);
+      const localKey = `${localDate.getUTCFullYear()}-${String(localDate.getUTCMonth() + 1).padStart(2, "0")}-${String(
+        localDate.getUTCDate()
+      ).padStart(2, "0")}`;
+      return localKey === todayLocalKey;
+    })
     .filter((game) => (includeLocked ? true : !game.isLocked));
 }
 

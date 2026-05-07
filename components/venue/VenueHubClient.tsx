@@ -21,19 +21,20 @@ import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
 
 type BingoBadgePayload = {
   ok: boolean;
-  cards?: Array<{ status?: string }>;
+  cards?: Array<{ status?: string; rewardClaimedAt?: string | null; rewardPoints?: number }>;
 };
 
 type PickEmBadgePayload = {
   ok: boolean;
-  picks?: Array<{ status?: string }>;
+  picks?: Array<{ status?: string; rewardClaimedAt?: string | null; rewardPoints?: number }>;
 };
 
-type ChallengesBadgePayload = {
+type FantasyBadgePayload = {
   ok: boolean;
-  challenges?: Array<{
+  entries?: Array<{
     status?: string;
-    receiverUserId?: string;
+    rewardClaimedAt?: string | null;
+    points?: number;
   }>;
 };
 
@@ -243,7 +244,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const venueReadyDispatchedRef = useRef(false);
   const swipeViewportRef = useRef<HTMLDivElement | null>(null);
   const activeScreenRef = useRef<HomeScreenIndex>(0);
-  const viewportWidthRef = useRef(0);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
   const touchStartAtRef = useRef<number | null>(null);
@@ -416,16 +416,10 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   };
 
   const goToScreen = useCallback((screenIndex: HomeScreenIndex) => {
-    const viewport = swipeViewportRef.current;
-    if (!viewport) {
-      return;
-    }
-    const nextIndex = clamp(screenIndex, 0, SWIPE_SCREEN_COUNT - 1);
-    viewport.scrollTo({
-      left: viewport.clientWidth * nextIndex,
-      behavior: "smooth",
-    });
-    activeScreenRef.current = nextIndex as HomeScreenIndex;
+    const nextIndex = clamp(screenIndex, 0, SWIPE_SCREEN_COUNT - 1) as HomeScreenIndex;
+    setActiveScreen(nextIndex);
+    activeScreenRef.current = nextIndex;
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   }, []);
 
   const onSwipeTouchStart = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
@@ -523,19 +517,30 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         fetchJsonWithTimeout<PickEmBadgePayload>(
           `/api/pickem/picks?userId=${encodeURIComponent(userId)}&includeSettled=true&limit=200`
         ).then((payload) => payload ?? ({ ok: false } as PickEmBadgePayload)),
-        fetchJsonWithTimeout<ChallengesBadgePayload>(
-          `/api/challenges?userId=${encodeURIComponent(userId)}&includeResolved=true`
-        ).then((payload) => payload ?? ({ ok: false } as ChallengesBadgePayload)),
+        fetchJsonWithTimeout<FantasyBadgePayload>(
+          `/api/fantasy/entries?userId=${encodeURIComponent(userId)}&includeSettled=true&refreshProgress=true&limit=120`
+        ).then((payload) => payload ?? ({ ok: false } as FantasyBadgePayload)),
       ]);
       const bingoPayload = results[0].status === "fulfilled" ? results[0].value : { ok: false as const };
       const pickEmPayload = results[1].status === "fulfilled" ? results[1].value : { ok: false as const };
-      const challengesPayload = results[2].status === "fulfilled" ? results[2].value : { ok: false as const };
-      const activeBingoCount = bingoPayload.ok ? (bingoPayload.cards ?? []).filter((c) => c.status === "active").length : 0;
-      const pendingPickEmCount = pickEmPayload.ok ? (pickEmPayload.picks ?? []).filter((p) => p.status === "pending").length : 0;
-      const pendingFantasyCount = challengesPayload.ok
-        ? (challengesPayload.challenges ?? []).filter((ch) => ch.status === "pending" && ch.receiverUserId === userId).length
+      const fantasyPayload = results[2].status === "fulfilled" ? results[2].value : { ok: false as const };
+      const unclaimedBingoCount = bingoPayload.ok
+        ? (bingoPayload.cards ?? []).filter(
+            (card) => card.status === "won" && !card.rewardClaimedAt && Math.max(0, Number(card.rewardPoints ?? 0)) > 0
+          ).length
         : 0;
-      setHomeBadgeCounts({ bingo: activeBingoCount, pickem: pendingPickEmCount, fantasy: pendingFantasyCount });
+      const unclaimedPickEmCount = pickEmPayload.ok
+        ? (pickEmPayload.picks ?? []).filter((pick) => pick.status === "won" && !pick.rewardClaimedAt).length
+        : 0;
+      const unclaimedFantasyCount = fantasyPayload.ok
+        ? (fantasyPayload.entries ?? []).filter(
+            (entry) =>
+              entry.status === "final" &&
+              !entry.rewardClaimedAt &&
+              Math.max(0, Number(entry.points ?? 0)) > 0
+          ).length
+        : 0;
+      setHomeBadgeCounts({ bingo: unclaimedBingoCount, pickem: unclaimedPickEmCount, fantasy: unclaimedFantasyCount });
     } catch {
       setBadgeError("Offline: badge counts unavailable.");
     } finally {
@@ -631,10 +636,13 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       setArrivalProgress(42);
       setArrivalStatusText("Loading your venue dashboard...");
       if (!bootstrapSnapshotRef.current) {
-        const sessionValid = await verifyActiveVenueSession();
-        if (!sessionValid) {
-          clearVenueSession();
-          router.replace(`/?v=${encodeURIComponent(venue.id)}`);
+        // Validate credentials from local storage/cookie only — no blocking network call.
+        // A network timeout returning null was being treated as "invalid session" and
+        // wiping auth for users who had a perfectly valid cookie.
+        const localUserId = (getUserId() ?? "").trim();
+        const localVenueId = (getVenueId() ?? "").trim();
+        if (!localUserId || !localVenueId || localVenueId !== venue.id || !hasUserTokenInCookie()) {
+          if (!cancelled) router.replace(`/?v=${encodeURIComponent(venue.id)}`);
           return;
         }
         const coreLoadPromise = Promise.allSettled([loadTriviaQuota(), loadHomeBadges()]);
@@ -673,7 +681,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     return () => {
       cancelled = true;
     };
-  }, [arrivalInProgress, loadHomeBadges, loadTriviaQuota, router, runWarmup, venue.id, verifyActiveVenueSession]);
+  }, [arrivalInProgress, hasUserTokenInCookie, loadHomeBadges, loadTriviaQuota, router, runWarmup, venue.id]);
 
   useEffect(() => {
     if (!arrivalInProgress) {
@@ -746,80 +754,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     return () => window.clearInterval(interval);
   }, [homeRevealComplete, loadHomeBadges]);
 
-  useEffect(() => {
-    const viewport = swipeViewportRef.current;
-    if (!viewport || typeof window === "undefined") return;
-    let rafId: number | null = null;
-    let resizeTimeoutId: number | null = null;
-    const measureActiveScreen = () => {
-      const width = Math.max(1, viewport.clientWidth);
-      const rawIndex = viewport.scrollLeft / width;
-      const next = clamp(Math.round(rawIndex), 0, SWIPE_SCREEN_COUNT - 1) as HomeScreenIndex;
-      if (next !== activeScreenRef.current) {
-        activeScreenRef.current = next;
-        setActiveScreen(next);
-      }
-    };
-    const onScroll = () => {
-      if (rafId !== null) return;
-      rafId = window.requestAnimationFrame(() => {
-        rafId = null;
-        measureActiveScreen();
-      });
-    };
-    const handleResize = () => {
-      const width = Math.max(1, viewport.clientWidth);
-      const previousWidth = viewportWidthRef.current;
-      viewportWidthRef.current = width;
-      const delta = previousWidth > 0 ? Math.abs(width - previousWidth) : width;
-      if (previousWidth > 0 && delta < 8) {
-        venueDebugLog("resize ignored: tiny width delta", {
-          width,
-          previousWidth,
-          delta,
-        });
-        return;
-      }
-      const nextLeft = width * activeScreenRef.current;
-      venueDebugLog("resize apply", {
-        width,
-        previousWidth,
-        delta,
-        activeScreen: activeScreenRef.current,
-        nextLeft,
-        currentLeft: viewport.scrollLeft,
-      });
-      if (Math.abs(viewport.scrollLeft - nextLeft) > 2) {
-        viewport.scrollTo({ left: nextLeft });
-      }
-      measureActiveScreen();
-    };
-    const onResize = () => {
-      if (resizeTimeoutId !== null) {
-        window.clearTimeout(resizeTimeoutId);
-      }
-      resizeTimeoutId = window.setTimeout(() => {
-        resizeTimeoutId = null;
-        handleResize();
-      }, 120);
-    };
-    viewportWidthRef.current = Math.max(1, viewport.clientWidth);
-    venueDebugLog("swipe viewport effect mounted", {
-      width: viewportWidthRef.current,
-      scrollLeft: viewport.scrollLeft,
-    });
-    measureActiveScreen();
-    viewport.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onResize, { passive: true });
-    window.addEventListener("orientationchange", onResize, { passive: true });
-    return () => {
-      if (rafId !== null) window.cancelAnimationFrame(rafId);
-      if (resizeTimeoutId !== null) window.clearTimeout(resizeTimeoutId);
-      viewport.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("orientationchange", onResize);
-    };
-  }, []);
 
   useEffect(() => {
     if (!homeRevealComplete) return;
@@ -844,22 +778,25 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       if (!destination) return;
       triggerPulse();
       if (dest === "trivia") {
-        const latestQuota = await loadTriviaQuota();
-        const triviaLocked = Boolean(latestQuota && !latestQuota.isAdminBypass && latestQuota.questionsRemaining <= 0);
-        if (triviaLocked) {
-          const unlockIn = Math.max(0, Math.floor(latestQuota?.windowSecondsRemaining ?? triviaUnlockSeconds));
-          setTriviaUnlockSeconds(unlockIn);
-          setTriviaGateNotice(unlockIn > 0 ? `Trivia is locked for now. Try again in ${formatCountdown(unlockIn)}.` : "Trivia is locked for now. Please try again soon.");
-          return;
+        // Only block navigation when trivia is already known to be locked.
+        // If quota is null (not yet loaded), navigate immediately — the trivia page
+        // enforces limits itself. Awaiting a network call here caused the UI to freeze
+        // for up to 4.5 s and opened a window where the arrival pipeline could clear
+        // the session and bounce the user to login.
+        const knownLocked = Boolean(triviaQuota && !triviaQuota.isAdminBypass && triviaQuota.questionsRemaining <= 0);
+        if (knownLocked) {
+          const latestQuota = await loadTriviaQuota();
+          const stillLocked = Boolean(latestQuota && !latestQuota.isAdminBypass && latestQuota.questionsRemaining <= 0);
+          if (stillLocked) {
+            const unlockIn = Math.max(0, Math.floor(latestQuota?.windowSecondsRemaining ?? triviaUnlockSeconds));
+            setTriviaUnlockSeconds(unlockIn);
+            setTriviaGateNotice(unlockIn > 0 ? `Trivia is locked for now. Try again in ${formatCountdown(unlockIn)}.` : "Trivia is locked for now. Please try again soon.");
+            return;
+          }
+          // Quota has reset — fall through and navigate
         }
       }
       setTriviaGateNotice("");
-      setDismissedBadgeGames((previous) => {
-        if (previous.has(dest)) return previous;
-        const next = new Set(previous);
-        next.add(dest);
-        return next;
-      });
       setPendingDestination(dest);
       try {
         await runVenueGameOpenTransition({
@@ -882,20 +819,18 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
 
   const visibleBadgeByGame = useMemo(() => {
     const badges = new Map<VenueGameKey, string>();
-    if (triviaUnlockCountdown > 0) badges.set("trivia", "!");
     for (const [gameKey, count] of Object.entries(homeBadgeCounts) as Array<[VenueGameKey, number | undefined]>) {
       if (!count || count <= 0) continue;
       badges.set(gameKey, formatBadgeCount(count));
     }
-    for (const dismissedGame of dismissedBadgeGames) badges.delete(dismissedGame);
     return badges;
-  }, [dismissedBadgeGames, homeBadgeCounts, triviaUnlockCountdown]);
+  }, [homeBadgeCounts]);
 
   const showFastPathSkeleton = arrivalInProgress && !arrivalCoreReady;
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 top-[calc(env(safe-area-inset-top)+4.35rem)] z-10 flex min-h-0 flex-col overflow-hidden isolation-isolate [contain:layout_size] sm:top-[calc(env(safe-area-inset-top)+5.1rem)]"
+      className="relative z-[60] flex flex-col isolation-isolate"
     >
       <section className="relative shrink-0 px-2 pb-3">
         <div className="relative min-h-[7.2rem] overflow-hidden rounded-[1.4rem] border-[2px] border-[#cbd5e1]/70 bg-[linear-gradient(172deg,#2f241d_0%,#2a1f19_45%,#211712_100%)] p-[18px] shadow-[0_8px_0_rgba(15,23,42,0.28),0_12px_24px_rgba(15,23,42,0.26)]">
@@ -925,9 +860,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         </div>
       </section>
 
-      <div className="relative min-h-0 flex-1 overflow-x-hidden">
-        <div ref={swipeViewportRef} onTouchStart={onSwipeTouchStart} onTouchEnd={onSwipeTouchEnd} className="h-full flex w-full touch-pan-y snap-x snap-proximity overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Venue home screens">
-          <section className="relative flex min-h-0 w-full shrink-0 snap-start flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-3 pb-3 pt-1">
+      <div ref={swipeViewportRef} onTouchStart={onSwipeTouchStart} onTouchEnd={onSwipeTouchEnd} className="w-full" aria-label="Venue home screens">
+          <section className={`relative flex flex-col px-3 pb-3 pt-1${activeScreen !== 0 ? " hidden" : ""}`}>
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(14,165,233,0.3)_0%,rgba(14,165,233,0)_36%),radial-gradient(circle_at_84%_22%,rgba(251,146,60,0.35)_0%,rgba(251,146,60,0)_35%),radial-gradient(circle_at_52%_84%,rgba(236,72,153,0.3)_0%,rgba(236,72,153,0)_43%)]" />
             {showFastPathSkeleton ? (
               <div className="mx-auto mb-2 w-full max-w-[24rem] rounded-2xl border border-cyan-200/80 bg-cyan-50/85 px-3 py-2 text-center text-xs font-semibold text-cyan-900">
@@ -973,7 +907,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
             ) : null}
           </section>
 
-          <section className="w-full shrink-0 snap-start overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-3 pb-3 pt-1">
+          <section className={`px-3 pb-8 pt-1${activeScreen !== 1 ? " hidden" : ""}`}>
             <div className="mx-auto w-full max-w-[26rem] space-y-3">
               <div className="rounded-[1.6rem] border-[3px] border-[#3b2412] bg-[#4a2e18] p-3 shadow-[0_8px_0_rgba(15,23,42,0.3)]">
                 <div className="inline-flex rounded-xl border-2 border-[#3b2412] bg-[#1f5136] px-3 py-1.5 shadow-[0_2px_0_rgba(0,0,0,0.25)]">
@@ -990,7 +924,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
             </div>
           </section>
 
-          <section className="w-full shrink-0 snap-start overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-3 pb-3 pt-1">
+          <section className={`px-3 pb-3 pt-1${activeScreen !== 2 ? " hidden" : ""}`}>
             <div className="mx-auto w-full max-w-[26rem] space-y-3">
               <div className="rounded-[1.6rem] border-[3px] border-[#3b2412] bg-[#4a2e18] p-3 shadow-[0_8px_0_rgba(15,23,42,0.3)]">
                 <div className="inline-flex rounded-xl border-2 border-[#3b2412] bg-[#1f5136] px-3 py-1.5 shadow-[0_2px_0_rgba(0,0,0,0.25)]">
@@ -1029,7 +963,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
               </div>
             </div>
           </section>
-        </div>
       </div>
     </div>
   );

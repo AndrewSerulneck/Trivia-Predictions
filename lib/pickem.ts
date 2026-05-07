@@ -588,6 +588,76 @@ function resolveWinner(homeTeam: string, awayTeam: string, homeScore: number | n
   return "push";
 }
 
+function getPickEmRoundMultiplier(totalPicks: number, correctPicks: number): number {
+  if (totalPicks <= 0) {
+    return 1;
+  }
+  if (correctPicks === totalPicks) {
+    return 3;
+  }
+  if (correctPicks / totalPicks >= 0.7) {
+    return 2;
+  }
+  return 1;
+}
+
+function getUtcDateRangeForIsoDay(startsAtIso: string): { dayStartIso: string; dayEndIso: string } | null {
+  const startsAtMs = Date.parse(startsAtIso);
+  if (!Number.isFinite(startsAtMs)) {
+    return null;
+  }
+  const date = new Date(startsAtMs);
+  const dayStartMs = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0);
+  const dayEndMs = dayStartMs + 24 * 60 * 60 * 1000 - 1;
+  return {
+    dayStartIso: new Date(dayStartMs).toISOString(),
+    dayEndIso: new Date(dayEndMs).toISOString(),
+  };
+}
+
+async function recomputePickEmRoundRewards(params: {
+  userId: string;
+  venueId: string;
+  startsAtIso: string;
+}): Promise<void> {
+  if (!supabaseAdmin) {
+    return;
+  }
+
+  const range = getUtcDateRangeForIsoDay(params.startsAtIso);
+  if (!range) {
+    return;
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("pickem_picks")
+    .select("id, status")
+    .eq("user_id", params.userId)
+    .eq("venue_id", params.venueId)
+    .gte("starts_at", range.dayStartIso)
+    .lte("starts_at", range.dayEndIso);
+
+  if (error || !data) {
+    return;
+  }
+
+  const totalPicks = data.length;
+  const pendingPicks = data.filter((row) => row.status === "pending").length;
+  const correctPicks = data.filter((row) => row.status === "won").length;
+  const multiplier = pendingPicks === 0 ? getPickEmRoundMultiplier(totalPicks, correctPicks) : 1;
+  const rewardPointsPerWin = PICKEM_REWARD_POINTS * multiplier;
+
+  await supabaseAdmin
+    .from("pickem_picks")
+    .update({ reward_points: rewardPointsPerWin })
+    .eq("user_id", params.userId)
+    .eq("venue_id", params.venueId)
+    .gte("starts_at", range.dayStartIso)
+    .lte("starts_at", range.dayEndIso)
+    .eq("status", "won")
+    .is("reward_claimed_at", null);
+}
+
 async function insertPickEmSettlementNotification(params: {
   userId: string;
   status: PickEmPickStatus;
@@ -997,6 +1067,7 @@ export async function submitPickEmPick(params: {
     .from("pickem_picks")
     .select(PICKEM_PICK_SELECT)
     .eq("user_id", userId)
+    .eq("venue_id", venueId)
     .eq("game_id", gameId)
     .maybeSingle<PickEmPickRow>();
 
@@ -1043,6 +1114,7 @@ export async function submitPickEmPick(params: {
     .from("pickem_picks")
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
+    .eq("venue_id", venueId)
     .gte("starts_at", dailyRange.fromIso)
     .lte("starts_at", dailyRange.toIso);
 
@@ -1254,6 +1326,7 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
   let won = 0;
   let lost = 0;
   let push = 0;
+  const roundsToRecompute = new Map<string, { userId: string; venueId: string; startsAtIso: string }>();
 
   for (const row of pending) {
     const scoreMap = scoresBySportKey.get(row.sport_key);
@@ -1308,6 +1381,15 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
     });
 
     settledCount += 1;
+    roundsToRecompute.set(`${row.user_id}::${row.venue_id}::${row.starts_at.slice(0, 10)}`, {
+      userId: row.user_id,
+      venueId: row.venue_id,
+      startsAtIso: row.starts_at,
+    });
+  }
+
+  for (const round of roundsToRecompute.values()) {
+    await recomputePickEmRoundRewards(round);
   }
 
   return {
@@ -1332,6 +1414,57 @@ export async function claimPickEmReward(params: {
   if (!userId || !pickId) {
     throw new Error("userId and pickId are required.");
   }
+
+  const pickLookup = await supabaseAdmin
+    .from("pickem_picks")
+    .select("id, starts_at, venue_id, status, reward_claimed_at, reward_points")
+    .eq("id", pickId)
+    .eq("user_id", userId)
+    .maybeSingle<{
+      id: string;
+      starts_at: string;
+      venue_id: string;
+      status: PickEmPickStatus;
+      reward_claimed_at: string | null;
+      reward_points: number | null;
+    }>();
+
+  if (pickLookup.error) {
+    if (isMissingPickEmTablesError(pickLookup.error)) {
+      throw new Error(PICKEM_TABLES_MISSING_ERROR);
+    }
+    throw new Error(pickLookup.error.message ?? "Failed to verify Pick 'Em pick.");
+  }
+  if (!pickLookup.data) {
+    throw new Error("Pick not found.");
+  }
+
+  const range = getUtcDateRangeForIsoDay(pickLookup.data.starts_at);
+  if (!range) {
+    throw new Error("Invalid pick start time.");
+  }
+
+  const { data: roundPicks, error: roundError } = await supabaseAdmin
+    .from("pickem_picks")
+    .select("status")
+    .eq("user_id", userId)
+    .eq("venue_id", pickLookup.data.venue_id)
+    .gte("starts_at", range.dayStartIso)
+    .lte("starts_at", range.dayEndIso);
+
+  if (roundError || !roundPicks) {
+    throw new Error(roundError?.message ?? "Failed to verify Pick 'Em round status.");
+  }
+
+  if (roundPicks.some((row) => row.status === "pending")) {
+    throw new Error("Pick 'Em rewards unlock after all of your submitted picks are final.");
+  }
+
+  await recomputePickEmRoundRewards({
+    userId,
+    venueId: pickLookup.data.venue_id,
+    startsAtIso: pickLookup.data.starts_at,
+  });
 
   const nowIso = new Date().toISOString();
   const { data, error } = await supabaseAdmin

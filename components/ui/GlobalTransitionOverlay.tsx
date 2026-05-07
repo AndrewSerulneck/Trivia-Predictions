@@ -167,7 +167,7 @@ export function GlobalTransitionOverlay() {
   }, [clearSafetyTimers, startFadeOut]);
 
   const shouldRender = visible;
-  const overlayLabel = useMemo(() => "Hightop Sports: Game On", []);
+  const overlayLabel = useMemo(() => "Hightop Challenge: Game On", []);
 
   if (!shouldRender) {
     return (

@@ -56,6 +56,7 @@ const SPORT_ICONS: Record<string, string> = {
   nfl: "🏈",
   nhl: "🏒",
 };
+const PICKEM_PICK_LIMIT = 10;
 
 function getSportIcon(slug: string): string {
   return SPORT_ICONS[slug] ?? "🏟️";
@@ -109,6 +110,8 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
   const queuedPickByGameRef = useRef<Record<string, string>>({});
   const refreshTimerRef = useRef<number | null>(null);
   const [pickPulseByGameId, setPickPulseByGameId] = useState<Record<string, string | undefined>>({});
+  const [dailyPickCount, setDailyPickCount] = useState(0);
+  const [dailyPickCountDelta, setDailyPickCountDelta] = useState(0);
 
   useEffect(() => {
     setUserId(getUserId() ?? "");
@@ -244,14 +247,8 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
     return Array.from(byLeague.entries()).sort((a, b) => a[0].localeCompare(b[0], undefined, { sensitivity: "base" }));
   }, [games]);
 
-  const pickCount = useMemo(
-    () =>
-      games.reduce((count, game) => {
-        const displayedPickTeam = optimisticPickByGame[game.id] ?? game.userPickTeam;
-        return displayedPickTeam ? count + 1 : count;
-      }, 0),
-    [games, optimisticPickByGame]
-  );
+  const pickCount = Math.max(0, dailyPickCount + dailyPickCountDelta);
+  const picksRemaining = Math.max(0, PICKEM_PICK_LIMIT - pickCount);
 
   const scheduleBackgroundRefresh = useCallback(() => {
     if (refreshTimerRef.current !== null) {
@@ -262,6 +259,36 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
       void loadGames({ background: true });
     }, 250);
   }, [loadGames]);
+
+  const loadDailyPickCount = useCallback(async () => {
+    if (!userId || !venueId) {
+      setDailyPickCount(0);
+      setDailyPickCountDelta(0);
+      return;
+    }
+    const response = await fetch(`/api/pickem/picks?userId=${encodeURIComponent(userId)}&includeSettled=true&limit=300`, {
+      cache: "no-store",
+    });
+    const payload = (await response.json()) as {
+      ok: boolean;
+      picks?: Array<{ startsAt: string; venueId: string }>;
+    };
+    if (!payload.ok) {
+      return;
+    }
+    const tzOffsetMinutes = new Date().getTimezoneOffset();
+    const toLocalDateKey = (iso: string) => {
+      const ms = Date.parse(iso);
+      if (!Number.isFinite(ms)) return "";
+      const localMs = ms - tzOffsetMinutes * 60_000;
+      const d = new Date(localMs);
+      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+    };
+    const todayKey = toLocalDateKey(new Date().toISOString());
+    const count = (payload.picks ?? []).filter((pick) => pick.venueId === venueId && toLocalDateKey(pick.startsAt) === todayKey).length;
+    setDailyPickCount(count);
+    setDailyPickCountDelta(0);
+  }, [userId, venueId]);
 
   const submitPickRequest = useCallback(
     async (gameId: string, pickTeam: string) => {
@@ -322,6 +349,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
       try {
         await submitPickRequest(gameId, pickTeam);
         scheduleBackgroundRefresh();
+        await loadDailyPickCount();
       } catch (error) {
         delete queuedPickByGameRef.current[gameId];
         const serverPick = latestGameMapRef.current.get(gameId)?.userPickTeam;
@@ -334,6 +362,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           }
           return next;
         });
+        await loadDailyPickCount();
         setSubmitMessage(error instanceof Error ? error.message : "Failed to save your pick.");
       } finally {
         inFlightGameIdsRef.current[gameId] = false;
@@ -344,7 +373,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         }
       }
     },
-    [scheduleBackgroundRefresh, submitPickRequest]
+    [loadDailyPickCount, scheduleBackgroundRefresh, submitPickRequest]
   );
 
   const submitPick = useCallback(
@@ -356,6 +385,15 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
       const displayedPickTeam = optimisticPickByGame[game.id] ?? game.userPickTeam;
       const isDeselect = displayedPickTeam === pickTeam;
       setSubmitMessage("");
+      if (!isDeselect && pickCount >= PICKEM_PICK_LIMIT) {
+        setSubmitMessage(`Pick limit reached (${PICKEM_PICK_LIMIT}/${PICKEM_PICK_LIMIT}). Remove one pick to change your slate.`);
+        return;
+      }
+      if (isDeselect) {
+        setDailyPickCountDelta((current) => current - 1);
+      } else if (!displayedPickTeam) {
+        setDailyPickCountDelta((current) => current + 1);
+      }
       setGames((current) =>
         current.map((row) =>
           row.id === game.id
@@ -390,6 +428,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           try {
             await clearPickRequest(game.id);
             scheduleBackgroundRefresh();
+            await loadDailyPickCount();
           } catch (error) {
             const serverPick = latestGameMapRef.current.get(game.id)?.userPickTeam;
             setOptimisticPickByGame((current) => {
@@ -397,6 +436,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
               if (serverPick) next[game.id] = serverPick;
               return next;
             });
+            setDailyPickCountDelta((current) => current + 1);
             setSubmitMessage(error instanceof Error ? error.message : "Failed to clear your pick.");
           }
         })();
@@ -404,7 +444,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         void flushGamePick(game.id, pickTeam);
       }
     },
-    [clearPickRequest, flushGamePick, optimisticPickByGame, scheduleBackgroundRefresh, userId, venueId]
+    [clearPickRequest, flushGamePick, loadDailyPickCount, optimisticPickByGame, pickCount, scheduleBackgroundRefresh, userId, venueId]
   );
 
   const claimPoints = useCallback(
@@ -465,6 +505,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           setSubmitMessage("Points already collected for this pick.");
         }
         await loadGames({ background: true });
+        await loadDailyPickCount();
       } catch (error) {
         setSubmitMessage(error instanceof Error ? error.message : "Failed to collect Pick 'Em points.");
       } finally {
@@ -475,8 +516,12 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         });
       }
     },
-    [loadGames, userId]
+    [loadDailyPickCount, loadGames, userId]
   );
+
+  useEffect(() => {
+    void loadDailyPickCount();
+  }, [loadDailyPickCount]);
 
   return (
     <div className="tp-pickem-compact min-h-[100dvh] touch-pan-y space-y-3 sm:space-y-4">
@@ -489,7 +534,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           <p className="text-[10px] font-black uppercase tracking-[0.12em] text-cyan-100 sm:text-[11px]">Pick Counter</p>
           <div className="mt-1 flex items-end justify-between gap-3">
             <p className="text-lg font-black leading-none sm:text-xl">{pickCount}<span className="ml-1 text-sm font-bold text-cyan-100 sm:text-base">/10</span></p>
-            <p className="text-[11px] font-semibold text-cyan-100 sm:text-xs">Daily picks used</p>
+            <p className="text-[11px] font-semibold text-cyan-100 sm:text-xs">{picksRemaining} remaining</p>
           </div>
         </div>
 
@@ -600,6 +645,9 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                   const baseDisabled = !sport.isClickable || !userId || !venueId;
                   const awaySelected = displayedPickTeam === game.awayTeam;
                   const homeSelected = displayedPickTeam === game.homeTeam;
+                  const pickLimitReached = pickCount >= PICKEM_PICK_LIMIT;
+                  const disableAwaySelection = baseDisabled || (pickLimitReached && !awaySelected && !homeSelected);
+                  const disableHomeSelection = baseDisabled || (pickLimitReached && !awaySelected && !homeSelected);
 
                   return (
                     <li key={game.id} className="rounded-xl border border-slate-300 bg-white p-2.5 shadow-sm sm:p-3">
@@ -626,7 +674,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                       <div className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2 sm:gap-2">
                         <button
                           type="button"
-                          disabled={baseDisabled}
+                          disabled={disableAwaySelection}
                           onClick={() => {
                             if (game.isLocked) {
                               setSubmitMessage("This game is locked because it has already started.");
@@ -646,7 +694,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                         </button>
                         <button
                           type="button"
-                          disabled={baseDisabled}
+                          disabled={disableHomeSelection}
                           onClick={() => {
                             if (game.isLocked) {
                               setSubmitMessage("This game is locked because it has already started.");
@@ -665,6 +713,11 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                           <span className="min-w-0 break-words">{game.homeTeam}</span>
                         </button>
                       </div>
+                      {displayedPickTeam ? (
+                        <p className="mt-1 text-[11px] font-black uppercase tracking-[0.08em] text-emerald-700">
+                          ✓ Pick counted
+                        </p>
+                      ) : null}
 
                       <div className="mt-2 text-xs text-slate-600">
                         <span className="font-semibold uppercase tracking-[0.08em] text-slate-700">
@@ -672,7 +725,8 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                         </span>
                         {game.isLocked ? (
                           <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-rose-300 bg-rose-100 px-2 py-0.5 font-bold text-rose-800">
-                            <span aria-hidden="true">🔒</span> Picks locked
+                            <span aria-hidden="true">🔒</span>{" "}
+                            {game.status === "final" ? "Game Over Picks Locked" : "Game Started Picks Locked."}
                           </span>
                         ) : (
                           <span className="ml-2">Picks open</span>
@@ -696,7 +750,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                       {game.userPickStatus === "won" && !game.userPickRewardClaimedAt ? (
                         <div className="mt-2 rounded-lg border border-emerald-300 bg-emerald-50 p-2">
                           <p className="text-xs font-semibold text-emerald-800">
-                            Correct pick. Click below to collect {(game.userPickRewardPoints ?? 10).toLocaleString()} points.
+                            {`Correct pick. Claim ${(game.userPickRewardPoints ?? 10).toLocaleString()} points now. Bonus multipliers apply based on your final correct-pick percentage.`}
                           </p>
                           <button
                             type="button"

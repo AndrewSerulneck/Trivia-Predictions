@@ -7,7 +7,7 @@ export default function SportsBingoSelectGamePage() {
   return (
     <PageShell
       title={APP_PAGE_NAMES.sportsBingo}
-      description="Step 2: Choose an upcoming game."
+      showPageTitle={false}
     >
       <div className="h-full space-y-4 overflow-y-auto pr-1">
         <BackButton href="/bingo/select-sport" label="Back" preferHref />

@@ -39,6 +39,7 @@ export async function GET(request: Request) {
     const placementKey = (searchParams.get("placementKey") ?? "").trim() || undefined;
     const roundNumberRaw = Number.parseInt(searchParams.get("roundNumber") ?? "", 10);
     const sequenceIndexRaw = Number.parseInt(searchParams.get("sequenceIndex") ?? "", 10);
+    const clientCounterRaw = Number.parseInt(searchParams.get("clientCounter") ?? "", 10);
     const allowAnyVenue =
       (searchParams.get("allowAnyVenue") ?? "").trim() === "1" ||
       (searchParams.get("allowAnyVenue") ?? "").trim().toLowerCase() === "true";
@@ -68,6 +69,7 @@ export async function GET(request: Request) {
       placementKey,
       roundNumber: Number.isFinite(roundNumberRaw) ? roundNumberRaw : undefined,
       sequenceIndex: Number.isFinite(sequenceIndexRaw) ? sequenceIndexRaw : undefined,
+      clientCounter: Number.isFinite(clientCounterRaw) ? clientCounterRaw : 0,
       excludeAdIds,
       allowAnyVenue,
     });

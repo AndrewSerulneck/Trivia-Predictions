@@ -6,6 +6,7 @@ import { getVenueId } from "@/lib/storage";
 import { isVenueTransitionGateActive } from "@/lib/venueGameTransition";
 import { releaseAdTier, requestAdTier, setLandingPopupGate } from "@/components/ui/adPriority";
 import { setScrollLock } from "@/lib/scrollLock";
+import { incrementAdCounter } from "@/lib/adFrequency";
 import type { Advertisement, AdPageKey } from "@/types";
 
 type PopupTrigger = "popup-on-entry" | "popup-on-scroll" | "popup-round-end";
@@ -25,6 +26,19 @@ type PopupState = {
 type PopupGuaranteeMeta = {
   guaranteed: boolean;
 };
+
+const TRIVIA_ROUND_ENDED_ACTIVE_KEY = "tp:trivia:round-ended-active:v1";
+
+function isTriviaRoundEndedActive(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  try {
+    return window.sessionStorage.getItem(TRIVIA_ROUND_ENDED_ACTIVE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 function resolvePageKey(pathname: string | null): AdPageKey | null {
   if (!pathname || pathname === "/" || pathname === "/join") {
@@ -182,6 +196,9 @@ export function PopupAds() {
     roundNumber?: number;
   }) => {
     const venueId = typeof window !== "undefined" ? getVenueId() : "";
+    const counterKey = `popup:${slot}:${options.pageKey}`;
+    const counter = incrementAdCounter(counterKey);
+
     const params = new URLSearchParams({ slot });
     if (venueId) {
       params.set("venueId", venueId);
@@ -189,6 +206,7 @@ export function PopupAds() {
     params.set("pageKey", options.pageKey);
     params.set("adType", "popup");
     params.set("displayTrigger", options.displayTrigger);
+    params.set("clientCounter", String(counter));
     if (Number.isFinite(options.roundNumber)) {
       params.set("roundNumber", String(Math.round(Number(options.roundNumber))));
     }
@@ -221,6 +239,9 @@ export function PopupAds() {
       if (dismissedByTriggerRef.current[trigger]) {
         return false;
       }
+      if (trigger === "popup-round-end" && !isTriviaRoundEndedActive()) {
+        return false;
+      }
       popupOpeningRef.current = true;
 
       try {
@@ -229,7 +250,7 @@ export function PopupAds() {
         if (!ad) {
           return false;
         }
-        const guaranteed = Number(ad.deliveryWeight ?? 0) >= 100 && Number(ad.popupCooldownSeconds ?? 0) <= 0;
+        const guaranteed = Number(ad.frequencyInterval ?? 1) === 1 && Number(ad.popupCooldownSeconds ?? 0) <= 0;
         guaranteeMetaRef.current = { guaranteed };
 
         const cooldownSeconds = Number.isFinite(ad.popupCooldownSeconds)
@@ -274,11 +295,12 @@ export function PopupAds() {
         dismissedByTriggerRef.current[popup.trigger] = true;
       }
       if (popup.trigger === "popup-on-entry") {
-        // Avoid showing a second popup immediately after dismissing entry popup.
         dismissedByTriggerRef.current["popup-on-scroll"] = true;
         setLandingPopupGate(false);
       }
     }
+    // Release scroll lock immediately on close — don't wait for the effect cycle.
+    setScrollLock(`popup-ad:${popupOwnerId}`, false);
     popupOpenRef.current = false;
     popupOpeningRef.current = false;
     if (!guaranteeMetaRef.current.guaranteed) {
@@ -412,15 +434,19 @@ export function PopupAds() {
       if (requestedRound) {
         pendingRoundPopupQueueRef.current = pendingRoundPopupQueueRef.current.filter((value) => value !== requestedRound);
       }
-      void showPopup("popup-round-end", {
-        pageKey: "trivia",
-        displayTrigger: "round-end",
-        roundNumber: requestedRound,
-      }).then((opened) => {
-        if (!opened && requestedRound) {
-          pendingRoundPopupQueueRef.current.push(requestedRound);
-        }
-      });
+      // Delay so the round-summary UI has time to render before the popup
+      // covers it — the ad should appear *over* the summary, not before it.
+      void wait(350).then(() =>
+        showPopup("popup-round-end", {
+          pageKey: "trivia",
+          displayTrigger: "round-end",
+          roundNumber: requestedRound,
+        }).then((opened) => {
+          if (!opened && requestedRound) {
+            pendingRoundPopupQueueRef.current.push(requestedRound);
+          }
+        })
+      );
     };
 
     window.addEventListener("tp:trivia-round-complete", onRoundComplete as EventListener);
@@ -436,6 +462,10 @@ export function PopupAds() {
     }
 
     const intervalId = window.setInterval(() => {
+      if (!isTriviaRoundEndedActive()) {
+        pendingRoundPopupQueueRef.current = [];
+        return;
+      }
       if (popupOpenRef.current || popupOpeningRef.current || isVenueTransitionGateActive()) {
         return;
       }

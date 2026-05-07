@@ -131,6 +131,9 @@ function matchesInventorySlot(ad: Advertisement, slot: AdInventorySlot): boolean
 }
 
 function isAdTargetingVenue(ad: Advertisement, venueId: string): boolean {
+  if (ad.targetAllVenues) {
+    return true;
+  }
   if (!venueId) {
     return true;
   }
@@ -222,6 +225,10 @@ function toggleVenueSelection(current: string[], venueId: string): string[] {
     return current.filter((id) => id !== venueId);
   }
   return [...current, venueId];
+}
+
+function parseTargetList(value: string): string[] {
+  return Array.from(new Set(value.split(",").map((item) => item.trim()).filter(Boolean)));
 }
 
 type LoadState = "idle" | "loading" | "error";
@@ -318,6 +325,12 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [sequenceIndex, setSequenceIndex] = useState(1);
   const [slot, setSlot] = useState<AdSlot>(() => deriveSlotFromPlacement({ adType: "popup", displayTrigger: "on-load" }));
   const [venueIds, setVenueIds] = useState<string[]>([]);
+  const [targetAllVenues, setTargetAllVenues] = useState(true);
+  const [targetCitiesText, setTargetCitiesText] = useState("");
+  const [targetZipCodesText, setTargetZipCodesText] = useState("");
+  const [targetCountiesText, setTargetCountiesText] = useState("");
+  const [targetStatesText, setTargetStatesText] = useState("");
+  const [targetRegionsText, setTargetRegionsText] = useState("");
   const [advertiserName, setAdvertiserName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [adImageFile, setAdImageFile] = useState<File | null>(null);
@@ -327,7 +340,8 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [altText, setAltText] = useState("");
   const [width, setWidth] = useState(728);
   const [height, setHeight] = useState(90);
-  const [deliveryWeight, setDeliveryWeight] = useState(1);
+  const [frequencyInterval, setFrequencyInterval] = useState(1);
+  const [venueSearch, setVenueSearch] = useState("");
   const [dismissDelaySeconds, setDismissDelaySeconds] = useState(3);
   const [popupCooldownSeconds, setPopupCooldownSeconds] = useState(180);
   const [active, setActive] = useState(true);
@@ -348,6 +362,12 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [editSequenceIndex, setEditSequenceIndex] = useState(1);
   const [editSlot, setEditSlot] = useState<AdSlot>(() => deriveSlotFromPlacement({ adType: "popup", displayTrigger: "on-load" }));
   const [editVenueIds, setEditVenueIds] = useState<string[]>([]);
+  const [editTargetAllVenues, setEditTargetAllVenues] = useState(true);
+  const [editTargetCitiesText, setEditTargetCitiesText] = useState("");
+  const [editTargetZipCodesText, setEditTargetZipCodesText] = useState("");
+  const [editTargetCountiesText, setEditTargetCountiesText] = useState("");
+  const [editTargetStatesText, setEditTargetStatesText] = useState("");
+  const [editTargetRegionsText, setEditTargetRegionsText] = useState("");
   const [editAdvertiserName, setEditAdvertiserName] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
   const [editAdImageFile, setEditAdImageFile] = useState<File | null>(null);
@@ -357,7 +377,8 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [editAltText, setEditAltText] = useState("");
   const [editWidth, setEditWidth] = useState(728);
   const [editHeight, setEditHeight] = useState(90);
-  const [editDeliveryWeight, setEditDeliveryWeight] = useState(1);
+  const [editFrequencyInterval, setEditFrequencyInterval] = useState(1);
+  const [editVenueSearch, setEditVenueSearch] = useState("");
   const [editDismissDelaySeconds, setEditDismissDelaySeconds] = useState(3);
   const [editPopupCooldownSeconds, setEditPopupCooldownSeconds] = useState(180);
   const [editActive, setEditActive] = useState(true);
@@ -1052,13 +1073,19 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           roundNumber: computedRoundNumber,
           sequenceIndex: computedSequenceIndex,
           venueIds: venueIds.length > 0 ? venueIds : undefined,
+          targetAllVenues,
+          targetCities: parseTargetList(targetCitiesText),
+          targetZipCodes: parseTargetList(targetZipCodesText),
+          targetCounties: parseTargetList(targetCountiesText),
+          targetStates: parseTargetList(targetStatesText),
+          targetRegions: parseTargetList(targetRegionsText),
           advertiserName,
           imageUrl: uploadedImageUrl,
           clickUrl,
           altText,
           width,
           height,
-          deliveryWeight,
+          frequencyInterval,
           dismissDelaySeconds: computedDismissDelaySeconds,
           popupCooldownSeconds: computedPopupCooldownSeconds,
           active,
@@ -1078,10 +1105,16 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       setAltText("");
       setWidth(728);
       setHeight(90);
-      setDeliveryWeight(1);
+      setFrequencyInterval(1);
       setDismissDelaySeconds(3);
       setPopupCooldownSeconds(180);
       setVenueIds([]);
+      setTargetAllVenues(true);
+      setTargetCitiesText("");
+      setTargetZipCodesText("");
+      setTargetCountiesText("");
+      setTargetStatesText("");
+      setTargetRegionsText("");
       setPageKey("venue");
       setAdType("popup");
       setDisplayTrigger("on-load");
@@ -1392,6 +1425,12 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     setEditSequenceIndex(item.sequenceIndex ?? 1);
     setEditSlot(item.slot);
     setEditVenueIds(item.venueIds && item.venueIds.length > 0 ? item.venueIds : item.venueId ? [item.venueId] : []);
+    setEditTargetAllVenues(Boolean(item.targetAllVenues ?? false));
+    setEditTargetCitiesText(item.targetCities?.join(", ") ?? "");
+    setEditTargetZipCodesText(item.targetZipCodes?.join(", ") ?? "");
+    setEditTargetCountiesText(item.targetCounties?.join(", ") ?? "");
+    setEditTargetStatesText(item.targetStates?.join(", ") ?? "");
+    setEditTargetRegionsText(item.targetRegions?.join(", ") ?? "");
     setEditAdvertiserName(item.advertiserName);
     setEditImageUrl(item.imageUrl);
     setEditAdImageFile(null);
@@ -1400,7 +1439,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     setEditAltText(item.altText);
     setEditWidth(item.width);
     setEditHeight(item.height);
-    setEditDeliveryWeight(item.deliveryWeight ?? 1);
+    setEditFrequencyInterval(item.frequencyInterval ?? 1);
     setEditDismissDelaySeconds(item.dismissDelaySeconds ?? 3);
     setEditPopupCooldownSeconds(item.popupCooldownSeconds ?? 180);
     setEditActive(item.active);
@@ -1418,6 +1457,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     setRoundNumber(Number.isFinite(slotConfig.roundNumber) ? Number(slotConfig.roundNumber) : "all");
     setSequenceIndex(Number.isFinite(slotConfig.sequenceIndex) ? Number(slotConfig.sequenceIndex) : 1);
     setVenueIds(selectedManagedVenueId ? [selectedManagedVenueId] : []);
+    setTargetAllVenues(false);
     setErrorMessage("");
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1470,13 +1510,19 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           roundNumber: computedEditRoundNumber,
           sequenceIndex: computedEditSequenceIndex,
           venueIds: editVenueIds.length > 0 ? editVenueIds : undefined,
+          targetAllVenues: editTargetAllVenues,
+          targetCities: parseTargetList(editTargetCitiesText),
+          targetZipCodes: parseTargetList(editTargetZipCodesText),
+          targetCounties: parseTargetList(editTargetCountiesText),
+          targetStates: parseTargetList(editTargetStatesText),
+          targetRegions: parseTargetList(editTargetRegionsText),
           advertiserName: editAdvertiserName,
           imageUrl: nextImageUrl,
           clickUrl: editClickUrl,
           altText: editAltText,
           width: editWidth,
           height: editHeight,
-          deliveryWeight: editDeliveryWeight,
+          frequencyInterval: editFrequencyInterval,
           dismissDelaySeconds: computedEditDismissDelaySeconds,
           popupCooldownSeconds: computedEditPopupCooldownSeconds,
           active: editActive,
@@ -2354,20 +2400,47 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           <div className="rounded-md border border-slate-300 px-3 py-2 text-sm">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Venue targeting</p>
             <p className="mt-1 text-xs text-slate-600">
-              {venueIds.length === 0 ? "All venues" : `${venueIds.length} selected`}
+              {targetAllVenues ? "All venues" : `${venueIds.length} selected`}
             </p>
-            <div className="mt-2 max-h-32 space-y-1 overflow-y-auto pr-1">
-              {availableVenues.map((venue) => (
-                <label key={venue.id} className="flex items-center gap-2 text-xs text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={venueIds.includes(venue.id)}
-                    onChange={() => setVenueIds((current) => toggleVenueSelection(current, venue.id))}
-                  />
-                  {getVenueDisplayName(venue)}
-                </label>
-              ))}
+            <label className="mt-2 flex items-center gap-2 text-xs text-slate-700">
+              <input
+                type="checkbox"
+                checked={targetAllVenues}
+                onChange={(event) => setTargetAllVenues(event.target.checked)}
+              />
+              All venues
+            </label>
+            <input
+              value={venueSearch}
+              onChange={(event) => setVenueSearch(event.target.value)}
+              placeholder="Search venues…"
+              disabled={targetAllVenues}
+              className="mt-2 w-full rounded-md border border-slate-200 px-2 py-1 text-xs disabled:opacity-50"
+            />
+            <div className="mt-1 max-h-32 space-y-1 overflow-y-auto pr-1">
+              {availableVenues
+                .filter((venue) =>
+                  !venueSearch.trim() ||
+                  getVenueDisplayName(venue).toLowerCase().includes(venueSearch.trim().toLowerCase())
+                )
+                .map((venue) => (
+                  <label key={venue.id} className="flex items-center gap-2 text-xs text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={venueIds.includes(venue.id)}
+                      disabled={targetAllVenues}
+                      onChange={() => setVenueIds((current) => toggleVenueSelection(current, venue.id))}
+                    />
+                    {getVenueDisplayName(venue)}
+                  </label>
+                ))}
             </div>
+            <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Geo targeting (optional)</p>
+            <input value={targetCitiesText} onChange={(event) => setTargetCitiesText(event.target.value)} placeholder="Cities (comma-separated)" className="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-xs" />
+            <input value={targetZipCodesText} onChange={(event) => setTargetZipCodesText(event.target.value)} placeholder="ZIP codes (comma-separated)" className="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-xs" />
+            <input value={targetCountiesText} onChange={(event) => setTargetCountiesText(event.target.value)} placeholder="Counties (comma-separated)" className="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-xs" />
+            <input value={targetStatesText} onChange={(event) => setTargetStatesText(event.target.value)} placeholder="States (e.g. NY, CA)" className="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-xs" />
+            <input value={targetRegionsText} onChange={(event) => setTargetRegionsText(event.target.value)} placeholder="Regions (NORTHEAST, MIDWEST, SOUTH, WEST)" className="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-xs" />
           </div>
         </div>
         <div className="space-y-1">
@@ -2441,14 +2514,14 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Delivery Weight (1-100)</label>
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Frequency Interval (N)</label>
             <input
               type="number"
               min={1}
-              max={100}
-              value={deliveryWeight}
-              onChange={(event) => setDeliveryWeight(Number(event.target.value))}
-              placeholder="Higher means shown more often"
+              max={999}
+              value={frequencyInterval}
+              onChange={(event) => setFrequencyInterval(Math.max(1, Number(event.target.value)))}
+              placeholder="1 = every visitor, 3 = every 3rd visitor"
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
             />
           </div>
@@ -2481,9 +2554,9 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
             </div>
           ) : null}
         </div>
-        <p className="text-xs text-slate-500">Higher delivery weight means this ad is shown more often.</p>
+        <p className="text-xs text-slate-500">Frequency interval: 1 = show to every visitor, 3 = show to every 3rd visitor, etc.</p>
         <p className="text-xs text-slate-500">
-          Venue targeting: leave all unchecked for all venues, check one for one venue, or check multiple venues.
+          Venue targeting: leave all unchecked for all venues, or search and select specific venues.
         </p>
         <p className="text-xs text-slate-500">
           Recommended for <span className="font-semibold">{slot}</span>: {getRecommendedSlotSize(slot).width}x
@@ -2841,22 +2914,49 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                     <div className="rounded-md border border-slate-300 px-2 py-1.5 text-sm">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Venue targeting</p>
                       <p className="mt-1 text-xs text-slate-600">
-                        {editVenueIds.length === 0 ? "All venues" : `${editVenueIds.length} selected`}
+                        {editTargetAllVenues ? "All venues" : `${editVenueIds.length} selected`}
                       </p>
-                      <div className="mt-2 max-h-28 space-y-1 overflow-y-auto pr-1">
-                        {availableVenues.map((venue) => (
-                          <label key={venue.id} className="flex items-center gap-2 text-xs text-slate-700">
-                            <input
-                              type="checkbox"
-                              checked={editVenueIds.includes(venue.id)}
-                              onChange={() =>
-                                setEditVenueIds((current) => toggleVenueSelection(current, venue.id))
-                              }
-                            />
-                            {getVenueDisplayName(venue)}
-                          </label>
-                        ))}
+                      <label className="mt-1 flex items-center gap-2 text-xs text-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={editTargetAllVenues}
+                          onChange={(event) => setEditTargetAllVenues(event.target.checked)}
+                        />
+                        All venues
+                      </label>
+                      <input
+                        value={editVenueSearch}
+                        onChange={(event) => setEditVenueSearch(event.target.value)}
+                        placeholder="Search venues…"
+                        disabled={editTargetAllVenues}
+                        className="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-xs disabled:opacity-50"
+                      />
+                      <div className="mt-1 max-h-28 space-y-1 overflow-y-auto pr-1">
+                        {availableVenues
+                          .filter((venue) =>
+                            !editVenueSearch.trim() ||
+                            getVenueDisplayName(venue).toLowerCase().includes(editVenueSearch.trim().toLowerCase())
+                          )
+                          .map((venue) => (
+                            <label key={venue.id} className="flex items-center gap-2 text-xs text-slate-700">
+                              <input
+                                type="checkbox"
+                                checked={editVenueIds.includes(venue.id)}
+                                disabled={editTargetAllVenues}
+                                onChange={() =>
+                                  setEditVenueIds((current) => toggleVenueSelection(current, venue.id))
+                                }
+                              />
+                              {getVenueDisplayName(venue)}
+                            </label>
+                          ))}
                       </div>
+                      <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Geo targeting (optional)</p>
+                      <input value={editTargetCitiesText} onChange={(event) => setEditTargetCitiesText(event.target.value)} placeholder="Cities (comma-separated)" className="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-xs" />
+                      <input value={editTargetZipCodesText} onChange={(event) => setEditTargetZipCodesText(event.target.value)} placeholder="ZIP codes (comma-separated)" className="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-xs" />
+                      <input value={editTargetCountiesText} onChange={(event) => setEditTargetCountiesText(event.target.value)} placeholder="Counties (comma-separated)" className="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-xs" />
+                      <input value={editTargetStatesText} onChange={(event) => setEditTargetStatesText(event.target.value)} placeholder="States (e.g. NY, CA)" className="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-xs" />
+                      <input value={editTargetRegionsText} onChange={(event) => setEditTargetRegionsText(event.target.value)} placeholder="Regions (NORTHEAST, MIDWEST, SOUTH, WEST)" className="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-xs" />
                     </div>
                   </div>
                   <div className="space-y-1">
@@ -2923,13 +3023,14 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Delivery Weight (1-100)</label>
+                      <label className="block text-xs font-medium uppercase tracking-wide text-slate-600">Frequency Interval (N)</label>
                       <input
                         type="number"
                         min={1}
-                        max={100}
-                        value={editDeliveryWeight}
-                        onChange={(event) => setEditDeliveryWeight(Number(event.target.value))}
+                        max={999}
+                        value={editFrequencyInterval}
+                        onChange={(event) => setEditFrequencyInterval(Math.max(1, Number(event.target.value)))}
+                        placeholder="1 = every visitor, 3 = every 3rd visitor"
                         className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                       />
                     </div>
@@ -2960,9 +3061,9 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                       </div>
                     ) : null}
                   </div>
-                  <p className="text-xs text-slate-500">Higher delivery weight means this ad is shown more often.</p>
+                  <p className="text-xs text-slate-500">Frequency interval: 1 = every visitor, 3 = every 3rd visitor, etc.</p>
                   <p className="text-xs text-slate-500">
-                    Venue targeting: leave all unchecked for all venues, check one for one venue, or check multiple venues.
+                    Venue targeting: leave all unchecked for all venues, or search and select specific venues.
                   </p>
                   <p className="text-xs text-slate-500">
                     Recommended for <span className="font-semibold">{editSlot}</span>: {getRecommendedSlotSize(editSlot).width}x
@@ -3025,11 +3126,26 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                 <>
                   <p className="break-words font-medium">{item.advertiserName}</p>
                   <p className="break-words text-xs text-slate-600">
-                    {AD_PAGE_LABEL[item.pageKey]} | {AD_TYPE_LABEL[item.adType]} | {AD_TRIGGER_LABEL[item.displayTrigger]} | {item.slot} | {item.width}x{item.height} | Weight {item.deliveryWeight ?? 1} | {item.active ? "active" : "inactive"} |{" "}
-                    {(item.venueIds ?? (item.venueId ? [item.venueId] : [])).length > 0
+                    {AD_PAGE_LABEL[item.pageKey]} | {AD_TYPE_LABEL[item.adType]} | {AD_TRIGGER_LABEL[item.displayTrigger]} | {item.slot} | {item.width}x{item.height} | Every {item.frequencyInterval ?? 1} visitor{(item.frequencyInterval ?? 1) !== 1 ? "s" : ""} | {item.active ? "active" : "inactive"} |{" "}
+                    {item.targetAllVenues
+                      ? "all venues"
+                      : (item.venueIds ?? (item.venueId ? [item.venueId] : [])).length > 0
                       ? `${(item.venueIds ?? (item.venueId ? [item.venueId] : [])).length} venue(s)`
                       : "global"}
                   </p>
+                  {(item.targetCities?.length ?? 0) > 0 ||
+                  (item.targetZipCodes?.length ?? 0) > 0 ||
+                  (item.targetCounties?.length ?? 0) > 0 ||
+                  (item.targetStates?.length ?? 0) > 0 ||
+                  (item.targetRegions?.length ?? 0) > 0 ? (
+                    <p className="break-words text-xs text-slate-500">
+                      Geo: {item.targetCities?.length ? `Cities ${item.targetCities.join(", ")} ` : ""}
+                      {item.targetZipCodes?.length ? `ZIP ${item.targetZipCodes.join(", ")} ` : ""}
+                      {item.targetCounties?.length ? `Counties ${item.targetCounties.join(", ")} ` : ""}
+                      {item.targetStates?.length ? `States ${item.targetStates.join(", ")} ` : ""}
+                      {item.targetRegions?.length ? `Regions ${item.targetRegions.join(", ")}` : ""}
+                    </p>
+                  ) : null}
                   {item.adType === "inline" ? (
                     <p className="break-words text-xs text-slate-500">
                       Inline variant: {item.sequenceIndex ?? 1} | Placement: {item.placementKey ?? "default"}

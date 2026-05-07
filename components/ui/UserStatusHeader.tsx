@@ -36,12 +36,34 @@ function TreasureChestIcon({ className = "h-8 w-8" }: { className?: string }) {
 
 function GoldCoinIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
-      <circle cx="32" cy="32" r="24" fill="#f4b400" stroke="#111827" strokeWidth="4" />
-      <circle cx="32" cy="32" r="16" fill="#fcd34d" stroke="#111827" strokeWidth="3" />
-      <path d="M26 33h12" stroke="#111827" strokeWidth="3.4" strokeLinecap="round" />
-      <path d="M29 27h6" stroke="#111827" strokeWidth="3.4" strokeLinecap="round" />
-      <path d="M29 39h6" stroke="#111827" strokeWidth="3.4" strokeLinecap="round" />
+    <svg viewBox="0 0 64 64" aria-hidden="true" className={`${className} tp-coin-idle drop-shadow-[0_2px_2px_rgba(106,64,0,0.45)]`}>
+      <defs>
+        <linearGradient id="tp-coin-rim-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fff5bf" />
+          <stop offset="28%" stopColor="#ffd769" />
+          <stop offset="62%" stopColor="#f2b437" />
+          <stop offset="100%" stopColor="#b67612" />
+        </linearGradient>
+        <linearGradient id="tp-coin-core-gradient" x1="10%" y1="8%" x2="82%" y2="92%">
+          <stop offset="0%" stopColor="#fff9d8" />
+          <stop offset="44%" stopColor="#ffdc73" />
+          <stop offset="100%" stopColor="#d98b12" />
+        </linearGradient>
+      </defs>
+      <ellipse cx="32" cy="54" rx="17" ry="4.8" fill="rgba(74,40,0,0.24)" />
+      <circle cx="32" cy="32" r="24.5" fill="url(#tp-coin-rim-gradient)" stroke="#774600" strokeWidth="2.4" />
+      <circle cx="32" cy="32" r="17.5" fill="url(#tp-coin-core-gradient)" stroke="#8a5200" strokeWidth="1.9" />
+      <ellipse
+        cx="26.5"
+        cy="22.5"
+        rx="9.6"
+        ry="5.5"
+        className="tp-coin-idle-shimmer"
+        fill="rgba(255,255,255,0.46)"
+      />
+      <path d="M23 35h18" stroke="#8a5200" strokeWidth="3.2" strokeLinecap="round" />
+      <path d="M27 28h10" stroke="#8a5200" strokeWidth="3.2" strokeLinecap="round" />
+      <path d="M27 42h10" stroke="#8a5200" strokeWidth="3.2" strokeLinecap="round" />
     </svg>
   );
 }

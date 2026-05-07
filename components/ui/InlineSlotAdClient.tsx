@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AdBanner } from "@/components/ui/AdBanner";
+import { incrementAdCounter } from "@/lib/adFrequency";
 import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, Advertisement } from "@/types";
 
 type SlotResponse = {
@@ -37,8 +38,37 @@ export function InlineSlotAdClient({
 }) {
   const [ad, setAd] = useState<Advertisement | null>(null);
   const [loaded, setLoaded] = useState(false);
+  // Track whether we've already fetched so props re-renders (e.g. parent
+  // re-renders that don't change any meaningful prop) don't cause a second
+  // fetch that would cause the ad to flicker.
+  const fetchedRef = useRef(false);
+  // Stable string key derived from the props that actually matter for the query.
+  const stableKey = [
+    slot,
+    venueId ?? "",
+    pageKey ?? "",
+    adType ?? "",
+    displayTrigger ?? "",
+    placementKey ?? "",
+    String(roundNumber ?? ""),
+    String(sequenceIndex ?? ""),
+    (excludeAdIds ?? []).slice().sort().join(","),
+    allowAnyVenue ? "1" : "0",
+  ].join("|");
+
+  const prevKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
+    // Only re-fetch when the query parameters actually change.
+    if (fetchedRef.current && prevKeyRef.current === stableKey) {
+      return;
+    }
+    prevKeyRef.current = stableKey;
+    fetchedRef.current = true;
+
+    const counterKey = `inline:${slot}:${pageKey ?? ""}:${placementKey ?? ""}:${roundNumber ?? ""}:${sequenceIndex ?? ""}`;
+    const counter = incrementAdCounter(counterKey);
+
     const params = new URLSearchParams({ slot });
     if (venueId) {
       params.set("venueId", venueId);
@@ -67,25 +97,28 @@ export function InlineSlotAdClient({
     if (allowAnyVenue) {
       params.set("allowAnyVenue", "1");
     }
+    params.set("clientCounter", String(counter));
 
     const load = async () => {
       try {
         const response = await fetch(`/api/ads/slot?${params.toString()}`, { cache: "no-store" });
         const payload = (await response.json()) as SlotResponse;
         if (payload.ok) {
+          // Keep slot output in sync with server matching to avoid stale ads
+          // persisting when placement/variant filters no longer match.
           setAd(payload.ad ?? null);
-        } else {
-          setAd(null);
         }
       } catch {
-        setAd(null);
+        // Keep the existing ad visible on network error.
       } finally {
         setLoaded(true);
       }
     };
 
     void load();
-  }, [slot, venueId, pageKey, adType, displayTrigger, placementKey, roundNumber, sequenceIndex, excludeAdIds, allowAnyVenue]);
+    // stableKey encodes all meaningful props — it's safe to use as the sole dep.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stableKey]);
 
   if (ad) {
     return <AdBanner ad={ad} />;

@@ -155,7 +155,7 @@ export function GameLandingExperience({
         >
           {isPlaying ? (
             <div
-              className="animate-tp-surface-enter relative z-10 min-h-[100dvh] px-2 py-2 touch-pan-y sm:px-3 sm:py-3"
+              className="animate-tp-surface-enter relative z-10 flex min-h-[100dvh] flex-col px-2 py-2 touch-pan-y sm:px-3 sm:py-3"
               style={{ WebkitOverflowScrolling: "touch" }}
             >
             {showPlayingBackButton ? (
@@ -172,7 +172,7 @@ export function GameLandingExperience({
                 </button>
               </div>
             ) : null}
-            {children}
+            <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
             </div>
           ) : isResumeCheckPending ? (
             <div className="flex h-full min-h-[60dvh] items-center justify-center px-4">

@@ -7,7 +7,7 @@ export default function SportsBingoSelectBoardPage() {
   return (
     <PageShell
       title={APP_PAGE_NAMES.sportsBingo}
-      description="Step 3: Generate a board and lock it before game start."
+      showPageTitle={false}
     >
       <div className="h-full space-y-4 overflow-y-auto pr-1">
         <BackButton href="/bingo/select-game" label="Back" preferHref />

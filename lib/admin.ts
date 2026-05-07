@@ -23,8 +23,14 @@ type AdvertisementRow = {
   sequence_index: number | null;
   venue_id: string | null;
   venue_ids: string[] | null;
+  target_all_venues: boolean | null;
+  target_cities: string[] | null;
+  target_zip_codes: string[] | null;
+  target_counties: string[] | null;
+  target_states: string[] | null;
+  target_regions: string[] | null;
   advertiser_name: string;
-  delivery_weight: number | null;
+  frequency_interval: number | null;
   image_url: string;
   click_url: string;
   alt_text: string;
@@ -123,8 +129,14 @@ function mapAdRow(row: AdvertisementRow): Advertisement {
     sequenceIndex: placementMeta.sequenceIndex,
     venueId: row.venue_id ?? undefined,
     venueIds: Array.isArray(row.venue_ids) ? row.venue_ids : row.venue_id ? [row.venue_id] : undefined,
+    targetAllVenues: Boolean(row.target_all_venues ?? false),
+    targetCities: Array.isArray(row.target_cities) ? row.target_cities : undefined,
+    targetZipCodes: Array.isArray(row.target_zip_codes) ? row.target_zip_codes : undefined,
+    targetCounties: Array.isArray(row.target_counties) ? row.target_counties : undefined,
+    targetStates: Array.isArray(row.target_states) ? row.target_states : undefined,
+    targetRegions: Array.isArray(row.target_regions) ? row.target_regions : undefined,
     advertiserName: row.advertiser_name,
-    deliveryWeight: Number.isFinite(Number(row.delivery_weight)) ? Math.max(1, Number(row.delivery_weight)) : 1,
+    frequencyInterval: Number.isFinite(Number(row.frequency_interval)) ? Math.max(1, Number(row.frequency_interval)) : 1,
     imageUrl: row.image_url,
     clickUrl: row.click_url,
     altText: row.alt_text,
@@ -394,7 +406,7 @@ export async function listAdminAdvertisements(): Promise<Advertisement[]> {
   const { data, error } = await supabaseAdmin!
     .from("advertisements")
     .select(
-      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
+      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .order("created_at", { ascending: false })
     .limit(100);
@@ -416,8 +428,14 @@ export async function createAdminAdvertisement(input: {
   sequenceIndex?: number;
   venueId?: string;
   venueIds?: string[];
+  targetAllVenues?: boolean;
+  targetCities?: string[];
+  targetZipCodes?: string[];
+  targetCounties?: string[];
+  targetStates?: string[];
+  targetRegions?: string[];
   advertiserName: string;
-  deliveryWeight?: number;
+  frequencyInterval?: number;
   imageUrl: string;
   clickUrl: string;
   altText: string;
@@ -466,10 +484,17 @@ export async function createAdminAdvertisement(input: {
   const popupCooldownSeconds = Number.isFinite(input.popupCooldownSeconds)
     ? Math.round(Number(input.popupCooldownSeconds))
     : 180;
-  const deliveryWeight = Number.isFinite(input.deliveryWeight) ? Math.round(Number(input.deliveryWeight)) : 1;
+  const frequencyInterval = Number.isFinite(input.frequencyInterval) ? Math.max(1, Math.round(Number(input.frequencyInterval))) : 1;
   const normalizedVenueIds = Array.from(
     new Set((input.venueIds ?? []).map((item) => item.trim()).filter(Boolean))
   );
+  const normalizeTextList = (values?: string[]) =>
+    Array.from(new Set((values ?? []).map((item) => item.trim()).filter(Boolean)));
+  const normalizedTargetCities = normalizeTextList(input.targetCities);
+  const normalizedTargetZipCodes = normalizeTextList(input.targetZipCodes);
+  const normalizedTargetCounties = normalizeTextList(input.targetCounties);
+  const normalizedTargetStates = normalizeTextList(input.targetStates);
+  const normalizedTargetRegions = normalizeTextList(input.targetRegions).map((value) => value.toUpperCase());
   const fallbackVenueId = input.venueId?.trim() || "";
   const finalVenueIds = normalizedVenueIds.length > 0 ? normalizedVenueIds : fallbackVenueId ? [fallbackVenueId] : [];
   if (!Number.isFinite(width) || width < 1) {
@@ -484,8 +509,8 @@ export async function createAdminAdvertisement(input: {
   if (!Number.isFinite(popupCooldownSeconds) || popupCooldownSeconds < 0 || popupCooldownSeconds > 86400) {
     throw new Error("Popup cooldown must be between 0 and 86400 seconds.");
   }
-  if (!Number.isFinite(deliveryWeight) || deliveryWeight < 1 || deliveryWeight > 100) {
-    throw new Error("Delivery weight must be between 1 and 100.");
+  if (!Number.isFinite(frequencyInterval) || frequencyInterval < 1 || frequencyInterval > 999) {
+    throw new Error("Frequency interval must be between 1 and 999.");
   }
   if (placementMeta.pageKey === "global") {
     throw new Error("Select a specific page for this advertisement.");
@@ -513,8 +538,14 @@ export async function createAdminAdvertisement(input: {
       sequence_index: placementMeta.sequenceIndex ?? null,
       venue_id: finalVenueIds.length === 1 ? finalVenueIds[0] : null,
       venue_ids: finalVenueIds.length > 0 ? finalVenueIds : null,
+      target_all_venues: Boolean(input.targetAllVenues),
+      target_cities: normalizedTargetCities.length > 0 ? normalizedTargetCities : null,
+      target_zip_codes: normalizedTargetZipCodes.length > 0 ? normalizedTargetZipCodes : null,
+      target_counties: normalizedTargetCounties.length > 0 ? normalizedTargetCounties : null,
+      target_states: normalizedTargetStates.length > 0 ? normalizedTargetStates : null,
+      target_regions: normalizedTargetRegions.length > 0 ? normalizedTargetRegions : null,
       advertiser_name: input.advertiserName.trim(),
-      delivery_weight: deliveryWeight,
+      frequency_interval: frequencyInterval,
       image_url: input.imageUrl.trim(),
       click_url: input.clickUrl.trim(),
       alt_text: input.altText.trim(),
@@ -527,7 +558,7 @@ export async function createAdminAdvertisement(input: {
       end_date: input.endDate?.trim() || null,
     })
     .select(
-      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
+      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .single<AdvertisementRow>();
 
@@ -549,8 +580,14 @@ export async function updateAdminAdvertisement(input: {
   sequenceIndex?: number;
   venueId?: string;
   venueIds?: string[];
+  targetAllVenues?: boolean;
+  targetCities?: string[];
+  targetZipCodes?: string[];
+  targetCounties?: string[];
+  targetStates?: string[];
+  targetRegions?: string[];
   advertiserName: string;
-  deliveryWeight?: number;
+  frequencyInterval?: number;
   imageUrl: string;
   clickUrl: string;
   altText: string;
@@ -603,10 +640,17 @@ export async function updateAdminAdvertisement(input: {
   const popupCooldownSeconds = Number.isFinite(input.popupCooldownSeconds)
     ? Math.round(Number(input.popupCooldownSeconds))
     : 180;
-  const deliveryWeight = Number.isFinite(input.deliveryWeight) ? Math.round(Number(input.deliveryWeight)) : 1;
+  const frequencyInterval = Number.isFinite(input.frequencyInterval) ? Math.max(1, Math.round(Number(input.frequencyInterval))) : 1;
   const normalizedVenueIds = Array.from(
     new Set((input.venueIds ?? []).map((item) => item.trim()).filter(Boolean))
   );
+  const normalizeTextList = (values?: string[]) =>
+    Array.from(new Set((values ?? []).map((item) => item.trim()).filter(Boolean)));
+  const normalizedTargetCities = normalizeTextList(input.targetCities);
+  const normalizedTargetZipCodes = normalizeTextList(input.targetZipCodes);
+  const normalizedTargetCounties = normalizeTextList(input.targetCounties);
+  const normalizedTargetStates = normalizeTextList(input.targetStates);
+  const normalizedTargetRegions = normalizeTextList(input.targetRegions).map((value) => value.toUpperCase());
   const fallbackVenueId = input.venueId?.trim() || "";
   const finalVenueIds = normalizedVenueIds.length > 0 ? normalizedVenueIds : fallbackVenueId ? [fallbackVenueId] : [];
   if (!Number.isFinite(width) || width < 1) {
@@ -621,8 +665,8 @@ export async function updateAdminAdvertisement(input: {
   if (!Number.isFinite(popupCooldownSeconds) || popupCooldownSeconds < 0 || popupCooldownSeconds > 86400) {
     throw new Error("Popup cooldown must be between 0 and 86400 seconds.");
   }
-  if (!Number.isFinite(deliveryWeight) || deliveryWeight < 1 || deliveryWeight > 100) {
-    throw new Error("Delivery weight must be between 1 and 100.");
+  if (!Number.isFinite(frequencyInterval) || frequencyInterval < 1 || frequencyInterval > 999) {
+    throw new Error("Frequency interval must be between 1 and 999.");
   }
   if (placementMeta.pageKey === "global") {
     throw new Error("Select a specific page for this advertisement.");
@@ -650,8 +694,14 @@ export async function updateAdminAdvertisement(input: {
       sequence_index: placementMeta.sequenceIndex ?? null,
       venue_id: finalVenueIds.length === 1 ? finalVenueIds[0] : null,
       venue_ids: finalVenueIds.length > 0 ? finalVenueIds : null,
+      target_all_venues: Boolean(input.targetAllVenues),
+      target_cities: normalizedTargetCities.length > 0 ? normalizedTargetCities : null,
+      target_zip_codes: normalizedTargetZipCodes.length > 0 ? normalizedTargetZipCodes : null,
+      target_counties: normalizedTargetCounties.length > 0 ? normalizedTargetCounties : null,
+      target_states: normalizedTargetStates.length > 0 ? normalizedTargetStates : null,
+      target_regions: normalizedTargetRegions.length > 0 ? normalizedTargetRegions : null,
       advertiser_name: input.advertiserName.trim(),
-      delivery_weight: deliveryWeight,
+      frequency_interval: frequencyInterval,
       image_url: input.imageUrl.trim(),
       click_url: input.clickUrl.trim(),
       alt_text: input.altText.trim(),
@@ -665,7 +715,7 @@ export async function updateAdminAdvertisement(input: {
     })
     .eq("id", id)
     .select(
-      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
+      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .single<AdvertisementRow>();
 

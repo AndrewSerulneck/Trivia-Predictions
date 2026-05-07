@@ -19,7 +19,7 @@ type TriviaAnswerLookupRow = {
 
 type UserRow = {
   id: string;
-  username: string;
+  points: number;
 };
 
 const MAX_CANDIDATE_QUESTIONS = 2000;
@@ -272,40 +272,17 @@ export async function getTriviaQuota(
     };
   }
 
-  const { data: userData } = await supabaseAdmin
-    .from("users")
-    .select("id, username")
-    .eq("id", userId)
-    .maybeSingle<UserRow>();
-
   const cutoffIso = new Date(Date.now() - WINDOW_MS).toISOString();
-  const userIdsForQuota = [userId];
-  if (userData?.username) {
-    const { data: usernameMatches } = await supabaseAdmin
-      .from("users")
-      .select("id")
-      .eq("username", userData.username)
-      .limit(200);
-    for (const row of usernameMatches ?? []) {
-      const candidateId = (row as { id?: string }).id;
-      if (candidateId && !userIdsForQuota.includes(candidateId)) {
-        userIdsForQuota.push(candidateId);
-      }
-    }
-  }
 
-  let answersQuery = supabaseAdmin
+  // Quota is scoped strictly to this userId. Each user record is already unique
+  // per (username, venue_id), so cross-venue aggregation is intentionally absent.
+  const { data, error } = await supabaseAdmin
     .from("trivia_answers")
     .select("answered_at")
+    .eq("user_id", userId)
     .gte("answered_at", cutoffIso)
     .order("answered_at", { ascending: true })
     .limit(TRIVIA_LIMIT_PER_WINDOW + 1);
-  if (userIdsForQuota.length === 1) {
-    answersQuery = answersQuery.eq("user_id", userIdsForQuota[0]);
-  } else {
-    answersQuery = answersQuery.in("user_id", userIdsForQuota);
-  }
-  const { data, error } = await answersQuery;
 
   if (error || !data) {
     return emptyQuota;

@@ -67,7 +67,9 @@ export function SportsBingoSelectGame() {
 
     try {
       const response = await fetch(
-        `/api/bingo/games?sportKey=${encodeURIComponent(sportKey)}&includeLocked=false`,
+        `/api/bingo/games?sportKey=${encodeURIComponent(sportKey)}&includeLocked=false&tzOffsetMinutes=${encodeURIComponent(
+          String(new Date().getTimezoneOffset())
+        )}`,
         { cache: "no-store" }
       );
       const payload = (await response.json()) as GamesResponse;

@@ -124,6 +124,44 @@ function namesLikelyMatch(left: string, right: string): boolean {
   return leftRemainder[0]?.charAt(0) === rightRemainder[0]?.charAt(0);
 }
 
+function isStartedFantasyGameStatus(value: string): boolean {
+  const status = String(value ?? "").trim().toUpperCase();
+  if (!status) {
+    return false;
+  }
+  const notStartedStatuses = new Set([
+    "NS",
+    "NOT STARTED",
+    "SCHEDULED",
+    "PREGAME",
+    "PRE-GAME",
+    "POSTPONED",
+    "CANCELED",
+    "CANCELLED",
+  ]);
+  if (notStartedStatuses.has(status)) {
+    return false;
+  }
+  const startedIndicators = ["Q1", "Q2", "Q3", "Q4", "OT", "HT", "HALF", "LIVE", "IN PLAY", "IN_PROGRESS", "FT", "AOT", "FINAL", "COMPLETED"];
+  return startedIndicators.some((indicator) => status.includes(indicator));
+}
+
+function getLocalWeekStartMs(date: Date): number {
+  const next = new Date(date);
+  next.setHours(0, 0, 0, 0);
+  const dayOfWeek = next.getDay();
+  next.setDate(next.getDate() - dayOfWeek);
+  return next.getTime();
+}
+
+function isIsoInCurrentLocalWeek(iso: string): boolean {
+  const parsed = new Date(iso);
+  if (!Number.isFinite(parsed.getTime())) {
+    return false;
+  }
+  return getLocalWeekStartMs(parsed) === getLocalWeekStartMs(new Date());
+}
+
 export function FantasyHome() {
   const [userId, setUserId] = useState("");
   const [venueId, setVenueId] = useState("");
@@ -289,8 +327,13 @@ export function FantasyHome() {
     playerPool.length > 0;
   const liveEntries = useMemo(() => entries.filter((entry) => entry.status === "live"), [entries]);
   const hasActiveDraftedEntry = useMemo(
-    () => entries.some((entry) => entry.status === "pending" || entry.status === "live"),
-    [entries]
+    () =>
+      entries.some(
+        (entry) =>
+          entry.gameId === selectedGameId &&
+          (entry.status === "pending" || entry.status === "live")
+      ),
+    [entries, selectedGameId]
   );
   const hasLiveEntry = liveEntries.length > 0;
   const nextPendingEntryStartMs = useMemo(() => {
@@ -310,16 +353,29 @@ export function FantasyHome() {
     }
     return nextStart;
   }, [entries]);
+  const finalUnclaimedEntries = useMemo(
+    () =>
+      entries
+        .filter(
+          (entry) =>
+            entry.status === "final" &&
+            !entry.rewardClaimedAt &&
+            computeFantasyClaimablePoints(entry) > 0 &&
+            isIsoInCurrentLocalWeek(entry.startsAt)
+        )
+        .sort((left, right) => Date.parse(right.startsAt) - Date.parse(left.startsAt)),
+    [entries]
+  );
   const trackedEntry = useMemo(() => {
     const selected = entries.find((entry) => entry.gameId === selectedGameId);
-    if (selected) {
+    if (selected && !(selected.status === "final" && Boolean(selected.rewardClaimedAt))) {
       return selected;
     }
     if (liveEntries.length > 0) {
       return liveEntries[0] ?? null;
     }
-    return entries[0] ?? null;
-  }, [entries, liveEntries, selectedGameId]);
+    return finalUnclaimedEntries[0] ?? null;
+  }, [entries, finalUnclaimedEntries, liveEntries, selectedGameId]);
   const trackedEntryClaimablePoints = useMemo(
     () => (trackedEntry ? computeFantasyClaimablePoints(trackedEntry) : 0),
     [trackedEntry]
@@ -343,7 +399,9 @@ export function FantasyHome() {
       return next;
     }
     for (const playerName of liveStatPlayerNames) {
-      const rowsForPlayer = liveStatRows.filter((row) => namesLikelyMatch(playerName, row.player_name));
+      const rowsForPlayer = liveStatRows.filter(
+        (row) => isStartedFantasyGameStatus(row.game_status) && namesLikelyMatch(playerName, row.player_name)
+      );
       if (rowsForPlayer.length === 0) {
         continue;
       }
@@ -678,6 +736,38 @@ export function FantasyHome() {
               )}
             </>
           )}
+        </section>
+      ) : null}
+
+      {finalUnclaimedEntries.length > 1 ? (
+        <section className="rounded-2xl border border-emerald-200/70 bg-emerald-50/70 p-4 shadow-sm">
+          <h3 className="text-base font-semibold text-slate-900">Completed Games Ready To Collect</h3>
+          <p className="mt-1 text-xs text-slate-700">
+            Finalized rosters stay here until you collect points.
+          </p>
+          <div className="mt-3 space-y-2">
+            {finalUnclaimedEntries.map((entry) => (
+              <div key={entry.id} className="rounded-lg border border-emerald-200 bg-white px-3 py-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-900">{entry.gameLabel}</p>
+                    <p className="text-xs text-slate-600">{formatLocalDateTime(entry.startsAt)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      const rect = event.currentTarget.getBoundingClientRect();
+                      void claimReward(entry, rect);
+                    }}
+                    disabled={claimingEntryId === entry.id}
+                    className="tp-clean-button rounded-lg border border-emerald-500 bg-emerald-100 px-2.5 py-1.5 text-xs font-semibold text-emerald-900 disabled:opacity-60"
+                  >
+                    {claimingEntryId === entry.id ? "Collecting..." : `Collect ${computeFantasyClaimablePoints(entry)} Points`}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
       ) : null}
 

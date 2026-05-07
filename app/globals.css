@@ -754,3 +754,39 @@ a[role="button"][class*="text-[11px]"] {
   transform: scale(0.95) !important;
   pointer-events: none;
 }
+
+@keyframes tp-coin-idle-wobble {
+  0% {
+    transform: rotate(-2deg) translate3d(0, 0, 0);
+  }
+  35% {
+    transform: rotate(1.4deg) translate3d(0, -0.6px, 0);
+  }
+  70% {
+    transform: rotate(-0.8deg) translate3d(0, 0.4px, 0);
+  }
+  100% {
+    transform: rotate(-2deg) translate3d(0, 0, 0);
+  }
+}
+
+@keyframes tp-coin-idle-shimmer {
+  0% {
+    opacity: 0.38;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0.38;
+  }
+}
+
+.tp-coin-idle {
+  transform-origin: 50% 50%;
+  animation: tp-coin-idle-wobble 2.8s ease-in-out infinite;
+}
+
+.tp-coin-idle-shimmer {
+  animation: tp-coin-idle-shimmer 2.8s ease-in-out infinite;
+}

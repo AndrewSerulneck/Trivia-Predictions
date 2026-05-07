@@ -21,8 +21,14 @@ type AdvertisementRow = {
   sequence_index: number | null;
   venue_id: string | null;
   venue_ids: string[] | null;
+  target_all_venues: boolean | null;
+  target_cities: string[] | null;
+  target_zip_codes: string[] | null;
+  target_counties: string[] | null;
+  target_states: string[] | null;
+  target_regions: string[] | null;
   advertiser_name: string;
-  delivery_weight: number | null;
+  frequency_interval: number | null;
   image_url: string;
   click_url: string;
   alt_text: string;
@@ -59,8 +65,14 @@ function mapAdRow(row: AdvertisementRow): Advertisement {
     sequenceIndex: placementMeta.sequenceIndex,
     venueId: row.venue_id ?? undefined,
     venueIds: Array.isArray(row.venue_ids) ? row.venue_ids : row.venue_id ? [row.venue_id] : undefined,
+    targetAllVenues: Boolean(row.target_all_venues ?? false),
+    targetCities: Array.isArray(row.target_cities) ? row.target_cities : undefined,
+    targetZipCodes: Array.isArray(row.target_zip_codes) ? row.target_zip_codes : undefined,
+    targetCounties: Array.isArray(row.target_counties) ? row.target_counties : undefined,
+    targetStates: Array.isArray(row.target_states) ? row.target_states : undefined,
+    targetRegions: Array.isArray(row.target_regions) ? row.target_regions : undefined,
     advertiserName: row.advertiser_name,
-    deliveryWeight: Number.isFinite(Number(row.delivery_weight)) ? Math.max(1, Number(row.delivery_weight)) : 1,
+    frequencyInterval: Number.isFinite(Number(row.frequency_interval)) ? Math.max(1, Number(row.frequency_interval)) : 1,
     imageUrl: row.image_url,
     clickUrl: row.click_url,
     altText: row.alt_text,
@@ -80,74 +92,104 @@ function mapAdRow(row: AdvertisementRow): Advertisement {
   };
 }
 
-function chooseWeightedRandomAd(rows: AdvertisementRow[]): AdvertisementRow | null {
+/**
+ * Pick the ad to serve using a deterministic round-robin rotation based on the
+ * client's page-load counter.  When multiple ads compete for the same slot the
+ * counter cycles through them in insertion order.
+ */
+function chooseAdByCounter(rows: AdvertisementRow[], counter: number): AdvertisementRow | null {
   if (rows.length === 0) {
     return null;
   }
-
-  let totalWeight = 0;
-  for (const row of rows) {
-    totalWeight += Number.isFinite(Number(row.delivery_weight))
-      ? Math.max(1, Number(row.delivery_weight))
-      : 1;
-  }
-
-  if (totalWeight <= 0) {
-    return rows[0];
-  }
-
-  let threshold = Math.random() * totalWeight;
-  for (const row of rows) {
-    const weight = Number.isFinite(Number(row.delivery_weight))
-      ? Math.max(1, Number(row.delivery_weight))
-      : 1;
-    threshold -= weight;
-    if (threshold <= 0) {
-      return row;
-    }
-  }
-
-  return rows[rows.length - 1];
+  const safeCounter = Math.max(0, Math.round(counter));
+  return rows[safeCounter % rows.length] ?? rows[0] ?? null;
 }
 
-function chooseWeightedAdBySequence(rows: AdvertisementRow[], sequenceIndex: number): AdvertisementRow | null {
-  if (rows.length === 0) {
-    return null;
-  }
-
-  const safeSequence = Math.max(1, Math.round(sequenceIndex));
-  const weights = rows.map((row) =>
-    Number.isFinite(Number(row.delivery_weight)) ? Math.max(1, Number(row.delivery_weight)) : 1
-  );
-  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
-  if (totalWeight <= 0) {
-    return rows[(safeSequence - 1) % rows.length] ?? rows[0] ?? null;
-  }
-
-  const target = ((safeSequence - 1) % totalWeight) + 1;
-  let running = 0;
-  for (let index = 0; index < rows.length; index += 1) {
-    running += weights[index] ?? 1;
-    if (target <= running) {
-      return rows[index] ?? rows[0] ?? null;
-    }
-  }
-
-  return rows[rows.length - 1] ?? null;
-}
-
+/**
+ * Returns true if this ad must always be served regardless of frequency gating.
+ * Popup ads with cooldown=0 and frequencyInterval=1 are guaranteed-serve.
+ */
 function isMustServePopup(row: AdvertisementRow): boolean {
-  const weight = Number.isFinite(Number(row.delivery_weight)) ? Math.max(1, Number(row.delivery_weight)) : 1;
+  const interval = Number.isFinite(Number(row.frequency_interval)) ? Math.max(1, Number(row.frequency_interval)) : 1;
   const cooldown = Number.isFinite(Number(row.popup_cooldown_seconds))
     ? Math.max(0, Math.round(Number(row.popup_cooldown_seconds)))
     : 180;
-  return weight >= 100 && cooldown === 0;
+  return interval === 1 && cooldown === 0;
 }
 
 type AdLookupOptions = Partial<AdPlacementMeta> & {
   excludeAdIds?: string[];
   allowAnyVenue?: boolean;
+  /** Client-side page-load counter (from lib/adFrequency). Used for rotation + frequency gating. */
+  clientCounter?: number;
 };
+
+type VenueGeoContext = {
+  city: string;
+  zipCode: string;
+  county: string;
+  state: string;
+  region: string;
+};
+
+const US_REGION_BY_STATE: Record<string, string> = {
+  CT: "NORTHEAST", ME: "NORTHEAST", MA: "NORTHEAST", NH: "NORTHEAST", RI: "NORTHEAST", VT: "NORTHEAST",
+  NJ: "NORTHEAST", NY: "NORTHEAST", PA: "NORTHEAST",
+  IL: "MIDWEST", IN: "MIDWEST", MI: "MIDWEST", OH: "MIDWEST", WI: "MIDWEST",
+  IA: "MIDWEST", KS: "MIDWEST", MN: "MIDWEST", MO: "MIDWEST", NE: "MIDWEST", ND: "MIDWEST", SD: "MIDWEST",
+  DE: "SOUTH", FL: "SOUTH", GA: "SOUTH", MD: "SOUTH", NC: "SOUTH", SC: "SOUTH", VA: "SOUTH", DC: "SOUTH", WV: "SOUTH",
+  AL: "SOUTH", KY: "SOUTH", MS: "SOUTH", TN: "SOUTH",
+  AR: "SOUTH", LA: "SOUTH", OK: "SOUTH", TX: "SOUTH",
+  AZ: "WEST", CO: "WEST", ID: "WEST", MT: "WEST", NV: "WEST", NM: "WEST", UT: "WEST", WY: "WEST",
+  AK: "WEST", CA: "WEST", HI: "WEST", OR: "WEST", WA: "WEST",
+};
+
+function cleanGeoValue(value: string | null | undefined): string {
+  return (value ?? "").trim().toUpperCase();
+}
+
+async function getVenueGeoContext(venueId?: string): Promise<VenueGeoContext | null> {
+  if (!supabaseAdmin || !venueId) return null;
+  try {
+    const { data } = await supabaseAdmin
+      .from("venues")
+      .select("city, zip_code, county, state, region")
+      .eq("id", venueId)
+      .maybeSingle<{ city?: string | null; zip_code?: string | null; county?: string | null; state?: string | null; region?: string | null }>();
+    if (!data) return null;
+    const state = cleanGeoValue(data.state);
+    const region = cleanGeoValue(data.region) || US_REGION_BY_STATE[state] || "";
+    return {
+      city: cleanGeoValue(data.city),
+      zipCode: cleanGeoValue(data.zip_code),
+      county: cleanGeoValue(data.county),
+      state,
+      region,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function matchesGeoTarget(row: AdvertisementRow, venueGeo: VenueGeoContext | null): boolean {
+  const hasGeoTargets =
+    (row.target_cities?.length ?? 0) > 0 ||
+    (row.target_zip_codes?.length ?? 0) > 0 ||
+    (row.target_counties?.length ?? 0) > 0 ||
+    (row.target_states?.length ?? 0) > 0 ||
+    (row.target_regions?.length ?? 0) > 0;
+  if (row.target_all_venues) return true;
+  if (!hasGeoTargets) return true;
+  if (!venueGeo) return false;
+  const includesAny = (source: string[] | null | undefined, value: string) =>
+    value ? (source ?? []).map((item) => cleanGeoValue(item)).includes(value) : false;
+  const cityOk = (row.target_cities?.length ?? 0) === 0 || includesAny(row.target_cities, venueGeo.city);
+  const zipOk = (row.target_zip_codes?.length ?? 0) === 0 || includesAny(row.target_zip_codes, venueGeo.zipCode);
+  const countyOk = (row.target_counties?.length ?? 0) === 0 || includesAny(row.target_counties, venueGeo.county);
+  const stateOk = (row.target_states?.length ?? 0) === 0 || includesAny(row.target_states, venueGeo.state);
+  const regionOk = (row.target_regions?.length ?? 0) === 0 || includesAny(row.target_regions, venueGeo.region);
+  return cityOk && zipOk && countyOk && stateOk && regionOk;
+}
 
 async function getActiveAdQuery(slot: AdSlot, venueId?: string, options?: AdLookupOptions): Promise<Advertisement | null> {
   if (!supabaseAdmin) {
@@ -159,7 +201,7 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string, options?: AdLook
   let query = supabaseAdmin
     .from("advertisements")
     .select(
-      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
+      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .eq("slot", slot)
     .eq("active", true)
@@ -181,13 +223,7 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string, options?: AdLook
     query = query.eq("placement_key", options.placementKey);
   }
 
-  if (options?.allowAnyVenue) {
-    // Intentionally skip venue filter and allow any targeted join inline ad to fill this slot.
-  } else if (venueId) {
-    query = query.or(`venue_id.eq.${venueId},venue_ids.cs.{${venueId}}`);
-  } else {
-    query = query.is("venue_id", null).is("venue_ids", null);
-  }
+  // Venue and geography targeting are applied after fetch to support combined filters.
 
   const { data, error } = await query.returns<AdvertisementRow[]>();
 
@@ -196,7 +232,22 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string, options?: AdLook
   }
 
   const excluded = new Set((options?.excludeAdIds ?? []).map((id) => id.trim()).filter(Boolean));
-  const rows = data.filter((row) => !excluded.has(row.id));
+  const venueGeo = await getVenueGeoContext(venueId);
+  const rows = data.filter((row) => {
+    if (excluded.has(row.id)) {
+      return false;
+    }
+    if (options?.allowAnyVenue) {
+      return true;
+    }
+    const targetedVenueIds = Array.isArray(row.venue_ids)
+      ? row.venue_ids.filter(Boolean)
+      : row.venue_id
+        ? [row.venue_id]
+        : [];
+    const venueMatch = targetedVenueIds.length === 0 || (venueId ? targetedVenueIds.includes(venueId) : false);
+    return venueMatch && matchesGeoTarget(row, venueGeo);
+  });
   if (rows.length === 0) {
     return null;
   }
@@ -212,33 +263,42 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string, options?: AdLook
   const roundPool = filteredByRound.length > 0 ? filteredByRound : rows;
 
   let sequencePool = roundPool;
+  const isStrictLeaderboardVariantRequest =
+    options?.placementKey === "venue-leaderboard-inline" &&
+    Number.isFinite(requestedSequence) &&
+    Number(requestedSequence) >= 1;
+
   if (requestedSequence && options?.placementKey === "venue-leaderboard-inline") {
     const filteredBySequence = roundPool.filter((row) => Number(row.sequence_index) === requestedSequence);
-    // Leaderboard inline variants are positional inventory.
-    // Do not fall back to other variants when a specific variant is requested.
     if (filteredBySequence.length === 0) {
       return null;
     }
     sequencePool = filteredBySequence;
   }
 
-  if (requestedSequence && options?.placementKey === "predictions-inline" && sequencePool.length > 0) {
-    const weightedRow = chooseWeightedAdBySequence(sequencePool, requestedSequence);
-    return weightedRow ? mapAdRow(weightedRow) : null;
-  }
+  const counter = Number.isFinite(options?.clientCounter) ? Math.max(0, Math.round(Number(options?.clientCounter))) : 0;
 
-  // Hard guarantee path: popup ads configured with 100 weight and 0s cooldown
-  // must always serve whenever their trigger query matches.
+  // Hard guarantee path: popup ads configured with interval=1 and cooldown=0 always serve.
   if (options?.adType === "popup") {
     const mustServePool = sequencePool.filter(isMustServePopup);
     if (mustServePool.length > 0) {
-      const chosen = mustServePool[0] ?? null;
+      const chosen = chooseAdByCounter(mustServePool, counter);
       return chosen ? mapAdRow(chosen) : null;
     }
   }
 
-  const pickedRow = chooseWeightedRandomAd(sequencePool);
+  // Pick the ad deterministically by rotating through the pool using the client counter.
+  const pickedRow = chooseAdByCounter(sequencePool, counter);
   if (!pickedRow) {
+    return null;
+  }
+
+  // Frequency gate: only serve if counter % frequencyInterval === 0.
+  // When counter is 0 (first ever load) always show — this avoids a blank first impression.
+  const interval = Number.isFinite(Number(pickedRow.frequency_interval))
+    ? Math.max(1, Number(pickedRow.frequency_interval))
+    : 1;
+  if (!isStrictLeaderboardVariantRequest && interval > 1 && counter > 0 && counter % interval !== 0) {
     return null;
   }
 
@@ -246,10 +306,18 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string, options?: AdLook
 }
 
 export async function getActiveAdForSlot(slot: AdSlot, venueId?: string, options?: AdLookupOptions): Promise<Advertisement | null> {
+  const isStrictLeaderboardVariantRequest =
+    options?.placementKey === "venue-leaderboard-inline" &&
+    Number.isFinite(options?.sequenceIndex) &&
+    Number(options?.sequenceIndex) >= 1;
+
   if (venueId) {
     const venueAd = await getActiveAdQuery(slot, venueId, options);
     if (venueAd) {
       return venueAd;
+    }
+    if (isStrictLeaderboardVariantRequest) {
+      return null;
     }
   }
 
@@ -264,7 +332,7 @@ export async function getAdById(id: string): Promise<Advertisement | null> {
   const { data, error } = await supabaseAdmin
     .from("advertisements")
     .select(
-      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, advertiser_name, delivery_weight, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
+      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .eq("id", id)
     .maybeSingle<AdvertisementRow>();
@@ -312,7 +380,6 @@ async function insertAdEvent(id: string, eventType: AdEventType, context?: AdEve
   });
 
   if (error) {
-    // Ignore event-table errors so tracking never breaks the main request flow.
     return;
   }
 }

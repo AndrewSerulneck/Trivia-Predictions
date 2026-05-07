@@ -6,6 +6,7 @@ import { getUserId } from "@/lib/storage";
 import { getVenueId } from "@/lib/storage";
 import { readWarmTriviaCache } from "@/lib/warmupCache";
 import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
+import { canAdvanceToNextTriviaQuestion } from "@/lib/triviaRoundProgress";
 import type { TriviaQuestion } from "@/types";
 
 type TriviaApiResponse = {
@@ -70,7 +71,7 @@ const CORRECT_FEEDBACK_FLASH_DURATION_MS = 1300;
 const INCORRECT_FEEDBACK_FLASH_DURATION_MS = 1300;
 const FIREWORK_HIDE_DELAY_MS = 2700;
 const RAIN_HIDE_DELAY_MS = 2700;
-const TRIVIA_ROUND_END_REASON_KEY = "tp:trivia-round-ended-reason";
+const TRIVIA_ROUND_ENDED_ACTIVE_KEY = "tp:trivia:round-ended-active:v1";
 const TRIVIA_LIVE_PREVIEW_STORAGE_KEY = "tp:trivia:live-preview:v1";
 const TRIVIA_LIVE_PREVIEW_MAX_AGE_MS = 60 * 60 * 1000;
 
@@ -454,8 +455,8 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     );
     const message =
       nextIndex < snapshot.questions.length
-        ? `Question ${forfeitedQuestionNumber} was forfeited after the session was interrupted. Continuing on question ${nextIndex + 1}.`
-        : `Question ${forfeitedQuestionNumber} was forfeited after the session was interrupted. This round is complete.`;
+        ? `Question ${forfeitedQuestionNumber} was forfeited because the window was closed during active play. Continuing on question ${nextIndex + 1}.`
+        : `Question ${forfeitedQuestionNumber} was forfeited because the window was closed during active play. This round is complete.`;
 
     return {
       questions: snapshot.questions,
@@ -665,19 +666,6 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   }, [loadCurrentUserPoints, loadQuota, loadRoundQuestions, recoverInterruptedQuestion]);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    const endedReason = window.sessionStorage.getItem(TRIVIA_ROUND_END_REASON_KEY);
-    if (!endedReason) {
-      return;
-    }
-    window.sessionStorage.removeItem(TRIVIA_ROUND_END_REASON_KEY);
-    setRoundEndedMessage(endedReason);
-    resetRoundState();
-  }, [resetRoundState]);
-
-  useEffect(() => {
     if (typeof document === "undefined" || typeof window === "undefined") {
       return;
     }
@@ -699,34 +687,22 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         void forfeitQuestion(activeQuestionId, secondsRemaining);
       }
 
-      const reason = didForfeit
-        ? `Question ${activeQuestionNumber} was forfeited because the browser was minimized or closed during active play.`
-        : "Round ended because the browser was minimized or left during active play.";
-      try {
-        window.sessionStorage.setItem(TRIVIA_ROUND_END_REASON_KEY, reason);
-      } catch {
-        // Ignore storage write failures.
+      if (didForfeit) {
+        setRoundEndedMessage(
+          `Question ${activeQuestionNumber} was forfeited because the window was closed during active play.`
+        );
       }
-      setRoundEndedMessage(reason);
       window.setTimeout(() => {
         backgroundRoundExitRef.current = false;
       }, 800);
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
-        endRoundForBackgrounding();
-      }
     };
 
     const handlePageHide = () => {
       endRoundForBackgrounding();
     };
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("pagehide", handlePageHide);
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("pagehide", handlePageHide);
     };
   }, [
@@ -995,12 +971,6 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   }, [isRoundStarted, preRoundCountdown, finished, selectedAnswer, isSubmitting, secondsRemaining, chooseAnswer, triviaQuotaLocked]);
 
   const nextQuestion = () => {
-    if (triviaQuotaLocked) {
-      setFeedback(`Trivia limit reached. You can play again in ${formatCountdown(quotaSecondsRemaining)}.`);
-      setFeedbackKind(null);
-      return;
-    }
-
     setFeedbackFlash(null);
     setRainEmojis([]);
     setFireworks([]);
@@ -1013,6 +983,13 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   };
 
   const startNextRound = useCallback(async () => {
+    if (typeof window !== "undefined") {
+      try {
+        window.sessionStorage.setItem(TRIVIA_ROUND_ENDED_ACTIVE_KEY, "0");
+      } catch {
+        // Ignore storage failures.
+      }
+    }
     setIsPreparingNextRound(true);
     setRoundEndedMessage("");
     try {
@@ -1030,6 +1007,11 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
     if (!roundCompletionHandledRef.current && typeof window !== "undefined") {
       roundCompletionHandledRef.current = true;
+      try {
+        window.sessionStorage.setItem(TRIVIA_ROUND_ENDED_ACTIVE_KEY, "1");
+      } catch {
+        // Ignore storage failures.
+      }
       const userId = getUserId() ?? "anon";
       const venueId = getVenueId() ?? "global";
       const storageKey = `tp:trivia-round-count:${venueId}:${userId}`;
@@ -1075,6 +1057,19 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     };
 
     void loadTotalPoints();
+  }, [finished]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    if (!finished) {
+      try {
+        window.sessionStorage.setItem(TRIVIA_ROUND_ENDED_ACTIVE_KEY, "0");
+      } catch {
+        // Ignore storage failures.
+      }
+    }
   }, [finished]);
 
   useEffect(() => {
@@ -1323,7 +1318,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   return (
     <div
       ref={gameRootRef}
-      className="relative flex h-full min-h-0 flex-col gap-2 overflow-x-hidden overflow-y-auto px-0.5 pb-[max(env(safe-area-inset-bottom),0.5rem)]"
+      className="relative flex h-full min-h-0 flex-col gap-2 overflow-hidden px-0.5"
     >
       {feedbackFlash ? (
         <div
@@ -1401,16 +1396,16 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         </div>
       </div>
 
-      <div className="min-h-0 flex flex-1 flex-col gap-2 overflow-y-auto sm:gap-3">
-        {showRewardPulse ? (
-          <div className="tp-pop-in rounded-lg border border-blue-200 bg-blue-50 p-1.5 text-sm font-bold text-blue-700 sm:p-2">
-            {rewardPulse}
-          </div>
-        ) : null}
+      <div className="min-h-0 flex flex-1 flex-col gap-2 overflow-y-auto pr-0.5 sm:gap-3">
+        <div className="min-h-[1.5rem] sm:min-h-[1.75rem]">
+          {showRewardPulse ? (
+            <p className="tp-pop-in px-0.5 text-sm font-black text-cyan-100">{rewardPulse}</p>
+          ) : null}
+        </div>
         <h2 className="px-0.5 text-base font-black leading-snug text-white [text-shadow:0_1px_0_rgba(2,6,23,0.7),0_0_12px_rgba(255,255,255,0.24)] sm:text-xl">
           {question.question}
         </h2>
-        <div className="grid min-h-0 flex-1 grid-cols-1 content-start gap-2 overflow-y-auto pr-0.5 sm:gap-3">
+        <div className="grid grid-cols-1 content-start gap-2 pb-2 sm:gap-3">
           {question.options.map((option, optionIndex) => {
             const selected = selectedAnswer === optionIndex;
             const isRevealedCorrect = revealedCorrectAnswer === optionIndex;
@@ -1433,7 +1428,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
                     ? "border-slate-900 bg-rose-500 text-white"
                     : selected
                     ? "border-slate-900 bg-pink-500 text-white"
-                    : "border-slate-900 bg-white text-slate-900 hover:bg-cyan-100"
+                    : "border-slate-900 bg-white text-slate-900 enabled:hover:bg-cyan-100"
                 } disabled:opacity-80`}
               >
                 {option}
@@ -1443,27 +1438,29 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         </div>
       </div>
 
-      <div className="sticky bottom-0 z-40 -mx-0.5 mt-auto space-y-1.5 border-t border-cyan-200/35 bg-[linear-gradient(180deg,rgba(2,6,23,0)_0%,rgba(2,6,23,0.72)_18%,rgba(2,6,23,0.92)_100%)] px-1 py-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 backdrop-blur-[1px] sm:space-y-2.5">
-        {feedback ? (
-          <div
-            className={`rounded-xl border-2 p-1.5 text-sm font-semibold leading-snug shadow-[2px_2px_0_#0f172a] sm:rounded-2xl sm:border-4 sm:p-2 sm:shadow-[5px_5px_0_#0f172a] ${
-              feedbackKind === "correct"
-                ? "border-slate-900 bg-emerald-200 text-emerald-900"
-                : feedbackKind === "incorrect" || feedbackKind === "timeout"
-                ? "border-slate-900 bg-rose-200 text-rose-900"
-                : "border-slate-900 bg-white text-slate-700"
-            }`}
-          >
-            {feedback}
-          </div>
-        ) : null}
+      <div className="z-40 mt-auto shrink-0 space-y-1.5 px-1 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-1 sm:space-y-2">
+        <div className="relative h-10 sm:h-11">
+          {feedback ? (
+            <p
+              className={`absolute inset-x-0 top-0 overflow-hidden text-ellipsis whitespace-nowrap px-0.5 text-sm font-black leading-snug ${
+                feedbackKind === "correct"
+                  ? "text-emerald-200"
+                  : feedbackKind === "incorrect" || feedbackKind === "timeout"
+                  ? "text-rose-200"
+                  : "text-cyan-100"
+              }`}
+            >
+              {feedback}
+            </p>
+          ) : null}
+        </div>
 
         <button
           ref={nextQuestionButtonRef}
           type="button"
           onMouseDown={() => triggerHaptic(14)}
           onClick={nextQuestion}
-          disabled={selectedAnswer === null || isSubmitting || triviaQuotaLocked}
+          disabled={!canAdvanceToNextTriviaQuestion({ selectedAnswer, isSubmitting })}
           className={`${BUTTON_POP_CLASS} inline-flex min-h-[44px] w-full items-center justify-center rounded-xl border-2 border-slate-900 bg-cyan-300 px-3 py-2 text-base font-black text-slate-900 shadow-[2px_2px_0_#0f172a] sm:min-h-[50px] sm:rounded-2xl sm:border-4 sm:px-4 sm:py-2.5 sm:shadow-[5px_5px_0_#0f172a] disabled:opacity-60`}
         >
           Next Question

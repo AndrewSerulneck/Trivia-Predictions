@@ -49,6 +49,11 @@ export function AuthNavigationGuard() {
   const lastRedirectRef = useRef("");
 
   useEffect(() => {
+    // lastSyncedAt === 0 means the auth state is still the initial placeholder —
+    // the useEffect in AuthSessionProvider hasn't read from storage yet.
+    // Redirecting before that read completes causes valid sessions to be bounced.
+    if (state.lastSyncedAt === 0) return;
+
     const currentPath = pathname ?? "/";
     const query = searchParams?.toString() ?? "";
     const currentUrl = query ? `${currentPath}?${query}` : currentPath;
@@ -103,7 +108,7 @@ export function AuthNavigationGuard() {
       lastRedirectRef.current = target;
       router.replace(target);
     }
-  }, [pathname, router, searchParams, state.tokenVerified, state.venueId]);
+  }, [pathname, router, searchParams, state.lastSyncedAt, state.tokenVerified, state.venueId]);
 
   return null;
 }

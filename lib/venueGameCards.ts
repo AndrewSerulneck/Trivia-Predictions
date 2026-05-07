@@ -54,10 +54,11 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
     cardClassName: "bg-indigo-600 text-white",
     visibleOnVenueHome: true,
     rules: [
-      "-Think you can pick the most winners this week? Prove it.",
-      "-Challenge another user head-to-head",
-      "-Choose a sport and pick more winners than they do",
-      "-Add other users to your league to multiply your rewards",
+      "-Think you can pick today's winners? Prove it.",
+      "-10 picks total",
+      "-10 points per correct pick",
+      "-7 correct picks wins double",
+      "-10 correct picks wins triple", 
     ],
   },
   {
