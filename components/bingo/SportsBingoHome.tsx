@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { TouchEvent as ReactTouchEvent } from "react";
 import { getUserId } from "@/lib/storage";
+import { getVenueId } from "@/lib/storage";
 import { consumeBingoPrefetchCache } from "@/lib/bingoPrefetchCache";
 import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
+import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 
 type BingoCardSquare = {
   id: string;
@@ -330,6 +332,7 @@ function LoadingState({ label }: { label: string }) {
 
 export function SportsBingoHome() {
   const [userId, setUserId] = useState("");
+  const [venueId, setVenueId] = useState("");
   const [cards, setCards] = useState<BingoCard[]>([]);
   const [loadingCards, setLoadingCards] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -349,6 +352,7 @@ export function SportsBingoHome() {
 
   useEffect(() => {
     setUserId(getUserId() ?? "");
+    setVenueId(getVenueId() ?? "");
   }, []);
 
   useEffect(() => {
@@ -903,6 +907,17 @@ export function SportsBingoHome() {
                 })}
               </ul>
             )}
+
+            <div className="mt-3">
+              <InlineSlotAdClient
+                slot="leaderboard-sidebar"
+                venueId={venueId}
+                pageKey="sports-bingo"
+                adType="inline"
+                displayTrigger="on-scroll"
+                placementKey="bingo-home-active-inline"
+              />
+            </div>
           </section>
 
           <section className="w-full shrink-0 snap-start pl-3">
@@ -990,6 +1005,17 @@ export function SportsBingoHome() {
             })}
               </ul>
             )}
+
+            <div className="mt-3">
+              <InlineSlotAdClient
+                slot="leaderboard-sidebar"
+                venueId={venueId}
+                pageKey="sports-bingo"
+                adType="inline"
+                displayTrigger="on-scroll"
+                placementKey="bingo-home-final-inline"
+              />
+            </div>
           </section>
         </div>
       </div>

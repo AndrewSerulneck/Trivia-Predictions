@@ -180,7 +180,9 @@ export function FantasyHome() {
   const [errorMessage, setErrorMessage] = useState("");
   const [claimingEntryId, setClaimingEntryId] = useState("");
   const [isCollectingAllFantasy, setIsCollectingAllFantasy] = useState(false);
+  const [hasLocalLineupDraft, setHasLocalLineupDraft] = useState(false);
   const fantasyKickoffRefreshTimerRef = useRef<number | null>(null);
+  const fantasyLineupAutosaveTimerRef = useRef<number | null>(null);
   const todayDate = useMemo(() => getTodayDateInput(), []);
 
   useEffect(() => {
@@ -322,11 +324,6 @@ export function FantasyHome() {
     return existingEntryForSelectedGame.lineup.every((playerName) => playerPoolKeys.has(normalizePlayerKey(playerName)));
   }, [existingEntryForSelectedGame, playerPoolKeys]);
   const nextUnlockedGame = useMemo(() => games.find((game) => !game.isLocked) ?? null, [games]);
-  const canSubmitLineup =
-    Boolean(userId && venueId && selectedGameId) &&
-    selectedPlayers.length === 5 &&
-    !submitting &&
-    playerPool.length > 0;
   const liveEntries = useMemo(() => entries.filter((entry) => entry.status === "live"), [entries]);
   const hasActiveDraftedEntry = useMemo(
     () =>
@@ -463,14 +460,21 @@ export function FantasyHome() {
     if (!existingEntryForSelectedGame || !canEditExistingEntryLineup) {
       return;
     }
+    if (hasLocalLineupDraft) {
+      return;
+    }
     setSelectedPlayers(existingEntryForSelectedGame.lineup);
-  }, [canEditExistingEntryLineup, existingEntryForSelectedGame]);
+  }, [canEditExistingEntryLineup, existingEntryForSelectedGame, hasLocalLineupDraft]);
 
   useEffect(() => {
     return () => {
       if (fantasyKickoffRefreshTimerRef.current) {
         window.clearTimeout(fantasyKickoffRefreshTimerRef.current);
         fantasyKickoffRefreshTimerRef.current = null;
+      }
+      if (fantasyLineupAutosaveTimerRef.current) {
+        window.clearTimeout(fantasyLineupAutosaveTimerRef.current);
+        fantasyLineupAutosaveTimerRef.current = null;
       }
     };
   }, []);
@@ -513,6 +517,7 @@ export function FantasyHome() {
   }, [hasLiveEntry, loadEntries, loadGames, loadSelectedGameDetails, nextPendingEntryStartMs, userId]);
 
   const togglePlayer = useCallback((playerName: string) => {
+    setHasLocalLineupDraft(true);
     setSelectedPlayers((current) => {
       if (current.includes(playerName)) {
         return current.filter((name) => name !== playerName);
@@ -524,13 +529,12 @@ export function FantasyHome() {
     });
   }, []);
 
-  const submitLineup = useCallback(async () => {
-    if (!canSubmitLineup || !selectedGameId) {
+  const persistLineup = useCallback(async (lineup: string[]) => {
+    if (!userId || !venueId || !selectedGameId || lineup.length !== 5) {
       return;
     }
 
     setSubmitting(true);
-    setStatusMessage("");
     setErrorMessage("");
 
     try {
@@ -543,7 +547,7 @@ export function FantasyHome() {
           venueId,
           gameId: selectedGameId,
           tzOffsetMinutes: new Date().getTimezoneOffset(),
-          lineup: selectedPlayers,
+          lineup,
         }),
       });
 
@@ -554,19 +558,60 @@ export function FantasyHome() {
 
       setStatusMessage(
         existingEntryForSelectedGame
-          ? "Lineup updated. Live scoring will continue automatically."
-          : "Lineup submitted. Live scoring will update automatically."
+          ? "Roster updated and saved automatically."
+          : "Roster submitted automatically. Live scoring will update automatically."
       );
-      if (!existingEntryForSelectedGame) {
-        setSelectedPlayers([]);
-      }
+      setHasLocalLineupDraft(false);
       await Promise.all([loadEntries(true), loadSelectedGameDetails()]);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Failed to submit fantasy lineup.");
+      setErrorMessage(error instanceof Error ? error.message : "Failed to save fantasy lineup.");
     } finally {
       setSubmitting(false);
     }
-  }, [canSubmitLineup, existingEntryForSelectedGame, loadEntries, loadSelectedGameDetails, selectedGameId, selectedPlayers, userId, venueId]);
+  }, [existingEntryForSelectedGame, loadEntries, loadSelectedGameDetails, selectedGameId, userId, venueId]);
+
+  useEffect(() => {
+    if (!(selectedGameId && hasResolvedEntries && ((hasStartedGame && !existingEntryForSelectedGame) || canEditExistingEntryLineup))) {
+      return;
+    }
+
+    if (!hasLocalLineupDraft) {
+      return;
+    }
+
+    if (selectedPlayers.length !== 5) {
+      setStatusMessage(
+        selectedPlayers.length === 0
+          ? "Tap players to build your roster. Saves happen automatically at 5 selections."
+          : `Select ${5 - selectedPlayers.length} more player${5 - selectedPlayers.length === 1 ? "" : "s"} to auto-save.`
+      );
+      return;
+    }
+
+    if (fantasyLineupAutosaveTimerRef.current) {
+      window.clearTimeout(fantasyLineupAutosaveTimerRef.current);
+    }
+    fantasyLineupAutosaveTimerRef.current = window.setTimeout(() => {
+      fantasyLineupAutosaveTimerRef.current = null;
+      void persistLineup(selectedPlayers);
+    }, 220);
+
+    return () => {
+      if (fantasyLineupAutosaveTimerRef.current) {
+        window.clearTimeout(fantasyLineupAutosaveTimerRef.current);
+        fantasyLineupAutosaveTimerRef.current = null;
+      }
+    };
+  }, [
+    canEditExistingEntryLineup,
+    existingEntryForSelectedGame,
+    hasLocalLineupDraft,
+    hasResolvedEntries,
+    hasStartedGame,
+    persistLineup,
+    selectedGameId,
+    selectedPlayers,
+  ]);
 
   const claimReward = useCallback(
     async (entry: FantasyEntry, sourceRect?: DOMRect) => {
@@ -899,7 +944,7 @@ export function FantasyHome() {
             Scoring: 1 pt per point, 1.2 per rebound, 1.5 per assist, 3 per steal, 3 per block, -1 per turnover.
           </div>
           <p className="mt-2 text-xs text-slate-700">
-            Tap a highlighted player to remove them from your lineup. Tap any other player to add them.
+            Tap any player once to add them instantly. Tap again to remove.
           </p>
 
           {playerPool.length === 0 ? (
@@ -922,7 +967,14 @@ export function FantasyHome() {
                         : "border-violet-200 bg-white/90 hover:border-violet-300"
                     }`}
                   >
-                    <div className="text-sm font-semibold text-slate-900">{item.playerName}</div>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-sm font-semibold text-slate-900">{item.playerName}</div>
+                      {selected ? (
+                        <span className="rounded-full border border-emerald-300 bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-emerald-900">
+                          Added
+                        </span>
+                      ) : null}
+                    </div>
                     <div className="text-[11px] text-slate-600">
                       Markets: {item.coverage} · Avg line: {item.projectedLine ?? "--"}
                     </div>
@@ -940,14 +992,13 @@ export function FantasyHome() {
             ))}
           </div>
 
-          <button
-            type="button"
-            onClick={() => void submitLineup()}
-            disabled={!canSubmitLineup}
-            className="tp-clean-button mt-3 rounded-lg border border-indigo-500 bg-indigo-100 px-3 py-2 text-sm font-semibold text-indigo-900 disabled:opacity-60"
-          >
-            {submitting ? "Saving..." : existingEntryForSelectedGame ? "Save Lineup Changes" : "Submit Lineup"}
-          </button>
+          <p className="mt-3 text-xs font-semibold text-slate-700">
+            {submitting
+              ? "Saving lineup..."
+              : selectedPlayers.length === 5
+                ? "Lineup auto-saves when complete."
+                : `Select ${5 - selectedPlayers.length} more player${5 - selectedPlayers.length === 1 ? "" : "s"} to auto-save.`}
+          </p>
         </section>
       ) : null}
 

@@ -174,6 +174,15 @@ const ONBOARDING_PANEL_VARIANTS = {
   }),
 };
 
+const LOADING_PHRASES = [
+  "Lace up...",
+  "Checking the stats...",
+  "Entering the arena...",
+  "Warming up...",
+  "Taking the field...",
+  "Game time...",
+];
+
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -201,6 +210,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [authLoginState, setAuthLoginState] = useState<AuthLoginState>("idle");
   const [connectionRetryMessage, setConnectionRetryMessage] = useState("");
   const [pendingVenueSelectionId, setPendingVenueSelectionId] = useState<string | null>(null);
+  const [loginStep, setLoginStep] = useState<"username" | "pin">("username");
+  const [loginStepDirection, setLoginStepDirection] = useState<1 | -1>(1);
+  const [isPinShaking, setIsPinShaking] = useState(false);
+  const [loadingPhrase, setLoadingPhrase] = useState("Entering the arena...");
   const autoVerificationAttemptedRef = useRef(false);
   const loginAttemptIdRef = useRef(0);
   const loginAbortRef = useRef<AbortController | null>(null);
@@ -210,6 +223,12 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const scanStreamRef = useRef<MediaStream | null>(null);
   const scanRafRef = useRef<number | null>(null);
   const scanCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const usernameInputRef = useRef<HTMLInputElement>(null);
+  const pinInputRef = useRef<HTMLInputElement>(null);
+  const pinContainerRef = useRef<HTMLDivElement>(null);
+  const shakeTimerRef = useRef<number | null>(null);
+  const pinSubmittingRef = useRef(false);
+  const createProfileRef = useRef<((pinOverride?: string) => Promise<void>) | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -527,6 +546,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     (selectedVenue: Venue) => {
       setPanelDirection(1);
       setActivePanel("venue-login");
+      setLoginStep("username");
+      setLoginStepDirection(1);
       setPendingVenueSelectionId(selectedVenue.id);
       setVenue(selectedVenue);
       setErrorMessage("");
@@ -546,11 +567,37 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const handleBackToVenueList = useCallback(() => {
     setPanelDirection(-1);
     setActivePanel("venue-list");
+    setLoginStep("username");
+    setLoginStepDirection(1);
     setVenue(null);
     setErrorMessage("");
+    setPin("");
     setIsTransitioning(false);
     setIsOptimisticallyEntering(false);
     setPendingVenueSelectionId(null);
+  }, []);
+
+  const handleGoToPinStep = useCallback(() => {
+    if (!validateUsername(username)) {
+      setErrorMessage("Please enter a valid username.");
+      return;
+    }
+    setErrorMessage("");
+    setPin("");
+    setLoginStepDirection(1);
+    setLoginStep("pin");
+  }, [username]);
+
+  const handleBackFromPin = useCallback(() => {
+    setLoginStepDirection(-1);
+    setLoginStep("username");
+    setPin("");
+    setErrorMessage("");
+  }, []);
+
+  const handlePinDigit = useCallback((value: string) => {
+    const cleaned = value.replace(/\D/g, "").slice(0, 4);
+    setPin(cleaned);
   }, []);
 
   const canCreate = useMemo(() => {
@@ -752,6 +799,32 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     router.prefetch(`/venue/${venue.id}`);
   }, [router, venue]);
 
+  useEffect(() => {
+    if (activePanel !== "venue-login" || loginStep !== "username") return;
+    const t = window.setTimeout(() => { usernameInputRef.current?.focus(); }, 50);
+    return () => window.clearTimeout(t);
+  }, [activePanel, loginStep]);
+
+  useEffect(() => {
+    if (activePanel !== "venue-login" || loginStep !== "pin") return;
+    const t = window.setTimeout(() => { pinInputRef.current?.focus(); }, 50);
+    return () => window.clearTimeout(t);
+  }, [activePanel, loginStep]);
+
+  useEffect(() => {
+    return () => { if (shakeTimerRef.current) window.clearTimeout(shakeTimerRef.current); };
+  }, []);
+
+  useEffect(() => { createProfileRef.current = createProfile; });
+
+  useEffect(() => {
+    if (loginStep !== "pin" || pin.length !== 4 || pinSubmittingRef.current) return;
+    pinSubmittingRef.current = true;
+    void createProfileRef.current?.(pin).finally(() => {
+      pinSubmittingRef.current = false;
+    });
+  }, [pin, loginStep]);
+
   const preloadVenueHome = useCallback(
     async (selectedVenue: Venue, userId: string) => {
       const venueId = selectedVenue.id;
@@ -874,15 +947,17 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     []
   );
 
-  const createProfile = async () => {
+  const createProfile = async (pinOverride?: string) => {
+    const effectivePin = pinOverride ?? pin;
     if (!venue) return;
     setErrorMessage("");
     setConnectionRetryMessage("");
+    setLoadingPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
     if (!validateUsername(username)) {
       setErrorMessage("Username is required.");
       return;
     }
-    if (!validatePin(pin)) {
+    if (!validatePin(effectivePin)) {
       setErrorMessage("PIN must be exactly 4 digits.");
       return;
     }
@@ -1058,82 +1133,141 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                   animate="center"
                   exit="exit"
                   transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="relative z-0 space-y-4"
+                  className="relative z-0"
                 >
-                  <button
-                    type="button"
-                    onClick={handleBackToVenueList}
-                    className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90"
-                  >
-                    <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">
-                      ←
-                    </span>
-                    Choose different venue
-                  </button>
+                  <AnimatePresence custom={loginStepDirection} mode="wait">
+                    {loginStep === "username" ? (
+                      <motion.div
+                        key="step-username"
+                        custom={loginStepDirection}
+                        variants={ONBOARDING_PANEL_VARIANTS}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{ duration: 0.28, ease: "easeOut" }}
+                        className="flex flex-col pt-4 pb-10"
+                      >
+                        <button
+                          type="button"
+                          onClick={handleBackToVenueList}
+                          className="self-start mb-8 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90"
+                        >
+                          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">←</span>
+                          Back
+                        </button>
 
-                  <p className="text-sm font-medium text-slate-900">{getVenueDisplayName(venue)}</p>
-
-                  <div className="space-y-2">
-                    <label htmlFor="username" className="block font-medium">
-                      Enter username and PIN
-                    </label>
-                    <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-                      <p>
-                        If this is your first time playing Hightop Challenge, enter a username and PIN to create a
-                        new profile.
-                      </p>
-                      <p className="mt-2">
-                        If you have played Hightop Challenge before, enter the same username and PIN you enterred last
-                        time to continue playing.
-                      </p>
-                    </div>
-                    <input
-                      id="username"
-                      type="text"
-                      value={username}
-                      onChange={(event) => setUsername(event.target.value)}
-                      placeholder="Your username"
-                      autoComplete="username"
-                      className="w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-slate-600"
-                    />
-                    <input
-                      id="pin"
-                      type="tel"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={pin}
-                      maxLength={4}
-                      autoComplete="one-time-code"
-                      onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 4))}
-                      placeholder="4-digit PIN"
-                      className="w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-slate-600"
-                    />
-                    <button
-                      type="button"
-                      onClick={createProfile}
-                      disabled={!canCreate || status === "saving" || isTransitioning || isAuthLoading}
-                      className={`${JOIN_BUTTON_POP_CLASS} inline-flex min-h-[42px] items-center rounded-full bg-gradient-to-r from-blue-700 to-cyan-600 px-4 py-2 font-medium text-white disabled:opacity-60`}
-                    >
-                      {isAuthLoading
-                        ? authLoginState === "authenticating"
-                          ? "Authenticating..."
-                          : authLoginState === "verifying"
-                            ? "Verifying venue access..."
-                            : "Entering venue..."
-                        : "Enter Game"}
-                    </button>
-                    {isOptimisticallyEntering ? (
-                      <div className="rounded-xl border border-cyan-200 bg-cyan-50/80 p-3 text-sm text-cyan-900">
-                        <p className="font-semibold">Loading your venue home...</p>
-                        <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-cyan-100">
-                          <span className="block h-full w-1/2 animate-pulse rounded-full bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500" />
-                        </div>
-                        <p className="mt-2 text-xs text-cyan-800">
-                          Your account is confirmed. We are preparing games, leaderboard, and rewards.
+                        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-3">
+                          What&apos;s your username?
+                        </h1>
+                        <p className="mb-8 text-lg font-semibold text-slate-900">
+                          If you&apos;ve never played Hightop Challenge before, make one up!
                         </p>
-                      </div>
-                    ) : null}
-                  </div>
+
+                        <input
+                          ref={usernameInputRef}
+                          id="username"
+                          type="text"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") handleGoToPinStep(); }}
+                          placeholder=""
+                          autoComplete="username"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          className="mb-2 w-full border-0 border-b-2 border-slate-200 bg-transparent px-3 py-3 text-3xl font-bold text-slate-900 outline-none transition-colors placeholder:text-slate-300 focus:border-slate-900"
+                        />
+
+                        {errorMessage ? (
+                          <p className="mb-6 text-sm text-rose-500">{errorMessage}</p>
+                        ) : (
+                          <div className="mb-6" />
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={handleGoToPinStep}
+                          disabled={!username.trim()}
+                          className="self-end inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90 disabled:opacity-40"
+                        >
+                          Next
+                          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">→</span>
+                        </button>
+
+                        {locationLoading ? (
+                          <p className="mt-6 text-xs text-slate-400">Verifying your location...</p>
+                        ) : null}
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="step-pin"
+                        custom={loginStepDirection}
+                        variants={ONBOARDING_PANEL_VARIANTS}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{ duration: 0.28, ease: "easeOut" }}
+                        className="flex flex-col pt-4 pb-10"
+                      >
+                        <button
+                          type="button"
+                          onClick={handleBackFromPin}
+                          className="self-start mb-8 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90"
+                        >
+                          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">←</span>
+                          Back
+                        </button>
+
+                        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-3">
+                          What&apos;s your PIN?
+                        </h1>
+                        <p className="mb-10 text-lg font-semibold text-slate-900">
+                          Returning user? Use your last PIN.<br />
+                          New user? Pick 4 digits you&apos;ll remember.
+                        </p>
+
+                        <div
+                          ref={pinContainerRef}
+                          className={`mb-8 flex cursor-text gap-6 px-3 ${isPinShaking ? "animate-shake" : ""}`}
+                          onClick={() => pinInputRef.current?.focus()}
+                        >
+                          {[0, 1, 2, 3].map((i) => (
+                            <div
+                              key={i}
+                              className={`h-5 w-5 rounded-full border-2 transition-all duration-150 ${
+                                i < pin.length
+                                  ? "scale-125 border-slate-900 bg-slate-900"
+                                  : "border-slate-300 bg-transparent"
+                              }`}
+                            />
+                          ))}
+                        </div>
+
+                        <input
+                          ref={pinInputRef}
+                          type="tel"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          value={pin}
+                          maxLength={4}
+                          autoComplete="one-time-code"
+                          onChange={(e) => {
+                            setPin(e.target.value.replace(/\D/g, "").slice(0, 4));
+                          }}
+                          className="absolute h-px w-px overflow-hidden opacity-0"
+                          aria-label="4-digit PIN"
+                        />
+
+                        {isAuthLoading ? (
+                          <p className="animate-pulse text-base text-slate-500">{loadingPhrase}</p>
+                        ) : errorMessage ? (
+                          <p className="text-sm text-rose-500">{errorMessage}</p>
+                        ) : connectionRetryMessage ? (
+                          <p className="text-sm text-amber-700">{connectionRetryMessage}</p>
+                        ) : null}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               ) : (
                 <motion.div

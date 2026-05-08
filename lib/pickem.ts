@@ -593,11 +593,12 @@ function getPickEmRoundMultiplier(totalPicks: number, correctPicks: number): num
   if (totalPicks <= 0) {
     return 1;
   }
-  if (correctPicks === totalPicks) {
-    return 3;
+  // Revised rule: bonus multipliers are only based on a full 10-pick slate.
+  if (totalPicks === 10 && correctPicks === 10) {
+    return 2.0;
   }
-  if (correctPicks / totalPicks >= 0.7) {
-    return 2;
+  if (totalPicks === 10 && correctPicks >= 7) {
+    return 1.5;
   }
   return 1;
 }

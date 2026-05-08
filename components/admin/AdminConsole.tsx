@@ -6,7 +6,16 @@ import { ensureAnonymousSession } from "@/lib/auth";
 import { ADMIN_SECTION_OPTIONS, type AdminSection } from "@/components/admin/adminSections";
 import { supabase } from "@/lib/supabase";
 import { deriveSlotFromPlacement } from "@/lib/adPlacements";
-import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, Advertisement, TriviaQuestion, Venue } from "@/types";
+import type {
+  AdDisplayTrigger,
+  AdPageKey,
+  AdSlot,
+  AdType,
+  Advertisement,
+  CampaignRecurringType,
+  TriviaQuestion,
+  Venue,
+} from "@/types";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
 
 const AD_PAGE_KEYS: Array<Exclude<AdPageKey, "global">> = ["join", "venue", "trivia", "sports-bingo", "pickem", "fantasy"];
@@ -39,6 +48,9 @@ const VENUE_INLINE_VARIANTS = [
   { value: 5, label: "Variant 5 (ranks 41-50)" },
 ] as const;
 const AD_TYPE_ORDER: AdType[] = ["popup", "banner", "inline"];
+const CHALLENGE_GAME_TYPES = ["pickem", "fantasy", "trivia", "bingo"] as const;
+const CHALLENGE_ACTIVE_DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+const CHALLENGE_RECURRING_OPTIONS: CampaignRecurringType[] = ["none", "daily", "weekly", "monthly", "yearly"];
 
 type AdInventorySlot = {
   id: string;
@@ -183,6 +195,8 @@ const AD_SLOT_DEFAULT_SIZE: Record<AdSlot, { width: number; height: number }> = 
 const ADDRESS_LOOKUP_DEBOUNCE_MS = 250;
 const MAX_AD_IMAGE_BYTES = 300 * 1024;
 const AD_STATIC_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const MAX_CHALLENGE_IMAGE_BYTES = 1024 * 1024;
+const CHALLENGE_IMAGE_MIME_TYPES = new Set(["image/png", "image/webp", "image/svg+xml", "image/jpeg"]);
 
 function formatDateTimeLocal(value: Date): string {
   const year = value.getFullYear();
@@ -265,6 +279,33 @@ type AdminPendingPredictionSummary = {
   latestPickAt: string;
   outcomes: Array<{ outcomeId: string; outcomeTitle: string; pickCount: number }>;
 };
+type AdminChallengeCampaign = {
+  id: string;
+  createdAt: string;
+  name: string;
+  imageUrl?: string;
+  rules: string;
+  venueIds: string[];
+  activeDays: string[];
+  startTime?: string;
+  endTime?: string;
+  endDate?: string;
+  gameTypes: string[];
+  pointMultiplier: number;
+  pointsRequiredToWin: number;
+  recurringType: CampaignRecurringType;
+  winnerUserId?: string | null;
+  winnerUsername?: string | null;
+  isActive: boolean;
+};
+type AdminChallengeProgress = {
+  id: string;
+  challengeId: string;
+  userId: string;
+  venueId: string;
+  pointsEarned: number;
+  updatedAt: string;
+};
 type AdminVenueUser = {
   id: string;
   username: string;
@@ -302,6 +343,10 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [ads, setAds] = useState<Advertisement[]>([]);
   const [adsDebug, setAdsDebug] = useState<AdminAdsDebugSnapshot | null>(null);
   const [pendingPredictions, setPendingPredictions] = useState<AdminPendingPredictionSummary[]>([]);
+  const [challengeCampaigns, setChallengeCampaigns] = useState<AdminChallengeCampaign[]>([]);
+  const [challengeProgress, setChallengeProgress] = useState<AdminChallengeProgress[]>([]);
+  const [selectedChallengeCampaignId, setSelectedChallengeCampaignId] = useState("");
+  const [editingChallengeCampaignId, setEditingChallengeCampaignId] = useState<string | null>(null);
   const [selectedVenueUserId, setSelectedVenueUserId] = useState(() => venues[0]?.id ?? "");
   const [venueUsers, setVenueUsers] = useState<AdminVenueUser[]>([]);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
@@ -413,6 +458,26 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [isEditAddressLookupLoading, setIsEditAddressLookupLoading] = useState(false);
   const [adsCreateReturnSection, setAdsCreateReturnSection] = useState<AdminSection | null>(null);
   const [adsListReturnToBoard, setAdsListReturnToBoard] = useState(false);
+  const [challengeName, setChallengeName] = useState("");
+  const [challengeRules, setChallengeRules] = useState("");
+  const [challengeImageUrl, setChallengeImageUrl] = useState("");
+  const [challengeImageFile, setChallengeImageFile] = useState<File | null>(null);
+  const [challengeImageDetails, setChallengeImageDetails] = useState("");
+  const [challengeImagePreviewUrl, setChallengeImagePreviewUrl] = useState("");
+  const [challengePreviewCheckerboard, setChallengePreviewCheckerboard] = useState(true);
+  const [isChallengeDropActive, setIsChallengeDropActive] = useState(false);
+  const [isUploadingChallengeImage, setIsUploadingChallengeImage] = useState(false);
+  const [challengeVenueIds, setChallengeVenueIds] = useState<string[]>([]);
+  const [challengeActiveDays, setChallengeActiveDays] = useState<string[]>([]);
+  const [challengeStartTime, setChallengeStartTime] = useState("");
+  const [challengeEndTime, setChallengeEndTime] = useState("");
+  const [challengeEndDate, setChallengeEndDate] = useState("");
+  const [challengeGameTypes, setChallengeGameTypes] = useState<string[]>(["pickem", "fantasy", "trivia", "bingo"]);
+  const [challengePointMultiplier, setChallengePointMultiplier] = useState("1");
+  const [challengePointsRequired, setChallengePointsRequired] = useState("100");
+  const [challengeRecurringType, setChallengeRecurringType] = useState<CampaignRecurringType>("none");
+  const [challengeIsActive, setChallengeIsActive] = useState(true);
+  const [challengeFormMessage, setChallengeFormMessage] = useState("");
   const addressSuggestionsCacheRef = useRef<Map<string, AdminAddressSuggestion[]>>(new Map());
   const addressLookupDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const addressLookupRequestId = useRef(0);
@@ -427,6 +492,34 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     () => editOptionsText.split(",").map((item) => item.trim()).filter(Boolean),
     [editOptionsText]
   );
+  const selectedChallengeCampaign = useMemo(
+    () => challengeCampaigns.find((item) => item.id === selectedChallengeCampaignId) ?? null,
+    [challengeCampaigns, selectedChallengeCampaignId]
+  );
+
+  const resetChallengeForm = useCallback(() => {
+    setEditingChallengeCampaignId(null);
+    setChallengeName("");
+    setChallengeRules("");
+    setChallengeImageUrl("");
+    setChallengeImageFile(null);
+    setChallengeImageDetails("");
+    setChallengeImagePreviewUrl("");
+    setChallengePreviewCheckerboard(true);
+    setIsChallengeDropActive(false);
+    setIsUploadingChallengeImage(false);
+    setChallengeVenueIds([]);
+    setChallengeActiveDays([]);
+    setChallengeStartTime("");
+    setChallengeEndTime("");
+    setChallengeEndDate("");
+    setChallengeGameTypes(["pickem", "fantasy", "trivia", "bingo"]);
+    setChallengePointMultiplier("1");
+    setChallengePointsRequired("100");
+    setChallengeRecurringType("none");
+    setChallengeIsActive(true);
+    setChallengeFormMessage("");
+  }, []);
 
   const availableAdTypes = useMemo(() => getAdTypesForPage(pageKey), [pageKey]);
   const availableTriggers = useMemo(() => getTriggersForPlacement(pageKey, adType), [pageKey, adType]);
@@ -838,6 +931,24 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     return payload.imageUrl;
   }, [adminFetch]);
 
+  const uploadChallengeImageFile = useCallback(
+    async (file: File): Promise<string> => {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await adminFetch("/api/admin/challenges/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const payload = (await response.json()) as { ok: boolean; imageUrl?: string; error?: string };
+      if (!payload.ok || !payload.imageUrl) {
+        throw new Error(payload.error ?? "Failed to upload challenge image.");
+      }
+      return payload.imageUrl;
+    },
+    [adminFetch]
+  );
+
   const handleAdImageSelection = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
       const selectedFile = event.target.files?.[0] ?? null;
@@ -911,15 +1022,52 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     [getImageDimensions]
   );
 
+  async function handleChallengeImageSelection(event: ChangeEvent<HTMLInputElement>) {
+    const selectedFile = event.target.files?.[0] ?? null;
+    acceptChallengeImageFile(selectedFile);
+  }
+
+  const acceptChallengeImageFile = useCallback((selectedFile: File | null) => {
+    setErrorMessage("");
+    setChallengeImageFile(null);
+    setChallengeImageDetails("");
+    setChallengeImagePreviewUrl("");
+    if (!selectedFile) return;
+    if (!CHALLENGE_IMAGE_MIME_TYPES.has(selectedFile.type)) {
+      setErrorMessage("Challenge images must be PNG/WebP/SVG (transparent supported) or JPG.");
+      return;
+    }
+    if (selectedFile.size <= 0) {
+      setErrorMessage("Selected challenge image is empty.");
+      return;
+    }
+    if (selectedFile.size > MAX_CHALLENGE_IMAGE_BYTES) {
+      setErrorMessage("Challenge image must be under 1MB.");
+      return;
+    }
+    setChallengeImageFile(selectedFile);
+    setChallengeImageDetails(`${selectedFile.name} (${(selectedFile.size / 1024).toFixed(1)}KB) - ${selectedFile.type || "unknown type"}`);
+    setChallengeImagePreviewUrl(URL.createObjectURL(selectedFile));
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (challengeImagePreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(challengeImagePreviewUrl);
+      }
+    };
+  }, [challengeImagePreviewUrl]);
+
   const loadAll = useCallback(async () => {
     setState("loading");
     setErrorMessage("");
     try {
-      const [triviaResponse, adResponse, adsDebugResponse, pendingPredictionsResponse] = await Promise.all([
+      const [triviaResponse, adResponse, adsDebugResponse, pendingPredictionsResponse, challengeCampaignsResponse] = await Promise.all([
         adminFetch("/api/admin?resource=trivia", { cache: "no-store" }),
         adminFetch("/api/admin?resource=ads", { cache: "no-store" }),
         adminFetch(`/api/admin?resource=ads-debug&windowHours=${adsWindowHours}`, { cache: "no-store" }),
         adminFetch("/api/admin?resource=predictions-pending", { cache: "no-store" }),
+        adminFetch("/api/admin?resource=challenge-campaigns&includeInactive=true&includeResolved=true", { cache: "no-store" }),
       ]);
 
       const triviaPayload = (await triviaResponse.json()) as {
@@ -942,6 +1090,11 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
         items?: AdminPendingPredictionSummary[];
         error?: string;
       };
+      const challengeCampaignsPayload = (await challengeCampaignsResponse.json()) as {
+        ok: boolean;
+        items?: AdminChallengeCampaign[];
+        error?: string;
+      };
 
       if (!triviaPayload.ok) {
         throw new Error(triviaPayload.error ?? "Failed to load trivia.");
@@ -955,11 +1108,17 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       if (!pendingPredictionsPayload.ok) {
         throw new Error(pendingPredictionsPayload.error ?? "Failed to load pending predictions.");
       }
+      if (!challengeCampaignsPayload.ok) {
+        throw new Error(challengeCampaignsPayload.error ?? "Failed to load challenge campaigns.");
+      }
 
       setQuestions(triviaPayload.items ?? []);
       setAds(adPayload.items ?? []);
       setAdsDebug(adsDebugPayload.snapshot ?? null);
       setPendingPredictions(pendingPredictionsPayload.items ?? []);
+      const campaigns = challengeCampaignsPayload.items ?? [];
+      setChallengeCampaigns(campaigns);
+      setSelectedChallengeCampaignId((current) => current || campaigns[0]?.id || "");
       setState("idle");
     } catch (error) {
       setState("error");
@@ -991,6 +1150,27 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       setErrorMessage(error instanceof Error ? error.message : "Failed to load venue users.");
     }
   }, [adminFetch, selectedVenueUserId]);
+
+  const loadChallengeProgress = useCallback(async () => {
+    const challengeId = selectedChallengeCampaignId.trim();
+    if (!challengeId) {
+      setChallengeProgress([]);
+      return;
+    }
+    try {
+      const response = await adminFetch(
+        `/api/admin?resource=challenge-campaign-progress&challengeId=${encodeURIComponent(challengeId)}`,
+        { cache: "no-store" }
+      );
+      const payload = (await response.json()) as { ok: boolean; items?: AdminChallengeProgress[]; error?: string };
+      if (!payload.ok) {
+        throw new Error(payload.error ?? "Failed to load challenge progress.");
+      }
+      setChallengeProgress(payload.items ?? []);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Failed to load challenge progress.");
+    }
+  }, [adminFetch, selectedChallengeCampaignId]);
 
   useEffect(() => {
     const init = async () => {
@@ -1030,6 +1210,13 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     }
     void loadVenueUsers();
   }, [authInitialized, accessToken, adminCredentials, loadVenueUsers]);
+
+  useEffect(() => {
+    if (!authInitialized || activeSection !== "challenge-campaigns") {
+      return;
+    }
+    void loadChallengeProgress();
+  }, [activeSection, authInitialized, loadChallengeProgress]);
 
   useEffect(() => {
     if (initialSection) {
@@ -1211,6 +1398,131 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       setCreatingVenue(false);
     }
   };
+
+  const beginEditChallengeCampaign = useCallback((campaign: AdminChallengeCampaign) => {
+    setEditingChallengeCampaignId(campaign.id);
+    setChallengeName(campaign.name ?? "");
+    setChallengeRules(campaign.rules ?? "");
+    setChallengeImageUrl(campaign.imageUrl ?? "");
+    setChallengeImageFile(null);
+    setChallengeImageDetails("");
+    setChallengeVenueIds(campaign.venueIds ?? []);
+    setChallengeActiveDays(campaign.activeDays ?? []);
+    setChallengeStartTime(campaign.startTime?.slice(0, 5) ?? "");
+    setChallengeEndTime(campaign.endTime?.slice(0, 5) ?? "");
+    setChallengeEndDate(campaign.endDate ?? "");
+    setChallengeGameTypes(campaign.gameTypes ?? ["pickem", "fantasy", "trivia", "bingo"]);
+    setChallengePointMultiplier(String(campaign.pointMultiplier ?? 1));
+    setChallengePointsRequired(String(campaign.pointsRequiredToWin ?? 100));
+    setChallengeRecurringType(campaign.recurringType ?? "none");
+    setChallengeIsActive(Boolean(campaign.isActive));
+    setChallengeFormMessage(`Editing "${campaign.name}"`);
+  }, []);
+
+  const submitChallengeCampaign = useCallback(async () => {
+    setErrorMessage("");
+    setChallengeFormMessage("");
+
+    const name = challengeName.trim();
+    const rules = challengeRules.trim();
+    if (!name || !rules) {
+      setErrorMessage("Challenge name and rules are required.");
+      return;
+    }
+
+    try {
+      let resolvedChallengeImageUrl = challengeImageUrl.trim() || undefined;
+      if (challengeImageFile) {
+        setIsUploadingChallengeImage(true);
+        resolvedChallengeImageUrl = await uploadChallengeImageFile(challengeImageFile);
+        setChallengeImageUrl(resolvedChallengeImageUrl);
+      }
+
+      const payloadBody = {
+      resource: "challenge-campaigns" as const,
+      name,
+      imageUrl: resolvedChallengeImageUrl,
+      rules,
+      venueIds: challengeVenueIds,
+      activeDays: challengeActiveDays,
+      startTime: challengeStartTime || undefined,
+      endTime: challengeEndTime || undefined,
+      endDate: challengeEndDate || undefined,
+      gameTypes: challengeGameTypes,
+      pointMultiplier: Number.parseFloat(challengePointMultiplier || "1") || 1,
+      pointsRequiredToWin: Number.parseInt(challengePointsRequired || "100", 10) || 100,
+      recurringType: challengeRecurringType,
+      isActive: challengeIsActive,
+      };
+
+      const response = await adminFetch("/api/admin", {
+        method: editingChallengeCampaignId ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          editingChallengeCampaignId
+            ? {
+                ...payloadBody,
+                id: editingChallengeCampaignId,
+              }
+            : payloadBody
+        ),
+      });
+      const payload = (await response.json()) as { ok: boolean; error?: string };
+      if (!payload.ok) {
+        throw new Error(payload.error ?? "Failed to save challenge campaign.");
+      }
+      setChallengeFormMessage(editingChallengeCampaignId ? "Challenge campaign updated." : "Challenge campaign created.");
+      await loadAll();
+      resetChallengeForm();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Failed to save challenge campaign.");
+    } finally {
+      setIsUploadingChallengeImage(false);
+    }
+  }, [
+    adminFetch,
+    challengeActiveDays,
+    challengeEndDate,
+    challengeEndTime,
+    challengeImageFile,
+    challengeGameTypes,
+    challengeImageUrl,
+    challengeIsActive,
+    challengeName,
+    challengePointMultiplier,
+    challengePointsRequired,
+    challengeRecurringType,
+    challengeRules,
+    challengeStartTime,
+    challengeVenueIds,
+    editingChallengeCampaignId,
+    loadAll,
+    resetChallengeForm,
+    uploadChallengeImageFile,
+  ]);
+
+  const deleteChallengeCampaignItem = useCallback(
+    async (id: string) => {
+      setErrorMessage("");
+      try {
+        const response = await adminFetch(
+          `/api/admin?resource=challenge-campaigns&id=${encodeURIComponent(id)}`,
+          { method: "DELETE" }
+        );
+        const payload = (await response.json()) as { ok: boolean; error?: string };
+        if (!payload.ok) {
+          throw new Error(payload.error ?? "Failed to delete challenge campaign.");
+        }
+        if (selectedChallengeCampaignId === id) {
+          setSelectedChallengeCampaignId("");
+        }
+        await loadAll();
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : "Failed to delete challenge campaign.");
+      }
+    },
+    [adminFetch, loadAll, selectedChallengeCampaignId]
+  );
 
   const deleteItem = async (resource: "trivia" | "ads", id: string) => {
     setErrorMessage("");
@@ -1667,6 +1979,19 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
 
       {shouldShowBootstrap ? (
         <section className="space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-3">
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined" && window.history.length > 1) {
+                router.back();
+                return;
+              }
+              router.push("/");
+            }}
+            className="rounded-md border border-amber-300 bg-white px-3 py-2 text-xs font-medium text-amber-900 hover:bg-amber-100"
+          >
+            Back
+          </button>
           <h2 className="text-base font-semibold text-amber-900">Admin Login</h2>
           <p className="text-sm text-amber-800">
             Sign in with configured admin credentials to access admin tools. A venue profile is not required.
@@ -3242,15 +3567,366 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       {shouldRenderSectionContent && activeSection === "challenge-campaigns" ? (
       <section className="space-y-3 rounded-lg border border-slate-200 p-3">
         <h2 className="text-base font-semibold text-slate-900">Challenge Manager</h2>
-        <p className="text-sm text-slate-700">
-          Campaign challenges are now managed separately from head-to-head user challenges.
-        </p>
-        <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
-          API resources available in this build:
-          <div className="mt-1 font-mono">GET /api/admin?resource=challenge-campaigns</div>
-          <div className="font-mono">POST/PATCH /api/admin {"{"} resource: "challenge-campaigns", ... {"}"}</div>
-          <div className="font-mono">DELETE /api/admin?resource=challenge-campaigns&id=...</div>
-          <div className="font-mono">GET /api/admin?resource=challenge-campaign-progress&challengeId=...</div>
+        <p className="text-sm text-slate-700">Create and manage venue challenge campaigns and view live progress.</p>
+
+        <div className="grid gap-3 lg:grid-cols-[1.1fr_1fr]">
+          <div className="space-y-3 rounded-md border border-slate-200 bg-slate-50 p-3">
+            <h3 className="text-sm font-semibold text-slate-900">
+              {editingChallengeCampaignId ? "Edit Challenge Campaign" : "Create Challenge Campaign"}
+            </h3>
+            <label className={FORM_LABEL_CLASS}>
+              Name
+              <input
+                value={challengeName}
+                onChange={(event) => setChallengeName(event.target.value)}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+            </label>
+            <label className={FORM_LABEL_CLASS}>
+              Rules
+              <textarea
+                value={challengeRules}
+                onChange={(event) => setChallengeRules(event.target.value)}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                rows={4}
+              />
+            </label>
+            <label className={FORM_LABEL_CLASS}>
+              Image URL
+              <input
+                value={challengeImageUrl}
+                onChange={(event) => setChallengeImageUrl(event.target.value)}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+            </label>
+            <label className={FORM_LABEL_CLASS}>
+              Upload Challenge Image
+              <div
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  setIsChallengeDropActive(true);
+                }}
+                onDragLeave={(event) => {
+                  event.preventDefault();
+                  setIsChallengeDropActive(false);
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  setIsChallengeDropActive(false);
+                  const droppedFile = event.dataTransfer.files?.[0] ?? null;
+                  acceptChallengeImageFile(droppedFile);
+                }}
+                className={`mt-1 rounded-md border-2 border-dashed px-3 py-4 text-center text-xs ${
+                  isChallengeDropActive ? "border-indigo-500 bg-indigo-50" : "border-slate-300 bg-white"
+                }`}
+              >
+                Drag & drop image here, or choose file below
+              </div>
+              <input
+                type="file"
+                accept="image/png,image/webp,image/svg+xml,image/jpeg"
+                onChange={(event) => {
+                  void handleChallengeImageSelection(event);
+                }}
+                className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-2 py-2 text-xs"
+              />
+              <span className="mt-1 block text-[11px] font-medium normal-case text-slate-500">
+                PNG/WebP/SVG keep transparent backgrounds. Max 1MB.
+              </span>
+            </label>
+            {challengeImageDetails ? (
+              <p className="text-xs text-slate-600">{challengeImageDetails}</p>
+            ) : null}
+            {(challengeImagePreviewUrl || challengeImageUrl) ? (
+              <div className="rounded-md border border-slate-200 bg-white p-2">
+                <label className="mb-2 flex items-center gap-2 text-[11px] font-medium text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={challengePreviewCheckerboard}
+                    onChange={(event) => setChallengePreviewCheckerboard(event.target.checked)}
+                  />
+                  Show checkerboard background (transparency preview)
+                </label>
+                <p className="mb-1 text-[11px] font-medium text-slate-500">Current Image Preview</p>
+                <div
+                  className="rounded-md p-2"
+                  style={
+                    challengePreviewCheckerboard
+                      ? {
+                          backgroundImage:
+                            "linear-gradient(45deg, #e2e8f0 25%, transparent 25%), linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e2e8f0 75%), linear-gradient(-45deg, transparent 75%, #e2e8f0 75%)",
+                          backgroundSize: "16px 16px",
+                          backgroundPosition: "0 0, 0 8px, 8px -8px, -8px 0px",
+                        }
+                      : undefined
+                  }
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={challengeImagePreviewUrl || challengeImageUrl} alt="Challenge preview" className="max-h-24 w-auto object-contain" />
+                </div>
+              </div>
+            ) : null}
+
+            <div>
+              <p className={FORM_LABEL_CLASS}>Target Venues</p>
+              <div className="mt-1 grid gap-1 sm:grid-cols-2">
+                {availableVenues.map((venue) => (
+                  <label key={venue.id} className="flex items-center gap-2 rounded border border-slate-200 bg-white px-2 py-1 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={challengeVenueIds.includes(venue.id)}
+                      onChange={() =>
+                        setChallengeVenueIds((current) =>
+                          current.includes(venue.id) ? current.filter((item) => item !== venue.id) : [...current, venue.id]
+                        )
+                      }
+                    />
+                    <span>{getVenueDisplayName(venue)}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className={FORM_LABEL_CLASS}>Active Days</p>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {CHALLENGE_ACTIVE_DAYS.map((day) => (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() =>
+                      setChallengeActiveDays((current) =>
+                        current.includes(day) ? current.filter((item) => item !== day) : [...current, day]
+                      )
+                    }
+                    className={`rounded-full border px-2 py-1 text-xs font-semibold ${
+                      challengeActiveDays.includes(day) ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-700"
+                    }`}
+                  >
+                    {day.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className={FORM_LABEL_CLASS}>Game Types</p>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {CHALLENGE_GAME_TYPES.map((gameType) => (
+                  <button
+                    key={gameType}
+                    type="button"
+                    onClick={() =>
+                      setChallengeGameTypes((current) =>
+                        current.includes(gameType) ? current.filter((item) => item !== gameType) : [...current, gameType]
+                      )
+                    }
+                    className={`rounded-full border px-2 py-1 text-xs font-semibold ${
+                      challengeGameTypes.includes(gameType) ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-700"
+                    }`}
+                  >
+                    {gameType}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className={FORM_LABEL_CLASS}>
+                Start Time
+                <input
+                  type="time"
+                  value={challengeStartTime}
+                  onChange={(event) => setChallengeStartTime(event.target.value)}
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                />
+              </label>
+              <label className={FORM_LABEL_CLASS}>
+                End Time
+                <input
+                  type="time"
+                  value={challengeEndTime}
+                  onChange={(event) => setChallengeEndTime(event.target.value)}
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                />
+              </label>
+              <label className={FORM_LABEL_CLASS}>
+                End Date
+                <input
+                  type="date"
+                  value={challengeEndDate}
+                  onChange={(event) => setChallengeEndDate(event.target.value)}
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                />
+              </label>
+              <label className={FORM_LABEL_CLASS}>
+                Recurring Type
+                <select
+                  value={challengeRecurringType}
+                  onChange={(event) => setChallengeRecurringType(event.target.value as CampaignRecurringType)}
+                  className={`${FORM_SELECT_CLASS} mt-1 w-full text-sm`}
+                >
+                  {CHALLENGE_RECURRING_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className={FORM_LABEL_CLASS}>
+                Point Multiplier
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0.1"
+                  value={challengePointMultiplier}
+                  onChange={(event) => setChallengePointMultiplier(event.target.value)}
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                />
+              </label>
+              <label className={FORM_LABEL_CLASS}>
+                Points Required
+                <input
+                  type="number"
+                  min="1"
+                  value={challengePointsRequired}
+                  onChange={(event) => setChallengePointsRequired(event.target.value)}
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                />
+              </label>
+            </div>
+
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={challengeIsActive}
+                onChange={(event) => setChallengeIsActive(event.target.checked)}
+              />
+              Active campaign
+            </label>
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => void submitChallengeCampaign()}
+                disabled={isUploadingChallengeImage}
+                className="rounded-md bg-emerald-700 px-3 py-2 text-sm font-medium text-white"
+              >
+                {isUploadingChallengeImage
+                  ? "Uploading image..."
+                  : editingChallengeCampaignId
+                  ? "Update Campaign"
+                  : "Create Campaign"}
+              </button>
+              {editingChallengeCampaignId ? (
+                <button
+                  type="button"
+                  onClick={resetChallengeForm}
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700"
+                >
+                  Cancel Edit
+                </button>
+              ) : null}
+            </div>
+            {challengeFormMessage ? (
+              <p className="text-xs font-medium text-emerald-700">{challengeFormMessage}</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-3 rounded-md border border-slate-200 bg-white p-3">
+            <h3 className="text-sm font-semibold text-slate-900">Campaigns</h3>
+            {challengeCampaigns.length === 0 ? (
+              <p className="text-sm text-slate-600">No challenge campaigns created yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {challengeCampaigns.map((campaign) => (
+                  <li key={campaign.id} className="rounded border border-slate-200 p-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedChallengeCampaignId(campaign.id)}
+                        className="text-left"
+                      >
+                        <p className="text-sm font-semibold text-slate-900">{campaign.name}</p>
+                        <p className="text-xs text-slate-500">
+                          {campaign.isActive ? "Active" : "Inactive"} · Multiplier {campaign.pointMultiplier}x · Target {campaign.pointsRequiredToWin} pts
+                        </p>
+                      </button>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => beginEditChallengeCampaign(campaign)}
+                          className="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void deleteChallengeCampaignItem(campaign.id)}
+                          className="rounded bg-rose-700 px-2 py-1 text-xs font-semibold text-white"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-slate-900">Campaign Progress</h3>
+            <button
+              type="button"
+              onClick={() => void loadChallengeProgress()}
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700"
+              disabled={!selectedChallengeCampaign}
+            >
+              Refresh
+            </button>
+          </div>
+          {selectedChallengeCampaign ? (
+            <p className="mb-2 text-xs text-slate-600">
+              Showing progress for <span className="font-semibold text-slate-900">{selectedChallengeCampaign.name}</span>.
+            </p>
+          ) : (
+            <p className="mb-2 text-xs text-slate-600">Select a campaign to view progress.</p>
+          )}
+          {challengeProgress.length === 0 ? (
+            <p className="text-sm text-slate-600">No progress yet for this campaign.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 text-slate-500">
+                    <th className="px-2 py-1">User ID</th>
+                    <th className="px-2 py-1">Venue</th>
+                    <th className="px-2 py-1">Points</th>
+                    <th className="px-2 py-1">Updated</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {challengeProgress
+                    .slice()
+                    .sort((a, b) => b.pointsEarned - a.pointsEarned)
+                    .map((row) => (
+                      <tr key={row.id} className="border-b border-slate-100">
+                        <td className="px-2 py-1 font-mono text-slate-700">{row.userId}</td>
+                        <td className="px-2 py-1 font-mono text-slate-700">{row.venueId}</td>
+                        <td className="px-2 py-1 font-semibold text-slate-900">{row.pointsEarned}</td>
+                        <td className="px-2 py-1 text-slate-600">{new Date(row.updatedAt).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </section>
       ) : null}

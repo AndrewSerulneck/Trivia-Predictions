@@ -949,7 +949,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                           {titleLines.map((line) => <span key={`${card.key}-${line}`} className="block">{line}</span>)}
                         </span>
                       </div>
-                      {badge ? <span className="absolute right-1.5 top-1.5 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[10px] font-black leading-none text-white shadow-[0_2px_8px_rgba(15,23,42,0.45)]">{badge}</span> : null}
+                      {badge ? <span className="absolute right-1.5 top-1.5 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black leading-none text-white shadow-[0_2px_8px_rgba(15,23,42,0.45)]">{badge}</span> : null}
                     </button>
                   );
                 })}

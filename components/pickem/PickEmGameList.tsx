@@ -704,15 +704,6 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
 
       </section>
 
-      <InlineSlotAdClient
-        slot="leaderboard-sidebar"
-        venueId={venueId}
-        pageKey="pickem"
-        adType="inline"
-        displayTrigger="on-scroll"
-        placementKey="pickem-inline"
-      />
-
       {errorMessage ? (
         <div className="rounded-xl border border-rose-300 bg-rose-50 p-2.5 text-xs text-rose-700 sm:p-3 sm:text-sm">{errorMessage}</div>
       ) : null}
@@ -886,6 +877,15 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           ))}
         </div>
       )}
+
+      <InlineSlotAdClient
+        slot="leaderboard-sidebar"
+        venueId={venueId}
+        pageKey="pickem"
+        adType="inline"
+        displayTrigger="on-scroll"
+        placementKey="pickem-inline"
+      />
     </div>
   );
 }
