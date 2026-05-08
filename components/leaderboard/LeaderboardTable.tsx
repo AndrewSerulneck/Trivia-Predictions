@@ -9,6 +9,7 @@ import type { LeaderboardEntry } from "@/types";
 type LeaderboardPayload = {
   ok: boolean;
   entries?: LeaderboardEntry[];
+  currentUserRank?: number | null;
   error?: string;
 };
 
@@ -52,6 +53,7 @@ export function LeaderboardTable({
   const [entries, setEntries] = useState<LeaderboardEntry[]>(initialEntries);
   const [errorMessage, setErrorMessage] = useState("");
   const [currentUserId, setCurrentUserId] = useState("");
+  const [resolvedCurrentUserRank, setResolvedCurrentUserRank] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(isEnabled && initialEntries.length === 0);
   const hydratedVenueRef = useRef("");
 
@@ -63,7 +65,12 @@ export function LeaderboardTable({
     }
 
     try {
-      const response = await fetch(`/api/leaderboard?venue=${encodeURIComponent(venueId)}`, {
+      const params = new URLSearchParams({ venue: venueId });
+      const safeUserId = (getUserId() ?? "").trim();
+      if (safeUserId) {
+        params.set("userId", safeUserId);
+      }
+      const response = await fetch(`/api/leaderboard?${params.toString()}`, {
         cache: "no-store",
       });
       const payload = (await response.json()) as LeaderboardPayload;
@@ -72,6 +79,8 @@ export function LeaderboardTable({
       }
       const nextEntries = payload.entries ?? [];
       setEntries((current) => (areEntriesEqual(current, nextEntries) ? current : nextEntries));
+      const nextRank = Number.isFinite(payload.currentUserRank ?? NaN) ? Math.max(1, Number(payload.currentUserRank)) : null;
+      setResolvedCurrentUserRank((current) => (current === nextRank ? current : nextRank));
       setErrorMessage("");
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Failed to load leaderboard.");
@@ -119,8 +128,8 @@ export function LeaderboardTable({
   }, [entries.length, isEnabled, load]);
 
   const currentUserRank = useMemo(
-    () => entries.find((entry) => entry.userId === currentUserId)?.rank ?? null,
-    [currentUserId, entries]
+    () => resolvedCurrentUserRank ?? entries.find((entry) => entry.userId === currentUserId)?.rank ?? null,
+    [currentUserId, entries, resolvedCurrentUserRank]
   );
 
   if (isLoading && entries.length === 0) {
@@ -183,8 +192,8 @@ export function LeaderboardTable({
           <tbody className="divide-y divide-white/10 bg-transparent">
             {entries.map((entry, index) => {
               const isCurrentUser = currentUserId && entry.userId === currentUserId;
-              const shouldRenderAdBreak = (index + 1) % 15 === 0;
-              const adBreakNumber = shouldRenderAdBreak ? (index + 1) / 15 : 0;
+              const shouldRenderAdBreak = (index + 1) % 10 === 0;
+              const adBreakNumber = shouldRenderAdBreak ? (index + 1) / 10 : 0;
               const sequenceIndex = shouldRenderAdBreak ? ((adBreakNumber - 1) % 6) + 1 : 1;
               const isTopThree = entry.rank <= 3;
               return (

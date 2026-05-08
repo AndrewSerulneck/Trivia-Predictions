@@ -185,6 +185,8 @@ export function PopupAds() {
   const popupOpeningRef = useRef(false);
   const pageReadyRef = useRef(false);
   const pendingRoundPopupQueueRef = useRef<number[]>([]);
+  const scrollRafRef = useRef<number | null>(null);
+  const maxObservedScrollPxRef = useRef<Record<string, number>>({});
 
   useEffect(() => {
     popupOpenRef.current = Boolean(popup?.open);
@@ -392,8 +394,10 @@ export function PopupAds() {
 
     const key = pathname;
     scrollTriggeredRef.current[key] = false;
+    maxObservedScrollPxRef.current[key] = 0;
+    const minPixelThreshold = 140;
 
-    const onScroll = () => {
+    const onScroll = (event?: Event) => {
       if (!pageReadyRef.current) {
         return;
       }
@@ -406,18 +410,66 @@ export function PopupAds() {
       if (scrollTriggeredRef.current[key]) {
         return;
       }
-      const doc = document.documentElement;
-      const scrolled = doc.scrollTop + window.innerHeight;
-      const threshold = doc.scrollHeight * 0.58;
-      if (scrolled >= threshold) {
-        scrollTriggeredRef.current[key] = true;
-        void showPopup("popup-on-scroll", { pageKey, displayTrigger: "on-scroll" });
+      if (scrollRafRef.current !== null) {
+        return;
       }
+      scrollRafRef.current = window.requestAnimationFrame(() => {
+        scrollRafRef.current = null;
+        if (scrollTriggeredRef.current[key]) {
+          return;
+        }
+
+        const target = event?.target;
+        let currentScrollTop = window.scrollY;
+        let currentViewportHeight = window.innerHeight;
+        let currentScrollHeight = document.documentElement.scrollHeight;
+
+        if (target instanceof HTMLElement) {
+          currentScrollTop = target.scrollTop;
+          currentViewportHeight = target.clientHeight;
+          currentScrollHeight = target.scrollHeight;
+        }
+
+        const seenMax = Math.max(maxObservedScrollPxRef.current[key] ?? 0, currentScrollTop);
+        maxObservedScrollPxRef.current[key] = seenMax;
+
+        const percentThreshold = currentScrollHeight * 0.58;
+        const progressValue = currentScrollTop + currentViewportHeight;
+        const hitThreshold = seenMax >= minPixelThreshold || progressValue >= percentThreshold;
+
+        if (!hitThreshold) {
+          return;
+        }
+
+        scrollTriggeredRef.current[key] = true;
+        console.info("[tp-ads] popup on-scroll threshold hit", {
+          pageKey,
+          scrollTop: currentScrollTop,
+          maxScrollTop: seenMax,
+          thresholdPx: minPixelThreshold,
+        });
+        void showPopup("popup-on-scroll", { pageKey, displayTrigger: "on-scroll" });
+      });
     };
 
-    window.addEventListener("scroll", onScroll, { passive: true });
+    const gameSurface = document.querySelector<HTMLElement>("[data-venue-game-surface]");
+    const pageMain = document.querySelector<HTMLElement>(".tp-page-main");
+    const onWindowScroll = () => onScroll(new Event("scroll"));
+
+    window.addEventListener("scroll", onWindowScroll, { passive: true });
+    document.addEventListener("scroll", onScroll, { passive: true, capture: true });
+    gameSurface?.addEventListener("scroll", onScroll, { passive: true });
+    pageMain?.addEventListener("scroll", onScroll, { passive: true });
+
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scroll", onWindowScroll);
+      document.removeEventListener("scroll", onScroll, { capture: true } as EventListenerOptions);
+      gameSurface?.removeEventListener("scroll", onScroll);
+      pageMain?.removeEventListener("scroll", onScroll);
+      if (scrollRafRef.current !== null) {
+        window.cancelAnimationFrame(scrollRafRef.current);
+        scrollRafRef.current = null;
+      }
     };
   }, [pathname, showPopup]);
 

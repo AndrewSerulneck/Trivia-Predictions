@@ -89,3 +89,51 @@ export async function getLeaderboardForVenue(venueId: string): Promise<Leaderboa
     return FALLBACK_LEADERBOARD.filter((entry) => entry.venueId === venueId);
   }
 }
+
+export async function getUserRankForVenue(venueId: string, userId: string): Promise<number | null> {
+  if (!venueId || !userId) {
+    return null;
+  }
+
+  const adminClient = supabaseAdmin;
+  if (!adminClient) {
+    const fallbackEntry = FALLBACK_LEADERBOARD.find((entry) => entry.venueId === venueId && entry.userId === userId);
+    return fallbackEntry?.rank ?? null;
+  }
+
+  try {
+    const { data: userRow, error: userError } = await withTimedLeaderboardQuery(async (signal) => {
+      return await adminClient
+        .from("users")
+        .select("id, username, points")
+        .abortSignal(signal)
+        .eq("venue_id", venueId)
+        .eq("id", userId)
+        .maybeSingle();
+    });
+
+    if (userError || !userRow) {
+      return null;
+    }
+
+    const targetPoints = Number(userRow.points ?? 0);
+    const targetUsername = String(userRow.username ?? "");
+
+    const { count, error: countError } = await withTimedLeaderboardQuery(async (signal) => {
+      return await adminClient
+        .from("users")
+        .select("id", { count: "exact", head: true })
+        .abortSignal(signal)
+        .eq("venue_id", venueId)
+        .or(`points.gt.${targetPoints},and(points.eq.${targetPoints},username.lt.${targetUsername})`);
+    });
+
+    if (countError || !Number.isFinite(count ?? NaN)) {
+      return null;
+    }
+
+    return Number(count ?? 0) + 1;
+  } catch {
+    return null;
+  }
+}
