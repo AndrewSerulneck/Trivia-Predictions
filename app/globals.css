@@ -404,6 +404,23 @@ h4,
   margin-right: -50vw;
 }
 
+.venue-home-carousel {
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y;
+}
+
+.venue-home-carousel .venue-screen {
+  flex: 0 0 100%;
+  width: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
 /* Tighter chrome for small phones (iPhone SE and similar) */
 @media (max-width: 380px) {
   html {

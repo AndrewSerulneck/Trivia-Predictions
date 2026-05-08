@@ -18,6 +18,23 @@ function hasVisibleScrollLockUI(): boolean {
   return Boolean(document.querySelector("[data-tp-scroll-lock='active']"));
 }
 
+function hasResidualScrollLockStyles(): boolean {
+  if (typeof document === "undefined") {
+    return false;
+  }
+  const root = document.documentElement;
+  const body = document.body;
+  return (
+    root.classList.contains("tp-modal-open") ||
+    root.classList.contains("tp-popup-open") ||
+    body.classList.contains("tp-modal-open") ||
+    body.classList.contains("tp-popup-open") ||
+    body.style.position === "fixed" ||
+    body.style.overflow === "hidden" ||
+    root.style.overflow === "hidden"
+  );
+}
+
 function auditAndRecoverStaleLocks(): void {
   const hasVisibleUI = hasVisibleScrollLockUI();
   const hasLockState = hasActiveScrollLocks();
@@ -25,6 +42,9 @@ function auditAndRecoverStaleLocks(): void {
     return;
   }
   if (!hasLockState) {
+    if (!hasResidualScrollLockStyles()) {
+      return;
+    }
     recoverScrollableState();
     return;
   }

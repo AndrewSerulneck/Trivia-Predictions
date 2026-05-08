@@ -122,7 +122,21 @@ export function ScrollRescueGuard() {
       stallProbeRef.current.rafId = window.requestAnimationFrame(() => tick(1));
     };
 
+    const isInsideVenueCarousel = (target: EventTarget | null): boolean => {
+      if (!target) return false;
+      if (target instanceof Element) {
+        return Boolean(target.closest(".venue-home-carousel"));
+      }
+      if (target instanceof Node && target.parentElement) {
+        return Boolean(target.parentElement.closest(".venue-home-carousel"));
+      }
+      return false;
+    };
+
     const handleWheel = (event: WheelEvent) => {
+      if (isInsideVenueCarousel(event.target)) {
+        return;
+      }
       if (Math.abs(event.deltaY) < 0.5) {
         return;
       }
@@ -151,6 +165,10 @@ export function ScrollRescueGuard() {
     };
 
     const handleTouchStart = (event: TouchEvent) => {
+      if (isInsideVenueCarousel(event.target)) {
+        touchTrackingRef.current.active = false;
+        return;
+      }
       const touch = event.touches[0];
       if (!touch) {
         touchTrackingRef.current.active = false;
@@ -162,6 +180,10 @@ export function ScrollRescueGuard() {
     };
 
     const handleTouchMove = (event: TouchEvent) => {
+      if (isInsideVenueCarousel(event.target)) {
+        return;
+      }
+
       const touch = event.touches[0];
       if (!touch || !touchTrackingRef.current.active) {
         return;

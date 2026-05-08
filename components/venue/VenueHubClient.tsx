@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
 import type { Venue, LeaderboardEntry } from "@/types";
 import { getUserId, getVenueId, saveUserId, saveVenueId, clearVenueSession } from "@/lib/storage";
 import { clearLoginInProgress } from "@/lib/authFastPath";
@@ -66,20 +65,10 @@ const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
 };
 
 const SWIPE_SCREEN_COUNT = 3;
-const SWIPE_TRIGGER_PX = 10;
-const SWIPE_FLICK_TRIGGER_PX = 8;
-const SWIPE_FLICK_MAX_DURATION_MS = 220;
-const SWIPE_DIRECTION_RATIO = 0.45;
 const FETCH_TIMEOUT_MS = 4500;
 const ARRIVAL_CORE_MAX_WAIT_MS = 2800;
 const ARRIVAL_WATCHDOG_TIMEOUT_MS = 8000;
 const ARRIVAL_RECOVERY_ATTEMPT_KEY = "tp:venue-arrival-recovery-attempt";
-
-const HOME_SCREEN_VARIANTS = {
-  enter: (direction: 1 | -1) => ({ x: direction > 0 ? "100%" : "-100%" }),
-  center: { x: "0%" },
-  exit:  (direction: 1 | -1) => ({ x: direction > 0 ? "-100%" : "100%" }),
-};
 
 function formatCountdown(seconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(seconds));
@@ -98,6 +87,16 @@ function formatBadgeCount(value: number): string {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
+}
+
+function areHomeBadgeCountsEqual(left: HomeBadgeCounts, right: HomeBadgeCounts): boolean {
+  const leftBingo = Math.max(0, Number(left.bingo ?? 0));
+  const leftPickEm = Math.max(0, Number(left.pickem ?? 0));
+  const leftFantasy = Math.max(0, Number(left.fantasy ?? 0));
+  const rightBingo = Math.max(0, Number(right.bingo ?? 0));
+  const rightPickEm = Math.max(0, Number(right.pickem ?? 0));
+  const rightFantasy = Math.max(0, Number(right.fantasy ?? 0));
+  return leftBingo === rightBingo && leftPickEm === rightPickEm && leftFantasy === rightFantasy;
 }
 
 function wait(ms: number): Promise<void> {
@@ -250,11 +249,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const [arrivalInProgress, setArrivalInProgress] = useState(true);
   const venueReadyDispatchedRef = useRef(false);
   const swipeViewportRef = useRef<HTMLDivElement | null>(null);
+  const scrollTickingRef = useRef(false);
   const activeScreenRef = useRef<HomeScreenIndex>(0);
-  const touchStartXRef = useRef<number | null>(null);
-  const touchStartYRef = useRef<number | null>(null);
-  const touchStartAtRef = useRef<number | null>(null);
-  const swipeDirectionRef = useRef<1 | -1>(1);
   const warmupPromiseRef = useRef<Promise<void> | null>(null);
   const warmupStartedRef = useRef(false);
 
@@ -424,54 +420,46 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   };
 
   const goToScreen = useCallback((screenIndex: HomeScreenIndex) => {
+    const viewport = swipeViewportRef.current;
+    if (!viewport) return;
     const nextIndex = clamp(screenIndex, 0, SWIPE_SCREEN_COUNT - 1) as HomeScreenIndex;
-    const currentIndex = activeScreenRef.current;
-    if (nextIndex === currentIndex) return;
-    swipeDirectionRef.current = nextIndex > currentIndex ? 1 : -1;
-    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    if (nextIndex === activeScreenRef.current) return;
+    viewport.scrollTo({ left: viewport.clientWidth * nextIndex, behavior: "smooth" });
     setActiveScreen(nextIndex);
     activeScreenRef.current = nextIndex;
   }, []);
 
-  const onSwipeTouchStart = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
-    const touch = event.touches[0];
-    touchStartXRef.current = touch?.clientX ?? null;
-    touchStartYRef.current = touch?.clientY ?? null;
-    touchStartAtRef.current = Date.now();
+  const onCarouselScroll = useCallback(() => {
+    const viewport = swipeViewportRef.current;
+    if (!viewport || scrollTickingRef.current) return;
+    scrollTickingRef.current = true;
+    window.requestAnimationFrame(() => {
+      scrollTickingRef.current = false;
+      const panelWidth = Math.max(1, viewport.clientWidth);
+      const nextIndex = clamp(Math.round(viewport.scrollLeft / panelWidth), 0, SWIPE_SCREEN_COUNT - 1) as HomeScreenIndex;
+      if (nextIndex === activeScreenRef.current) return;
+      activeScreenRef.current = nextIndex;
+      setActiveScreen(nextIndex);
+    });
   }, []);
 
-  const onSwipeTouchEnd = useCallback(
-    (event: React.TouchEvent<HTMLDivElement>) => {
-      const startX = touchStartXRef.current;
-      const startY = touchStartYRef.current;
-      const startedAt = touchStartAtRef.current;
-      touchStartXRef.current = null;
-      touchStartYRef.current = null;
-      touchStartAtRef.current = null;
-      if (startX === null || startY === null) return;
+  useEffect(() => {
+    const viewport = swipeViewportRef.current;
+    if (!viewport) return;
+    viewport.scrollTo({ left: viewport.clientWidth * activeScreenRef.current, behavior: "auto" });
+  }, []);
 
-      const touch = event.changedTouches[0];
-      if (!touch) return;
-
-      const dx = touch.clientX - startX;
-      const dy = touch.clientY - startY;
-      const elapsedMs = startedAt === null ? Number.POSITIVE_INFINITY : Math.max(0, Date.now() - startedAt);
-      const absDx = Math.abs(dx);
-      const absDy = Math.abs(dy);
-      const isQuickFlick = elapsedMs <= SWIPE_FLICK_MAX_DURATION_MS && absDx >= SWIPE_FLICK_TRIGGER_PX;
-      const passesDirectionalRatio = absDx >= absDy * SWIPE_DIRECTION_RATIO;
-      if ((!isQuickFlick && absDx < SWIPE_TRIGGER_PX) || (!isQuickFlick && !passesDirectionalRatio)) return;
-
-      if (dx < 0) {
-        goToScreen((activeScreen + 1) as HomeScreenIndex);
-        return;
-      }
-      if (dx > 0) {
-        goToScreen((activeScreen - 1) as HomeScreenIndex);
-      }
-    },
-    [activeScreen, goToScreen]
-  );
+  useEffect(() => {
+    const onResize = () => {
+      const viewport = swipeViewportRef.current;
+      if (!viewport) return;
+      viewport.scrollTo({ left: viewport.clientWidth * activeScreenRef.current, behavior: "auto" });
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
 
   const loadTriviaQuota = useCallback(async (): Promise<TriviaQuotaSnapshot | null> => {
     const userId = (getUserId() ?? "").trim();
@@ -511,15 +499,20 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     return String(payload.profile.venueId ?? "").trim() === venue.id;
   }, [venue.id]);
 
-  const loadHomeBadges = useCallback(async () => {
+  const loadHomeBadges = useCallback(async (options?: { silent?: boolean }) => {
+    const silent = Boolean(options?.silent);
     const userId = (getUserId() ?? "").trim();
     if (!userId) {
-      setHomeBadgeCounts({});
-      setIsBadgeLoading(false);
+      setHomeBadgeCounts((current) => (areHomeBadgeCountsEqual(current, {}) ? current : {}));
+      if (!silent) {
+        setIsBadgeLoading(false);
+      }
       return;
     }
-    setIsBadgeLoading(true);
-    setBadgeError("");
+    if (!silent) {
+      setIsBadgeLoading(true);
+    }
+    setBadgeError((current) => (current ? "" : current));
     try {
       const results = await Promise.allSettled([
         fetchJsonWithTimeout<BingoBadgePayload>(
@@ -551,11 +544,18 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
               Math.max(0, Number(entry.points ?? 0)) > 0
           ).length
         : 0;
-      setHomeBadgeCounts({ bingo: unclaimedBingoCount, pickem: unclaimedPickEmCount, fantasy: unclaimedFantasyCount });
+      const nextCounts: HomeBadgeCounts = {
+        bingo: unclaimedBingoCount,
+        pickem: unclaimedPickEmCount,
+        fantasy: unclaimedFantasyCount,
+      };
+      setHomeBadgeCounts((current) => (areHomeBadgeCountsEqual(current, nextCounts) ? current : nextCounts));
     } catch {
-      setBadgeError("Offline: badge counts unavailable.");
+      setBadgeError((current) => (current === "Offline: badge counts unavailable." ? current : "Offline: badge counts unavailable."));
     } finally {
-      setIsBadgeLoading(false);
+      if (!silent) {
+        setIsBadgeLoading(false);
+      }
     }
   }, []);
 
@@ -761,7 +761,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     if (!homeRevealComplete) return;
     const userId = (getUserId() ?? "").trim();
     if (!userId) return;
-    const interval = window.setInterval(() => void loadHomeBadges(), 20000);
+    const interval = window.setInterval(() => void loadHomeBadges({ silent: true }), 20000);
     return () => window.clearInterval(interval);
   }, [homeRevealComplete, loadHomeBadges]);
 
@@ -864,26 +864,26 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           </div>
         </div>
 
-        <div className="relative z-20 mt-4 flex items-center justify-center gap-2">
-          <button type="button" onClick={() => goToScreen(0)} className={`tp-clean-button rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${activeScreen === 0 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-pressed={activeScreen === 0}>Games</button>
-          <button type="button" onClick={() => goToScreen(1)} className={`tp-clean-button rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${activeScreen === 1 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-pressed={activeScreen === 1}>Leaderboard</button>
-          <button type="button" onClick={() => goToScreen(2)} className={`tp-clean-button rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${activeScreen === 2 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-pressed={activeScreen === 2}>Prizes</button>
+        <div className="relative z-40 mt-4 flex items-center justify-center gap-2">
+          <button type="button" onClick={() => goToScreen(0)} className={`tp-clean-button rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${activeScreen === 0 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-current={activeScreen === 0 ? "page" : undefined}>Games</button>
+          <button type="button" onClick={() => goToScreen(1)} className={`tp-clean-button rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${activeScreen === 1 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-current={activeScreen === 1 ? "page" : undefined}>Leaderboard</button>
+          <button type="button" onClick={() => goToScreen(2)} className={`tp-clean-button rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${activeScreen === 2 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-current={activeScreen === 2 ? "page" : undefined}>Prizes</button>
         </div>
       </section>
 
-      <div ref={swipeViewportRef} onTouchStart={onSwipeTouchStart} onTouchEnd={onSwipeTouchEnd} className="relative w-full [overflow-x:clip]" aria-label="Venue home screens">
-        <AnimatePresence initial={false} custom={swipeDirectionRef.current}>
-          {activeScreen === 0 && (
-          <motion.section
-            key="screen-games"
-            custom={swipeDirectionRef.current}
-            variants={HOME_SCREEN_VARIANTS}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.22, ease: "easeOut" }}
-            className="relative flex flex-col px-3 pb-3 pt-1"
-          >
+      <div
+        ref={swipeViewportRef}
+        onScroll={onCarouselScroll}
+        className="venue-home-carousel relative flex w-full overflow-x-auto overflow-y-visible scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        style={{
+          scrollSnapType: "x mandatory",
+          WebkitOverflowScrolling: "touch",
+          touchAction: "pan-x pan-y",
+          overscrollBehaviorX: "contain",
+        }}
+        aria-label="Venue home screens"
+      >
+        <section className="venue-screen relative flex w-full shrink-0 basis-full snap-start flex-col px-3 pb-3 pt-1">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(14,165,233,0.3)_0%,rgba(14,165,233,0)_36%),radial-gradient(circle_at_84%_22%,rgba(251,146,60,0.35)_0%,rgba(251,146,60,0)_35%),radial-gradient(circle_at_52%_84%,rgba(236,72,153,0.3)_0%,rgba(236,72,153,0)_43%)]" />
             {showFastPathSkeleton ? (
               <div className="mx-auto mb-2 w-full max-w-[24rem] rounded-2xl border border-cyan-200/80 bg-cyan-50/85 px-3 py-2 text-center text-xs font-semibold text-cyan-900">
@@ -927,20 +927,9 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 {badgeError} Tap to retry
               </button>
             ) : null}
-          </motion.section>
-          )}
+        </section>
 
-          {activeScreen === 1 && (
-          <motion.section
-            key="screen-leaderboard"
-            custom={swipeDirectionRef.current}
-            variants={HOME_SCREEN_VARIANTS}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.22, ease: "easeOut" }}
-            className="px-3 pb-8 pt-1"
-          >
+        <section className="venue-screen w-full shrink-0 basis-full snap-start px-3 pb-8 pt-1">
             <div className="mx-auto w-full max-w-[26rem] space-y-3">
               <div className="rounded-[1.6rem] border-[3px] border-[#3b2412] bg-[#4a2e18] p-3 shadow-[0_8px_0_rgba(15,23,42,0.3)]">
                 <div className="inline-flex rounded-xl border-2 border-[#3b2412] bg-[#1f5136] px-3 py-1.5 shadow-[0_2px_0_rgba(0,0,0,0.25)]">
@@ -955,20 +944,9 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 </div>
               </div>
             </div>
-          </motion.section>
-          )}
+        </section>
 
-          {activeScreen === 2 && (
-          <motion.section
-            key="screen-prizes"
-            custom={swipeDirectionRef.current}
-            variants={HOME_SCREEN_VARIANTS}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.22, ease: "easeOut" }}
-            className="px-3 pb-3 pt-1"
-          >
+        <section className="venue-screen w-full shrink-0 basis-full snap-start px-3 pb-3 pt-1">
             <div className="mx-auto w-full max-w-[26rem] space-y-3">
               <div className="rounded-[1.6rem] border-[3px] border-[#3b2412] bg-[#4a2e18] p-3 shadow-[0_8px_0_rgba(15,23,42,0.3)]">
                 <div className="inline-flex rounded-xl border-2 border-[#3b2412] bg-[#1f5136] px-3 py-1.5 shadow-[0_2px_0_rgba(0,0,0,0.25)]">
@@ -1006,9 +984,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 </div>
               </div>
             </div>
-          </motion.section>
-          )}
-        </AnimatePresence>
+        </section>
       </div>
     </div>
   );

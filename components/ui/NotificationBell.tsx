@@ -12,6 +12,26 @@ type NotificationPayload = {
   error?: string;
 };
 
+function areNotificationsEqual(left: Notification[], right: Notification[]): boolean {
+  if (left === right) return true;
+  if (left.length !== right.length) return false;
+  for (let index = 0; index < left.length; index += 1) {
+    const l = left[index];
+    const r = right[index];
+    if (!l || !r) return false;
+    if (
+      l.id !== r.id ||
+      l.message !== r.message ||
+      l.type !== r.type ||
+      l.createdAt !== r.createdAt ||
+      l.read !== r.read
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function extractPointsFromMessage(message: string): number {
   const match = message.match(/(?:earned|won)\s+([0-9][0-9,]*)\s+points?/i);
   if (!match?.[1]) {
@@ -108,8 +128,9 @@ export function NotificationBell() {
     }
     hasLoadedOnceRef.current = true;
 
-    setUnreadCount(payload.unreadCount ?? 0);
-    setItems(nextItems);
+    const nextUnreadCount = payload.unreadCount ?? 0;
+    setUnreadCount((current) => (current === nextUnreadCount ? current : nextUnreadCount));
+    setItems((current) => (areNotificationsEqual(current, nextItems) ? current : nextItems));
   };
 
   useEffect(() => {
