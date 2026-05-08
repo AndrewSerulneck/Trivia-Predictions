@@ -334,6 +334,7 @@ export function SportsBingoHome() {
   const [loadingCards, setLoadingCards] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [claimingCardId, setClaimingCardId] = useState("");
+  const [isCollectingAllBingo, setIsCollectingAllBingo] = useState(false);
   const [expandedActiveCardId, setExpandedActiveCardId] = useState("");
   const [expandedFinalCardId, setExpandedFinalCardId] = useState("");
   const [recentlyUpdatedSquareKeys, setRecentlyUpdatedSquareKeys] = useState<Set<string>>(new Set());
@@ -595,6 +596,61 @@ export function SportsBingoHome() {
     return nextStart;
   }, [activeCards]);
   const settledCards = finalizedCards;
+  const unclaimedWonBingoCards = useMemo(
+    () => settledCards.filter((card) => card.status === "won" && !card.rewardClaimedAt && card.rewardPoints > 0),
+    [settledCards]
+  );
+  const totalUnclaimedBingoPoints = useMemo(
+    () => unclaimedWonBingoCards.reduce((sum, card) => sum + card.rewardPoints, 0),
+    [unclaimedWonBingoCards]
+  );
+
+  const collectAllBingoPoints = useCallback(async () => {
+    if (!userId || isCollectingAllBingo || unclaimedWonBingoCards.length === 0) return;
+    setIsCollectingAllBingo(true);
+    setErrorMessage("");
+    let totalAwarded = 0;
+    let firstRect: DOMRect | undefined;
+    try {
+      const collectButton = document.querySelector<HTMLElement>("[data-bingo-collect-all]");
+      firstRect = collectButton?.getBoundingClientRect();
+      for (const card of unclaimedWonBingoCards) {
+        const response = await fetch("/api/bingo/cards", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "claim", userId, cardId: card.id }),
+        });
+        const payload = (await response.json()) as ClaimResponse;
+        if (payload.ok && payload.result) {
+          totalAwarded += payload.result.rewardPoints;
+        }
+      }
+      if (totalAwarded > 0) {
+        window.dispatchEvent(
+          new CustomEvent("tp:coin-flight", {
+            detail: {
+              sourceRect: firstRect
+                ? { left: firstRect.left, top: firstRect.top, width: firstRect.width, height: firstRect.height }
+                : undefined,
+              delta: totalAwarded,
+              coins: Math.min(36, Math.max(14, Math.round(totalAwarded / 4))),
+            },
+          })
+        );
+        window.dispatchEvent(
+          new CustomEvent("tp:points-updated", {
+            detail: { source: "bingo-claim", delta: totalAwarded },
+          })
+        );
+      }
+    } catch {
+      setErrorMessage("Failed to collect some boards. Try individual collect buttons below.");
+    } finally {
+      setIsCollectingAllBingo(false);
+      void loadCards({ background: true });
+    }
+  }, [isCollectingAllBingo, loadCards, unclaimedWonBingoCards, userId]);
+
   const expandedActiveCard = useMemo(
     () => activeCards.find((card) => card.id === expandedActiveCardId) ?? null,
     [activeCards, expandedActiveCardId]
@@ -638,7 +694,7 @@ export function SportsBingoHome() {
     };
   }, [hasStartedActiveCard, loadCards, nextActiveCardStartMs, userId]);
 
-  const claimPoints = async (card: BingoCard, event: React.MouseEvent<HTMLButtonElement>) => {
+  const claimPoints = async (card: BingoCard, sourceElement: HTMLElement | null = null) => {
     if (!userId || claimingCardId) {
       return;
     }
@@ -660,16 +716,13 @@ export function SportsBingoHome() {
         throw new Error(payload.error ?? "Failed to claim Bingo points.");
       }
 
-      const buttonRect = event.currentTarget.getBoundingClientRect();
+      const buttonRect = sourceElement?.getBoundingClientRect();
       window.dispatchEvent(
         new CustomEvent("tp:coin-flight", {
           detail: {
-            sourceRect: {
-              left: buttonRect.left,
-              top: buttonRect.top,
-              width: buttonRect.width,
-              height: buttonRect.height,
-            },
+            sourceRect: buttonRect
+              ? { left: buttonRect.left, top: buttonRect.top, width: buttonRect.width, height: buttonRect.height }
+              : undefined,
             delta: payload.result.rewardPoints,
             coins: Math.min(32, Math.max(12, Math.round(payload.result.rewardPoints / 4))),
           },
@@ -710,6 +763,31 @@ export function SportsBingoHome() {
       />
       {errorMessage ? (
         <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">{errorMessage}</div>
+      ) : null}
+
+      {unclaimedWonBingoCards.length > 0 ? (
+        <div className="rounded-xl border-2 border-orange-500 bg-gradient-to-r from-orange-600 to-red-600 px-3 py-3 shadow-[0_6px_18px_rgba(234,88,12,0.35)]">
+          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-orange-100">Bingo Points Ready</p>
+          <div className="mt-1 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-lg font-black leading-none text-white">
+                {unclaimedWonBingoCards.length} winning board{unclaimedWonBingoCards.length !== 1 ? "s" : ""}
+              </p>
+              <p className="mt-0.5 text-[11px] font-semibold text-orange-100">
+                +{totalUnclaimedBingoPoints} pts waiting to collect
+              </p>
+            </div>
+            <button
+              type="button"
+              data-bingo-collect-all
+              onClick={() => void collectAllBingoPoints()}
+              disabled={isCollectingAllBingo}
+              className="tp-clean-button inline-flex min-h-[44px] items-center rounded-full border-2 border-white bg-white px-4 py-2 text-sm font-black text-orange-700 shadow-[0_3px_0_rgba(0,0,0,0.18)] transition-all active:scale-95 disabled:opacity-60"
+            >
+              {isCollectingAllBingo ? "Collecting..." : "Collect Points"}
+            </button>
+          </div>
+        </div>
       ) : null}
 
       <div className="rounded-2xl border border-amber-200/70 bg-amber-50/85 p-4 shadow-sm">
@@ -839,7 +917,15 @@ export function SportsBingoHome() {
               const summary = summarizeCardState(card);
               const showClaimOverlay = card.status === "won" && !card.rewardClaimedAt;
               return (
-                <li key={card.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <li
+                  key={card.id}
+                  className={`rounded-xl border p-3 ${
+                    showClaimOverlay
+                      ? "cursor-pointer border-emerald-300 bg-emerald-50 ring-2 ring-emerald-400 animate-pulse"
+                      : "border-slate-200 bg-slate-50"
+                  }`}
+                  onClick={showClaimOverlay ? (event) => void claimPoints(card, event.currentTarget) : undefined}
+                >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-semibold text-slate-900">{card.gameLabel}</p>
                     <span
@@ -853,6 +939,11 @@ export function SportsBingoHome() {
                     >
                       {card.status}
                     </span>
+                    {showClaimOverlay ? (
+                      <span className="rounded-full border border-emerald-400 bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-emerald-800">
+                        Tap to Claim
+                      </span>
+                    ) : null}
                   </div>
                   <p className="mt-1 text-xs text-slate-600">
                     {formatLocalDateTime(card.startsAt)} · Hits {summary.hitCount}/25
@@ -870,7 +961,8 @@ export function SportsBingoHome() {
                               type="button"
                               disabled={claimingCardId === card.id}
                               onClick={(event) => {
-                                void claimPoints(card, event);
+                                event.stopPropagation();
+                                void claimPoints(card, event.currentTarget);
                               }}
                               className="pointer-events-auto inline-flex min-h-[44px] items-center rounded-full bg-gradient-to-r from-emerald-700 to-teal-600 px-4 py-2 text-sm font-semibold text-white transition-all active:scale-95 disabled:opacity-60"
                             >

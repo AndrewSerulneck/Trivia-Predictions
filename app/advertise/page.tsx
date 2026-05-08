@@ -9,6 +9,7 @@ export default function AdvertisePage() {
       description="Tell us about your interest in advertising. Name, email, and phone are required."
       showUserStatus={false}
       showAlerts={false}
+      showPageTitle={false}
     >
       <div className="space-y-4">
         <BackButton label="Back" />

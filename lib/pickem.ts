@@ -1,6 +1,7 @@
 import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 
 export type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl";
 type PickEmPickStatus = "pending" | "won" | "lost" | "push" | "canceled";
@@ -1509,7 +1510,20 @@ export async function claimPickEmReward(params: {
     };
   }
 
-  const pointsAwarded = Number(data.reward_points ?? PICKEM_REWARD_POINTS);
+  const basePointsAwarded = Number(data.reward_points ?? PICKEM_REWARD_POINTS);
+  let pointsAwarded = basePointsAwarded;
+  const venueId = String(pickLookup.data.venue_id ?? "").trim();
+  if (venueId && pointsAwarded > 0) {
+    try {
+      const campaignResult = await applyChallengeCampaignPoints({
+        userId,
+        venueId,
+        gameType: "pickem",
+        basePoints: pointsAwarded,
+      });
+      pointsAwarded = Math.max(0, Number(campaignResult.finalPoints ?? pointsAwarded));
+    } catch {}
+  }
 
   const { data: userRow, error: userError } = await supabaseAdmin
     .from("users")

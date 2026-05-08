@@ -2,6 +2,7 @@ import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { apiSportsGet } from "@/lib/apisports";
+import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 
 const ODDS_API_BASE_URL = process.env.ODDS_API_BASE_URL ?? "https://api.the-odds-api.com/v4";
 const ODDS_API_KEY = process.env.ODDS_API_KEY?.trim() ?? "";
@@ -4657,8 +4658,8 @@ export async function claimSportsBingoReward(params: {
     .eq("user_id", userId)
     .eq("status", "won")
     .is("reward_claimed_at", null)
-    .select("id, reward_points, game_label")
-    .maybeSingle<{ id: string; reward_points: number; game_label: string }>();
+    .select("id, reward_points, game_label, venue_id")
+    .maybeSingle<{ id: string; reward_points: number; game_label: string; venue_id: string | null }>();
 
   if (claimError) {
     throw new Error(claimError.message ?? "Failed to claim Bingo points.");
@@ -4667,7 +4668,21 @@ export async function claimSportsBingoReward(params: {
     throw new Error("This Bingo reward was already claimed or is not eligible yet.");
   }
 
-  const rewardPoints = Math.max(0, Number(claimedCard.reward_points ?? 0));
+  const baseRewardPoints = Math.max(0, Number(claimedCard.reward_points ?? 0));
+  let rewardPoints = baseRewardPoints;
+  const venueId = String(claimedCard.venue_id ?? "").trim();
+  if (venueId && rewardPoints > 0) {
+    try {
+      const campaignResult = await applyChallengeCampaignPoints({
+        userId,
+        venueId,
+        gameType: "bingo",
+        basePoints: rewardPoints,
+      });
+      rewardPoints = Math.max(0, Number(campaignResult.finalPoints ?? rewardPoints));
+    } catch {}
+  }
+
   if (rewardPoints > 0) {
     const currentPoints = await loadUserPoints(userId);
     await supabaseAdmin!

@@ -1241,7 +1241,7 @@ export function PredictionMarketList() {
                             <InlineSlotAdClient
                               slot="leaderboard-sidebar"
                               venueId={getVenueId() ?? undefined}
-                              pageKey="sports-predictions"
+                              pageKey="pickem"
                               adType="inline"
                               displayTrigger="on-scroll"
                               placementKey="predictions-inline"

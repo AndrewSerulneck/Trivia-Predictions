@@ -1,18 +1,5 @@
-import { PageShell } from "@/components/ui/PageShell";
-import { PredictionMarketList } from "@/components/predictions/PredictionMarketList";
-import { BackButton } from "@/components/navigation/BackButton";
-import { APP_PAGE_NAMES } from "@/lib/pageNames";
+import { redirect } from "next/navigation";
 
-export default async function PredictionsPage() {
-  return (
-    <PageShell
-      title={APP_PAGE_NAMES.sportsPredictions}
-      description="Browse live sports markets, choose a sport, then drill into leagues to place picks."
-    >
-      <div className="space-y-4">
-        <BackButton label="Back" venueHomeFallback />
-        <PredictionMarketList />
-      </div>
-    </PageShell>
-  );
+export default function PredictionsPage() {
+  redirect("/pickem");
 }

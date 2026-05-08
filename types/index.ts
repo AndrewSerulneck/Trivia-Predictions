@@ -14,8 +14,9 @@ export type AdPageKey =
   | "join"
   | "venue"
   | "trivia"
-  | "sports-predictions"
-  | "sports-bingo";
+  | "sports-bingo"
+  | "pickem"
+  | "fantasy";
 
 export type AdType = "popup" | "banner" | "inline";
 
@@ -142,6 +143,37 @@ export interface ChallengeInvite {
   expiresAt?: string;
   createdAt: string;
   respondedAt?: string;
+}
+
+export type CampaignRecurringType = "none" | "daily" | "weekly" | "monthly" | "yearly";
+
+export interface ChallengeCampaign {
+  id: string;
+  createdAt: string;
+  name: string;
+  imageUrl?: string;
+  rules: string;
+  venueIds: string[];
+  activeDays: string[];
+  startTime?: string;
+  endTime?: string;
+  endDate?: string;
+  gameTypes: ChallengeGameType[];
+  pointMultiplier: number;
+  pointsRequiredToWin: number;
+  recurringType: CampaignRecurringType;
+  winnerUserId?: string | null;
+  winnerUsername?: string | null;
+  isActive: boolean;
+}
+
+export interface ChallengeCampaignProgress {
+  id: string;
+  challengeId: string;
+  userId: string;
+  venueId: string;
+  pointsEarned: number;
+  updatedAt: string;
 }
 
 export interface WeeklyPrize {

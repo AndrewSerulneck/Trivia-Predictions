@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import type { Venue, LeaderboardEntry } from "@/types";
 import { getUserId, getVenueId, saveUserId, saveVenueId, clearVenueSession } from "@/lib/storage";
 import { clearLoginInProgress } from "@/lib/authFastPath";
@@ -43,6 +44,23 @@ type UserSummaryPayload = {
   profile?: {
     venueId?: string;
   } | null;
+};
+
+type ChallengeCampaignCard = {
+  id: string;
+  name: string;
+  imageUrl?: string;
+  rules: string;
+  pointsRequiredToWin: number;
+  progressPoints: number;
+  winnerUserId?: string | null;
+  winnerUsername?: string | null;
+  isActive: boolean;
+};
+
+type ChallengeCampaignPayload = {
+  ok?: boolean;
+  campaigns?: ChallengeCampaignCard[];
 };
 
 type HomeScreenIndex = 0 | 1 | 2;
@@ -228,13 +246,10 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const [triviaGateNotice, setTriviaGateNotice] = useState("");
   const [homeBadgeCounts, setHomeBadgeCounts] = useState<HomeBadgeCounts>({});
   const [dismissedBadgeGames, setDismissedBadgeGames] = useState<Set<VenueGameKey>>(new Set());
-  const [weeklyPrizeTitle, setWeeklyPrizeTitle] = useState("Weekly Venue Champion Prize");
-  const [weeklyPrizeDescription, setWeeklyPrizeDescription] = useState(
-    "Top the leaderboard by week end to earn this venue's reward."
-  );
-  const [weeklyPrizePoints, setWeeklyPrizePoints] = useState(0);
-  const [isWeeklyPrizeLoading, setIsWeeklyPrizeLoading] = useState(true);
-  const [weeklyPrizeError, setWeeklyPrizeError] = useState("");
+  const [challengeCards, setChallengeCards] = useState<ChallengeCampaignCard[]>([]);
+  const [isChallengesLoading, setIsChallengesLoading] = useState(true);
+  const [challengesError, setChallengesError] = useState("");
+  const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
   const [isBadgeLoading, setIsBadgeLoading] = useState(true);
   const [badgeError, setBadgeError] = useState("");
   const [leaderboardBootstrapEntries, setLeaderboardBootstrapEntries] = useState<LeaderboardEntry[]>([]);
@@ -247,6 +262,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const [arrivalOverlayCleared, setArrivalOverlayCleared] = useState(true);
   const [arrivalCoreReady, setArrivalCoreReady] = useState(false);
   const [arrivalInProgress, setArrivalInProgress] = useState(true);
+  const [carouselBootstrapped, setCarouselBootstrapped] = useState(false);
   const venueReadyDispatchedRef = useRef(false);
   const swipeViewportRef = useRef<HTMLDivElement | null>(null);
   const scrollTickingRef = useRef(false);
@@ -307,12 +323,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       const isLocked = Boolean(quota && !quota.isAdminBypass && quota.questionsRemaining <= 0);
       setTriviaUnlockSeconds(isLocked ? Math.max(0, Math.floor(quota?.windowSecondsRemaining ?? 0)) : 0);
       setHomeBadgeCounts(snapshot.homeBadgeCounts ?? {});
-      setWeeklyPrizeTitle(snapshot.weeklyPrizeTitle ?? "Weekly Venue Champion Prize");
-      setWeeklyPrizeDescription(
-        snapshot.weeklyPrizeDescription ?? "Top the leaderboard by week end to earn this venue's reward."
-      );
-      setWeeklyPrizePoints(snapshot.weeklyPrizePoints ?? 0);
-      if (snapshot.weeklyPrizeTitle) setIsWeeklyPrizeLoading(false);
       if (snapshot.homeBadgeCounts) setIsBadgeLoading(false);
       if (snapshot.leaderboardEntries && snapshot.leaderboardEntries.length > 0) {
         setLeaderboardBootstrapEntries(snapshot.leaderboardEntries);
@@ -443,10 +453,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     });
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const viewport = swipeViewportRef.current;
     if (!viewport) return;
-    viewport.scrollTo({ left: viewport.clientWidth * activeScreenRef.current, behavior: "auto" });
+    viewport.scrollLeft = viewport.clientWidth * activeScreenRef.current;
+    setCarouselBootstrapped(true);
   }, []);
 
   useEffect(() => {
@@ -559,30 +570,43 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     }
   }, []);
 
-  const loadWeeklyPrize = useCallback(async () => {
-    const venueId = getVenueId() ?? "";
-    if (!venueId) {
-      setIsWeeklyPrizeLoading(false);
-      return;
-    }
-    setIsWeeklyPrizeLoading(true);
-    setWeeklyPrizeError("");
-    try {
-      const prizeBody = await fetchJsonWithTimeout<{ ok?: boolean; weeklyPrize?: { prizeTitle?: string; prizeDescription?: string; rewardPoints?: number } | null }>(
-        `/api/prizes?venueId=${encodeURIComponent(venueId)}`
-      );
-      if (!prizeBody?.ok || !prizeBody.weeklyPrize) {
-        throw new Error("Prize unavailable.");
+  const loadChallengeCampaigns = useCallback(
+    async (options?: { silent?: boolean }) => {
+      const userId = (getUserId() ?? "").trim();
+      const venueId = (getVenueId() ?? "").trim();
+      const silent = Boolean(options?.silent);
+      if (!venueId) {
+        setIsChallengesLoading(false);
+        return;
       }
-      setWeeklyPrizeTitle(String(prizeBody.weeklyPrize.prizeTitle ?? "Weekly Venue Champion Prize"));
-      setWeeklyPrizeDescription(String(prizeBody.weeklyPrize.prizeDescription ?? "Top the leaderboard by week end to earn this venue's reward."));
-      setWeeklyPrizePoints(Math.max(0, Number(prizeBody.weeklyPrize.rewardPoints ?? 0)));
-    } catch {
-      setWeeklyPrizeError("Offline: weekly prize unavailable.");
-    } finally {
-      setIsWeeklyPrizeLoading(false);
-    }
-  }, []);
+      if (!silent) {
+        setIsChallengesLoading(true);
+      }
+      setChallengesError("");
+      try {
+        const query = new URLSearchParams({
+          venueId,
+          includeInactive: "true",
+          includeResolved: "true",
+        });
+        if (userId) {
+          query.set("userId", userId);
+        }
+        const body = await fetchJsonWithTimeout<ChallengeCampaignPayload>(`/api/challenge-campaigns?${query.toString()}`);
+        if (!body?.ok) {
+          throw new Error("Challenges unavailable.");
+        }
+        setChallengeCards(Array.isArray(body.campaigns) ? body.campaigns : []);
+      } catch {
+        setChallengesError("Offline: challenges unavailable.");
+      } finally {
+        if (!silent) {
+          setIsChallengesLoading(false);
+        }
+      }
+    },
+    []
+  );
 
   const runWarmup = useCallback(async () => {
     if (warmupPromiseRef.current) return warmupPromiseRef.current;
@@ -621,11 +645,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       try {
         await fetchJsonWithTimeout<{ ok?: boolean }>("/api/pickem/sports");
       } catch {}
-      await Promise.allSettled([loadWeeklyPrize(), loadHomeBadges()]);
+      await Promise.allSettled([loadChallengeCampaigns(), loadHomeBadges()]);
     })();
     warmupPromiseRef.current = p;
     return p;
-  }, [loadHomeBadges, loadWeeklyPrize]);
+  }, [loadChallengeCampaigns, loadHomeBadges]);
 
   useEffect(() => {
     if (!arrivalInProgress) {
@@ -765,6 +789,13 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     return () => window.clearInterval(interval);
   }, [homeRevealComplete, loadHomeBadges]);
 
+  useEffect(() => {
+    if (!homeRevealComplete) return;
+    void loadChallengeCampaigns();
+    const interval = window.setInterval(() => void loadChallengeCampaigns({ silent: true }), 30000);
+    return () => window.clearInterval(interval);
+  }, [homeRevealComplete, loadChallengeCampaigns]);
+
 
   useEffect(() => {
     if (!homeRevealComplete) return;
@@ -837,7 +868,13 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     return badges;
   }, [homeBadgeCounts]);
 
+  const selectedChallenge = useMemo(
+    () => challengeCards.find((card) => card.id === selectedChallengeId) ?? null,
+    [challengeCards, selectedChallengeId]
+  );
+
   const showFastPathSkeleton = arrivalInProgress && !arrivalCoreReady;
+  const contentReady = !arrivalInProgress && homeRevealComplete && carouselBootstrapped;
 
   return (
     <div
@@ -849,7 +886,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           <div className="pointer-events-none absolute inset-[7px] rounded-[1rem] border border-[#94a3b8]/30" />
           <div className="relative flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-[clamp(2.25rem,8.6vw,3.45rem)] font-black leading-[0.96] text-cyan-200 [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_0_10px_rgba(34,211,238,0.5),0_0_24px_rgba(34,211,238,0.35),0_2px_0_rgba(8,47,73,0.9)]">
+              <h2 className="text-[clamp(1.6rem,7.2vw,3.45rem)] font-black leading-[0.96] text-cyan-200 [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_0_10px_rgba(34,211,238,0.5),0_0_24px_rgba(34,211,238,0.35),0_2px_0_rgba(8,47,73,0.9)]">
                 {venueDisplayName}
               </h2>
             </div>
@@ -865,25 +902,28 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         </div>
 
         <div className="relative z-40 mt-4 flex items-center justify-center gap-2">
-          <button type="button" onClick={() => goToScreen(0)} className={`tp-clean-button rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${activeScreen === 0 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-current={activeScreen === 0 ? "page" : undefined}>Games</button>
-          <button type="button" onClick={() => goToScreen(1)} className={`tp-clean-button rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${activeScreen === 1 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-current={activeScreen === 1 ? "page" : undefined}>Leaderboard</button>
-          <button type="button" onClick={() => goToScreen(2)} className={`tp-clean-button rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${activeScreen === 2 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-current={activeScreen === 2 ? "page" : undefined}>Prizes</button>
+          <button type="button" onClick={() => goToScreen(0)} className={`tp-clean-button min-w-[6.9rem] rounded-full px-4 py-2 text-base font-bold text-center ${activeScreen === 0 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-current={activeScreen === 0 ? "page" : undefined}>Games</button>
+          <button type="button" onClick={() => goToScreen(1)} className={`tp-clean-button min-w-[6.9rem] rounded-full px-4 py-2 text-base font-bold text-center ${activeScreen === 1 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-current={activeScreen === 1 ? "page" : undefined}>Leaderboard</button>
+          <button type="button" onClick={() => goToScreen(2)} className={`tp-clean-button min-w-[6.9rem] rounded-full px-4 py-2 text-base font-bold text-center ${activeScreen === 2 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-current={activeScreen === 2 ? "page" : undefined}>Challenges</button>
         </div>
       </section>
 
-      <div
-        ref={swipeViewportRef}
-        onScroll={onCarouselScroll}
-        className="venue-home-carousel relative flex w-full overflow-x-auto overflow-y-visible scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-        style={{
-          scrollSnapType: "x mandatory",
-          WebkitOverflowScrolling: "touch",
-          touchAction: "pan-x pan-y",
-          overscrollBehaviorX: "contain",
-        }}
-        aria-label="Venue home screens"
-      >
-        <section className="venue-screen relative flex w-full shrink-0 basis-full snap-start flex-col px-3 pb-3 pt-1">
+      <div className="canvas-ribbon m-0 w-full p-0">
+        <div
+          ref={swipeViewportRef}
+          onScroll={onCarouselScroll}
+          className="venue-home-carousel relative m-0 flex w-full overflow-x-auto overflow-y-visible p-0 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          style={{
+            scrollSnapType: "x mandatory",
+            WebkitOverflowScrolling: "touch",
+            touchAction: "pan-x pan-y",
+            overscrollBehaviorX: "contain",
+            scrollPadding: 0,
+          }}
+          aria-label="Venue home screens"
+        >
+        <section className="venue-screen relative m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">
+            <div className={`venue-home-panel-content venue-home-games-fit w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-3 pt-1 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(14,165,233,0.3)_0%,rgba(14,165,233,0)_36%),radial-gradient(circle_at_84%_22%,rgba(251,146,60,0.35)_0%,rgba(251,146,60,0)_35%),radial-gradient(circle_at_52%_84%,rgba(236,72,153,0.3)_0%,rgba(236,72,153,0)_43%)]" />
             {showFastPathSkeleton ? (
               <div className="mx-auto mb-2 w-full max-w-[24rem] rounded-2xl border border-cyan-200/80 bg-cyan-50/85 px-3 py-2 text-center text-xs font-semibold text-cyan-900">
@@ -893,19 +933,19 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 </p>
               </div>
             ) : null}
-            <div className="relative mx-auto min-h-0 w-full max-w-[24rem] flex-1 pt-1">
-              <div className="grid w-full grid-cols-2 gap-3 pb-2 sm:gap-4">
+            <div className="relative mx-auto min-h-0 w-full max-w-[24rem] flex-1 pt-1 sm:max-w-md">
+              <div className="grid w-full grid-cols-2 gap-[clamp(0.55rem,2.4vw,1rem)] pb-2">
                 {homeCards.map((card) => {
                   const isOpening = pendingDestination === card.key;
                   const badge = visibleBadgeByGame.get(card.key);
                   const titleLines = GAME_TITLE_LINES_BY_KEY[card.key];
                   return (
-                    <button key={card.key} type="button" onMouseDown={triggerPulse} onClick={(event) => { void goTo(card.key, event.currentTarget); }} disabled={pendingDestination !== null} data-venue-game-card={card.key} className={`tp-clean-button tp-game-card-btn group relative aspect-square w-full overflow-hidden !rounded-[22%] !border-[2px] !border-white/90 !shadow-[0_10px_20px_rgba(15,23,42,0.35)] p-0 text-left${isOpening ? " is-opening" : ""}`}>
+                    <button key={card.key} type="button" onMouseDown={triggerPulse} onClick={(event) => { void goTo(card.key, event.currentTarget); }} disabled={pendingDestination !== null} data-venue-game-card={card.key} className={`tp-clean-button tp-game-card-btn group relative aspect-square w-full max-w-[clamp(8.2rem,40vw,11.5rem)] justify-self-center overflow-hidden !rounded-[22%] !border-[2px] !border-white/90 !shadow-[0_10px_20px_rgba(15,23,42,0.35)] p-0 text-left${isOpening ? " is-opening" : ""}`}>
                       <div className={`absolute inset-0 ${GAME_ICON_BG_BY_KEY[card.key]}`} />
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_26%_18%,rgba(255,255,255,0.38)_0%,rgba(255,255,255,0.1)_40%,rgba(255,255,255,0)_72%)]" />
                       <div className="relative flex h-full flex-col items-center justify-center gap-2 p-2 text-center">
                         <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-white/65 bg-white/20 shadow-[0_3px_10px_rgba(2,6,23,0.35)]"><GameGlyph gameKey={card.key} /></span>
-                        <span className="text-[clamp(2.16rem,8vw,2.76rem)] font-black leading-[0.8] text-white [font-family:'Kalam','Bree_Serif','Nunito',cursive] [text-shadow:0_2px_0_rgba(15,23,42,0.58),0_4px_10px_rgba(2,6,23,0.45)]">
+                        <span className="text-[clamp(1.7rem,6.9vw,2.5rem)] font-black leading-[0.8] text-white [font-family:'Kalam','Bree_Serif','Nunito',cursive] [text-shadow:0_2px_0_rgba(15,23,42,0.58),0_4px_10px_rgba(2,6,23,0.45)]">
                           {titleLines.map((line) => <span key={`${card.key}-${line}`} className="block">{line}</span>)}
                         </span>
                       </div>
@@ -927,9 +967,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 {badgeError} Tap to retry
               </button>
             ) : null}
+            </div>
         </section>
 
-        <section className="venue-screen w-full shrink-0 basis-full snap-start px-3 pb-8 pt-1">
+        <section className="venue-screen m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">
+            <div className={`venue-home-panel-content w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-8 pt-1 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>
             <div className="mx-auto w-full max-w-[26rem] space-y-3">
               <div className="rounded-[1.6rem] border-[3px] border-[#3b2412] bg-[#4a2e18] p-3 shadow-[0_8px_0_rgba(15,23,42,0.3)]">
                 <div className="inline-flex rounded-xl border-2 border-[#3b2412] bg-[#1f5136] px-3 py-1.5 shadow-[0_2px_0_rgba(0,0,0,0.25)]">
@@ -944,48 +986,120 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 </div>
               </div>
             </div>
+            </div>
         </section>
 
-        <section className="venue-screen w-full shrink-0 basis-full snap-start px-3 pb-3 pt-1">
+        <section className="venue-screen m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">
+            <div className={`venue-home-panel-content w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-3 pt-1 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>
             <div className="mx-auto w-full max-w-[26rem] space-y-3">
               <div className="rounded-[1.6rem] border-[3px] border-[#3b2412] bg-[#4a2e18] p-3 shadow-[0_8px_0_rgba(15,23,42,0.3)]">
                 <div className="inline-flex rounded-xl border-2 border-[#3b2412] bg-[#1f5136] px-3 py-1.5 shadow-[0_2px_0_rgba(0,0,0,0.25)]">
-                  <h3 className="text-2xl font-semibold text-[#ecf8f1] [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.45)]">Prizes</h3>
+                  <h3 className="text-2xl font-semibold text-[#ecf8f1] [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.45)]">Challenges</h3>
                 </div>
-                <div className="mt-3 relative overflow-hidden rounded-[1.4rem] border-[3px] border-[#0f172a]/80 bg-[linear-gradient(146deg,#0f766e_0%,#06b6d4_50%,#22d3ee_100%)] p-3 shadow-[0_8px_0_rgba(15,23,42,0.35)]">
-                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_86%_10%,rgba(254,240,138,0.35)_0%,rgba(254,240,138,0)_34%)]" />
-                  <div className="relative flex items-start gap-2">
-                    <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/70 bg-white/25 shadow-[0_2px_8px_rgba(2,6,23,0.35)]"><TrophyGlyph className="h-10 w-10 scale-[4]" /></div>
-                    <div className="min-w-0">
-                      <div className="text-[11px] font-black uppercase tracking-[0.14em] text-cyan-50">This Week&apos;s Prize</div>
-                      {isWeeklyPrizeLoading ? (
-                        <div className="space-y-1.5 pt-1">
-                          <div className="h-4 w-44 animate-pulse rounded bg-white/30" />
-                          <div className="h-3 w-56 animate-pulse rounded bg-white/20" />
-                        </div>
-                      ) : (
-                        <>
-                          <div className="text-base font-black leading-tight text-white">{weeklyPrizeTitle}</div>
-                          <div className="text-xs text-cyan-50/95">{weeklyPrizeDescription}</div>
-                          {weeklyPrizePoints > 0 ? <div className="mt-1 text-xs font-black text-amber-100">Bonus reward: +{weeklyPrizePoints} points</div> : null}
-                          {weeklyPrizeError ? (
-                            <button
-                              type="button"
-                              onClick={() => void loadWeeklyPrize()}
-                              className="mt-2 rounded-md border border-cyan-100/80 bg-cyan-50/20 px-2 py-1 text-[11px] font-black uppercase tracking-[0.08em] text-cyan-50"
-                            >
-                              {weeklyPrizeError} Tap to retry
-                            </button>
-                          ) : null}
-                        </>
-                      )}
+                <div className="mt-3 space-y-2">
+                  {isChallengesLoading ? (
+                    <div className="space-y-2 rounded-[1.2rem] border-[3px] border-[#0f172a]/80 bg-[linear-gradient(146deg,#0f766e_0%,#06b6d4_50%,#22d3ee_100%)] p-3 shadow-[0_8px_0_rgba(15,23,42,0.35)]">
+                      <div className="h-4 w-32 animate-pulse rounded bg-white/40" />
+                      <div className="h-3 w-full animate-pulse rounded bg-white/25" />
                     </div>
-                  </div>
+                  ) : null}
+
+                  {!isChallengesLoading && challengeCards.length === 0 ? (
+                    <div className="rounded-[1.2rem] border-[3px] border-[#0f172a]/70 bg-[#0f172a]/50 p-3 text-center text-sm font-semibold text-cyan-50">
+                      No active challenges for this venue yet.
+                    </div>
+                  ) : null}
+
+                  {challengeCards.map((challenge) => {
+                    const progress = Math.max(0, Number(challenge.progressPoints ?? 0));
+                    const target = Math.max(1, Number(challenge.pointsRequiredToWin ?? 1));
+                    const percent = Math.min(100, Math.round((progress / target) * 100));
+                    const isWon = Boolean(challenge.winnerUserId);
+                    return (
+                      <button
+                        key={challenge.id}
+                        type="button"
+                        onClick={() => setSelectedChallengeId(challenge.id)}
+                        className="tp-clean-button relative flex w-full items-center gap-3 overflow-hidden rounded-[1.2rem] border-[3px] border-[#0f172a]/80 bg-[linear-gradient(146deg,#0f766e_0%,#06b6d4_50%,#22d3ee_100%)] p-3 text-left shadow-[0_8px_0_rgba(15,23,42,0.35)]"
+                      >
+                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_86%_10%,rgba(254,240,138,0.35)_0%,rgba(254,240,138,0)_34%)]" />
+                        <div className="relative inline-flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/70 bg-white/25 shadow-[0_2px_8px_rgba(2,6,23,0.35)]">
+                          {challenge.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={challenge.imageUrl} alt={challenge.name} className="h-full w-full object-cover" />
+                          ) : (
+                            <TrophyGlyph className="h-10 w-10 scale-[3.6]" />
+                          )}
+                        </div>
+                        <div className="relative min-w-0 flex-1">
+                          <div className="truncate text-sm font-black uppercase tracking-[0.08em] text-cyan-50">{challenge.name}</div>
+                          {isWon ? (
+                            <div className="mt-1 text-xs font-black text-amber-100">
+                              {challenge.winnerUsername ? `${challenge.winnerUsername} has won this challenge.` : "A winner has been declared."}
+                            </div>
+                          ) : (
+                            <>
+                              <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-slate-950/35">
+                                <div className="h-full rounded-full bg-amber-300 transition-all duration-300" style={{ width: `${percent}%` }} />
+                              </div>
+                              <div className="mt-1 text-[11px] font-semibold text-cyan-50/95">
+                                {progress} / {target} points
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+
+                  {challengesError ? (
+                    <button
+                      type="button"
+                      onClick={() => void loadChallengeCampaigns()}
+                      className="rounded-md border border-cyan-100/80 bg-cyan-50/20 px-2 py-1 text-[11px] font-black uppercase tracking-[0.08em] text-cyan-50"
+                    >
+                      {challengesError} Tap to retry
+                    </button>
+                  ) : null}
                 </div>
               </div>
             </div>
+            </div>
         </section>
+        </div>
       </div>
+
+      <AnimatePresence>
+        {selectedChallenge ? (
+          <motion.div
+            className="fixed inset-0 z-[990] flex items-end justify-center bg-black/45 px-3 pb-4 pt-16"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedChallengeId(null)}
+          >
+            <motion.div
+              className="relative w-full max-w-[28rem] rounded-[1.4rem] border-[2px] border-slate-900/20 bg-[#fff7ea] p-4 shadow-[0_12px_34px_rgba(15,23,42,0.45)]"
+              initial={{ opacity: 0, y: 28, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 14, scale: 0.99 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <button
+                type="button"
+                className="tp-clean-button absolute right-3 top-3 inline-flex h-11 min-w-11 items-center justify-center rounded-full border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700"
+                onClick={() => setSelectedChallengeId(null)}
+                aria-label="Close challenge rules"
+              >
+                Close
+              </button>
+              <h4 className="pr-16 text-lg font-black text-slate-900">{selectedChallenge.name}</h4>
+              <p className="mt-2 text-sm leading-6 text-slate-700">{selectedChallenge.rules}</p>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

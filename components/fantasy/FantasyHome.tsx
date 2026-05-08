@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
+import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import type { FantasyEntry, FantasyGame, FantasyLeaderboardEntry, FantasyPlayerPoolItem } from "@/lib/fantasy";
 import { useLivePlayerStats } from "@/lib/hooks/useLivePlayerStats";
 
@@ -178,6 +179,7 @@ export function FantasyHome() {
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [claimingEntryId, setClaimingEntryId] = useState("");
+  const [isCollectingAllFantasy, setIsCollectingAllFantasy] = useState(false);
   const fantasyKickoffRefreshTimerRef = useRef<number | null>(null);
   const todayDate = useMemo(() => getTodayDateInput(), []);
 
@@ -636,6 +638,63 @@ export function FantasyHome() {
     [claimingEntryId, loadEntries, userId]
   );
 
+  const totalUnclaimedFantasyPoints = useMemo(
+    () => finalUnclaimedEntries.reduce((sum, e) => sum + computeFantasyClaimablePoints(e), 0),
+    [finalUnclaimedEntries]
+  );
+
+  const collectAllFantasyEntries = useCallback(async () => {
+    if (!userId || isCollectingAllFantasy || finalUnclaimedEntries.length === 0) return;
+    setIsCollectingAllFantasy(true);
+    setStatusMessage("");
+    setErrorMessage("");
+    let totalAwarded = 0;
+    let firstRect: DOMRect | undefined;
+    try {
+      const collectButton = document.querySelector<HTMLElement>("[data-fantasy-collect-all]");
+      firstRect = collectButton?.getBoundingClientRect();
+      for (const entry of finalUnclaimedEntries) {
+        if (!entry.id) continue;
+        const response = await fetch("/api/fantasy/entries", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "claim", userId, entryId: entry.id }),
+        });
+        const payload = (await response.json()) as {
+          ok: boolean;
+          result?: { claimed: boolean; pointsAwarded: number };
+        };
+        if (payload.ok && payload.result?.claimed) {
+          totalAwarded += payload.result.pointsAwarded;
+        }
+      }
+      if (totalAwarded > 0) {
+        window.dispatchEvent(
+          new CustomEvent("tp:coin-flight", {
+            detail: {
+              sourceRect: firstRect
+                ? { left: firstRect.left, top: firstRect.top, width: firstRect.width, height: firstRect.height }
+                : undefined,
+              delta: totalAwarded,
+              coins: Math.min(36, Math.max(14, Math.round(totalAwarded / 2))),
+            },
+          })
+        );
+        window.dispatchEvent(
+          new CustomEvent("tp:points-updated", {
+            detail: { source: "fantasy-claim", delta: totalAwarded },
+          })
+        );
+        setStatusMessage(`Collected +${totalAwarded} points!`);
+      }
+    } catch {
+      setErrorMessage("Failed to collect some entries. Try individual collect buttons below.");
+    } finally {
+      setIsCollectingAllFantasy(false);
+      await loadEntries(false);
+    }
+  }, [finalUnclaimedEntries, isCollectingAllFantasy, loadEntries, userId]);
+
   if (!userId || !venueId) {
     return (
       <div className="rounded-2xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
@@ -647,6 +706,31 @@ export function FantasyHome() {
   return (
     <div className="space-y-4">
       <VenueEntryRulesPanel gameKey="fantasy" shouldDisplay={entries.length === 0} />
+
+      {finalUnclaimedEntries.length > 0 ? (
+        <div className="rounded-xl border-2 border-violet-500 bg-gradient-to-r from-violet-600 to-indigo-600 px-3 py-3 shadow-[0_6px_18px_rgba(124,58,237,0.35)]">
+          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-violet-100">Fantasy Points Ready</p>
+          <div className="mt-1 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-lg font-black leading-none text-white">
+                {finalUnclaimedEntries.length} completed game{finalUnclaimedEntries.length !== 1 ? "s" : ""}
+              </p>
+              <p className="mt-0.5 text-[11px] font-semibold text-violet-100">
+                {totalUnclaimedFantasyPoints} pts waiting to collect
+              </p>
+            </div>
+            <button
+              type="button"
+              data-fantasy-collect-all
+              onClick={() => void collectAllFantasyEntries()}
+              disabled={isCollectingAllFantasy}
+              className="tp-clean-button inline-flex min-h-[44px] items-center rounded-full border-2 border-white bg-white px-4 py-2 text-sm font-black text-violet-800 shadow-[0_3px_0_rgba(0,0,0,0.18)] transition-all active:scale-95 disabled:opacity-60"
+            >
+              {isCollectingAllFantasy ? "Collecting..." : "Collect Points"}
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <section className="rounded-2xl border border-violet-200/70 bg-violet-50/85 p-4 shadow-sm">
         <div className="flex items-center justify-between gap-2">
@@ -676,6 +760,15 @@ export function FantasyHome() {
           </div>
         ) : null}
       </section>
+
+      <InlineSlotAdClient
+        slot="leaderboard-sidebar"
+        venueId={venueId}
+        pageKey="fantasy"
+        adType="inline"
+        displayTrigger="on-scroll"
+        placementKey="fantasy-inline"
+      />
 
       {trackedEntry ? (
         <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm">

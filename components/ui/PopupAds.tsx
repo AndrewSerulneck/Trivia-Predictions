@@ -50,11 +50,17 @@ function resolvePageKey(pathname: string | null): AdPageKey | null {
   if (pathname.startsWith("/trivia")) {
     return "trivia";
   }
-  if (pathname.startsWith("/predictions")) {
-    return "sports-predictions";
-  }
   if (pathname.startsWith("/bingo")) {
     return "sports-bingo";
+  }
+  if (pathname.startsWith("/pickem")) {
+    return "pickem";
+  }
+  if (pathname.startsWith("/fantasy")) {
+    return "fantasy";
+  }
+  if (pathname.startsWith("/predictions")) {
+    return "pickem";
   }
   return null;
 }
@@ -420,15 +426,15 @@ export function PopupAds() {
         }
 
         const target = event?.target;
-        let currentScrollTop = window.scrollY;
-        let currentViewportHeight = window.innerHeight;
-        let currentScrollHeight = document.documentElement.scrollHeight;
+        const scrollContainer =
+          (target instanceof HTMLElement ? target : null) ??
+          document.querySelector<HTMLElement>("[data-venue-game-scroll]") ??
+          document.querySelector<HTMLElement>(".tp-page-main") ??
+          null;
 
-        if (target instanceof HTMLElement) {
-          currentScrollTop = target.scrollTop;
-          currentViewportHeight = target.clientHeight;
-          currentScrollHeight = target.scrollHeight;
-        }
+        const currentScrollTop = scrollContainer ? scrollContainer.scrollTop : window.scrollY;
+        const currentViewportHeight = scrollContainer ? scrollContainer.clientHeight : window.innerHeight;
+        const currentScrollHeight = scrollContainer ? scrollContainer.scrollHeight : document.documentElement.scrollHeight;
 
         const seenMax = Math.max(maxObservedScrollPxRef.current[key] ?? 0, currentScrollTop);
         maxObservedScrollPxRef.current[key] = seenMax;
@@ -452,20 +458,15 @@ export function PopupAds() {
       });
     };
 
+    const gameScrollSurface = document.querySelector<HTMLElement>("[data-venue-game-scroll]");
     const gameSurface = document.querySelector<HTMLElement>("[data-venue-game-surface]");
     const pageMain = document.querySelector<HTMLElement>(".tp-page-main");
-    const onWindowScroll = () => onScroll(new Event("scroll"));
+    const primaryScrollContainer = gameScrollSurface ?? gameSurface ?? pageMain;
 
-    window.addEventListener("scroll", onWindowScroll, { passive: true });
-    document.addEventListener("scroll", onScroll, { passive: true, capture: true });
-    gameSurface?.addEventListener("scroll", onScroll, { passive: true });
-    pageMain?.addEventListener("scroll", onScroll, { passive: true });
+    primaryScrollContainer?.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
-      window.removeEventListener("scroll", onWindowScroll);
-      document.removeEventListener("scroll", onScroll, { capture: true } as EventListenerOptions);
-      gameSurface?.removeEventListener("scroll", onScroll);
-      pageMain?.removeEventListener("scroll", onScroll);
+      primaryScrollContainer?.removeEventListener("scroll", onScroll);
       if (scrollRafRef.current !== null) {
         window.cancelAnimationFrame(scrollRafRef.current);
         scrollRafRef.current = null;

@@ -3,7 +3,6 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { CoinFXCanvas } from "@/components/ui/CoinFXCanvas";
-import { NotificationBell } from "@/components/ui/NotificationBell";
 import { getUserId, getUsername, getVenueId } from "@/lib/storage";
 import { setScrollLock } from "@/lib/scrollLock";
 
@@ -16,7 +15,7 @@ type SummaryPayload = {
   } | null;
 };
 
-type UserStatusHeaderProps = {
+type LeftHamburgerMenuProps = {
   variant?: "default" | "trivia";
   showAlerts?: boolean;
 };
@@ -90,7 +89,7 @@ function getVenueIdFromPathname(pathname: string): string {
   }
 }
 
-export function UserStatusHeader({ variant = "default", showAlerts = true }: UserStatusHeaderProps) {
+export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: LeftHamburgerMenuProps) {
   const pathname = usePathname();
   const router = useRouter();
   const isJoinRoute = pathname === "/" || pathname === "/join";
@@ -130,6 +129,11 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
       label: "Career Stats",
       description: "Track your lifetime performance across every game.",
       href: "/active-games",
+    },
+    {
+      label: "FAQs",
+      description: "Get quick answers about gameplay and prizes.",
+      href: "/faqs",
     },
     {
       label: "Advertise With Us",
@@ -468,7 +472,6 @@ export function UserStatusHeader({ variant = "default", showAlerts = true }: Use
               <span>{(points ?? displayedPoints).toLocaleString()}</span>
             </div>
 
-            {showAlerts ? <NotificationBell /> : null}
           </div>
         </div>
       </div>

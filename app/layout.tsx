@@ -6,7 +6,6 @@ import { GlobalTransitionOverlay } from "@/components/ui/GlobalTransitionOverlay
 import { ScrollRecoverySentinel } from "@/components/ui/ScrollRecoverySentinel";
 import { ScrollRescueGuard } from "@/components/ui/ScrollRescueGuard";
 import { ViewportHeightSync } from "@/components/ui/ViewportHeightSync";
-import { LayoutDebugProbe } from "@/components/ui/LayoutDebugProbe";
 import { AuthSessionProvider } from "@/components/auth/AuthSessionProvider";
 import { AuthNavigationGuard } from "@/components/auth/AuthNavigationGuard";
 import { LoginStuckStateBreaker } from "@/components/auth/LoginStuckStateBreaker";
@@ -56,7 +55,6 @@ export default async function RootLayout({
           <ScrollRecoverySentinel />
           <ScrollRescueGuard />
           <ViewportHeightSync />
-          <LayoutDebugProbe />
           <GlobalTransitionOverlay />
           <PopupAds />
           <MobileAdhesionAd />

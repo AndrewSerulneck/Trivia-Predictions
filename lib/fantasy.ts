@@ -2,6 +2,7 @@ import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { apiSportsGet } from "@/lib/apisports";
+import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 
 const ODDS_API_BASE_URL = process.env.ODDS_API_BASE_URL ?? "https://api.the-odds-api.com/v4";
 const ODDS_API_KEY = process.env.ODDS_API_KEY?.trim() ?? "";
@@ -2222,12 +2223,13 @@ export async function claimFantasyReward(params: {
 
   const { data: entry, error } = await supabaseAdmin
     .from("fantasy_entries")
-    .select("id, user_id, status, points, reward_points, reward_claimed_at")
+    .select("id, user_id, venue_id, status, points, reward_points, reward_claimed_at")
     .eq("id", entryId)
     .eq("user_id", userId)
     .maybeSingle<{
       id: string;
       user_id: string;
+      venue_id: string;
       status: FantasyEntryStatus;
       points: number;
       reward_points: number;
@@ -2244,10 +2246,11 @@ export async function claimFantasyReward(params: {
     return { claimed: false, pointsAwarded: 0 };
   }
 
-  const pointsAwarded = computeFantasyRewardPoints(Number(entry.points ?? 0));
-  if (pointsAwarded <= 0) {
+  const basePointsAwarded = computeFantasyRewardPoints(Number(entry.points ?? 0));
+  if (basePointsAwarded <= 0) {
     throw new Error("This entry does not have a reward to claim.");
   }
+  let pointsAwarded = basePointsAwarded;
 
   const nowIso = new Date().toISOString();
   const { data: claimed, error: claimError } = await supabaseAdmin
@@ -2263,6 +2266,19 @@ export async function claimFantasyReward(params: {
   }
   if (!claimed) {
     return { claimed: false, pointsAwarded: 0 };
+  }
+
+  const venueId = String(entry.venue_id ?? "").trim();
+  if (venueId && pointsAwarded > 0) {
+    try {
+      const campaignResult = await applyChallengeCampaignPoints({
+        userId,
+        venueId,
+        gameType: "fantasy",
+        basePoints: pointsAwarded,
+      });
+      pointsAwarded = Math.max(0, Number(campaignResult.finalPoints ?? pointsAwarded));
+    } catch {}
   }
 
   const { data: user, error: userError } = await supabaseAdmin

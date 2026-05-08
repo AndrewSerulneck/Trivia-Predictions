@@ -28,11 +28,17 @@ function resolvePageKey(pathname: string | null): AdPageKey {
   if (pathname.startsWith("/trivia")) {
     return "trivia";
   }
-  if (pathname.startsWith("/predictions")) {
-    return "sports-predictions";
-  }
   if (pathname.startsWith("/bingo")) {
     return "sports-bingo";
+  }
+  if (pathname.startsWith("/pickem")) {
+    return "pickem";
+  }
+  if (pathname.startsWith("/fantasy")) {
+    return "fantasy";
+  }
+  if (pathname.startsWith("/predictions")) {
+    return "pickem";
   }
   return "global";
 }

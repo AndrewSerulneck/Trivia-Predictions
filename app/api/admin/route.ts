@@ -16,8 +16,15 @@ import {
   updateAdminTriviaQuestion,
 } from "@/lib/admin";
 import { requireAdminAuth } from "@/lib/adminAuth";
+import {
+  createChallengeCampaign,
+  deleteChallengeCampaign,
+  listChallengeCampaignProgress,
+  listChallengeCampaigns,
+  updateChallengeCampaign,
+} from "@/lib/challengeCampaigns";
 import { recordAdClick, recordAdImpression } from "@/lib/ads";
-import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType } from "@/types";
+import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, CampaignRecurringType } from "@/types";
 
 export async function GET(request: Request) {
   try {
@@ -48,6 +55,22 @@ export async function GET(request: Request) {
 
     if (resource === "predictions-pending") {
       const items = await listPendingPredictionSummaries();
+      return NextResponse.json({ ok: true, items });
+    }
+
+    if (resource === "challenge-campaigns") {
+      const venueId = String(searchParams.get("venueId") ?? "").trim() || undefined;
+      const includeInactive = String(searchParams.get("includeInactive") ?? "true").trim().toLowerCase() !== "false";
+      const includeResolved = String(searchParams.get("includeResolved") ?? "true").trim().toLowerCase() !== "false";
+      const items = await listChallengeCampaigns({ venueId, includeInactive, includeResolved });
+      return NextResponse.json({ ok: true, items });
+    }
+
+    if (resource === "challenge-campaign-progress") {
+      const challengeId = String(searchParams.get("challengeId") ?? "").trim() || undefined;
+      const venueId = String(searchParams.get("venueId") ?? "").trim() || undefined;
+      const userId = String(searchParams.get("userId") ?? "").trim() || undefined;
+      const items = await listChallengeCampaignProgress({ challengeId, venueId, userId });
       return NextResponse.json({ ok: true, items });
     }
 
@@ -141,6 +164,22 @@ export async function POST(request: Request) {
         }
       | {
           resource: "predictions-auto-settle";
+        }
+      | {
+          resource: "challenge-campaigns";
+          name: string;
+          imageUrl?: string;
+          rules: string;
+          venueIds?: string[];
+          activeDays?: string[];
+          startTime?: string;
+          endTime?: string;
+          endDate?: string;
+          gameTypes?: string[];
+          pointMultiplier?: number;
+          pointsRequiredToWin?: number;
+          recurringType?: CampaignRecurringType;
+          isActive?: boolean;
         };
 
     if (body.resource === "trivia") {
@@ -230,8 +269,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, result });
     }
 
+    if (body.resource === "challenge-campaigns") {
+      const item = await createChallengeCampaign({
+        name: body.name,
+        imageUrl: body.imageUrl,
+        rules: body.rules,
+        venueIds: body.venueIds,
+        activeDays: body.activeDays,
+        startTime: body.startTime,
+        endTime: body.endTime,
+        endDate: body.endDate,
+        gameTypes: body.gameTypes,
+        pointMultiplier: body.pointMultiplier,
+        pointsRequiredToWin: body.pointsRequiredToWin,
+        recurringType: body.recurringType,
+        isActive: body.isActive,
+      });
+      return NextResponse.json({ ok: true, item });
+    }
+
     return NextResponse.json(
-      { ok: false, error: "Unknown resource. Use trivia, ads, venues, ads-track, predictions-settle, or predictions-auto-settle." },
+      {
+        ok: false,
+        error:
+          "Unknown resource. Use trivia, ads, venues, ads-track, predictions-settle, predictions-auto-settle, or challenge-campaigns.",
+      },
       { status: 400 }
     );
   } catch (error) {
@@ -267,8 +329,13 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
+    if (resource === "challenge-campaigns") {
+      await deleteChallengeCampaign(id);
+      return NextResponse.json({ ok: true });
+    }
+
     return NextResponse.json(
-      { ok: false, error: "Unknown resource. Use resource=trivia or resource=ads." },
+      { ok: false, error: "Unknown resource. Use resource=trivia, resource=ads, or resource=challenge-campaigns." },
       { status: 400 }
     );
   } catch (error) {
@@ -327,7 +394,7 @@ export async function PATCH(request: Request) {
           startDate: string;
           endDate?: string;
         }
-      | {
+        | {
           resource: "venues";
           id: string;
           name: string;
@@ -338,6 +405,24 @@ export async function PATCH(request: Request) {
           radius: number;
           latitude?: number;
           longitude?: number;
+        }
+      | {
+          resource: "challenge-campaigns";
+          id: string;
+          name?: string;
+          imageUrl?: string;
+          rules?: string;
+          venueIds?: string[];
+          activeDays?: string[];
+          startTime?: string;
+          endTime?: string;
+          endDate?: string;
+          gameTypes?: string[];
+          pointMultiplier?: number;
+          pointsRequiredToWin?: number;
+          recurringType?: CampaignRecurringType;
+          winnerUserId?: string | null;
+          isActive?: boolean;
         };
 
     if (body.resource === "trivia") {
@@ -397,6 +482,27 @@ export async function PATCH(request: Request) {
         radius: body.radius,
         latitude: body.latitude,
         longitude: body.longitude,
+      });
+      return NextResponse.json({ ok: true, item });
+    }
+
+    if (body.resource === "challenge-campaigns") {
+      const item = await updateChallengeCampaign({
+        id: body.id,
+        name: body.name,
+        imageUrl: body.imageUrl,
+        rules: body.rules,
+        venueIds: body.venueIds,
+        activeDays: body.activeDays,
+        startTime: body.startTime,
+        endTime: body.endTime,
+        endDate: body.endDate,
+        gameTypes: body.gameTypes,
+        pointMultiplier: body.pointMultiplier,
+        pointsRequiredToWin: body.pointsRequiredToWin,
+        recurringType: body.recurringType,
+        winnerUserId: body.winnerUserId,
+        isActive: body.isActive,
       });
       return NextResponse.json({ ok: true, item });
     }

@@ -17,7 +17,7 @@ function isAdSlot(value: string): value is AdSlot {
 }
 
 function isAdPageKey(value: string): value is AdPageKey {
-  return ["global", "join", "venue", "trivia", "sports-predictions", "sports-bingo"].includes(value);
+  return ["global", "join", "venue", "trivia", "sports-bingo", "pickem", "fantasy"].includes(value);
 }
 
 function isAdType(value: string): value is AdType {

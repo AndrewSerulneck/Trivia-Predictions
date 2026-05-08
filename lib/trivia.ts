@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 import { randomInt } from "node:crypto";
 import type { TriviaQuestion } from "@/types";
 
@@ -395,11 +396,25 @@ export async function submitTriviaAnswer(params: {
       if (isCorrect) {
         const { data: userData } = await supabaseAdmin
           .from("users")
-          .select("points")
+          .select("points, venue_id")
           .eq("id", params.userId)
-          .maybeSingle<{ points: number }>();
+          .maybeSingle<{ points: number; venue_id: string | null }>();
 
-        const nextPoints = (userData?.points ?? 0) + TRIVIA_POINTS_PER_CORRECT;
+        let pointsAwarded = TRIVIA_POINTS_PER_CORRECT;
+        const venueId = String(userData?.venue_id ?? "").trim();
+        if (venueId) {
+          try {
+            const campaignResult = await applyChallengeCampaignPoints({
+              userId: params.userId,
+              venueId,
+              gameType: "trivia",
+              basePoints: TRIVIA_POINTS_PER_CORRECT,
+            });
+            pointsAwarded = Math.max(0, Number(campaignResult.finalPoints ?? TRIVIA_POINTS_PER_CORRECT));
+          } catch {}
+        }
+
+        const nextPoints = (userData?.points ?? 0) + pointsAwarded;
         await supabaseAdmin.from("users").update({ points: nextPoints }).eq("id", params.userId);
       }
     }

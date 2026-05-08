@@ -404,21 +404,95 @@ h4,
   margin-right: -50vw;
 }
 
+.canvas-ribbon {
+  display: flex;
+  flex-wrap: nowrap;
+  width: 100vw;
+  max-width: 100vw;
+  min-height: 100%;
+  margin: 0;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding: 0;
+  box-sizing: border-box;
+  overflow: visible;
+  background: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
 .venue-home-carousel {
+  width: 100vw;
+  max-width: 100vw;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
   overflow-x: auto;
   overflow-y: visible;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
+  scroll-padding: 0;
+  scroll-padding-inline: 0;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
   touch-action: pan-x pan-y;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  background: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+.venue-home-carousel::-webkit-scrollbar {
+  display: none;
 }
 
 .venue-home-carousel .venue-screen {
-  flex: 0 0 100%;
-  width: 100%;
+  flex: 0 0 100vw;
+  flex-shrink: 0;
+  width: 100vw;
+  max-width: 100vw;
+  min-height: 100%;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: visible;
   scroll-snap-align: start;
   scroll-snap-stop: always;
+  background: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+.venue-home-panel-content {
+  width: 100%;
+  max-width: 100vw;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+.venue-home-games-fit {
+  transform: none;
+}
+
+.tp-game-page,
+.tp-game-page [data-venue-game-surface] {
+  max-width: 100vw;
+  max-height: 100dvh;
+  overflow-x: hidden;
 }
 
 /* Tighter chrome for small phones (iPhone SE and similar) */

@@ -157,7 +157,8 @@ export function GameLandingExperience({
         >
           {isPlaying ? (
             <div
-              className="animate-tp-surface-enter relative z-10 flex min-h-[100dvh] flex-col px-2 py-2 touch-pan-y sm:px-3 sm:py-3"
+              data-venue-game-scroll
+              className="animate-tp-surface-enter relative z-10 flex min-h-[100dvh] flex-col overflow-y-auto px-2 py-2 touch-pan-y sm:px-3 sm:py-3"
               style={{ WebkitOverflowScrolling: "touch" }}
             >
             {showPlayingBackButton ? (

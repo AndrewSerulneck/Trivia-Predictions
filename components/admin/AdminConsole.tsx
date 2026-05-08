@@ -9,14 +9,15 @@ import { deriveSlotFromPlacement } from "@/lib/adPlacements";
 import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, Advertisement, TriviaQuestion, Venue } from "@/types";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
 
-const AD_PAGE_KEYS: Array<Exclude<AdPageKey, "global">> = ["join", "venue", "trivia", "sports-predictions", "sports-bingo"];
+const AD_PAGE_KEYS: Array<Exclude<AdPageKey, "global">> = ["join", "venue", "trivia", "sports-bingo", "pickem", "fantasy"];
 const AD_PAGE_LABEL: Record<AdPageKey, string> = {
   global: "Global",
   join: "Join",
   venue: "Leaderboard",
   trivia: "Trivia",
-  "sports-predictions": "Sports Predictions",
   "sports-bingo": "Sports Bingo",
+  pickem: "Pick 'Em",
+  fantasy: "Fantasy",
 };
 const AD_TYPE_LABEL: Record<AdType, string> = {
   popup: "Pop Up",
@@ -77,16 +78,22 @@ const AD_INVENTORY_SLOTS: Record<Exclude<AdPageKey, "global">, AdInventorySlot[]
     { id: "trivia-popup-round-3", pageKey: "trivia", adType: "popup", label: "Popup Round End (Round 3)", displayTrigger: "round-end", roundNumber: 3 },
     { id: "trivia-banner-mobile", pageKey: "trivia", adType: "banner", label: "Mobile Banner (Adhesion)", displayTrigger: "on-load" },
   ],
-  "sports-predictions": [
-    { id: "pred-popup-entry", pageKey: "sports-predictions", adType: "popup", label: "Popup on Landing", displayTrigger: "on-load" },
-    { id: "pred-popup-scroll", pageKey: "sports-predictions", adType: "popup", label: "Popup on Scroll", displayTrigger: "on-scroll" },
-    { id: "pred-banner-mobile", pageKey: "sports-predictions", adType: "banner", label: "Mobile Banner (Adhesion)", displayTrigger: "on-load" },
-    { id: "pred-inline-breaks", pageKey: "sports-predictions", adType: "inline", label: "Inline Breaks (Every 10 Markets)", displayTrigger: "on-scroll", placementKey: "predictions-inline" },
-  ],
   "sports-bingo": [
     { id: "bingo-popup-entry", pageKey: "sports-bingo", adType: "popup", label: "Popup on Landing", displayTrigger: "on-load" },
     { id: "bingo-popup-scroll", pageKey: "sports-bingo", adType: "popup", label: "Popup on Scroll", displayTrigger: "on-scroll" },
     { id: "bingo-banner-mobile", pageKey: "sports-bingo", adType: "banner", label: "Mobile Banner (Adhesion)", displayTrigger: "on-load" },
+  ],
+  pickem: [
+    { id: "pickem-popup-entry", pageKey: "pickem", adType: "popup", label: "Popup on Landing", displayTrigger: "on-load" },
+    { id: "pickem-popup-scroll", pageKey: "pickem", adType: "popup", label: "Popup on Scroll", displayTrigger: "on-scroll" },
+    { id: "pickem-banner-mobile", pageKey: "pickem", adType: "banner", label: "Mobile Banner (Adhesion)", displayTrigger: "on-load" },
+    { id: "pickem-inline-breaks", pageKey: "pickem", adType: "inline", label: "Inline Pick 'Em Slot", displayTrigger: "on-scroll", placementKey: "pickem-inline" },
+  ],
+  fantasy: [
+    { id: "fantasy-popup-entry", pageKey: "fantasy", adType: "popup", label: "Popup on Landing", displayTrigger: "on-load" },
+    { id: "fantasy-popup-scroll", pageKey: "fantasy", adType: "popup", label: "Popup on Scroll", displayTrigger: "on-scroll" },
+    { id: "fantasy-banner-mobile", pageKey: "fantasy", adType: "banner", label: "Mobile Banner (Adhesion)", displayTrigger: "on-load" },
+    { id: "fantasy-inline-breaks", pageKey: "fantasy", adType: "inline", label: "Inline Fantasy Slot", displayTrigger: "on-scroll", placementKey: "fantasy-inline" },
   ],
 };
 
@@ -154,7 +161,7 @@ function getTriggersForPlacement(pageKey: AdPageKey, adType: AdType): AdDisplayT
   if (pageKey === "trivia") {
     return ["on-load", "round-end"];
   }
-  if (pageKey === "sports-predictions") {
+  if (pageKey === "pickem" || pageKey === "fantasy") {
     if (adType === "inline") {
       return ["on-scroll"];
     }
@@ -509,16 +516,28 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       }
       return;
     }
-    if (adType === "inline" && pageKey === "sports-predictions") {
-      setPlacementKey("predictions-inline");
+    if (adType === "inline" && pageKey === "pickem") {
+      setPlacementKey("pickem-inline");
       return;
     }
-    if (adType === "popup" && pageKey === "sports-predictions" && displayTrigger === "on-scroll") {
-      setPlacementKey("predictions-popup-scroll");
+    if (adType === "popup" && pageKey === "pickem" && displayTrigger === "on-scroll") {
+      setPlacementKey("pickem-popup-scroll");
       return;
     }
-    if (adType === "banner" && pageKey === "sports-predictions" && displayTrigger === "on-scroll") {
-      setPlacementKey("predictions-banner-scroll");
+    if (adType === "banner" && pageKey === "pickem" && displayTrigger === "on-scroll") {
+      setPlacementKey("pickem-banner-scroll");
+      return;
+    }
+    if (adType === "inline" && pageKey === "fantasy") {
+      setPlacementKey("fantasy-inline");
+      return;
+    }
+    if (adType === "popup" && pageKey === "fantasy" && displayTrigger === "on-scroll") {
+      setPlacementKey("fantasy-popup-scroll");
+      return;
+    }
+    if (adType === "banner" && pageKey === "fantasy" && displayTrigger === "on-scroll") {
+      setPlacementKey("fantasy-banner-scroll");
       return;
     }
     if (!placementKey.trim()) {
@@ -538,16 +557,28 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       }
       return;
     }
-    if (editAdType === "inline" && editPageKey === "sports-predictions") {
-      setEditPlacementKey("predictions-inline");
+    if (editAdType === "inline" && editPageKey === "pickem") {
+      setEditPlacementKey("pickem-inline");
       return;
     }
-    if (editAdType === "popup" && editPageKey === "sports-predictions" && editDisplayTrigger === "on-scroll") {
-      setEditPlacementKey("predictions-popup-scroll");
+    if (editAdType === "popup" && editPageKey === "pickem" && editDisplayTrigger === "on-scroll") {
+      setEditPlacementKey("pickem-popup-scroll");
       return;
     }
-    if (editAdType === "banner" && editPageKey === "sports-predictions" && editDisplayTrigger === "on-scroll") {
-      setEditPlacementKey("predictions-banner-scroll");
+    if (editAdType === "banner" && editPageKey === "pickem" && editDisplayTrigger === "on-scroll") {
+      setEditPlacementKey("pickem-banner-scroll");
+      return;
+    }
+    if (editAdType === "inline" && editPageKey === "fantasy") {
+      setEditPlacementKey("fantasy-inline");
+      return;
+    }
+    if (editAdType === "popup" && editPageKey === "fantasy" && editDisplayTrigger === "on-scroll") {
+      setEditPlacementKey("fantasy-popup-scroll");
+      return;
+    }
+    if (editAdType === "banner" && editPageKey === "fantasy" && editDisplayTrigger === "on-scroll") {
+      setEditPlacementKey("fantasy-banner-scroll");
       return;
     }
     if (!editPlacementKey.trim()) {
@@ -3205,6 +3236,22 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
             </li>
           ))}
         </ul>
+      </section>
+      ) : null}
+
+      {shouldRenderSectionContent && activeSection === "challenge-campaigns" ? (
+      <section className="space-y-3 rounded-lg border border-slate-200 p-3">
+        <h2 className="text-base font-semibold text-slate-900">Challenge Manager</h2>
+        <p className="text-sm text-slate-700">
+          Campaign challenges are now managed separately from head-to-head user challenges.
+        </p>
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+          API resources available in this build:
+          <div className="mt-1 font-mono">GET /api/admin?resource=challenge-campaigns</div>
+          <div className="font-mono">POST/PATCH /api/admin {"{"} resource: "challenge-campaigns", ... {"}"}</div>
+          <div className="font-mono">DELETE /api/admin?resource=challenge-campaigns&id=...</div>
+          <div className="font-mono">GET /api/admin?resource=challenge-campaign-progress&challengeId=...</div>
+        </div>
       </section>
       ) : null}
     </div>

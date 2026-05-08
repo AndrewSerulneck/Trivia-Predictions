@@ -7,7 +7,8 @@ export type AdminSection =
   | "trivia-create"
   | "trivia-list"
   | "ads-create"
-  | "ads-list";
+  | "ads-list"
+  | "challenge-campaigns";
 
 export type AdminSectionOption = {
   id: AdminSection;
@@ -23,6 +24,7 @@ export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
   { id: "trivia-list", label: "Trivia Questions", slug: "trivia-list" },
   { id: "ads-create", label: "Create Advertisement", slug: "ads-create" },
   { id: "ads-list", label: "Manage Advertisements", slug: "ads-list" },
+  { id: "challenge-campaigns", label: "Challenge Manager", slug: "challenge-campaigns" },
   { id: "prediction-settlement", label: "Prediction Settlement", slug: "prediction-settlement" },
   { id: "ad-debug", label: "Ad Debug Snapshot", slug: "ad-debug" },
 ];

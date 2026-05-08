@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getUserId, getVenueId } from "@/lib/storage";
+import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 
 type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl";
 
@@ -112,6 +113,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
   const [pickPulseByGameId, setPickPulseByGameId] = useState<Record<string, string | undefined>>({});
   const [dailyPickCount, setDailyPickCount] = useState(0);
   const [dailyPickCountDelta, setDailyPickCountDelta] = useState(0);
+  const [isCollectingAll, setIsCollectingAll] = useState(false);
 
   useEffect(() => {
     setUserId(getUserId() ?? "");
@@ -523,6 +525,74 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
     void loadDailyPickCount();
   }, [loadDailyPickCount]);
 
+  const unclaimedWonGames = useMemo(
+    () => games.filter((g) => g.userPickStatus === "won" && !g.userPickRewardClaimedAt),
+    [games]
+  );
+
+  const totalUnclaimedPickEmPoints = useMemo(
+    () => unclaimedWonGames.reduce((sum, g) => sum + (g.userPickRewardPoints ?? 10), 0),
+    [unclaimedWonGames]
+  );
+
+  const correctPickCount = useMemo(
+    () => games.filter((g) => g.userPickStatus === "won").length,
+    [games]
+  );
+
+  const collectAllPickEmPoints = useCallback(async () => {
+    if (!userId || isCollectingAll || unclaimedWonGames.length === 0) return;
+    setIsCollectingAll(true);
+    setSubmitMessage("");
+    let totalAwarded = 0;
+    let firstRect: DOMRect | undefined;
+    try {
+      const collectButton = document.querySelector<HTMLElement>("[data-pickem-collect-all]");
+      firstRect = collectButton?.getBoundingClientRect();
+      for (const game of unclaimedWonGames) {
+        if (!game.userPickId) continue;
+        const response = await fetch("/api/pickem/picks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "claim", userId, pickId: game.userPickId }),
+        });
+        const payload = (await response.json()) as {
+          ok: boolean;
+          result?: { claimed: boolean; pointsAwarded: number };
+          error?: string;
+        };
+        if (payload.ok && payload.result?.claimed) {
+          totalAwarded += payload.result.pointsAwarded;
+        }
+      }
+      if (totalAwarded > 0) {
+        window.dispatchEvent(
+          new CustomEvent("tp:coin-flight", {
+            detail: {
+              sourceRect: firstRect
+                ? { left: firstRect.left, top: firstRect.top, width: firstRect.width, height: firstRect.height }
+                : undefined,
+              delta: totalAwarded,
+              coins: Math.min(32, Math.max(14, Math.round(totalAwarded / 2))),
+            },
+          })
+        );
+        window.dispatchEvent(
+          new CustomEvent("tp:points-updated", {
+            detail: { source: "pickem-claim", delta: totalAwarded },
+          })
+        );
+        setSubmitMessage(`Collected +${totalAwarded} points!`);
+      }
+    } catch {
+      setSubmitMessage("Failed to collect some picks. Please try individual collect buttons below.");
+    } finally {
+      setIsCollectingAll(false);
+      await loadGames({ background: true });
+      await loadDailyPickCount();
+    }
+  }, [isCollectingAll, loadDailyPickCount, loadGames, unclaimedWonGames, userId]);
+
   return (
     <div className="tp-pickem-compact min-h-[100dvh] touch-pan-y space-y-3 sm:space-y-4">
       <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-3 shadow-sm sm:p-4">
@@ -537,6 +607,32 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
             <p className="text-[11px] font-semibold text-cyan-100 sm:text-xs">{picksRemaining} remaining</p>
           </div>
         </div>
+
+        {unclaimedWonGames.length > 0 ? (
+          <div className="mt-3 rounded-xl border-2 border-emerald-500 bg-gradient-to-r from-emerald-600 to-teal-600 px-3 py-3 shadow-[0_6px_18px_rgba(5,150,105,0.35)]">
+            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100">Points Ready to Collect</p>
+            <div className="mt-1 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-lg font-black leading-none text-white">
+                  {unclaimedWonGames.length} correct pick{unclaimedWonGames.length !== 1 ? "s" : ""}
+                </p>
+                <p className="mt-0.5 text-[11px] font-semibold text-emerald-100">
+                  ~{totalUnclaimedPickEmPoints} pts base
+                  {correctPickCount >= 7 ? " · 🔥 Multiplier bonus active!" : " · Bonus at 7/10 or 10/10 correct"}
+                </p>
+              </div>
+              <button
+                type="button"
+                data-pickem-collect-all
+                onClick={() => void collectAllPickEmPoints()}
+                disabled={isCollectingAll}
+                className="tp-clean-button inline-flex min-h-[44px] items-center rounded-full border-2 border-white bg-white px-4 py-2 text-sm font-black text-emerald-800 shadow-[0_3px_0_rgba(0,0,0,0.18)] transition-all active:scale-95 disabled:opacity-60"
+              >
+                {isCollectingAll ? "Collecting..." : "Collect Points"}
+              </button>
+            </div>
+          </div>
+        ) : null}
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {selectedSportSlug === "nfl" && nflWeekOptions.length > 0 ? (
@@ -607,6 +703,15 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         </div>
 
       </section>
+
+      <InlineSlotAdClient
+        slot="leaderboard-sidebar"
+        venueId={venueId}
+        pageKey="pickem"
+        adType="inline"
+        displayTrigger="on-scroll"
+        placementKey="pickem-inline"
+      />
 
       {errorMessage ? (
         <div className="rounded-xl border border-rose-300 bg-rose-50 p-2.5 text-xs text-rose-700 sm:p-3 sm:text-sm">{errorMessage}</div>

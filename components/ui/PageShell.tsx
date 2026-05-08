@@ -1,6 +1,5 @@
-import { UserStatusHeader } from "@/components/ui/UserStatusHeader";
+import { LeftHamburgerMenu } from "@/components/ui/LeftHamburgerMenu";
 import { HightopLogo } from "@/components/ui/HightopLogo";
-import { NotificationBell } from "@/components/ui/NotificationBell";
 
 type PageShellProps = {
   title: string;
@@ -56,7 +55,7 @@ export function PageShell({
       {useCompactTopNav ? (
         <header className="tp-page-header tp-page-header-compact fixed inset-x-0 top-0 z-[1000] w-full max-w-none overflow-visible px-0 pb-0 pt-0">
           <div className="w-full max-w-none box-border px-0 pt-[max(env(safe-area-inset-top),0px)]">
-            {showUserStatus ? <UserStatusHeader showAlerts={showAlerts} /> : null}
+            {showUserStatus ? <LeftHamburgerMenu showAlerts={showAlerts} /> : null}
             {showPageTitle ? (
               <div
                 className={`${showUserStatus ? "mt-1" : ""} mx-0 rounded-none border border-slate-900/20 bg-[#fff7ea]/92 px-2 py-1 text-center text-xs text-slate-800 shadow-sm`}
@@ -80,9 +79,6 @@ export function PageShell({
                 ) : null}
               </div>
 
-              <div className="mt-1 flex justify-center sm:absolute sm:right-0 sm:top-0 sm:mt-0 sm:justify-end">
-                {showUserStatus && showAlerts ? <NotificationBell /> : null}
-              </div>
             </div>
 
             <div className={`${showPageTitle ? "mt-4" : "mt-2"} text-center`}>
@@ -97,7 +93,7 @@ export function PageShell({
               ) : null}
 
               <div className="mt-3">
-                {showUserStatus ? <UserStatusHeader showAlerts={showAlerts} /> : null}
+                {showUserStatus ? <LeftHamburgerMenu showAlerts={showAlerts} /> : null}
               </div>
             </div>
           </div>

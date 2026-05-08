@@ -10,9 +10,11 @@ import { setScrollLock } from "@/lib/scrollLock";
 const NAV_ITEMS = [
   { href: "/", label: APP_PAGE_NAMES.join },
   { href: "/trivia", label: APP_PAGE_NAMES.trivia },
-  { href: "/predictions", label: APP_PAGE_NAMES.sportsPredictions },
+  { href: "/pickem", label: APP_PAGE_NAMES.sportsPickEm },
+  { href: "/fantasy", label: APP_PAGE_NAMES.sportsFantasy },
   { href: "/bingo", label: APP_PAGE_NAMES.sportsBingo },
   { href: "/active-games", label: APP_PAGE_NAMES.activeGames },
+  { href: "/faqs", label: APP_PAGE_NAMES.faqs },
   { href: "/advertise", label: "Advertise With Us" },
 ];
 
@@ -98,7 +100,7 @@ export function LeftHamburgerNav() {
         />
 
         <aside
-          className={`absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-white px-4 py-4 shadow-xl transition-transform duration-200 ${
+          className={`absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-white px-4 py-4 shadow-xl transition-transform duration-200 ${
             isOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
@@ -113,7 +115,7 @@ export function LeftHamburgerNav() {
             </button>
           </div>
 
-          <nav aria-label="Mobile navigation">
+          <nav aria-label="Mobile navigation" className="min-h-0 flex-1 overflow-y-auto pb-4">
             <ul className="space-y-2">
               {NAV_ITEMS.map((item) => (
                 <li key={item.href}>
