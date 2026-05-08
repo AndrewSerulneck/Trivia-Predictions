@@ -4366,5 +4366,174 @@
     "correctAnswer": 1,
     "category": "General Knowledge",
     "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-is-known-to-lay-the-largest-eggs",
+    "question": "Which animal is known to lay the largest eggs?",
+    "options": [
+      "Chicken",
+      "Crocodile",
+      "Ostrich",
+      "Emu"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-planet-in-our-solar-system-is-often-referred-to-as-the-red-planet",
+    "question": "Which planet in our solar system is often referred to as the \"Red Planet\"?",
+    "options": [
+      "Jupiter",
+      "Mars",
+      "Venus",
+      "Saturn"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-sides-does-a-standard-hexagon-have",
+    "question": "How many sides does a standard hexagon have?",
+    "options": [
+      "Five",
+      "Six",
+      "Seven",
+      "Eight"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-is-famous-for-painting-the-mona-lisa",
+    "question": "Who is famous for painting the Mona Lisa?",
+    "options": [
+      "Vincent van Gogh",
+      "Pablo Picasso",
+      "Leonardo da Vinci",
+      "Claude Monet"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-considered-the-longest-river-in-the-world",
+    "question": "What is considered the longest river in the world?",
+    "options": [
+      "Amazon River",
+      "Yangtze River",
+      "Mississippi River",
+      "Nile River"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-chemical-element-is-represented-by-the-symbol-o",
+    "question": "Which chemical element is represented by the symbol 'O'?",
+    "options": [
+      "Gold",
+      "Oxygen",
+      "Osmium",
+      "Iron"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-what-year-did-neil-armstrong-become-the-first-person-to-walk-on-the-moon",
+    "question": "In what year did Neil Armstrong become the first person to walk on the moon?",
+    "options": [
+      "1965",
+      "1969",
+      "1971",
+      "1973"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-roman-emperor-made-christianity-the-official-state-religion-of-the-roman-empire",
+    "question": "Which Roman Emperor made Christianity the official state religion of the Roman Empire?",
+    "options": [
+      "Augustus",
+      "Nero",
+      "Constantine I",
+      "Theodosius I"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-is-the-highest-mountain-peak-in-africa",
+    "question": "Which is the highest mountain peak in Africa?",
+    "options": [
+      "Mount Kenya",
+      "Mount Kilimanjaro",
+      "Ras Dashen",
+      "Mount Stanley"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-which-ancient-civilization-were-the-original-olympic-games-founded",
+    "question": "In which ancient civilization were the original Olympic Games founded?",
+    "options": [
+      "Ancient Egypt",
+      "Roman Empire",
+      "Ancient Greece",
+      "Persian Empire"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-developed-the-theory-of-general-relativity",
+    "question": "Who developed the theory of general relativity?",
+    "options": [
+      "Isaac Newton",
+      "Stephen Hawking",
+      "Albert Einstein",
+      "Marie Curie"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-city-is-home-to-the-iconic-opera-house-with-a-distinctive-sail-like-design",
+    "question": "Which city is home to the iconic opera house with a distinctive sail-like design?",
+    "options": [
+      "Vienna",
+      "Sydney",
+      "Paris",
+      "Berlin"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-musical-instrument-has-88-keys",
+    "question": "Which musical instrument has 88 keys?",
+    "options": [
+      "Guitar",
+      "Piano",
+      "Violin",
+      "Drums"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
   }
 ]

@@ -4392,5 +4392,174 @@
     "correctAnswer": 1,
     "category": "Geography",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-european-capital-city-is-built-on-14-islands-and-connected-by-over-50-bridges",
+    "question": "Which European capital city is built on 14 islands and connected by over 50 bridges?",
+    "options": [
+      "Amsterdam",
+      "Venice",
+      "Stockholm",
+      "Copenhagen"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-dead-sea-known-for-its-extremely-high-salt-content-borders-which-two-countries",
+    "question": "The Dead Sea, known for its extremely high salt content, borders which two countries?",
+    "options": [
+      "Egypt and Israel",
+      "Jordan and Syria",
+      "Israel and Jordan",
+      "Lebanon and Israel"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-is-known-for-its-iconic-eiffel-tower",
+    "question": "Which country is known for its iconic Eiffel Tower?",
+    "options": [
+      "Italy",
+      "Spain",
+      "Germany",
+      "France"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-narrow-strip-of-land-that-connects-north-and-south-america",
+    "question": "What is the name of the narrow strip of land that connects North and South America?",
+    "options": [
+      "Isthmus of Kra",
+      "Sinai Peninsula",
+      "Isthmus of Panama",
+      "Yucatán Peninsula"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-major-river-flows-through-london-england",
+    "question": "Which major river flows through London, England?",
+    "options": [
+      "Seine",
+      "Rhine",
+      "Danube",
+      "Thames"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-worlds-largest-hot-desert-is-the-sahara-which-one-is-the-largest-cold-desert",
+    "question": "The world's largest hot desert is the Sahara. Which one is the largest cold desert?",
+    "options": [
+      "Gobi Desert",
+      "Arctic Polar Desert",
+      "Antarctic Polar Desert",
+      "Great Basin Desert"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-nile-river-one-of-the-worlds-longest-primarily-flows-through-which-continent",
+    "question": "The Nile River, one of the world's longest, primarily flows through which continent?",
+    "options": [
+      "Asia",
+      "Europe",
+      "Africa",
+      "North America"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "mount-everest-the-worlds-highest-peak-is-part-of-which-major-mountain-range",
+    "question": "Mount Everest, the world's highest peak, is part of which major mountain range?",
+    "options": [
+      "Andes",
+      "Rockies",
+      "Alps",
+      "Himalayas"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-large-island-nation-is-located-off-the-southeast-coast-of-africa-in-the-indian-ocean",
+    "question": "Which large island nation is located off the southeast coast of Africa in the Indian Ocean?",
+    "options": [
+      "Sri Lanka",
+      "New Zealand",
+      "Madagascar",
+      "Cuba"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-ocean-is-recognized-as-the-largest-and-deepest-on-earth",
+    "question": "Which ocean is recognized as the largest and deepest on Earth?",
+    "options": [
+      "Atlantic Ocean",
+      "Indian Ocean",
+      "Arctic Ocean",
+      "Pacific Ocean"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-gobi-desert-a-large-cold-desert-spans-parts-of-which-two-countries",
+    "question": "The Gobi Desert, a large cold desert, spans parts of which two countries?",
+    "options": [
+      "China and India",
+      "Kazakhstan and Uzbekistan",
+      "Mongolia and China",
+      "Russia and Ukraine"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-highest-peak-in-africa",
+    "question": "What is the highest peak in Africa?",
+    "options": [
+      "Mount Kenya",
+      "Mount Kilimanjaro",
+      "Mount Stanley",
+      "Ras Dashen"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-south-american-country-shares-a-border-with-10-other-countries",
+    "question": "Which South American country shares a border with 10 other countries?",
+    "options": [
+      "Argentina",
+      "Peru",
+      "Brazil",
+      "Colombia"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
   }
 ]

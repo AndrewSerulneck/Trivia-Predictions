@@ -4392,5 +4392,161 @@
     "correctAnswer": 0,
     "category": "Music",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-classical-composer-wrote-the-four-seasons",
+    "question": "Which classical composer wrote \"The Four Seasons\"?",
+    "options": [
+      "Johann Sebastian Bach",
+      "Antonio Vivaldi",
+      "Wolfgang Amadeus Mozart",
+      "Ludwig van Beethoven"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-music-what-does-the-term-fortissimo-mean",
+    "question": "In music, what does the term \"fortissimo\" mean?",
+    "options": [
+      "To play very softly",
+      "To play at a moderate speed",
+      "To play very loudly",
+      "To slow down gradually"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-singer-is-commonly-referred-to-as-the-queen-of-pop",
+    "question": "Which singer is commonly referred to as \"The Queen of Pop\"?",
+    "options": [
+      "Mariah Carey",
+      "Whitney Houston",
+      "Madonna",
+      "Janet Jackson"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-rock-band-acdc-was-formed-in-which-country",
+    "question": "The rock band AC/DC was formed in which country?",
+    "options": [
+      "United States",
+      "United Kingdom",
+      "Australia",
+      "Canada"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-standard-time-signature-for-a-waltz",
+    "question": "What is the standard time signature for a waltz?",
+    "options": [
+      "4/4",
+      "2/4",
+      "3/4",
+      "6/8"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-these-instruments-belongs-to-the-brass-family",
+    "question": "Which of these instruments belongs to the brass family?",
+    "options": [
+      "Clarinet",
+      "Flute",
+      "Trumpet",
+      "Violin"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-rock-icon-is-known-for-biting-the-head-off-a-bat-during-a-concert",
+    "question": "Which rock icon is known for biting the head off a bat during a concert?",
+    "options": [
+      "Alice Cooper",
+      "Gene Simmons",
+      "Marilyn Manson",
+      "Ozzy Osbourne"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-music-what-does-a-cappella-primarily-refer-to",
+    "question": "In music, what does \"A cappella\" primarily refer to?",
+    "options": [
+      "Playing very fast",
+      "Singing without instrumental accompaniment",
+      "A slow, melodic passage",
+      "A sudden change in tempo"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-musical-genre-emerged-from-new-orleans-at-the-turn-of-the-20th-century",
+    "question": "Which musical genre emerged from New Orleans at the turn of the 20th century?",
+    "options": [
+      "Blues",
+      "Ragtime",
+      "Jazz",
+      "Gospel"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-artist-released-the-critically-acclaimed-visual-album-lemonade",
+    "question": "Which artist released the critically acclaimed visual album \"Lemonade\"?",
+    "options": [
+      "Rihanna",
+      "Adele",
+      "Beyoncé",
+      "Taylor Swift"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-italian-composer-is-renowned-for-his-operas-including-la-traviata-and-aida",
+    "question": "Which Italian composer is renowned for his operas, including 'La Traviata' and 'Aida'?",
+    "options": [
+      "Giacomo Puccini",
+      "Giuseppe Verdi",
+      "Gioachino Rossini",
+      "Vincenzo Bellini"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-artist-released-the-2011-hit-single-rolling-in-the-deep",
+    "question": "Which artist released the 2011 hit single 'Rolling in the Deep'?",
+    "options": [
+      "Beyoncé",
+      "Rihanna",
+      "Adele",
+      "Lady Gaga"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
   }
 ]

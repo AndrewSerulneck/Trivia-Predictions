@@ -4392,5 +4392,161 @@
     "correctAnswer": 0,
     "category": "Sports",
     "difficulty": "hard"
+  },
+  {
+    "slug": "which-country-has-won-the-most-fifa-world-cups",
+    "question": "Which country has won the most FIFA World Cups?",
+    "options": [
+      "Germany",
+      "Brazil",
+      "Italy",
+      "Argentina"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-major-golf-tournament-is-played-annually-at-augusta-national-golf-club",
+    "question": "Which major golf tournament is played annually at Augusta National Golf Club?",
+    "options": [
+      "The Open Championship",
+      "US Open",
+      "The Masters",
+      "PGA Championship"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-do-the-five-olympic-rings-represent",
+    "question": "What do the five Olympic rings represent?",
+    "options": [
+      "Five core values",
+      "Five continents",
+      "Five host cities",
+      "Five ancient gods"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-players-are-on-the-ice-for-one-team-at-a-time-during-regulation-play-in-ice-hockey-including-the-goalie",
+    "question": "How many players are on the ice for one team at a time during regulation play in ice hockey (including the goalie)?",
+    "options": [
+      "5",
+      "6",
+      "7",
+      "4"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-cricket-what-is-the-term-for-a-batsman-scoring-100-runs-in-a-single-innings",
+    "question": "In cricket, what is the term for a batsman scoring 100 runs in a single innings?",
+    "options": [
+      "Half-century",
+      "Century",
+      "Double century",
+      "Hat-trick"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-swimming-stroke-is-generally-considered-the-fastest",
+    "question": "Which swimming stroke is generally considered the fastest?",
+    "options": [
+      "Backstroke",
+      "Breaststroke",
+      "Butterfly",
+      "Freestyle"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-famous-multi-stage-cycling-race-primarily-held-in-france",
+    "question": "What is the name of the famous multi-stage cycling race primarily held in France?",
+    "options": [
+      "Giro d'Italia",
+      "Tour de France",
+      "Vuelta a España",
+      "Paris-Roubaix"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-balls-result-in-a-walk-base-on-balls-in-baseball",
+    "question": "How many balls result in a walk (base on balls) in baseball?",
+    "options": [
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-color-belt-typically-signifies-a-beginner-in-most-martial-arts",
+    "question": "What color belt typically signifies a beginner in most martial arts?",
+    "options": [
+      "Black",
+      "Blue",
+      "White",
+      "Red"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-american-football-how-many-points-is-a-touchdown-worth-before-the-extra-point-or-two-point-conversion",
+    "question": "In American football, how many points is a touchdown worth (before the extra point or two-point conversion)?",
+    "options": [
+      "4",
+      "6",
+      "7",
+      "3"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-of-the-four-tennis-grand-slams-is-uniquely-played-on-red-clay-courts",
+    "question": "Which of the four tennis Grand Slams is uniquely played on red clay courts?",
+    "options": [
+      "Wimbledon",
+      "US Open",
+      "French Open",
+      "Australian Open"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-year-did-the-first-modern-olympic-games-take-place-in-athens-greece",
+    "question": "In which year did the first modern Olympic Games take place in Athens, Greece?",
+    "options": [
+      "1892",
+      "1896",
+      "1900",
+      "1904"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
   }
 ]

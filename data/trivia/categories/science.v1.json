@@ -4392,5 +4392,161 @@
     "correctAnswer": 2,
     "category": "Science",
     "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-often-referred-to-as-the-powerhouse-of-the-cell",
+    "question": "What is often referred to as the 'powerhouse' of the cell?",
+    "options": [
+      "Nucleus",
+      "Mitochondria",
+      "Ribosome",
+      "Endoplasmic Reticulum"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-fundamental-force-is-responsible-for-the-attraction-between-objects-with-mass",
+    "question": "Which fundamental force is responsible for the attraction between objects with mass?",
+    "options": [
+      "Electromagnetic force",
+      "Strong nuclear force",
+      "Weak nuclear force",
+      "Gravitational force"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-primary-characteristic-that-defines-an-isotope-of-an-element",
+    "question": "What is the primary characteristic that defines an isotope of an element?",
+    "options": [
+      "Number of protons",
+      "Number of neutrons",
+      "Number of electrons",
+      "Atomic mass"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-is-the-smallest-planet-in-our-solar-system",
+    "question": "Which is the smallest planet in our solar system?",
+    "options": [
+      "Mars",
+      "Venus",
+      "Mercury",
+      "Earth"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-standard-unit-of-electrical-current",
+    "question": "What is the standard unit of electrical current?",
+    "options": [
+      "Volt",
+      "Ampere",
+      "Ohm",
+      "Watt"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-part-of-the-human-brain-is-primarily-responsible-for-balance-and-coordination",
+    "question": "Which part of the human brain is primarily responsible for balance and coordination?",
+    "options": [
+      "Cerebrum",
+      "Cerebellum",
+      "Brainstem",
+      "Thalamus"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-type-of-celestial-body-is-characterized-by-a-tail-of-gas-and-dust-as-it-orbits-the-sun",
+    "question": "What type of celestial body is characterized by a 'tail' of gas and dust as it orbits the Sun?",
+    "options": [
+      "Asteroid",
+      "Meteoroid",
+      "Comet",
+      "Planetoid"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-phenomenon-describes-the-bending-of-light-as-it-passes-from-one-medium-to-another-eg-air-to-water",
+    "question": "What phenomenon describes the bending of light as it passes from one medium to another (e.g., air to water)?",
+    "options": [
+      "Reflection",
+      "Diffraction",
+      "Refraction",
+      "Dispersion"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-given-to-the-supercontinent-that-existed-approximately-300-million-years-ago",
+    "question": "What is the name given to the supercontinent that existed approximately 300 million years ago?",
+    "options": [
+      "Gondwana",
+      "Laurasia",
+      "Pangea",
+      "Rodinia"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-term-for-a-solution-with-a-higher-concentration-of-solute-outside-a-cell-than-inside-causing-water-to-leave-the-cell",
+    "question": "What is the term for a solution with a higher concentration of solute outside a cell than inside, causing water to leave the cell?",
+    "options": [
+      "Isotonic",
+      "Hypotonic",
+      "Hypertonic",
+      "Anionic"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-layer-of-earth-is-primarily-liquid-and-responsible-for-generating-the-planets-magnetic-field",
+    "question": "Which layer of Earth is primarily liquid and responsible for generating the planet's magnetic field?",
+    "options": [
+      "Inner Core",
+      "Mantle",
+      "Crust",
+      "Outer Core"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-gas-is-primarily-absorbed-by-plants-from-the-atmosphere-during-the-process-of-photosynthesis",
+    "question": "What gas is primarily absorbed by plants from the atmosphere during the process of photosynthesis?",
+    "options": [
+      "Oxygen",
+      "Nitrogen",
+      "Carbon Dioxide",
+      "Hydrogen"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
   }
 ]

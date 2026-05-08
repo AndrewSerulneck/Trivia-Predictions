@@ -4392,5 +4392,161 @@
     "correctAnswer": 2,
     "category": "Pop Culture",
     "difficulty": "hard"
+  },
+  {
+    "slug": "which-artist-released-the-critically-acclaimed-album-lemonade-in-2016",
+    "question": "Which artist released the critically acclaimed album \"Lemonade\" in 2016?",
+    "options": [
+      "Beyoncé",
+      "Rihanna",
+      "Adele",
+      "Taylor Swift"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-the-tv-series-game-of-thrones-what-is-the-primary-continent-where-most-of-the-story-unfolds",
+    "question": "In the TV series \"Game of Thrones,\" what is the primary continent where most of the story unfolds?",
+    "options": [
+      "Essos",
+      "Westeros",
+      "Sothoryos",
+      "Ulthos"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animated-movie-features-a-forgetful-blue-tang-fish-named-dory-as-a-prominent-character",
+    "question": "Which animated movie features a forgetful blue tang fish named Dory as a prominent character?",
+    "options": [
+      "Finding Nemo",
+      "Finding Dory",
+      "The Little Mermaid",
+      "Shark Tale"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-year-was-the-first-grand-theft-auto-video-game-originally-released",
+    "question": "What year was the first \"Grand Theft Auto\" video game originally released?",
+    "options": [
+      "1995",
+      "1997",
+      "1999",
+      "2001"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "before-directing-the-oscar-winning-parasite-which-critically-acclaimed-film-did-bong-joon-ho-direct-that-featured-tilda-swinton-and-jake-gyllenhaal",
+    "question": "Before directing the Oscar-winning \"Parasite\", which critically acclaimed film did Bong Joon-ho direct that featured Tilda Swinton and Jake Gyllenhaal?",
+    "options": [
+      "Okja",
+      "The Host",
+      "Mother",
+      "Memories of Murder"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-social-media-platform-is-primarily-known-for-its-short-form-video-content-and-viral-dance-trends",
+    "question": "Which social media platform is primarily known for its short-form video content and viral dance trends?",
+    "options": [
+      "Instagram",
+      "Twitter",
+      "TikTok",
+      "Snapchat"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-fictional-town-is-home-to-the-simpson-family-in-the-long-running-animated-tv-show",
+    "question": "What fictional town is home to the Simpson family in the long-running animated TV show?",
+    "options": [
+      "Quahog",
+      "South Park",
+      "Springfield",
+      "Arlen"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-k-pop-group-released-the-hit-song-dynamite-in-2020-becoming-their-first-english-language-single",
+    "question": "Which K-pop group released the hit song \"Dynamite\" in 2020, becoming their first English-language single?",
+    "options": [
+      "EXO",
+      "Blackpink",
+      "BTS",
+      "TWICE"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-played-the-titular-character-in-the-2019-film-joker",
+    "question": "Who played the titular character in the 2019 film \"Joker\"?",
+    "options": [
+      "Jared Leto",
+      "Heath Ledger",
+      "Joaquin Phoenix",
+      "Jack Nicholson"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-reality-television-family-stars-in-the-show-the-kardashians-on-hulu-after-keeping-up-with-the-kardashians",
+    "question": "Which reality television family stars in the show \"The Kardashians\" on Hulu, after \"Keeping Up with the Kardashians\"?",
+    "options": [
+      "The Osbournes",
+      "The Jenners",
+      "The Hiltons",
+      "The Kardashian-Jenners"
+    ],
+    "correctAnswer": 3,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-the-marvel-cinematic-universe-who-wields-the-infinity-gauntlet-to-snap-away-half-of-all-life-in-avengers-infinity-war",
+    "question": "In the Marvel Cinematic Universe, who wields the infinity gauntlet to snap away half of all life in \"Avengers: Infinity War\"?",
+    "options": [
+      "Iron Man",
+      "Captain America",
+      "Thanos",
+      "Hulk"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-iconic-pop-star-famously-kissed-madonna-at-the-2003-mtv-video-music-awards",
+    "question": "Which iconic pop star famously kissed Madonna at the 2003 MTV Video Music Awards?",
+    "options": [
+      "Britney Spears",
+      "Christina Aguilera",
+      "Jennifer Lopez",
+      "Mariah Carey"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
   }
 ]

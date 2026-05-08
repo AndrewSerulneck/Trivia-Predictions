@@ -4405,5 +4405,161 @@
     "correctAnswer": 2,
     "category": "Animals",
     "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-is-famous-for-its-black-and-white-stripes",
+    "question": "Which animal is famous for its black and white stripes?",
+    "options": [
+      "Tiger",
+      "Zebra",
+      "Panda",
+      "Skunk"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-do-caterpillars-transform-into",
+    "question": "What do caterpillars transform into?",
+    "options": [
+      "Beetle",
+      "Moth",
+      "Butterfly",
+      "Wasp"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-large-flightless-bird-is-native-to-africa",
+    "question": "Which large, flightless bird is native to Africa?",
+    "options": [
+      "Emu",
+      "Rhea",
+      "Cassowary",
+      "Ostrich"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-marine-mammal-uses-echolocation-to-navigate-and-hunt",
+    "question": "Which marine mammal uses echolocation to navigate and hunt?",
+    "options": [
+      "Seal",
+      "Dolphin",
+      "Walrus",
+      "Manatee"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-building-elaborate-dams-on-rivers",
+    "question": "Which animal is known for building elaborate dams on rivers?",
+    "options": [
+      "Otter",
+      "Beaver",
+      "Muskrat",
+      "Platypus"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-has-the-longest-neck-among-all-living-land-animals",
+    "question": "Which animal has the longest neck among all living land animals?",
+    "options": [
+      "Elephant",
+      "Camel",
+      "Giraffe",
+      "Llama"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-ocean-creature-has-three-hearts",
+    "question": "Which ocean creature has three hearts?",
+    "options": [
+      "Crab",
+      "Shark",
+      "Octopus",
+      "Jellyfish"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-do-bats-use-to-navigate-and-hunt-in-the-dark",
+    "question": "What do bats use to navigate and hunt in the dark?",
+    "options": [
+      "Excellent night vision",
+      "Echolocation",
+      "Strong sense of smell",
+      "Heat sensing"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-type-of-animal-is-a-narwhal",
+    "question": "What type of animal is a 'narwhal'?",
+    "options": [
+      "A large fish",
+      "A type of whale",
+      "A seal species",
+      "A deep-sea squid"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-continent-are-kangaroos-native-to",
+    "question": "Which continent are kangaroos native to?",
+    "options": [
+      "Asia",
+      "Africa",
+      "Australia",
+      "South America"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-the-only-mammal-capable-of-true-sustained-flight",
+    "question": "Which animal is the only mammal capable of true sustained flight?",
+    "options": [
+      "A) Flying Squirrel",
+      "B) Bat",
+      "C) Sugar Glider",
+      "D) Colugo"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-only-marsupial-native-to-north-america",
+    "question": "What is the only marsupial native to North America?",
+    "options": [
+      "Kangaroo",
+      "Koala",
+      "Opossum",
+      "Wallaby"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
   }
 ]

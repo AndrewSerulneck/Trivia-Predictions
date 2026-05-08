@@ -4392,5 +4392,174 @@
     "correctAnswer": 0,
     "category": "History",
     "difficulty": "medium"
+  },
+  {
+    "slug": "the-spinning-jenny-a-key-invention-of-the-industrial-revolution-was-invented-by-whom",
+    "question": "The \"Spinning Jenny,\" a key invention of the Industrial Revolution, was invented by whom?",
+    "options": [
+      "James Watt",
+      "Eli Whitney",
+      "Richard Arkwright",
+      "James Hargreaves"
+    ],
+    "correctAnswer": 3,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-peloponnesian-war-was-fought-between-which-two-major-greek-city-states",
+    "question": "The Peloponnesian War was fought between which two major Greek city-states?",
+    "options": [
+      "Athens and Sparta",
+      "Corinth and Thebes",
+      "Argos and Mycenae",
+      "Delphi and Olympia"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-what-year-did-the-american-civil-war-begin",
+    "question": "In what year did the American Civil War begin?",
+    "options": [
+      "1859",
+      "1861",
+      "1863",
+      "1865"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "leonardo-da-vincis-mona-lisa-is-housed-in-which-famous-museum",
+    "question": "Leonardo da Vinci's \"Mona Lisa\" is housed in which famous museum?",
+    "options": [
+      "The British Museum",
+      "The Louvre",
+      "The Uffizi Gallery",
+      "The Metropolitan Museum of Art"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-term-iron-curtain-was-popularized-by-which-british-prime-minister-to-describe-the-division-of-europe-during-the-cold-war",
+    "question": "The term \"Iron Curtain\" was popularized by which British Prime Minister to describe the division of Europe during the Cold War?",
+    "options": [
+      "Clement Attlee",
+      "Winston Churchill",
+      "Margaret Thatcher",
+      "Harold Macmillan"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "world-war-i-officially-ended-with-the-signing-of-the-treaty-of-versailles-in-which-year",
+    "question": "World War I officially ended with the signing of the Treaty of Versailles in which year?",
+    "options": [
+      "1917",
+      "1918",
+      "1919",
+      "1920"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-storming-of-the-bastille-often-considered-the-start-of-the-french-revolution-occurred-in-which-year",
+    "question": "The storming of the Bastille, often considered the start of the French Revolution, occurred in which year?",
+    "options": [
+      "1776",
+      "1789",
+      "1792",
+      "1804"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-ancient-civilization-developed-the-first-known-system-of-writing-cuneiform",
+    "question": "Which ancient civilization developed the first known system of writing, cuneiform?",
+    "options": [
+      "Egyptians",
+      "Greeks",
+      "Sumerians",
+      "Indus Valley"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-cuban-missile-crisis-a-major-confrontation-of-the-cold-war-occurred-in-what-year",
+    "question": "The Cuban Missile Crisis, a major confrontation of the Cold War, occurred in what year?",
+    "options": [
+      "1959",
+      "1961",
+      "1962",
+      "1965"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-colosseum-an-iconic-amphitheater-was-built-in-which-ancient-city",
+    "question": "The Colosseum, an iconic amphitheater, was built in which ancient city?",
+    "options": [
+      "Athens",
+      "Alexandria",
+      "Rome",
+      "Constantinople"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-roman-emperor-famously-divided-the-roman-empire-into-western-and-eastern-halves-in-285-ad",
+    "question": "Which Roman Emperor famously divided the Roman Empire into Western and Eastern halves in 285 AD?",
+    "options": [
+      "Diocletian",
+      "Constantine",
+      "Augustus",
+      "Theodosius I"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-war-of-the-roses-was-a-series-of-civil-wars-fought-for-control-of-the-throne-of-england-between-two-rival-branches-of-the-royal-house-of-plantagenet-which-two-houses-were-they",
+    "question": "The 'War of the Roses' was a series of civil wars fought for control of the throne of England between two rival branches of the royal House of Plantagenet. Which two houses were they?",
+    "options": [
+      "House of Lancaster and House of York",
+      "House of Tudor and House of Stuart",
+      "House of Windsor and House of Hanover",
+      "House of Normandy and House of Anjou"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-ancient-civilization-constructed-the-great-pyramid-of-giza",
+    "question": "Which ancient civilization constructed the Great Pyramid of Giza?",
+    "options": [
+      "Mesopotamian",
+      "Roman",
+      "Egyptian",
+      "Greek"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
   }
 ]
