@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import type { Venue, LeaderboardEntry } from "@/types";
 import { getUserId, getVenueId, saveUserId, saveVenueId, clearVenueSession } from "@/lib/storage";
 import { clearLoginInProgress } from "@/lib/authFastPath";
@@ -73,6 +74,12 @@ const FETCH_TIMEOUT_MS = 4500;
 const ARRIVAL_CORE_MAX_WAIT_MS = 2800;
 const ARRIVAL_WATCHDOG_TIMEOUT_MS = 8000;
 const ARRIVAL_RECOVERY_ATTEMPT_KEY = "tp:venue-arrival-recovery-attempt";
+
+const HOME_SCREEN_VARIANTS = {
+  enter: (direction: 1 | -1) => ({ x: direction > 0 ? "100%" : "-100%" }),
+  center: { x: "0%" },
+  exit:  (direction: 1 | -1) => ({ x: direction > 0 ? "-100%" : "100%" }),
+};
 
 function formatCountdown(seconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(seconds));
@@ -247,6 +254,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
   const touchStartAtRef = useRef<number | null>(null);
+  const swipeDirectionRef = useRef<1 | -1>(1);
   const warmupPromiseRef = useRef<Promise<void> | null>(null);
   const warmupStartedRef = useRef(false);
 
@@ -417,9 +425,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
 
   const goToScreen = useCallback((screenIndex: HomeScreenIndex) => {
     const nextIndex = clamp(screenIndex, 0, SWIPE_SCREEN_COUNT - 1) as HomeScreenIndex;
+    const currentIndex = activeScreenRef.current;
+    if (nextIndex === currentIndex) return;
+    swipeDirectionRef.current = nextIndex > currentIndex ? 1 : -1;
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
     setActiveScreen(nextIndex);
     activeScreenRef.current = nextIndex;
-    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   }, []);
 
   const onSwipeTouchStart = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
@@ -860,8 +871,19 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         </div>
       </section>
 
-      <div ref={swipeViewportRef} onTouchStart={onSwipeTouchStart} onTouchEnd={onSwipeTouchEnd} className="w-full" aria-label="Venue home screens">
-          <section className={`relative flex flex-col px-3 pb-3 pt-1${activeScreen !== 0 ? " hidden" : ""}`}>
+      <div ref={swipeViewportRef} onTouchStart={onSwipeTouchStart} onTouchEnd={onSwipeTouchEnd} className="relative w-full [overflow-x:clip]" aria-label="Venue home screens">
+        <AnimatePresence initial={false} custom={swipeDirectionRef.current}>
+          {activeScreen === 0 && (
+          <motion.section
+            key="screen-games"
+            custom={swipeDirectionRef.current}
+            variants={HOME_SCREEN_VARIANTS}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className="relative flex flex-col px-3 pb-3 pt-1"
+          >
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(14,165,233,0.3)_0%,rgba(14,165,233,0)_36%),radial-gradient(circle_at_84%_22%,rgba(251,146,60,0.35)_0%,rgba(251,146,60,0)_35%),radial-gradient(circle_at_52%_84%,rgba(236,72,153,0.3)_0%,rgba(236,72,153,0)_43%)]" />
             {showFastPathSkeleton ? (
               <div className="mx-auto mb-2 w-full max-w-[24rem] rounded-2xl border border-cyan-200/80 bg-cyan-50/85 px-3 py-2 text-center text-xs font-semibold text-cyan-900">
@@ -905,9 +927,20 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 {badgeError} Tap to retry
               </button>
             ) : null}
-          </section>
+          </motion.section>
+          )}
 
-          <section className={`px-3 pb-8 pt-1${activeScreen !== 1 ? " hidden" : ""}`}>
+          {activeScreen === 1 && (
+          <motion.section
+            key="screen-leaderboard"
+            custom={swipeDirectionRef.current}
+            variants={HOME_SCREEN_VARIANTS}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className="px-3 pb-8 pt-1"
+          >
             <div className="mx-auto w-full max-w-[26rem] space-y-3">
               <div className="rounded-[1.6rem] border-[3px] border-[#3b2412] bg-[#4a2e18] p-3 shadow-[0_8px_0_rgba(15,23,42,0.3)]">
                 <div className="inline-flex rounded-xl border-2 border-[#3b2412] bg-[#1f5136] px-3 py-1.5 shadow-[0_2px_0_rgba(0,0,0,0.25)]">
@@ -922,9 +955,20 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 </div>
               </div>
             </div>
-          </section>
+          </motion.section>
+          )}
 
-          <section className={`px-3 pb-3 pt-1${activeScreen !== 2 ? " hidden" : ""}`}>
+          {activeScreen === 2 && (
+          <motion.section
+            key="screen-prizes"
+            custom={swipeDirectionRef.current}
+            variants={HOME_SCREEN_VARIANTS}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className="px-3 pb-3 pt-1"
+          >
             <div className="mx-auto w-full max-w-[26rem] space-y-3">
               <div className="rounded-[1.6rem] border-[3px] border-[#3b2412] bg-[#4a2e18] p-3 shadow-[0_8px_0_rgba(15,23,42,0.3)]">
                 <div className="inline-flex rounded-xl border-2 border-[#3b2412] bg-[#1f5136] px-3 py-1.5 shadow-[0_2px_0_rgba(0,0,0,0.25)]">
@@ -962,7 +1006,9 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 </div>
               </div>
             </div>
-          </section>
+          </motion.section>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
