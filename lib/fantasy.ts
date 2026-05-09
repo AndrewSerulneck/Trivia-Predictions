@@ -1401,7 +1401,7 @@ function pickFirstNumber(row: Record<string, unknown>, pathOptions: string[][]):
 }
 
 function parseApiSportsGameStartMs(game: ApiSportsNbaGame): number {
-  const iso = String(getPath(game, ["date", "start"]) ?? "").trim();
+  const iso = String(getPath(game, ["date", "start"]) ?? getPath(game, ["date"]) ?? "").trim();
   const parsed = Date.parse(iso);
   return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
 }
@@ -1937,6 +1937,122 @@ export async function refreshFantasyProgress(params?: {
     updated,
     finalized,
     rewardedGames: 0,
+  };
+}
+
+export async function debugFantasyScoring(params: {
+  userId: string;
+  entryId?: string;
+}): Promise<{
+  entry: {
+    id: string;
+    gameId: string;
+    startsAt: string;
+    status: string;
+    lineup: string[];
+    points: number;
+  } | null;
+  recentLiveRowCount: number;
+  playerDiagnostics: Array<{
+    playerName: string;
+    matchedRowCount: number;
+    acceptedGameIds: string[];
+    acceptedPoints: number;
+    sampleRejectedReasons: string[];
+  }>;
+}> {
+  const userId = String(params.userId ?? "").trim();
+  const entryId = String(params.entryId ?? "").trim();
+  if (!supabaseAdmin || !userId) {
+    return { entry: null, recentLiveRowCount: 0, playerDiagnostics: [] };
+  }
+
+  await ensureFantasyTables();
+
+  let query = supabaseAdmin
+    .from("fantasy_entries")
+    .select("id, game_id, starts_at, status, lineup, points, updated_at")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false })
+    .limit(1);
+  if (entryId) {
+    query = query.eq("id", entryId);
+  } else {
+    query = query.like("game_id", "nba-daily-%");
+  }
+
+  const { data: entryRows } = await query;
+  const row = (entryRows?.[0] ?? null) as
+    | { id: string; game_id: string; starts_at: string; status: string; lineup: unknown; points: number }
+    | null;
+  if (!row) {
+    return { entry: null, recentLiveRowCount: 0, playerDiagnostics: [] };
+  }
+
+  const entry = {
+    id: row.id,
+    gameId: row.game_id,
+    startsAt: row.starts_at,
+    status: row.status,
+    lineup: parseLineup(row.lineup),
+    points: Number(row.points ?? 0),
+  };
+  const startsAtMs = Date.parse(entry.startsAt);
+  const nowMs = Date.now();
+  const hasDailyGameId = Boolean(parseFantasyDailyGameId(entry.gameId));
+  const recentLiveRows = await loadRecentLivePlayerStatsRows();
+  const gameMetaById = await loadApiSportsGameMetaForRecentWindow();
+
+  const playerDiagnostics = entry.lineup.map((playerName) => {
+    const rejected: string[] = [];
+    const accepted = recentLiveRows.filter((rowLive) => {
+      if (!isStartedGameStatus(rowLive.game_status)) {
+        rejected.push("not_started_status");
+        return false;
+      }
+      if (!namesLikelyMatch(playerName, String(rowLive.player_name ?? ""))) {
+        rejected.push("name_mismatch");
+        return false;
+      }
+      const gameId = String(rowLive.game_id ?? "").trim();
+      if (!gameId) {
+        rejected.push("missing_game_id");
+        return false;
+      }
+      const rowTs = Date.parse(String(rowLive.source_updated_at ?? ""));
+      if (Number.isFinite(startsAtMs) && Number.isFinite(rowTs) && (rowTs < startsAtMs || rowTs > nowMs + 2 * 60 * 60 * 1000)) {
+        rejected.push("outside_row_timestamp_window");
+        return false;
+      }
+      const gameMeta = gameMetaById.get(gameId);
+      if (hasDailyGameId) {
+        if (!gameMeta || !Number.isFinite(startsAtMs)) {
+          rejected.push("missing_game_meta_for_daily");
+          return false;
+        }
+        if (gameMeta.startMs < startsAtMs - 2 * 60 * 60 * 1000 || gameMeta.startMs > startsAtMs + 36 * 60 * 60 * 1000) {
+          rejected.push("outside_daily_game_window");
+          return false;
+        }
+      }
+      return true;
+    });
+
+    const latestByGame = getLatestRowsByGameId(accepted);
+    const acceptedPoints = Number(latestByGame.reduce((sum, r) => sum + Number(r.total_fantasy_points ?? 0), 0).toFixed(2));
+    return {
+      playerName,
+      matchedRowCount: accepted.length,
+      acceptedGameIds: latestByGame.map((r) => String(r.game_id ?? "").trim()).filter(Boolean),
+      acceptedPoints,
+      sampleRejectedReasons: Array.from(new Set(rejected)).slice(0, 8),
+    };
+  });
+
+  return {
+    entry,
+    recentLiveRowCount: recentLiveRows.length,
+    playerDiagnostics,
   };
 }
 

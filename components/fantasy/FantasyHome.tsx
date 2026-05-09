@@ -5,7 +5,6 @@ import { getUserId, getVenueId } from "@/lib/storage";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import type { FantasyEntry, FantasyGame, FantasyLeaderboardEntry, FantasyPlayerPoolItem } from "@/lib/fantasy";
-import { useLivePlayerStats } from "@/lib/hooks/useLivePlayerStats";
 
 type GamesPayload = {
   ok: boolean;
@@ -30,6 +29,13 @@ function getTodayDateInput(): string {
   return `${year}-${month}-${day}`;
 }
 
+function toLocalDateInput(value: Date): string {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function buildFantasyDailyGameId(date: string): string {
   return `nba-daily-${date}`;
 }
@@ -41,6 +47,18 @@ function parseDailyGameDateFromId(gameId: string): string | null {
   }
   const rawDate = trimmed.slice("nba-daily-".length).trim();
   return /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null;
+}
+
+function getEntryLocalDateKey(entry: Pick<FantasyEntry, "gameId" | "startsAt">): string | null {
+  const fromGameId = parseDailyGameDateFromId(entry.gameId);
+  if (fromGameId) {
+    return fromGameId;
+  }
+  const startsAtMs = Date.parse(String(entry.startsAt ?? ""));
+  if (!Number.isFinite(startsAtMs)) {
+    return null;
+  }
+  return toLocalDateInput(new Date(startsAtMs));
 }
 
 function formatLocalDateTime(iso: string): string {
@@ -83,73 +101,6 @@ function normalizePlayerKey(value: string): string {
     .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-}
-
-function tokenizePlayerName(value: string): string[] {
-  const normalized = normalizePlayerKey(value);
-  return normalized ? normalized.split(" ").filter(Boolean) : [];
-}
-
-function namesLikelyMatch(left: string, right: string): boolean {
-  const leftTokens = tokenizePlayerName(left);
-  const rightTokens = tokenizePlayerName(right);
-  if (leftTokens.length === 0 || rightTokens.length === 0) {
-    return false;
-  }
-  const leftNormalized = leftTokens.join(" ");
-  const rightNormalized = rightTokens.join(" ");
-  if (leftNormalized === rightNormalized) {
-    return true;
-  }
-  if (
-    leftTokens.length === 2 &&
-    rightTokens.length === 2 &&
-    leftTokens[0] === rightTokens[1] &&
-    leftTokens[1] === rightTokens[0]
-  ) {
-    return true;
-  }
-
-  const rightSet = new Set(rightTokens);
-  const sharedLong = leftTokens.filter((token) => token.length >= 3 && rightSet.has(token));
-  if (sharedLong.length === 0) {
-    return false;
-  }
-
-  const sharedSet = new Set(sharedLong);
-  const leftRemainder = leftTokens.filter((token) => !sharedSet.has(token));
-  const rightRemainder = rightTokens.filter((token) => !sharedSet.has(token));
-  if (leftRemainder.length === 0 || rightRemainder.length === 0) {
-    return true;
-  }
-  return leftRemainder[0]?.charAt(0) === rightRemainder[0]?.charAt(0);
-}
-
-function isStartedFantasyGameStatus(value: string): boolean {
-  const status = String(value ?? "").trim().toUpperCase();
-  if (!status) {
-    return false;
-  }
-  const notStartedStatuses = new Set([
-    "NS",
-    "NOT STARTED",
-    "SCHEDULED",
-    "PREGAME",
-    "PRE-GAME",
-    "POSTPONED",
-    "CANCELED",
-    "CANCELLED",
-  ]);
-  if (notStartedStatuses.has(status)) {
-    return false;
-  }
-  const startedIndicators = ["Q1", "Q2", "Q3", "Q4", "OT", "BT", "HT", "HALF", "LIVE", "IN PLAY", "IN_PROGRESS", "FT", "AOT", "FINAL", "COMPLETED"];
-  return startedIndicators.some((indicator) => status.includes(indicator));
-}
-
-function isFinalFantasyGameStatus(value: string): boolean {
-  const status = String(value ?? "").trim().toUpperCase();
-  return status === "FT" || status === "AOT" || status === "FINAL" || status === "COMPLETED";
 }
 
 function getLocalWeekStartMs(date: Date): number {
@@ -329,7 +280,18 @@ export function FantasyHome() {
     return existingEntryForSelectedGame.lineup.every((playerName) => playerPoolKeys.has(normalizePlayerKey(playerName)));
   }, [existingEntryForSelectedGame, playerPoolKeys]);
   const nextUnlockedGame = useMemo(() => games.find((game) => !game.isLocked) ?? null, [games]);
-  const liveEntries = useMemo(() => entries.filter((entry) => entry.status === "live"), [entries]);
+  const selectedSlateDate = useMemo(() => parseDailyGameDateFromId(selectedGameId) ?? todayDate, [selectedGameId, todayDate]);
+  const liveEntries = useMemo(
+    () =>
+      entries.filter((entry) => {
+        if (entry.status !== "live") {
+          return false;
+        }
+        const entryDateKey = getEntryLocalDateKey(entry);
+        return entryDateKey === selectedSlateDate;
+      }),
+    [entries, selectedSlateDate]
+  );
   const hasActiveDraftedEntry = useMemo(
     () =>
       entries.some(
@@ -341,13 +303,24 @@ export function FantasyHome() {
   );
   const hasLiveEntry = liveEntries.length > 0;
   const hasSyncableEntry = useMemo(
-    () => entries.some((entry) => entry.status === "pending" || entry.status === "live"),
-    [entries]
+    () =>
+      entries.some((entry) => {
+        const entryDateKey = getEntryLocalDateKey(entry);
+        if (entryDateKey !== selectedSlateDate) {
+          return false;
+        }
+        return entry.status === "pending" || entry.status === "live";
+      }),
+    [entries, selectedSlateDate]
   );
   const nextPendingEntryStartMs = useMemo(() => {
     const now = Date.now();
     let nextStart: number | null = null;
     for (const entry of entries) {
+      const entryDateKey = getEntryLocalDateKey(entry);
+      if (entryDateKey !== selectedSlateDate) {
+        continue;
+      }
       if (entry.status !== "pending") {
         continue;
       }
@@ -360,19 +333,20 @@ export function FantasyHome() {
       }
     }
     return nextStart;
-  }, [entries]);
+  }, [entries, selectedSlateDate]);
   const finalUnclaimedEntries = useMemo(
     () =>
       entries
         .filter(
           (entry) =>
+            getEntryLocalDateKey(entry) === selectedSlateDate &&
             entry.status === "final" &&
             !entry.rewardClaimedAt &&
             computeFantasyClaimablePoints(entry) > 0 &&
             isIsoInCurrentLocalWeek(entry.startsAt)
         )
         .sort((left, right) => Date.parse(right.startsAt) - Date.parse(left.startsAt)),
-    [entries]
+    [entries, selectedSlateDate]
   );
   const trackedEntry = useMemo(() => {
     const selected = entries.find((entry) => entry.gameId === selectedGameId);
@@ -397,80 +371,24 @@ export function FantasyHome() {
     [trackedEntry, trackedEntryClaimablePoints]
   );
   const hasResolvedEntries = !loadingEntries;
-  const liveStatPlayerNames = useMemo(() => trackedEntry?.lineup ?? [], [trackedEntry]);
-  const trackedEntryStartsAtIso = useMemo(() => String(trackedEntry?.startsAt ?? "").trim(), [trackedEntry]);
-  const trackedEntryStartsAtMs = useMemo(() => Date.parse(trackedEntryStartsAtIso), [trackedEntryStartsAtIso]);
+  const trackedEntryStartsAtMs = useMemo(() => Date.parse(String(trackedEntry?.startsAt ?? "").trim()), [trackedEntry]);
   const trackedEntryPreTipoff = useMemo(
     () => Boolean(Number.isFinite(trackedEntryStartsAtMs) && Date.now() < trackedEntryStartsAtMs),
     [trackedEntryStartsAtMs]
   );
-  const trackedEntryLiveGameId = useMemo(() => {
-    const gameId = String(trackedEntry?.gameId ?? "").trim();
-    if (!gameId || gameId.startsWith("nba-daily-")) {
-      return "";
-    }
-    return gameId;
-  }, [trackedEntry]);
-  const { rows: liveStatRows, loading: liveStatsLoading, error: liveStatsError } = useLivePlayerStats({
-    enabled: Boolean(trackedEntry && (trackedEntry.status === "live" || trackedEntry.status === "pending")),
-    gameId: trackedEntryLiveGameId || undefined,
-    sinceIso: trackedEntryStartsAtIso || undefined,
-    leagueName: "NBA",
-  });
   const livePointsByPlayer = useMemo(() => {
     const next = new Map<string, number>();
-    if (trackedEntryPreTipoff) {
+    if (!trackedEntry || trackedEntryPreTipoff) {
       return next;
     }
-    if (liveStatPlayerNames.length === 0) {
-      return next;
-    }
-    for (const playerName of liveStatPlayerNames) {
-      const rowsForPlayer = liveStatRows.filter(
-        (row) => {
-          if (!isStartedFantasyGameStatus(row.game_status)) {
-            return false;
-          }
-          if (trackedEntry?.status !== "final" && isFinalFantasyGameStatus(row.game_status)) {
-            return false;
-          }
-          if (!namesLikelyMatch(playerName, row.player_name)) {
-            return false;
-          }
-          const rowTs = Date.parse(String(row.source_updated_at ?? ""));
-          if (Number.isFinite(trackedEntryStartsAtMs) && Number.isFinite(rowTs) && rowTs < trackedEntryStartsAtMs) {
-            return false;
-          }
-          return true;
-        }
-      );
-      if (rowsForPlayer.length === 0) {
-        continue;
-      }
-      const latestByGame = new Map<string, (typeof liveStatRows)[number]>();
-      for (const row of rowsForPlayer) {
-        const gameId = String(row.game_id ?? "").trim();
-        if (!gameId) {
-          continue;
-        }
-        const previous = latestByGame.get(gameId);
-        if (!previous) {
-          latestByGame.set(gameId, row);
-          continue;
-        }
-        const nextTs = Date.parse(String(row.source_updated_at ?? ""));
-        const previousTs = Date.parse(String(previous.source_updated_at ?? ""));
-        if (Number.isFinite(nextTs) && (!Number.isFinite(previousTs) || nextTs > previousTs)) {
-          latestByGame.set(gameId, row);
-        }
-      }
-      const points = Array.from(latestByGame.values()).reduce((sum, row) => sum + Number(row.total_fantasy_points ?? 0), 0);
+    for (const playerName of trackedEntry.lineup) {
+      const points = Number(trackedEntry.scoreBreakdown[playerName] ?? 0);
       if (Number.isFinite(points)) {
         next.set(playerName, Number(points.toFixed(2)));
       }
     }
     return next;
-  }, [liveStatPlayerNames, liveStatRows, trackedEntryPreTipoff, trackedEntryStartsAtMs]);
+  }, [trackedEntry, trackedEntryPreTipoff]);
   const liveTrackedEntryPoints = useMemo(() => {
     if (!trackedEntry) {
       return 0;
@@ -913,8 +831,6 @@ export function FantasyHome() {
                   })}
                 </ul>
               </div>
-              {liveStatsError ? <p className="mt-2 text-[11px] text-rose-700">Live stats feed unavailable right now.</p> : null}
-              {liveStatsLoading ? <p className="mt-2 text-[11px] text-slate-600">Syncing live stats...</p> : null}
               {hasLiveEntry ? (
                 <p className="mt-2 text-[11px] font-semibold text-emerald-800">Live game detected. Updating every 5 seconds.</p>
               ) : (

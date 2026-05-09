@@ -1,5 +1,4 @@
 import { LeftHamburgerMenu } from "@/components/ui/LeftHamburgerMenu";
-import { HightopLogo } from "@/components/ui/HightopLogo";
 
 type PageShellProps = {
   title: string;
@@ -39,7 +38,7 @@ export function PageShell({
       ? "h-[calc(env(safe-area-inset-top)+2.9rem)]"
       : "h-0"
     : "h-0";
-  const shellGapClass = "gap-3";
+  const shellGapClass = showBranding ? "gap-0" : "gap-3";
 
   const shellHeightClass = lockViewport ? "h-[100svh] min-h-[100svh] max-h-[100svh] overflow-hidden" : "min-h-[100dvh] overflow-x-hidden";
   const shellStyle = lockViewport
@@ -67,36 +66,14 @@ export function PageShell({
           </div>
         </header>
       ) : (
-        <header className="tp-page-header tp-hud-card sticky top-2 z-20 overflow-x-hidden p-1 sm:p-4 min-h-[6.75rem] sm:min-h-[9.5rem] md:min-h-[11.5rem]">
-          <div className="w-full max-w-full sm:max-w-[720px] mx-auto px-1 sm:px-2 box-border">
-            <div className="relative flex flex-col items-center justify-center sm:items-start">
-              <div className="flex justify-center items-start">
-                {showBranding ? (
-                  <HightopLogo
-                    size="xl"
-                    className="h-24 sm:h-40 md:h-52 w-auto drop-shadow-[0_6px_14px_rgba(31,42,54,0.25)]"
-                  />
-                ) : null}
-              </div>
-
-            </div>
-
-            <div className={`${showPageTitle ? "mt-4" : "mt-2"} text-center`}>
-              {showPageTitle ? (
-                <>
-                  <h1 className="text-[0.95rem] sm:text-[1.25rem] md:text-[1.5rem] font-semibold tracking-tight text-slate-900 inline">
-                    {title}
-                    {description ? ": " : null}
-                  </h1>
-                  {description ? <span className="font-medium"> {description}</span> : null}
-                </>
-              ) : null}
-
-              <div className="mt-3">
-                {showUserStatus ? <LeftHamburgerMenu showAlerts={showAlerts} /> : null}
-              </div>
-            </div>
-          </div>
+        <header className="tp-page-header sticky top-0 z-20 p-0 h-[13rem] sm:h-[16.5rem] md:h-[19rem] overflow-visible">
+          {showBranding ? (
+            <img
+              src="/brand/hightop-logo-header.png"
+              alt="Hightop Challenge"
+              className="block h-[17rem] sm:h-[22rem] md:h-[25rem] w-full object-contain object-top -translate-y-5 sm:-translate-y-6 md:-translate-y-7"
+            />
+          ) : null}
         </header>
       )}
 

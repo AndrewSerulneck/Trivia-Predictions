@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { claimFantasyReward, listUserFantasyEntries, refreshFantasyProgress, submitFantasyEntry, updateFantasyEntryLineup } from "@/lib/fantasy";
+import { claimFantasyReward, debugFantasyScoring, listUserFantasyEntries, refreshFantasyProgress, submitFantasyEntry, updateFantasyEntryLineup } from "@/lib/fantasy";
 
 function normalizeBoolean(value: string | null, fallback: boolean): boolean {
   const normalized = String(value ?? "").trim().toLowerCase();
@@ -42,6 +42,8 @@ export async function GET(request: Request) {
     if (!userId) {
       return NextResponse.json({ ok: true, entries: [] });
     }
+    const debug = normalizeBoolean(searchParams.get("debug"), false);
+    const debugEntryId = String(searchParams.get("debugEntryId") ?? "").trim();
 
     const refreshProgress = normalizeBoolean(searchParams.get("refreshProgress"), false);
     if (refreshProgress) {
@@ -54,6 +56,11 @@ export async function GET(request: Request) {
       refreshProgress: false,
       limit: Math.max(1, Math.min(300, normalizePositiveInt(searchParams.get("limit"), 120))),
     });
+
+    if (debug) {
+      const diagnostics = await debugFantasyScoring({ userId, entryId: debugEntryId || undefined });
+      return NextResponse.json({ ok: true, entries, diagnostics });
+    }
 
     return NextResponse.json({ ok: true, entries });
   } catch (error) {
