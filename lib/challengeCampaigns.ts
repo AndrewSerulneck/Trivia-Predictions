@@ -1,13 +1,17 @@
 import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import type { ChallengeCampaign, ChallengeCampaignProgress, ChallengeGameType, CampaignRecurringType } from "@/types";
+import type { ChallengeCampaign, ChallengeCampaignProgress, ChallengeGameType, CampaignRecurringType, ChallengeImageFitMode } from "@/types";
 
 type ChallengeCampaignRow = {
   id: string;
   created_at: string;
   name: string;
   image_url: string | null;
+  image_scale: number | null;
+  image_focus_x: number | null;
+  image_focus_y: number | null;
+  image_fit: ChallengeImageFitMode | null;
   rules: string;
   venue_ids: string[] | null;
   active_days: string[] | null;
@@ -33,6 +37,11 @@ type ChallengeCampaignProgressRow = {
 
 const VALID_GAME_TYPES: ChallengeGameType[] = ["pickem", "fantasy", "trivia", "bingo"];
 const VALID_DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+const VALID_IMAGE_FITS: ChallengeImageFitMode[] = ["cover", "contain"];
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
 
 function mapCampaignRow(row: ChallengeCampaignRow, winnerUsername?: string | null): ChallengeCampaign {
   const gameTypes = (row.game_types ?? [])
@@ -44,6 +53,12 @@ function mapCampaignRow(row: ChallengeCampaignRow, winnerUsername?: string | nul
     createdAt: row.created_at,
     name: row.name,
     imageUrl: row.image_url ?? undefined,
+    imageScale: row.image_scale === null || row.image_scale === undefined ? 1 : clamp(Number(row.image_scale), 0.6, 2.5),
+    imageFocusX: row.image_focus_x === null || row.image_focus_x === undefined ? 50 : clamp(Number(row.image_focus_x), 0, 100),
+    imageFocusY: row.image_focus_y === null || row.image_focus_y === undefined ? 50 : clamp(Number(row.image_focus_y), 0, 100),
+    imageFit: VALID_IMAGE_FITS.includes((row.image_fit ?? "cover") as ChallengeImageFitMode)
+      ? (row.image_fit as ChallengeImageFitMode)
+      : "cover",
     rules: row.rules,
     venueIds: Array.isArray(row.venue_ids) ? row.venue_ids : [],
     activeDays: Array.isArray(row.active_days) ? row.active_days : [],
@@ -153,7 +168,7 @@ export async function listChallengeCampaigns(params: {
   let query = supabaseAdmin!
     .from("challenge_campaigns")
     .select(
-      "id, created_at, name, image_url, rules, venue_ids, active_days, start_time, end_time, end_date, game_types, point_multiplier, points_required_to_win, recurring_type, winner_user_id, is_active"
+      "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, active_days, start_time, end_time, end_date, game_types, point_multiplier, points_required_to_win, recurring_type, winner_user_id, is_active"
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -214,6 +229,10 @@ export async function listChallengeCampaignProgress(params: {
 export async function createChallengeCampaign(input: {
   name: string;
   imageUrl?: string;
+  imageScale?: number;
+  imageFocusX?: number;
+  imageFocusY?: number;
+  imageFit?: ChallengeImageFitMode;
   rules: string;
   venueIds?: string[];
   activeDays?: string[];
@@ -235,6 +254,10 @@ export async function createChallengeCampaign(input: {
   const row = {
     name,
     image_url: String(input.imageUrl ?? "").trim() || null,
+    image_scale: Number.isFinite(input.imageScale) ? clamp(Number(input.imageScale), 0.6, 2.5) : 1,
+    image_focus_x: Number.isFinite(input.imageFocusX) ? clamp(Number(input.imageFocusX), 0, 100) : 50,
+    image_focus_y: Number.isFinite(input.imageFocusY) ? clamp(Number(input.imageFocusY), 0, 100) : 50,
+    image_fit: VALID_IMAGE_FITS.includes((input.imageFit ?? "cover") as ChallengeImageFitMode) ? (input.imageFit ?? "cover") : "cover",
     rules,
     venue_ids: Array.from(new Set((input.venueIds ?? []).map((value) => String(value).trim()).filter(Boolean))),
     active_days: normalizeDays(input.activeDays),
@@ -254,7 +277,7 @@ export async function createChallengeCampaign(input: {
     .from("challenge_campaigns")
     .insert(row)
     .select(
-      "id, created_at, name, image_url, rules, venue_ids, active_days, start_time, end_time, end_date, game_types, point_multiplier, points_required_to_win, recurring_type, winner_user_id, is_active"
+      "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, active_days, start_time, end_time, end_date, game_types, point_multiplier, points_required_to_win, recurring_type, winner_user_id, is_active"
     )
     .single<ChallengeCampaignRow>();
   if (error || !data) {
@@ -267,6 +290,10 @@ export async function updateChallengeCampaign(input: {
   id: string;
   name?: string;
   imageUrl?: string;
+  imageScale?: number;
+  imageFocusX?: number;
+  imageFocusY?: number;
+  imageFit?: ChallengeImageFitMode;
   rules?: string;
   venueIds?: string[];
   activeDays?: string[];
@@ -287,6 +314,10 @@ export async function updateChallengeCampaign(input: {
   const update: Record<string, unknown> = {};
   if (typeof input.name === "string") update.name = input.name.trim();
   if (typeof input.imageUrl === "string") update.image_url = input.imageUrl.trim() || null;
+  if (Number.isFinite(input.imageScale)) update.image_scale = clamp(Number(input.imageScale), 0.6, 2.5);
+  if (Number.isFinite(input.imageFocusX)) update.image_focus_x = clamp(Number(input.imageFocusX), 0, 100);
+  if (Number.isFinite(input.imageFocusY)) update.image_focus_y = clamp(Number(input.imageFocusY), 0, 100);
+  if (typeof input.imageFit === "string" && VALID_IMAGE_FITS.includes(input.imageFit)) update.image_fit = input.imageFit;
   if (typeof input.rules === "string") update.rules = input.rules.trim();
   if (Array.isArray(input.venueIds)) update.venue_ids = Array.from(new Set(input.venueIds.map((v) => String(v).trim()).filter(Boolean)));
   if (Array.isArray(input.activeDays)) update.active_days = normalizeDays(input.activeDays);
@@ -305,7 +336,7 @@ export async function updateChallengeCampaign(input: {
     .update(update)
     .eq("id", id)
     .select(
-      "id, created_at, name, image_url, rules, venue_ids, active_days, start_time, end_time, end_date, game_types, point_multiplier, points_required_to_win, recurring_type, winner_user_id, is_active"
+      "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, active_days, start_time, end_time, end_date, game_types, point_multiplier, points_required_to_win, recurring_type, winner_user_id, is_active"
     )
     .single<ChallengeCampaignRow>();
   if (error || !data) {

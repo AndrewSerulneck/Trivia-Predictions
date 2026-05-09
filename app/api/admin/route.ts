@@ -24,7 +24,7 @@ import {
   updateChallengeCampaign,
 } from "@/lib/challengeCampaigns";
 import { recordAdClick, recordAdImpression } from "@/lib/ads";
-import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, CampaignRecurringType } from "@/types";
+import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, CampaignRecurringType, ChallengeImageFitMode } from "@/types";
 
 export async function GET(request: Request) {
   try {
@@ -169,6 +169,10 @@ export async function POST(request: Request) {
           resource: "challenge-campaigns";
           name: string;
           imageUrl?: string;
+          imageScale?: number;
+          imageFocusX?: number;
+          imageFocusY?: number;
+          imageFit?: ChallengeImageFitMode;
           rules: string;
           venueIds?: string[];
           activeDays?: string[];
@@ -273,6 +277,10 @@ export async function POST(request: Request) {
       const item = await createChallengeCampaign({
         name: body.name,
         imageUrl: body.imageUrl,
+        imageScale: body.imageScale,
+        imageFocusX: body.imageFocusX,
+        imageFocusY: body.imageFocusY,
+        imageFit: body.imageFit,
         rules: body.rules,
         venueIds: body.venueIds,
         activeDays: body.activeDays,
@@ -411,6 +419,10 @@ export async function PATCH(request: Request) {
           id: string;
           name?: string;
           imageUrl?: string;
+          imageScale?: number;
+          imageFocusX?: number;
+          imageFocusY?: number;
+          imageFit?: ChallengeImageFitMode;
           rules?: string;
           venueIds?: string[];
           activeDays?: string[];
@@ -491,6 +503,10 @@ export async function PATCH(request: Request) {
         id: body.id,
         name: body.name,
         imageUrl: body.imageUrl,
+        imageScale: body.imageScale,
+        imageFocusX: body.imageFocusX,
+        imageFocusY: body.imageFocusY,
+        imageFit: body.imageFit,
         rules: body.rules,
         venueIds: body.venueIds,
         activeDays: body.activeDays,

@@ -196,7 +196,7 @@ const ADDRESS_LOOKUP_DEBOUNCE_MS = 250;
 const MAX_AD_IMAGE_BYTES = 300 * 1024;
 const AD_STATIC_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_CHALLENGE_IMAGE_BYTES = 1024 * 1024;
-const CHALLENGE_IMAGE_MIME_TYPES = new Set(["image/png", "image/webp", "image/svg+xml", "image/jpeg"]);
+const CHALLENGE_IMAGE_MIME_TYPES = new Set(["image/png", "image/webp", "image/svg+xml"]);
 
 function formatDateTimeLocal(value: Date): string {
   const year = value.getFullYear();
@@ -284,6 +284,10 @@ type AdminChallengeCampaign = {
   createdAt: string;
   name: string;
   imageUrl?: string;
+  imageScale?: number;
+  imageFocusX?: number;
+  imageFocusY?: number;
+  imageFit?: "cover" | "contain";
   rules: string;
   venueIds: string[];
   activeDays: string[];
@@ -461,13 +465,17 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [challengeName, setChallengeName] = useState("");
   const [challengeRules, setChallengeRules] = useState("");
   const [challengeImageUrl, setChallengeImageUrl] = useState("");
+  const [challengeImageRemoved, setChallengeImageRemoved] = useState(false);
   const [challengeImageFile, setChallengeImageFile] = useState<File | null>(null);
   const [challengeImageDetails, setChallengeImageDetails] = useState("");
   const [challengeImagePreviewUrl, setChallengeImagePreviewUrl] = useState("");
-  const [challengePreviewCheckerboard, setChallengePreviewCheckerboard] = useState(true);
+  const [challengePreviewCheckerboard, setChallengePreviewCheckerboard] = useState(false);
   const [isChallengeDropActive, setIsChallengeDropActive] = useState(false);
+  const [challengeImageScale, setChallengeImageScale] = useState(1);
+  const [challengeImageFit, setChallengeImageFit] = useState<"cover" | "contain">("cover");
   const [isUploadingChallengeImage, setIsUploadingChallengeImage] = useState(false);
   const [challengeVenueIds, setChallengeVenueIds] = useState<string[]>([]);
+  const [challengeVenueSearch, setChallengeVenueSearch] = useState("");
   const [challengeActiveDays, setChallengeActiveDays] = useState<string[]>([]);
   const [challengeStartTime, setChallengeStartTime] = useState("");
   const [challengeEndTime, setChallengeEndTime] = useState("");
@@ -479,6 +487,12 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [challengeIsActive, setChallengeIsActive] = useState(true);
   const [challengeFormMessage, setChallengeFormMessage] = useState("");
   const addressSuggestionsCacheRef = useRef<Map<string, AdminAddressSuggestion[]>>(new Map());
+  const challengePreviewResizeRef = useRef<{ active: boolean; startX: number; startY: number; startScale: number }>({
+    active: false,
+    startX: 0,
+    startY: 0,
+    startScale: 1,
+  });
   const addressLookupDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const addressLookupRequestId = useRef(0);
   const editAddressLookupDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -502,13 +516,17 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     setChallengeName("");
     setChallengeRules("");
     setChallengeImageUrl("");
+    setChallengeImageRemoved(false);
     setChallengeImageFile(null);
     setChallengeImageDetails("");
     setChallengeImagePreviewUrl("");
-    setChallengePreviewCheckerboard(true);
+    setChallengePreviewCheckerboard(false);
     setIsChallengeDropActive(false);
+    setChallengeImageScale(1);
+    setChallengeImageFit("cover");
     setIsUploadingChallengeImage(false);
     setChallengeVenueIds([]);
+    setChallengeVenueSearch("");
     setChallengeActiveDays([]);
     setChallengeStartTime("");
     setChallengeEndTime("");
@@ -1032,9 +1050,10 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     setChallengeImageFile(null);
     setChallengeImageDetails("");
     setChallengeImagePreviewUrl("");
+    setChallengeImageRemoved(false);
     if (!selectedFile) return;
     if (!CHALLENGE_IMAGE_MIME_TYPES.has(selectedFile.type)) {
-      setErrorMessage("Challenge images must be PNG/WebP/SVG (transparent supported) or JPG.");
+      setErrorMessage("Challenge images must be PNG/WebP/SVG (JPEG is not supported for transparent icons).");
       return;
     }
     if (selectedFile.size <= 0) {
@@ -1057,6 +1076,24 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       }
     };
   }, [challengeImagePreviewUrl]);
+
+  useEffect(() => {
+    const handleMove = (event: MouseEvent) => {
+      if (!challengePreviewResizeRef.current.active) return;
+      const delta = ((event.clientX - challengePreviewResizeRef.current.startX) + (event.clientY - challengePreviewResizeRef.current.startY)) / 280;
+      const nextScale = Math.max(0.6, Math.min(2.5, Number((challengePreviewResizeRef.current.startScale + delta).toFixed(3))));
+      setChallengeImageScale(nextScale);
+    };
+    const handleUp = () => {
+      challengePreviewResizeRef.current.active = false;
+    };
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleUp);
+    };
+  }, []);
 
   const loadAll = useCallback(async () => {
     setState("loading");
@@ -1404,9 +1441,14 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     setChallengeName(campaign.name ?? "");
     setChallengeRules(campaign.rules ?? "");
     setChallengeImageUrl(campaign.imageUrl ?? "");
+    setChallengeImageRemoved(false);
     setChallengeImageFile(null);
     setChallengeImageDetails("");
+    setChallengeImagePreviewUrl("");
+    setChallengeImageScale(Number(campaign.imageScale ?? 1));
+    setChallengeImageFit(campaign.imageFit === "contain" ? "contain" : "cover");
     setChallengeVenueIds(campaign.venueIds ?? []);
+    setChallengeVenueSearch("");
     setChallengeActiveDays(campaign.activeDays ?? []);
     setChallengeStartTime(campaign.startTime?.slice(0, 5) ?? "");
     setChallengeEndTime(campaign.endTime?.slice(0, 5) ?? "");
@@ -1431,17 +1473,22 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     }
 
     try {
-      let resolvedChallengeImageUrl = challengeImageUrl.trim() || undefined;
+      let resolvedChallengeImageUrl = challengeImageRemoved ? "" : challengeImageUrl.trim() || undefined;
       if (challengeImageFile) {
         setIsUploadingChallengeImage(true);
         resolvedChallengeImageUrl = await uploadChallengeImageFile(challengeImageFile);
         setChallengeImageUrl(resolvedChallengeImageUrl);
+        setChallengeImageRemoved(false);
       }
 
       const payloadBody = {
       resource: "challenge-campaigns" as const,
       name,
       imageUrl: resolvedChallengeImageUrl,
+      imageScale: challengeImageScale,
+      imageFocusX: 50,
+      imageFocusY: 50,
+      imageFit: challengeImageFit,
       rules,
       venueIds: challengeVenueIds,
       activeDays: challengeActiveDays,
@@ -1487,6 +1534,9 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     challengeImageFile,
     challengeGameTypes,
     challengeImageUrl,
+    challengeImageScale,
+    challengeImageFit,
+    challengeImageRemoved,
     challengeIsActive,
     challengeName,
     challengePointMultiplier,
@@ -1953,7 +2003,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const showLogout = !shouldShowBootstrap && (Boolean(adminCredentials) || state === "idle");
   const isSectionMode = mode === "section";
   const selectedSection = ADMIN_SECTION_OPTIONS.find((section) => section.id === activeSection) ?? null;
-  const shouldRenderSectionContent = !shouldShowBootstrap && isSectionMode;
+  const shouldRenderSectionContent = !shouldShowBootstrap && (isSectionMode || mode === "dashboard");
   const isManageAdvertisementsSection = shouldRenderSectionContent && activeSection === "ads-list";
 
   return (
@@ -2033,11 +2083,37 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       )}
       {state === "loading" && <p className="text-sm text-slate-600">Loading admin data...</p>}
 
+      {shouldRenderSectionContent ? (
+        <aside className="hidden lg:fixed lg:inset-y-20 lg:left-4 lg:block lg:w-64 lg:overflow-y-auto lg:rounded-xl lg:border lg:border-slate-200 lg:bg-white lg:p-3 lg:shadow-sm">
+          <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">Admin Tools</p>
+          <div className="mt-2 space-y-1">
+            {ADMIN_SECTION_OPTIONS.map((section) => (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => setActiveSection(section.id)}
+                className={`w-full rounded-md px-3 py-2 text-left text-sm font-semibold ${
+                  activeSection === section.id ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                {section.label}
+              </button>
+            ))}
+            <a
+              href="/faqs"
+              className="block w-full rounded-md bg-slate-100 px-3 py-2 text-left text-sm font-semibold text-slate-700 hover:bg-slate-200"
+            >
+              FAQs Page
+            </a>
+          </div>
+        </aside>
+      ) : null}
+
       {!shouldShowBootstrap && !isSectionMode ? (
         <section className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
           <h2 className="text-lg font-semibold">Admin Tools</h2>
           <p className="text-sm text-slate-600">Tap a tool to open its page.</p>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:hidden">
             {ADMIN_SECTION_OPTIONS.map((section) => (
               <button
                 key={section.id}
@@ -3569,36 +3645,41 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
         <h2 className="text-base font-semibold text-slate-900">Challenge Manager</h2>
         <p className="text-sm text-slate-700">Create and manage venue challenge campaigns and view live progress.</p>
 
-        <div className="grid gap-3 lg:grid-cols-[1.1fr_1fr]">
+        <div className="grid gap-3 xl:grid-cols-[1.35fr_1fr]">
           <div className="space-y-3 rounded-md border border-slate-200 bg-slate-50 p-3">
             <h3 className="text-sm font-semibold text-slate-900">
               {editingChallengeCampaignId ? "Edit Challenge Campaign" : "Create Challenge Campaign"}
             </h3>
+            <div className="grid gap-3 lg:grid-cols-2">
             <label className={FORM_LABEL_CLASS}>
               Name
               <input
                 value={challengeName}
                 onChange={(event) => setChallengeName(event.target.value)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-              />
-            </label>
-            <label className={FORM_LABEL_CLASS}>
-              Rules
-              <textarea
-                value={challengeRules}
-                onChange={(event) => setChallengeRules(event.target.value)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                rows={4}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm"
               />
             </label>
             <label className={FORM_LABEL_CLASS}>
               Image URL
               <input
                 value={challengeImageUrl}
-                onChange={(event) => setChallengeImageUrl(event.target.value)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                onChange={(event) => {
+                  setChallengeImageUrl(event.target.value);
+                  setChallengeImageRemoved(false);
+                }}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm"
               />
             </label>
+            <label className={`${FORM_LABEL_CLASS} lg:col-span-2`}>
+              Rules
+              <textarea
+                value={challengeRules}
+                onChange={(event) => setChallengeRules(event.target.value)}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm"
+                rows={8}
+              />
+            </label>
+            </div>
             <label className={FORM_LABEL_CLASS}>
               Upload Challenge Image
               <div
@@ -3624,53 +3705,152 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
               </div>
               <input
                 type="file"
-                accept="image/png,image/webp,image/svg+xml,image/jpeg"
+                accept="image/png,image/webp,image/svg+xml"
                 onChange={(event) => {
                   void handleChallengeImageSelection(event);
                 }}
                 className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-2 py-2 text-xs"
               />
               <span className="mt-1 block text-[11px] font-medium normal-case text-slate-500">
-                PNG/WebP/SVG keep transparent backgrounds. Max 1MB.
+                PNG/WebP/SVG only (transparent-friendly). Max 1MB.
               </span>
             </label>
+            {(challengeImagePreviewUrl || challengeImageUrl) && !challengeImageRemoved ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setChallengeImageRemoved(true);
+                  setChallengeImageUrl("");
+                  setChallengeImageFile(null);
+                  setChallengeImageDetails("");
+                  setChallengeImagePreviewUrl("");
+                }}
+                className="w-fit rounded-md border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+              >
+                Delete Image
+              </button>
+            ) : null}
             {challengeImageDetails ? (
               <p className="text-xs text-slate-600">{challengeImageDetails}</p>
             ) : null}
-            {(challengeImagePreviewUrl || challengeImageUrl) ? (
-              <div className="rounded-md border border-slate-200 bg-white p-2">
-                <label className="mb-2 flex items-center gap-2 text-[11px] font-medium text-slate-600">
+            <div className="rounded-[1.2rem] border-[3px] border-[#0f172a]/80 bg-[linear-gradient(146deg,#0f766e_0%,#06b6d4_50%,#22d3ee_100%)] p-4 shadow-[0_8px_0_rgba(15,23,42,0.35)]">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-xs font-black uppercase tracking-[0.08em] text-cyan-50/90">Live Card Preview</p>
+                <label className="flex items-center gap-2 text-[11px] font-medium text-cyan-50/95">
                   <input
                     type="checkbox"
                     checked={challengePreviewCheckerboard}
                     onChange={(event) => setChallengePreviewCheckerboard(event.target.checked)}
                   />
-                  Show checkerboard background (transparency preview)
+                  Checkerboard
                 </label>
-                <p className="mb-1 text-[11px] font-medium text-slate-500">Current Image Preview</p>
-                <div
-                  className="rounded-md p-2"
-                  style={
-                    challengePreviewCheckerboard
-                      ? {
-                          backgroundImage:
-                            "linear-gradient(45deg, #e2e8f0 25%, transparent 25%), linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e2e8f0 75%), linear-gradient(-45deg, transparent 75%, #e2e8f0 75%)",
-                          backgroundSize: "16px 16px",
-                          backgroundPosition: "0 0, 0 8px, 8px -8px, -8px 0px",
-                        }
-                      : undefined
-                  }
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={challengeImagePreviewUrl || challengeImageUrl} alt="Challenge preview" className="max-h-24 w-auto object-contain" />
+              </div>
+              <div
+                className="rounded-[1rem] p-2"
+                style={
+                  challengePreviewCheckerboard
+                    ? {
+                        backgroundImage:
+                          "linear-gradient(45deg, #e2e8f0 25%, transparent 25%), linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e2e8f0 75%), linear-gradient(-45deg, transparent 75%, #e2e8f0 75%)",
+                        backgroundSize: "16px 16px",
+                        backgroundPosition: "0 0, 0 8px, 8px -8px, -8px 0px",
+                      }
+                    : undefined
+                }
+              >
+                <div className="relative flex w-full items-center gap-3 overflow-hidden rounded-[1.2rem] border-[3px] border-[#0f172a]/80 bg-[linear-gradient(146deg,#0f766e_0%,#06b6d4_50%,#22d3ee_100%)] p-3 text-left shadow-[0_8px_0_rgba(15,23,42,0.35)]">
+                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_86%_10%,rgba(254,240,138,0.35)_0%,rgba(254,240,138,0)_34%)]" />
+                  <div
+                    className="relative inline-flex aspect-square w-[28%] min-w-[72px] max-w-[92px] shrink-0 items-center justify-center overflow-visible rounded-xl border-0 bg-transparent p-3 shadow-none"
+                    style={{ background: "none" }}
+                  >
+                    {(challengeImagePreviewUrl || challengeImageUrl) ? (
+                      <div
+                        className="h-full w-full"
+                        role="img"
+                        aria-label={challengeName || "Challenge preview"}
+                        style={{
+                          backgroundImage: `url(${challengeImagePreviewUrl || challengeImageUrl})`,
+                          backgroundSize: challengeImageFit,
+                          backgroundPosition: "50% 50%",
+                          backgroundRepeat: "no-repeat",
+                          backgroundColor: "transparent",
+                          transform: `scale(${challengeImageScale})`,
+                          transformOrigin: "center",
+                        }}
+                      />
+                    ) : (
+                      <span className="text-2xl">🏆</span>
+                    )}
+                    {[
+                      { key: "tl", className: "absolute -left-1 -top-1 cursor-nwse-resize" },
+                      { key: "tr", className: "absolute -right-1 -top-1 cursor-nesw-resize" },
+                      { key: "bl", className: "absolute -bottom-1 -left-1 cursor-nesw-resize" },
+                      { key: "br", className: "absolute -bottom-1 -right-1 cursor-nwse-resize" },
+                    ].map((handle) => (
+                      <button
+                        key={handle.key}
+                        type="button"
+                        aria-label="Resize challenge image"
+                        onMouseDown={(event) => {
+                          event.preventDefault();
+                          challengePreviewResizeRef.current = {
+                            active: true,
+                            startX: event.clientX,
+                            startY: event.clientY,
+                            startScale: challengeImageScale,
+                          };
+                        }}
+                        className={`${handle.className} z-10 h-4 w-4 rounded-sm border border-cyan-100/80 bg-cyan-300/30`}
+                      />
+                    ))}
+                  </div>
+                  <div className="relative min-w-0 flex-1">
+                    <div className="truncate text-sm font-black uppercase tracking-[0.08em] text-cyan-50">
+                      {challengeName.trim() || "Challenge Name"}
+                    </div>
+                    <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-slate-950/35">
+                      <div className="h-full w-[45%] rounded-full bg-amber-300" />
+                    </div>
+                    <div className="mt-1 text-[11px] font-semibold text-cyan-50/95">45 / {Math.max(1, Number(challengePointsRequired || "100"))} points</div>
+                  </div>
                 </div>
               </div>
-            ) : null}
+            </div>
+            <div className="grid gap-2 lg:grid-cols-2">
+              <label className={FORM_LABEL_CLASS}>
+                Image Fit
+                <select
+                  value={challengeImageFit}
+                  onChange={(event) => setChallengeImageFit(event.target.value as "cover" | "contain")}
+                  className={`${FORM_SELECT_CLASS} mt-1 w-full text-sm`}
+                >
+                  <option value="cover">Cover (fill card)</option>
+                  <option value="contain">Contain (show full image)</option>
+                </select>
+              </label>
+              <div className="flex items-end">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
+                  Direct Resize Scale: {challengeImageScale.toFixed(2)}x
+                </p>
+              </div>
+            </div>
 
             <div>
               <p className={FORM_LABEL_CLASS}>Target Venues</p>
+              <input
+                value={challengeVenueSearch}
+                onChange={(event) => setChallengeVenueSearch(event.target.value)}
+                placeholder="Search venues…"
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
               <div className="mt-1 grid gap-1 sm:grid-cols-2">
-                {availableVenues.map((venue) => (
+                {availableVenues
+                  .filter((venue) =>
+                    !challengeVenueSearch.trim() ||
+                    getVenueDisplayName(venue).toLowerCase().includes(challengeVenueSearch.trim().toLowerCase())
+                  )
+                  .map((venue) => (
                   <label key={venue.id} className="flex items-center gap-2 rounded border border-slate-200 bg-white px-2 py-1 text-xs">
                     <input
                       type="checkbox"

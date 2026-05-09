@@ -146,12 +146,17 @@ export interface ChallengeInvite {
 }
 
 export type CampaignRecurringType = "none" | "daily" | "weekly" | "monthly" | "yearly";
+export type ChallengeImageFitMode = "cover" | "contain";
 
 export interface ChallengeCampaign {
   id: string;
   createdAt: string;
   name: string;
   imageUrl?: string;
+  imageScale?: number;
+  imageFocusX?: number;
+  imageFocusY?: number;
+  imageFit?: ChallengeImageFitMode;
   rules: string;
   venueIds: string[];
   activeDays: string[];

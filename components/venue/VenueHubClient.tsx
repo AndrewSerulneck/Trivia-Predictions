@@ -50,6 +50,10 @@ type ChallengeCampaignCard = {
   id: string;
   name: string;
   imageUrl?: string;
+  imageScale?: number;
+  imageFocusX?: number;
+  imageFocusY?: number;
+  imageFit?: "cover" | "contain";
   rules: string;
   pointsRequiredToWin: number;
   progressPoints: number;
@@ -1023,10 +1027,25 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                         className="tp-clean-button relative flex w-full items-center gap-3 overflow-hidden rounded-[1.2rem] border-[3px] border-[#0f172a]/80 bg-[linear-gradient(146deg,#0f766e_0%,#06b6d4_50%,#22d3ee_100%)] p-3 text-left shadow-[0_8px_0_rgba(15,23,42,0.35)]"
                       >
                         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_86%_10%,rgba(254,240,138,0.35)_0%,rgba(254,240,138,0)_34%)]" />
-                        <div className="relative inline-flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/70 bg-white/25 shadow-[0_2px_8px_rgba(2,6,23,0.35)]">
+                        <div
+                          className="challenge-card-icon relative inline-flex aspect-square w-[28%] min-w-[72px] max-w-[92px] shrink-0 items-center justify-center overflow-visible rounded-xl border-0 bg-transparent shadow-none"
+                          style={{ background: "none" }}
+                        >
                           {challenge.imageUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={challenge.imageUrl} alt={challenge.name} className="h-full w-full object-cover" />
+                            <div
+                              className="h-full w-full pointer-events-none"
+                              role="img"
+                              aria-label={challenge.name}
+                              style={{
+                                backgroundImage: `url(${challenge.imageUrl})`,
+                                backgroundSize: challenge.imageFit === "contain" ? "contain" : "cover",
+                                backgroundPosition: `${Math.max(0, Math.min(100, Number(challenge.imageFocusX ?? 50)))}% ${Math.max(0, Math.min(100, Number(challenge.imageFocusY ?? 50)))}%`,
+                                backgroundRepeat: "no-repeat",
+                                backgroundColor: "transparent",
+                                transform: `scale(${Math.max(0.6, Math.min(2.5, Number(challenge.imageScale ?? 1)))})`,
+                                transformOrigin: "center",
+                              }}
+                            />
                           ) : (
                             <TrophyGlyph className="h-10 w-10 scale-[3.6]" />
                           )}
@@ -1072,14 +1091,14 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       <AnimatePresence>
         {selectedChallenge ? (
           <motion.div
-            className="fixed inset-0 z-[990] flex items-end justify-center bg-black/45 px-3 pb-4 pt-16"
+            className="fixed inset-0 z-[99999] flex items-start justify-center bg-black/45 px-3 pb-4 pt-16"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedChallengeId(null)}
           >
             <motion.div
-              className="relative w-full max-w-[28rem] rounded-[1.4rem] border-[2px] border-slate-900/20 bg-[#fff7ea] p-4 shadow-[0_12px_34px_rgba(15,23,42,0.45)]"
+              className="relative w-fit max-w-[calc(100vw-12px)] max-h-[calc(100svh-5rem)] overflow-y-auto rounded-2xl border border-slate-300 bg-[#fff7ea] px-5 pb-6 pt-5 shadow-[0_20px_45px_rgba(15,23,42,0.28)]"
               initial={{ opacity: 0, y: 28, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 14, scale: 0.99 }}
@@ -1088,14 +1107,14 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
             >
               <button
                 type="button"
-                className="tp-clean-button absolute right-3 top-3 inline-flex h-11 min-w-11 items-center justify-center rounded-full border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700"
+                className="tp-clean-button absolute right-3 top-3 inline-flex h-14 min-w-14 items-center justify-center rounded-full border border-slate-300 bg-white px-4 text-base font-semibold text-slate-700"
                 onClick={() => setSelectedChallengeId(null)}
                 aria-label="Close challenge rules"
               >
                 Close
               </button>
-              <h4 className="pr-16 text-lg font-black text-slate-900">{selectedChallenge.name}</h4>
-              <p className="mt-2 text-sm leading-6 text-slate-700">{selectedChallenge.rules}</p>
+              <h4 className="mt-2 w-[min(92vw,24rem)] pr-24 text-3xl font-black leading-9 text-slate-900">{selectedChallenge.name}</h4>
+              <p className="mt-7 w-[min(92vw,24rem)] pb-1 text-[1.65rem] leading-[2.35rem] text-slate-700">{selectedChallenge.rules}</p>
             </motion.div>
           </motion.div>
         ) : null}

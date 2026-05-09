@@ -7,7 +7,6 @@ const ALLOWED_CONTENT_TYPES = new Set([
   "image/png",
   "image/webp",
   "image/svg+xml",
-  "image/jpeg",
 ]);
 const STORAGE_BUCKET = process.env.SUPABASE_ADS_BUCKET?.trim() || "advertisements";
 
@@ -15,7 +14,6 @@ function getFileExtension(contentType: string, filename: string): string {
   if (contentType === "image/png") return "png";
   if (contentType === "image/webp") return "webp";
   if (contentType === "image/svg+xml") return "svg";
-  if (contentType === "image/jpeg") return "jpg";
   const fromName = filename.split(".").pop()?.trim().toLowerCase();
   return fromName && /^[a-z0-9]+$/.test(fromName) ? fromName : "bin";
 }
@@ -39,7 +37,7 @@ export async function POST(request: Request) {
 
     if (!ALLOWED_CONTENT_TYPES.has(uploaded.type)) {
       return NextResponse.json(
-        { ok: false, error: "Use PNG/WebP/SVG (transparent background supported), or JPG." },
+        { ok: false, error: "Use PNG/WebP/SVG only (transparent background supported)." },
         { status: 400 }
       );
     }
