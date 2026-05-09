@@ -4561,5 +4561,161 @@
     "correctAnswer": 2,
     "category": "Geography",
     "difficulty": "hard"
+  },
+  {
+    "slug": "which-continent-is-home-to-the-vast-majority-of-the-amazon-rainforest",
+    "question": "Which continent is home to the vast majority of the Amazon Rainforest?",
+    "options": [
+      "Africa",
+      "South America",
+      "Asia",
+      "North America"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-european-capital-city-is-bisected-by-the-danube-river",
+    "question": "Which European capital city is bisected by the Danube River?",
+    "options": [
+      "Prague",
+      "Warsaw",
+      "Budapest",
+      "Berlin"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-andes-mountains-the-longest-continental-mountain-range-in-the-world-are-located-on-which-continent",
+    "question": "The Andes Mountains, the longest continental mountain range in the world, are located on which continent?",
+    "options": [
+      "North America",
+      "Asia",
+      "Europe",
+      "South America"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-south-american-country-has-quito-as-its-capital-and-borders-both-colombia-and-peru",
+    "question": "Which South American country has Quito as its capital and borders both Colombia and Peru?",
+    "options": [
+      "Chile",
+      "Argentina",
+      "Ecuador",
+      "Bolivia"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-mariana-trench-the-deepest-known-oceanic-trench-on-earth-is-located-in-which-ocean",
+    "question": "The Mariana Trench, the deepest known oceanic trench on Earth, is located in which ocean?",
+    "options": [
+      "Atlantic Ocean",
+      "Indian Ocean",
+      "Arctic Ocean",
+      "Pacific Ocean"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-kalahari-desert-a-large-semi-arid-sandy-savanna-is-primarily-located-on-which-continent",
+    "question": "The Kalahari Desert, a large semi-arid sandy savanna, is primarily located on which continent?",
+    "options": [
+      "Asia",
+      "North America",
+      "Africa",
+      "Australia"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-major-american-city-would-you-find-the-statue-of-liberty",
+    "question": "In which major American city would you find the Statue of Liberty?",
+    "options": [
+      "Boston",
+      "Washington D.C.",
+      "New York City",
+      "Chicago"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-independent-island-nation-in-the-mediterranean-sea-is-located-directly-south-of-sicily",
+    "question": "Which independent island nation in the Mediterranean Sea is located directly south of Sicily?",
+    "options": [
+      "Cyprus",
+      "Malta",
+      "Corsica",
+      "Rhodes"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-strait-of-gibraltar-connects-the-atlantic-ocean-to-which-other-major-body-of-water",
+    "question": "The Strait of Gibraltar connects the Atlantic Ocean to which other major body of water?",
+    "options": [
+      "Black Sea",
+      "North Sea",
+      "Mediterranean Sea",
+      "Red Sea"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-ancient-city-of-petra-famous-for-its-rock-cut-architecture-is-located-in-which-country",
+    "question": "The ancient city of Petra, famous for its rock-cut architecture, is located in which country?",
+    "options": [
+      "Egypt",
+      "Turkey",
+      "Jordan",
+      "Greece"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-major-european-river-flows-through-the-city-of-paris",
+    "question": "Which major European river flows through the city of Paris?",
+    "options": [
+      "Rhine River",
+      "Thames River",
+      "Seine River",
+      "Danube River"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-is-often-referred-to-as-the-land-of-a-thousand-lakes-due-to-its-numerous-bodies-of-water",
+    "question": "Which country is often referred to as the 'Land of a Thousand Lakes' due to its numerous bodies of water?",
+    "options": [
+      "Canada",
+      "Sweden",
+      "Finland",
+      "Norway"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
   }
 ]

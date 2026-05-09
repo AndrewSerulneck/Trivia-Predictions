@@ -4548,5 +4548,161 @@
     "correctAnswer": 1,
     "category": "Sports",
     "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-championship-game-of-the-national-football-league-nfl",
+    "question": "What is the name of the championship game of the National Football League (NFL)?",
+    "options": [
+      "World Series",
+      "Stanley Cup",
+      "Super Bowl",
+      "NBA Finals"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-term-for-scoring-one-stroke-under-par-on-a-hole-in-golf",
+    "question": "What is the term for scoring one stroke under par on a hole in golf?",
+    "options": [
+      "Bogey",
+      "Birdie",
+      "Eagle",
+      "Albatross"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-traditional-number-of-rounds-in-a-professional-boxing-match-for-a-championship-title",
+    "question": "What is the traditional number of rounds in a professional boxing match for a championship title?",
+    "options": [
+      "8",
+      "10",
+      "12",
+      "15"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-athletics-event-involves-throwing-a-heavy-spherical-object",
+    "question": "Which athletics event involves throwing a heavy spherical object?",
+    "options": [
+      "Javelin throw",
+      "Discus throw",
+      "Shot put",
+      "Hammer throw"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-bases-are-there-on-a-standard-baseball-field-excluding-home-plate",
+    "question": "How many bases are there on a standard baseball field (excluding home plate)?",
+    "options": [
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-competitive-swimming-which-stroke-is-performed-lying-on-the-back",
+    "question": "In competitive swimming, which stroke is performed lying on the back?",
+    "options": [
+      "Freestyle",
+      "Breaststroke",
+      "Butterfly",
+      "Backstroke"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-which-city-were-the-2016-summer-olympics-held",
+    "question": "In which city were the 2016 Summer Olympics held?",
+    "options": [
+      "London",
+      "Beijing",
+      "Rio de Janeiro",
+      "Tokyo"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-cricket-what-is-the-term-for-taking-three-wickets-with-three-consecutive-deliveries",
+    "question": "In cricket, what is the term for taking three wickets with three consecutive deliveries?",
+    "options": [
+      "Century",
+      "Maiden over",
+      "Hat-trick",
+      "Duck"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-players-are-on-a-standard-basketball-team-on-the-court-at-one-time",
+    "question": "How many players are on a standard basketball team on the court at one time?",
+    "options": [
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-which-sport-would-you-perform-a-triple-axel",
+    "question": "In which sport would you perform a 'triple axel'?",
+    "options": [
+      "Gymnastics",
+      "Diving",
+      "Figure Skating",
+      "Synchronized Swimming"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-highest-governing-body-of-international-tennis",
+    "question": "What is the highest governing body of international tennis?",
+    "options": [
+      "ATP",
+      "WTA",
+      "ITF",
+      "Grand Slam Committee"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-has-won-the-most-fifa-world-cups-in-mens-football",
+    "question": "Which country has won the most FIFA World Cups in men's football?",
+    "options": [
+      "Germany",
+      "Italy",
+      "Brazil",
+      "Argentina"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
   }
 ]

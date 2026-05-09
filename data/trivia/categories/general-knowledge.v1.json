@@ -4535,5 +4535,161 @@
     "correctAnswer": 1,
     "category": "General Knowledge",
     "difficulty": "medium"
+  },
+  {
+    "slug": "who-wrote-the-famous-play-romeo-and-juliet",
+    "question": "Who wrote the famous play 'Romeo and Juliet'?",
+    "options": [
+      "Charles Dickens",
+      "William Shakespeare",
+      "Jane Austen",
+      "Mark Twain"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-ability-to-change-color-to-blend-with-its-surroundings",
+    "question": "Which animal is known for its ability to change color to blend with its surroundings?",
+    "options": [
+      "Octopus",
+      "Chameleon",
+      "Arctic Fox",
+      "Snow Leopard"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-longest-bone-in-the-human-body",
+    "question": "What is the name of the longest bone in the human body?",
+    "options": [
+      "Tibia",
+      "Femur",
+      "Humerus",
+      "Fibula"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-famous-structure-was-built-to-protect-ancient-china-from-invading-nomadic-tribes",
+    "question": "Which famous structure was built to protect ancient China from invading nomadic tribes?",
+    "options": [
+      "The Forbidden City",
+      "The Terracotta Army",
+      "The Great Wall",
+      "The Grand Canal"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-continent-is-the-only-one-with-no-active-volcanoes",
+    "question": "Which continent is the only one with no active volcanoes?",
+    "options": [
+      "Australia",
+      "Antarctica",
+      "Europe",
+      "Africa"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-painted-the-starry-night",
+    "question": "Who painted 'The Starry Night'?",
+    "options": [
+      "Pablo Picasso",
+      "Claude Monet",
+      "Vincent van Gogh",
+      "Leonardo da Vinci"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-deepest-oceanic-trench-on-earth",
+    "question": "What is the name of the deepest oceanic trench on Earth?",
+    "options": [
+      "Puerto Rico Trench",
+      "Java Trench",
+      "Mariana Trench",
+      "Tonga Trench"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-novel-begins-with-the-line-it-was-a-bright-cold-day-in-april-and-the-clocks-were-striking-thirteen",
+    "question": "Which novel begins with the line 'It was a bright cold day in April, and the clocks were striking thirteen.'?",
+    "options": [
+      "Brave New World",
+      "Fahrenheit 451",
+      "1984",
+      "Animal Farm"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-wrote-the-pulitzer-prize-winning-novel-to-kill-a-mockingbird",
+    "question": "Who wrote the Pulitzer Prize-winning novel 'To Kill a Mockingbird'?",
+    "options": [
+      "J.K. Rowling",
+      "Harper Lee",
+      "Ernest Hemingway",
+      "Mark Twain"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-largest-desert-in-the-world-by-area",
+    "question": "What is the largest desert in the world by area?",
+    "options": [
+      "Sahara Desert",
+      "Arabian Desert",
+      "Gobi Desert",
+      "Antarctic Polar Desert"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-famous-waterfall-is-located-on-the-border-between-zambia-and-zimbabwe",
+    "question": "Which famous waterfall is located on the border between Zambia and Zimbabwe?",
+    "options": [
+      "Niagara Falls",
+      "Angel Falls",
+      "Victoria Falls",
+      "Iguazu Falls"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-ancient-wonder-of-the-world-was-a-colossal-statue-of-the-sun-god-helios",
+    "question": "Which ancient wonder of the world was a colossal statue of the sun god Helios?",
+    "options": [
+      "Colossus of Rhodes",
+      "Lighthouse of Alexandria",
+      "Hanging Gardens of Babylon",
+      "Statue of Zeus at Olympia"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "medium"
   }
 ]

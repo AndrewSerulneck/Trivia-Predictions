@@ -4548,5 +4548,174 @@
     "correctAnswer": 0,
     "category": "Pop Culture",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-tv-show-features-characters-like-ross-rachel-monica-chandler-phoebe-and-joey",
+    "question": "Which TV show features characters like Ross, Rachel, Monica, Chandler, Phoebe, and Joey?",
+    "options": [
+      "Seinfeld",
+      "Friends",
+      "The Office",
+      "Parks and Recreation"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-is-known-as-the-king-of-pop-and-released-the-iconic-album-thriller",
+    "question": "Who is known as the \"King of Pop\" and released the iconic album \"Thriller\"?",
+    "options": [
+      "Prince",
+      "Michael Jackson",
+      "Stevie Wonder",
+      "James Brown"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-magical-school-do-harry-potter-hermione-granger-and-ron-weasley-attend",
+    "question": "What magical school do Harry Potter, Hermione Granger, and Ron Weasley attend?",
+    "options": [
+      "Durmstrang",
+      "Beauxbatons",
+      "Ilvermorny",
+      "Hogwarts"
+    ],
+    "correctAnswer": 3,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-nintendo-character-is-famous-for-rescuing-princess-peach-from-bowser",
+    "question": "Which Nintendo character is famous for rescuing Princess Peach from Bowser?",
+    "options": [
+      "Link",
+      "Donkey Kong",
+      "Mario",
+      "Pikachu"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-the-tv-series-stranger-things-what-is-the-name-of-the-alternate-dimension-that-mirrors-the-real-world",
+    "question": "In the TV series \"Stranger Things\", what is the name of the alternate dimension that mirrors the real world?",
+    "options": [
+      "The Shadow Realm",
+      "The Void",
+      "The Upside Down",
+      "The Netherworld"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-artist-is-known-for-hit-songs-like-shake-it-off-blank-space-and-bad-blood",
+    "question": "Which artist is known for hit songs like \"Shake It Off\", \"Blank Space\", and \"Bad Blood\"?",
+    "options": [
+      "Ariana Grande",
+      "Katy Perry",
+      "Taylor Swift",
+      "Adele"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-director-is-known-for-films-such-as-pulp-fiction-kill-bill-and-inglourious-basterds",
+    "question": "Which director is known for films such as \"Pulp Fiction\", \"Kill Bill\", and \"Inglourious Basterds\"?",
+    "options": [
+      "Martin Scorsese",
+      "Steven Spielberg",
+      "Quentin Tarantino",
+      "Christopher Nolan"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-popular-video-sharing-platform-was-launched-in-2005-and-acquired-by-google-in-2006",
+    "question": "What popular video-sharing platform was launched in 2005 and acquired by Google in 2006?",
+    "options": [
+      "Vimeo",
+      "Dailymotion",
+      "YouTube",
+      "Twitch"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-paper-company-where-the-characters-work-in-the-us-version-of-the-office",
+    "question": "What is the name of the paper company where the characters work in the US version of \"The Office\"?",
+    "options": [
+      "Staples",
+      "Office Depot",
+      "Dunder Mifflin",
+      "Aperture Paper Co."
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-iconic-british-rock-band-released-the-album-abbey-road-featuring-a-famous-zebra-crossing-on-its-cover",
+    "question": "Which iconic British rock band released the album \"Abbey Road\" featuring a famous zebra crossing on its cover?",
+    "options": [
+      "The Rolling Stones",
+      "Led Zeppelin",
+      "The Beatles",
+      "Queen"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-protagonist-in-the-legend-of-zelda-series-who-typically-wears-a-green-tunic",
+    "question": "What is the name of the protagonist in \"The Legend of Zelda\" series, who typically wears a green tunic?",
+    "options": [
+      "Zelda",
+      "Ganon",
+      "Link",
+      "Impa"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animated-disney-film-features-a-lion-cub-named-simba-and-the-villain-scar",
+    "question": "Which animated Disney film features a lion cub named Simba and the villain Scar?",
+    "options": [
+      "Tarzan",
+      "The Jungle Book",
+      "The Lion King",
+      "Bambi"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-critically-acclaimed-dystopian-tv-series-is-based-on-a-novel-by-margaret-atwood-and-features-offred-as-a-main-character",
+    "question": "Which critically acclaimed dystopian TV series is based on a novel by Margaret Atwood and features Offred as a main character?",
+    "options": [
+      "Westworld",
+      "Black Mirror",
+      "The Handmaid's Tale",
+      "Severance"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "hard"
   }
 ]

@@ -4548,5 +4548,174 @@
     "correctAnswer": 2,
     "category": "Music",
     "difficulty": "easy"
+  },
+  {
+    "slug": "which-instrument-is-primarily-associated-with-the-musician-yo-yo-ma",
+    "question": "Which instrument is primarily associated with the musician Yo-Yo Ma?",
+    "options": [
+      "Violin",
+      "Cello",
+      "Piano",
+      "Flute"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-was-the-lead-singer-of-the-legendary-rock-band-queen",
+    "question": "Who was the lead singer of the legendary rock band Queen?",
+    "options": [
+      "Robert Plant",
+      "Mick Jagger",
+      "Freddie Mercury",
+      "Steven Tyler"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-what-year-did-the-beatles-release-their-groundbreaking-album-sgt-peppers-lonely-hearts-club-band",
+    "question": "In what year did The Beatles release their groundbreaking album \"Sgt. Pepper's Lonely Hearts Club Band\"?",
+    "options": [
+      "1965",
+      "1967",
+      "1969",
+      "1971"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-musical-term-refers-to-a-slow-tempo-often-translated-as-walking-pace",
+    "question": "Which musical term refers to a slow tempo, often translated as \"walking pace\"?",
+    "options": [
+      "Allegro",
+      "Presto",
+      "Largo",
+      "Andante"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-composer-is-renowned-for-his-extensive-opera-cycle-der-ring-des-nibelungen",
+    "question": "Which composer is renowned for his extensive opera cycle \"Der Ring des Nibelungen\"?",
+    "options": [
+      "Giuseppe Verdi",
+      "Richard Wagner",
+      "Wolfgang Amadeus Mozart",
+      "Ludwig van Beethoven"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-highest-male-vocal-range-in-classical-music",
+    "question": "What is the name of the highest male vocal range in classical music?",
+    "options": [
+      "Baritone",
+      "Bass",
+      "Tenor",
+      "Countertenor"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-american-city-is-widely-considered-the-birthplace-of-motown-music",
+    "question": "Which American city is widely considered the birthplace of Motown music?",
+    "options": [
+      "Chicago",
+      "New York City",
+      "Detroit",
+      "Los Angeles"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-proper-term-for-a-musical-composition-for-a-solo-instrument-or-voice-often-with-orchestral-accompaniment-typically-in-three-movements",
+    "question": "What is the proper term for a musical composition for a solo instrument or voice, often with orchestral accompaniment, typically in three movements?",
+    "options": [
+      "Symphony",
+      "Sonata",
+      "Concerto",
+      "Oratorio"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-artist-is-famous-for-her-powerful-rendition-of-the-hit-song-i-will-always-love-you",
+    "question": "Which artist is famous for her powerful rendition of the hit song \"I Will Always Love You\"?",
+    "options": [
+      "Mariah Carey",
+      "Céline Dion",
+      "Whitney Houston",
+      "Adele"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-large-string-instrument-played-with-a-bow-provides-the-lowest-pitch-in-the-string-family-of-an-orchestra",
+    "question": "Which large string instrument, played with a bow, provides the lowest pitch in the string family of an orchestra?",
+    "options": [
+      "Cello",
+      "Viola",
+      "Contrabass",
+      "Violin"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-composed-the-beloved-classical-ballet-the-nutcracker",
+    "question": "Who composed the beloved classical ballet \"The Nutcracker\"?",
+    "options": [
+      "Igor Stravinsky",
+      "Pyotr Ilyich Tchaikovsky",
+      "Sergei Prokofiev",
+      "Claude Debussy"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-electronic-music-duo-is-famous-for-performing-in-distinctive-robot-helmets",
+    "question": "Which electronic music duo is famous for performing in distinctive robot helmets?",
+    "options": [
+      "The Chemical Brothers",
+      "Justice",
+      "Daft Punk",
+      "Disclosure"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "before-launching-her-highly-successful-solo-career-beyonc-was-the-lead-singer-of-which-rb-group",
+    "question": "Before launching her highly successful solo career, Beyoncé was the lead singer of which R&B group?",
+    "options": [
+      "TLC",
+      "En Vogue",
+      "The Supremes",
+      "Destiny's Child"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "medium"
   }
 ]

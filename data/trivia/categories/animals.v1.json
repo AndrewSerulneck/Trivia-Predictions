@@ -4561,5 +4561,161 @@
     "correctAnswer": 2,
     "category": "Animals",
     "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-largest-living-bird-by-mass-and-height",
+    "question": "What is the largest living bird by mass and height?",
+    "options": [
+      "Emu",
+      "Ostrich",
+      "Rhea",
+      "Cassowary"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-besides-humans-is-known-to-have-unique-fingerprints",
+    "question": "Which animal, besides humans, is known to have unique fingerprints?",
+    "options": [
+      "Chimpanzee",
+      "Gorilla",
+      "Koala",
+      "Raccoon"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-having-one-of-the-longest-hibernation-periods",
+    "question": "Which animal is known for having one of the longest hibernation periods?",
+    "options": [
+      "Bear",
+      "Groundhog",
+      "Dormouse",
+      "Arctic Ground Squirrel"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-these-animals-is-an-amphibian",
+    "question": "Which of these animals is an amphibian?",
+    "options": [
+      "Crocodile",
+      "Snake",
+      "Frog",
+      "Turtle"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-reptile-is-well-known-for-its-ability-to-change-its-skin-color",
+    "question": "Which reptile is well-known for its ability to change its skin color?",
+    "options": [
+      "Gecko",
+      "Iguana",
+      "Chameleon",
+      "Komodo Dragon"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-reputed-to-have-the-strongest-bite-force-among-living-animals",
+    "question": "Which animal is reputed to have the strongest bite force among living animals?",
+    "options": [
+      "Grizzly Bear",
+      "Great White Shark",
+      "Saltwater Crocodile",
+      "Hippopotamus"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-bird-lays-the-largest-egg",
+    "question": "Which bird lays the largest egg?",
+    "options": [
+      "Chicken",
+      "Emu",
+      "Ostrich",
+      "Kiwi"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-marine-mammal-is-well-known-for-using-echolocation-to-navigate-and-hunt",
+    "question": "Which marine mammal is well-known for using echolocation to navigate and hunt?",
+    "options": [
+      "Seal",
+      "Walrus",
+      "Dolphin",
+      "Manatee"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-unique-ability-to-play-dead-thanatosis-when-threatened",
+    "question": "Which animal is known for its unique ability to 'play dead' (thanatosis) when threatened?",
+    "options": [
+      "Fox",
+      "Opossum",
+      "Rabbit",
+      "Deer"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-amphibian-is-known-for-its-ability-to-regenerate-lost-limbs-and-organs-and-often-remains-in-its-larval-form-throughout-its-life",
+    "question": "Which amphibian is known for its ability to regenerate lost limbs and organs and often remains in its larval form throughout its life?",
+    "options": [
+      "A. Frog",
+      "B. Newt",
+      "C. Axolotl",
+      "D. Salamander"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-smallest-bird-in-the-world",
+    "question": "What is the smallest bird in the world?",
+    "options": [
+      "Bee Hummingbird",
+      "Willow Tit",
+      "Goldcrest",
+      "Zitting Cisticola"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-a-group-of-owls-commonly-called",
+    "question": "What is a group of owls commonly called?",
+    "options": [
+      "A parliament",
+      "A murder",
+      "A herd",
+      "A flock"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
   }
 ]

@@ -4561,5 +4561,161 @@
     "correctAnswer": 2,
     "category": "History",
     "difficulty": "easy"
+  },
+  {
+    "slug": "who-led-the-mongol-empire-and-conquered-vast-territories-in-the-13th-century",
+    "question": "Who led the Mongol Empire and conquered vast territories in the 13th century?",
+    "options": [
+      "Genghis Khan",
+      "Kublai Khan",
+      "Attila the Hun",
+      "Tamerlane"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-ancient-city-was-famously-buried-by-the-eruption-of-mount-vesuvius-in-79-ad",
+    "question": "Which ancient city was famously buried by the eruption of Mount Vesuvius in 79 AD?",
+    "options": [
+      "Pompeii",
+      "Herculaneum",
+      "Ostia",
+      "Ravenna"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-edict-of-nantes-granting-substantial-rights-to-calvinist-protestants-huguenots-in-france-was-issued-by-which-king",
+    "question": "The Edict of Nantes, granting substantial rights to Calvinist Protestants (Huguenots) in France, was issued by which king?",
+    "options": [
+      "Henry IV",
+      "Louis XIV",
+      "Francis I",
+      "Charles IX"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-famous-roman-general-was-assassinated-on-the-ides-of-march",
+    "question": "Which famous Roman general was assassinated on the Ides of March?",
+    "options": [
+      "Julius Caesar",
+      "Augustus",
+      "Nero",
+      "Trajan"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-berlin-wall-a-symbol-of-the-cold-war-fell-in-which-year",
+    "question": "The Berlin Wall, a symbol of the Cold War, fell in which year?",
+    "options": [
+      "1989",
+      "1991",
+      "1979",
+      "1961"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-peace-of-westphalia-which-established-the-principle-of-state-sovereignty-ended-which-major-european-conflict",
+    "question": "The Peace of Westphalia, which established the principle of state sovereignty, ended which major European conflict?",
+    "options": [
+      "Thirty Years' War",
+      "War of the Spanish Succession",
+      "Hundred Years' War",
+      "Seven Years' War"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-was-the-primary-author-of-the-american-declaration-of-independence",
+    "question": "Who was the primary author of the American Declaration of Independence?",
+    "options": [
+      "Thomas Jefferson",
+      "Benjamin Franklin",
+      "George Washington",
+      "John Adams"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-empire-was-ruled-by-the-ottoman-dynasty-for-over-600-years",
+    "question": "Which empire was ruled by the Ottoman dynasty for over 600 years?",
+    "options": [
+      "Ottoman Empire",
+      "Safavid Empire",
+      "Mughal Empire",
+      "Byzantine Empire"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-glorious-revolution-of-1688-primarily-involved-the-overthrow-of-which-english-monarch",
+    "question": "The Glorious Revolution of 1688 primarily involved the overthrow of which English monarch?",
+    "options": [
+      "James II",
+      "Charles I",
+      "Henry VIII",
+      "William III"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-first-successful-circumnavigation-of-the-earth-was-completed-by-the-expedition-of-which-explorer",
+    "question": "The first successful circumnavigation of the Earth was completed by the expedition of which explorer?",
+    "options": [
+      "Ferdinand Magellan",
+      "Vasco da Gama",
+      "James Cook",
+      "Francis Drake"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-was-a-student-of-plato-and-the-teacher-of-alexander-the-great",
+    "question": "Who was a student of Plato and the teacher of Alexander the Great?",
+    "options": [
+      "Socrates",
+      "Aristotle",
+      "Pythagoras",
+      "Herodotus"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-event-is-generally-considered-the-immediate-cause-of-the-outbreak-of-world-war-i",
+    "question": "What event is generally considered the immediate cause of the outbreak of World War I?",
+    "options": [
+      "The sinking of the Lusitania",
+      "Germany's invasion of Belgium",
+      "The assassination of Archduke Franz Ferdinand",
+      "The Zimmerman Telegram"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
   }
 ]

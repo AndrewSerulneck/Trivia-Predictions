@@ -4548,5 +4548,174 @@
     "correctAnswer": 2,
     "category": "Science",
     "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-chemical-symbol-for-the-element-oxygen",
+    "question": "What is the chemical symbol for the element Oxygen?",
+    "options": [
+      "O",
+      "Ox",
+      "Oy",
+      "On"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-process-by-which-water-vapor-in-the-air-turns-into-liquid-water-forming-clouds",
+    "question": "What is the process by which water vapor in the air turns into liquid water, forming clouds?",
+    "options": [
+      "Condensation",
+      "Evaporation",
+      "Precipitation",
+      "Transpiration"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-ph-value-of-a-neutral-solution-at-room-temperature",
+    "question": "What is the pH value of a neutral solution at room temperature?",
+    "options": [
+      "7",
+      "0",
+      "14",
+      "5"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-part-of-the-plant-is-primarily-responsible-for-photosynthesis",
+    "question": "Which part of the plant is primarily responsible for photosynthesis?",
+    "options": [
+      "Leaves",
+      "Roots",
+      "Stem",
+      "Flower"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-scientist-developed-the-theory-of-general-relativity",
+    "question": "Which scientist developed the theory of general relativity?",
+    "options": [
+      "Albert Einstein",
+      "Isaac Newton",
+      "Stephen Hawking",
+      "Galileo Galilei"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-bond-formed-when-atoms-share-electrons",
+    "question": "What is the name of the bond formed when atoms share electrons?",
+    "options": [
+      "Covalent bond",
+      "Ionic bond",
+      "Metallic bond",
+      "Hydrogen bond"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-bones-are-in-an-adult-human-skeleton",
+    "question": "How many bones are in an adult human skeleton?",
+    "options": [
+      "206",
+      "300",
+      "150",
+      "250"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-term-for-a-star-that-has-exhausted-most-of-its-nuclear-fuel-and-collapsed-into-a-very-dense-state",
+    "question": "What is the term for a star that has exhausted most of its nuclear fuel and collapsed into a very dense state?",
+    "options": [
+      "White Dwarf",
+      "Red Giant",
+      "Nebula",
+      "Pulsar"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-unit-is-used-to-measure-frequency",
+    "question": "What unit is used to measure frequency?",
+    "options": [
+      "Hertz",
+      "Joule",
+      "Watt",
+      "Ohm"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-process-by-which-plants-release-water-vapor-into-the-atmosphere",
+    "question": "What is the process by which plants release water vapor into the atmosphere?",
+    "options": [
+      "Respiration",
+      "Evaporation",
+      "Transpiration",
+      "Condensation"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-planet-in-our-solar-system-is-known-for-its-prominent-ring-system",
+    "question": "Which planet in our solar system is known for its prominent ring system?",
+    "options": [
+      "Mars",
+      "Jupiter",
+      "Saturn",
+      "Uranus"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-primary-function-of-red-blood-cells-in-the-human-body",
+    "question": "What is the primary function of red blood cells in the human body?",
+    "options": [
+      "Transport oxygen",
+      "Fight infections",
+      "Clot blood",
+      "Produce antibodies"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-phenomenon-explains-why-a-prism-separates-white-light-into-a-spectrum-of-colors",
+    "question": "Which phenomenon explains why a prism separates white light into a spectrum of colors?",
+    "options": [
+      "Diffraction",
+      "Refraction",
+      "Reflection",
+      "Interference"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
   }
 ]
