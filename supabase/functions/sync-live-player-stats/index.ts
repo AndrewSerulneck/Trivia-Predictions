@@ -20,6 +20,10 @@ const APISPORTS_BASE_URL = (Deno.env.get("APISPORTS_NBA_BASE_URL")?.trim() ?? "h
 const APISPORTS_REQUEST_DELAY_MS = Math.max(0, Number.parseInt(Deno.env.get("APISPORTS_REQUEST_DELAY_MS") ?? "180", 10) || 180);
 const APISPORTS_MAX_GAMES_PER_RUN = Math.max(1, Number.parseInt(Deno.env.get("APISPORTS_MAX_GAMES_PER_RUN") ?? "24", 10) || 24);
 const APISPORTS_TARGET_LEAGUE_ID = Number.parseInt(Deno.env.get("APISPORTS_TARGET_LEAGUE_ID") ?? "", 10) || 0;
+const APISPORTS_FINAL_REPLAY_WINDOW_MS = Math.max(
+  0,
+  Number.parseInt(Deno.env.get("APISPORTS_FINAL_REPLAY_WINDOW_MS") ?? String(6 * 60 * 60 * 1000), 10) || 6 * 60 * 60 * 1000
+);
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -102,12 +106,24 @@ async function fetchApiSports(pathWithQuery: string): Promise<{ rows: Record<str
   return { rows };
 }
 
-function isLiveOrFinal(statusShort: string): boolean {
+function isFinalStatus(statusShort: string): boolean {
   const key = statusShort.trim().toUpperCase();
   if (!key) return false;
-  const liveKeys = new Set(["Q1", "Q2", "Q3", "Q4", "HT", "OT", "AOT", "LIVE", "IN PLAY"]);
   const finalKeys = new Set(["FT", "AOT", "FINAL"]);
-  return liveKeys.has(key) || finalKeys.has(key);
+  return finalKeys.has(key);
+}
+
+function isLiveStatus(statusShort: string): boolean {
+  const key = statusShort.trim().toUpperCase();
+  if (!key) return false;
+  const liveKeys = new Set(["Q1", "Q2", "Q3", "Q4", "HT", "BT", "OT", "LIVE", "IN PLAY"]);
+  return liveKeys.has(key);
+}
+
+function parseGameStartMs(game: Record<string, unknown>): number | null {
+  const iso = String(getPath(game, ["date", "start"]) ?? "").trim();
+  const ms = Date.parse(iso);
+  return Number.isFinite(ms) ? ms : null;
 }
 
 function formatDateUTC(offsetDays = 0): string {
@@ -155,7 +171,18 @@ async function syncLivePlayerStats(): Promise<SyncResult> {
 
   let games = combinedRows.filter((game) => {
     const short = String(getPath(game, ["status", "short"]) ?? "");
-    return isLiveOrFinal(short);
+    if (isLiveStatus(short)) {
+      return true;
+    }
+    if (!isFinalStatus(short)) {
+      return false;
+    }
+    const startMs = parseGameStartMs(game);
+    if (!Number.isFinite(startMs)) {
+      return false;
+    }
+    // Do not keep replaying stale finals from prior days; only keep recent finals for end-of-game reconciliation.
+    return Date.now() - startMs <= APISPORTS_FINAL_REPLAY_WINDOW_MS;
   }) as ApiSportsGameRow[];
 
   if (APISPORTS_TARGET_LEAGUE_ID > 0) {

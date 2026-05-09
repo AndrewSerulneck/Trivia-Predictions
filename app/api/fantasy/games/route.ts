@@ -55,9 +55,11 @@ function toClientErrorStatus(message: string): number {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const date = String(searchParams.get("date") ?? "").trim() || undefined;
+    const requestedDate = String(searchParams.get("date") ?? "").trim() || undefined;
     const tzOffsetMinutes = searchParams.get("tzOffsetMinutes") ?? undefined;
     const tzOffset = normalizeTimezoneOffset(tzOffsetMinutes);
+    const todayDate = getTodayDateInOffset(tzOffset);
+    const date = todayDate;
     const gameId = String(searchParams.get("gameId") ?? "").trim();
     const sportKey = String(searchParams.get("sportKey") ?? "").trim() || undefined;
     const venueId = String(searchParams.get("venueId") ?? "").trim();
@@ -68,8 +70,7 @@ export async function GET(request: Request) {
       limit: Math.max(1, Math.min(40, normalizePositiveInt(searchParams.get("limit"), 20))),
     });
 
-    const fallbackDate = date || getTodayDateInOffset(tzOffset);
-    const dailyGameId = `${FANTASY_DAILY_GAME_ID_PREFIX}${fallbackDate}`;
+    const dailyGameId = `${FANTASY_DAILY_GAME_ID_PREFIX}${todayDate}`;
 
     let playerPool: FantasyPlayerPoolItem[] = [];
     if (gameId) {
@@ -77,7 +78,7 @@ export async function GET(request: Request) {
       playerPool = await getFantasyPlayerPoolForGame({
         gameId,
         sportKey,
-        date: dailyDateFromGameId ?? date,
+        date: dailyDateFromGameId === todayDate ? dailyDateFromGameId : requestedDate ?? todayDate,
         tzOffsetMinutes,
       });
     } else {

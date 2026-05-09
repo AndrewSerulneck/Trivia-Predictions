@@ -143,8 +143,13 @@ function isStartedFantasyGameStatus(value: string): boolean {
   if (notStartedStatuses.has(status)) {
     return false;
   }
-  const startedIndicators = ["Q1", "Q2", "Q3", "Q4", "OT", "HT", "HALF", "LIVE", "IN PLAY", "IN_PROGRESS", "FT", "AOT", "FINAL", "COMPLETED"];
+  const startedIndicators = ["Q1", "Q2", "Q3", "Q4", "OT", "BT", "HT", "HALF", "LIVE", "IN PLAY", "IN_PROGRESS", "FT", "AOT", "FINAL", "COMPLETED"];
   return startedIndicators.some((indicator) => status.includes(indicator));
+}
+
+function isFinalFantasyGameStatus(value: string): boolean {
+  const status = String(value ?? "").trim().toUpperCase();
+  return status === "FT" || status === "AOT" || status === "FINAL" || status === "COMPLETED";
 }
 
 function getLocalWeekStartMs(date: Date): number {
@@ -395,6 +400,10 @@ export function FantasyHome() {
   const liveStatPlayerNames = useMemo(() => trackedEntry?.lineup ?? [], [trackedEntry]);
   const trackedEntryStartsAtIso = useMemo(() => String(trackedEntry?.startsAt ?? "").trim(), [trackedEntry]);
   const trackedEntryStartsAtMs = useMemo(() => Date.parse(trackedEntryStartsAtIso), [trackedEntryStartsAtIso]);
+  const trackedEntryPreTipoff = useMemo(
+    () => Boolean(Number.isFinite(trackedEntryStartsAtMs) && Date.now() < trackedEntryStartsAtMs),
+    [trackedEntryStartsAtMs]
+  );
   const trackedEntryLiveGameId = useMemo(() => {
     const gameId = String(trackedEntry?.gameId ?? "").trim();
     if (!gameId || gameId.startsWith("nba-daily-")) {
@@ -410,6 +419,9 @@ export function FantasyHome() {
   });
   const livePointsByPlayer = useMemo(() => {
     const next = new Map<string, number>();
+    if (trackedEntryPreTipoff) {
+      return next;
+    }
     if (liveStatPlayerNames.length === 0) {
       return next;
     }
@@ -417,6 +429,9 @@ export function FantasyHome() {
       const rowsForPlayer = liveStatRows.filter(
         (row) => {
           if (!isStartedFantasyGameStatus(row.game_status)) {
+            return false;
+          }
+          if (trackedEntry?.status !== "final" && isFinalFantasyGameStatus(row.game_status)) {
             return false;
           }
           if (!namesLikelyMatch(playerName, row.player_name)) {
@@ -455,20 +470,30 @@ export function FantasyHome() {
       }
     }
     return next;
-  }, [liveStatPlayerNames, liveStatRows, trackedEntryStartsAtMs]);
+  }, [liveStatPlayerNames, liveStatRows, trackedEntryPreTipoff, trackedEntryStartsAtMs]);
   const liveTrackedEntryPoints = useMemo(() => {
     if (!trackedEntry) {
       return 0;
     }
+    if (trackedEntryPreTipoff) {
+      return 0;
+    }
+    const requireLiveRows = trackedEntry.status === "pending" || trackedEntry.status === "live";
     const total = trackedEntry.lineup.reduce((sum, playerName) => {
       const points = livePointsByPlayer.get(playerName);
       if (typeof points === "number" && Number.isFinite(points)) {
         return sum + points;
       }
+      if (requireLiveRows) {
+        return sum;
+      }
       return sum + Number(trackedEntry.scoreBreakdown[playerName] ?? 0);
     }, 0);
-    return Number.isFinite(total) ? total : Number(trackedEntry.points ?? 0);
-  }, [livePointsByPlayer, trackedEntry]);
+    if (!Number.isFinite(total)) {
+      return requireLiveRows ? 0 : Number(trackedEntry.points ?? 0);
+    }
+    return total;
+  }, [livePointsByPlayer, trackedEntry, trackedEntryPreTipoff]);
 
   useEffect(() => {
     if (!selectedGameId) {
@@ -872,7 +897,13 @@ export function FantasyHome() {
                 <ul className="mt-2 space-y-1">
                   {trackedEntry.lineup.map((playerName) => {
                     const livePoints = livePointsByPlayer.get(playerName);
-                    const playerPoints = typeof livePoints === "number" ? livePoints : Number(trackedEntry.scoreBreakdown[playerName] ?? 0);
+                    const requireLiveRows = trackedEntry.status === "pending" || trackedEntry.status === "live";
+                    const playerPoints =
+                      typeof livePoints === "number"
+                        ? livePoints
+                        : requireLiveRows
+                        ? 0
+                        : Number(trackedEntry.scoreBreakdown[playerName] ?? 0);
                     return (
                       <li key={`${trackedEntry.id}-${playerName}`} className="flex items-center justify-between gap-2 text-xs text-slate-700">
                         <span className="font-medium text-slate-800">{playerName}</span>
