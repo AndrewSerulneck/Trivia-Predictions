@@ -13,6 +13,7 @@ type AdEventContext = {
 type AdvertisementRow = {
   id: string;
   slot: AdSlot;
+  is_placeholder: boolean | null;
   page_key: AdPageKey | null;
   ad_type: AdType | null;
   display_trigger: AdDisplayTrigger | null;
@@ -57,6 +58,7 @@ function mapAdRow(row: AdvertisementRow): Advertisement {
   return {
     id: row.id,
     slot: row.slot,
+    isPlaceholder: Boolean(row.is_placeholder ?? false),
     pageKey: placementMeta.pageKey,
     adType: placementMeta.adType,
     displayTrigger: placementMeta.displayTrigger,
@@ -201,7 +203,7 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string, options?: AdLook
   let query = supabaseAdmin
     .from("advertisements")
     .select(
-      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
+      "id, slot, is_placeholder, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .eq("slot", slot)
     .eq("active", true)
@@ -252,15 +254,21 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string, options?: AdLook
     return null;
   }
 
+  const nonPlaceholderRows = rows.filter((row) => !row.is_placeholder);
+  const placementRows = nonPlaceholderRows.length > 0 ? nonPlaceholderRows : rows.filter((row) => Boolean(row.is_placeholder));
+  if (placementRows.length === 0) {
+    return null;
+  }
+
   const requestedRound = Number.isFinite(options?.roundNumber) ? Math.round(Number(options?.roundNumber)) : undefined;
   const requestedSequence = Number.isFinite(options?.sequenceIndex)
     ? Math.round(Number(options?.sequenceIndex))
     : undefined;
 
   const filteredByRound = requestedRound
-    ? rows.filter((row) => Number(row.round_number) === requestedRound)
-    : rows;
-  const roundPool = filteredByRound.length > 0 ? filteredByRound : rows;
+    ? placementRows.filter((row) => Number(row.round_number) === requestedRound)
+    : placementRows;
+  const roundPool = filteredByRound.length > 0 ? filteredByRound : placementRows;
 
   let sequencePool = roundPool;
   const isStrictLeaderboardVariantRequest =
@@ -332,7 +340,7 @@ export async function getAdById(id: string): Promise<Advertisement | null> {
   const { data, error } = await supabaseAdmin
     .from("advertisements")
     .select(
-      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
+      "id, slot, is_placeholder, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .eq("id", id)
     .maybeSingle<AdvertisementRow>();

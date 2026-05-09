@@ -169,7 +169,18 @@ export interface ChallengeCampaign {
   recurringType: CampaignRecurringType;
   winnerUserId?: string | null;
   winnerUsername?: string | null;
+  prizeClaimedAt?: string | null;
   isActive: boolean;
+}
+
+export interface ChallengeCampaignWin {
+  challengeId: string;
+  venueId: string;
+  challengeName: string;
+  challengeRules: string;
+  winnerUserId: string;
+  winnerUsername?: string | null;
+  claimedAt?: string | null;
 }
 
 export interface ChallengeCampaignProgress {
@@ -211,6 +222,7 @@ export interface PrizeWin {
 export interface Advertisement {
   id: string;
   slot: AdSlot;
+  isPlaceholder?: boolean;
   pageKey: AdPageKey;
   adType: AdType;
   displayTrigger: AdDisplayTrigger;

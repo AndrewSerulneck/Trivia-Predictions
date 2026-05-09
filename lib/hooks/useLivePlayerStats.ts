@@ -29,6 +29,8 @@ type UseLivePlayerStatsParams = {
   gameId?: string;
   rosterPlayerIds?: number[];
   enabled?: boolean;
+  sinceIso?: string;
+  leagueName?: string;
 };
 
 type UseLivePlayerStatsResult = {
@@ -46,6 +48,9 @@ function byPlayerThenGame(a: LivePlayerStatRow, b: LivePlayerStatRow): number {
 
 export function useLivePlayerStats(params: UseLivePlayerStatsParams): UseLivePlayerStatsResult {
   const gameId = String(params.gameId ?? "").trim();
+  const sinceIso = String(params.sinceIso ?? "").trim();
+  const sinceTs = Date.parse(sinceIso);
+  const leagueName = String(params.leagueName ?? "NBA").trim() || "NBA";
   const rosterPlayerIds = useMemo(
     () =>
       (params.rosterPlayerIds ?? [])
@@ -79,6 +84,7 @@ export function useLivePlayerStats(params: UseLivePlayerStatsParams): UseLivePla
         .select(
           "id, game_id, player_id, player_name, team_id, team_name, league_id, league_name, game_status, pts, ast, reb, stl, blk, turnovers, total_fantasy_points, source_updated_at, created_at, updated_at"
         )
+        .eq("league_name", leagueName)
         .order("source_updated_at", { ascending: false })
         .limit(500);
 
@@ -87,6 +93,9 @@ export function useLivePlayerStats(params: UseLivePlayerStatsParams): UseLivePla
       }
       if (rosterPlayerIds.length > 0) {
         query = query.in("player_id", rosterPlayerIds);
+      }
+      if (Number.isFinite(sinceTs)) {
+        query = query.gte("source_updated_at", new Date(sinceTs).toISOString());
       }
 
       const { data, error: loadError } = await query;
@@ -115,6 +124,15 @@ export function useLivePlayerStats(params: UseLivePlayerStatsParams): UseLivePla
           if (!active) return;
           const nextRow = (payload.new ?? payload.old ?? null) as LivePlayerStatRow | null;
           if (!nextRow) return;
+          if (leagueName && String(nextRow.league_name ?? "").trim() !== leagueName) {
+            return;
+          }
+          if (Number.isFinite(sinceTs)) {
+            const rowTs = Date.parse(String(nextRow.source_updated_at ?? ""));
+            if (!Number.isFinite(rowTs) || rowTs < sinceTs) {
+              return;
+            }
+          }
           if (rosterPlayerIds.length > 0 && !rosterPlayerIds.includes(Number(nextRow.player_id))) {
             return;
           }
@@ -141,7 +159,7 @@ export function useLivePlayerStats(params: UseLivePlayerStatsParams): UseLivePla
       active = false;
       void client.removeChannel(channel);
     };
-  }, [enabled, gameId, rosterPlayerIds]);
+  }, [enabled, gameId, leagueName, rosterPlayerIds, sinceIso, sinceTs]);
 
   return { rows, loading, error };
 }

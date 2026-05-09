@@ -113,6 +113,7 @@ export async function POST(request: Request) {
       | {
           resource: "ads";
           slot: AdSlot;
+          isPlaceholder?: boolean;
           pageKey?: AdPageKey;
           adType?: AdType;
           displayTrigger?: AdDisplayTrigger;
@@ -200,6 +201,7 @@ export async function POST(request: Request) {
     if (body.resource === "ads") {
       const item = await createAdminAdvertisement({
         slot: body.slot,
+        isPlaceholder: body.isPlaceholder,
         pageKey: body.pageKey,
         adType: body.adType,
         displayTrigger: body.displayTrigger,
@@ -375,6 +377,7 @@ export async function PATCH(request: Request) {
           resource: "ads";
           id: string;
           slot: AdSlot;
+          isPlaceholder?: boolean;
           pageKey?: AdPageKey;
           adType?: AdType;
           displayTrigger?: AdDisplayTrigger;
@@ -453,6 +456,7 @@ export async function PATCH(request: Request) {
       const item = await updateAdminAdvertisement({
         id: body.id,
         slot: body.slot,
+        isPlaceholder: body.isPlaceholder,
         pageKey: body.pageKey,
         adType: body.adType,
         displayTrigger: body.displayTrigger,

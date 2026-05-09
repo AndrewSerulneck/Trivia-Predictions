@@ -59,6 +59,7 @@ type ChallengeCampaignCard = {
   progressPoints: number;
   winnerUserId?: string | null;
   winnerUsername?: string | null;
+  prizeClaimedAt?: string | null;
   isActive: boolean;
 };
 
@@ -242,6 +243,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const bootstrapSnapshotRef = useRef<VenueHomeBootstrapSnapshot | null>(null);
   const entryHandoffRef = useRef(false);
   const [pendingDestination, setPendingDestination] = useState<VenueGameKey | null>(null);
+  const [pendingChallengeRedeemId, setPendingChallengeRedeemId] = useState<string | null>(null);
   // All state below is initialized to server-safe "no bootstrap" defaults.
   // The useEffect at the top of the effect list reads sessionStorage and corrects
   // these values on the client immediately after mount.
@@ -859,6 +861,23 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   );
 
   const homeCards = useMemo(() => VENUE_HOME_GAME_KEYS.map((key) => VENUE_GAME_CARD_BY_KEY[key]), []);
+  const currentUserId = useMemo(() => (getUserId() ?? "").trim(), []);
+  const goToChallengeRedeem = useCallback(
+    async (challengeId: string, sourceElement: HTMLElement | null) => {
+      setPendingChallengeRedeemId(challengeId);
+      try {
+        await runVenueGameOpenTransition({
+          gameKey: "fantasy",
+          sourceElement,
+          targetPath: `/venue/${encodeURIComponent(venue.id)}/redeem`,
+          navigate: () => router.push(`/venue/${encodeURIComponent(venue.id)}/redeem`),
+        });
+      } catch {
+        setPendingChallengeRedeemId(null);
+      }
+    },
+    [router, venue.id]
+  );
   const leaderboardInitialEntries = leaderboardBootstrapEntries.length > 0 ? leaderboardBootstrapEntries : initialEntries;
   const triviaIsLocked = Boolean(triviaQuota && !triviaQuota.isAdminBypass && triviaQuota.questionsRemaining <= 0);
   const triviaUnlockCountdown = triviaUnlockSeconds > 0 ? triviaUnlockSeconds : triviaIsLocked ? Math.max(0, Math.floor(triviaQuota?.windowSecondsRemaining ?? 0)) : 0;
@@ -1019,12 +1038,30 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                     const target = Math.max(1, Number(challenge.pointsRequiredToWin ?? 1));
                     const percent = Math.min(100, Math.round((progress / target) * 100));
                     const isWon = Boolean(challenge.winnerUserId);
+                    const isWinner = Boolean(challenge.winnerUserId && challenge.winnerUserId === currentUserId);
+                    const canOpenRules = !isWon;
+                    const canOpenRedeem = isWinner;
+                    const isBusy = pendingChallengeRedeemId === challenge.id;
                     return (
                       <button
                         key={challenge.id}
                         type="button"
-                        onClick={() => setSelectedChallengeId(challenge.id)}
-                        className="tp-clean-button relative flex w-full items-center gap-3 overflow-hidden rounded-[1.2rem] border-[3px] border-[#0f172a]/80 bg-[linear-gradient(146deg,#0f766e_0%,#06b6d4_50%,#22d3ee_100%)] p-3 text-left shadow-[0_8px_0_rgba(15,23,42,0.35)]"
+                        onClick={(event) => {
+                          if (canOpenRedeem) {
+                            void goToChallengeRedeem(challenge.id, event.currentTarget);
+                            return;
+                          }
+                          if (canOpenRules) {
+                            setSelectedChallengeId(challenge.id);
+                          }
+                        }}
+                        disabled={!canOpenRules && !canOpenRedeem}
+                        aria-disabled={!canOpenRules && !canOpenRedeem}
+                        className={`tp-clean-button relative flex min-h-[122px] w-full items-center gap-3 overflow-hidden rounded-[1.2rem] border-[3px] border-[#0f172a]/80 p-3 text-left shadow-[0_8px_0_rgba(15,23,42,0.35)] ${
+                          isWinner
+                            ? "bg-[linear-gradient(146deg,#1d4ed8_0%,#2563eb_48%,#38bdf8_100%)]"
+                            : "bg-[linear-gradient(146deg,#0f766e_0%,#06b6d4_50%,#22d3ee_100%)]"
+                        } ${!canOpenRules && !canOpenRedeem ? "cursor-default opacity-95" : ""}`}
                       >
                         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_86%_10%,rgba(254,240,138,0.35)_0%,rgba(254,240,138,0)_34%)]" />
                         <div
@@ -1052,9 +1089,23 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                         </div>
                         <div className="relative min-w-0 flex-1">
                           <div className="truncate text-sm font-black uppercase tracking-[0.08em] text-cyan-50">{challenge.name}</div>
-                          {isWon ? (
-                            <div className="mt-1 text-xs font-black text-amber-100">
-                              {challenge.winnerUsername ? `${challenge.winnerUsername} has won this challenge.` : "A winner has been declared."}
+                          {isWon && isWinner ? (
+                            <div className="mt-2">
+                              <div className="text-[11px] font-black uppercase tracking-[0.09em] text-amber-100">
+                                Congratulations! You won the {challenge.name}!
+                              </div>
+                              <div className="mt-2 inline-flex min-h-[38px] items-center rounded-full border border-amber-100/90 bg-amber-200/90 px-3 text-xs font-black uppercase tracking-[0.08em] text-amber-900">
+                                {isBusy ? "Opening..." : challenge.prizeClaimedAt ? "Prize Claimed" : "Claim Prize"}
+                              </div>
+                            </div>
+                          ) : isWon ? (
+                            <div className="mt-2">
+                              <div className="inline-flex rounded-full border border-slate-950/30 bg-slate-900/35 px-2 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-cyan-50">
+                                Challenge Closed
+                              </div>
+                              <div className="mt-2 text-xs font-black text-amber-100">
+                                Winner: <span className="text-amber-300">{challenge.winnerUsername ?? "Champion"}</span>
+                              </div>
                             </div>
                           ) : (
                             <>

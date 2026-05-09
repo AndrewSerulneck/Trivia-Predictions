@@ -94,6 +94,22 @@ const AD_INVENTORY_SLOTS: Record<Exclude<AdPageKey, "global">, AdInventorySlot[]
     { id: "bingo-popup-entry", pageKey: "sports-bingo", adType: "popup", label: "Popup on Landing", displayTrigger: "on-load" },
     { id: "bingo-popup-scroll", pageKey: "sports-bingo", adType: "popup", label: "Popup on Scroll", displayTrigger: "on-scroll" },
     { id: "bingo-banner-mobile", pageKey: "sports-bingo", adType: "banner", label: "Mobile Banner (Adhesion)", displayTrigger: "on-load" },
+    {
+      id: "bingo-inline-active-home",
+      pageKey: "sports-bingo",
+      adType: "inline",
+      label: "Inline Bingo Slot (Active Card)",
+      displayTrigger: "on-load",
+      placementKey: "bingo-home-active-inline",
+    },
+    {
+      id: "bingo-inline-final-home",
+      pageKey: "sports-bingo",
+      adType: "inline",
+      label: "Inline Bingo Slot (Final Cards)",
+      displayTrigger: "on-load",
+      placementKey: "bingo-home-final-inline",
+    },
   ],
   pickem: [
     { id: "pickem-popup-entry", pageKey: "pickem", adType: "popup", label: "Popup on Landing", displayTrigger: "on-load" },
@@ -105,7 +121,7 @@ const AD_INVENTORY_SLOTS: Record<Exclude<AdPageKey, "global">, AdInventorySlot[]
     { id: "fantasy-popup-entry", pageKey: "fantasy", adType: "popup", label: "Popup on Landing", displayTrigger: "on-load" },
     { id: "fantasy-popup-scroll", pageKey: "fantasy", adType: "popup", label: "Popup on Scroll", displayTrigger: "on-scroll" },
     { id: "fantasy-banner-mobile", pageKey: "fantasy", adType: "banner", label: "Mobile Banner (Adhesion)", displayTrigger: "on-load" },
-    { id: "fantasy-inline-breaks", pageKey: "fantasy", adType: "inline", label: "Inline Fantasy Slot", displayTrigger: "on-scroll", placementKey: "fantasy-inline" },
+    { id: "fantasy-inline-breaks", pageKey: "fantasy", adType: "inline", label: "Inline Fantasy Slot", displayTrigger: "on-load", placementKey: "fantasy-inline" },
   ],
 };
 
@@ -173,9 +189,15 @@ function getTriggersForPlacement(pageKey: AdPageKey, adType: AdType): AdDisplayT
   if (pageKey === "trivia") {
     return ["on-load", "round-end"];
   }
-  if (pageKey === "pickem" || pageKey === "fantasy") {
+  if (pageKey === "pickem") {
     if (adType === "inline") {
       return ["on-scroll"];
+    }
+    return ["on-load", "on-scroll"];
+  }
+  if (pageKey === "fantasy") {
+    if (adType === "inline") {
+      return ["on-load"];
     }
     return ["on-load", "on-scroll"];
   }
@@ -396,6 +418,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [width, setWidth] = useState(728);
   const [height, setHeight] = useState(90);
   const [frequencyInterval, setFrequencyInterval] = useState(1);
+  const [isPlaceholderAd, setIsPlaceholderAd] = useState(false);
   const [venueSearch, setVenueSearch] = useState("");
   const [dismissDelaySeconds, setDismissDelaySeconds] = useState(3);
   const [popupCooldownSeconds, setPopupCooldownSeconds] = useState(180);
@@ -433,6 +456,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [editWidth, setEditWidth] = useState(728);
   const [editHeight, setEditHeight] = useState(90);
   const [editFrequencyInterval, setEditFrequencyInterval] = useState(1);
+  const [editIsPlaceholderAd, setEditIsPlaceholderAd] = useState(false);
   const [editVenueSearch, setEditVenueSearch] = useState("");
   const [editDismissDelaySeconds, setEditDismissDelaySeconds] = useState(3);
   const [editPopupCooldownSeconds, setEditPopupCooldownSeconds] = useState(180);
@@ -1320,6 +1344,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
         body: JSON.stringify({
           resource: "ads",
           slot,
+          isPlaceholder: isPlaceholderAd,
           pageKey,
           adType,
           displayTrigger,
@@ -1360,6 +1385,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       setWidth(728);
       setHeight(90);
       setFrequencyInterval(1);
+      setIsPlaceholderAd(false);
       setDismissDelaySeconds(3);
       setPopupCooldownSeconds(180);
       setVenueIds([]);
@@ -1832,6 +1858,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     setEditWidth(item.width);
     setEditHeight(item.height);
     setEditFrequencyInterval(item.frequencyInterval ?? 1);
+    setEditIsPlaceholderAd(Boolean(item.isPlaceholder));
     setEditDismissDelaySeconds(item.dismissDelaySeconds ?? 3);
     setEditPopupCooldownSeconds(item.popupCooldownSeconds ?? 180);
     setEditActive(item.active);
@@ -1895,6 +1922,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           resource: "ads",
           id: editingAdId,
           slot: editSlot,
+          isPlaceholder: editIsPlaceholderAd,
           pageKey: editPageKey,
           adType: editAdType,
           displayTrigger: editDisplayTrigger,
@@ -3021,6 +3049,14 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           />
           Active
         </label>
+        <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={isPlaceholderAd}
+            onChange={(event) => setIsPlaceholderAd(event.target.checked)}
+          />
+          Placeholder ad (fallback only)
+        </label>
         <button
           type="button"
           onClick={() => {
@@ -3528,6 +3564,14 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                     />
                     Active
                   </label>
+                  <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={editIsPlaceholderAd}
+                      onChange={(event) => setEditIsPlaceholderAd(event.target.checked)}
+                    />
+                    Placeholder ad (fallback only)
+                  </label>
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
@@ -3557,7 +3601,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                 <>
                   <p className="break-words font-medium">{item.advertiserName}</p>
                   <p className="break-words text-xs text-slate-600">
-                    {AD_PAGE_LABEL[item.pageKey]} | {AD_TYPE_LABEL[item.adType]} | {AD_TRIGGER_LABEL[item.displayTrigger]} | {item.slot} | {item.width}x{item.height} | Every {item.frequencyInterval ?? 1} visitor{(item.frequencyInterval ?? 1) !== 1 ? "s" : ""} | {item.active ? "active" : "inactive"} |{" "}
+                    {AD_PAGE_LABEL[item.pageKey]} | {AD_TYPE_LABEL[item.adType]} | {AD_TRIGGER_LABEL[item.displayTrigger]} | {item.slot} | {item.width}x{item.height} | Every {item.frequencyInterval ?? 1} visitor{(item.frequencyInterval ?? 1) !== 1 ? "s" : ""} | {item.active ? "active" : "inactive"}{item.isPlaceholder ? " | placeholder" : ""} |{" "}
                     {item.targetAllVenues
                       ? "all venues"
                       : (item.venueIds ?? (item.venueId ? [item.venueId] : [])).length > 0

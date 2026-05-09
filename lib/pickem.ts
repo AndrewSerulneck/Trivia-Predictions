@@ -183,8 +183,8 @@ const PICKEM_SPORTS: PickEmSportOption[] = [
     slug: "nfl",
     label: "NFL",
     subtitle: "National Football League",
-    isInSeason: true,
-    isClickable: true,
+    isInSeason: false,
+    isClickable: false,
     sportKeys: ["americanfootball_nfl"],
   },
 ];
@@ -575,7 +575,7 @@ function getTeamScore(scores: OddsScoreEvent["scores"], teamName: string): numbe
   return null;
 }
 
-function resolveWinner(homeTeam: string, awayTeam: string, homeScore: number | null, awayScore: number | null): string | null {
+function resolveWinner(homeTeam: string, awayTeam: string, homeScore: number | null, awayScore: number | null): string | "tie" | null {
   if (homeScore === null || awayScore === null) {
     return null;
   }
@@ -586,7 +586,7 @@ function resolveWinner(homeTeam: string, awayTeam: string, homeScore: number | n
   if (awayScore > homeScore) {
     return awayTeam;
   }
-  return "push";
+  return "tie";
 }
 
 function getPickEmRoundMultiplier(totalPicks: number, correctPicks: number): number {
@@ -979,7 +979,7 @@ export async function listPickEmGames(params: {
       status,
       homeScore,
       awayScore,
-      winnerTeam: winner === "push" ? null : winner,
+      winnerTeam: winner === "tie" ? null : winner,
       userPickId: pick?.id,
       userPickTeam: pick?.selected_team,
       userPickStatus: pick?.status,
@@ -1343,10 +1343,7 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
     let status: PickEmPickStatus = "canceled";
     if (homeScore !== null && awayScore !== null) {
       const winner = resolveWinner(row.home_team, row.away_team, homeScore, awayScore);
-      if (winner === "push") {
-        status = "push";
-        push += 1;
-      } else if (winner === row.selected_team) {
+      if (winner === row.selected_team) {
         status = "won";
         won += 1;
       } else {

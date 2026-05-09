@@ -10,7 +10,7 @@ export default async function PickEmPage({
   const initialSportSlug = String(params.sport ?? "").trim().toLowerCase();
 
   return (
-    <GameLandingExperience gameKey="pickem" playLabel="Play Pick 'Em">
+    <GameLandingExperience gameKey="pickem" playLabel="Play Pick 'Em" showPlayingBackButton={false}>
       <div className="space-y-3">
         <PickEmGameList initialSportSlug={initialSportSlug} />
       </div>

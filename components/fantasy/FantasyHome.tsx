@@ -335,6 +335,10 @@ export function FantasyHome() {
     [entries, selectedGameId]
   );
   const hasLiveEntry = liveEntries.length > 0;
+  const hasSyncableEntry = useMemo(
+    () => entries.some((entry) => entry.status === "pending" || entry.status === "live"),
+    [entries]
+  );
   const nextPendingEntryStartMs = useMemo(() => {
     const now = Date.now();
     let nextStart: number | null = null;
@@ -389,8 +393,20 @@ export function FantasyHome() {
   );
   const hasResolvedEntries = !loadingEntries;
   const liveStatPlayerNames = useMemo(() => trackedEntry?.lineup ?? [], [trackedEntry]);
+  const trackedEntryStartsAtIso = useMemo(() => String(trackedEntry?.startsAt ?? "").trim(), [trackedEntry]);
+  const trackedEntryStartsAtMs = useMemo(() => Date.parse(trackedEntryStartsAtIso), [trackedEntryStartsAtIso]);
+  const trackedEntryLiveGameId = useMemo(() => {
+    const gameId = String(trackedEntry?.gameId ?? "").trim();
+    if (!gameId || gameId.startsWith("nba-daily-")) {
+      return "";
+    }
+    return gameId;
+  }, [trackedEntry]);
   const { rows: liveStatRows, loading: liveStatsLoading, error: liveStatsError } = useLivePlayerStats({
     enabled: Boolean(trackedEntry && (trackedEntry.status === "live" || trackedEntry.status === "pending")),
+    gameId: trackedEntryLiveGameId || undefined,
+    sinceIso: trackedEntryStartsAtIso || undefined,
+    leagueName: "NBA",
   });
   const livePointsByPlayer = useMemo(() => {
     const next = new Map<string, number>();
@@ -399,7 +415,19 @@ export function FantasyHome() {
     }
     for (const playerName of liveStatPlayerNames) {
       const rowsForPlayer = liveStatRows.filter(
-        (row) => isStartedFantasyGameStatus(row.game_status) && namesLikelyMatch(playerName, row.player_name)
+        (row) => {
+          if (!isStartedFantasyGameStatus(row.game_status)) {
+            return false;
+          }
+          if (!namesLikelyMatch(playerName, row.player_name)) {
+            return false;
+          }
+          const rowTs = Date.parse(String(row.source_updated_at ?? ""));
+          if (Number.isFinite(trackedEntryStartsAtMs) && Number.isFinite(rowTs) && rowTs < trackedEntryStartsAtMs) {
+            return false;
+          }
+          return true;
+        }
       );
       if (rowsForPlayer.length === 0) {
         continue;
@@ -427,7 +455,7 @@ export function FantasyHome() {
       }
     }
     return next;
-  }, [liveStatPlayerNames, liveStatRows]);
+  }, [liveStatPlayerNames, liveStatRows, trackedEntryStartsAtMs]);
   const liveTrackedEntryPoints = useMemo(() => {
     if (!trackedEntry) {
       return 0;
@@ -480,7 +508,7 @@ export function FantasyHome() {
   }, []);
 
   useEffect(() => {
-    if (!userId || !hasLiveEntry) {
+    if (!userId || !hasSyncableEntry) {
       return;
     }
     const interval = window.setInterval(() => {
@@ -491,7 +519,7 @@ export function FantasyHome() {
     return () => {
       window.clearInterval(interval);
     };
-  }, [hasLiveEntry, loadEntries, loadGames, loadSelectedGameDetails, userId]);
+  }, [hasSyncableEntry, loadEntries, loadGames, loadSelectedGameDetails, userId]);
 
   useEffect(() => {
     if (!userId || hasLiveEntry || nextPendingEntryStartMs === null) {
@@ -797,23 +825,12 @@ export function FantasyHome() {
           </p>
         ) : null}
 
-        {loadingGames ? (
-          <div className="mt-3 text-sm text-slate-600">Loading fantasy games...</div>
-        ) : games.length === 0 ? (
+        {games.length === 0 ? (
           <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
             No NBA games available for this date.
           </div>
         ) : null}
       </section>
-
-      <InlineSlotAdClient
-        slot="leaderboard-sidebar"
-        venueId={venueId}
-        pageKey="fantasy"
-        adType="inline"
-        displayTrigger="on-scroll"
-        placementKey="fantasy-inline"
-      />
 
       {trackedEntry ? (
         <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm">
@@ -1011,7 +1028,15 @@ export function FantasyHome() {
         </section>
       ) : null}
 
-      
+      <InlineSlotAdClient
+        slot="leaderboard-sidebar"
+        venueId={venueId}
+        pageKey="fantasy"
+        adType="inline"
+        displayTrigger="on-load"
+        placementKey="fantasy-inline"
+      />
+
     </div>
   );
 }

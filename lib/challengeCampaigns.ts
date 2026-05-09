@@ -1,7 +1,14 @@
 import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import type { ChallengeCampaign, ChallengeCampaignProgress, ChallengeGameType, CampaignRecurringType, ChallengeImageFitMode } from "@/types";
+import type {
+  ChallengeCampaign,
+  ChallengeCampaignProgress,
+  ChallengeCampaignWin,
+  ChallengeGameType,
+  CampaignRecurringType,
+  ChallengeImageFitMode,
+} from "@/types";
 
 type ChallengeCampaignRow = {
   id: string;
@@ -35,6 +42,13 @@ type ChallengeCampaignProgressRow = {
   updated_at: string;
 };
 
+type ChallengeCampaignRedemptionRow = {
+  challenge_id: string;
+  winner_user_id: string;
+  venue_id: string;
+  claimed_at: string;
+};
+
 const VALID_GAME_TYPES: ChallengeGameType[] = ["pickem", "fantasy", "trivia", "bingo"];
 const VALID_DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 const VALID_IMAGE_FITS: ChallengeImageFitMode[] = ["cover", "contain"];
@@ -43,7 +57,11 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function mapCampaignRow(row: ChallengeCampaignRow, winnerUsername?: string | null): ChallengeCampaign {
+function mapCampaignRow(
+  row: ChallengeCampaignRow,
+  winnerUsername?: string | null,
+  prizeClaimedAt?: string | null
+): ChallengeCampaign {
   const gameTypes = (row.game_types ?? [])
     .map((value) => String(value).trim().toLowerCase())
     .filter((value): value is ChallengeGameType => VALID_GAME_TYPES.includes(value as ChallengeGameType));
@@ -71,6 +89,7 @@ function mapCampaignRow(row: ChallengeCampaignRow, winnerUsername?: string | nul
     recurringType: row.recurring_type,
     winnerUserId: row.winner_user_id,
     winnerUsername: winnerUsername ?? null,
+    prizeClaimedAt: prizeClaimedAt ?? null,
     isActive: Boolean(row.is_active),
   };
 }
@@ -465,8 +484,149 @@ export async function getChallengeCampaignSnapshotForUser(params: {
 
   const progressRows = await listChallengeCampaignProgress({ venueId, userId });
   const progressByChallenge = new Map(progressRows.map((row) => [row.challengeId, row.pointsEarned]));
+  const winnerCampaignIds = campaigns
+    .filter((campaign) => campaign.winnerUserId && campaign.winnerUserId === userId)
+    .map((campaign) => campaign.id);
+  const claimedAtByChallengeId = new Map<string, string>();
+  if (winnerCampaignIds.length > 0) {
+    const { data: redemptionRows } = await supabaseAdmin!
+      .from("challenge_campaign_redemptions")
+      .select("challenge_id, winner_user_id, venue_id, claimed_at")
+      .eq("winner_user_id", userId)
+      .eq("venue_id", venueId)
+      .in("challenge_id", winnerCampaignIds)
+      .returns<ChallengeCampaignRedemptionRow[]>();
+    for (const row of redemptionRows ?? []) {
+      if (row.challenge_id) {
+        claimedAtByChallengeId.set(row.challenge_id, row.claimed_at);
+      }
+    }
+  }
+
   return campaigns.map((campaign) => ({
     ...campaign,
     progressPoints: progressByChallenge.get(campaign.id) ?? 0,
+    prizeClaimedAt: claimedAtByChallengeId.get(campaign.id) ?? null,
   }));
+}
+
+export async function listChallengeCampaignWinsForUser(params: {
+  userId: string;
+  venueId: string;
+}): Promise<ChallengeCampaignWin[]> {
+  assertConfigured();
+  const userId = String(params.userId ?? "").trim();
+  const venueId = String(params.venueId ?? "").trim();
+  if (!userId || !venueId) {
+    return [];
+  }
+
+  const campaigns = await listChallengeCampaigns({
+    venueId,
+    includeInactive: true,
+    includeResolved: true,
+  });
+  const wins = campaigns.filter((campaign) => campaign.winnerUserId === userId);
+  if (wins.length === 0) {
+    return [];
+  }
+
+  const { data: redemptionRows } = await supabaseAdmin!
+    .from("challenge_campaign_redemptions")
+    .select("challenge_id, winner_user_id, venue_id, claimed_at")
+    .eq("winner_user_id", userId)
+    .eq("venue_id", venueId)
+    .in(
+      "challenge_id",
+      wins.map((campaign) => campaign.id)
+    )
+    .returns<ChallengeCampaignRedemptionRow[]>();
+
+  const claimedAtByChallenge = new Map<string, string>();
+  for (const row of redemptionRows ?? []) {
+    claimedAtByChallenge.set(row.challenge_id, row.claimed_at);
+  }
+
+  return wins.map((campaign) => ({
+    challengeId: campaign.id,
+    venueId,
+    challengeName: campaign.name,
+    challengeRules: campaign.rules,
+    winnerUserId: userId,
+    winnerUsername: campaign.winnerUsername ?? null,
+    claimedAt: claimedAtByChallenge.get(campaign.id) ?? null,
+  }));
+}
+
+export async function claimChallengeCampaignPrize(params: {
+  userId: string;
+  venueId: string;
+  challengeId: string;
+}): Promise<{ claimed: boolean; claimedAt?: string | null; challengeName: string }> {
+  assertConfigured();
+  const userId = String(params.userId ?? "").trim();
+  const venueId = String(params.venueId ?? "").trim();
+  const challengeId = String(params.challengeId ?? "").trim();
+  if (!userId || !venueId || !challengeId) {
+    throw new Error("userId, venueId, and challengeId are required.");
+  }
+
+  const { data: campaign, error: campaignError } = await supabaseAdmin!
+    .from("challenge_campaigns")
+    .select("id, name, winner_user_id")
+    .eq("id", challengeId)
+    .maybeSingle<{ id: string; name: string; winner_user_id: string | null }>();
+  if (campaignError) {
+    throw new Error(campaignError.message ?? "Failed to verify challenge winner.");
+  }
+  if (!campaign?.id) {
+    throw new Error("Challenge not found.");
+  }
+  if (!campaign.winner_user_id || campaign.winner_user_id !== userId) {
+    throw new Error("Only the winner can claim this challenge prize.");
+  }
+
+  const { data: existingClaim, error: existingClaimError } = await supabaseAdmin!
+    .from("challenge_campaign_redemptions")
+    .select("claimed_at")
+    .eq("challenge_id", challengeId)
+    .eq("winner_user_id", userId)
+    .maybeSingle<{ claimed_at: string }>();
+  if (existingClaimError) {
+    throw new Error(existingClaimError.message ?? "Failed to verify challenge claim status.");
+  }
+  if (existingClaim?.claimed_at) {
+    return { claimed: false, claimedAt: existingClaim.claimed_at, challengeName: campaign.name };
+  }
+
+  const nowIso = new Date().toISOString();
+  const { data: claimedRow, error: claimError } = await supabaseAdmin!
+    .from("challenge_campaign_redemptions")
+    .insert({
+      challenge_id: challengeId,
+      winner_user_id: userId,
+      venue_id: venueId,
+      claimed_at: nowIso,
+    })
+    .select("claimed_at")
+    .maybeSingle<{ claimed_at: string }>();
+
+  if (claimError) {
+    if (claimError.code === "23505") {
+      const { data: duplicateClaim } = await supabaseAdmin!
+        .from("challenge_campaign_redemptions")
+        .select("claimed_at")
+        .eq("challenge_id", challengeId)
+        .eq("winner_user_id", userId)
+        .maybeSingle<{ claimed_at: string }>();
+      return { claimed: false, claimedAt: duplicateClaim?.claimed_at ?? nowIso, challengeName: campaign.name };
+    }
+    throw new Error(claimError.message ?? "Failed to claim challenge prize.");
+  }
+
+  return {
+    claimed: true,
+    claimedAt: claimedRow?.claimed_at ?? nowIso,
+    challengeName: campaign.name,
+  };
 }

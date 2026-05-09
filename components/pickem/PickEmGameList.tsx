@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { motion } from "framer-motion";
 import { getUserId, getVenueId } from "@/lib/storage";
+import { navigateBackToVenue } from "@/lib/venueGameTransition";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 
 type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl";
@@ -114,6 +117,11 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
   const [dailyPickCount, setDailyPickCount] = useState(0);
   const [dailyPickCountDelta, setDailyPickCountDelta] = useState(0);
   const [isCollectingAll, setIsCollectingAll] = useState(false);
+  const [flashingSportSlug, setFlashingSportSlug] = useState("");
+  const [popAnim, setPopAnim] = useState<{ count: number; shake: boolean; id: number } | null>(null);
+  const [limitPulse, setLimitPulse] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const popIdRef = useRef(0);
 
   useEffect(() => {
     setUserId(getUserId() ?? "");
@@ -131,6 +139,8 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
       }
     };
   }, []);
+
+  useEffect(() => { setIsMounted(true); }, []);
 
   useEffect(() => {
     const run = async () => {
@@ -386,15 +396,22 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
       }
       const displayedPickTeam = optimisticPickByGame[game.id] ?? game.userPickTeam;
       const isDeselect = displayedPickTeam === pickTeam;
+      const isSwitch = !!displayedPickTeam && !isDeselect;
       setSubmitMessage("");
-      if (!isDeselect && pickCount >= PICKEM_PICK_LIMIT) {
+      if (!isDeselect && !isSwitch && pickCount >= PICKEM_PICK_LIMIT) {
         setSubmitMessage(`Pick limit reached (${PICKEM_PICK_LIMIT}/${PICKEM_PICK_LIMIT}). Remove one pick to change your slate.`);
+        popIdRef.current += 1;
+        setPopAnim({ count: PICKEM_PICK_LIMIT, shake: true, id: popIdRef.current });
+        setLimitPulse(true);
+        window.setTimeout(() => setLimitPulse(false), 900);
         return;
       }
       if (isDeselect) {
         setDailyPickCountDelta((current) => current - 1);
       } else if (!displayedPickTeam) {
         setDailyPickCountDelta((current) => current + 1);
+        popIdRef.current += 1;
+        setPopAnim({ count: pickCount + 1, shake: false, id: popIdRef.current });
       }
       setGames((current) =>
         current.map((row) =>
@@ -595,18 +612,79 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
 
   return (
     <div className="tp-pickem-compact min-h-[100dvh] touch-pan-y space-y-3 sm:space-y-4">
+      <style>{`
+        @keyframes sport-pop {
+          0%   { transform: scale(1); }
+          35%  { transform: scale(1.14); box-shadow: 0 0 0 5px rgba(99,102,241,0.30); }
+          65%  { transform: scale(0.97); }
+          100% { transform: scale(1); }
+        }
+        .sport-pop { animation: sport-pop 0.45s cubic-bezier(0.34,1.56,0.64,1) both; }
+      `}</style>
       <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-3 shadow-sm sm:p-4">
         <h2 className="text-base font-semibold text-slate-900 sm:text-lg">Hightop Pick &apos;Em™</h2>
         <p className="mt-1 text-xs text-slate-700 sm:text-sm">
           Select winners by checking a team. Picks lock at scheduled start time and are final.
         </p>
-        <div className="mt-2 rounded-xl border-2 border-indigo-700 bg-gradient-to-r from-indigo-700 via-blue-700 to-cyan-700 px-3 py-2.5 text-white shadow-[0_6px_18px_rgba(37,99,235,0.35)]">
-          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-cyan-100 sm:text-[11px]">Pick Counter</p>
-          <div className="mt-1 flex items-end justify-between gap-3">
-            <p className="text-lg font-black leading-none sm:text-xl">{pickCount}<span className="ml-1 text-sm font-bold text-cyan-100 sm:text-base">/10</span></p>
-            <p className="text-[11px] font-semibold text-cyan-100 sm:text-xs">{picksRemaining} remaining</p>
+
+        <motion.div
+          animate={limitPulse ? { scale: [1, 1.06, 1] } : { scale: 1 }}
+          transition={{ duration: 0.35 }}
+          className={`mt-3 overflow-hidden rounded-xl border ${
+            pickCount >= PICKEM_PICK_LIMIT
+              ? "border-red-300 bg-red-50"
+              : "border-slate-200 bg-white"
+          } shadow-sm`}
+        >
+          {/* Label row */}
+          <div className={`flex items-center justify-between border-b px-3 py-1.5 ${
+            pickCount >= PICKEM_PICK_LIMIT ? "border-red-200 bg-red-100/60" : "border-slate-100 bg-slate-50"
+          }`}>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              Pick Tracker
+            </span>
+            <span className={`text-[10px] font-bold uppercase tracking-widest ${
+              pickCount >= PICKEM_PICK_LIMIT ? "text-red-500" : "text-slate-400"
+            }`}>
+              {pickCount >= PICKEM_PICK_LIMIT ? "Limit Reached" : "Daily Picks"}
+            </span>
           </div>
-        </div>
+
+          {/* Progress row */}
+          <div className="flex items-center gap-3 px-3 py-2.5">
+            {/* Pip track */}
+            <div className="flex flex-1 items-center gap-[3px]">
+              {Array.from({ length: PICKEM_PICK_LIMIT }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-2 flex-1 rounded-full transition-colors duration-200 ${
+                    i < pickCount
+                      ? pickCount >= PICKEM_PICK_LIMIT
+                        ? "bg-red-500"
+                        : "bg-emerald-500"
+                      : "bg-slate-200"
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Numeric readout */}
+            <motion.span
+              key={pickCount}
+              initial={{ scale: 1 }}
+              animate={{ scale: [1, 1.18, 1] }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className={`shrink-0 text-lg font-black tabular-nums leading-none ${
+                pickCount >= PICKEM_PICK_LIMIT ? "text-red-500" : "text-slate-900"
+              }`}
+            >
+              {pickCount}
+              <span className={`text-xs font-semibold ${
+                pickCount >= PICKEM_PICK_LIMIT ? "text-red-400" : "text-slate-400"
+              }`}>/10</span>
+            </motion.span>
+          </div>
+        </motion.div>
 
         {unclaimedWonGames.length > 0 ? (
           <div className="mt-3 rounded-xl border-2 border-emerald-500 bg-gradient-to-r from-emerald-600 to-teal-600 px-3 py-3 shadow-[0_6px_18px_rgba(5,150,105,0.35)]">
@@ -684,17 +762,19 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                         setSelectedSportSlug(item.slug);
                         setSubmitMessage("");
                         setErrorMessage("");
+                        setFlashingSportSlug(item.slug);
+                        setTimeout(() => setFlashingSportSlug(""), 500);
                       }
                     }}
-                    className={`tp-clean-button inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold sm:gap-2 sm:px-3 sm:py-2 sm:text-sm ${
+                    className={`tp-clean-button inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-bold sm:gap-2 sm:px-4 sm:py-2 sm:text-sm ${
                       isSelected
-                        ? "border-indigo-500 bg-indigo-100 text-indigo-900"
+                        ? "border-indigo-700 bg-indigo-600 text-white shadow-md shadow-indigo-300"
                         : isDisabled
-                        ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-500"
-                        : "border-slate-300 bg-white text-slate-800"
-                    }`}
+                        ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+                        : "border-slate-300 bg-white text-slate-700 hover:border-indigo-300 hover:bg-indigo-50"
+                    } ${flashingSportSlug === item.slug ? "sport-pop" : ""}`}
                   >
-                    <span aria-hidden="true" className="text-base sm:text-lg">{getSportIcon(item.slug)}</span>
+                    <span aria-label={item.label} className="text-3xl sm:text-4xl">{getSportIcon(item.slug)}</span>
                   </button>
                 );
               })
@@ -703,6 +783,24 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         </div>
 
       </section>
+
+      <div className="sticky top-2 z-30">
+        <button
+          type="button"
+          onClick={() => {
+            if (venueId) {
+              navigateBackToVenue({
+                venuePath: `/venue/${encodeURIComponent(venueId)}`,
+                fallbackNavigate: () => { window.location.href = `/venue/${encodeURIComponent(venueId)}`; },
+              });
+            }
+          }}
+          className="tp-clean-button inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90"
+        >
+          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">←</span>
+          Back to Venue
+        </button>
+      </div>
 
       {errorMessage ? (
         <div className="rounded-xl border border-rose-300 bg-rose-50 p-2.5 text-xs text-rose-700 sm:p-3 sm:text-sm">{errorMessage}</div>
@@ -727,15 +825,15 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           No scheduled games found for this date.
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {grouped.map(([league, leagueGames]) => (
-            <section key={league} className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-3 shadow-sm sm:p-4">
+            <section key={league} className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm sm:p-5">
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-700 sm:text-sm">{league}</h3>
                 <span className="text-[11px] font-medium text-slate-500">{leagueGames.length} games</span>
               </div>
 
-              <ul className="mt-3 space-y-3">
+              <ul className="mt-4 space-y-4">
                 {leagueGames.map((game) => {
                   const displayedPickTeam = optimisticPickByGame[game.id] ?? game.userPickTeam;
                   const baseDisabled = !sport.isClickable || !userId || !venueId;
@@ -746,72 +844,75 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                   const disableHomeSelection = baseDisabled || (pickLimitReached && !awaySelected && !homeSelected);
 
                   return (
-                    <li key={game.id} className="rounded-xl border border-slate-300 bg-white p-2.5 shadow-sm sm:p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="min-w-0 text-xs font-bold text-slate-900 break-words sm:text-sm">
-                          {game.awayTeam} vs {game.homeTeam}
-                        </p>
-                        <span className="rounded-full border border-slate-300 bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-800 sm:text-sm">
-                          {formatLocalStartTime(game.startsAt)}
-                        </span>
-                      </div>
-
-                      <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-2">
-                        <div className="grid grid-cols-[1fr_auto] items-center gap-2 border-b border-slate-200 py-1 text-xs text-slate-800">
-                          <span className="font-semibold">{game.awayTeam}</span>
-                          <span className="font-black tabular-nums">{game.awayScore ?? "-"}</span>
+                    <li key={game.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                      {/* Scoreboard — team name rows are the pick action */}
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 overflow-hidden">
+                        <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2">
+                          <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Tap to pick</span>
+                          <span className="text-sm font-semibold text-slate-700 sm:text-base">
+                            {formatLocalStartTime(game.startsAt)}
+                          </span>
                         </div>
-                        <div className="grid grid-cols-[1fr_auto] items-center gap-2 py-1 text-xs text-slate-800">
-                          <span className="font-semibold">{game.homeTeam}</span>
-                          <span className="font-black tabular-nums">{game.homeScore ?? "-"}</span>
+                        <div className="divide-y divide-slate-200">
+                          <button
+                            type="button"
+                            disabled={disableAwaySelection}
+                            onClick={() => {
+                              if (game.isLocked) {
+                                setSubmitMessage("This game is locked because it has already started.");
+                                return;
+                              }
+                              void submitPick(game, game.awayTeam);
+                            }}
+                            style={{ touchAction: "manipulation" }}
+                            className={`tp-clean-button w-full grid grid-cols-[auto_1fr_auto] items-center gap-3 px-3 py-3.5 text-left transition-all sm:py-4 disabled:opacity-40 ${
+                              awaySelected
+                                ? "bg-emerald-50"
+                                : "hover:bg-white"
+                            } ${pickPulseByGameId[game.id] === game.awayTeam ? "scale-[1.01] shadow-[inset_0_0_0_2px_rgba(34,197,94,0.4)]" : ""}`}
+                          >
+                            <span className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${awaySelected ? "border-emerald-500 bg-emerald-500" : "border-slate-300 bg-white"}`}>
+                              {awaySelected ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 text-white" aria-hidden="true">
+                                  <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                                </svg>
+                              ) : null}
+                            </span>
+                            <span className={`text-sm font-bold sm:text-base ${awaySelected ? "text-emerald-900" : "text-slate-900"}`}>{game.awayTeam}</span>
+                            <span className={`text-base font-black tabular-nums sm:text-lg ${awaySelected ? "text-emerald-900" : "text-slate-500"}`}>{game.awayScore ?? "–"}</span>
+                          </button>
+                          <button
+                            type="button"
+                            disabled={disableHomeSelection}
+                            onClick={() => {
+                              if (game.isLocked) {
+                                setSubmitMessage("This game is locked because it has already started.");
+                                return;
+                              }
+                              void submitPick(game, game.homeTeam);
+                            }}
+                            style={{ touchAction: "manipulation" }}
+                            className={`tp-clean-button w-full grid grid-cols-[auto_1fr_auto] items-center gap-3 px-3 py-3.5 text-left transition-all sm:py-4 disabled:opacity-40 ${
+                              homeSelected
+                                ? "bg-emerald-50"
+                                : "hover:bg-white"
+                            } ${pickPulseByGameId[game.id] === game.homeTeam ? "scale-[1.01] shadow-[inset_0_0_0_2px_rgba(34,197,94,0.4)]" : ""}`}
+                          >
+                            <span className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${homeSelected ? "border-emerald-500 bg-emerald-500" : "border-slate-300 bg-white"}`}>
+                              {homeSelected ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 text-white" aria-hidden="true">
+                                  <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                                </svg>
+                              ) : null}
+                            </span>
+                            <span className={`text-sm font-bold sm:text-base ${homeSelected ? "text-emerald-900" : "text-slate-900"}`}>{game.homeTeam}</span>
+                            <span className={`text-base font-black tabular-nums sm:text-lg ${homeSelected ? "text-emerald-900" : "text-slate-500"}`}>{game.homeScore ?? "–"}</span>
+                          </button>
                         </div>
-                      </div>
-
-                      <div className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2 sm:gap-2">
-                        <button
-                          type="button"
-                          disabled={disableAwaySelection}
-                          onClick={() => {
-                            if (game.isLocked) {
-                              setSubmitMessage("This game is locked because it has already started.");
-                              return;
-                            }
-                            void submitPick(game, game.awayTeam);
-                          }}
-                          className={`tp-clean-button relative flex min-w-0 items-center gap-1.5 rounded-lg border px-2 py-1.5 text-left text-xs font-semibold transition-all sm:gap-2 sm:px-2.5 sm:py-2 sm:text-sm ${
-                            awaySelected
-                              ? "border-emerald-400 bg-emerald-100 text-emerald-900 ring-2 ring-emerald-300"
-                              : "border-slate-300 bg-white text-slate-800"
-                          } ${pickPulseByGameId[game.id] === game.awayTeam ? "scale-[1.02] shadow-[0_0_0_4px_rgba(34,197,94,0.25)]" : ""}`}
-                          style={{ touchAction: "manipulation" }}
-                        >
-                          {awaySelected ? <span aria-hidden="true" className="pointer-events-none absolute right-2 top-1 text-2xl font-black leading-none text-red-600">✓</span> : null}
-                          <span className="min-w-0 break-words">{game.awayTeam}</span>
-                        </button>
-                        <button
-                          type="button"
-                          disabled={disableHomeSelection}
-                          onClick={() => {
-                            if (game.isLocked) {
-                              setSubmitMessage("This game is locked because it has already started.");
-                              return;
-                            }
-                            void submitPick(game, game.homeTeam);
-                          }}
-                          className={`tp-clean-button relative flex min-w-0 items-center gap-1.5 rounded-lg border px-2 py-1.5 text-left text-xs font-semibold transition-all sm:gap-2 sm:px-2.5 sm:py-2 sm:text-sm ${
-                            homeSelected
-                              ? "border-emerald-400 bg-emerald-100 text-emerald-900 ring-2 ring-emerald-300"
-                              : "border-slate-300 bg-white text-slate-800"
-                          } ${pickPulseByGameId[game.id] === game.homeTeam ? "scale-[1.02] shadow-[0_0_0_4px_rgba(34,197,94,0.25)]" : ""}`}
-                          style={{ touchAction: "manipulation" }}
-                        >
-                          {homeSelected ? <span aria-hidden="true" className="pointer-events-none absolute right-2 top-1 text-2xl font-black leading-none text-red-600">✓</span> : null}
-                          <span className="min-w-0 break-words">{game.homeTeam}</span>
-                        </button>
                       </div>
                       {displayedPickTeam ? (
-                        <p className="mt-1 text-[11px] font-black uppercase tracking-[0.08em] text-emerald-700">
-                          ✓ Pick counted
+                        <p className="mt-2 text-[11px] font-black uppercase tracking-[0.08em] text-emerald-600">
+                          Pick locked in
                         </p>
                       ) : null}
 
@@ -886,6 +987,58 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         displayTrigger="on-scroll"
         placementKey="pickem-inline"
       />
+
+      {isMounted && popAnim
+        ? createPortal(
+            <div className="pointer-events-none fixed inset-0 z-[7000] flex items-center justify-center">
+              <motion.span
+                key={popAnim.id}
+                className="select-none font-black leading-none"
+                style={{
+                  color: popAnim.count >= PICKEM_PICK_LIMIT ? "#ef4444" : "#22c55e",
+                  fontSize: "clamp(5rem, 22vw, 11rem)",
+                  textShadow:
+                    popAnim.count >= PICKEM_PICK_LIMIT
+                      ? "0 0 60px rgba(239,68,68,0.55), 0 0 120px rgba(239,68,68,0.3)"
+                      : "0 0 60px rgba(34,197,94,0.55), 0 0 120px rgba(34,197,94,0.3)",
+                }}
+                initial={{ scale: 0, y: 0, x: 0, rotate: 0, opacity: 0 }}
+                animate={
+                  popAnim.shake
+                    ? {
+                        scale:   [0, 1.65, 1.3, 1.3, 1.3, 1.3, 1.3, 0.9],
+                        x:       [0,    0, -30,  30, -22,  22,   0,   0],
+                        y:       [0,  -35, -35, -35, -35, -35, -35, 360],
+                        rotate:  [0,    0,   0,   0,   0,   0,   0,  18],
+                        opacity: [0,    1,   1,   1,   1,   1,   1,   0],
+                      }
+                    : {
+                        scale:   [0, 1.65, 1.25, 1.25, 0.9],
+                        y:       [0,  -35,  -35,  -35, 340],
+                        rotate:  [0,    0,    0,    0,  13],
+                        opacity: [0,    1,    1,    1,   0],
+                      }
+                }
+                transition={
+                  popAnim.shake
+                    ? {
+                        duration: 0.9,
+                        times: [0, 0.14, 0.27, 0.4, 0.53, 0.66, 0.76, 1],
+                        ease: ["easeOut", "easeOut", "easeOut", "easeOut", "easeOut", "easeOut", "easeIn"],
+                      }
+                    : {
+                        duration: 0.8,
+                        times: [0, 0.13, 0.23, 0.62, 1],
+                        ease: ["easeOut", "easeOut", "linear", "easeIn"],
+                      }
+                }
+              >
+                {popAnim.count}
+              </motion.span>
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   );
 }

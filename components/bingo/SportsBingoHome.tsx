@@ -914,7 +914,7 @@ export function SportsBingoHome() {
                 venueId={venueId}
                 pageKey="sports-bingo"
                 adType="inline"
-                displayTrigger="on-scroll"
+                displayTrigger="on-load"
                 placementKey="bingo-home-active-inline"
               />
             </div>
@@ -1012,7 +1012,7 @@ export function SportsBingoHome() {
                 venueId={venueId}
                 pageKey="sports-bingo"
                 adType="inline"
-                displayTrigger="on-scroll"
+                displayTrigger="on-load"
                 placementKey="bingo-home-final-inline"
               />
             </div>

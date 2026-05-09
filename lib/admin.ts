@@ -15,6 +15,7 @@ type TriviaQuestionRow = {
 type AdvertisementRow = {
   id: string;
   slot: AdSlot;
+  is_placeholder: boolean | null;
   page_key: AdPageKey | null;
   ad_type: AdType | null;
   display_trigger: AdDisplayTrigger | null;
@@ -121,6 +122,7 @@ function mapAdRow(row: AdvertisementRow): Advertisement {
   return {
     id: row.id,
     slot: row.slot,
+    isPlaceholder: Boolean(row.is_placeholder ?? false),
     pageKey: placementMeta.pageKey,
     adType: placementMeta.adType,
     displayTrigger: placementMeta.displayTrigger,
@@ -406,7 +408,7 @@ export async function listAdminAdvertisements(): Promise<Advertisement[]> {
   const { data, error } = await supabaseAdmin!
     .from("advertisements")
     .select(
-      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
+      "id, slot, is_placeholder, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .order("created_at", { ascending: false })
     .limit(100);
@@ -420,6 +422,7 @@ export async function listAdminAdvertisements(): Promise<Advertisement[]> {
 
 export async function createAdminAdvertisement(input: {
   slot: AdSlot;
+  isPlaceholder?: boolean;
   pageKey?: AdPageKey;
   adType?: AdType;
   displayTrigger?: AdDisplayTrigger;
@@ -530,6 +533,7 @@ export async function createAdminAdvertisement(input: {
     .from("advertisements")
     .insert({
       slot: input.slot,
+      is_placeholder: Boolean(input.isPlaceholder),
       page_key: placementMeta.pageKey,
       ad_type: placementMeta.adType,
       display_trigger: placementMeta.displayTrigger,
@@ -558,7 +562,7 @@ export async function createAdminAdvertisement(input: {
       end_date: input.endDate?.trim() || null,
     })
     .select(
-      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
+      "id, slot, is_placeholder, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .single<AdvertisementRow>();
 
@@ -572,6 +576,7 @@ export async function createAdminAdvertisement(input: {
 export async function updateAdminAdvertisement(input: {
   id: string;
   slot: AdSlot;
+  isPlaceholder?: boolean;
   pageKey?: AdPageKey;
   adType?: AdType;
   displayTrigger?: AdDisplayTrigger;
@@ -686,6 +691,7 @@ export async function updateAdminAdvertisement(input: {
     .from("advertisements")
     .update({
       slot: input.slot,
+      is_placeholder: Boolean(input.isPlaceholder),
       page_key: placementMeta.pageKey,
       ad_type: placementMeta.adType,
       display_trigger: placementMeta.displayTrigger,
@@ -715,7 +721,7 @@ export async function updateAdminAdvertisement(input: {
     })
     .eq("id", id)
     .select(
-      "id, slot, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
+      "id, slot, is_placeholder, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
     )
     .single<AdvertisementRow>();
 
