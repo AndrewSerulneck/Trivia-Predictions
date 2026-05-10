@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import type { FantasyEntry, FantasyGame, FantasyLeaderboardEntry, FantasyPlayerPoolItem } from "@/lib/fantasy";
+import type { FantasyLineupPlayer } from "@/lib/fantasy";
 
 type GamesPayload = {
   ok: boolean;
@@ -51,7 +52,10 @@ function parseRealtimeLineup(raw: unknown): string[] {
   const seen = new Set<string>();
   const lineup: string[] = [];
   for (const item of raw) {
-    const name = String(item ?? "").trim();
+    const name =
+      item && typeof item === "object" && !Array.isArray(item)
+        ? String((item as Record<string, unknown>).player_name ?? (item as Record<string, unknown>).playerName ?? "").trim()
+        : String(item ?? "").trim();
     const key = normalizePlayerKey(name);
     if (!name || !key || seen.has(key)) {
       continue;
@@ -60,6 +64,28 @@ function parseRealtimeLineup(raw: unknown): string[] {
     lineup.push(name);
   }
   return lineup.slice(0, 5);
+}
+
+function parseRealtimeLineupPlayers(raw: unknown): FantasyLineupPlayer[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  const seen = new Set<number>();
+  const players: FantasyLineupPlayer[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      continue;
+    }
+    const row = item as Record<string, unknown>;
+    const playerId = Number.parseInt(String(row.player_id ?? row.playerId ?? ""), 10);
+    const playerName = String(row.player_name ?? row.playerName ?? "").trim();
+    if (!Number.isFinite(playerId) || playerId <= 0 || !playerName || seen.has(playerId)) {
+      continue;
+    }
+    seen.add(playerId);
+    players.push({ playerId, playerName });
+  }
+  return players;
 }
 
 function parseRealtimeScoreBreakdown(raw: unknown): Record<string, number> {
@@ -91,6 +117,8 @@ function mapRealtimeEntry(row: FantasyEntryRealtimeRow): FantasyEntry | null {
   const pointsRaw = typeof row.points === "number" ? row.points : Number.parseFloat(String(row.points ?? "0"));
   const rewardRaw =
     typeof row.reward_points === "number" ? row.reward_points : Number.parseInt(String(row.reward_points ?? "0"), 10);
+  const lineupPlayers = parseRealtimeLineupPlayers(row.lineup);
+  const lineupNames = lineupPlayers.length > 0 ? lineupPlayers.map((player) => player.playerName) : parseRealtimeLineup(row.lineup);
   return {
     id,
     userId,
@@ -101,7 +129,8 @@ function mapRealtimeEntry(row: FantasyEntryRealtimeRow): FantasyEntry | null {
     homeTeam: String(row.home_team ?? "").trim(),
     awayTeam: String(row.away_team ?? "").trim(),
     startsAt,
-    lineup: parseRealtimeLineup(row.lineup),
+    lineup: lineupNames,
+    lineupPlayers,
     status,
     points: Number((Number.isFinite(pointsRaw) ? pointsRaw : 0).toFixed(2)),
     scoreBreakdown: parseRealtimeScoreBreakdown(row.score_breakdown),
@@ -196,6 +225,39 @@ function normalizePlayerKey(value: string): string {
     .trim();
 }
 
+function getScoreFromBreakdownByName(
+  scoreBreakdown: Record<string, number>,
+  playerName: string
+): number {
+  const exact = scoreBreakdown[playerName];
+  if (typeof exact === "number" && Number.isFinite(exact)) {
+    return exact;
+  }
+  const targetKey = normalizePlayerKey(playerName);
+  for (const [key, raw] of Object.entries(scoreBreakdown)) {
+    if (normalizePlayerKey(key) !== targetKey) {
+      continue;
+    }
+    const parsed = Number(raw ?? 0);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  return 0;
+}
+
+function getScoreFromBreakdown(
+  scoreBreakdown: Record<string, number>,
+  player: { playerId: number; playerName: string }
+): number {
+  const idKey = String(player.playerId);
+  const byId = scoreBreakdown[idKey];
+  if (typeof byId === "number" && Number.isFinite(byId)) {
+    return byId;
+  }
+  return getScoreFromBreakdownByName(scoreBreakdown, player.playerName);
+}
+
 function getLocalWeekStartMs(date: Date): number {
   const next = new Date(date);
   next.setHours(0, 0, 0, 0);
@@ -230,7 +292,7 @@ export function FantasyHome() {
   const [claimingEntryId, setClaimingEntryId] = useState("");
   const [isCollectingAllFantasy, setIsCollectingAllFantasy] = useState(false);
   const [hasLocalLineupDraft, setHasLocalLineupDraft] = useState(false);
-  const [highlightedPlayerKeys, setHighlightedPlayerKeys] = useState<string[]>([]);
+  const [highlightedPlayerIds, setHighlightedPlayerIds] = useState<string[]>([]);
   const fantasyKickoffRefreshTimerRef = useRef<number | null>(null);
   const fantasyLineupAutosaveTimerRef = useRef<number | null>(null);
   const fantasyRealtimeFallbackTimerRef = useRef<number | null>(null);
@@ -301,18 +363,18 @@ export function FantasyHome() {
     }
   }, [userId]);
 
-  const markPlayersAsHot = useCallback((playerNames: string[]) => {
-    const keys = Array.from(new Set(playerNames.map((name) => normalizePlayerKey(name)).filter(Boolean)));
+  const markPlayersAsHot = useCallback((playerIds: Array<number | string>) => {
+    const keys = Array.from(new Set(playerIds.map((id) => String(id).trim()).filter(Boolean)));
     if (keys.length === 0) {
       return;
     }
-    setHighlightedPlayerKeys(keys);
+    setHighlightedPlayerIds(keys);
     if (fantasyHighlightResetTimerRef.current) {
       window.clearTimeout(fantasyHighlightResetTimerRef.current);
     }
     fantasyHighlightResetTimerRef.current = window.setTimeout(() => {
       fantasyHighlightResetTimerRef.current = null;
-      setHighlightedPlayerKeys([]);
+      setHighlightedPlayerIds([]);
     }, 900);
   }, []);
 
@@ -492,10 +554,14 @@ export function FantasyHome() {
     if (!trackedEntry || trackedEntryPreTipoff) {
       return next;
     }
-    for (const playerName of trackedEntry.lineup) {
-      const points = Number(trackedEntry.scoreBreakdown[playerName] ?? 0);
+    const lineupPlayers =
+      trackedEntry.lineupPlayers.length > 0
+        ? trackedEntry.lineupPlayers
+        : trackedEntry.lineup.map((playerName, index) => ({ playerId: -(index + 1), playerName }));
+    for (const player of lineupPlayers) {
+      const points = getScoreFromBreakdown(trackedEntry.scoreBreakdown, player);
       if (Number.isFinite(points)) {
-        next.set(playerName, Number(points.toFixed(2)));
+        next.set(String(player.playerId), Number(points.toFixed(2)));
       }
     }
     return next;
@@ -508,15 +574,19 @@ export function FantasyHome() {
       return 0;
     }
     const requireLiveRows = trackedEntry.status === "pending" || trackedEntry.status === "live";
-    const total = trackedEntry.lineup.reduce((sum, playerName) => {
-      const points = livePointsByPlayer.get(playerName);
+    const lineupPlayers =
+      trackedEntry.lineupPlayers.length > 0
+        ? trackedEntry.lineupPlayers
+        : trackedEntry.lineup.map((playerName, index) => ({ playerId: -(index + 1), playerName }));
+    const total = lineupPlayers.reduce((sum, player) => {
+      const points = livePointsByPlayer.get(String(player.playerId));
       if (typeof points === "number" && Number.isFinite(points)) {
         return sum + points;
       }
       if (requireLiveRows) {
         return sum;
       }
-      return sum + Number(trackedEntry.scoreBreakdown[playerName] ?? 0);
+      return sum + getScoreFromBreakdown(trackedEntry.scoreBreakdown, player);
     }, 0);
     if (!Number.isFinite(total)) {
       return requireLiveRows ? 0 : Number(trackedEntry.points ?? 0);
@@ -581,6 +651,7 @@ export function FantasyHome() {
         "postgres_changes",
         { event: "*", schema: "public", table: "fantasy_entries", filter: `user_id=eq.${userId}` },
         (payload) => {
+          console.log("[FantasyRealtime] fantasy_entries payload", payload);
           if (!active) {
             return;
           }
@@ -605,11 +676,17 @@ export function FantasyHome() {
             if (existingIndex >= 0) {
               const previousEntry = next[existingIndex];
               if (previousEntry) {
-                const changedPlayers = nextEntry.lineup.filter((playerName) => {
-                  const before = Number(previousEntry.scoreBreakdown[playerName] ?? 0);
-                  const after = Number(nextEntry.scoreBreakdown[playerName] ?? 0);
+                const nextLineupPlayers =
+                  nextEntry.lineupPlayers.length > 0
+                    ? nextEntry.lineupPlayers
+                    : nextEntry.lineup.map((playerName, index) => ({ playerId: -(index + 1), playerName }));
+                const changedPlayers = nextLineupPlayers
+                  .filter((player) => {
+                  const before = getScoreFromBreakdown(previousEntry.scoreBreakdown, player);
+                  const after = getScoreFromBreakdown(nextEntry.scoreBreakdown, player);
                   return Math.abs(after - before) >= 0.01;
-                });
+                })
+                  .map((player) => player.playerId);
                 if (changedPlayers.length > 0) {
                   window.requestAnimationFrame(() => {
                     markPlayersAsHot(changedPlayers);
@@ -1014,19 +1091,23 @@ export function FantasyHome() {
                   <p className="text-sm font-black text-slate-900">{liveTrackedEntryPoints.toFixed(2)} pts</p>
                 </div>
                 <ul className="mt-2 space-y-1">
-                  {trackedEntry.lineup.map((playerName) => {
-                    const livePoints = livePointsByPlayer.get(playerName);
+                  {(trackedEntry.lineupPlayers.length > 0
+                    ? trackedEntry.lineupPlayers
+                    : trackedEntry.lineup.map((playerName, index) => ({ playerId: -(index + 1), playerName })).map((player) => player)
+                  ).map((player) => {
+                    const playerName = player.playerName;
+                    const livePoints = livePointsByPlayer.get(String(player.playerId));
                     const requireLiveRows = trackedEntry.status === "pending" || trackedEntry.status === "live";
                     const playerPoints =
                       typeof livePoints === "number"
                         ? livePoints
                         : requireLiveRows
                         ? 0
-                        : Number(trackedEntry.scoreBreakdown[playerName] ?? 0);
-                    const isHot = highlightedPlayerKeys.includes(normalizePlayerKey(playerName));
+                        : getScoreFromBreakdown(trackedEntry.scoreBreakdown, player);
+                    const isHot = highlightedPlayerIds.includes(String(player.playerId));
                     return (
                       <li
-                        key={`${trackedEntry.id}-${playerName}`}
+                        key={`${trackedEntry.id}-${player.playerId}`}
                         className={`flex items-center justify-between gap-2 text-xs transition-all duration-300 ${
                           isHot ? "scale-[1.03] text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.95)]" : "text-slate-700"
                         }`}

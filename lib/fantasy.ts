@@ -140,7 +140,7 @@ export type FantasyPlayerPoolItem = {
   projectedLine: number | null;
 };
 
-type FantasyLineupPlayer = {
+export type FantasyLineupPlayer = {
   playerId: number;
   playerName: string;
 };
@@ -156,6 +156,7 @@ export type FantasyEntry = {
   awayTeam: string;
   startsAt: string;
   lineup: string[];
+  lineupPlayers: FantasyLineupPlayer[];
   status: FantasyEntryStatus;
   points: number;
   scoreBreakdown: Record<string, number>;
@@ -535,6 +536,7 @@ function zeroBreakdownForLineup(lineup: string[]): Record<string, number> {
 }
 
 function mapFantasyEntryRow(row: FantasyEntryRow): FantasyEntry {
+  const lineupPlayers = parseLineupPlayers(row.lineup);
   return {
     id: row.id,
     userId: row.user_id,
@@ -545,7 +547,8 @@ function mapFantasyEntryRow(row: FantasyEntryRow): FantasyEntry {
     homeTeam: row.home_team,
     awayTeam: row.away_team,
     startsAt: row.starts_at,
-    lineup: parseLineup(row.lineup),
+    lineup: lineupPlayers.map((player) => player.playerName),
+    lineupPlayers,
     status: row.status,
     points: Number(Number(row.points ?? 0).toFixed(2)),
     scoreBreakdown: parseScoreBreakdown(row.score_breakdown),

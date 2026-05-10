@@ -88,6 +88,20 @@ function parseRows(json: unknown): Record<string, unknown>[] {
   return response.map((row) => asRecord(row));
 }
 
+function buildPlayerName(player: Record<string, unknown>, playerId: number): string {
+  const direct = String(getPath(player, ["player", "name"]) ?? "").trim();
+  if (direct) {
+    return direct;
+  }
+  const first = String(getPath(player, ["player", "firstname"]) ?? getPath(player, ["player", "first_name"]) ?? "").trim();
+  const last = String(getPath(player, ["player", "lastname"]) ?? getPath(player, ["player", "last_name"]) ?? "").trim();
+  const combined = `${first} ${last}`.trim();
+  if (combined) {
+    return combined;
+  }
+  return `Player ${Math.round(playerId)}`;
+}
+
 function toFantasyPoints(pts: number, reb: number, ast: number, stl: number, blk: number, turnovers: number): number {
   const total = pts + reb * 1.2 + ast * 1.5 + stl * 3 + blk * 3 - turnovers;
   return Number(Math.max(0, total).toFixed(2));
@@ -246,7 +260,7 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
       if (!Number.isFinite(playerId) || playerId <= 0) {
         continue;
       }
-      const playerName = String(getPath(player, ["player", "name"]) ?? "").trim();
+      const playerName = buildPlayerName(player, playerId);
       const teamId = parseNumber(getPath(player, ["team", "id"])) || null;
       const teamName = String(getPath(player, ["team", "name"]) ?? "").trim();
 
