@@ -40,9 +40,15 @@ async function triggerLiveStatsSyncFromCron(): Promise<LiveStatsSyncResult> {
     return { ok: true, skipped: true };
   }
 
-  const burst = Math.max(1, Math.min(8, readPositiveIntEnv("FANTASY_LIVE_SYNC_BURST", 4)));
-  const intervalMs = Math.max(1000, Math.min(60000, readPositiveIntEnv("FANTASY_LIVE_SYNC_INTERVAL_MS", 15000)));
-  const endpoint = `${projectUrl.replace(/\/+$/, "")}/functions/v1/sync-live-player-stats?burst=${burst}&intervalMs=${intervalMs}`;
+  const pollMs = Math.max(500, Math.min(60000, readPositiveIntEnv("FANTASY_LIVE_SYNC_POLL_MS", 2500)));
+  const loopMs = Math.max(2500, Math.min(300000, readPositiveIntEnv("FANTASY_LIVE_SYNC_LOOP_MS", 55000)));
+  const finalReplayEveryCycle = Math.max(
+    0,
+    Math.min(200, readPositiveIntEnv("FANTASY_LIVE_SYNC_FINAL_REPLAY_EVERY_CYCLE", 6))
+  );
+  const endpoint = `${
+    projectUrl.replace(/\/+$/, "")
+  }/functions/v1/sync-live-player-stats?pollMs=${pollMs}&loopMs=${loopMs}&finalReplayEveryCycle=${finalReplayEveryCycle}`;
 
   try {
     const response = await fetch(endpoint, {

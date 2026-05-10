@@ -82,8 +82,10 @@ type CacheEntry<T> = {
 
 const apiSportsGamesCache = new Map<string, CacheEntry<ApiSportsNbaGame[]>>();
 const apiSportsPlayerStatsCache = new Map<string, CacheEntry<ApiSportsNbaPlayerStat[]>>();
+const apiSportsPlayerIdCache = new Map<string, CacheEntry<number>>();
 const APISPORTS_GAMES_TTL_MS = 15_000;
 const APISPORTS_PLAYER_STATS_TTL_MS = 10_000;
+const APISPORTS_PLAYER_ID_TTL_MS = 12 * 60 * 60 * 1000;
 
 type FantasyEntryRow = {
   id: string;
@@ -108,6 +110,7 @@ type FantasyEntryRow = {
 };
 
 type LivePlayerStatRow = {
+  player_id?: number;
   game_id: string;
   player_name: string;
   team_name: string;
@@ -131,9 +134,15 @@ export type FantasyGame = {
 };
 
 export type FantasyPlayerPoolItem = {
+  playerId: number | null;
   playerName: string;
   coverage: number;
   projectedLine: number | null;
+};
+
+type FantasyLineupPlayer = {
+  playerId: number;
+  playerName: string;
 };
 
 export type FantasyEntry = {
@@ -454,7 +463,10 @@ function parseLineup(raw: unknown): string[] {
   const lineup: string[] = [];
 
   for (const item of raw) {
-    const name = String(item ?? "").trim();
+    const name =
+      item && typeof item === "object" && !Array.isArray(item)
+        ? String((item as Record<string, unknown>).player_name ?? (item as Record<string, unknown>).playerName ?? "").trim()
+        : String(item ?? "").trim();
     if (!name) {
       continue;
     }
@@ -467,6 +479,34 @@ function parseLineup(raw: unknown): string[] {
   }
 
   return lineup.slice(0, FANTASY_LINEUP_SIZE);
+}
+
+function parseLineupPlayers(raw: unknown): FantasyLineupPlayer[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
+  const seen = new Set<number>();
+  const players: FantasyLineupPlayer[] = [];
+
+  for (const item of raw) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      continue;
+    }
+    const row = item as Record<string, unknown>;
+    const playerIdRaw = Number.parseInt(String(row.player_id ?? row.playerId ?? ""), 10);
+    const playerName = String(row.player_name ?? row.playerName ?? "").trim();
+    if (!Number.isFinite(playerIdRaw) || playerIdRaw <= 0 || !playerName) {
+      continue;
+    }
+    if (seen.has(playerIdRaw)) {
+      continue;
+    }
+    seen.add(playerIdRaw);
+    players.push({ playerId: playerIdRaw, playerName });
+  }
+
+  return players.slice(0, FANTASY_LINEUP_SIZE);
 }
 
 function parseScoreBreakdown(raw: unknown): Record<string, number> {
@@ -700,6 +740,7 @@ function toFantasyPlayerPool(playersByKey: Map<string, MutableFantasyPoolPlayer>
       const total = item.lines.reduce((sum, value) => sum + value, 0);
       const projectedLine = item.lines.length > 0 ? Number((total / item.lines.length).toFixed(1)) : null;
       return {
+        playerId: null,
         playerName: item.playerName,
         coverage: item.markets.size,
         projectedLine,
@@ -715,6 +756,128 @@ function toFantasyPlayerPool(playersByKey: Map<string, MutableFantasyPoolPlayer>
       return left.playerName.localeCompare(right.playerName);
     })
     .slice(0, FANTASY_PLAYER_POOL_LIMIT);
+}
+
+function extractApiSportsPlayerId(row: Record<string, unknown>): number | null {
+  const candidates = [
+    row.id,
+    getPath(row, ["player", "id"]),
+    getPath(row, ["player", "player_id"]),
+  ];
+  for (const candidate of candidates) {
+    const parsed = Number.parseInt(String(candidate ?? ""), 10);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return parsed;
+    }
+  }
+  return null;
+}
+
+function extractApiSportsDirectoryPlayerName(row: Record<string, unknown>): string {
+  const direct = String(row.name ?? getPath(row, ["player", "name"]) ?? "").trim();
+  if (direct) {
+    return direct;
+  }
+  const first = String(
+    getPath(row, ["firstname"]) ?? getPath(row, ["player", "firstname"]) ?? getPath(row, ["player", "first_name"]) ?? ""
+  ).trim();
+  const last = String(
+    getPath(row, ["lastname"]) ?? getPath(row, ["player", "lastname"]) ?? getPath(row, ["player", "last_name"]) ?? ""
+  ).trim();
+  return `${first} ${last}`.trim();
+}
+
+async function resolvePlayerIdByNameFromApiSports(playerName: string): Promise<number | null> {
+  if (!isApiSportsConfigured()) {
+    return null;
+  }
+  const key = normalizeNameKey(playerName);
+  if (!key) {
+    return null;
+  }
+
+  const cached = apiSportsPlayerIdCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
+  const query = encodeURIComponent(playerName);
+  const searchPaths = [
+    `/players?search=${query}`,
+    `/players?name=${query}`,
+  ];
+
+  for (const baseUrl of getApiSportsBaseCandidates()) {
+    for (const path of searchPaths) {
+      const result = await apiSportsGet(baseUrl, path, APISPORTS_API_KEY);
+      if (!result.ok) {
+        continue;
+      }
+      const rows = parseApiSportsResponseRows(result.json);
+      for (const rowUnknown of rows) {
+        const row = asRecord(rowUnknown);
+        const id = extractApiSportsPlayerId(row);
+        const resolvedName = extractApiSportsDirectoryPlayerName(row);
+        if (!id || !resolvedName) {
+          continue;
+        }
+        if (normalizeNameKey(resolvedName) === key) {
+          apiSportsPlayerIdCache.set(key, { value: id, expiresAt: Date.now() + APISPORTS_PLAYER_ID_TTL_MS });
+          return id;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+async function attachPlayerIdsToPool(pool: FantasyPlayerPoolItem[]): Promise<FantasyPlayerPoolItem[]> {
+  if (pool.length === 0) {
+    return pool;
+  }
+
+  const liveIdByName = new Map<string, number>();
+  if (supabaseAdmin) {
+    const sinceIso = new Date(Date.now() - FANTASY_LIVE_STATS_LOOKBACK_MS).toISOString();
+    const { data: liveRows } = await supabaseAdmin
+      .from("live_player_stats")
+      .select("player_id, player_name, source_updated_at")
+      .eq("league_name", "NBA")
+      .gte("source_updated_at", sinceIso)
+      .order("source_updated_at", { ascending: false })
+      .limit(5000);
+
+    for (const raw of (liveRows as Array<Record<string, unknown>> | null) ?? []) {
+      const name = String(raw.player_name ?? "").trim();
+      const id = Number.parseInt(String(raw.player_id ?? ""), 10);
+      const key = normalizeNameKey(name);
+      if (!key || !Number.isFinite(id) || id <= 0 || liveIdByName.has(key)) {
+        continue;
+      }
+      liveIdByName.set(key, id);
+    }
+  }
+
+  const nextPool = [...pool];
+  for (let i = 0; i < nextPool.length; i += 1) {
+    const item = nextPool[i];
+    if (!item) {
+      continue;
+    }
+    const key = normalizeNameKey(item.playerName);
+    if (!key) {
+      continue;
+    }
+    const fromLive = liveIdByName.get(key) ?? null;
+    const resolvedId = fromLive ?? (await resolvePlayerIdByNameFromApiSports(item.playerName));
+    nextPool[i] = {
+      ...item,
+      playerId: resolvedId,
+    };
+  }
+
+  return nextPool;
 }
 
 async function loadFantasyPlayerPoolFromGameIds(params: { gameIds: string[]; sportKey?: string }): Promise<FantasyPlayerPoolItem[]> {
@@ -748,7 +911,8 @@ async function loadFantasyPlayerPoolFromGameIds(params: { gameIds: string[]; spo
     }
   }
 
-  return toFantasyPlayerPool(playersByKey);
+  const pool = toFantasyPlayerPool(playersByKey);
+  return attachPlayerIdsToPool(pool);
 }
 
 export async function getFantasyPlayerPoolForDate(params?: {
@@ -771,6 +935,7 @@ export async function getFantasyPlayerPoolForGame(params: {
   sportKey?: string;
   date?: string;
   tzOffsetMinutes?: number | string;
+  includeStartedGames?: boolean;
 }): Promise<FantasyPlayerPoolItem[]> {
   const gameId = String(params.gameId ?? "").trim();
   const sportKey = String(params.sportKey ?? FANTASY_SPORT_KEY).trim() || FANTASY_SPORT_KEY;
@@ -783,7 +948,7 @@ export async function getFantasyPlayerPoolForGame(params: {
     return getFantasyPlayerPoolForDate({
       date: params.date ?? dailyDate,
       tzOffsetMinutes: params.tzOffsetMinutes,
-      includeStartedGames: false,
+      includeStartedGames: params.includeStartedGames === true,
     });
   }
 
@@ -874,6 +1039,32 @@ function validateLineup(lineup: unknown): string[] {
   return parsed;
 }
 
+function buildStoredLineupWithIds(lineup: string[], playerPool: FantasyPlayerPoolItem[]): Array<{ player_id: number; player_name: string }> {
+  const poolByKey = new Map<string, FantasyPlayerPoolItem>();
+  for (const item of playerPool) {
+    const key = normalizeNameKey(item.playerName);
+    if (!key || poolByKey.has(key)) {
+      continue;
+    }
+    poolByKey.set(key, item);
+  }
+
+  return lineup.map((playerName) => {
+    const key = normalizeNameKey(playerName);
+    const item = key ? poolByKey.get(key) : null;
+    const playerId = Number(item?.playerId ?? 0);
+    if (!Number.isFinite(playerId) || playerId <= 0) {
+      throw new Error(
+        `Could not resolve a stable player_id for \"${playerName}\". Please refresh player pool and try again.`
+      );
+    }
+    return {
+      player_id: Math.trunc(playerId),
+      player_name: playerName,
+    };
+  });
+}
+
 export async function submitFantasyEntry(params: {
   userId: string;
   venueId: string;
@@ -951,6 +1142,7 @@ export async function submitFantasyEntry(params: {
       throw new Error(`"${playerName}" is not in the available player pool for this slate.`);
     }
   }
+  const storedLineup = buildStoredLineupWithIds(lineup, playerPool);
 
   await assertFantasyEntryCadenceAvailable({
     userId,
@@ -968,7 +1160,7 @@ export async function submitFantasyEntry(params: {
     home_team: entryHomeTeam,
     away_team: entryAwayTeam,
     starts_at: entryStartsAt,
-    lineup,
+    lineup: storedLineup,
     status: "pending" as const,
     points: 0,
     score_breakdown: {},
@@ -1028,34 +1220,27 @@ export async function updateFantasyEntryLineup(params: {
   if (existingError || !existingRow) {
     throw new Error("Fantasy entry not found for this slate.");
   }
-  if (existingRow.status === "final" || existingRow.status === "canceled") {
+  // TODO: RESTORE ROSTER LOCK
+  if (existingRow.status === "canceled") {
     throw new Error("This lineup can no longer be changed because games have already started.");
   }
 
   const dailyDate = parseFantasyDailyGameId(gameId);
   const playerPool = dailyDate
-    ? await getFantasyPlayerPoolForDate({ date: dailyDate, tzOffsetMinutes, includeStartedGames: false })
-    : await getFantasyPlayerPoolForGame({ gameId, sportKey: existingRow.sport_key, tzOffsetMinutes });
+    ? await getFantasyPlayerPoolForDate({ date: dailyDate, tzOffsetMinutes, includeStartedGames: true })
+    : await getFantasyPlayerPoolForGame({ gameId, sportKey: existingRow.sport_key, tzOffsetMinutes, includeStartedGames: true });
   const poolKeys = new Set(playerPool.map((item) => normalizeNameKey(item.playerName)).filter(Boolean));
-  if (poolKeys.size === 0) {
-    throw new Error("This lineup can no longer be changed because games have already started.");
-  }
-
-  const existingLineup = parseLineup(existingRow.lineup);
-  const existingStillEditable = existingLineup.every((playerName) => poolKeys.has(normalizeNameKey(playerName)));
-  if (!existingStillEditable) {
-    throw new Error("This lineup can no longer be changed because one or more selected players already started.");
-  }
 
   for (const playerName of lineup) {
     if (!poolKeys.has(normalizeNameKey(playerName))) {
       throw new Error(`"${playerName}" is not in the available player pool for this slate.`);
     }
   }
+  const storedLineup = buildStoredLineupWithIds(lineup, playerPool);
 
   const { data, error } = await supabaseAdmin!
     .from("fantasy_entries")
-    .update({ lineup, score_breakdown: {}, points: 0, stats_last_source_updated_at: null })
+    .update({ lineup: storedLineup, score_breakdown: {}, points: 0, stats_last_source_updated_at: null })
     .eq("id", existingRow.id)
     .select(
       "id, user_id, venue_id, sport_key, game_id, game_label, home_team, away_team, starts_at, lineup, status, points, score_breakdown, reward_points, reward_claimed_at, stats_last_source_updated_at, settled_at, created_at, updated_at"
@@ -1065,6 +1250,10 @@ export async function updateFantasyEntryLineup(params: {
   if (error || !data) {
     throw new Error(error?.message ?? "Failed to update fantasy lineup.");
   }
+
+  // TODO: RESTORE ROSTER LOCK
+  // Testing mode: force immediate recompute after live lineup swaps.
+  await refreshFantasyProgress({ userId, limit: 200 });
 
   return mapFantasyEntryRow(data);
 }
@@ -1180,7 +1369,7 @@ async function loadRecentLivePlayerStatsRows(): Promise<LivePlayerStatRow[]> {
   const sinceIso = new Date(Date.now() - FANTASY_LIVE_STATS_LOOKBACK_MS).toISOString();
   const { data, error } = await supabaseAdmin
     .from("live_player_stats")
-    .select("game_id, player_name, team_name, game_status, total_fantasy_points, source_updated_at")
+    .select("player_id, game_id, player_name, team_name, game_status, total_fantasy_points, source_updated_at")
     .eq("league_name", "NBA")
     .gte("source_updated_at", sinceIso)
     .order("source_updated_at", { ascending: false })
@@ -1701,7 +1890,9 @@ async function fetchApiSportsStatsForDailyEntry(
   });
   const startedGames = slateRelevantGames.filter((game) => isApiSportsGameStarted(game));
   const anyInProgressGame = startedGames.some((game) => isApiSportsGameInProgress(game));
-  const allGamesFinal = startedGames.length > 0 && startedGames.every((game) => isApiSportsGameFinal(game));
+  // Daily slate is only final when every relevant game for the slate is final.
+  // Using startedGames here can finalize too early if later games haven't started yet.
+  const allGamesFinal = slateRelevantGames.length > 0 && slateRelevantGames.every((game) => isApiSportsGameFinal(game));
 
   if (startedGames.length === 0) {
     const status: FantasyEntryStatus = Number.isFinite(startsAtMs) && nowMs >= startsAtMs ? "live" : "pending";
@@ -1888,8 +2079,9 @@ export async function refreshFantasyProgress(params?: {
       };
     }
 
-    // Safety net: stale entries should never remain pending/live forever.
-    if (isStale && next.status !== "final") {
+    // Safety net: stale single-game entries should never remain pending/live forever.
+    // Do not auto-finalize daily slates here; daily slates can span many game start times.
+    if (!parseFantasyDailyGameId(entry.game_id) && isStale && next.status !== "final") {
       next = {
         status: "final",
         totalPoints: Number(entry.points ?? 0),

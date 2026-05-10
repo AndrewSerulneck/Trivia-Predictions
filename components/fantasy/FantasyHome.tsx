@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getUserId, getVenueId } from "@/lib/storage";
+import { supabase } from "@/lib/supabase";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import type { FantasyEntry, FantasyGame, FantasyLeaderboardEntry, FantasyPlayerPoolItem } from "@/lib/fantasy";
@@ -20,6 +21,98 @@ type EntriesPayload = {
   entries?: FantasyEntry[];
   error?: string;
 };
+
+type FantasyEntryRealtimeRow = {
+  id?: string;
+  user_id?: string;
+  venue_id?: string;
+  sport_key?: string;
+  game_id?: string;
+  game_label?: string;
+  home_team?: string;
+  away_team?: string;
+  starts_at?: string;
+  lineup?: unknown;
+  status?: FantasyEntry["status"];
+  points?: number | string;
+  score_breakdown?: unknown;
+  reward_points?: number | string;
+  reward_claimed_at?: string | null;
+  stats_last_source_updated_at?: string | null;
+  settled_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+function parseRealtimeLineup(raw: unknown): string[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  const seen = new Set<string>();
+  const lineup: string[] = [];
+  for (const item of raw) {
+    const name = String(item ?? "").trim();
+    const key = normalizePlayerKey(name);
+    if (!name || !key || seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    lineup.push(name);
+  }
+  return lineup.slice(0, 5);
+}
+
+function parseRealtimeScoreBreakdown(raw: unknown): Record<string, number> {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    return {};
+  }
+  const next: Record<string, number> = {};
+  for (const [playerName, value] of Object.entries(raw as Record<string, unknown>)) {
+    const points = typeof value === "number" ? value : Number.parseFloat(String(value));
+    if (!Number.isFinite(points)) {
+      continue;
+    }
+    next[playerName] = Number(points.toFixed(2));
+  }
+  return next;
+}
+
+function mapRealtimeEntry(row: FantasyEntryRealtimeRow): FantasyEntry | null {
+  const id = String(row.id ?? "").trim();
+  const userId = String(row.user_id ?? "").trim();
+  const venueId = String(row.venue_id ?? "").trim();
+  const sportKey = String(row.sport_key ?? "").trim();
+  const gameId = String(row.game_id ?? "").trim();
+  const startsAt = String(row.starts_at ?? "").trim();
+  const status = (String(row.status ?? "pending").trim() || "pending") as FantasyEntry["status"];
+  if (!id || !userId || !venueId || !gameId || !startsAt) {
+    return null;
+  }
+  const pointsRaw = typeof row.points === "number" ? row.points : Number.parseFloat(String(row.points ?? "0"));
+  const rewardRaw =
+    typeof row.reward_points === "number" ? row.reward_points : Number.parseInt(String(row.reward_points ?? "0"), 10);
+  return {
+    id,
+    userId,
+    venueId,
+    sportKey: sportKey || "basketball_nba",
+    gameId,
+    gameLabel: String(row.game_label ?? "").trim(),
+    homeTeam: String(row.home_team ?? "").trim(),
+    awayTeam: String(row.away_team ?? "").trim(),
+    startsAt,
+    lineup: parseRealtimeLineup(row.lineup),
+    status,
+    points: Number((Number.isFinite(pointsRaw) ? pointsRaw : 0).toFixed(2)),
+    scoreBreakdown: parseRealtimeScoreBreakdown(row.score_breakdown),
+    rewardPoints: Number.isFinite(rewardRaw) ? Math.max(0, rewardRaw) : 0,
+    rewardClaimedAt: row.reward_claimed_at ? String(row.reward_claimed_at) : null,
+    statsLastSourceUpdatedAt: row.stats_last_source_updated_at ? String(row.stats_last_source_updated_at) : null,
+    settledAt: row.settled_at ? String(row.settled_at) : null,
+    createdAt: String(row.created_at ?? ""),
+    updatedAt: String(row.updated_at ?? ""),
+  };
+}
 
 function getTodayDateInput(): string {
   const now = new Date();
@@ -137,8 +230,11 @@ export function FantasyHome() {
   const [claimingEntryId, setClaimingEntryId] = useState("");
   const [isCollectingAllFantasy, setIsCollectingAllFantasy] = useState(false);
   const [hasLocalLineupDraft, setHasLocalLineupDraft] = useState(false);
+  const [highlightedPlayerKeys, setHighlightedPlayerKeys] = useState<string[]>([]);
   const fantasyKickoffRefreshTimerRef = useRef<number | null>(null);
   const fantasyLineupAutosaveTimerRef = useRef<number | null>(null);
+  const fantasyRealtimeFallbackTimerRef = useRef<number | null>(null);
+  const fantasyHighlightResetTimerRef = useRef<number | null>(null);
   const todayDate = useMemo(() => getTodayDateInput(), []);
 
   useEffect(() => {
@@ -205,6 +301,21 @@ export function FantasyHome() {
     }
   }, [userId]);
 
+  const markPlayersAsHot = useCallback((playerNames: string[]) => {
+    const keys = Array.from(new Set(playerNames.map((name) => normalizePlayerKey(name)).filter(Boolean)));
+    if (keys.length === 0) {
+      return;
+    }
+    setHighlightedPlayerKeys(keys);
+    if (fantasyHighlightResetTimerRef.current) {
+      window.clearTimeout(fantasyHighlightResetTimerRef.current);
+    }
+    fantasyHighlightResetTimerRef.current = window.setTimeout(() => {
+      fantasyHighlightResetTimerRef.current = null;
+      setHighlightedPlayerKeys([]);
+    }, 900);
+  }, []);
+
   const loadSelectedGameDetails = useCallback(async () => {
     if (!selectedGameId) {
       setPlayerPool([]);
@@ -219,6 +330,8 @@ export function FantasyHome() {
         date: gameDate,
         tzOffsetMinutes: String(new Date().getTimezoneOffset()),
       });
+      // TODO: RESTORE ROSTER LOCK
+      params.set("includeStartedGames", "true");
       if (venueId) {
         params.set("venueId", venueId);
       }
@@ -271,13 +384,11 @@ export function FantasyHome() {
     if (!existingEntryForSelectedGame) {
       return false;
     }
-    if (existingEntryForSelectedGame.status === "final" || existingEntryForSelectedGame.status === "canceled") {
+    // TODO: RESTORE ROSTER LOCK
+    if (existingEntryForSelectedGame.status === "canceled") {
       return false;
     }
-    if (playerPoolKeys.size === 0) {
-      return false;
-    }
-    return existingEntryForSelectedGame.lineup.every((playerName) => playerPoolKeys.has(normalizePlayerKey(playerName)));
+    return true;
   }, [existingEntryForSelectedGame, playerPoolKeys]);
   const nextUnlockedGame = useMemo(() => games.find((game) => !game.isLocked) ?? null, [games]);
   const selectedSlateDate = useMemo(() => parseDailyGameDateFromId(selectedGameId) ?? todayDate, [selectedGameId, todayDate]);
@@ -447,11 +558,101 @@ export function FantasyHome() {
         window.clearTimeout(fantasyLineupAutosaveTimerRef.current);
         fantasyLineupAutosaveTimerRef.current = null;
       }
+      if (fantasyRealtimeFallbackTimerRef.current) {
+        window.clearTimeout(fantasyRealtimeFallbackTimerRef.current);
+        fantasyRealtimeFallbackTimerRef.current = null;
+      }
+      if (fantasyHighlightResetTimerRef.current) {
+        window.clearTimeout(fantasyHighlightResetTimerRef.current);
+        fantasyHighlightResetTimerRef.current = null;
+      }
     };
   }, []);
 
   useEffect(() => {
-    if (!userId || !hasSyncableEntry) {
+    if (!userId || !hasSyncableEntry || !supabase) {
+      return;
+    }
+    let active = true;
+    const client = supabase;
+    const channel = client
+      .channel(`fantasy-entries:${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "fantasy_entries", filter: `user_id=eq.${userId}` },
+        (payload) => {
+          if (!active) {
+            return;
+          }
+
+          if (payload.eventType === "DELETE") {
+            const deletedId = String((payload.old as { id?: string } | null)?.id ?? "").trim();
+            if (!deletedId) {
+              return;
+            }
+            setEntries((previous) => previous.filter((entry) => entry.id !== deletedId));
+            return;
+          }
+
+          const nextEntry = mapRealtimeEntry((payload.new ?? null) as FantasyEntryRealtimeRow);
+          if (!nextEntry) {
+            return;
+          }
+
+          setEntries((previous) => {
+            const next = [...previous];
+            const existingIndex = next.findIndex((entry) => entry.id === nextEntry.id);
+            if (existingIndex >= 0) {
+              const previousEntry = next[existingIndex];
+              if (previousEntry) {
+                const changedPlayers = nextEntry.lineup.filter((playerName) => {
+                  const before = Number(previousEntry.scoreBreakdown[playerName] ?? 0);
+                  const after = Number(nextEntry.scoreBreakdown[playerName] ?? 0);
+                  return Math.abs(after - before) >= 0.01;
+                });
+                if (changedPlayers.length > 0) {
+                  window.requestAnimationFrame(() => {
+                    markPlayersAsHot(changedPlayers);
+                  });
+                }
+              }
+              next[existingIndex] = nextEntry;
+            } else {
+              next.push(nextEntry);
+            }
+
+            next.sort((left, right) => Date.parse(right.startsAt) - Date.parse(left.startsAt));
+            return next;
+          });
+        }
+      )
+      .subscribe();
+
+    // Keep a low-frequency polling fallback for resilience if websocket delivery stalls.
+    const scheduleFallbackRefresh = () => {
+      if (!active || fantasyRealtimeFallbackTimerRef.current) {
+        return;
+      }
+      fantasyRealtimeFallbackTimerRef.current = window.setTimeout(() => {
+        fantasyRealtimeFallbackTimerRef.current = null;
+        void loadEntries(true, false);
+        scheduleFallbackRefresh();
+      }, 45000);
+    };
+    scheduleFallbackRefresh();
+
+    return () => {
+      active = false;
+      if (fantasyRealtimeFallbackTimerRef.current) {
+        window.clearTimeout(fantasyRealtimeFallbackTimerRef.current);
+        fantasyRealtimeFallbackTimerRef.current = null;
+      }
+      void client.removeChannel(channel);
+    };
+  }, [hasSyncableEntry, loadEntries, markPlayersAsHot, userId]);
+
+  useEffect(() => {
+    if (!userId || !hasSyncableEntry || supabase) {
       return;
     }
     const interval = window.setInterval(() => {
@@ -822,10 +1023,16 @@ export function FantasyHome() {
                         : requireLiveRows
                         ? 0
                         : Number(trackedEntry.scoreBreakdown[playerName] ?? 0);
+                    const isHot = highlightedPlayerKeys.includes(normalizePlayerKey(playerName));
                     return (
-                      <li key={`${trackedEntry.id}-${playerName}`} className="flex items-center justify-between gap-2 text-xs text-slate-700">
+                      <li
+                        key={`${trackedEntry.id}-${playerName}`}
+                        className={`flex items-center justify-between gap-2 text-xs transition-all duration-300 ${
+                          isHot ? "scale-[1.03] text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.95)]" : "text-slate-700"
+                        }`}
+                      >
                         <span className="font-medium text-slate-800">{playerName}</span>
-                        <span className="font-semibold">{playerPoints.toFixed(2)} pts</span>
+                        <span className={`font-semibold ${isHot ? "text-cyan-200" : ""}`}>{playerPoints.toFixed(2)} pts</span>
                       </li>
                     );
                   })}

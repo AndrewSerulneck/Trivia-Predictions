@@ -952,7 +952,9 @@ async function fetchGammaMarkets(query: URLSearchParams): Promise<GammaMarket[]>
   const response = await fetch(`${GAMMA_API_URL}?${query.toString()}`, {
     method: "GET",
     headers,
-    next: { revalidate: 30 },
+    // Gamma payloads are often >2MB; avoid Next Data Cache writes that fail/noise logs.
+    // We already maintain process-level caches in this module.
+    cache: "no-store",
   });
 
   if (!response.ok) {

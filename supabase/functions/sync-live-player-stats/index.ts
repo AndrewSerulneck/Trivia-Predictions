@@ -13,16 +13,28 @@ type SyncResult = {
   errors: string[];
 };
 
+type LoopSyncResult = SyncResult & {
+  cycles: number;
+  pollMs: number;
+  loopMs: number;
+};
+
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")?.trim() ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim() ?? "";
 const APISPORTS_KEY = Deno.env.get("APISPORTS_API_KEY")?.trim() ?? "";
 const APISPORTS_BASE_URL = (Deno.env.get("APISPORTS_NBA_BASE_URL")?.trim() ?? "https://v1.basketball.api-sports.io").replace(/\/+$/, "");
-const APISPORTS_REQUEST_DELAY_MS = Math.max(0, Number.parseInt(Deno.env.get("APISPORTS_REQUEST_DELAY_MS") ?? "180", 10) || 180);
+const APISPORTS_REQUEST_DELAY_MS = Math.max(0, Number.parseInt(Deno.env.get("APISPORTS_REQUEST_DELAY_MS") ?? "25", 10) || 25);
 const APISPORTS_MAX_GAMES_PER_RUN = Math.max(1, Number.parseInt(Deno.env.get("APISPORTS_MAX_GAMES_PER_RUN") ?? "24", 10) || 24);
 const APISPORTS_TARGET_LEAGUE_ID = Number.parseInt(Deno.env.get("APISPORTS_TARGET_LEAGUE_ID") ?? "", 10) || 0;
 const APISPORTS_FINAL_REPLAY_WINDOW_MS = Math.max(
   0,
   Number.parseInt(Deno.env.get("APISPORTS_FINAL_REPLAY_WINDOW_MS") ?? String(6 * 60 * 60 * 1000), 10) || 6 * 60 * 60 * 1000
+);
+const APISPORTS_DEFAULT_POLL_MS = Math.max(500, Number.parseInt(Deno.env.get("FANTASY_LIVE_SYNC_POLL_MS") ?? "2500", 10) || 2500);
+const APISPORTS_DEFAULT_LOOP_MS = Math.max(2500, Number.parseInt(Deno.env.get("FANTASY_LIVE_SYNC_LOOP_MS") ?? "55000", 10) || 55000);
+const APISPORTS_FINAL_REPLAY_EVERY_CYCLE = Math.max(
+  0,
+  Number.parseInt(Deno.env.get("FANTASY_LIVE_SYNC_FINAL_REPLAY_EVERY_CYCLE") ?? "6", 10) || 6
 );
 
 function sleep(ms: number): Promise<void> {
@@ -135,7 +147,15 @@ function formatDateUTC(offsetDays = 0): string {
   return `${y}-${m}-${d}`;
 }
 
-async function syncLivePlayerStats(): Promise<SyncResult> {
+function mergeSyncResults(target: SyncResult, source: SyncResult): void {
+  target.ok = target.ok && source.ok;
+  target.scannedGames += source.scannedGames;
+  target.scannedPlayers += source.scannedPlayers;
+  target.upsertedPlayers += source.upsertedPlayers;
+  target.errors.push(...source.errors);
+}
+
+async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolean }): Promise<SyncResult> {
   const result: SyncResult = {
     ok: true,
     scannedGames: 0,
@@ -169,12 +189,14 @@ async function syncLivePlayerStats(): Promise<SyncResult> {
     return result;
   }
 
+  const includeRecentFinals = options?.includeRecentFinals === true;
+
   let games = combinedRows.filter((game) => {
     const short = String(getPath(game, ["status", "short"]) ?? "");
     if (isLiveStatus(short)) {
       return true;
     }
-    if (!isFinalStatus(short)) {
+    if (!includeRecentFinals || !isFinalStatus(short)) {
       return false;
     }
     const startMs = parseGameStartMs(game);
@@ -281,26 +303,35 @@ function clampInt(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, Math.trunc(value)));
 }
 
-async function syncBurst(iterations: number, intervalMs: number): Promise<SyncResult> {
-  const merged: SyncResult = {
+async function runHighVelocityLoop(options: { pollMs: number; loopMs: number; finalReplayEveryCycle: number }): Promise<LoopSyncResult> {
+  const merged: LoopSyncResult = {
     ok: true,
     scannedGames: 0,
     scannedPlayers: 0,
     upsertedPlayers: 0,
     errors: [],
+    cycles: 0,
+    pollMs: options.pollMs,
+    loopMs: options.loopMs,
   };
-  for (let i = 0; i < iterations; i += 1) {
-    const result = await syncLivePlayerStats();
-    merged.ok = merged.ok && result.ok;
-    merged.scannedGames += result.scannedGames;
-    merged.scannedPlayers += result.scannedPlayers;
-    merged.upsertedPlayers += result.upsertedPlayers;
-    merged.errors.push(...result.errors);
 
-    if (i < iterations - 1) {
-      await sleep(intervalMs);
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < options.loopMs) {
+    const cycleStartedAt = Date.now();
+    const includeRecentFinals =
+      options.finalReplayEveryCycle > 0 && (merged.cycles + 1) % options.finalReplayEveryCycle === 0;
+    const cycle = await syncLivePlayerStatsCycle({ includeRecentFinals });
+    mergeSyncResults(merged, cycle);
+    merged.cycles += 1;
+
+    const elapsed = Date.now() - cycleStartedAt;
+    const delay = options.pollMs - elapsed;
+    if (delay > 0) {
+      await sleep(delay);
     }
   }
+
+  merged.ok = merged.errors.length === 0;
   return merged;
 }
 
@@ -314,9 +345,39 @@ Deno.serve(async (request) => {
 
   try {
     const url = new URL(request.url);
-    const iterations = clampInt(Number.parseInt(url.searchParams.get("burst") ?? "1", 10), 1, 8);
-    const intervalMs = clampInt(Number.parseInt(url.searchParams.get("intervalMs") ?? "15000", 10), 1000, 60000);
-    const data = await syncBurst(iterations, intervalMs);
+    const burst = clampInt(Number.parseInt(url.searchParams.get("burst") ?? "0", 10), 0, 200);
+    const explicitPollMs = Number.parseInt(url.searchParams.get("pollMs") ?? "", 10);
+    const legacyIntervalMs = Number.parseInt(url.searchParams.get("intervalMs") ?? "", 10);
+    const explicitLoopMs = Number.parseInt(url.searchParams.get("loopMs") ?? "", 10);
+    const pollMs = clampInt(
+      Number.isFinite(explicitPollMs) && explicitPollMs > 0
+        ? explicitPollMs
+        : Number.isFinite(legacyIntervalMs) && legacyIntervalMs > 0
+        ? legacyIntervalMs
+        : APISPORTS_DEFAULT_POLL_MS,
+      500,
+      60000
+    );
+    const loopMsFromBurst = burst > 0 ? burst * pollMs : 0;
+    const loopMs = clampInt(
+      Number.isFinite(explicitLoopMs) && explicitLoopMs > 0
+        ? explicitLoopMs
+        : loopMsFromBurst > 0
+        ? loopMsFromBurst
+        : APISPORTS_DEFAULT_LOOP_MS,
+      2500,
+      300000
+    );
+    const finalReplayEveryCycle = clampInt(
+      Number.parseInt(url.searchParams.get("finalReplayEveryCycle") ?? String(APISPORTS_FINAL_REPLAY_EVERY_CYCLE), 10),
+      0,
+      200
+    );
+    const data = await runHighVelocityLoop({
+      pollMs,
+      loopMs,
+      finalReplayEveryCycle,
+    });
     return new Response(JSON.stringify(data), {
       status: data.ok ? 200 : 207,
       headers: { "content-type": "application/json" },

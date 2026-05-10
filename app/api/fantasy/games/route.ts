@@ -21,6 +21,12 @@ function normalizePositiveInt(value: string | null, fallback: number): number {
   return parsed;
 }
 
+function normalizeBoolean(value: string | null, fallback: boolean): boolean {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) return fallback;
+  return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
+}
+
 function normalizeTimezoneOffset(value: string | null | undefined): number {
   const parsed = Number.parseInt(String(value ?? "").trim(), 10);
   if (!Number.isFinite(parsed)) {
@@ -63,6 +69,8 @@ export async function GET(request: Request) {
     const gameId = String(searchParams.get("gameId") ?? "").trim();
     const sportKey = String(searchParams.get("sportKey") ?? "").trim() || undefined;
     const venueId = String(searchParams.get("venueId") ?? "").trim();
+    // TODO: RESTORE ROSTER LOCK
+    const includeStartedGames = normalizeBoolean(searchParams.get("includeStartedGames"), false);
 
     const games = await listFantasyGames({
       date,
@@ -80,9 +88,10 @@ export async function GET(request: Request) {
         sportKey,
         date: dailyDateFromGameId === todayDate ? dailyDateFromGameId : requestedDate ?? todayDate,
         tzOffsetMinutes,
+        includeStartedGames,
       });
     } else {
-      playerPool = await getFantasyPlayerPoolForDate({ date, tzOffsetMinutes, includeStartedGames: false });
+      playerPool = await getFantasyPlayerPoolForDate({ date, tzOffsetMinutes, includeStartedGames });
     }
 
     let leaderboard: FantasyLeaderboardEntry[] = [];
