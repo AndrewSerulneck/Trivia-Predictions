@@ -4717,5 +4717,174 @@
     "correctAnswer": 0,
     "category": "Animals",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-marine-mammal-is-known-for-its-singing-complex-communication-and-long-migrations",
+    "question": "Which marine mammal is known for its singing, complex communication, and long migrations?",
+    "options": [
+      "Dolphin",
+      "Blue Whale",
+      "Humpback Whale",
+      "Orca"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-building-intricate-dams-across-rivers-and-streams",
+    "question": "Which animal is known for building intricate dams across rivers and streams?",
+    "options": [
+      "Otter",
+      "Beaver",
+      "Muskrat",
+      "Capybara"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-has-the-longest-neck-relative-to-its-body-size",
+    "question": "Which animal has the longest neck relative to its body size?",
+    "options": [
+      "Ostrich",
+      "Giraffe",
+      "Camel",
+      "Llama"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-lays-eggs-but-is-also-a-mammal",
+    "question": "Which animal lays eggs, but is also a mammal?",
+    "options": [
+      "Platypus",
+      "Kangaroo",
+      "Bat",
+      "Dolphin"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-large-african-animal-is-often-referred-to-as-a-river-horse-and-spends-much-of-its-time-in-water",
+    "question": "Which large African animal is often referred to as a \"river horse\" and spends much of its time in water?",
+    "options": [
+      "Rhinoceros",
+      "Elephant",
+      "Hippopotamus",
+      "Buffalo"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-creature-is-known-for-its-bioluminescence-often-seen-in-forests-at-night",
+    "question": "Which creature is known for its bioluminescence, often seen in forests at night?",
+    "options": [
+      "Butterfly",
+      "Ladybug",
+      "Firefly",
+      "Moth"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-bird-is-famous-for-its-elaborate-courtship-dance-and-brightly-colored-tail-feathers",
+    "question": "Which bird is famous for its elaborate courtship dance and brightly colored tail feathers?",
+    "options": [
+      "Peacock",
+      "Flamingo",
+      "Hummingbird",
+      "Parrot"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-a-baby-goat-commonly-called",
+    "question": "What is a baby goat commonly called?",
+    "options": [
+      "Kid",
+      "Calf",
+      "Fawn",
+      "Cub"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-known-for-having-unique-stripe-patterns-similar-to-human-fingerprints",
+    "question": "Which animal is known for having unique stripe patterns, similar to human fingerprints?",
+    "options": [
+      "Tiger",
+      "Zebra",
+      "Leopard",
+      "Giraffe"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-collective-noun-for-a-group-of-rhinoceroses",
+    "question": "What is the collective noun for a group of rhinoceroses?",
+    "options": [
+      "Crash",
+      "Herd",
+      "Dazzle",
+      "Bloat"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-is-famous-for-its-long-period-of-hibernation-during-winter",
+    "question": "Which animal is famous for its long period of hibernation during winter?",
+    "options": [
+      "Bear",
+      "Fox",
+      "Wolf",
+      "Deer"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-marsupial-is-native-to-australia-and-primarily-eats-eucalyptus-leaves",
+    "question": "Which marsupial is native to Australia and primarily eats eucalyptus leaves?",
+    "options": [
+      "Kangaroo",
+      "Wallaby",
+      "Koala",
+      "Wombat"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-ability-to-change-its-skin-color-to-camouflage-with-its-environment",
+    "question": "Which animal is known for its ability to change its skin color to camouflage with its environment?",
+    "options": [
+      "Chameleon",
+      "Panda",
+      "Elephant",
+      "Kangaroo"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
   }
 ]

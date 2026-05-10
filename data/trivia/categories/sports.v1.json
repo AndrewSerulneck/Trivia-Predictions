@@ -4704,5 +4704,174 @@
     "correctAnswer": 2,
     "category": "Sports",
     "difficulty": "medium"
+  },
+  {
+    "slug": "what-color-jersey-is-awarded-to-the-leader-of-the-tour-de-france",
+    "question": "What color jersey is awarded to the leader of the Tour de France?",
+    "options": [
+      "Yellow",
+      "Green",
+      "Red",
+      "White"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-sport-uses-a-shuttlecock",
+    "question": "Which sport uses a shuttlecock?",
+    "options": [
+      "Tennis",
+      "Badminton",
+      "Squash",
+      "Racquetball"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-which-sport-would-you-find-a-strike-and-a-spare",
+    "question": "In which sport would you find a 'strike' and a 'spare'?",
+    "options": [
+      "Bowling",
+      "Baseball",
+      "Billiards",
+      "Darts"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-players-are-on-a-soccer-football-team-on-the-field-at-one-time",
+    "question": "How many players are on a soccer (football) team on the field at one time?",
+    "options": [
+      "9",
+      "10",
+      "11",
+      "12"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-famous-boxer-was-known-as-the-greatest",
+    "question": "Which famous boxer was known as 'The Greatest'?",
+    "options": [
+      "Mike Tyson",
+      "George Foreman",
+      "Muhammad Ali",
+      "Joe Frazier"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-track-and-field-event-is-comprised-of-10-different-disciplines",
+    "question": "Which track and field event is comprised of 10 different disciplines?",
+    "options": [
+      "Heptathlon",
+      "Pentathlon",
+      "Decathlon",
+      "Triathlon"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-only-team-in-the-nfl-to-complete-a-perfect-undefeated-season",
+    "question": "What is the only team in the NFL to complete a perfect undefeated season?",
+    "options": [
+      "New England Patriots",
+      "Miami Dolphins",
+      "Chicago Bears",
+      "San Francisco 49ers"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-horse-racing-event-is-known-as-the-run-for-the-roses",
+    "question": "Which horse racing event is known as 'The Run for the Roses'?",
+    "options": [
+      "Preakness Stakes",
+      "Belmont Stakes",
+      "Kentucky Derby",
+      "Breeders' Cup"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-equipment-is-typically-used-to-hit-a-puck-in-ice-hockey",
+    "question": "What equipment is typically used to hit a puck in ice hockey?",
+    "options": [
+      "Bat",
+      "Racket",
+      "Stick",
+      "Club"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-gold-medals-did-michael-phelps-win-at-a-single-olympic-games-beijing-2008",
+    "question": "How many gold medals did Michael Phelps win at a single Olympic Games (Beijing 2008)?",
+    "options": [
+      "6",
+      "7",
+      "8",
+      "9"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-olympic-sport-involves-a-sabre-foil-and-pe",
+    "question": "Which Olympic sport involves a sabre, foil, and épée?",
+    "options": [
+      "Archery",
+      "Fencing",
+      "Modern Pentathlon",
+      "Kendo"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-baseball-how-many-balls-does-a-batter-accumulate-before-being-awarded-first-base",
+    "question": "In baseball, how many 'balls' does a batter accumulate before being awarded first base?",
+    "options": [
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-official-full-distance-of-a-marathon-race",
+    "question": "What is the official full distance of a marathon race?",
+    "options": [
+      "26 miles",
+      "26 miles, 385 yards",
+      "25 miles",
+      "27 miles, 195 yards"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
   }
 ]

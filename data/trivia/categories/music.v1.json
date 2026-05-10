@@ -4717,5 +4717,161 @@
     "correctAnswer": 3,
     "category": "Music",
     "difficulty": "medium"
+  },
+  {
+    "slug": "who-is-widely-recognized-as-the-king-of-pop",
+    "question": "Who is widely recognized as the 'King of Pop'?",
+    "options": [
+      "Elvis Presley",
+      "Michael Jackson",
+      "Prince",
+      "James Brown"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-instrument-is-primarily-associated-with-the-classical-guitar-virtuoso-andrs-segovia",
+    "question": "Which instrument is primarily associated with the classical guitar virtuoso Andrés Segovia?",
+    "options": [
+      "Violin",
+      "Cello",
+      "Piano",
+      "Guitar"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-legendary-rock-band-recorded-the-iconic-song-stairway-to-heaven",
+    "question": "Which legendary rock band recorded the iconic song 'Stairway to Heaven'?",
+    "options": [
+      "The Rolling Stones",
+      "Led Zeppelin",
+      "The Who",
+      "Pink Floyd"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-common-name-for-the-musical-notation-symbol-that-indicates-silence",
+    "question": "What is the common name for the musical notation symbol that indicates silence?",
+    "options": [
+      "Note",
+      "Chord",
+      "Rest",
+      "Tempo"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-avant-garde-composer-is-known-for-his-1952-work-433-which-consists-of-performers-not-playing-their-instruments",
+    "question": "Which avant-garde composer is known for his 1952 work '4'33\"', which consists of performers not playing their instruments?",
+    "options": [
+      "Arnold Schoenberg",
+      "Igor Stravinsky",
+      "John Cage",
+      "Philip Glass"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-artist-had-a-massive-hit-with-like-a-virgin-in-1984",
+    "question": "Which artist had a massive hit with 'Like a Virgin' in 1984?",
+    "options": [
+      "Janet Jackson",
+      "Mariah Carey",
+      "Madonna",
+      "Whitney Houston"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-city-is-often-credited-as-the-birthplace-of-grunge-music-in-the-late-1980s-and-early-1990s",
+    "question": "Which city is often credited as the birthplace of grunge music in the late 1980s and early 1990s?",
+    "options": [
+      "Los Angeles",
+      "New York City",
+      "Seattle",
+      "London"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-british-band-rose-to-fame-in-the-1960s-with-hits-like-satisfaction-and-paint-it-black",
+    "question": "Which British band rose to fame in the 1960s with hits like 'Satisfaction' and 'Paint It Black'?",
+    "options": [
+      "The Beatles",
+      "The Kinks",
+      "The Rolling Stones",
+      "The Who"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-music-theory-what-is-a-fugue",
+    "question": "In music theory, what is a 'fugue'?",
+    "options": [
+      "A fast, energetic dance",
+      "A contrapuntal compositional technique",
+      "A type of percussion instrument",
+      "A slow, melancholic ballad"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-singer-is-known-for-their-powerful-voice-and-hit-songs-like-my-heart-will-go-on",
+    "question": "Which singer is known for their powerful voice and hit songs like 'My Heart Will Go On'?",
+    "options": [
+      "Mariah Carey",
+      "Celine Dion",
+      "Adele",
+      "Christina Aguilera"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-legendary-reggae-musician-was-also-known-as-tuff-gong",
+    "question": "Which legendary reggae musician was also known as 'Tuff Gong'?",
+    "options": [
+      "Peter Tosh",
+      "Jimmy Cliff",
+      "Bob Marley",
+      "Toots Hibbert"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-pop-superstar-is-known-for-her-elaborate-stage-shows-and-hits-like-bad-romance-and-poker-face",
+    "question": "Which pop superstar is known for her elaborate stage shows and hits like 'Bad Romance' and 'Poker Face'?",
+    "options": [
+      "Katy Perry",
+      "Rihanna",
+      "Lady Gaga",
+      "Taylor Swift"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
   }
 ]

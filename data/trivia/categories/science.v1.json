@@ -4717,5 +4717,161 @@
     "correctAnswer": 1,
     "category": "Science",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-fundamental-force-is-responsible-for-objects-falling-to-the-ground",
+    "question": "Which fundamental force is responsible for objects falling to the ground?",
+    "options": [
+      "Strong nuclear",
+      "Weak nuclear",
+      "Electromagnetic",
+      "Gravity"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-process-where-a-solid-turns-directly-into-a-gas-without-passing-through-a-liquid-phase",
+    "question": "What is the name of the process where a solid turns directly into a gas without passing through a liquid phase?",
+    "options": [
+      "Evaporation",
+      "Condensation",
+      "Sublimation",
+      "Melting"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-vitamin-is-primarily-synthesized-in-the-skin-when-exposed-to-sunlight",
+    "question": "Which vitamin is primarily synthesized in the skin when exposed to sunlight?",
+    "options": [
+      "Vitamin A",
+      "Vitamin B12",
+      "Vitamin C",
+      "Vitamin D"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-element-has-the-chemical-symbol-au",
+    "question": "Which element has the chemical symbol 'Au'?",
+    "options": [
+      "Silver",
+      "Gold",
+      "Aluminum",
+      "Argon"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-boundary-beyond-which-nothing-not-even-light-can-escape-a-black-hole",
+    "question": "What is the name of the boundary beyond which nothing, not even light, can escape a black hole?",
+    "options": [
+      "Singularity",
+      "Event Horizon",
+      "Photon Sphere",
+      "Accretion Disk"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-type-of-blood-vessel-carries-oxygenated-blood-away-from-the-heart-to-the-rest-of-the-body",
+    "question": "Which type of blood vessel carries oxygenated blood away from the heart to the rest of the body?",
+    "options": [
+      "Veins",
+      "Capillaries",
+      "Arteries",
+      "Lymphatic vessels"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-term-describes-a-solution-that-has-reached-the-maximum-amount-of-solute-that-can-be-dissolved-at-a-given-temperature",
+    "question": "What term describes a solution that has reached the maximum amount of solute that can be dissolved at a given temperature?",
+    "options": [
+      "Unsaturated",
+      "Saturated",
+      "Supersaturated",
+      "Dilute"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-primary-function-of-dna",
+    "question": "What is the primary function of DNA?",
+    "options": [
+      "Energy storage",
+      "Structural support",
+      "Carrying genetic information",
+      "Catalyzing reactions"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-process-by-which-a-star-generates-energy",
+    "question": "What is the name of the process by which a star generates energy?",
+    "options": [
+      "Chemical reaction",
+      "Nuclear fission",
+      "Nuclear fusion",
+      "Gravitational collapse"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-phenomenon-where-a-magnetic-field-induces-an-electric-current-in-a-conductor",
+    "question": "What is the name of the phenomenon where a magnetic field induces an electric current in a conductor?",
+    "options": [
+      "Photoelectric effect",
+      "Faraday's Law of Induction",
+      "Compton scattering",
+      "Hall effect"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-moon-in-our-solar-system-is-the-largest",
+    "question": "Which moon in our solar system is the largest?",
+    "options": [
+      "Io",
+      "Titan",
+      "Ganymede",
+      "Europa"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-organelle-is-commonly-referred-to-as-the-powerhouse-of-the-cell",
+    "question": "What organelle is commonly referred to as the 'powerhouse' of the cell?",
+    "options": [
+      "Nucleus",
+      "Mitochondria",
+      "Ribosome",
+      "Endoplasmic Reticulum"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "easy"
   }
 ]

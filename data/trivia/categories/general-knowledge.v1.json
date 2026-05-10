@@ -4691,5 +4691,174 @@
     "correctAnswer": 0,
     "category": "General Knowledge",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-chemical-element-has-the-symbol-fe",
+    "question": "Which chemical element has the symbol 'Fe'?",
+    "options": [
+      "Fluorine",
+      "Iron",
+      "Gold",
+      "Silver"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-main-ingredient-in-traditional-guacamole",
+    "question": "What is the main ingredient in traditional guacamole?",
+    "options": [
+      "Tomato",
+      "Onion",
+      "Avocado",
+      "Pepper"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-authored-the-famous-dystopian-novel-1984",
+    "question": "Who authored the famous dystopian novel '1984'?",
+    "options": [
+      "Aldous Huxley",
+      "George Orwell",
+      "Ray Bradbury",
+      "H.G. Wells"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-sea-is-the-smallest-and-shallowest-of-the-worlds-five-oceans-located-around-the-north-pole",
+    "question": "Which sea is the smallest and shallowest of the world's five oceans, located around the North Pole?",
+    "options": [
+      "Atlantic Ocean",
+      "Indian Ocean",
+      "Southern Ocean",
+      "Arctic Ocean"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-distinctive-black-and-white-striped-coat",
+    "question": "Which animal is known for its distinctive black and white striped coat?",
+    "options": [
+      "Tiger",
+      "Leopard",
+      "Zebra",
+      "Giraffe"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-is-generally-credited-with-inventing-the-practical-incandescent-light-bulb",
+    "question": "Who is generally credited with inventing the practical incandescent light bulb?",
+    "options": [
+      "Nikola Tesla",
+      "Alexander Graham Bell",
+      "Thomas Edison",
+      "Isaac Newton"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-is-not-a-primary-color-of-light-additive-colors",
+    "question": "Which of these is not a primary color of light (additive colors)?",
+    "options": [
+      "Red",
+      "Green",
+      "Blue",
+      "Yellow"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-wrote-the-play-hamlet",
+    "question": "Who wrote the play 'Hamlet'?",
+    "options": [
+      "Charles Dickens",
+      "William Shakespeare",
+      "Jane Austen",
+      "Leo Tolstoy"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-element-has-the-chemical-symbol-o",
+    "question": "Which element has the chemical symbol 'O'?",
+    "options": [
+      "Gold",
+      "Oxygen",
+      "Osmium",
+      "Oganesson"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-of-these-famous-structures-is-located-in-rome-italy",
+    "question": "Which of these famous structures is located in Rome, Italy?",
+    "options": [
+      "Eiffel Tower",
+      "Acropolis",
+      "Colosseum",
+      "Taj Mahal"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-is-the-longest-river-in-south-america",
+    "question": "Which of these is the longest river in South America?",
+    "options": [
+      "Paraná River",
+      "Magdalena River",
+      "Amazon River",
+      "Orinoco River"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-longest-river-in-asia",
+    "question": "What is the name of the longest river in Asia?",
+    "options": [
+      "Yellow River",
+      "Ganges River",
+      "Mekong River",
+      "Yangtze River"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-famous-european-city-is-known-as-the-city-of-canals",
+    "question": "Which famous European city is known as the 'City of Canals'?",
+    "options": [
+      "Paris",
+      "Venice",
+      "Rome",
+      "Prague"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
   }
 ]

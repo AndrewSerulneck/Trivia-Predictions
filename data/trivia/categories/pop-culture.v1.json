@@ -4717,5 +4717,161 @@
     "correctAnswer": 2,
     "category": "Pop Culture",
     "difficulty": "hard"
+  },
+  {
+    "slug": "which-social-media-platform-is-primarily-known-for-its-short-form-video-content",
+    "question": "Which social media platform is primarily known for its short-form video content?",
+    "options": [
+      "Facebook",
+      "Instagram",
+      "TikTok",
+      "Twitter"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-the-simpsons-what-is-the-name-of-the-familys-pet-dog",
+    "question": "In \"The Simpsons,\" what is the name of the family's pet dog?",
+    "options": [
+      "Snowball II",
+      "Santa's Little Helper",
+      "Lassie",
+      "Brian"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-streaming-service-is-home-to-original-series-like-the-crown-and-stranger-things",
+    "question": "Which streaming service is home to original series like \"The Crown\" and \"Stranger Things\"?",
+    "options": [
+      "Hulu",
+      "Amazon Prime Video",
+      "Netflix",
+      "Disney+"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-classic-arcade-game-features-a-yellow-circular-character-eating-dots-and-avoiding-ghosts",
+    "question": "Which classic arcade game features a yellow, circular character eating dots and avoiding ghosts?",
+    "options": [
+      "Space Invaders",
+      "Pac-Man",
+      "Donkey Kong",
+      "Asteroids"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-fictional-continent-where-most-events-of-game-of-thrones-take-place",
+    "question": "What is the fictional continent where most events of \"Game of Thrones\" take place?",
+    "options": [
+      "Westeros",
+      "Essos",
+      "Sothoryos",
+      "Ulthos"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-artist-released-the-critically-acclaimed-album-folklore-in-2020",
+    "question": "Which artist released the critically acclaimed album \"Folklore\" in 2020?",
+    "options": [
+      "Billie Eilish",
+      "Adele",
+      "Taylor Swift",
+      "Ariana Grande"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-protagonist-in-the-uncharted-video-game-series",
+    "question": "What is the name of the protagonist in the \"Uncharted\" video game series?",
+    "options": [
+      "Joel Miller",
+      "Kratos",
+      "Nathan Drake",
+      "Arthur Morgan"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-directed-the-2010-science-fiction-film-inception",
+    "question": "Who directed the 2010 science fiction film \"Inception\"?",
+    "options": [
+      "Steven Spielberg",
+      "Christopher Nolan",
+      "James Cameron",
+      "Quentin Tarantino"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-band-released-the-iconic-album-rumours-in-1977",
+    "question": "Which band released the iconic album \"Rumours\" in 1977?",
+    "options": [
+      "The Eagles",
+      "Fleetwood Mac",
+      "Led Zeppelin",
+      "Pink Floyd"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-won-the-academy-award-for-best-director-for-parasite-in-2020",
+    "question": "Who won the Academy Award for Best Director for \"Parasite\" in 2020?",
+    "options": [
+      "Quentin Tarantino",
+      "Sam Mendes",
+      "Bong Joon-ho",
+      "Martin Scorsese"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-the-tv-series-breaking-bad-what-is-jesse-pinkmans-signature-catchphrase",
+    "question": "In the TV series \"Breaking Bad,\" what is Jesse Pinkman's signature catchphrase?",
+    "options": [
+      "\"Bazinga!\"",
+      "\"Alright, alright, alright.\"",
+      "\"Yeah, science!\"",
+      "\"Hello, Newman.\""
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-fictional-company-that-developed-the-replicants-in-the-film-blade-runner",
+    "question": "What is the name of the fictional company that developed the \"replicants\" in the film \"Blade Runner\"?",
+    "options": [
+      "Cyberdyne Systems",
+      "Tyrell Corporation",
+      "Omni Consumer Products",
+      "Weyland-Yutani"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "hard"
   }
 ]

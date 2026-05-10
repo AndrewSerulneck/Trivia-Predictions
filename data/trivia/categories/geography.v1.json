@@ -4717,5 +4717,161 @@
     "correctAnswer": 2,
     "category": "Geography",
     "difficulty": "hard"
+  },
+  {
+    "slug": "which-is-the-largest-ocean-on-earth-by-surface-area",
+    "question": "Which is the largest ocean on Earth by surface area?",
+    "options": [
+      "Atlantic Ocean",
+      "Indian Ocean",
+      "Arctic Ocean",
+      "Pacific Ocean"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-nile-river-often-cited-as-the-longest-river-in-the-world-primarily-flows-through-which-continent",
+    "question": "The Nile River, often cited as the longest river in the world, primarily flows through which continent?",
+    "options": [
+      "Asia",
+      "North America",
+      "Africa",
+      "Europe"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-country-is-an-archipelago-often-referred-to-as-the-land-of-the-rising-sun",
+    "question": "Which country is an archipelago often referred to as the 'Land of the Rising Sun'?",
+    "options": [
+      "China",
+      "South Korea",
+      "Japan",
+      "Vietnam"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-is-the-largest-hot-desert-in-the-world-covering-much-of-north-africa",
+    "question": "Which is the largest hot desert in the world, covering much of North Africa?",
+    "options": [
+      "Arabian Desert",
+      "Gobi Desert",
+      "Sahara Desert",
+      "Atacama Desert"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-major-mountain-range-is-mount-everest-the-worlds-highest-peak-located",
+    "question": "In which major mountain range is Mount Everest, the world's highest peak, located?",
+    "options": [
+      "Alps",
+      "Rockies",
+      "Andes",
+      "Himalayas"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-great-barrier-reef-the-worlds-largest-coral-reef-system-is-off-the-coast-of-which-country",
+    "question": "The Great Barrier Reef, the world's largest coral reef system, is off the coast of which country?",
+    "options": [
+      "Brazil",
+      "Indonesia",
+      "Australia",
+      "Mexico"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-sea-is-almost-entirely-enclosed-by-europe-asia-and-africa",
+    "question": "Which sea is almost entirely enclosed by Europe, Asia, and Africa?",
+    "options": [
+      "Red Sea",
+      "Black Sea",
+      "Mediterranean Sea",
+      "Caspian Sea"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-capital-city-holds-the-distinction-of-being-the-southernmost-national-capital-in-the-world",
+    "question": "Which capital city holds the distinction of being the southernmost national capital in the world?",
+    "options": [
+      "Canberra",
+      "Buenos Aires",
+      "Santiago",
+      "Wellington"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "including-its-overseas-territories-which-country-officially-has-the-most-time-zones",
+    "question": "Including its overseas territories, which country officially has the most time zones?",
+    "options": [
+      "Russia",
+      "United States",
+      "China",
+      "France"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "lake-titicaca-the-highest-navigable-lake-in-the-world-is-situated-on-the-border-of-which-two-south-american-countries",
+    "question": "Lake Titicaca, the highest navigable lake in the world, is situated on the border of which two South American countries?",
+    "options": [
+      "Argentina and Chile",
+      "Colombia and Ecuador",
+      "Peru and Bolivia",
+      "Brazil and Paraguay"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-continent-is-the-only-one-to-be-located-in-all-four-hemispheres-northern-southern-eastern-western",
+    "question": "Which continent is the only one to be located in all four hemispheres (Northern, Southern, Eastern, Western)?",
+    "options": [
+      "Asia",
+      "North America",
+      "Africa",
+      "South America"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-highest-waterfall-in-the-world",
+    "question": "What is the highest waterfall in the world?",
+    "options": [
+      "Niagara Falls",
+      "Victoria Falls",
+      "Angel Falls",
+      "Iguazu Falls"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
   }
 ]

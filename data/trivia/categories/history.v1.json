@@ -4717,5 +4717,161 @@
     "correctAnswer": 2,
     "category": "History",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-major-river-played-a-central-role-in-the-development-of-ancient-egyptian-civilization",
+    "question": "What major river played a central role in the development of ancient Egyptian civilization?",
+    "options": [
+      "Tigris",
+      "Nile",
+      "Euphrates",
+      "Indus"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-famous-battle-in-480-bce-saw-a-small-force-of-spartans-and-other-greeks-hold-off-a-much-larger-persian-army",
+    "question": "Which famous battle in 480 BCE saw a small force of Spartans and other Greeks hold off a much larger Persian army?",
+    "options": [
+      "Marathon",
+      "Thermopylae",
+      "Salamis",
+      "Plataea"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-magna-carta-a-charter-of-liberties-was-signed-by-king-john-of-england-in-what-year",
+    "question": "The Magna Carta, a charter of liberties, was signed by King John of England in what year?",
+    "options": [
+      "1066",
+      "1215",
+      "1348",
+      "1492"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-is-credited-with-initiating-the-protestant-reformation-by-posting-his-ninety-five-theses",
+    "question": "Who is credited with initiating the Protestant Reformation by posting his Ninety-five Theses?",
+    "options": [
+      "John Calvin",
+      "Martin Luther",
+      "Henry VIII",
+      "Huldrych Zwingli"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-explorers-voyages-are-often-credited-with-being-the-first-european-contact-with-the-americas-in-1492",
+    "question": "Which explorer's voyages are often credited with being the first European contact with the Americas in 1492?",
+    "options": [
+      "Ferdinand Magellan",
+      "Vasco da Gama",
+      "Christopher Columbus",
+      "James Cook"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-storming-of-which-prison-fortress-in-1789-is-often-considered-the-symbolic-start-of-the-french-revolution",
+    "question": "The storming of which prison fortress in 1789 is often considered the symbolic start of the French Revolution?",
+    "options": [
+      "The Bastille",
+      "The Conciergerie",
+      "The Temple",
+      "Vincennes"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-invention-by-james-watt-significantly-improved-the-efficiency-of-steam-engines-vital-for-the-industrial-revolution",
+    "question": "What invention by James Watt significantly improved the efficiency of steam engines, vital for the Industrial Revolution?",
+    "options": [
+      "Spinning Jenny",
+      "Power Loom",
+      "Steam Locomotive",
+      "Condensing Steam Engine"
+    ],
+    "correctAnswer": 3,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-led-the-union-army-to-victory-during-the-american-civil-war-and-later-served-as-the-18th-us-president",
+    "question": "Who led the Union Army to victory during the American Civil War and later served as the 18th U.S. President?",
+    "options": [
+      "Robert E. Lee",
+      "Abraham Lincoln",
+      "Ulysses S. Grant",
+      "William T. Sherman"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-treaty-of-versailles-signed-in-1919-officially-ended-which-major-global-conflict",
+    "question": "The Treaty of Versailles, signed in 1919, officially ended which major global conflict?",
+    "options": [
+      "Franco-Prussian War",
+      "World War I",
+      "World War II",
+      "Crimean War"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-was-the-prime-minister-of-the-united-kingdom-for-most-of-world-war-ii",
+    "question": "Who was the Prime Minister of the United Kingdom for most of World War II?",
+    "options": [
+      "Neville Chamberlain",
+      "Winston Churchill",
+      "Clement Attlee",
+      "Margaret Thatcher"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-space-race-was-a-20th-century-competition-between-which-two-global-superpowers",
+    "question": "The 'Space Race' was a 20th-century competition between which two global superpowers?",
+    "options": [
+      "USA and China",
+      "USA and USSR",
+      "UK and Germany",
+      "France and USA"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-ancient-greek-philosopher-was-sentenced-to-death-for-corrupting-the-youth-of-athens-and-impiety",
+    "question": "Which ancient Greek philosopher was sentenced to death for corrupting the youth of Athens and impiety?",
+    "options": [
+      "Aristotle",
+      "Plato",
+      "Socrates",
+      "Pythagoras"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
   }
 ]
