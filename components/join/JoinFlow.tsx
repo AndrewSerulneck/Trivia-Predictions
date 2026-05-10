@@ -983,12 +983,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     const attemptId = loginAttemptIdRef.current + 1;
     loginAttemptIdRef.current = attemptId;
 
-    // Step 2: hard-clear client state BEFORE creating the new controller.
-    // abortActiveAuthRequests inside is a no-op since we nulled it in step 1,
-    // so the controller we create next is never inadvertently aborted by this call.
-    hardClearAuthAndCachePreserveVenue(venue.id);
-
-    // Step 3: create a fresh, unaborted controller for this attempt.
+    // Step 2: create a fresh controller without clearing auth state yet.
+    // Keeping existing state intact means the app is never in a "null" auth window
+    // during the API call, which could cause route guards to redirect to login.
     const loginController = beginAuthRequest();
     loginAbortRef.current = loginController;
     clearLoginWatchdog();
@@ -1035,6 +1032,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         throw new Error("Session venue mismatch detected. Please try again.");
       }
 
+      // Clear stale auth immediately before atomic writes — zero window of null state.
+      hardClearAuthAndCachePreserveVenue(venue.id);
       saveVenueId(venue.id);
       saveUsername(user.username);
       saveUserId(user.id);
@@ -1044,15 +1043,15 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setVenueHomeRouteIntent({ venueId: venue.id });
       setVenueHomeEntryHandoff({ venueId: venue.id, userId: user.id });
 
-      // Establish a fresh anonymous Supabase session for the venue home page
-      // before navigating so client-side queries have auth context.
-      await signInAnonymously().catch(() => {});
-
       setAuthLoginState("navigating");
       didNavigate = true;
       const hardTarget = `/venue/${encodeURIComponent(venue.id)}?entryUser=${encodeURIComponent(
         user.id
       )}&entryVenue=${encodeURIComponent(venue.id)}&entryAt=${Date.now()}`;
+      // Fire anonymous Supabase session without blocking navigation — on slow
+      // connections the await was delaying window.location.assign() long enough
+      // for redirect guards on the destination page to see an empty auth state.
+      void signInAnonymously().catch(() => {});
       window.location.assign(hardTarget);
       void preflightVenueHomeCriticalData({
         userId: user.id,

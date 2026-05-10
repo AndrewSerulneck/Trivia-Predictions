@@ -56,6 +56,13 @@ export function AuthNavigationGuard() {
     // Redirecting before that read completes causes valid sessions to be bounced.
     if (state.lastSyncedAt === 0) return;
 
+    // If a fresh login handoff is in progress (entryAt < 10s old), be patient —
+    // cookie and localStorage writes may not have propagated to the new page yet.
+    const entryAtRaw = Number(searchParams?.get("entryAt") ?? "");
+    if (Number.isFinite(entryAtRaw) && Date.now() - entryAtRaw <= 10_000) {
+      return;
+    }
+
     const currentPath = pathname ?? "/";
     const query = searchParams?.toString() ?? "";
     const currentUrl = query ? `${currentPath}?${query}` : currentPath;
@@ -73,12 +80,14 @@ export function AuthNavigationGuard() {
     if (state.tokenVerified && enforcedVenueId) {
       if (!venueIdFromPath && !isInSessionGameRoute(currentPath)) {
         const target = `/venue/${encodeURIComponent(enforcedVenueId)}`;
+        console.warn(`[AuthNavigationGuard] Redirecting to venue home: no venue in path at '${currentPath}'`);
         lastRedirectRef.current = target;
         router.replace(target);
         return;
       }
       if (venueIdFromPath && venueIdFromPath !== enforcedVenueId) {
         const target = `/venue/${encodeURIComponent(enforcedVenueId)}`;
+        console.warn(`[AuthNavigationGuard] Redirecting: path venue '${venueIdFromPath}' !== enforced '${enforcedVenueId}'`);
         lastRedirectRef.current = target;
         router.replace(target);
         return;
@@ -89,6 +98,7 @@ export function AuthNavigationGuard() {
       if (state.tokenVerified) {
         if (enforcedVenueId && enforcedVenueId !== venueIdFromPath) {
           const target = `/?v=${encodeURIComponent(venueIdFromPath)}`;
+          console.warn(`[AuthNavigationGuard] Redirecting to join: venue mismatch '${venueIdFromPath}' vs enforced '${enforcedVenueId}'`);
           lastRedirectRef.current = target;
           router.replace(target);
         }
@@ -97,7 +107,14 @@ export function AuthNavigationGuard() {
       if (hasValidEntryHandoff(searchParams ?? new URLSearchParams(), venueIdFromPath)) {
         return;
       }
+      // Prioritize a fresh entryAt URL param for 15s — covers cases where the
+      // sessionStorage handoff was consumed or cleared before this guard ran.
+      const entryAtForPath = Number(searchParams?.get("entryAt") ?? "");
+      if (Number.isFinite(entryAtForPath) && Date.now() - entryAtForPath <= 15_000) {
+        return;
+      }
       const fallback = `/?v=${encodeURIComponent(venueIdFromPath)}`;
+      console.warn(`[AuthNavigationGuard] Redirecting to login: unverified session on venue path '${venueIdFromPath}'`);
       lastRedirectRef.current = fallback;
       router.replace(fallback);
       return;

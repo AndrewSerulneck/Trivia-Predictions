@@ -318,7 +318,23 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     }
 
     const snapshot = consumeVenueHomeBootstrap({ venueId: venue.id, userId });
-    const handoff = consumeVenueHomeEntryHandoff({ venueId: venue.id, userId });
+    const sessionHandoff = consumeVenueHomeEntryHandoff({ venueId: venue.id, userId });
+
+    // Fall back to URL params as a secondary handoff signal when sessionStorage
+    // was cleared or expired before this effect ran (e.g. on slow connections).
+    let handoff = sessionHandoff;
+    if (!handoff) {
+      const params = new URLSearchParams(window.location.search);
+      const urlEntryUser = (params.get("entryUser") ?? "").trim();
+      const urlEntryVenue = (params.get("entryVenue") ?? "").trim();
+      const urlEntryAt = Number(params.get("entryAt") ?? "");
+      handoff = Boolean(
+        urlEntryUser &&
+        (!urlEntryVenue || urlEntryVenue === venue.id) &&
+        Number.isFinite(urlEntryAt) &&
+        Date.now() - urlEntryAt <= 60_000
+      );
+    }
 
     bootstrapSnapshotRef.current = snapshot;
     entryHandoffRef.current = handoff;
@@ -374,6 +390,13 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       if (storedVenueId && storedVenueId !== venue.id) router.replace(`/?v=${venue.id}`);
       return;
     }
+    // On slow connections the entryAt URL param may still be present at mount
+    // time even though the handoff wasn't found in sessionStorage. Use it as a
+    // proxy for "a login transition just happened" and double the patience window.
+    const mountParams = new URLSearchParams(window.location.search);
+    const mountEntryAt = Number(mountParams.get("entryAt") ?? "");
+    const isLoginTransition = Number.isFinite(mountEntryAt) && Date.now() - mountEntryAt <= 60_000;
+    const redirectDelay = isLoginTransition ? 10_000 : 5_000;
     const timer = window.setTimeout(() => {
       if (hasRecentVenueHomeRouteIntent({ venueId: venue.id, maxAgeMs: 30000 })) {
         return;
@@ -385,9 +408,10 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         return;
       }
       if (!hasUserTokenInCookie()) {
+        console.warn(`[VenueHub] Redirecting to login: no user token found after ${redirectDelay}ms guard (loginTransition=${isLoginTransition})`);
         router.replace(`/?v=${venue.id}`);
       }
-    }, 5000);
+    }, redirectDelay);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasUserTokenInCookie, venue.id]);
@@ -683,7 +707,10 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         const localUserId = (getUserId() ?? "").trim();
         const localVenueId = (getVenueId() ?? "").trim();
         if (!localUserId || !localVenueId || localVenueId !== venue.id || !hasUserTokenInCookie()) {
-          if (!cancelled) router.replace(`/?v=${encodeURIComponent(venue.id)}`);
+          if (!cancelled) {
+            console.warn(`[VenueHub] Redirecting to login during arrival: missing identity (userId=${!!localUserId}, venueMatch=${localVenueId === venue.id}, cookie=${hasUserTokenInCookie()})`);
+            router.replace(`/?v=${encodeURIComponent(venue.id)}`);
+          }
           return;
         }
         const coreLoadPromise = Promise.allSettled([loadTriviaQuota(), loadHomeBadges()]);

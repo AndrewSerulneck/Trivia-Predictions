@@ -8,7 +8,6 @@ const ODDS_API_BASE_URL = process.env.ODDS_API_BASE_URL ?? "https://api.the-odds
 const ODDS_API_KEY = process.env.ODDS_API_KEY?.trim() ?? "";
 const APISPORTS_NBA_BASE_URL = process.env.APISPORTS_NBA_BASE_URL?.trim() ?? "https://v2.nba.api-sports.io";
 const APISPORTS_API_KEY = process.env.APISPORTS_API_KEY?.trim() ?? "";
-const APISPORTS_NBA_BASE_URL_FALLBACKS = ["https://v2.nba.api-sports.io", "https://v1.basketball.api-sports.io"] as const;
 const FANTASY_SPORT_KEY = "basketball_nba";
 const FANTASY_NFL_SPORT_KEY = "americanfootball_nfl";
 const FANTASY_LINEUP_SIZE = 5;
@@ -1535,7 +1534,7 @@ function isApiSportsConfigured(): boolean {
 }
 
 function getApiSportsBaseCandidates(): string[] {
-  const candidates = [APISPORTS_NBA_BASE_URL, ...APISPORTS_NBA_BASE_URL_FALLBACKS]
+  const candidates = [APISPORTS_NBA_BASE_URL]
     .map((value) => String(value ?? "").trim().replace(/\/+$/, ""))
     .filter(Boolean);
   return Array.from(new Set(candidates));

@@ -78,6 +78,7 @@ export function proxy(request: NextRequest) {
   if (venueIdFromPath) {
     redirectUrl.searchParams.set("v", venueIdFromPath);
   }
+  console.warn(`[Middleware] Redirecting unauthenticated request: ${pathname} → / (hasEntryHandoff=false, hasCookies=false)`);
   return NextResponse.redirect(redirectUrl);
 }
 
