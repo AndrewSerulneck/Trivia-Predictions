@@ -991,20 +991,33 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
       {isMounted && popAnim
         ? createPortal(
             <div className="pointer-events-none fixed inset-0 z-[7000] flex items-center justify-center">
+              {(() => {
+                const isLimitReached = popAnim.count >= PICKEM_PICK_LIMIT;
+                const useShake = popAnim.shake && !isLimitReached;
+                return (
               <motion.span
                 key={popAnim.id}
-                className="select-none font-black leading-none"
+                className="select-none whitespace-nowrap font-black leading-none transform-gpu will-change-transform"
                 style={{
-                  color: popAnim.count >= PICKEM_PICK_LIMIT ? "#ef4444" : "#22c55e",
-                  fontSize: "clamp(5rem, 22vw, 11rem)",
+                  color: isLimitReached ? "#ef4444" : "#22c55e",
+                  fontSize:
+                    isLimitReached
+                      ? "clamp(2.2rem, 10vw, 4.5rem)"
+                      : "clamp(5rem, 22vw, 11rem)",
                   textShadow:
-                    popAnim.count >= PICKEM_PICK_LIMIT
-                      ? "0 0 60px rgba(239,68,68,0.55), 0 0 120px rgba(239,68,68,0.3)"
+                    isLimitReached
+                      ? "0 0 22px rgba(239,68,68,0.42), 0 0 44px rgba(239,68,68,0.24)"
                       : "0 0 60px rgba(34,197,94,0.55), 0 0 120px rgba(34,197,94,0.3)",
                 }}
                 initial={{ scale: 0, y: 0, x: 0, rotate: 0, opacity: 0 }}
                 animate={
-                  popAnim.shake
+                  isLimitReached
+                    ? {
+                        scale: [0.72, 1.08, 1.02, 0.98],
+                        y: [0, -20, -16, -8],
+                        opacity: [0, 1, 1, 0],
+                      }
+                    : useShake
                     ? {
                         scale:   [0, 1.65, 1.3, 1.3, 1.3, 1.3, 1.3, 0.9],
                         x:       [0,    0, -30,  30, -22,  22,   0,   0],
@@ -1020,7 +1033,13 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                       }
                 }
                 transition={
-                  popAnim.shake
+                  isLimitReached
+                    ? {
+                        duration: 0.55,
+                        times: [0, 0.28, 0.62, 1],
+                        ease: ["easeOut", "easeOut", "easeIn", "easeIn"],
+                      }
+                    : useShake
                     ? {
                         duration: 0.9,
                         times: [0, 0.14, 0.27, 0.4, 0.53, 0.66, 0.76, 1],
@@ -1033,8 +1052,10 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                       }
                 }
               >
-                {popAnim.count}
+                {isLimitReached ? "Limit Reached" : popAnim.count}
               </motion.span>
+                );
+              })()}
             </div>,
             document.body
           )

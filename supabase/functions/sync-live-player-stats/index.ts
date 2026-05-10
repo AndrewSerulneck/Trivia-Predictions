@@ -36,6 +36,16 @@ const APISPORTS_FINAL_REPLAY_EVERY_CYCLE = Math.max(
   0,
   Number.parseInt(Deno.env.get("FANTASY_LIVE_SYNC_FINAL_REPLAY_EVERY_CYCLE") ?? "6", 10) || 6
 );
+const FANTASY_TRACK_ONLY_ROSTERED_PLAYERS =
+  String(Deno.env.get("FANTASY_TRACK_ONLY_ROSTERED_PLAYERS") ?? "true").trim().toLowerCase() !== "false";
+const FANTASY_TRACKED_LOOKBACK_HOURS = Math.max(
+  1,
+  Number.parseInt(Deno.env.get("FANTASY_TRACKED_LOOKBACK_HOURS") ?? "24", 10) || 24
+);
+const FANTASY_TRACKED_LOOKAHEAD_HOURS = Math.max(
+  1,
+  Number.parseInt(Deno.env.get("FANTASY_TRACKED_LOOKAHEAD_HOURS") ?? "36", 10) || 36
+);
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -89,15 +99,15 @@ function parseRows(json: unknown): Record<string, unknown>[] {
 }
 
 function buildPlayerName(player: Record<string, unknown>, playerId: number): string {
-  const direct = String(getPath(player, ["player", "name"]) ?? "").trim();
-  if (direct) {
-    return direct;
-  }
   const first = String(getPath(player, ["player", "firstname"]) ?? getPath(player, ["player", "first_name"]) ?? "").trim();
   const last = String(getPath(player, ["player", "lastname"]) ?? getPath(player, ["player", "last_name"]) ?? "").trim();
   const combined = `${first} ${last}`.trim();
   if (combined) {
     return combined;
+  }
+  const direct = String(getPath(player, ["player", "name"]) ?? "").trim();
+  if (direct) {
+    return direct;
   }
   return `Player ${Math.round(playerId)}`;
 }
@@ -169,6 +179,62 @@ function mergeSyncResults(target: SyncResult, source: SyncResult): void {
   target.errors.push(...source.errors);
 }
 
+function extractLineupPlayerIds(lineup: unknown): number[] {
+  if (!Array.isArray(lineup)) {
+    return [];
+  }
+  const ids: number[] = [];
+  const seen = new Set<number>();
+  for (const item of lineup) {
+    let parsed = Number.NaN;
+    if (item && typeof item === "object" && !Array.isArray(item)) {
+      const row = item as Record<string, unknown>;
+      parsed = Number.parseInt(String(row.player_id ?? row.playerId ?? ""), 10);
+    } else {
+      parsed = Number.parseInt(String(item ?? ""), 10);
+    }
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      continue;
+    }
+    const normalized = Math.trunc(parsed);
+    if (seen.has(normalized)) {
+      continue;
+    }
+    seen.add(normalized);
+    ids.push(normalized);
+  }
+  return ids;
+}
+
+async function loadTrackedRosterPlayerIds(
+  supabase: ReturnType<typeof createClient>
+): Promise<{ ids: Set<number>; error?: string }> {
+  const nowMs = Date.now();
+  const fromIso = new Date(nowMs - FANTASY_TRACKED_LOOKBACK_HOURS * 60 * 60 * 1000).toISOString();
+  const toIso = new Date(nowMs + FANTASY_TRACKED_LOOKAHEAD_HOURS * 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await supabase
+    .from("fantasy_entries")
+    .select("lineup, starts_at, status, sport_key")
+    .eq("sport_key", "basketball_nba")
+    .in("status", ["pending", "live"])
+    .gte("starts_at", fromIso)
+    .lte("starts_at", toIso)
+    .limit(5000);
+
+  if (error) {
+    return { ids: new Set<number>(), error: `Failed to load tracked fantasy roster players: ${error.message}` };
+  }
+
+  const ids = new Set<number>();
+  for (const row of (data as Array<Record<string, unknown>> | null) ?? []) {
+    for (const id of extractLineupPlayerIds(row.lineup)) {
+      ids.add(id);
+    }
+  }
+  return { ids };
+}
+
 async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolean }): Promise<SyncResult> {
   const result: SyncResult = {
     ok: true,
@@ -234,6 +300,20 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
 
   result.scannedGames = games.length;
 
+  let trackedRosterPlayerIds: Set<number> | null = null;
+  if (FANTASY_TRACK_ONLY_ROSTERED_PLAYERS) {
+    const tracked = await loadTrackedRosterPlayerIds(supabase);
+    if (tracked.error) {
+      result.errors.push(tracked.error);
+    } else {
+      trackedRosterPlayerIds = tracked.ids;
+      if (trackedRosterPlayerIds.size === 0) {
+        result.ok = result.errors.length === 0;
+        return result;
+      }
+    }
+  }
+
   for (const game of games) {
     const gameId = String(getPath(game, ["id"]) ?? "").trim();
     if (!gameId) {
@@ -260,6 +340,10 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
       if (!Number.isFinite(playerId) || playerId <= 0) {
         continue;
       }
+      const normalizedPlayerId = Math.round(playerId);
+      if (trackedRosterPlayerIds && !trackedRosterPlayerIds.has(normalizedPlayerId)) {
+        continue;
+      }
       const playerName = buildPlayerName(player, playerId);
       const teamId = parseNumber(getPath(player, ["team", "id"])) || null;
       const teamName = String(getPath(player, ["team", "name"]) ?? "").trim();
@@ -274,7 +358,7 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
 
       upsertRows.push({
         game_id: gameId,
-        player_id: Math.round(playerId),
+        player_id: normalizedPlayerId,
         player_name: playerName,
         team_id: teamId ? Math.round(teamId) : null,
         team_name: teamName,
