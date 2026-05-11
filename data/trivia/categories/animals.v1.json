@@ -4886,5 +4886,161 @@
     "correctAnswer": 0,
     "category": "Animals",
     "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-incredible-memory-and-complex-social-structures-often-exhibiting-mourning-rituals",
+    "question": "Which animal is known for its incredible memory and complex social structures, often exhibiting mourning rituals?",
+    "options": [
+      "Elephant",
+      "Dolphin",
+      "Chimpanzee",
+      "Wolf"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-do-caterpillars-primarily-transform-into",
+    "question": "What do caterpillars primarily transform into?",
+    "options": [
+      "Butterfly",
+      "Beetle",
+      "Moth",
+      "Ladybug"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-ability-to-regenerate-lost-limbs-including-its-tail-and-even-parts-of-its-brain",
+    "question": "Which animal is known for its ability to regenerate lost limbs, including its tail and even parts of its brain?",
+    "options": [
+      "Starfish",
+      "Lizard",
+      "Salamander",
+      "Crab"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-marine-animal-has-a-decentralized-nervous-system-with-a-significant-portion-of-its-brain-located-in-its-arms",
+    "question": "Which marine animal has a decentralized nervous system, with a significant portion of its 'brain' located in its arms?",
+    "options": [
+      "Jellyfish",
+      "Octopus",
+      "Squid",
+      "Sea Anemone"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-a-group-of-fish-commonly-called",
+    "question": "What is a group of fish commonly called?",
+    "options": [
+      "Herd",
+      "Flock",
+      "School",
+      "Swarm"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-unique-about-the-eyes-of-a-chameleon",
+    "question": "What is unique about the eyes of a chameleon?",
+    "options": [
+      "They can see in complete darkness",
+      "They can move independently",
+      "They have multiple pupils",
+      "They are sensitive to UV light"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-bird-holds-the-record-for-the-longest-known-migratory-journey-flying-annually-between-the-arctic-and-antarctic",
+    "question": "Which bird holds the record for the longest known migratory journey, flying annually between the Arctic and Antarctic?",
+    "options": [
+      "Albatross",
+      "Arctic Tern",
+      "Godwit",
+      "Osprey"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-color-is-the-skin-of-a-polar-bear",
+    "question": "What color is the skin of a polar bear?",
+    "options": [
+      "White",
+      "Pink",
+      "Black",
+      "Grey"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-uses-echolocation-to-navigate-and-hunt-in-water",
+    "question": "Which animal uses echolocation to navigate and hunt in water?",
+    "options": [
+      "Shark",
+      "Seal",
+      "Dolphin",
+      "Whale"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-has-the-most-powerful-bite-force-among-all-living-animals",
+    "question": "Which animal has the most powerful bite force among all living animals?",
+    "options": [
+      "Great White Shark",
+      "Lion",
+      "Saltwater Crocodile",
+      "Grizzly Bear"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-marine-mammal-is-known-for-having-the-largest-brain",
+    "question": "Which marine mammal is known for having the largest brain?",
+    "options": [
+      "Blue Whale",
+      "Orca",
+      "Sperm Whale",
+      "Humpback Whale"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-having-the-longest-lifespan-among-all-vertebrates",
+    "question": "Which animal is known for having the longest lifespan among all vertebrates?",
+    "options": [
+      "Bowhead Whale",
+      "Greenland Shark",
+      "Galapagos Tortoise",
+      "Red Sea Urchin"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
   }
 ]

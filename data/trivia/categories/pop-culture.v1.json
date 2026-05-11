@@ -4873,5 +4873,161 @@
     "correctAnswer": 1,
     "category": "Pop Culture",
     "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-fictional-wizarding-school-in-the-harry-potter-series",
+    "question": "What is the name of the fictional wizarding school in the \"Harry Potter\" series?",
+    "options": [
+      "Hogwarts",
+      "Durmstrang",
+      "Beauxbatons",
+      "Ilvermorny"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-singer-is-known-for-hits-like-single-ladies-put-a-ring-on-it-and-crazy-in-love",
+    "question": "Which singer is known for hits like \"Single Ladies (Put a Ring on It)\" and \"Crazy in Love\"?",
+    "options": [
+      "Rihanna",
+      "Beyoncé",
+      "Adele",
+      "Lady Gaga"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-the-sitcom-friends-what-is-the-name-of-the-coffee-shop-where-the-main-characters-often-hang-out",
+    "question": "In the sitcom \"Friends,\" what is the name of the coffee shop where the main characters often hang out?",
+    "options": [
+      "Central Perk",
+      "The Grind",
+      "Daily Dose",
+      "Coffee Bean"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-nintendo-character-is-a-plumber-who-rescues-princess-peach",
+    "question": "Which Nintendo character is a plumber who rescues Princess Peach?",
+    "options": [
+      "Luigi",
+      "Link",
+      "Mario",
+      "Donkey Kong"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-actor-plays-the-role-of-tony-stark-also-known-as-iron-man-in-the-marvel-cinematic-universe",
+    "question": "Which actor plays the role of Tony Stark, also known as Iron Man, in the Marvel Cinematic Universe?",
+    "options": [
+      "Chris Evans",
+      "Robert Downey Jr.",
+      "Mark Ruffalo",
+      "Chris Hemsworth"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-iconic-album-cover-features-a-prism-refracting-light-released-by-pink-floyd",
+    "question": "Which iconic album cover features a prism refracting light, released by Pink Floyd?",
+    "options": [
+      "The Wall",
+      "Wish You Were Here",
+      "Dark Side of the Moon",
+      "Animals"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "before-becoming-a-famous-actor-which-star-of-the-office-us-was-an-intern-on-late-night-with-conan-obrien",
+    "question": "Before becoming a famous actor, which star of \"The Office\" (US) was an intern on \"Late Night with Conan O'Brien\"?",
+    "options": [
+      "Steve Carell",
+      "John Krasinski",
+      "Rainn Wilson",
+      "Mindy Kaling"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-futuristic-metropolis-in-the-cyberpunk-2077-video-game",
+    "question": "What is the name of the futuristic metropolis in the Cyberpunk 2077 video game?",
+    "options": [
+      "Night City",
+      "Neo-Kyoto",
+      "Tech-Vegas",
+      "Bright Metropolis"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-social-media-platform-is-known-for-its-tweets-and-a-bird-logo-prior-to-its-rebrand",
+    "question": "Which social media platform is known for its \"tweets\" and a bird logo (prior to its rebrand)?",
+    "options": [
+      "Instagram",
+      "Facebook",
+      "X (formerly Twitter)",
+      "TikTok"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-director-is-known-for-his-distinct-visual-style-often-featuring-symmetrical-shots-and-pastel-color-palettes-in-films-like-the-grand-budapest-hotel-and-rushmore",
+    "question": "Which director is known for his distinct visual style, often featuring symmetrical shots and pastel color palettes, in films like \"The Grand Budapest Hotel\" and \"Rushmore\"?",
+    "options": [
+      "Quentin Tarantino",
+      "Christopher Nolan",
+      "Wes Anderson",
+      "Martin Scorsese"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-character-in-stranger-things-has-telekinetic-abilities-and-a-love-for-eggos",
+    "question": "Which character in \"Stranger Things\" has telekinetic abilities and a love for Eggos?",
+    "options": [
+      "Mike",
+      "Dustin",
+      "Lucas",
+      "Eleven"
+    ],
+    "correctAnswer": 3,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-streaming-service-released-the-hit-series-squid-game",
+    "question": "Which streaming service released the hit series 'Squid Game'?",
+    "options": [
+      "Netflix",
+      "Hulu",
+      "Amazon Prime Video",
+      "Disney+"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
   }
 ]

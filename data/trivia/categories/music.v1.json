@@ -4873,5 +4873,174 @@
     "correctAnswer": 2,
     "category": "Music",
     "difficulty": "easy"
+  },
+  {
+    "slug": "which-musical-instrument-has-keys-pedals-and-strings-and-is-a-common-fixture-in-classical-music",
+    "question": "Which musical instrument has keys, pedals, and strings, and is a common fixture in classical music?",
+    "options": [
+      "Guitar",
+      "Violin",
+      "Piano",
+      "Trumpet"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-common-time-signature-for-most-popular-music-often-referred-to-as-common-time",
+    "question": "What is the common time signature for most popular music, often referred to as 'common time'?",
+    "options": [
+      "3/4",
+      "6/8",
+      "4/4",
+      "2/4"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-artist-released-the-groundbreaking-album-sgt-peppers-lonely-hearts-club-band",
+    "question": "Which artist released the groundbreaking album 'Sgt. Pepper's Lonely Hearts Club Band'?",
+    "options": [
+      "The Rolling Stones",
+      "The Who",
+      "The Beatles",
+      "Led Zeppelin"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-which-city-did-the-genre-of-grunge-music-originate",
+    "question": "In which city did the genre of grunge music originate?",
+    "options": [
+      "Los Angeles",
+      "New York City",
+      "Seattle",
+      "London"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-musical-symbol-that-indicates-a-note-should-be-held-for-twice-its-usual-duration",
+    "question": "What is the name of the musical symbol that indicates a note should be held for twice its usual duration?",
+    "options": [
+      "Fermata",
+      "Staccato",
+      "Tie",
+      "Whole note"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-artist-is-known-for-the-hit-song-purple-haze",
+    "question": "Which artist is known for the hit song 'Purple Haze'?",
+    "options": [
+      "Eric Clapton",
+      "Jimi Hendrix",
+      "Jimmy Page",
+      "Carlos Santana"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-is-renowned-for-inventing-the-bagpipes",
+    "question": "Which country is renowned for inventing the bagpipes?",
+    "options": [
+      "Ireland",
+      "Scotland",
+      "England",
+      "Wales"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-term-for-a-musical-composition-for-a-solo-instrument-often-with-piano-accompaniment-typically-in-three-or-four-movements",
+    "question": "What is the term for a musical composition for a solo instrument, often with piano accompaniment, typically in three or four movements?",
+    "options": [
+      "Symphony",
+      "Concerto",
+      "Sonata",
+      "Oratorio"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-musical-term-refers-to-the-speed-at-which-a-piece-of-music-is-played",
+    "question": "Which musical term refers to the speed at which a piece of music is played?",
+    "options": [
+      "Rhythm",
+      "Tempo",
+      "Melody",
+      "Harmony"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-singer-is-known-for-hits-like-i-will-always-love-you-and-greatest-love-of-all",
+    "question": "Which singer is known for hits like 'I Will Always Love You' and 'Greatest Love of All'?",
+    "options": [
+      "Mariah Carey",
+      "Celine Dion",
+      "Whitney Houston",
+      "Aretha Franklin"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-primary-instrument-played-by-jazz-legend-louis-armstrong",
+    "question": "What is the primary instrument played by jazz legend Louis Armstrong?",
+    "options": [
+      "Saxophone",
+      "Piano",
+      "Trumpet",
+      "Drums"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-iconic-british-band-released-the-album-the-dark-side-of-the-moon",
+    "question": "Which iconic British band released the album 'The Dark Side of the Moon'?",
+    "options": [
+      "Led Zeppelin",
+      "The Rolling Stones",
+      "Pink Floyd",
+      "Queen"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-musical-instrument-is-commonly-associated-with-the-genre-of-flamenco-music",
+    "question": "Which musical instrument is commonly associated with the genre of flamenco music?",
+    "options": [
+      "Violin",
+      "Trumpet",
+      "Acoustic Guitar",
+      "Piano"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
   }
 ]

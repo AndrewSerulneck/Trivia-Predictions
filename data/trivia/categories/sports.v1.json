@@ -4873,5 +4873,161 @@
     "correctAnswer": 1,
     "category": "Sports",
     "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-primary-objective-of-a-touchdown-in-american-football",
+    "question": "What is the primary objective of a 'touchdown' in American Football?",
+    "options": [
+      "Intercepting a pass",
+      "Kicking a field goal",
+      "Carrying or catching the ball in the opponent's end zone",
+      "Tackling the quarterback"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-cricket-what-is-the-term-for-dismissing-a-batsman-by-hitting-the-wicket-with-the-ball-after-they-have-left-their-crease",
+    "question": "In cricket, what is the term for dismissing a batsman by hitting the wicket with the ball after they have left their crease?",
+    "options": [
+      "Catch",
+      "Run out",
+      "LBW",
+      "Bowled"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-gymnastic-apparatus-is-a-long-narrow-wooden-beam-used-by-female-gymnasts",
+    "question": "Which gymnastic apparatus is a long, narrow wooden beam used by female gymnasts?",
+    "options": [
+      "Uneven Bars",
+      "Vault",
+      "Balance Beam",
+      "Parallel Bars"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-boxing-what-is-the-term-for-a-punch-delivered-with-the-lead-hand-usually-straight-and-quick",
+    "question": "In boxing, what is the term for a punch delivered with the lead hand, usually straight and quick?",
+    "options": [
+      "Hook",
+      "Uppercut",
+      "Jab",
+      "Cross"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-event-in-track-cycling-involves-a-mass-start-and-riders-completing-a-set-number-of-laps-with-points-awarded-for-sprints",
+    "question": "Which event in track cycling involves a mass start and riders completing a set number of laps, with points awarded for sprints?",
+    "options": [
+      "Keirin",
+      "Sprint",
+      "Madison",
+      "Points Race"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-innings-are-typically-played-in-a-standard-game-of-baseball",
+    "question": "How many innings are typically played in a standard game of baseball?",
+    "options": [
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-term-for-the-fastest-lap-recorded-during-a-formula-1-grand-prix-race",
+    "question": "What is the term for the fastest lap recorded during a Formula 1 Grand Prix race?",
+    "options": [
+      "Pole Position",
+      "Pit Stop",
+      "Fastest Lap",
+      "Checkered Flag"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-color-jersey-is-traditionally-worn-by-the-leader-of-the-general-classification-in-the-tour-de-france",
+    "question": "What color jersey is traditionally worn by the leader of the general classification in the Tour de France?",
+    "options": [
+      "Red",
+      "Green",
+      "Yellow",
+      "White"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-country-is-credited-with-inventing-the-modern-sport-of-badminton",
+    "question": "Which country is credited with inventing the modern sport of Badminton?",
+    "options": [
+      "China",
+      "England",
+      "India",
+      "Malaysia"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-city-has-hosted-the-summer-olympic-games-three-times",
+    "question": "Which city has hosted the Summer Olympic Games three times?",
+    "options": [
+      "Athens",
+      "Paris",
+      "London",
+      "Los Angeles"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-holds-the-record-for-the-most-career-points-in-nba-history",
+    "question": "Who holds the record for the most career points in NBA history?",
+    "options": [
+      "LeBron James",
+      "Kareem Abdul-Jabbar",
+      "Michael Jordan",
+      "Kobe Bryant"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-sport-would-an-athlete-perform-a-triple-axel",
+    "question": "In which sport would an athlete perform a 'triple axel'?",
+    "options": [
+      "Gymnastics",
+      "Figure Skating",
+      "Diving",
+      "Snowboarding"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
   }
 ]

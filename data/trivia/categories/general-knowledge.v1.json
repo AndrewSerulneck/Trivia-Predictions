@@ -4860,5 +4860,161 @@
     "correctAnswer": 1,
     "category": "General Knowledge",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-is-famous-for-the-pyramids-of-giza",
+    "question": "Which country is famous for the pyramids of Giza?",
+    "options": [
+      "Mexico",
+      "Egypt",
+      "Greece",
+      "Peru"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-wrote-to-kill-a-mockingbird",
+    "question": "Who wrote 'To Kill a Mockingbird'?",
+    "options": [
+      "J.K. Rowling",
+      "Ernest Hemingway",
+      "Harper Lee",
+      "F. Scott Fitzgerald"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-continents-are-there-on-earth",
+    "question": "How many continents are there on Earth?",
+    "options": [
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-ocean-is-the-largest-on-earth",
+    "question": "Which ocean is the largest on Earth?",
+    "options": [
+      "Atlantic Ocean",
+      "Indian Ocean",
+      "Pacific Ocean",
+      "Arctic Ocean"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-country-has-the-largest-land-area-in-the-world",
+    "question": "Which country has the largest land area in the world?",
+    "options": [
+      "China",
+      "Canada",
+      "Russia",
+      "United States"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-what-year-did-the-first-man-walk-on-the-moon",
+    "question": "In what year did the first man walk on the moon?",
+    "options": [
+      "1959",
+      "1969",
+      "1979",
+      "1989"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-ancient-wonder-was-a-colossal-statue-of-the-greek-sun-god-helios",
+    "question": "Which ancient wonder was a colossal statue of the Greek sun god Helios?",
+    "options": [
+      "Lighthouse of Alexandria",
+      "Colossus of Rhodes",
+      "Statue of Zeus at Olympia",
+      "Temple of Artemis at Ephesus"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "approximately-what-is-the-speed-of-light-in-a-vacuum",
+    "question": "Approximately what is the speed of light in a vacuum?",
+    "options": [
+      "150,000 km/s",
+      "300,000 km/s",
+      "450,000 km/s",
+      "600,000 km/s"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-is-the-smallest-country-in-the-world-by-land-area",
+    "question": "Which is the smallest country in the world by land area?",
+    "options": [
+      "Monaco",
+      "Nauru",
+      "Vatican City",
+      "San Marino"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-literary-works-features-the-first-appearance-of-sherlock-holmes",
+    "question": "Which of these literary works features the first appearance of 'Sherlock Holmes'?",
+    "options": [
+      "Moby Dick",
+      "Pride and Prejudice",
+      "A Study in Scarlet",
+      "The Great Gatsby"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-continent-is-the-amazon-rainforest-primarily-located-in",
+    "question": "Which continent is the Amazon Rainforest primarily located in?",
+    "options": [
+      "Africa",
+      "Asia",
+      "South America",
+      "North America"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-ancient-trade-route-connecting-the-east-and-west",
+    "question": "What is the name of the ancient trade route connecting the East and West?",
+    "options": [
+      "The Spice Road",
+      "The Silk Road",
+      "The Royal Road",
+      "The Amber Road"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
   }
 ]

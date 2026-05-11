@@ -4873,5 +4873,174 @@
     "correctAnswer": 2,
     "category": "Geography",
     "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-smallest-continent-by-land-area",
+    "question": "What is the smallest continent by land area?",
+    "options": [
+      "Asia",
+      "Africa",
+      "Europe",
+      "Australia"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-european-country-is-a-peninsula-known-for-its-boot-like-shape",
+    "question": "Which European country is a peninsula known for its boot-like shape?",
+    "options": [
+      "Spain",
+      "Greece",
+      "Italy",
+      "Portugal"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-strait-of-gibraltar-separates-which-two-continents",
+    "question": "The Strait of Gibraltar separates which two continents?",
+    "options": [
+      "Europe and Asia",
+      "North America and South America",
+      "Africa and Europe",
+      "Asia and Africa"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-desert-is-known-for-its-red-sand-dunes-and-covers-a-large-part-of-southern-africa",
+    "question": "Which desert is known for its red sand dunes and covers a large part of southern Africa?",
+    "options": [
+      "Sahara",
+      "Gobi",
+      "Atacama",
+      "Kalahari"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-south-american-country-is-landlocked",
+    "question": "Which South American country is landlocked?",
+    "options": [
+      "Chile",
+      "Ecuador",
+      "Paraguay",
+      "Uruguay"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-bodies-of-water-is-a-lake-not-a-sea",
+    "question": "Which of these bodies of water is a lake, not a sea?",
+    "options": [
+      "Red Sea",
+      "Black Sea",
+      "Caspian Sea",
+      "Adriatic Sea"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-city-of-istanbul-is-uniquely-located-on-two-continents-which-two",
+    "question": "The city of Istanbul is uniquely located on two continents. Which two?",
+    "options": [
+      "Europe and Asia",
+      "Asia and Africa",
+      "Europe and North America",
+      "Asia and Australia"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-continent-is-almost-entirely-covered-by-ice",
+    "question": "Which continent is almost entirely covered by ice?",
+    "options": [
+      "Arctic",
+      "Greenland",
+      "Antarctica",
+      "Siberia"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-river-flows-through-london-england",
+    "question": "Which river flows through London, England?",
+    "options": [
+      "Seine",
+      "Danube",
+      "Thames",
+      "Rhine"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-longest-unbroken-mountain-range-in-the-world-stretching-along-the-western-side-of-south-america-is-called-what",
+    "question": "The longest unbroken mountain range in the world, stretching along the western side of South America, is called what?",
+    "options": [
+      "Rocky Mountains",
+      "Atlas Mountains",
+      "Andes Mountains",
+      "Great Dividing Range"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-has-the-largest-population-in-africa",
+    "question": "Which country has the largest population in Africa?",
+    "options": [
+      "Egypt",
+      "Ethiopia",
+      "Nigeria",
+      "South Africa"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-deepest-ocean-trench-on-earth",
+    "question": "What is the deepest ocean trench on Earth?",
+    "options": [
+      "Kermadec Trench",
+      "Mariana Trench",
+      "Philippine Trench",
+      "Java Trench"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-is-known-as-the-land-of-a-thousand-lakes",
+    "question": "Which country is known as the 'Land of a Thousand Lakes'?",
+    "options": [
+      "Finland",
+      "Canada",
+      "Sweden",
+      "Russia"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "medium"
   }
 ]

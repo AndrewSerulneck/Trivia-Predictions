@@ -4873,5 +4873,174 @@
     "correctAnswer": 2,
     "category": "History",
     "difficulty": "hard"
+  },
+  {
+    "slug": "what-ancient-wonder-was-a-massive-lighthouse-located-in-alexandria-egypt",
+    "question": "What ancient wonder was a massive lighthouse located in Alexandria, Egypt?",
+    "options": [
+      "Colossus of Rhodes",
+      "Lighthouse of Alexandria",
+      "Statue of Zeus at Olympia",
+      "Temple of Artemis at Ephesus"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-byzantine-empire-was-a-continuation-of-which-empire-in-its-eastern-provinces",
+    "question": "The Byzantine Empire was a continuation of which empire in its eastern provinces?",
+    "options": [
+      "Persian Empire",
+      "Roman Empire",
+      "Ottoman Empire",
+      "Mongol Empire"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-was-the-first-emperor-of-ancient-rome",
+    "question": "Who was the first emperor of ancient Rome?",
+    "options": [
+      "Julius Caesar",
+      "Augustus",
+      "Nero",
+      "Constantine"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-edict-of-nantes-issued-in-1598-granted-substantial-rights-to-which-religious-minority-in-france",
+    "question": "The Edict of Nantes, issued in 1598, granted substantial rights to which religious minority in France?",
+    "options": [
+      "Jews",
+      "Calvinist Protestants (Huguenots)",
+      "Orthodox Christians",
+      "Anabaptists"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-queen-of-egypt-was-famous-for-her-relationships-with-julius-caesar-and-mark-antony",
+    "question": "Which queen of Egypt was famous for her relationships with Julius Caesar and Mark Antony?",
+    "options": [
+      "Nefertiti",
+      "Hatshepsut",
+      "Cleopatra VII",
+      "Sobekneferu"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-glorious-revolution-of-1688-established-the-supremacy-of-parliament-over-the-monarchy-in-which-country",
+    "question": "The 'Glorious Revolution' of 1688 established the supremacy of Parliament over the monarchy in which country?",
+    "options": [
+      "France",
+      "England",
+      "Spain",
+      "Russia"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-what-year-did-the-berlin-wall-fall-symbolizing-the-end-of-the-cold-war-era",
+    "question": "In what year did the Berlin Wall fall, symbolizing the end of the Cold War era?",
+    "options": [
+      "1985",
+      "1987",
+      "1989",
+      "1991"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-is-credited-with-discovering-penicillin-revolutionizing-medicine",
+    "question": "Who is credited with discovering penicillin, revolutionizing medicine?",
+    "options": [
+      "Louis Pasteur",
+      "Marie Curie",
+      "Alexander Fleming",
+      "Robert Koch"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-construction-of-the-suez-canal-significantly-shortened-sea-voyages-between-europe-and-which-continent",
+    "question": "The construction of the Suez Canal significantly shortened sea voyages between Europe and which continent?",
+    "options": [
+      "North America",
+      "South America",
+      "Asia",
+      "Australia"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-renaissance-period-began-in-which-european-country",
+    "question": "The Renaissance period began in which European country?",
+    "options": [
+      "France",
+      "England",
+      "Germany",
+      "Italy"
+    ],
+    "correctAnswer": 3,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-was-the-last-empress-of-china-ruling-de-facto-for-47-years-during-the-late-qing-dynasty",
+    "question": "Who was the last Empress of China, ruling de facto for 47 years during the late Qing Dynasty?",
+    "options": [
+      "Empress Wu Zetian",
+      "Empress Dowager Cixi",
+      "Empress Xiaozhuang Wen",
+      "Empress Lü"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-year-was-the-united-states-declaration-of-independence-adopted",
+    "question": "What year was the United States Declaration of Independence adopted?",
+    "options": [
+      "1774",
+      "1776",
+      "1783",
+      "1787"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-ancient-mesopotamian-civilization-is-credited-with-creating-the-first-known-writing-system-cuneiform",
+    "question": "Which ancient Mesopotamian civilization is credited with creating the first known writing system, cuneiform?",
+    "options": [
+      "Akkadians",
+      "Babylonians",
+      "Sumerians",
+      "Assyrians"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
   }
 ]

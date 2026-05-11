@@ -4873,5 +4873,161 @@
     "correctAnswer": 1,
     "category": "Science",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-approximate-age-of-the-earth",
+    "question": "What is the approximate age of the Earth?",
+    "options": [
+      "6,000 years",
+      "4.5 billion years",
+      "1 million years",
+      "13.8 billion years"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-type-of-chemical-bond-involves-the-sharing-of-electron-pairs-between-atoms",
+    "question": "Which type of chemical bond involves the sharing of electron pairs between atoms?",
+    "options": [
+      "Ionic bond",
+      "Metallic bond",
+      "Covalent bond",
+      "Hydrogen bond"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-layer-of-the-earth-is-primarily-responsible-for-generating-its-magnetic-field",
+    "question": "What layer of the Earth is primarily responsible for generating its magnetic field?",
+    "options": [
+      "Crust",
+      "Mantle",
+      "Outer Core",
+      "Inner Core"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-part-of-the-human-brain-is-primarily-responsible-for-controlling-balance-and-coordination",
+    "question": "Which part of the human brain is primarily responsible for controlling balance and coordination?",
+    "options": [
+      "Cerebrum",
+      "Brainstem",
+      "Cerebellum",
+      "Thalamus"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-astronomical-phenomenon-describes-the-bending-of-light-as-it-passes-a-massive-object",
+    "question": "What astronomical phenomenon describes the bending of light as it passes a massive object?",
+    "options": [
+      "Redshift",
+      "Gravitational lensing",
+      "Chandrasekhar limit",
+      "Stellar parallax"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-the-equation-emc-what-does-the-c-represent",
+    "question": "In the equation E=mc², what does the 'c' represent?",
+    "options": [
+      "Charge",
+      "Mass",
+      "Speed of light",
+      "Energy"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-scientific-principle-states-that-two-identical-fermions-cannot-occupy-the-same-quantum-state-simultaneously",
+    "question": "Which scientific principle states that two identical fermions cannot occupy the same quantum state simultaneously?",
+    "options": [
+      "Heisenberg Uncertainty Principle",
+      "Pauli Exclusion Principle",
+      "Aufbau Principle",
+      "Hund's Rule"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-astronomical-phenomenon-describes-the-gradual-increase-in-the-wavelength-of-light-from-distant-galaxies-as-they-move-away-from-us",
+    "question": "What astronomical phenomenon describes the gradual increase in the wavelength of light from distant galaxies as they move away from us?",
+    "options": [
+      "Blue Shift",
+      "Gravitational Lensing",
+      "Red Shift",
+      "Stellar Parallax"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-scientific-principle-describes-the-tendency-of-an-object-to-resist-changes-in-its-state-of-motion",
+    "question": "What scientific principle describes the tendency of an object to resist changes in its state of motion?",
+    "options": [
+      "Gravity",
+      "Inertia",
+      "Momentum",
+      "Friction"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-the-following-describes-the-complete-set-of-genes-or-genetic-material-present-in-a-cell-or-organism",
+    "question": "Which of the following describes the complete set of genes or genetic material present in a cell or organism?",
+    "options": [
+      "Proteome",
+      "Metabolome",
+      "Genome",
+      "Transcriptome"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-main-gas-that-plants-absorb-from-the-atmosphere-for-photosynthesis",
+    "question": "What is the main gas that plants absorb from the atmosphere for photosynthesis?",
+    "options": [
+      "Oxygen",
+      "Carbon Dioxide",
+      "Nitrogen",
+      "Hydrogen"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-smallest-unit-of-an-element-that-retains-its-chemical-properties",
+    "question": "What is the smallest unit of an element that retains its chemical properties?",
+    "options": [
+      "Molecule",
+      "Atom",
+      "Proton",
+      "Electron"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "easy"
   }
 ]
