@@ -1,0 +1,4 @@
+{
+  "build": { "builder": "NIXPACKS" },
+  "deploy": { "startCommand": "node --import tsx scripts/heartbeat.ts" }
+}

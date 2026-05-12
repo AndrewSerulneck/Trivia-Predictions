@@ -24,6 +24,10 @@ const FANTASY_USE_DIRECT_APISPORTS_SCORING =
   String(process.env.FANTASY_USE_DIRECT_APISPORTS_SCORING ?? "")
     .trim()
     .toLowerCase() !== "false";
+const FANTASY_ALLOW_STARTED_DRAFTING_FOR_TESTING =
+  String(process.env.FANTASY_ALLOW_STARTED_DRAFTING_FOR_TESTING ?? "")
+    .trim()
+    .toLowerCase() === "true";
 const FANTASY_TABLES_MISSING_ERROR =
   "Fantasy tables are not installed in this Supabase project yet. Run migration supabase/migrations/20260428184500_add_fantasy_entries.sql.";
 
@@ -1372,6 +1376,10 @@ function validateLineup(lineup: unknown): string[] {
   return parsed;
 }
 
+function shouldAllowStartedDraftingForTesting(): boolean {
+  return FANTASY_ALLOW_STARTED_DRAFTING_FOR_TESTING;
+}
+
 function buildStoredLineupWithIds(lineup: string[], playerPool: FantasyPlayerPoolItem[]): Array<{ player_id: number; player_name: string }> {
   const poolByKey = new Map<string, FantasyPlayerPoolItem>();
   for (const item of playerPool) {
@@ -1411,6 +1419,7 @@ export async function submitFantasyEntry(params: {
   const lineup = validateLineup(params.lineup);
   const tzOffsetMinutes = parseTimezoneOffset(params.tzOffsetMinutes);
   const todayDate = getTodayDateInOffset(tzOffsetMinutes);
+  const allowStartedDrafting = shouldAllowStartedDraftingForTesting();
 
   if (!userId || !venueId || !gameId) {
     throw new Error("userId, venueId, and gameId are required.");
@@ -1437,7 +1446,7 @@ export async function submitFantasyEntry(params: {
       throw new Error("No NBA games available for this date.");
     }
 
-    const eligibleGames = dayGames.filter((game) => !game.isLocked);
+    const eligibleGames = allowStartedDrafting ? dayGames : dayGames.filter((game) => !game.isLocked);
     if (eligibleGames.length === 0) {
       throw new Error("All NBA games for today have already started.");
     }
@@ -1445,9 +1454,9 @@ export async function submitFantasyEntry(params: {
     playerPool = await getFantasyPlayerPoolForDate({
       date: dailyDate,
       tzOffsetMinutes,
-      includeStartedGames: false,
+      includeStartedGames: allowStartedDrafting,
     });
-    if (playerPool.length === 0) {
+    if (playerPool.length === 0 && !allowStartedDrafting) {
       throw new Error("No eligible players are available from unstarted NBA games.");
     }
 
@@ -1533,6 +1542,7 @@ export async function updateFantasyEntryLineup(params: {
   const gameId = String(params.gameId ?? "").trim();
   const lineup = validateLineup(params.lineup);
   const tzOffsetMinutes = parseTimezoneOffset(params.tzOffsetMinutes);
+  const allowStartedDrafting = shouldAllowStartedDraftingForTesting();
 
   if (!userId || !venueId || !gameId) {
     throw new Error("userId, venueId, and gameId are required.");
@@ -1553,10 +1563,10 @@ export async function updateFantasyEntryLineup(params: {
   if (existingError || !existingRow) {
     throw new Error("Fantasy entry not found for this slate.");
   }
-  if (existingRow.status === "canceled" || existingRow.status === "final") {
+  if (!allowStartedDrafting && (existingRow.status === "canceled" || existingRow.status === "final")) {
     throw new Error("This lineup can no longer be changed because games have already started.");
   }
-  if (await isFantasyEntryRosterLocked(existingRow, tzOffsetMinutes)) {
+  if (!allowStartedDrafting && (await isFantasyEntryRosterLocked(existingRow, tzOffsetMinutes))) {
     throw new Error("This lineup is locked because at least one player on your roster has already started playing.");
   }
 

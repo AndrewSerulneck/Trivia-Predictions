@@ -3,6 +3,10 @@ import { getFantasyPlayerPoolForDate, getFantasyPlayerPoolForGame, listFantasyGa
 import type { FantasyLeaderboardEntry, FantasyPlayerPoolItem } from "@/lib/fantasy";
 
 const FANTASY_DAILY_GAME_ID_PREFIX = "nba-daily-";
+const FANTASY_ALLOW_STARTED_DRAFTING_FOR_TESTING =
+  String(process.env.FANTASY_ALLOW_STARTED_DRAFTING_FOR_TESTING ?? "")
+    .trim()
+    .toLowerCase() === "true";
 
 function parseDailyGameDateFromId(gameId: string): string | null {
   const trimmed = String(gameId ?? "").trim();
@@ -69,8 +73,11 @@ export async function GET(request: Request) {
     const gameId = String(searchParams.get("gameId") ?? "").trim();
     const sportKey = String(searchParams.get("sportKey") ?? "").trim() || undefined;
     const venueId = String(searchParams.get("venueId") ?? "").trim();
-    // TODO: RESTORE ROSTER LOCK
-    const includeStartedGames = normalizeBoolean(searchParams.get("includeStartedGames"), false);
+    // Keep explicit query param precedence, otherwise allow test-mode override.
+    const includeStartedGames = normalizeBoolean(
+      searchParams.get("includeStartedGames"),
+      FANTASY_ALLOW_STARTED_DRAFTING_FOR_TESTING
+    );
 
     const games = await listFantasyGames({
       date,

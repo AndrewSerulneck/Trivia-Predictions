@@ -537,10 +537,16 @@ export function SportsBingoHome() {
   }, [subscribedCardIds]);
 
   useEffect(() => {
-    if (!userId || !supabase) {
+    if (!userId) {
+      console.log("[BingoRealtime] waiting for userId before subscribing");
+      return;
+    }
+    if (!supabase) {
+      console.log("[BingoRealtime] supabase client not configured");
       return;
     }
 
+    console.log("[BingoRealtime] subscribing", { userId });
     const client = supabase;
     let active = true;
     const cardsChannel = client
@@ -548,7 +554,8 @@ export function SportsBingoHome() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "sports_bingo_cards", filter: `user_id=eq.${userId}` },
-        () => {
+        (payload) => {
+          console.log("[BingoRealtime] sports_bingo_cards payload", payload);
           if (!active) {
             return;
           }
@@ -556,7 +563,12 @@ export function SportsBingoHome() {
           void loadCards({ background: true, refreshProgress: false });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("[BingoRealtime] cards channel status", status, { userId });
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          setIsRealtimeFresh(false);
+        }
+      });
 
     let squaresChannel: ReturnType<typeof client.channel> | null = null;
     if (subscribedCardFilter) {
@@ -565,7 +577,8 @@ export function SportsBingoHome() {
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "sports_bingo_squares", filter: subscribedCardFilter },
-          () => {
+          (payload) => {
+            console.log("[BingoRealtime] sports_bingo_squares payload", payload);
             if (!active) {
               return;
             }
@@ -573,7 +586,12 @@ export function SportsBingoHome() {
             void loadCards({ background: true, refreshProgress: false });
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          console.log("[BingoRealtime] squares channel status", status, { userId, subscribedCardFilter });
+          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+            setIsRealtimeFresh(false);
+          }
+        });
     }
 
     return () => {

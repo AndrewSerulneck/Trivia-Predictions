@@ -8,6 +8,7 @@ type CreateProfileBody = {
   venueId?: string;
   pin?: string;
   selectedVenueId?: string;
+  authUserId?: string;
 };
 
 type UserRow = {
@@ -45,6 +46,14 @@ function verifyPin(pin: string, salt: string, hash: string): boolean {
   return timingSafeEqual(computed, expected);
 }
 
+function normalizeAuthUserId(value: unknown): string | null {
+  const raw = String(value ?? "").trim();
+  if (!raw) {
+    return null;
+  }
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(raw) ? raw : null;
+}
+
 function isMissingPinColumnError(error: unknown): boolean {
   const dbError = error as DbError | null;
   const message = (dbError?.message ?? "").toLowerCase();
@@ -62,6 +71,7 @@ export async function POST(request: Request) {
   const selectedVenueFromBody = (body.selectedVenueId ?? "").trim();
   const selectedVenueFromHeader = (request.headers.get("x-selected-venue-id") ?? "").trim();
   const selectedVenueId = selectedVenueFromBody || selectedVenueFromHeader || venueId;
+  const authUserId = normalizeAuthUserId(body.authUserId);
   const pin = normalizePin(body.pin ?? "");
 
   if (!username) {
@@ -158,6 +168,18 @@ export async function POST(request: Request) {
       }
     }
 
+    if (!existingUser.auth_id && authUserId) {
+      const { error: authLinkError } = await supabaseAdmin
+        .from("users")
+        .update({ auth_id: authUserId })
+        .eq("id", existingUser.id)
+        .is("auth_id", null);
+      if (authLinkError) {
+        return NextResponse.json({ ok: false, error: authLinkError.message }, { status: 500 });
+      }
+      existingUser.auth_id = authUserId;
+    }
+
     return NextResponse.json({
       ok: true,
       user: {
@@ -175,7 +197,7 @@ export async function POST(request: Request) {
   const hash = hashPin(pin, salt);
   const insertPayload = pinColumnsAvailable
     ? {
-        auth_id: null,
+        auth_id: authUserId,
         username,
         venue_id: venueId,
         points: 0,
@@ -183,7 +205,7 @@ export async function POST(request: Request) {
         pin_hash: hash,
       }
     : {
-        auth_id: null,
+        auth_id: authUserId,
         username,
         venue_id: venueId,
         points: 0,

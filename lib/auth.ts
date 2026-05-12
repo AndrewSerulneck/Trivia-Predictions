@@ -99,6 +99,9 @@ export async function createUserProfile(params: {
   }
 
   const selectedVenueId = String(params.selectedVenueId ?? params.venueId).trim();
+  const authUserId = supabase
+    ? (await supabase.auth.getUser().catch(() => ({ data: { user: null } })))?.data?.user?.id ?? null
+    : null;
   const timeoutController = new AbortController();
   const timeoutId = globalThis.setTimeout(() => {
     timeoutController.abort();
@@ -121,6 +124,7 @@ export async function createUserProfile(params: {
         venueId: params.venueId,
         pin,
         selectedVenueId,
+        authUserId,
       }),
       signal: timeoutController.signal,
     });

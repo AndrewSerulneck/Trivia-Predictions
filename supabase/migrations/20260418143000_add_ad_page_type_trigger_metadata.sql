@@ -16,11 +16,14 @@ add column if not exists round_number integer null;
 alter table advertisements
 add column if not exists sequence_index integer null;
 
+alter table advertisements
+drop constraint if exists ads_page_key_valid;
+
 update advertisements
 set
   page_key = case
     when slot in ('popup-on-entry', 'popup-on-scroll', 'mobile-adhesion', 'leaderboard-sidebar') then 'venue'
-    when slot in ('inline-content', 'mid-content') then 'sports-predictions'
+    when slot in ('inline-content', 'mid-content') then 'pickem'
     else 'global'
   end,
   ad_type = case
@@ -37,12 +40,32 @@ set
     else placement_key
   end;
 
+update advertisements
+set ad_type = 'inline'
+where ad_type is null
+  or ad_type not in ('popup', 'banner', 'inline');
+
+update advertisements
+set display_trigger = 'on-load'
+where display_trigger is null
+  or display_trigger not in ('on-load', 'on-scroll', 'round-end');
+
+update advertisements
+set round_number = null
+where round_number is not null
+  and (round_number < 1 or round_number > 3);
+
+update advertisements
+set sequence_index = null
+where sequence_index is not null
+  and (sequence_index < 1 or sequence_index > 4);
+
 alter table advertisements
 drop constraint if exists ads_page_key_valid;
 
 alter table advertisements
 add constraint ads_page_key_valid
-check (page_key in ('global', 'join', 'venue', 'trivia', 'sports-predictions', 'sports-bingo'));
+check (page_key in ('global', 'join', 'venue', 'trivia', 'sports-bingo', 'pickem', 'fantasy', 'sports-predictions'));
 
 alter table advertisements
 drop constraint if exists ads_ad_type_valid;

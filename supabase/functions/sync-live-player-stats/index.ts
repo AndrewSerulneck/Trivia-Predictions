@@ -21,8 +21,11 @@ type LoopSyncResult = SyncResult & {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")?.trim() ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim() ?? "";
+const APISPORTS_PROVIDER = (Deno.env.get("APISPORTS_PROVIDER")?.trim().toLowerCase() ?? "direct");
 const APISPORTS_KEY = Deno.env.get("APISPORTS_API_KEY")?.trim() ?? "";
-const APISPORTS_BASE_URL = (Deno.env.get("APISPORTS_NBA_BASE_URL")?.trim() ?? "https://v1.basketball.api-sports.io").replace(/\/+$/, "");
+const APISPORTS_RAPIDAPI_KEY = Deno.env.get("APISPORTS_RAPIDAPI_KEY")?.trim() ?? APISPORTS_KEY;
+const APISPORTS_NBA_RAPIDAPI_HOST = Deno.env.get("APISPORTS_NBA_RAPIDAPI_HOST")?.trim() ?? "api-nba-v1.p.rapidapi.com";
+const APISPORTS_BASE_URL = (Deno.env.get("APISPORTS_NBA_BASE_URL")?.trim() ?? "https://v2.nba.api-sports.io").replace(/\/+$/, "");
 const APISPORTS_REQUEST_DELAY_MS = Math.max(0, Number.parseInt(Deno.env.get("APISPORTS_REQUEST_DELAY_MS") ?? "25", 10) || 25);
 const APISPORTS_MAX_GAMES_PER_RUN = Math.max(1, Number.parseInt(Deno.env.get("APISPORTS_MAX_GAMES_PER_RUN") ?? "24", 10) || 24);
 const APISPORTS_TARGET_LEAGUE_ID = Number.parseInt(Deno.env.get("APISPORTS_TARGET_LEAGUE_ID") ?? "", 10) || 0;
@@ -46,6 +49,8 @@ const FANTASY_TRACKED_LOOKAHEAD_HOURS = Math.max(
   1,
   Number.parseInt(Deno.env.get("FANTASY_TRACKED_LOOKAHEAD_HOURS") ?? "36", 10) || 36
 );
+const SHADOW_MISMATCH_WINDOW_MS = 5 * 60 * 1000;
+const processStartedAtMs = Date.now();
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -98,6 +103,17 @@ function parseRows(json: unknown): Record<string, unknown>[] {
   return response.map((row) => asRecord(row));
 }
 
+function normalizeName(value: string): string {
+  return String(value ?? "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9\s]/g, " ")
+    .toLowerCase()
+    .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function buildPlayerName(player: Record<string, unknown>, playerId: number): string {
   const first = String(getPath(player, ["player", "firstname"]) ?? getPath(player, ["player", "first_name"]) ?? "").trim();
   const last = String(getPath(player, ["player", "lastname"]) ?? getPath(player, ["player", "last_name"]) ?? "").trim();
@@ -122,12 +138,16 @@ async function fetchApiSports(pathWithQuery: string): Promise<{ rows: Record<str
     return { rows: [], error: "Missing APISPORTS_NBA_BASE_URL or APISPORTS_API_KEY." };
   }
   const url = `${APISPORTS_BASE_URL}${pathWithQuery.startsWith("/") ? pathWithQuery : `/${pathWithQuery}`}`;
+  const headers: Record<string, string> = { accept: "application/json" };
+  if (APISPORTS_PROVIDER === "rapidapi") {
+    headers["x-rapidapi-key"] = APISPORTS_RAPIDAPI_KEY;
+    headers["x-rapidapi-host"] = APISPORTS_NBA_RAPIDAPI_HOST;
+  } else {
+    headers["x-apisports-key"] = APISPORTS_KEY;
+  }
   const response = await fetch(url, {
     method: "GET",
-    headers: {
-      "x-apisports-key": APISPORTS_KEY,
-      accept: "application/json",
-    },
+    headers,
   });
   const json = await response.json().catch(() => null);
   const rows = parseRows(json);
@@ -208,31 +228,45 @@ function extractLineupPlayerIds(lineup: unknown): number[] {
 
 async function loadTrackedRosterPlayerIds(
   supabase: ReturnType<typeof createClient>
-): Promise<{ ids: Set<number>; error?: string }> {
+): Promise<{ ids: Set<number>; names: Map<string, { playerId: number; playerName: string; entryId: string }>; error?: string }> {
   const nowMs = Date.now();
   const fromIso = new Date(nowMs - FANTASY_TRACKED_LOOKBACK_HOURS * 60 * 60 * 1000).toISOString();
   const toIso = new Date(nowMs + FANTASY_TRACKED_LOOKAHEAD_HOURS * 60 * 60 * 1000).toISOString();
 
   const { data, error } = await supabase
     .from("fantasy_entries")
-    .select("lineup, starts_at, status, sport_key")
-    .eq("sport_key", "basketball_nba")
+    .select("id, lineup, starts_at, status, sport_key")
+    .in("sport_key", ["basketball_nba", "nba"])
     .in("status", ["pending", "live"])
     .gte("starts_at", fromIso)
     .lte("starts_at", toIso)
     .limit(5000);
 
   if (error) {
-    return { ids: new Set<number>(), error: `Failed to load tracked fantasy roster players: ${error.message}` };
+    return { ids: new Set<number>(), names: new Map(), error: `Failed to load tracked fantasy roster players: ${error.message}` };
   }
 
   const ids = new Set<number>();
+  const names = new Map<string, { playerId: number; playerName: string; entryId: string }>();
   for (const row of (data as Array<Record<string, unknown>> | null) ?? []) {
+    const entryId = String(row.id ?? "").trim();
     for (const id of extractLineupPlayerIds(row.lineup)) {
       ids.add(id);
     }
+    if (Array.isArray(row.lineup)) {
+      for (const player of row.lineup) {
+        if (!player || typeof player !== "object" || Array.isArray(player)) continue;
+        const raw = player as Record<string, unknown>;
+        const playerId = Number.parseInt(String(raw.player_id ?? raw.playerId ?? ""), 10);
+        const playerName = String(raw.player_name ?? raw.playerName ?? "").trim();
+        if (!Number.isFinite(playerId) || playerId <= 0 || !playerName) continue;
+        const key = normalizeName(playerName);
+        if (!key || names.has(key)) continue;
+        names.set(key, { playerId, playerName, entryId });
+      }
+    }
   }
-  return { ids };
+  return { ids, names };
 }
 
 async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolean }): Promise<SyncResult> {
@@ -252,18 +286,13 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const candidateDates = [formatDateUTC(-1), formatDateUTC(0), formatDateUTC(1)];
-  const gameRowsByDate = await Promise.all(
-    candidateDates.map((date) => fetchApiSports(`/games?date=${encodeURIComponent(date)}`))
-  );
-  const combinedRows: Record<string, unknown>[] = [];
-  for (const batch of gameRowsByDate) {
-    if (batch.error) {
-      result.errors.push(batch.error);
-      continue;
-    }
-    combinedRows.push(...batch.rows);
+  const liveGamesResponse = await fetchApiSports("/games?live=all");
+  if (liveGamesResponse.error) {
+    result.errors.push(liveGamesResponse.error);
+    result.ok = result.errors.length === 0;
+    return result;
   }
+  const combinedRows = liveGamesResponse.rows;
   if (combinedRows.length === 0) {
     result.ok = result.errors.length === 0;
     return result;
@@ -301,12 +330,14 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
   result.scannedGames = games.length;
 
   let trackedRosterPlayerIds: Set<number> | null = null;
+  let trackedRosterPlayersByName: Map<string, { playerId: number; playerName: string; entryId: string }> = new Map();
   if (FANTASY_TRACK_ONLY_ROSTERED_PLAYERS) {
     const tracked = await loadTrackedRosterPlayerIds(supabase);
     if (tracked.error) {
       result.errors.push(tracked.error);
     } else {
       trackedRosterPlayerIds = tracked.ids;
+      trackedRosterPlayersByName = tracked.names;
       if (trackedRosterPlayerIds.size === 0) {
         result.ok = result.errors.length === 0;
         return result;
@@ -341,10 +372,21 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
         continue;
       }
       const normalizedPlayerId = Math.round(playerId);
-      if (trackedRosterPlayerIds && !trackedRosterPlayerIds.has(normalizedPlayerId)) {
+      const playerName = buildPlayerName(player, playerId);
+      const normalizedPlayerName = normalizeName(playerName);
+      let resolvedPlayerId = normalizedPlayerId;
+      const trackedByName = trackedRosterPlayersByName.get(normalizedPlayerName);
+      if (trackedByName && trackedByName.playerId > 0 && trackedByName.playerId !== normalizedPlayerId) {
+        if (Date.now() - processStartedAtMs <= SHADOW_MISMATCH_WINDOW_MS) {
+          console.log(
+            `[sync-shadow] id_mismatch_resolved name="${playerName}" incoming_player_id=${normalizedPlayerId} mapped_player_id=${trackedByName.playerId} entry_id=${trackedByName.entryId}`
+          );
+        }
+        resolvedPlayerId = trackedByName.playerId;
+      }
+      if (trackedRosterPlayerIds && !trackedRosterPlayerIds.has(resolvedPlayerId)) {
         continue;
       }
-      const playerName = buildPlayerName(player, playerId);
       const teamId = parseNumber(getPath(player, ["team", "id"])) || null;
       const teamName = String(getPath(player, ["team", "name"]) ?? "").trim();
 
@@ -358,8 +400,9 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
 
       upsertRows.push({
         game_id: gameId,
-        player_id: normalizedPlayerId,
+        player_id: resolvedPlayerId,
         player_name: playerName,
+        normalized_player_name: normalizedPlayerName,
         team_id: teamId ? Math.round(teamId) : null,
         team_name: teamName,
         league_id: leagueId ? Math.round(leagueId) : null,
@@ -373,7 +416,7 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
         turnovers,
         total_fantasy_points: totalFantasyPoints,
         source_updated_at: nowIso,
-        sport_key: "basketball_nba",
+        sport_key: "nba",
         stat_type: "fantasy_points_total",
         value: totalFantasyPoints,
       });

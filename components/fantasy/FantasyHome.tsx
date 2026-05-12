@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useAnimationControls } from "framer-motion";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { supabase } from "@/lib/supabase";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
@@ -273,6 +273,49 @@ function isIsoInCurrentLocalWeek(iso: string): boolean {
     return false;
   }
   return getLocalWeekStartMs(parsed) === getLocalWeekStartMs(new Date());
+}
+
+function SpringPop({
+  popKey,
+  className,
+  glowSize,
+  children,
+}: {
+  popKey: number;
+  className?: string;
+  glowSize: number;
+  children: React.ReactNode;
+}) {
+  const controls = useAnimationControls();
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      await controls.set({ scale: 1, filter: "drop-shadow(0 0 0 rgba(34,211,238,0))" });
+      if (cancelled) return;
+      await controls.start({
+        scale: 1.2,
+        filter: `drop-shadow(0 0 ${glowSize}px rgba(34,211,238,0.95))`,
+        transition: { type: "spring", stiffness: 300, damping: 30, mass: 1 },
+      });
+      if (cancelled) return;
+      await controls.start({
+        scale: 1,
+        filter: "drop-shadow(0 0 0 rgba(34,211,238,0))",
+        transition: { type: "spring", stiffness: 300, damping: 30, mass: 1 },
+      });
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [controls, glowSize, popKey]);
+
+  return (
+    <motion.span animate={controls} className={className}>
+      {children}
+    </motion.span>
+  );
 }
 
 export function FantasyHome() {
@@ -676,9 +719,15 @@ export function FantasyHome() {
   }, [lastRealtimeMessageAt]);
 
   useEffect(() => {
-    if (!userId || !hasSyncableEntry || !supabase) {
+    if (!userId) {
+      console.log("[FantasyRealtime] waiting for userId before subscribing");
       return;
     }
+    if (!supabase) {
+      console.log("[FantasyRealtime] supabase client not configured");
+      return;
+    }
+    console.log("[FantasyRealtime] subscribing", { userId });
     let active = true;
     const client = supabase;
     const channel = client
@@ -744,7 +793,12 @@ export function FantasyHome() {
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("[FantasyRealtime] channel status", status, { userId });
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          setIsRealtimeFresh(false);
+        }
+      });
 
     // Keep a low-frequency polling fallback for resilience if websocket delivery stalls.
     const scheduleFallbackRefresh = () => {
@@ -767,10 +821,10 @@ export function FantasyHome() {
       }
       void client.removeChannel(channel);
     };
-  }, [hasSyncableEntry, loadEntries, markPlayersAsHot, triggerPlayerScorePop, triggerTotalScorePop, userId]);
+  }, [loadEntries, markPlayersAsHot, triggerPlayerScorePop, triggerTotalScorePop, userId]);
 
   useEffect(() => {
-    if (!userId || !hasSyncableEntry || supabase) {
+    if (!userId || supabase) {
       return;
     }
     const interval = window.setInterval(() => {
@@ -781,7 +835,7 @@ export function FantasyHome() {
     return () => {
       window.clearInterval(interval);
     };
-  }, [hasSyncableEntry, loadEntries, loadGames, loadSelectedGameDetails, userId]);
+  }, [loadEntries, loadGames, loadSelectedGameDetails, userId, supabase]);
 
   useEffect(() => {
     if (!userId || hasLiveEntry || nextPendingEntryStartMs === null) {
@@ -1133,14 +1187,9 @@ export function FantasyHome() {
               <div className="mt-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-semibold text-slate-900">Live Points</p>
-                  <motion.div
-                    key={`fantasy-total-score-${totalScorePopTick}`}
-                    initial={{ scale: 1, filter: "drop-shadow(0 0 0 rgba(34,211,238,0))" }}
-                    animate={{ scale: [1, 1.2, 1], filter: ["drop-shadow(0 0 0 rgba(34,211,238,0))", "drop-shadow(0 0 12px rgba(34,211,238,0.95))", "drop-shadow(0 0 0 rgba(34,211,238,0))"] }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20, mass: 1, duration: 0.3 }}
-                  >
+                  <SpringPop popKey={totalScorePopTick} glowSize={12}>
                     <p className={`text-sm font-black ${isRealtimeFresh ? "text-cyan-700" : "text-slate-900"}`}>{liveTrackedEntryPoints.toFixed(2)} pts</p>
-                  </motion.div>
+                  </SpringPop>
                 </div>
                 <ul className="mt-2 space-y-1">
                   {(trackedEntry.lineupPlayers.length > 0
@@ -1165,15 +1214,13 @@ export function FantasyHome() {
                         }`}
                       >
                         <span className="font-medium text-slate-800">{playerName}</span>
-                        <motion.span
-                          key={`${trackedEntry.id}-${player.playerId}-${playerPopTickById[String(player.playerId)] ?? 0}`}
-                          initial={{ scale: 1, filter: "drop-shadow(0 0 0 rgba(34,211,238,0))" }}
-                          animate={{ scale: [1, 1.2, 1], filter: ["drop-shadow(0 0 0 rgba(34,211,238,0))", "drop-shadow(0 0 10px rgba(34,211,238,0.9))", "drop-shadow(0 0 0 rgba(34,211,238,0))"] }}
-                          transition={{ type: "spring", stiffness: 300, damping: 20, mass: 1, duration: 0.3 }}
+                        <SpringPop
+                          popKey={playerPopTickById[String(player.playerId)] ?? 0}
+                          glowSize={10}
                           className={`font-semibold ${isHot ? "text-cyan-200" : ""}`}
                         >
                           {playerPoints.toFixed(2)} pts
-                        </motion.span>
+                        </SpringPop>
                       </li>
                     );
                   })}
