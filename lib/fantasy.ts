@@ -10,7 +10,8 @@ const FANTASY_SPORT_KEY = "basketball_nba";
 const FANTASY_NFL_SPORT_KEY = "americanfootball_nfl";
 const FANTASY_LINEUP_SIZE = 5;
 const FANTASY_POINTS_MULTIPLIER = Math.max(1, Number.parseInt(process.env.FANTASY_POINTS_MULTIPLIER ?? "1", 10) || 1);
-const FANTASY_PLAYER_POOL_LIMIT = 30;
+// Keep this high enough to include full-day NBA slates across multiple games.
+const FANTASY_PLAYER_POOL_LIMIT = 200;
 const FANTASY_LIVE_STATS_LOOKBACK_MS = 48 * 60 * 60 * 1000;
 const FANTASY_ENABLE_POOL_LIVE_ENRICH =
   String(process.env.FANTASY_ENABLE_POOL_LIVE_ENRICH ?? "")
@@ -1258,7 +1259,13 @@ export async function getFantasyPlayerPoolForDate(params?: {
 
   const games = await listApiSportsGamesForLocalDay(date, tzOffsetMinutes);
   const eligibleGames = includeStartedGames ? games : games.filter((game) => !isApiSportsGameStarted(game));
-  return loadFantasyPlayerPoolFromApiSportsGames(eligibleGames);
+
+  // Prefer active/live games when includeStartedGames is enabled so the builder
+  // reflects the current matchup during realtime testing windows.
+  const liveGames = eligibleGames.filter((game) => isApiSportsGameStarted(game) && !isApiSportsGameFinal(game));
+  const prioritizedGames = includeStartedGames && liveGames.length > 0 ? liveGames : eligibleGames;
+
+  return loadFantasyPlayerPoolFromApiSportsGames(prioritizedGames);
 }
 
 export async function getFantasyPlayerPoolForGame(params: {
@@ -1876,10 +1883,14 @@ function isApiSportsConfigured(): boolean {
 }
 
 function getApiSportsBaseCandidates(): string[] {
+  const allowLegacyBasketballFallback =
+    String(process.env.APISPORTS_ALLOW_LEGACY_BASKETBALL_FALLBACK ?? "")
+      .trim()
+      .toLowerCase() === "true";
   const candidates = [
     APISPORTS_NBA_BASE_URL,
     "https://v2.nba.api-sports.io",
-    "https://v1.basketball.api-sports.io",
+    ...(allowLegacyBasketballFallback ? ["https://v1.basketball.api-sports.io"] : []),
   ]
     .map((value) => String(value ?? "").trim().replace(/\/+$/, ""))
     .filter(Boolean);

@@ -18,6 +18,7 @@ type LoopSyncResult = SyncResult & {
   pollMs: number;
   loopMs: number;
 };
+type DiscoveryMode = "live_only" | "date_scan" | "live_then_date";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")?.trim() ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim() ?? "";
@@ -33,8 +34,8 @@ const APISPORTS_FINAL_REPLAY_WINDOW_MS = Math.max(
   0,
   Number.parseInt(Deno.env.get("APISPORTS_FINAL_REPLAY_WINDOW_MS") ?? String(6 * 60 * 60 * 1000), 10) || 6 * 60 * 60 * 1000
 );
-const APISPORTS_DEFAULT_POLL_MS = Math.max(500, Number.parseInt(Deno.env.get("FANTASY_LIVE_SYNC_POLL_MS") ?? "2500", 10) || 2500);
-const APISPORTS_DEFAULT_LOOP_MS = Math.max(2500, Number.parseInt(Deno.env.get("FANTASY_LIVE_SYNC_LOOP_MS") ?? "55000", 10) || 55000);
+const APISPORTS_DEFAULT_POLL_MS = Math.max(15000, Number.parseInt(Deno.env.get("FANTASY_LIVE_SYNC_POLL_MS") ?? "15000", 10) || 15000);
+const APISPORTS_DEFAULT_LOOP_MS = Math.max(15000, Number.parseInt(Deno.env.get("FANTASY_LIVE_SYNC_LOOP_MS") ?? "60000", 10) || 60000);
 const APISPORTS_FINAL_REPLAY_EVERY_CYCLE = Math.max(
   0,
   Number.parseInt(Deno.env.get("FANTASY_LIVE_SYNC_FINAL_REPLAY_EVERY_CYCLE") ?? "6", 10) || 6
@@ -51,6 +52,12 @@ const FANTASY_TRACKED_LOOKAHEAD_HOURS = Math.max(
 );
 const SHADOW_MISMATCH_WINDOW_MS = 5 * 60 * 1000;
 const processStartedAtMs = Date.now();
+const NBA_DISCOVERY_MODE = (String(Deno.env.get("NBA_DISCOVERY_MODE") ?? "live_then_date").trim().toLowerCase() ||
+  "live_then_date") as DiscoveryMode;
+const NBA_FORCE_GAME_IDS = String(Deno.env.get("NBA_FORCE_GAME_IDS") ?? "")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -69,6 +76,15 @@ function getPath(source: unknown, path: string[]): unknown {
     current = (current as Record<string, unknown>)[key];
   }
   return current;
+}
+function pickPath(source: unknown, pathOptions: string[][]): unknown {
+  for (const path of pathOptions) {
+    const value = getPath(source, path);
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      return value;
+    }
+  }
+  return undefined;
 }
 
 function parseNumber(value: unknown): number {
@@ -102,6 +118,9 @@ function parseRows(json: unknown): Record<string, unknown>[] {
   }
   return response.map((row) => asRecord(row));
 }
+function parseGameId(row: Record<string, unknown>): string {
+  return String(pickPath(row, [["id"], ["game", "id"], ["fixture", "id"]]) ?? "").trim();
+}
 
 function normalizeName(value: string): string {
   return String(value ?? "")
@@ -112,6 +131,19 @@ function normalizeName(value: string): string {
     .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function buildNameKeys(value: string): string[] {
+  const normalized = normalizeName(value);
+  if (!normalized) {
+    return [];
+  }
+  const keys = new Set<string>([normalized]);
+  const tokens = normalized.split(" ").filter(Boolean);
+  if (tokens.length === 2) {
+    keys.add(`${tokens[1]} ${tokens[0]}`);
+  }
+  return Array.from(keys);
 }
 
 function buildPlayerName(player: Record<string, unknown>, playerId: number): string {
@@ -126,6 +158,33 @@ function buildPlayerName(player: Record<string, unknown>, playerId: number): str
     return direct;
   }
   return `Player ${Math.round(playerId)}`;
+}
+
+function normalizePlayerRow(raw: Record<string, unknown>): Record<string, unknown> {
+  const player = asRecord(raw.player);
+  const team = asRecord(raw.team);
+  const stats = asRecord(raw.statistics);
+  if (Object.keys(player).length > 0 || Object.keys(team).length > 0 || Object.keys(stats).length > 0) {
+    return raw;
+  }
+  return {
+    player: {
+      id: raw.player_id ?? raw.playerId ?? getPath(raw, ["player", "id"]),
+      firstname: raw.firstname ?? raw.first_name ?? raw.player_first_name,
+      lastname: raw.lastname ?? raw.last_name ?? raw.player_last_name,
+      name: raw.player_name ?? raw.name,
+    },
+    team: {
+      id: raw.team_id ?? raw.teamId ?? getPath(raw, ["team", "id"]),
+      name: raw.team_name ?? raw.teamName ?? getPath(raw, ["team", "name"]),
+    },
+    points: raw.points ?? raw.pts ?? getPath(raw, ["statistics", "points"]),
+    rebounds: raw.rebounds ?? raw.reb ?? getPath(raw, ["statistics", "rebounds", "total"]),
+    assists: raw.assists ?? raw.ast ?? getPath(raw, ["statistics", "assists"]),
+    steals: raw.steals ?? raw.stl ?? getPath(raw, ["statistics", "steals"]),
+    blocks: raw.blocks ?? raw.blk ?? getPath(raw, ["statistics", "blocks"]),
+    turnovers: raw.turnovers ?? raw.to ?? getPath(raw, ["statistics", "turnovers"]),
+  };
 }
 
 function toFantasyPoints(pts: number, reb: number, ast: number, stl: number, blk: number, turnovers: number): number {
@@ -174,6 +233,32 @@ function isLiveStatus(statusShort: string): boolean {
   if (!key) return false;
   const liveKeys = new Set(["Q1", "Q2", "Q3", "Q4", "HT", "BT", "OT", "LIVE", "IN PLAY"]);
   return liveKeys.has(key);
+}
+function isLiveGameStatus(game: Record<string, unknown>): boolean {
+  const short = parseGameStatusShort(game);
+  if (isLiveStatus(short)) {
+    return true;
+  }
+  const longStatus = String(getPath(game, ["status", "long"]) ?? "").trim().toUpperCase();
+  if (
+    ["IN PLAY", "LIVE", "HALFTIME", "Q1", "Q2", "Q3", "Q4", "OVERTIME"].includes(longStatus)
+  ) {
+    return true;
+  }
+  const clock = getPath(game, ["status", "clock"]);
+  if (clock !== null && clock !== undefined && String(clock).trim() !== "") {
+    return true;
+  }
+  // NBA v2 numeric in-play state.
+  if (short === "2") {
+    return true;
+  }
+  return false;
+}
+function parseGameStatusShort(game: Record<string, unknown>): string {
+  return String(pickPath(game, [["status", "short"], ["status", "long"], ["game", "status", "short"], ["fixture", "status", "short"]]) ?? "")
+    .trim()
+    .toUpperCase();
 }
 
 function parseGameStartMs(game: Record<string, unknown>): number | null {
@@ -260,9 +345,10 @@ async function loadTrackedRosterPlayerIds(
         const playerId = Number.parseInt(String(raw.player_id ?? raw.playerId ?? ""), 10);
         const playerName = String(raw.player_name ?? raw.playerName ?? "").trim();
         if (!Number.isFinite(playerId) || playerId <= 0 || !playerName) continue;
-        const key = normalizeName(playerName);
-        if (!key || names.has(key)) continue;
-        names.set(key, { playerId, playerName, entryId });
+        for (const key of buildNameKeys(playerName)) {
+          if (!key || names.has(key)) continue;
+          names.set(key, { playerId, playerName, entryId });
+        }
       }
     }
   }
@@ -286,13 +372,34 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const liveGamesResponse = await fetchApiSports("/games?live=all");
-  if (liveGamesResponse.error) {
-    result.errors.push(liveGamesResponse.error);
-    result.ok = result.errors.length === 0;
-    return result;
+  let combinedRows: Record<string, unknown>[] = [];
+  if (NBA_FORCE_GAME_IDS.length > 0) {
+    combinedRows = NBA_FORCE_GAME_IDS.map((id) => ({ id, status: { short: "LIVE" } }));
+    console.log(`[sync] using NBA_FORCE_GAME_IDS (${NBA_FORCE_GAME_IDS.length})`);
+  } else if (NBA_DISCOVERY_MODE !== "date_scan") {
+    const liveGamesResponse = await fetchApiSports("/games?live=all");
+    if (liveGamesResponse.error) {
+      result.errors.push(liveGamesResponse.error);
+    }
+    combinedRows = liveGamesResponse.rows;
+    console.log(`[sync] discovery live endpoint rows=${combinedRows.length}`);
   }
-  const combinedRows = liveGamesResponse.rows;
+  if (combinedRows.length === 0 && NBA_DISCOVERY_MODE !== "live_only") {
+    const candidateDates = [formatDateUTC(-1), formatDateUTC(0), formatDateUTC(1)];
+    const gameRowsByDate = await Promise.all(
+      candidateDates.map((date) => fetchApiSports(`/games?date=${encodeURIComponent(date)}`))
+    );
+    const fallbackRows: Record<string, unknown>[] = [];
+    for (const batch of gameRowsByDate) {
+      if (batch.error) {
+        result.errors.push(batch.error);
+        continue;
+      }
+      fallbackRows.push(...batch.rows);
+    }
+    combinedRows = fallbackRows;
+    console.log(`[sync] discovery date-scan rows=${combinedRows.length}`);
+  }
   if (combinedRows.length === 0) {
     result.ok = result.errors.length === 0;
     return result;
@@ -301,10 +408,10 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
   const includeRecentFinals = options?.includeRecentFinals === true;
 
   let games = combinedRows.filter((game) => {
-    const short = String(getPath(game, ["status", "short"]) ?? "");
-    if (isLiveStatus(short)) {
+    if (isLiveGameStatus(game)) {
       return true;
     }
+    const short = parseGameStatusShort(game);
     if (!includeRecentFinals || !isFinalStatus(short)) {
       return false;
     }
@@ -346,12 +453,19 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
   }
 
   for (const game of games) {
-    const gameId = String(getPath(game, ["id"]) ?? "").trim();
+    const gameId = parseGameId(game);
     if (!gameId) {
       continue;
     }
 
-    const playersResponse = await fetchApiSports(`/games/statistics/players?id=${encodeURIComponent(gameId)}`);
+    let playersResponse = await fetchApiSports(`/games/statistics/players?id=${encodeURIComponent(gameId)}`);
+    if (!playersResponse.error && playersResponse.rows.length === 0) {
+      const fallbackPlayersResponse = await fetchApiSports(`/players/statistics?game=${encodeURIComponent(gameId)}`);
+      if (!fallbackPlayersResponse.error && fallbackPlayersResponse.rows.length > 0) {
+        console.log(`[sync] player stats fallback endpoint used for game=${gameId} rows=${fallbackPlayersResponse.rows.length}`);
+        playersResponse = fallbackPlayersResponse;
+      }
+    }
     if (playersResponse.error) {
       result.errors.push(`game ${gameId}: ${playersResponse.error}`);
       await sleep(APISPORTS_REQUEST_DELAY_MS);
@@ -360,13 +474,13 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
 
     const leagueId = parseNumber(getPath(game, ["league", "id"])) || null;
     const leagueName = String(getPath(game, ["league", "name"]) ?? "").trim();
-    const statusShort = String(getPath(game, ["status", "short"]) ?? "").trim();
+    const statusShort = parseGameStatusShort(game);
     const nowIso = new Date().toISOString();
 
     const upsertRows: Array<Record<string, unknown>> = [];
 
     for (const playerRaw of playersResponse.rows as ApiSportsPlayerRow[]) {
-      const player = asRecord(playerRaw);
+      const player = normalizePlayerRow(asRecord(playerRaw));
       const playerId = parseNumber(getPath(player, ["player", "id"]));
       if (!Number.isFinite(playerId) || playerId <= 0) {
         continue;
@@ -374,8 +488,11 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
       const normalizedPlayerId = Math.round(playerId);
       const playerName = buildPlayerName(player, playerId);
       const normalizedPlayerName = normalizeName(playerName);
+      const candidateNameKeys = buildNameKeys(playerName);
       let resolvedPlayerId = normalizedPlayerId;
-      const trackedByName = trackedRosterPlayersByName.get(normalizedPlayerName);
+      const trackedByName = candidateNameKeys
+        .map((key) => trackedRosterPlayersByName.get(key))
+        .find((value): value is { playerId: number; playerName: string; entryId: string } => Boolean(value));
       if (trackedByName && trackedByName.playerId > 0 && trackedByName.playerId !== normalizedPlayerId) {
         if (Date.now() - processStartedAtMs <= SHADOW_MISMATCH_WINDOW_MS) {
           console.log(
@@ -423,6 +540,7 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
     }
 
     result.scannedPlayers += upsertRows.length;
+    console.log(`[sync] game=${gameId} player_rows=${upsertRows.length} status=${statusShort}`);
 
     if (upsertRows.length > 0) {
       const { error } = await supabase
@@ -499,7 +617,7 @@ Deno.serve(async (request) => {
         : Number.isFinite(legacyIntervalMs) && legacyIntervalMs > 0
         ? legacyIntervalMs
         : APISPORTS_DEFAULT_POLL_MS,
-      500,
+      15000,
       60000
     );
     const loopMsFromBurst = burst > 0 ? burst * pollMs : 0;
@@ -509,7 +627,7 @@ Deno.serve(async (request) => {
         : loopMsFromBurst > 0
         ? loopMsFromBurst
         : APISPORTS_DEFAULT_LOOP_MS,
-      2500,
+      15000,
       300000
     );
     const finalReplayEveryCycle = clampInt(

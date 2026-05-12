@@ -24,6 +24,22 @@ type EntriesPayload = {
   error?: string;
 };
 
+type LiveStatsDebugRow = {
+  gameId: string;
+  playerId: number;
+  playerName: string;
+  teamName: string;
+  fantasyPoints: number;
+  gameStatus: string;
+  sourceUpdatedAt: string;
+};
+
+type LiveStatsDebugPayload = {
+  ok: boolean;
+  rows?: LiveStatsDebugRow[];
+  error?: string;
+};
+
 type FantasyEntryRealtimeRow = {
   id?: string;
   user_id?: string;
@@ -341,6 +357,10 @@ export function FantasyHome() {
   const [playerPopTickById, setPlayerPopTickById] = useState<Record<string, number>>({});
   const [lastRealtimeMessageAt, setLastRealtimeMessageAt] = useState<number | null>(null);
   const [isRealtimeFresh, setIsRealtimeFresh] = useState(false);
+  const [liveDebugRows, setLiveDebugRows] = useState<LiveStatsDebugRow[]>([]);
+  const [liveDebugGameId, setLiveDebugGameId] = useState("");
+  const [liveDebugLoading, setLiveDebugLoading] = useState(false);
+  const gameDetailsRequestNonceRef = useRef(0);
   const fantasyKickoffRefreshTimerRef = useRef<number | null>(null);
   const fantasyLineupAutosaveTimerRef = useRef<number | null>(null);
   const fantasyRealtimeFallbackTimerRef = useRef<number | null>(null);
@@ -370,7 +390,13 @@ export function FantasyHome() {
       const nextGames = payload.games ?? [];
       setGames(nextGames);
       const fallbackDailyGameId = buildFantasyDailyGameId(date);
-      setSelectedGameId(String(payload.dailyGameId ?? "").trim() || fallbackDailyGameId);
+      const nextSelectedDailyId = String(payload.dailyGameId ?? "").trim() || fallbackDailyGameId;
+      setSelectedGameId((current) => {
+        if (current && (current === nextSelectedDailyId || nextGames.some((game) => game.id === current))) {
+          return current;
+        }
+        return nextSelectedDailyId;
+      });
     } catch (error) {
       setGames([]);
       setSelectedGameId("");
@@ -452,11 +478,13 @@ export function FantasyHome() {
     }
 
     try {
+      const requestNonce = ++gameDetailsRequestNonceRef.current;
       const gameDate = parseDailyGameDateFromId(selectedGameId) ?? todayDate;
       const params = new URLSearchParams({
         gameId: selectedGameId,
         date: gameDate,
         tzOffsetMinutes: String(new Date().getTimezoneOffset()),
+        _t: String(Date.now()),
       });
       // TODO: RESTORE ROSTER LOCK
       params.set("includeStartedGames", "true");
@@ -468,6 +496,9 @@ export function FantasyHome() {
       const payload = (await response.json()) as GamesPayload;
       if (!payload.ok) {
         throw new Error(payload.error ?? "Failed to load player pool.");
+      }
+      if (requestNonce !== gameDetailsRequestNonceRef.current) {
+        return;
       }
 
       setPlayerPool(payload.playerPool ?? []);
@@ -483,6 +514,12 @@ export function FantasyHome() {
       setErrorMessage(error instanceof Error ? error.message : "Failed to load fantasy player pool.");
     }
   }, [selectedGameId, todayDate, venueId]);
+
+  useEffect(() => {
+    setSelectedPlayers([]);
+    setPlayerPool([]);
+    setLeaderboard([]);
+  }, [selectedGameId]);
 
   useEffect(() => {
     void loadGames();
@@ -519,6 +556,20 @@ export function FantasyHome() {
     return true;
   }, [existingEntryForSelectedGame, playerPoolKeys]);
   const nextUnlockedGame = useMemo(() => games.find((game) => !game.isLocked) ?? null, [games]);
+  const liveDebugTargetGame = useMemo(() => {
+    const liveGames = games.filter((game) => game.status === "live");
+    if (liveGames.length === 0) {
+      return null;
+    }
+    const lakersThunder = liveGames.find((game) => {
+      const home = String(game.homeTeam ?? "").toLowerCase();
+      const away = String(game.awayTeam ?? "").toLowerCase();
+      const hasLakers = home.includes("lakers") || away.includes("lakers");
+      const hasThunder = home.includes("thunder") || away.includes("thunder");
+      return hasLakers && hasThunder;
+    });
+    return lakersThunder ?? liveGames[0] ?? null;
+  }, [games]);
   const selectedSlateDate = useMemo(() => parseDailyGameDateFromId(selectedGameId) ?? todayDate, [selectedGameId, todayDate]);
   const liveEntries = useMemo(
     () =>
@@ -836,6 +887,70 @@ export function FantasyHome() {
       window.clearInterval(interval);
     };
   }, [loadEntries, loadGames, loadSelectedGameDetails, userId, supabase]);
+
+  useEffect(() => {
+    if (!selectedGameId) {
+      return;
+    }
+    const interval = window.setInterval(() => {
+      void loadSelectedGameDetails();
+    }, 15000);
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [loadSelectedGameDetails, selectedGameId]);
+
+  const loadLiveDebugRows = useCallback(async () => {
+    const targetGameId = String(liveDebugTargetGame?.id ?? "").trim();
+    const rosterPlayerIds = (
+      trackedEntry?.lineupPlayers.length
+        ? trackedEntry.lineupPlayers.map((player) => player.playerId)
+        : []
+    )
+      .filter((id) => Number.isFinite(id) && id > 0)
+      .map((id) => String(id));
+    if (!targetGameId && rosterPlayerIds.length === 0) {
+      setLiveDebugRows([]);
+      setLiveDebugGameId("");
+      return;
+    }
+    setLiveDebugLoading(true);
+    try {
+      const params = new URLSearchParams({
+        gameId: targetGameId,
+        limit: "120",
+      });
+      if (rosterPlayerIds.length > 0) {
+        params.set("rosterPlayerIds", rosterPlayerIds.join(","));
+      }
+      const response = await fetch(`/api/fantasy/live-stats-debug?${params.toString()}`, { cache: "no-store" });
+      const payload = (await response.json()) as LiveStatsDebugPayload;
+      if (!payload.ok) {
+        throw new Error(payload.error ?? "Failed to load live debug rows.");
+      }
+      setLiveDebugRows(payload.rows ?? []);
+      setLiveDebugGameId(targetGameId || "roster-fallback");
+    } catch (error) {
+      setLiveDebugRows([]);
+      setLiveDebugGameId(targetGameId || "roster-fallback");
+      setErrorMessage(error instanceof Error ? error.message : "Failed to load live debug rows.");
+    } finally {
+      setLiveDebugLoading(false);
+    }
+  }, [liveDebugTargetGame?.id, trackedEntry]);
+
+  useEffect(() => {
+    void loadLiveDebugRows();
+  }, [loadLiveDebugRows]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      void loadLiveDebugRows();
+    }, 5000);
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [loadLiveDebugRows]);
 
   useEffect(() => {
     if (!userId || hasLiveEntry || nextPendingEntryStartMs === null) {
@@ -1235,6 +1350,57 @@ export function FantasyHome() {
           )}
         </section>
       ) : null}
+
+      <section className="rounded-2xl border border-cyan-200/70 bg-cyan-50/80 p-4 shadow-sm">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <h3 className="text-base font-semibold text-slate-900">Live Player Feed (Debug)</h3>
+            <p className="mt-1 text-xs text-slate-700">
+              {liveDebugTargetGame
+                ? `${liveDebugTargetGame.awayTeam} vs ${liveDebugTargetGame.homeTeam} · Game ID ${liveDebugTargetGame.id}`
+                : "No live NBA game detected right now."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void loadLiveDebugRows()}
+            className="tp-clean-button rounded-lg border border-cyan-400 bg-cyan-100 px-2.5 py-1.5 text-xs font-semibold text-cyan-900"
+          >
+            Refresh
+          </button>
+        </div>
+        <p className="mt-2 text-[11px] text-slate-600">
+          {liveDebugLoading ? "Refreshing..." : `Rows: ${liveDebugRows.length}${liveDebugGameId ? ` · game_id=${liveDebugGameId}` : ""}`}
+        </p>
+        {liveDebugRows.length === 0 ? (
+          <p className="mt-2 text-xs text-slate-600">No live player rows returned yet.</p>
+        ) : (
+          <div className="mt-3 max-h-72 overflow-y-auto rounded-lg border border-cyan-200 bg-white">
+            <table className="min-w-full text-xs">
+              <thead className="sticky top-0 bg-cyan-100 text-slate-800">
+                <tr>
+                  <th className="px-2 py-1 text-left font-semibold">Team</th>
+                  <th className="px-2 py-1 text-left font-semibold">Player</th>
+                  <th className="px-2 py-1 text-right font-semibold">Pts</th>
+                  <th className="px-2 py-1 text-left font-semibold">Status</th>
+                  <th className="px-2 py-1 text-left font-semibold">Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {liveDebugRows.map((row) => (
+                  <tr key={`${row.gameId}-${row.playerId}`} className="border-t border-cyan-100">
+                    <td className="px-2 py-1 text-slate-700">{row.teamName}</td>
+                    <td className="px-2 py-1 font-medium text-slate-900">{row.playerName}</td>
+                    <td className="px-2 py-1 text-right font-semibold text-slate-900">{row.fantasyPoints.toFixed(2)}</td>
+                    <td className="px-2 py-1 text-slate-700">{row.gameStatus}</td>
+                    <td className="px-2 py-1 text-slate-600">{formatLocalDateTime(row.sourceUpdatedAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       {finalUnclaimedEntries.length > 1 ? (
         <section className="rounded-2xl border border-emerald-200/70 bg-emerald-50/70 p-4 shadow-sm">

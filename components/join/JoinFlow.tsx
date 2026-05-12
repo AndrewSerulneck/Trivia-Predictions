@@ -175,10 +175,9 @@ const ONBOARDING_PANEL_VARIANTS = {
 };
 
 const SWIPE_SPRING_TRANSITION = {
-  type: "spring" as const,
-  stiffness: 300,
-  damping: 30,
-  mass: 1,
+  type: "tween" as const,
+  duration: 0.22,
+  ease: [0.4, 0.0, 0.2, 1.0] as [number, number, number, number],
 };
 
 const LOADING_PHRASES = [
@@ -599,6 +598,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     setIsAdvancingToPin(true);
     setLoginStepDirection(1);
     setLoginStep("pin");
+    // Focus while still in the user-gesture call stack so iOS shows the numeric keypad.
+    pinInputRef.current?.focus();
   }, [isAdvancingToPin, username]);
 
   const handleBackFromPin = useCallback(() => {
@@ -1154,6 +1155,22 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                   transition={SWIPE_SPRING_TRANSITION}
                   className="relative z-0"
                 >
+                  {/* Always-mounted hidden input so we can focus it synchronously from handleGoToPinStep (iOS requires focus during user-gesture stack). */}
+                  <input
+                    ref={pinInputRef}
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={pin}
+                    maxLength={4}
+                    autoComplete="one-time-code"
+                    onChange={(e) => {
+                      if (loginStep !== "pin") return;
+                      setPin(e.target.value.replace(/\D/g, "").slice(0, 4));
+                    }}
+                    className="absolute h-px w-px overflow-hidden opacity-0"
+                    aria-label="4-digit PIN"
+                  />
                   <AnimatePresence custom={loginStepDirection} mode="wait">
                     {loginStep === "username" ? (
                       <motion.div
@@ -1228,12 +1245,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                         transition={SWIPE_SPRING_TRANSITION}
                         onAnimationComplete={() => {
                           setIsAdvancingToPin(false);
-                          if (pinFocusTimerRef.current) {
-                            window.clearTimeout(pinFocusTimerRef.current);
-                          }
-                          pinFocusTimerRef.current = window.setTimeout(() => {
-                            pinInputRef.current?.focus();
-                          }, 300);
                         }}
                         className="flex flex-col pt-4 pb-10"
                       >
@@ -1271,21 +1282,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                           ))}
                         </div>
 
-                        <input
-                          ref={pinInputRef}
-                          type="tel"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          autoFocus
-                          value={pin}
-                          maxLength={4}
-                          autoComplete="one-time-code"
-                          onChange={(e) => {
-                            setPin(e.target.value.replace(/\D/g, "").slice(0, 4));
-                          }}
-                          className="absolute h-px w-px overflow-hidden opacity-0"
-                          aria-label="4-digit PIN"
-                        />
 
                         {isAuthLoading ? (
                           <p className="animate-pulse text-base text-slate-500">{loadingPhrase}</p>

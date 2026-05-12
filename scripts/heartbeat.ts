@@ -10,8 +10,10 @@ type SportConfig = {
   gameStatusFinal: Set<string>;
   buildLiveGamesPath: () => string;
   buildGameStatsPath: (gameId: string) => string;
+  buildGameStatsFallbackPath?: (gameId: string) => string;
   toFantasyPoints: (row: Record<string, unknown>) => number;
 };
+type DiscoveryMode = "live_only" | "date_scan" | "live_then_date";
 
 type CycleMetrics = {
   liveGames: number;
@@ -33,11 +35,20 @@ const APISPORTS_NBA_BASE_URL = String(process.env.APISPORTS_NBA_BASE_URL ?? "htt
 const APISPORTS_NFL_BASE_URL = String(process.env.APISPORTS_NFL_BASE_URL ?? "https://v1.american-football.api-sports.io").trim().replace(/\/+$/, "");
 const APISPORTS_RAPIDAPI_KEY = String(process.env.APISPORTS_RAPIDAPI_KEY ?? APISPORTS_API_KEY).trim();
 const APISPORTS_NBA_RAPIDAPI_HOST = String(process.env.APISPORTS_NBA_RAPIDAPI_HOST ?? "api-nba-v1.p.rapidapi.com").trim();
-const HEARTBEAT_POLL_MS = Math.max(2500, Number.parseInt(String(process.env.HEARTBEAT_POLL_MS ?? "2500"), 10) || 2500);
+const HEARTBEAT_POLL_MS = Math.max(15000, Number.parseInt(String(process.env.HEARTBEAT_POLL_MS ?? "15000"), 10) || 15000);
 const SUPABASE_URL = String(process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").trim();
 const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY ?? "").trim();
 const SHADOW_MISMATCH_WINDOW_MS = 5 * 60 * 1000;
 const processStartedAtMs = Date.now();
+const NBA_DISCOVERY_MODE = (String(process.env.NBA_DISCOVERY_MODE ?? "live_then_date").trim().toLowerCase() ||
+  "live_then_date") as DiscoveryMode;
+const NBA_FORCE_GAME_IDS = String(process.env.NBA_FORCE_GAME_IDS ?? "")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
+const HEARTBEAT_LOG_SHAPE_DEBUG = String(process.env.HEARTBEAT_LOG_SHAPE_DEBUG ?? "true").trim().toLowerCase() === "true";
+const SHAPE_LOG_EVERY_MS = 60_000;
+let lastShapeLogAt = 0;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -57,6 +68,15 @@ function getPath(source: unknown, path: string[]): unknown {
   }
   return current;
 }
+function pickPath(source: unknown, pathOptions: string[][]): unknown {
+  for (const path of pathOptions) {
+    const value = getPath(source, path);
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      return value;
+    }
+  }
+  return undefined;
+}
 
 function parseRows(payload: unknown): Record<string, unknown>[] {
   const rows = toRecord(payload).response;
@@ -75,6 +95,19 @@ function normalizeName(value: string): string {
     .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function buildNameKeys(value: string): string[] {
+  const normalized = normalizeName(value);
+  if (!normalized) {
+    return [];
+  }
+  const keys = new Set<string>([normalized]);
+  const tokens = normalized.split(" ").filter(Boolean);
+  if (tokens.length === 2) {
+    keys.add(`${tokens[1]} ${tokens[0]}`);
+  }
+  return Array.from(keys);
 }
 
 function num(...values: unknown[]): number {
@@ -127,6 +160,14 @@ function parseIsoMs(value: unknown): number | null {
   const ms = Date.parse(raw);
   return Number.isFinite(ms) ? ms : null;
 }
+function parseGameId(row: Record<string, unknown>): string {
+  return String(pickPath(row, [["id"], ["game", "id"], ["fixture", "id"]]) ?? "").trim();
+}
+function parseGameStatus(row: Record<string, unknown>): string {
+  return String(pickPath(row, [["status", "short"], ["status", "long"], ["game", "status", "short"], ["fixture", "status", "short"]]) ?? "")
+    .trim()
+    .toUpperCase();
+}
 
 function buildPlayerName(row: Record<string, unknown>, playerId: number): string {
   const first = String(getPath(row, ["player", "firstname"]) ?? getPath(row, ["player", "first_name"]) ?? "").trim();
@@ -134,6 +175,33 @@ function buildPlayerName(row: Record<string, unknown>, playerId: number): string
   const full = String(getPath(row, ["player", "name"]) ?? "").trim();
   const combined = `${first} ${last}`.trim();
   return combined || full || `Player ${playerId}`;
+}
+
+function normalizePlayerRow(raw: Record<string, unknown>): Record<string, unknown> {
+  const player = toRecord(raw.player);
+  const team = toRecord(raw.team);
+  const stats = toRecord(raw.statistics);
+  if (Object.keys(player).length > 0 || Object.keys(team).length > 0 || Object.keys(stats).length > 0) {
+    return raw;
+  }
+  return {
+    player: {
+      id: raw.player_id ?? raw.playerId ?? getPath(raw, ["player", "id"]),
+      firstname: raw.firstname ?? raw.first_name ?? raw.player_first_name,
+      lastname: raw.lastname ?? raw.last_name ?? raw.player_last_name,
+      name: raw.player_name ?? raw.name,
+    },
+    team: {
+      id: raw.team_id ?? raw.teamId ?? getPath(raw, ["team", "id"]),
+      name: raw.team_name ?? raw.teamName ?? getPath(raw, ["team", "name"]),
+    },
+    points: raw.points ?? raw.pts ?? getPath(raw, ["statistics", "points"]),
+    rebounds: raw.rebounds ?? raw.reb ?? getPath(raw, ["statistics", "rebounds", "total"]),
+    assists: raw.assists ?? raw.ast ?? getPath(raw, ["statistics", "assists"]),
+    steals: raw.steals ?? raw.stl ?? getPath(raw, ["statistics", "steals"]),
+    blocks: raw.blocks ?? raw.blk ?? getPath(raw, ["statistics", "blocks"]),
+    turnovers: raw.turnovers ?? raw.to ?? getPath(raw, ["statistics", "turnovers"]),
+  };
 }
 
 function nbaFantasyPoints(row: Record<string, unknown>): number {
@@ -186,6 +254,7 @@ const SPORT_CONFIG: Record<SportSlug, SportConfig> = {
     gameStatusFinal: new Set(["FT", "AOT", "FINAL"]),
     buildLiveGamesPath: () => "/games?live=all",
     buildGameStatsPath: (gameId: string) => `/games/statistics/players?id=${encodeURIComponent(gameId)}`,
+    buildGameStatsFallbackPath: (gameId: string) => `/players/statistics?game=${encodeURIComponent(gameId)}`,
     toFantasyPoints: nbaFantasyPoints,
   },
   nfl: {
@@ -201,8 +270,25 @@ const SPORT_CONFIG: Record<SportSlug, SportConfig> = {
 };
 
 function isLiveGame(row: Record<string, unknown>, config: SportConfig): boolean {
-  const status = String(getPath(row, ["status", "short"]) ?? getPath(row, ["status", "long"]) ?? "").trim().toUpperCase();
-  return config.gameStatusLive.has(status);
+  const status = parseGameStatus(row);
+  if (config.gameStatusLive.has(status)) {
+    return true;
+  }
+  const longStatus = String(getPath(row, ["status", "long"]) ?? "").trim().toUpperCase();
+  if (
+    ["IN PLAY", "LIVE", "HALFTIME", "Q1", "Q2", "Q3", "Q4", "OVERTIME"].includes(longStatus)
+  ) {
+    return true;
+  }
+  const clock = getPath(row, ["status", "clock"]);
+  if (clock !== null && clock !== undefined && String(clock).trim() !== "") {
+    return true;
+  }
+  // NBA v2 uses numeric shorts: 2 commonly represents in-play.
+  if (status === "2") {
+    return true;
+  }
+  return false;
 }
 
 async function loadTrackedFantasyIdentityMap(): Promise<Map<string, { playerId: number; playerName: string; entryId: string }>> {
@@ -231,9 +317,11 @@ async function loadTrackedFantasyIdentityMap(): Promise<Map<string, { playerId: 
       const playerId = Math.trunc(num(raw.player_id, raw.playerId));
       const playerName = String(raw.player_name ?? raw.playerName ?? "").trim();
       if (!playerName || !Number.isFinite(playerId) || playerId <= 0) continue;
-      const key = normalizeName(playerName);
-      if (!key || map.has(key)) continue;
-      map.set(key, { playerId, playerName, entryId });
+      const keys = buildNameKeys(playerName);
+      for (const key of keys) {
+        if (!key || map.has(key)) continue;
+        map.set(key, { playerId, playerName, entryId });
+      }
     }
   }
   return map;
@@ -252,10 +340,48 @@ async function runCycle(config: SportConfig): Promise<CycleMetrics> {
     avgSourceLagMs: 0,
     apiCalls: 0,
   };
-  metrics.apiCalls += 1;
-  const gameRows = await apiSportsGet(config.baseUrl, config.buildLiveGamesPath());
+  let liveGames: Record<string, unknown>[] = [];
+  let primaryGameRows: Record<string, unknown>[] = [];
 
-  const liveGames = gameRows.filter((row) => isLiveGame(row, config));
+  const shouldUseLive = config.slug !== "nba" || NBA_DISCOVERY_MODE !== "date_scan";
+  const shouldUseDateFallback = config.slug === "nba" && NBA_DISCOVERY_MODE !== "live_only";
+
+  if (NBA_FORCE_GAME_IDS.length > 0) {
+    liveGames = NBA_FORCE_GAME_IDS.map((id) => ({ id, status: { short: "LIVE" } }));
+    console.log(`[heartbeat] using NBA_FORCE_GAME_IDS (${NBA_FORCE_GAME_IDS.length})`);
+  } else if (shouldUseLive) {
+    metrics.apiCalls += 1;
+    primaryGameRows = await apiSportsGet(config.baseUrl, config.buildLiveGamesPath());
+    liveGames = primaryGameRows.filter((row) => isLiveGame(row, config));
+    console.log(`[heartbeat] discovery live endpoint rows=${primaryGameRows.length} live_filtered=${liveGames.length}`);
+  }
+
+  if (liveGames.length === 0 && shouldUseDateFallback) {
+    const candidateDates = [isoDateFromOffset(-1), isoDateFromOffset(0), isoDateFromOffset(1)];
+    const fallbackRows = (
+      await Promise.all(
+        candidateDates.map(async (date) => {
+          metrics.apiCalls += 1;
+          return apiSportsGet(config.baseUrl, `/games?date=${encodeURIComponent(date)}`);
+        })
+      )
+    ).flat();
+    liveGames = fallbackRows.filter((row) => isLiveGame(row, config));
+    console.log(`[heartbeat] discovery date-scan rows=${fallbackRows.length} live_filtered=${liveGames.length}`);
+  }
+
+  if (
+    HEARTBEAT_LOG_SHAPE_DEBUG &&
+    Date.now() - lastShapeLogAt >= SHAPE_LOG_EVERY_MS &&
+    (primaryGameRows[0] || liveGames[0])
+  ) {
+    const sample = (primaryGameRows[0] ?? liveGames[0]) as Record<string, unknown>;
+    const sampleKeys = Object.keys(sample).slice(0, 20);
+    const parsedId = parseGameId(sample);
+    const parsedStatus = parseGameStatus(sample);
+    console.log(`[heartbeat-shape] sample_game_keys=${JSON.stringify(sampleKeys)} parsed_id=${parsedId} parsed_status=${parsedStatus}`);
+    lastShapeLogAt = Date.now();
+  }
   metrics.liveGames = liveGames.length;
   if (liveGames.length === 0) {
     return metrics;
@@ -267,19 +393,29 @@ async function runCycle(config: SportConfig): Promise<CycleMetrics> {
   const trackedIdentityByName = config.slug === "nba" ? await loadTrackedFantasyIdentityMap() : new Map<string, { playerId: number; playerName: string; entryId: string }>();
   const matchedTrackedNames = new Set<string>();
   for (const game of liveGames) {
-    const gameId = String(getPath(game, ["id"]) ?? "").trim();
+    const gameId = parseGameId(game);
     if (!gameId) {
       continue;
     }
     const leagueName = String(getPath(game, ["league", "name"]) ?? "").trim();
     const leagueId = Math.round(num(getPath(game, ["league", "id"]))) || null;
-    const gameStatus = String(getPath(game, ["status", "short"]) ?? "").trim();
+    const gameStatus = parseGameStatus(game);
     metrics.apiCalls += 1;
-    const playerRows = await apiSportsGet(config.baseUrl, config.buildGameStatsPath(gameId));
+    let playerRows = await apiSportsGet(config.baseUrl, config.buildGameStatsPath(gameId));
+    if (playerRows.length === 0 && config.buildGameStatsFallbackPath) {
+      metrics.apiCalls += 1;
+      const fallbackRows = await apiSportsGet(config.baseUrl, config.buildGameStatsFallbackPath(gameId));
+      if (fallbackRows.length > 0) {
+        console.log(`[heartbeat] player stats fallback endpoint used for game=${gameId} rows=${fallbackRows.length}`);
+        playerRows = fallbackRows;
+      }
+    }
+    console.log(`[heartbeat] game=${gameId} player_rows=${playerRows.length} status=${gameStatus}`);
 
     const allRows: Array<Record<string, unknown>> = [];
     const playerIds: number[] = [];
-    for (const row of playerRows) {
+    for (const rawRow of playerRows) {
+      const row = normalizePlayerRow(rawRow);
       const playerId = Math.round(num(getPath(row, ["player", "id"])));
       if (!Number.isFinite(playerId) || playerId <= 0) {
         continue;
@@ -287,8 +423,11 @@ async function runCycle(config: SportConfig): Promise<CycleMetrics> {
       const totalFantasyPoints = config.toFantasyPoints(row);
       const rawPlayerName = buildPlayerName(row, playerId);
       const normalizedPlayerName = normalizeName(rawPlayerName);
+      const candidateNameKeys = buildNameKeys(rawPlayerName);
       let resolvedPlayerId = playerId;
-      const trackedIdentity = trackedIdentityByName.get(normalizedPlayerName);
+      const trackedIdentity = candidateNameKeys
+        .map((key) => trackedIdentityByName.get(key))
+        .find((value): value is { playerId: number; playerName: string; entryId: string } => Boolean(value));
       if (trackedIdentity && trackedIdentity.playerId > 0 && trackedIdentity.playerId !== playerId) {
         if (Date.now() - processStartedAtMs <= SHADOW_MISMATCH_WINDOW_MS) {
           console.log(
@@ -298,7 +437,9 @@ async function runCycle(config: SportConfig): Promise<CycleMetrics> {
         resolvedPlayerId = trackedIdentity.playerId;
       }
       if (trackedIdentity) {
-        matchedTrackedNames.add(normalizedPlayerName);
+        for (const key of buildNameKeys(trackedIdentity.playerName)) {
+          matchedTrackedNames.add(key);
+        }
       }
       playerIds.push(resolvedPlayerId);
       const teamId = Math.round(num(getPath(row, ["team", "id"]))) || null;

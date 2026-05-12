@@ -40,8 +40,8 @@ async function triggerLiveStatsSyncFromCron(): Promise<LiveStatsSyncResult> {
     return { ok: true, skipped: true };
   }
 
-  const pollMs = Math.max(500, Math.min(60000, readPositiveIntEnv("FANTASY_LIVE_SYNC_POLL_MS", 2500)));
-  const loopMs = Math.max(2500, Math.min(300000, readPositiveIntEnv("FANTASY_LIVE_SYNC_LOOP_MS", 55000)));
+  const pollMs = Math.max(15000, Math.min(60000, readPositiveIntEnv("FANTASY_LIVE_SYNC_POLL_MS", 15000)));
+  const loopMs = Math.max(15000, Math.min(300000, readPositiveIntEnv("FANTASY_LIVE_SYNC_LOOP_MS", 60000)));
   const finalReplayEveryCycle = Math.max(
     0,
     Math.min(200, readPositiveIntEnv("FANTASY_LIVE_SYNC_FINAL_REPLAY_EVERY_CYCLE", 6))
