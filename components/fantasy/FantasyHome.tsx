@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { supabase } from "@/lib/supabase";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
@@ -293,6 +294,10 @@ export function FantasyHome() {
   const [isCollectingAllFantasy, setIsCollectingAllFantasy] = useState(false);
   const [hasLocalLineupDraft, setHasLocalLineupDraft] = useState(false);
   const [highlightedPlayerIds, setHighlightedPlayerIds] = useState<string[]>([]);
+  const [totalScorePopTick, setTotalScorePopTick] = useState(0);
+  const [playerPopTickById, setPlayerPopTickById] = useState<Record<string, number>>({});
+  const [lastRealtimeMessageAt, setLastRealtimeMessageAt] = useState<number | null>(null);
+  const [isRealtimeFresh, setIsRealtimeFresh] = useState(false);
   const fantasyKickoffRefreshTimerRef = useRef<number | null>(null);
   const fantasyLineupAutosaveTimerRef = useRef<number | null>(null);
   const fantasyRealtimeFallbackTimerRef = useRef<number | null>(null);
@@ -376,6 +381,24 @@ export function FantasyHome() {
       fantasyHighlightResetTimerRef.current = null;
       setHighlightedPlayerIds([]);
     }, 900);
+  }, []);
+
+  const triggerTotalScorePop = useCallback(() => {
+    setTotalScorePopTick((value) => value + 1);
+  }, []);
+
+  const triggerPlayerScorePop = useCallback((playerIds: Array<number | string>) => {
+    const keys = Array.from(new Set(playerIds.map((id) => String(id).trim()).filter(Boolean)));
+    if (keys.length === 0) {
+      return;
+    }
+    setPlayerPopTickById((previous) => {
+      const next = { ...previous };
+      for (const key of keys) {
+        next[key] = (next[key] ?? 0) + 1;
+      }
+      return next;
+    });
   }, []);
 
   const loadSelectedGameDetails = useCallback(async () => {
@@ -640,6 +663,19 @@ export function FantasyHome() {
   }, []);
 
   useEffect(() => {
+    const updateFreshness = () => {
+      if (!lastRealtimeMessageAt) {
+        setIsRealtimeFresh(false);
+        return;
+      }
+      setIsRealtimeFresh(Date.now() - lastRealtimeMessageAt <= 10_000);
+    };
+    updateFreshness();
+    const interval = window.setInterval(updateFreshness, 1000);
+    return () => window.clearInterval(interval);
+  }, [lastRealtimeMessageAt]);
+
+  useEffect(() => {
     if (!userId || !hasSyncableEntry || !supabase) {
       return;
     }
@@ -655,6 +691,7 @@ export function FantasyHome() {
           if (!active) {
             return;
           }
+          setLastRealtimeMessageAt(Date.now());
 
           if (payload.eventType === "DELETE") {
             const deletedId = String((payload.old as { id?: string } | null)?.id ?? "").trim();
@@ -690,7 +727,11 @@ export function FantasyHome() {
                 if (changedPlayers.length > 0) {
                   window.requestAnimationFrame(() => {
                     markPlayersAsHot(changedPlayers);
+                    triggerPlayerScorePop(changedPlayers);
                   });
+                }
+                if (Math.abs(Number(nextEntry.points ?? 0) - Number(previousEntry.points ?? 0)) >= 0.01 || changedPlayers.length > 0) {
+                  triggerTotalScorePop();
                 }
               }
               next[existingIndex] = nextEntry;
@@ -726,7 +767,7 @@ export function FantasyHome() {
       }
       void client.removeChannel(channel);
     };
-  }, [hasSyncableEntry, loadEntries, markPlayersAsHot, userId]);
+  }, [hasSyncableEntry, loadEntries, markPlayersAsHot, triggerPlayerScorePop, triggerTotalScorePop, userId]);
 
   useEffect(() => {
     if (!userId || !hasSyncableEntry || supabase) {
@@ -1032,6 +1073,10 @@ export function FantasyHome() {
             <h2 className="text-lg font-semibold text-slate-900">Hightop Fantasy™</h2>
             <p className="text-sm text-slate-700">Build a 5-player lineup and compete live with your venue.</p>
           </div>
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-white/80 px-2 py-1">
+            <span className={`inline-flex h-2 w-2 rounded-full bg-emerald-500 ${isRealtimeFresh ? "animate-pulse" : "opacity-40"}`} />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-700">Live</span>
+          </div>
         </div>
 
         {statusMessage ? (
@@ -1088,7 +1133,14 @@ export function FantasyHome() {
               <div className="mt-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-semibold text-slate-900">Live Points</p>
-                  <p className="text-sm font-black text-slate-900">{liveTrackedEntryPoints.toFixed(2)} pts</p>
+                  <motion.div
+                    key={`fantasy-total-score-${totalScorePopTick}`}
+                    initial={{ scale: 1, filter: "drop-shadow(0 0 0 rgba(34,211,238,0))" }}
+                    animate={{ scale: [1, 1.2, 1], filter: ["drop-shadow(0 0 0 rgba(34,211,238,0))", "drop-shadow(0 0 12px rgba(34,211,238,0.95))", "drop-shadow(0 0 0 rgba(34,211,238,0))"] }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20, mass: 1, duration: 0.3 }}
+                  >
+                    <p className={`text-sm font-black ${isRealtimeFresh ? "text-cyan-700" : "text-slate-900"}`}>{liveTrackedEntryPoints.toFixed(2)} pts</p>
+                  </motion.div>
                 </div>
                 <ul className="mt-2 space-y-1">
                   {(trackedEntry.lineupPlayers.length > 0
@@ -1113,14 +1165,22 @@ export function FantasyHome() {
                         }`}
                       >
                         <span className="font-medium text-slate-800">{playerName}</span>
-                        <span className={`font-semibold ${isHot ? "text-cyan-200" : ""}`}>{playerPoints.toFixed(2)} pts</span>
+                        <motion.span
+                          key={`${trackedEntry.id}-${player.playerId}-${playerPopTickById[String(player.playerId)] ?? 0}`}
+                          initial={{ scale: 1, filter: "drop-shadow(0 0 0 rgba(34,211,238,0))" }}
+                          animate={{ scale: [1, 1.2, 1], filter: ["drop-shadow(0 0 0 rgba(34,211,238,0))", "drop-shadow(0 0 10px rgba(34,211,238,0.9))", "drop-shadow(0 0 0 rgba(34,211,238,0))"] }}
+                          transition={{ type: "spring", stiffness: 300, damping: 20, mass: 1, duration: 0.3 }}
+                          className={`font-semibold ${isHot ? "text-cyan-200" : ""}`}
+                        >
+                          {playerPoints.toFixed(2)} pts
+                        </motion.span>
                       </li>
                     );
                   })}
                 </ul>
               </div>
               {hasLiveEntry ? (
-                <p className="mt-2 text-[11px] font-semibold text-emerald-800">Live game detected. Updating every 5 seconds.</p>
+                <p className="mt-2 text-[11px] font-semibold text-emerald-800">Live game detected. Streaming realtime updates.</p>
               ) : (
                 <p className="mt-2 text-[11px] text-slate-600">No live game right now. Automatic updates will resume when your next game starts.</p>
               )}

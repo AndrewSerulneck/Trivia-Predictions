@@ -19,6 +19,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const userId = (searchParams.get("userId") ?? "").trim();
     const includeSettled = normalizeBoolean(searchParams.get("includeSettled"), true);
+    const refreshProgress = normalizeBoolean(searchParams.get("refreshProgress"), true);
 
     if (!userId) {
       return NextResponse.json({ ok: true, cards: [] });
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
     const cards = await listUserSportsBingoCards({
       userId,
       includeSettled,
-      refreshProgress: true,
+      refreshProgress,
     });
 
     return NextResponse.json({

@@ -373,6 +373,9 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
         turnovers,
         total_fantasy_points: totalFantasyPoints,
         source_updated_at: nowIso,
+        sport_key: "basketball_nba",
+        stat_type: "fantasy_points_total",
+        value: totalFantasyPoints,
       });
     }
 

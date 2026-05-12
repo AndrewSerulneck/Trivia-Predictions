@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { TouchEvent as ReactTouchEvent } from "react";
 import { getUserId } from "@/lib/storage";
 import { getVenueId } from "@/lib/storage";
+import { supabase } from "@/lib/supabase";
 import { consumeBingoPrefetchCache } from "@/lib/bingoPrefetchCache";
 import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
@@ -153,13 +154,16 @@ function compareCardsEarliestToLatest(a: BingoCard, b: BingoCard): number {
   return a.id.localeCompare(b.id);
 }
 
-function collectUpdatedSquareKeys(previousCards: BingoCard[], nextCards: BingoCard[]): string[] {
+function collectUpdatedSquareChanges(
+  previousCards: BingoCard[],
+  nextCards: BingoCard[]
+): Array<{ key: string; status: BingoCardSquare["status"] }> {
   const previousByCardId = new Map<string, BingoCard>();
   for (const card of previousCards) {
     previousByCardId.set(card.id, card);
   }
 
-  const updatedKeys: string[] = [];
+  const updates: Array<{ key: string; status: BingoCardSquare["status"] }> = [];
   for (const nextCard of nextCards) {
     const previousCard = previousByCardId.get(nextCard.id);
     if (!previousCard) {
@@ -175,12 +179,12 @@ function collectUpdatedSquareKeys(previousCards: BingoCard[], nextCards: BingoCa
         continue;
       }
       if (previousSquare.status !== nextSquare.status) {
-        updatedKeys.push(toCardSquareKey(nextCard.id, nextSquare.index));
+        updates.push({ key: toCardSquareKey(nextCard.id, nextSquare.index), status: nextSquare.status });
       }
     }
   }
 
-  return updatedKeys;
+  return updates;
 }
 
 function summarizeCardState(card: BingoCard): {
@@ -237,7 +241,8 @@ function summarizeCardState(card: BingoCard): {
 function renderCompactGrid(
   cardId: string,
   squares: BingoCardSquare[],
-  recentlyUpdatedSquareKeys: ReadonlySet<string>
+  recentlyUpdatedSquareKeys: ReadonlySet<string>,
+  recentlySucceededSquareKeys: ReadonlySet<string>
 ) {
   const byIndex = new Map<number, BingoCardSquare>();
   for (const square of squares) {
@@ -253,7 +258,9 @@ function renderCompactGrid(
         }
 
         const isFree = Boolean(square.isFree);
-        const shouldPop = recentlyUpdatedSquareKeys.has(toCardSquareKey(cardId, index));
+        const squareKey = toCardSquareKey(cardId, index);
+        const shouldPop = recentlyUpdatedSquareKeys.has(squareKey);
+        const isSuccessPop = recentlySucceededSquareKeys.has(squareKey);
         return (
           <div
             key={index}
@@ -261,7 +268,13 @@ function renderCompactGrid(
             className={`relative flex h-10 items-center justify-center rounded-md border px-1 text-center text-[9px] font-semibold leading-tight ${getCardSquareStyle(
               square.status,
               isFree
-            )} ${shouldPop ? "bingo-square-pop ring-2 ring-cyan-400 shadow-[0_0_8px_2px_rgba(34,211,238,0.45)]" : ""}`}
+            )} ${
+              shouldPop
+                ? isSuccessPop
+                  ? "bingo-square-pop ring-2 ring-amber-300 bg-gradient-to-br from-amber-300 via-yellow-300 to-lime-200 text-amber-900 shadow-[0_0_14px_3px_rgba(250,204,21,0.9)] animate-pulse"
+                  : "bingo-square-pop ring-2 ring-cyan-400 shadow-[0_0_8px_2px_rgba(34,211,238,0.45)]"
+                : ""
+            }`}
           >
             {renderSquareStatusGlyph(square)}
             {isFree ? "FREE" : shortenLabel(square.label)}
@@ -275,7 +288,8 @@ function renderCompactGrid(
 function renderExpandedGrid(
   cardId: string,
   squares: BingoCardSquare[],
-  recentlyUpdatedSquareKeys: ReadonlySet<string>
+  recentlyUpdatedSquareKeys: ReadonlySet<string>,
+  recentlySucceededSquareKeys: ReadonlySet<string>
 ) {
   const byIndex = new Map<number, BingoCardSquare>();
   for (const square of squares) {
@@ -292,14 +306,22 @@ function renderExpandedGrid(
           }
 
           const isFree = Boolean(square.isFree);
-          const shouldPop = recentlyUpdatedSquareKeys.has(toCardSquareKey(cardId, index));
+          const squareKey = toCardSquareKey(cardId, index);
+          const shouldPop = recentlyUpdatedSquareKeys.has(squareKey);
+          const isSuccessPop = recentlySucceededSquareKeys.has(squareKey);
           return (
             <div
               key={index}
               className={`relative flex min-h-[72px] items-center justify-center rounded-lg border px-1.5 py-1.5 text-center text-[10px] font-semibold leading-tight sm:min-h-[82px] sm:px-2 sm:py-2 sm:text-[11px] ${getCardSquareStyle(
                 square.status,
                 isFree
-              )} ${shouldPop ? "bingo-square-pop ring-2 ring-cyan-400 shadow-[0_0_8px_2px_rgba(34,211,238,0.45)]" : ""}`}
+              )} ${
+                shouldPop
+                  ? isSuccessPop
+                    ? "bingo-square-pop ring-2 ring-amber-300 bg-gradient-to-br from-amber-300 via-yellow-300 to-lime-200 text-amber-900 shadow-[0_0_14px_3px_rgba(250,204,21,0.9)] animate-pulse"
+                    : "bingo-square-pop ring-2 ring-cyan-400 shadow-[0_0_8px_2px_rgba(34,211,238,0.45)]"
+                  : ""
+              }`}
             >
               {renderSquareStatusGlyph(square)}
               {isFree ? "FREE" : square.label}
@@ -341,7 +363,10 @@ export function SportsBingoHome() {
   const [expandedActiveCardId, setExpandedActiveCardId] = useState("");
   const [expandedFinalCardId, setExpandedFinalCardId] = useState("");
   const [recentlyUpdatedSquareKeys, setRecentlyUpdatedSquareKeys] = useState<Set<string>>(new Set());
+  const [recentlySucceededSquareKeys, setRecentlySucceededSquareKeys] = useState<Set<string>>(new Set());
   const [showBoardLimitMessage, setShowBoardLimitMessage] = useState(false);
+  const [lastRealtimeMessageAt, setLastRealtimeMessageAt] = useState<number | null>(null);
+  const [isRealtimeFresh, setIsRealtimeFresh] = useState(false);
   const prefetchUsedRef = useRef(false);
   const clearSquarePopTimerRef = useRef<number | null>(null);
   const kickoffRefreshTimerRef = useRef<number | null>(null);
@@ -398,10 +423,12 @@ export function SportsBingoHome() {
     };
   }, []);
 
-  const queueSquarePop = useCallback((keys: string[]) => {
-    if (keys.length === 0) {
+  const queueSquarePop = useCallback((updates: Array<{ key: string; status: BingoCardSquare["status"] }>) => {
+    if (updates.length === 0) {
       return;
     }
+    const keys = updates.map((item) => item.key);
+    const successKeys = updates.filter((item) => item.status === "hit").map((item) => item.key);
 
     setRecentlyUpdatedSquareKeys((current) => {
       const next = new Set(current);
@@ -410,17 +437,35 @@ export function SportsBingoHome() {
       }
       return next;
     });
+    if (successKeys.length > 0) {
+      setRecentlySucceededSquareKeys((current) => {
+        const next = new Set(current);
+        for (const key of successKeys) {
+          next.add(key);
+        }
+        return next;
+      });
+      window.dispatchEvent(
+        new CustomEvent("tp:success-particles", {
+          detail: {
+            source: "bingo-square",
+            squareKeys: successKeys,
+          },
+        })
+      );
+    }
 
     if (clearSquarePopTimerRef.current) {
       window.clearTimeout(clearSquarePopTimerRef.current);
     }
     clearSquarePopTimerRef.current = window.setTimeout(() => {
       setRecentlyUpdatedSquareKeys(new Set());
+      setRecentlySucceededSquareKeys(new Set());
       clearSquarePopTimerRef.current = null;
     }, 2200);
   }, []);
 
-  const loadCards = useCallback(async ({ background = false }: { background?: boolean } = {}) => {
+  const loadCards = useCallback(async ({ background = false, refreshProgress = true }: { background?: boolean; refreshProgress?: boolean } = {}) => {
     if (!userId) {
       if (!prefetchUsedRef.current) {
         setCards([]);
@@ -437,9 +482,12 @@ export function SportsBingoHome() {
       setLoadingCards(true);
     }
     try {
-      const response = await fetch(`/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=true`, {
-        cache: "no-store",
-      });
+      const response = await fetch(
+        `/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=true&refreshProgress=${refreshProgress ? "true" : "false"}`,
+        {
+          cache: "no-store",
+        }
+      );
       const payload = (await response.json()) as CardsResponse;
       if (!payload.ok) {
         throw new Error(payload.error ?? "Failed to load your Sports Bingo cards.");
@@ -449,7 +497,7 @@ export function SportsBingoHome() {
       }
       const nextCards = payload.cards ?? [];
       setCards((previousCards) => {
-        queueSquarePop(collectUpdatedSquareKeys(previousCards, nextCards));
+        queueSquarePop(collectUpdatedSquareChanges(previousCards, nextCards));
         return nextCards;
       });
     } catch (error) {
@@ -466,6 +514,76 @@ export function SportsBingoHome() {
   useEffect(() => {
     void loadCards();
   }, [loadCards]);
+
+  useEffect(() => {
+    const updateFreshness = () => {
+      if (!lastRealtimeMessageAt) {
+        setIsRealtimeFresh(false);
+        return;
+      }
+      setIsRealtimeFresh(Date.now() - lastRealtimeMessageAt <= 10_000);
+    };
+    updateFreshness();
+    const interval = window.setInterval(updateFreshness, 1000);
+    return () => window.clearInterval(interval);
+  }, [lastRealtimeMessageAt]);
+
+  const subscribedCardIds = useMemo(() => Array.from(new Set(cards.map((card) => card.id).filter(Boolean))), [cards]);
+  const subscribedCardFilter = useMemo(() => {
+    if (subscribedCardIds.length === 0) {
+      return "";
+    }
+    return `card_id=in.(${subscribedCardIds.join(",")})`;
+  }, [subscribedCardIds]);
+
+  useEffect(() => {
+    if (!userId || !supabase) {
+      return;
+    }
+
+    const client = supabase;
+    let active = true;
+    const cardsChannel = client
+      .channel(`bingo-cards:${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "sports_bingo_cards", filter: `user_id=eq.${userId}` },
+        () => {
+          if (!active) {
+            return;
+          }
+          setLastRealtimeMessageAt(Date.now());
+          void loadCards({ background: true, refreshProgress: false });
+        }
+      )
+      .subscribe();
+
+    let squaresChannel: ReturnType<typeof client.channel> | null = null;
+    if (subscribedCardFilter) {
+      squaresChannel = client
+        .channel(`bingo-squares:${userId}:${subscribedCardIds.length}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "sports_bingo_squares", filter: subscribedCardFilter },
+          () => {
+            if (!active) {
+              return;
+            }
+            setLastRealtimeMessageAt(Date.now());
+            void loadCards({ background: true, refreshProgress: false });
+          }
+        )
+        .subscribe();
+    }
+
+    return () => {
+      active = false;
+      void client.removeChannel(cardsChannel);
+      if (squaresChannel) {
+        void client.removeChannel(squaresChannel);
+      }
+    };
+  }, [loadCards, subscribedCardFilter, subscribedCardIds.length, userId]);
 
   const goToScreen = useCallback((screen: BingoScreenIndex) => {
     const viewport = swipeViewportRef.current;
@@ -666,18 +784,6 @@ export function SportsBingoHome() {
   const hasReachedBoardLimit = activeCards.length >= 4;
 
   useEffect(() => {
-    if (!userId || !hasStartedActiveCard) {
-      return;
-    }
-    const interval = window.setInterval(() => {
-      void loadCards({ background: true });
-    }, 5000);
-    return () => {
-      window.clearInterval(interval);
-    };
-  }, [hasStartedActiveCard, loadCards, userId]);
-
-  useEffect(() => {
     if (!userId || hasStartedActiveCard || nextActiveCardStartMs === null) {
       if (kickoffRefreshTimerRef.current) {
         window.clearTimeout(kickoffRefreshTimerRef.current);
@@ -797,6 +903,12 @@ export function SportsBingoHome() {
       <div className="rounded-2xl border border-amber-200/70 bg-amber-50/85 p-4 shadow-sm">
         <p className="text-center text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Hightop Sports Bingo™</p>
         <p className="mt-1 text-center text-sm text-slate-700">Track active bingo boards here.</p>
+        <div className="mt-2 flex justify-center">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-white/80 px-2 py-1">
+            <span className={`inline-flex h-2 w-2 rounded-full bg-emerald-500 ${isRealtimeFresh ? "animate-pulse" : "opacity-40"}`} />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-700">Live</span>
+          </div>
+        </div>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
           {hasReachedBoardLimit ? (
             <button
@@ -901,7 +1013,7 @@ export function SportsBingoHome() {
                         </span>
                       </div>
                       <p className="mt-1 text-xs text-slate-600">Starts {formatLocalDateTime(card.startsAt)}</p>
-                      <div className="mt-2">{renderCompactGrid(card.id, card.squares, recentlyUpdatedSquareKeys)}</div>
+                      <div className="mt-2">{renderCompactGrid(card.id, card.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys)}</div>
                     </li>
                   );
                 })}
@@ -967,7 +1079,7 @@ export function SportsBingoHome() {
                   </p>
                   {card.status === "won" ? (
                     <div className="relative mt-2">
-                      {renderCompactGrid(card.id, card.squares, recentlyUpdatedSquareKeys)}
+                      {renderCompactGrid(card.id, card.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys)}
                       {showClaimOverlay ? (
                         <>
                           <div className="pointer-events-none absolute inset-0 rounded-lg bg-slate-900/10" />
@@ -1044,7 +1156,7 @@ export function SportsBingoHome() {
               </button>
             </div>
             <p className="mb-2 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-cyan-700">Active Board</p>
-            {renderExpandedGrid(expandedActiveCard.id, expandedActiveCard.squares, recentlyUpdatedSquareKeys)}
+            {renderExpandedGrid(expandedActiveCard.id, expandedActiveCard.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys)}
           </div>
         </div>
       ) : null}
@@ -1075,7 +1187,7 @@ export function SportsBingoHome() {
             <p className="mb-2 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-cyan-700">
               Final Score Board
             </p>
-            {renderExpandedGrid(expandedFinalCard.id, expandedFinalCard.squares, recentlyUpdatedSquareKeys)}
+            {renderExpandedGrid(expandedFinalCard.id, expandedFinalCard.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys)}
           </div>
         </div>
       ) : null}
