@@ -5042,5 +5042,161 @@
     "correctAnswer": 2,
     "category": "Music",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-instrument-is-typically-played-by-bowing-its-strings-and-is-a-staple-of-classical-orchestras",
+    "question": "Which instrument is typically played by bowing its strings and is a staple of classical orchestras?",
+    "options": [
+      "Flute",
+      "Clarinet",
+      "Cello",
+      "Trumpet"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-musical-term-for-playing-notes-smoothly-and-connectedly",
+    "question": "What is the musical term for playing notes smoothly and connectedly?",
+    "options": [
+      "Staccato",
+      "Legato",
+      "Pizzicato",
+      "Vibrato"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-legendary-band-released-the-album-a-night-at-the-opera-featuring-the-iconic-song-bohemian-rhapsody",
+    "question": "Which legendary band released the album \"A Night at the Opera\" featuring the iconic song \"Bohemian Rhapsody\"?",
+    "options": [
+      "Led Zeppelin",
+      "Queen",
+      "The Rolling Stones",
+      "Pink Floyd"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "from-which-caribbean-island-did-the-music-genre-reggae-primarily-originate",
+    "question": "From which Caribbean island did the music genre Reggae primarily originate?",
+    "options": [
+      "Cuba",
+      "Jamaica",
+      "Trinidad and Tobago",
+      "Barbados"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-classical-composer-is-famous-for-his-nine-symphonies-including-the-ode-to-joy",
+    "question": "Which classical composer is famous for his nine symphonies, including the \"Ode to Joy\"?",
+    "options": [
+      "Wolfgang Amadeus Mozart",
+      "Johann Sebastian Bach",
+      "Ludwig van Beethoven",
+      "Pyotr Ilyich Tchaikovsky"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-annual-music-awards-presented-by-the-recording-academy",
+    "question": "What is the name of the annual music awards presented by the Recording Academy?",
+    "options": [
+      "MTV Video Music Awards",
+      "American Music Awards",
+      "Billboard Music Awards",
+      "Grammy Awards"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-artist-is-known-for-the-hit-song-like-a-rolling-stone-and-is-a-nobel-laureate-in-literature",
+    "question": "Which artist is known for the hit song \"Like a Rolling Stone\" and is a Nobel laureate in Literature?",
+    "options": [
+      "Bob Dylan",
+      "John Lennon",
+      "Paul Simon",
+      "Bruce Springsteen"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-instrument-is-the-primary-melodic-instrument-in-a-traditional-scottish-bagpipe-band",
+    "question": "Which instrument is the primary melodic instrument in a traditional Scottish bagpipe band?",
+    "options": [
+      "Drone",
+      "Chanter",
+      "Bass Drum",
+      "Tenor Drum"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-musical-key-signature-has-no-sharps-or-flats",
+    "question": "What musical key signature has no sharps or flats?",
+    "options": [
+      "G Major",
+      "C Major",
+      "D Major",
+      "F Major"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-famous-opera-composer-wrote-the-marriage-of-figaro-and-don-giovanni",
+    "question": "Which famous opera composer wrote \"The Marriage of Figaro\" and \"Don Giovanni\"?",
+    "options": [
+      "Giuseppe Verdi",
+      "Richard Wagner",
+      "Giacomo Puccini",
+      "Wolfgang Amadeus Mozart"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-decade-saw-the-rise-of-punk-rock-music-with-bands-like-the-ramones-and-sex-pistols",
+    "question": "Which decade saw the rise of punk rock music with bands like The Ramones and Sex Pistols?",
+    "options": [
+      "1960s",
+      "1970s",
+      "1980s",
+      "1990s"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-pop-superstar-is-known-for-her-album-1989-and-hits-like-shake-it-off",
+    "question": "Which pop superstar is known for her album \"1989\" and hits like \"Shake It Off\"?",
+    "options": [
+      "Taylor Swift",
+      "Ariana Grande",
+      "Katy Perry",
+      "Adele"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "easy"
   }
 ]

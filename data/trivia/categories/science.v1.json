@@ -5029,5 +5029,174 @@
     "correctAnswer": 1,
     "category": "Science",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-si-unit-for-temperature",
+    "question": "What is the SI unit for temperature?",
+    "options": [
+      "Celsius",
+      "Fahrenheit",
+      "Kelvin",
+      "Joule"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-main-function-of-the-small-intestine-in-the-human-digestive-system",
+    "question": "What is the main function of the small intestine in the human digestive system?",
+    "options": [
+      "Absorb water",
+      "Produce bile",
+      "Digest protein",
+      "Absorb nutrients"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-type-of-energy-is-stored-in-a-stretched-spring",
+    "question": "What type of energy is stored in a stretched spring?",
+    "options": [
+      "Kinetic energy",
+      "Chemical energy",
+      "Potential energy",
+      "Thermal energy"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-scientific-theory-that-describes-the-movement-of-earths-lithospheric-plates",
+    "question": "What is the name of the scientific theory that describes the movement of Earth's lithospheric plates?",
+    "options": [
+      "Continental Drift",
+      "Plate Tectonics",
+      "Seafloor Spreading",
+      "Isostasy"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-subatomic-particle-has-a-negative-charge",
+    "question": "Which subatomic particle has a negative charge?",
+    "options": [
+      "Proton",
+      "Neutron",
+      "Electron",
+      "Photon"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-phenomenon-where-light-waves-spread-out-as-they-pass-through-an-opening-or-around-an-obstacle",
+    "question": "What is the name of the phenomenon where light waves spread out as they pass through an opening or around an obstacle?",
+    "options": [
+      "Refraction",
+      "Reflection",
+      "Diffraction",
+      "Interference"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-common-name-for-the-reaction-between-an-acid-and-a-base",
+    "question": "What is the common name for the reaction between an acid and a base?",
+    "options": [
+      "Oxidation",
+      "Reduction",
+      "Neutralization",
+      "Polymerization"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-part-of-a-plant-is-responsible-for-absorbing-water-and-nutrients-from-the-soil",
+    "question": "Which part of a plant is responsible for absorbing water and nutrients from the soil?",
+    "options": [
+      "Leaves",
+      "Stem",
+      "Roots",
+      "Flowers"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-term-for-a-star-that-has-exhausted-its-nuclear-fuel-and-collapsed-into-a-very-dense-object-but-is-not-massive-enough-to-become-a-black-hole",
+    "question": "What is the term for a star that has exhausted its nuclear fuel and collapsed into a very dense object, but is not massive enough to become a black hole?",
+    "options": [
+      "Red Giant",
+      "White Dwarf",
+      "Neutron Star",
+      "Pulsar"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-primary-component-of-earths-atmosphere-by-volume",
+    "question": "What is the primary component of Earth's atmosphere by volume?",
+    "options": [
+      "Oxygen",
+      "Carbon Dioxide",
+      "Nitrogen",
+      "Argon"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-of-these-is-not-considered-one-of-the-four-fundamental-forces-of-nature",
+    "question": "Which of these is NOT considered one of the four fundamental forces of nature?",
+    "options": [
+      "Strong nuclear force",
+      "Weak nuclear force",
+      "Electromagnetic force",
+      "Centrifugal force"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-type-of-rock-is-formed-from-the-cooling-and-solidification-of-molten-magma-or-lava",
+    "question": "What type of rock is formed from the cooling and solidification of molten magma or lava?",
+    "options": [
+      "Sedimentary",
+      "Metamorphic",
+      "Igneous",
+      "Organic"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-organelle-is-often-referred-to-as-the-powerhouse-of-the-cell",
+    "question": "Which organelle is often referred to as the 'powerhouse of the cell'?",
+    "options": [
+      "Nucleus",
+      "Ribosome",
+      "Mitochondrion",
+      "Endoplasmic Reticulum"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
   }
 ]

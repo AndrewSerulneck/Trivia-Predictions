@@ -5029,5 +5029,174 @@
     "correctAnswer": 0,
     "category": "Pop Culture",
     "difficulty": "easy"
+  },
+  {
+    "slug": "who-performed-the-super-bowl-lvii-halftime-show-in-2023",
+    "question": "Who performed the Super Bowl LVII halftime show in 2023?",
+    "options": [
+      "Rihanna",
+      "Beyoncé",
+      "Taylor Swift",
+      "Adele"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-game-of-thrones-what-is-the-name-of-arya-starks-sword",
+    "question": "In 'Game of Thrones,' what is the name of Arya Stark's sword?",
+    "options": [
+      "Needle",
+      "Oathkeeper",
+      "Longclaw",
+      "Valyrian Steel"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-marvel-superhero-wields-a-hammer-called-mjolnir",
+    "question": "Which Marvel superhero wields a hammer called Mjolnir?",
+    "options": [
+      "Captain America",
+      "Thor",
+      "Iron Man",
+      "Hulk"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-year-was-tiktok-originally-launched-internationally",
+    "question": "What year was TikTok originally launched internationally?",
+    "options": [
+      "2012",
+      "2015",
+      "2017",
+      "2020"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-fictional-town-where-the-events-of-schitts-creek-unfold",
+    "question": "What is the name of the fictional town where the events of 'Schitt's Creek' unfold?",
+    "options": [
+      "Schitt's Creek",
+      "Rosebud",
+      "Moira's Town",
+      "Gold River"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-pop-superstar-is-known-as-the-queen-of-pop",
+    "question": "Which pop superstar is known as the 'Queen of Pop'?",
+    "options": [
+      "Mariah Carey",
+      "Whitney Houston",
+      "Madonna",
+      "Janet Jackson"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-color-is-neos-famous-trench-coat-in-the-matrix",
+    "question": "What color is Neo's famous trench coat in 'The Matrix'?",
+    "options": [
+      "Red",
+      "Blue",
+      "Black",
+      "Green"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-the-office-us-what-is-the-name-of-michael-scotts-self-produced-action-movie",
+    "question": "In 'The Office' (US), what is the name of Michael Scott's self-produced action movie?",
+    "options": [
+      "Threat Level Midnight",
+      "The Scranton Strangler",
+      "Dundie Awards: The Movie",
+      "Dinner Party Massacre"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-artist-famously-sampled-rick-james-super-freak-for-their-hit-song-u-cant-touch-this",
+    "question": "Which artist famously sampled Rick James' 'Super Freak' for their hit song 'U Can't Touch This'?",
+    "options": [
+      "Vanilla Ice",
+      "MC Hammer",
+      "Bobby Brown",
+      "Salt-N-Pepa"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-directed-the-2019-film-joker-starring-joaquin-phoenix",
+    "question": "Who directed the 2019 film 'Joker' starring Joaquin Phoenix?",
+    "options": [
+      "Christopher Nolan",
+      "Todd Phillips",
+      "Martin Scorsese",
+      "Quentin Tarantino"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-cartoon-family-lives-at-742-evergreen-terrace",
+    "question": "Which cartoon family lives at 742 Evergreen Terrace?",
+    "options": [
+      "The Flintstones",
+      "The Griffins",
+      "The Jetsons",
+      "The Simpsons"
+    ],
+    "correctAnswer": 3,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-main-protagonist-in-the-legend-of-zelda-series",
+    "question": "What is the name of the main protagonist in 'The Legend of Zelda' series?",
+    "options": [
+      "Zelda",
+      "Ganon",
+      "Link",
+      "Navi"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-artist-released-the-album-1989-in-2014-and-re-recorded-it-as-1989-taylors-version",
+    "question": "Which artist released the album '1989' in 2014 and re-recorded it as '1989 (Taylor's Version)'?",
+    "options": [
+      "Ariana Grande",
+      "Katy Perry",
+      "Taylor Swift",
+      "Billie Eilish"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
   }
 ]

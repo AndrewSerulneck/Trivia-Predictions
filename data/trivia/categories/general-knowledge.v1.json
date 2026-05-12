@@ -5016,5 +5016,174 @@
     "correctAnswer": 1,
     "category": "General Knowledge",
     "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-colors-are-there-in-a-traditional-rainbow",
+    "question": "How many colors are there in a traditional rainbow?",
+    "options": [
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-painted-the-famous-artwork-mona-lisa",
+    "question": "Who painted the famous artwork 'Mona Lisa'?",
+    "options": [
+      "Vincent van Gogh",
+      "Pablo Picasso",
+      "Leonardo da Vinci",
+      "Claude Monet"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-commonly-known-as-the-king-of-the-jungle",
+    "question": "Which animal is commonly known as the 'king of the jungle'?",
+    "options": [
+      "Tiger",
+      "Bear",
+      "Lion",
+      "Elephant"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-country-is-the-smallest-in-the-world-by-population",
+    "question": "Which country is the smallest in the world by population?",
+    "options": [
+      "Monaco",
+      "Nauru",
+      "Vatican City",
+      "San Marino"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-freezing-point-of-water-in-celsius",
+    "question": "What is the freezing point of water in Celsius?",
+    "options": [
+      "0°C",
+      "-10°C",
+      "10°C",
+      "32°C"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-famous-classical-composer-continued-to-compose-after-becoming-deaf",
+    "question": "Which famous classical composer continued to compose after becoming deaf?",
+    "options": [
+      "Wolfgang Amadeus Mozart",
+      "Johann Sebastian Bach",
+      "Ludwig van Beethoven",
+      "Frédéric Chopin"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-galaxy-our-solar-system-is-located-in",
+    "question": "What is the name of the galaxy our solar system is located in?",
+    "options": [
+      "Andromeda",
+      "Triangulum",
+      "Whirlpool",
+      "Milky Way"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-ring-of-fire-is-a-major-area-in-the-basin-of-which-ocean-known-for-its-frequent-earthquakes-and-volcanic-eruptions",
+    "question": "The 'Ring of Fire' is a major area in the basin of which ocean, known for its frequent earthquakes and volcanic eruptions?",
+    "options": [
+      "Atlantic Ocean",
+      "Indian Ocean",
+      "Pacific Ocean",
+      "Arctic Ocean"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-element-has-the-chemical-symbol-fe",
+    "question": "Which element has the chemical symbol 'Fe'?",
+    "options": [
+      "Fluorine",
+      "Iron",
+      "Gold",
+      "Silver"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-greek-mythology-who-was-the-goddess-of-wisdom-and-war",
+    "question": "In Greek mythology, who was the goddess of wisdom and war?",
+    "options": [
+      "Aphrodite",
+      "Hera",
+      "Artemis",
+      "Athena"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-is-credited-with-inventing-the-printing-press",
+    "question": "Who is credited with inventing the printing press?",
+    "options": [
+      "Leonardo da Vinci",
+      "Johannes Gutenberg",
+      "Thomas Edison",
+      "Alexander Graham Bell"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-city-is-famously-known-as-the-eternal-city",
+    "question": "Which city is famously known as the 'Eternal City'?",
+    "options": [
+      "Paris",
+      "Rome",
+      "Athens",
+      "London"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-gas-do-plants-absorb-from-the-atmosphere-for-photosynthesis",
+    "question": "What gas do plants absorb from the atmosphere for photosynthesis?",
+    "options": [
+      "Oxygen",
+      "Nitrogen",
+      "Carbon Dioxide",
+      "Hydrogen"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
   }
 ]

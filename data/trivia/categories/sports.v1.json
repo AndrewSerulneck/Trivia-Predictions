@@ -5029,5 +5029,174 @@
     "correctAnswer": 1,
     "category": "Sports",
     "difficulty": "hard"
+  },
+  {
+    "slug": "which-international-governing-body-oversees-the-sport-of-basketball",
+    "question": "Which international governing body oversees the sport of basketball?",
+    "options": [
+      "NBA",
+      "NCAA",
+      "FIBA",
+      "WNBA"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-term-for-scoring-one-stroke-under-par-on-a-single-hole-in-golf",
+    "question": "What is the term for scoring one stroke under par on a single hole in golf?",
+    "options": [
+      "Eagle",
+      "Birdie",
+      "Bogey",
+      "Albatross"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-swimming-stroke-is-characterized-by-both-arms-moving-simultaneously-forward-over-the-head-and-a-dolphin-kick",
+    "question": "Which swimming stroke is characterized by both arms moving simultaneously forward over the head and a dolphin kick?",
+    "options": [
+      "Freestyle",
+      "Backstroke",
+      "Butterfly",
+      "Breaststroke"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-type-of-specialized-footwear-do-cyclists-use-to-attach-their-feet-to-the-pedals",
+    "question": "What type of specialized footwear do cyclists use to attach their feet to the pedals?",
+    "options": [
+      "Cleats",
+      "Sneakers",
+      "Boots",
+      "Sandals"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-periods-are-played-in-a-standard-game-of-ice-hockey",
+    "question": "How many periods are played in a standard game of ice hockey?",
+    "options": [
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-championship-game-of-the-national-football-league-nfl-called",
+    "question": "What is the championship game of the National Football League (NFL) called?",
+    "options": [
+      "World Series",
+      "Stanley Cup",
+      "Super Bowl",
+      "NBA Finals"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-judo-what-color-belt-typically-signifies-a-beginner-student",
+    "question": "In Judo, what color belt typically signifies a beginner student?",
+    "options": [
+      "Black",
+      "Brown",
+      "White",
+      "Blue"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-athletics-throwing-event-involves-propelling-a-heavy-spherical-ball-from-the-shoulder",
+    "question": "Which athletics throwing event involves propelling a heavy spherical ball from the shoulder?",
+    "options": [
+      "Javelin throw",
+      "Discus throw",
+      "Shot put",
+      "Hammer throw"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-a-standard-game-of-snooker-which-color-ball-is-worth-the-most-points",
+    "question": "In a standard game of snooker, which color ball is worth the most points?",
+    "options": [
+      "Red",
+      "Black",
+      "Pink",
+      "Blue"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-male-artistic-gymnastics-apparatus-consists-of-two-horizontal-bars-set-parallel-to-each-other",
+    "question": "Which male artistic gymnastics apparatus consists of two horizontal bars set parallel to each other?",
+    "options": [
+      "High Bar",
+      "Rings",
+      "Parallel Bars",
+      "Pommel Horse"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-points-are-awarded-for-scoring-a-try-in-rugby-union",
+    "question": "How many points are awarded for scoring a 'try' in Rugby Union?",
+    "options": [
+      "3",
+      "4",
+      "5",
+      "6"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-term-for-zero-points-in-a-tennis-game",
+    "question": "What is the term for zero points in a tennis game?",
+    "options": [
+      "Deuce",
+      "Love",
+      "Advantage",
+      "Break"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-baseball-how-many-bases-does-a-batter-typically-advance-on-a-home-run",
+    "question": "In baseball, how many bases does a batter typically advance on a home run?",
+    "options": [
+      "One",
+      "Two",
+      "Three",
+      "Four"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "easy"
   }
 ]

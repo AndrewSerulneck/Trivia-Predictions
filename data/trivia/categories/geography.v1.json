@@ -5042,5 +5042,161 @@
     "correctAnswer": 0,
     "category": "Geography",
     "difficulty": "medium"
+  },
+  {
+    "slug": "the-nile-river-primarily-flows-through-which-continent",
+    "question": "The Nile River primarily flows through which continent?",
+    "options": [
+      "Asia",
+      "Europe",
+      "Africa",
+      "South America"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-gobi-desert-is-located-on-which-continent",
+    "question": "The Gobi Desert is located on which continent?",
+    "options": [
+      "Africa",
+      "Asia",
+      "Australia",
+      "South America"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-bering-strait-separates-which-two-major-landmasses",
+    "question": "The Bering Strait separates which two major landmasses?",
+    "options": [
+      "North America and Asia",
+      "Europe and Africa",
+      "South America and Antarctica",
+      "Australia and Asia"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-continent-has-the-most-independent-countries",
+    "question": "Which continent has the most independent countries?",
+    "options": [
+      "Asia",
+      "Europe",
+      "Africa",
+      "North America"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-mediterranean-sea-separates-which-two-continents",
+    "question": "The Mediterranean Sea separates which two continents?",
+    "options": [
+      "Europe and Asia",
+      "Africa and Asia",
+      "Europe and Africa",
+      "North America and South America"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-smallest-independent-state-in-the-world-by-land-area",
+    "question": "What is the smallest independent state in the world by land area?",
+    "options": [
+      "Monaco",
+      "Nauru",
+      "Vatican City",
+      "San Marino"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-largest-freshwater-lake-by-surface-area-in-the-world",
+    "question": "What is the largest freshwater lake by surface area in the world?",
+    "options": [
+      "Lake Superior",
+      "Lake Victoria",
+      "Lake Huron",
+      "Lake Baikal"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-great-dividing-range-is-the-largest-mountain-range-on-which-continent",
+    "question": "The Great Dividing Range is the largest mountain range on which continent?",
+    "options": [
+      "Africa",
+      "South America",
+      "Australia",
+      "North America"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-panama-canal-connects-which-two-oceans",
+    "question": "The Panama Canal connects which two oceans?",
+    "options": [
+      "Atlantic and Pacific",
+      "Indian and Pacific",
+      "Atlantic and Indian",
+      "Arctic and Atlantic"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-desert-is-recognized-as-the-largest-hot-desert-in-the-world",
+    "question": "Which desert is recognized as the largest hot desert in the world?",
+    "options": [
+      "Arabian Desert",
+      "Sahara Desert",
+      "Kalahari Desert",
+      "Great Victoria Desert"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-strait-that-separates-the-north-island-and-south-island-of-new-zealand",
+    "question": "What is the name of the strait that separates the North Island and South Island of New Zealand?",
+    "options": [
+      "Cook Strait",
+      "Torres Strait",
+      "Bering Strait",
+      "Strait of Gibraltar"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-major-river-flows-through-london",
+    "question": "Which major river flows through London?",
+    "options": [
+      "Seine",
+      "Thames",
+      "Danube",
+      "Rhine"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "easy"
   }
 ]

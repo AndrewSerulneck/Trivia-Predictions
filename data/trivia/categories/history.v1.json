@@ -5042,5 +5042,161 @@
     "correctAnswer": 2,
     "category": "History",
     "difficulty": "medium"
+  },
+  {
+    "slug": "who-led-the-soviet-union-during-much-of-the-cold-war-including-the-cuban-missile-crisis",
+    "question": "Who led the Soviet Union during much of the Cold War, including the Cuban Missile Crisis?",
+    "options": [
+      "Nikita Khrushchev",
+      "Joseph Stalin",
+      "Mikhail Gorbachev",
+      "Vladimir Lenin"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-major-event-is-widely-considered-to-have-started-world-war-i",
+    "question": "What major event is widely considered to have started World War I?",
+    "options": [
+      "Assassination of Archduke Franz Ferdinand",
+      "Invasion of Poland",
+      "Sinking of the Lusitania",
+      "Attack on Pearl Harbor"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-magna-carta-signed-in-1215-limited-the-power-of-the-monarchy-in-which-country",
+    "question": "The Magna Carta, signed in 1215, limited the power of the monarchy in which country?",
+    "options": [
+      "England",
+      "France",
+      "Germany",
+      "Spain"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-was-the-name-of-the-ship-that-brought-the-pilgrims-to-america-in-1620",
+    "question": "What was the name of the ship that brought the Pilgrims to America in 1620?",
+    "options": [
+      "Mayflower",
+      "Pinta",
+      "Santa Maria",
+      "Susan Constant"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-authored-the-communist-manifesto-along-with-friedrich-engels",
+    "question": "Who authored \"The Communist Manifesto\" along with Friedrich Engels?",
+    "options": [
+      "Karl Marx",
+      "Vladimir Lenin",
+      "Leon Trotsky",
+      "Mao Zedong"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-ancient-city-of-troy-famous-for-the-trojan-war-was-located-in-what-modern-day-country",
+    "question": "The ancient city of Troy, famous for the Trojan War, was located in what modern-day country?",
+    "options": [
+      "Turkey",
+      "Greece",
+      "Italy",
+      "Egypt"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-chinese-dynasty-built-much-of-the-great-wall-as-it-is-known-today",
+    "question": "Which Chinese dynasty built much of the Great Wall as it is known today?",
+    "options": [
+      "Ming Dynasty",
+      "Qin Dynasty",
+      "Han Dynasty",
+      "Tang Dynasty"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-major-historical-event-occurred-on-october-24-1929-often-called-black-thursday",
+    "question": "What major historical event occurred on October 24, 1929, often called \"Black Thursday\"?",
+    "options": [
+      "Stock Market Crash",
+      "Beginning of World War II",
+      "Pearl Harbor Attack",
+      "End of the Great Depression"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-was-the-leader-of-the-mongol-empire-establishing-the-largest-contiguous-land-empire-in-history",
+    "question": "Who was the leader of the Mongol Empire, establishing the largest contiguous land empire in history?",
+    "options": [
+      "Genghis Khan",
+      "Kublai Khan",
+      "Attila the Hun",
+      "Tamerlane"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-fall-of-which-city-to-the-ottoman-turks-in-1453-is-often-considered-the-end-of-the-byzantine-empire",
+    "question": "The fall of which city to the Ottoman Turks in 1453 is often considered the end of the Byzantine Empire?",
+    "options": [
+      "Constantinople",
+      "Rome",
+      "Antioch",
+      "Jerusalem"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-is-considered-the-first-roman-emperor-marking-the-end-of-the-roman-republic",
+    "question": "Who is considered the first Roman Emperor, marking the end of the Roman Republic?",
+    "options": [
+      "Julius Caesar",
+      "Augustus",
+      "Nero",
+      "Constantine the Great"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-what-year-did-vasco-da-gama-first-reach-india-by-sea-opening-a-new-trade-route",
+    "question": "In what year did Vasco da Gama first reach India by sea, opening a new trade route?",
+    "options": [
+      "1488",
+      "1492",
+      "1498",
+      "1501"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
   }
 ]

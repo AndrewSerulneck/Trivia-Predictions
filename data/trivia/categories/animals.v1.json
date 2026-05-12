@@ -5042,5 +5042,161 @@
     "correctAnswer": 1,
     "category": "Animals",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-bird-is-known-for-building-elaborate-decorated-nests-to-attract-mates",
+    "question": "Which bird is known for building elaborate, decorated nests to attract mates?",
+    "options": [
+      "Bowerbird",
+      "Weaverbird",
+      "Lyrebird",
+      "Ostrich"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-large-land-animal-is-known-for-its-long-trunk",
+    "question": "Which large land animal is known for its long trunk?",
+    "options": [
+      "Elephant",
+      "Rhinoceros",
+      "Hippopotamus",
+      "Giraffe"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-famous-for-its-unique-ability-to-hover-in-mid-air",
+    "question": "Which animal is famous for its unique ability to hover in mid-air?",
+    "options": [
+      "Hummingbird",
+      "Eagle",
+      "Sparrow",
+      "Pigeon"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animals-venom-is-considered-the-most-potent-among-all-snakes",
+    "question": "Which animal's venom is considered the most potent among all snakes?",
+    "options": [
+      "Inland Taipan",
+      "Black Mamba",
+      "King Cobra",
+      "Rattlesnake"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-is-a-common-pet-known-for-purring",
+    "question": "Which animal is a common pet known for purring?",
+    "options": [
+      "Cat",
+      "Dog",
+      "Hamster",
+      "Goldfish"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-sea-creature-has-three-hearts",
+    "question": "Which sea creature has three hearts?",
+    "options": [
+      "Octopus",
+      "Dolphin",
+      "Shark",
+      "Jellyfish"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-farm-animal-provides-us-with-wool",
+    "question": "Which farm animal provides us with wool?",
+    "options": [
+      "Sheep",
+      "Cow",
+      "Pig",
+      "Chicken"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-unique-ability-to-sleep-while-standing-up",
+    "question": "Which animal is known for its unique ability to sleep while standing up?",
+    "options": [
+      "Horse",
+      "Bear",
+      "Dog",
+      "Cat"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-scientific-term-for-the-study-of-birds",
+    "question": "What is the scientific term for the study of birds?",
+    "options": [
+      "Ornithology",
+      "Ichthyology",
+      "Entomology",
+      "Herpetology"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-reptile-is-known-for-having-a-tongue-that-can-be-up-to-twice-its-body-length",
+    "question": "Which reptile is known for having a tongue that can be up to twice its body length?",
+    "options": [
+      "A. Snake",
+      "B. Lizard",
+      "C. Chameleon",
+      "D. Crocodile"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-marine-animal-is-known-for-its-remarkable-ability-to-change-its-skin-color-and-texture-to-blend-with-its-surroundings",
+    "question": "Which marine animal is known for its remarkable ability to change its skin color and texture to blend with its surroundings?",
+    "options": [
+      "Dolphin",
+      "Octopus",
+      "Jellyfish",
+      "Starfish"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-marine-animal-is-known-for-its-ability-to-change-its-gender-during-its-lifetime",
+    "question": "Which marine animal is known for its ability to change its gender during its lifetime?",
+    "options": [
+      "Blue Whale",
+      "Great White Shark",
+      "Clownfish",
+      "Sea Turtle"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
   }
 ]
