@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useAnimationControls } from "framer-motion";
 import { getUserId, getVenueId } from "@/lib/storage";
+import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { supabase } from "@/lib/supabase";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
@@ -377,22 +378,7 @@ function SpringPop({
 }
 
 function BasketballLoader({ label = "Loading Fantasy..." }: { label?: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-orange-200 bg-gradient-to-b from-orange-50 to-amber-50 px-4 py-6">
-      <div className="relative h-14 w-20 overflow-hidden">
-        <motion.div
-          className="absolute left-1/2 top-0 h-8 w-8 -translate-x-1/2 rounded-full border-2 border-orange-900 bg-orange-400"
-          animate={{ y: [0, 22, 0], scaleX: [1, 1.04, 1], scaleY: [1, 0.94, 1] }}
-          transition={{ repeat: Infinity, duration: 0.9, ease: "easeInOut" }}
-        >
-          <div className="absolute inset-x-[47%] top-0 h-full w-[2px] bg-orange-900/80" />
-          <div className="absolute inset-y-[47%] left-0 h-[2px] w-full bg-orange-900/80" />
-        </motion.div>
-        <div className="absolute bottom-0 left-1/2 h-[3px] w-12 -translate-x-1/2 rounded-full bg-orange-900/20" />
-      </div>
-      <p className="text-xs font-semibold tracking-[0.08em] text-slate-700">{label}</p>
-    </div>
-  );
+  return <BouncingBallLoader size="md" label={label} />;
 }
 
 export function FantasyHome() {

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 
 type PickEmSport = {
   slug: string;
@@ -73,7 +74,9 @@ export function PickEmSportSelect() {
         </p>
 
         {loading ? (
-          <p className="mt-4 text-sm text-slate-600">Loading sports...</p>
+          <div className="mt-4">
+            <BouncingBallLoader size="sm" label="Loading sports..." />
+          </div>
         ) : (
           <div className="mt-4 space-y-2">
             {sports.map((sport) => (

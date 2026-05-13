@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getUserId, getVenueId } from "@/lib/storage";
+import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import type { PrizeWin, WeeklyPrize } from "@/types";
 
 type PrizePayload = {
@@ -155,7 +156,7 @@ export function PrizeWalletPanel() {
   }
 
   if (loading) {
-    return <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">Loading prize wallet...</div>;
+    return <BouncingBallLoader size="sm" label="Loading prize wallet..." />;
   }
 
   return (

@@ -9,6 +9,8 @@ import {
 } from "@/lib/webhooks/balldontlie";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { settlePendingPickEmPicks } from "@/lib/pickem";
+import { refreshFantasyProgress } from "@/lib/fantasy";
+import { refreshSportsBingoProgress } from "@/lib/sportsBingo";
 
 const WEBHOOK_SECRET = process.env.BALLDONTLIE_WEBHOOK_SECRET?.trim() ?? "";
 
@@ -30,33 +32,44 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (webhookId && supabaseAdmin) {
+  if (!supabaseAdmin) {
+    return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
+  }
+
+  if (webhookId) {
     const { error: dedupError } = await supabaseAdmin
       .from("webhook_events_processed")
       .insert({ webhook_id: webhookId });
     if (dedupError?.code === "23505") {
       return NextResponse.json({ ok: true, duplicate: true });
     }
+    if (dedupError) {
+      console.error("[bdl-webhook] dedup insert failed:", dedupError.message);
+    }
   }
 
   const root = body as Record<string, unknown>;
   const eventType = String(root?.type ?? root?.event ?? root?.event_type ?? "");
+  const result: Record<string, unknown> = { ok: true, eventType };
 
-  if (eventType.startsWith("nba.player.")) {
+  // BDL uses both "nba.player.*" and "nba.player_stat.*" — match the "nba.player" prefix
+  // without the trailing dot so both variants are caught.
+  if (eventType.startsWith("nba.player")) {
     const event = parseNbaPlayerEvent(body);
     if (!event) {
-      return NextResponse.json({ ok: true, skipped: "unparseable" });
+      return NextResponse.json({ ok: true, skipped: "unparseable_player_event", eventType });
     }
     try {
-      await handleNbaPlayerEvent(event);
+      const playerResult = await handleNbaPlayerEvent(event);
+      result.playerEvent = { playerId: event.playerId, playerName: event.playerName, ...playerResult };
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
       console.error("[bdl-webhook] handleNbaPlayerEvent failed:", msg);
-      return NextResponse.json({ error: msg }, { status: 500 });
+      return NextResponse.json({ error: msg, eventType }, { status: 500 });
     }
   }
 
-  // If this webhook includes a final game status update, trigger Pick 'Em settlement immediately.
+  // Detect game-final status from any event shape BDL might send.
   const gameStatus = String(
     ((root?.data as Record<string, unknown> | undefined)?.game as Record<string, unknown> | undefined)?.status ??
       (root?.game as Record<string, unknown> | undefined)?.status ??
@@ -65,23 +78,61 @@ export async function POST(request: Request) {
   )
     .trim()
     .toLowerCase();
-  if (gameStatus === "final" || gameStatus === "status_final" || gameStatus === "ft" || gameStatus === "status_full_time") {
-    try {
-      await settlePendingPickEmPicks();
-    } catch (err) {
-      console.error("[bdl-webhook] settlePendingPickEmPicks failed:", err instanceof Error ? err.message : String(err));
+
+  // BDL event types follow the pattern "<sport>.game.<action>" across all leagues.
+  const isGameFinalEventType =
+    eventType.endsWith(".game.end") ||
+    eventType.endsWith(".game.final") ||
+    eventType.endsWith(".game.complete");
+
+  const isGameFinal =
+    isGameFinalEventType ||
+    gameStatus === "final" ||
+    gameStatus === "status_final" ||
+    gameStatus === "ft" ||
+    gameStatus === "status_full_time";
+
+  if (isGameFinal) {
+    const [pickEmResult, fantasyResult, bingoResult] = await Promise.allSettled([
+      settlePendingPickEmPicks(),
+      refreshFantasyProgress({ limit: 500 }),
+      refreshSportsBingoProgress({ limit: 500 }),
+    ]);
+
+    if (pickEmResult.status === "rejected") {
+      const msg = pickEmResult.reason instanceof Error ? pickEmResult.reason.message : String(pickEmResult.reason);
+      console.error("[bdl-webhook] settlePendingPickEmPicks failed:", msg);
+      result.pickEmError = msg;
+    } else {
+      result.pickEm = pickEmResult.value;
+    }
+
+    if (fantasyResult.status === "rejected") {
+      const msg = fantasyResult.reason instanceof Error ? fantasyResult.reason.message : String(fantasyResult.reason);
+      console.error("[bdl-webhook] refreshFantasyProgress failed:", msg);
+      result.fantasyError = msg;
+    } else {
+      result.fantasy = fantasyResult.value;
+    }
+
+    if (bingoResult.status === "rejected") {
+      const msg = bingoResult.reason instanceof Error ? bingoResult.reason.message : String(bingoResult.reason);
+      console.error("[bdl-webhook] refreshSportsBingoProgress failed:", msg);
+      result.bingoError = msg;
+    } else {
+      result.bingo = bingoResult.value;
     }
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json(result);
 }
 
-async function handleNbaPlayerEvent(event: BdlNbaPlayerEvent): Promise<void> {
-  if (!supabaseAdmin) return;
-
+async function handleNbaPlayerEvent(
+  event: BdlNbaPlayerEvent
+): Promise<{ statsUpserted: boolean; hit: number; miss: number }> {
   const totalFantasyPoints = calcNbaFantasyPoints(event.stats);
 
-  const { error: upsertError } = await supabaseAdmin.from("live_player_stats").upsert(
+  const { error: upsertError } = await supabaseAdmin!.from("live_player_stats").upsert(
     {
       game_id: event.gameId,
       player_id: event.playerId,
@@ -111,31 +162,46 @@ async function handleNbaPlayerEvent(event: BdlNbaPlayerEvent): Promise<void> {
     throw new Error(`live_player_stats upsert failed: ${upsertError.message}`);
   }
 
-  await resolveBingoSquares(event);
+  const { hit, miss } = await resolveBingoSquares(event);
+  return { statsUpserted: true, hit, miss };
 }
 
-async function resolveBingoSquares(event: BdlNbaPlayerEvent): Promise<void> {
-  if (!supabaseAdmin) return;
+function isGameCompleted(gameStatus: string): boolean {
+  const s = gameStatus.trim().toLowerCase();
+  return s === "final" || s === "ft" || s.startsWith("final") || s === "status_final" || s === "status_full_time";
+}
 
-  const { data: cards, error: cardsError } = await supabaseAdmin
+async function resolveBingoSquares(event: BdlNbaPlayerEvent): Promise<{ hit: number; miss: number }> {
+  const { data: cards, error: cardsError } = await supabaseAdmin!
     .from("sports_bingo_cards")
     .select("id")
     .eq("game_id", event.gameId)
     .eq("status", "active");
 
-  if (cardsError || !cards?.length) return;
+  if (cardsError) {
+    console.error("[bdl-webhook] bingo cards query failed:", cardsError.message);
+    return { hit: 0, miss: 0 };
+  }
+  if (!cards?.length) return { hit: 0, miss: 0 };
 
   const cardIds = cards.map((c: Record<string, unknown>) => c.id);
 
-  const { data: squares, error: squaresError } = await supabaseAdmin
+  const { data: squares, error: squaresError } = await supabaseAdmin!
     .from("sports_bingo_squares")
     .select("id, resolver")
     .in("card_id", cardIds)
     .eq("status", "pending");
 
-  if (squaresError || !squares?.length) return;
+  if (squaresError) {
+    console.error("[bdl-webhook] bingo squares query failed:", squaresError.message);
+    return { hit: 0, miss: 0 };
+  }
+  if (!squares?.length) return { hit: 0, miss: 0 };
 
   const hitIds: string[] = [];
+  const missIds: string[] = [];
+  const gameCompleted = isGameCompleted(event.gameStatus);
+  const now = new Date().toISOString();
 
   for (const square of squares as Array<{ id: string; resolver: Record<string, unknown> }>) {
     const resolver = square.resolver;
@@ -149,16 +215,46 @@ async function resolveBingoSquares(event: BdlNbaPlayerEvent): Promise<void> {
     const threshold = Number(resolver.threshold ?? 0);
     if (!metric || threshold <= 0) continue;
 
-    if (getStatForBingoMetric(event.stats, metric) >= threshold) {
+    const value = getStatForBingoMetric(event.stats, metric);
+
+    if (value >= threshold) {
       hitIds.push(square.id);
+    } else if (gameCompleted) {
+      // Game is over and the player fell short — square is a confirmed miss.
+      missIds.push(square.id);
     }
+    // If game is still live and threshold not yet reached, leave pending.
   }
 
-  if (hitIds.length === 0) return;
+  const resolvedAt = now;
+  const updates: Promise<unknown>[] = [];
 
-  await supabaseAdmin
-    .from("sports_bingo_squares")
-    .update({ status: "hit", resolved_at: new Date().toISOString() })
-    .in("id", hitIds)
-    .eq("status", "pending");
+  if (hitIds.length > 0) {
+    updates.push(
+      supabaseAdmin!
+        .from("sports_bingo_squares")
+        .update({ status: "hit", resolved_at: resolvedAt })
+        .in("id", hitIds)
+        .eq("status", "pending")
+        .then(({ error }) => {
+          if (error) console.error("[bdl-webhook] bingo hit update failed:", error.message);
+        })
+    );
+  }
+
+  if (missIds.length > 0) {
+    updates.push(
+      supabaseAdmin!
+        .from("sports_bingo_squares")
+        .update({ status: "miss", resolved_at: resolvedAt })
+        .in("id", missIds)
+        .eq("status", "pending")
+        .then(({ error }) => {
+          if (error) console.error("[bdl-webhook] bingo miss update failed:", error.message);
+        })
+    );
+  }
+
+  await Promise.all(updates);
+  return { hit: hitIds.length, miss: missIds.length };
 }

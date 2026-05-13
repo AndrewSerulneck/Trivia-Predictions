@@ -13,6 +13,12 @@
   --tp-orange: #c96b40;
   --tp-red: #a64534;
   --tp-umber: #853626;
+
+  /* Mown-grass field stripes. background-size for the color layer must be
+     exactly 2× this value so each shade fills one full stripe segment. */
+  --stripe-height: 80px;
+  --stripe-green-a: #4ade80;
+  --stripe-green-b: #6ee89a;
 }
 
 *,
@@ -31,15 +37,25 @@ body {
   overscroll-behavior-y: auto;
   text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
-  background:
+  /* Layer 1: white field lines (2px, sharp) */
+  /* Layer 2: alternating mown-grass stripes (hard stop at 50%) */
+  background-image:
     repeating-linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0) 0px,
-      rgba(255, 255, 255, 0) 78px,
-      rgba(255, 255, 255, 0.55) 78px,
-      rgba(255, 255, 255, 0.55) 80px
+      transparent 0,
+      transparent calc(var(--stripe-height) - 2px),
+      rgba(255, 255, 255, 0.55) calc(var(--stripe-height) - 2px),
+      rgba(255, 255, 255, 0.55) var(--stripe-height)
     ),
-    linear-gradient(180deg, #2f8f46 0%, #2b8440 100%);
+    linear-gradient(
+      180deg,
+      var(--stripe-green-a) 50%,
+      var(--stripe-green-b) 50%
+    );
+  background-size:
+    100% var(--stripe-height),
+    100% calc(var(--stripe-height) * 2);
+  background-attachment: fixed;
 }
 
 html {
@@ -49,15 +65,23 @@ html {
   overflow-anchor: none;
   text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
-  background:
+  background-image:
     repeating-linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0) 0px,
-      rgba(255, 255, 255, 0) 78px,
-      rgba(255, 255, 255, 0.55) 78px,
-      rgba(255, 255, 255, 0.55) 80px
+      transparent 0,
+      transparent calc(var(--stripe-height) - 2px),
+      rgba(255, 255, 255, 0.55) calc(var(--stripe-height) - 2px),
+      rgba(255, 255, 255, 0.55) var(--stripe-height)
     ),
-    linear-gradient(180deg, #2f8f46 0%, #2b8440 100%);
+    linear-gradient(
+      180deg,
+      var(--stripe-green-a) 50%,
+      var(--stripe-green-b) 50%
+    );
+  background-size:
+    100% var(--stripe-height),
+    100% calc(var(--stripe-height) * 2);
+  background-attachment: fixed;
 }
 
 /* Ensure text does not inflate unpredictably on iOS narrow screens. */

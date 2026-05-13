@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { getUserId } from "@/lib/storage";
+import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 
 type CareerStatsSummary = {
   generatedAt: string;
@@ -133,7 +134,7 @@ export function CareerStatsPanel() {
   }
 
   if (loading) {
-    return <p className="text-sm text-slate-600">Loading career stats...</p>;
+    return <BouncingBallLoader size="sm" label="Loading career stats..." />;
   }
 
   if (errorMessage) {

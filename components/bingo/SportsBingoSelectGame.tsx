@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getUserId } from "@/lib/storage";
+import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 
 type BingoGame = {
   id: string;
@@ -131,7 +132,9 @@ export function SportsBingoSelectGame() {
         <p className="mt-1 text-sm text-slate-700">Showing upcoming {sportLabel} games only.</p>
 
         {loading ? (
-          <p className="mt-3 text-sm text-slate-600">Loading games...</p>
+          <div className="mt-3">
+            <BouncingBallLoader size="sm" label="Loading games..." />
+          </div>
         ) : games.length === 0 ? (
           <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
             No upcoming games are available right now.

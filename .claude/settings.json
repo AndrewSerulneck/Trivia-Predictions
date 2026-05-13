@@ -5,7 +5,13 @@
       "Bash(git checkout *)",
       "Bash(xargs ls -1)",
       "WebFetch(domain:www.balldontlie.io)",
-      "Bash(grep -v \"^$\")"
+      "Bash(grep -v \"^$\")",
+      "Bash(node scripts/test-webhook.cjs game-final http://localhost:3000)",
+      "Bash(vercel env *)",
+      "Bash(node scripts/test-webhook.cjs player-stat http://localhost:3000)",
+      "Bash(curl -s \"http://localhost:3000/api/fantasy/games\")",
+      "Bash(curl -s \"http://localhost:3000/api/fantasy/entries?userId=test-user&includeSettled=true&refreshProgress=true&limit=200\")",
+      "Bash(curl -v \"http://localhost:3000/api/fantasy/games?tzOffsetMinutes=240&limit=30&venueId=venue-001\")"
     ]
   }
 }

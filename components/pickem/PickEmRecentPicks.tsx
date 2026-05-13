@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { getUserId } from "@/lib/storage";
+import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 
 type PickEmPick = {
@@ -112,7 +113,7 @@ export function PickEmRecentPicks() {
         {errorMessage ? (
           <p className="mt-2 text-sm text-rose-700">{errorMessage}</p>
         ) : loading ? (
-          <p className="mt-2 text-sm text-slate-600">Loading your picks...</p>
+          <BouncingBallLoader size="sm" label="Loading your picks..." />
         ) : recentPicks.length === 0 ? (
           <p className="mt-2 text-sm text-slate-600">No picks yet. Choose a sport above to start playing.</p>
         ) : (

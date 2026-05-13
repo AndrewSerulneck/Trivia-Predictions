@@ -92,19 +92,20 @@ type VenuesPayload = {
 
 type BingoBadgePayload = {
   ok?: boolean;
-  cards?: Array<{ status?: string }>;
+  cards?: Array<{ status?: string; rewardClaimedAt?: string | null; rewardPoints?: number }>;
 };
 
 type PickEmBadgePayload = {
   ok?: boolean;
-  picks?: Array<{ status?: string }>;
+  picks?: Array<{ status?: string; rewardClaimedAt?: string | null; rewardPoints?: number }>;
 };
 
-type ChallengesBadgePayload = {
+type FantasyBadgePayload = {
   ok?: boolean;
-  challenges?: Array<{
+  entries?: Array<{
     status?: string;
-    receiverUserId?: string;
+    rewardClaimedAt?: string | null;
+    points?: number;
   }>;
 };
 
@@ -921,8 +922,12 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           fetchJson<PredictionsPayload>("/api/predictions?page=1&pageSize=24&excludeSensitive=false"),
           fetchJson<PrizesPayload>(`/api/prizes?venueId=${encodeURIComponent(venueId)}&userId=${encodeURIComponent(safeUserId)}`),
           fetchJson<BingoBadgePayload>(`/api/bingo/cards?userId=${encodeURIComponent(safeUserId)}&includeSettled=true`),
-          fetchJson<PickEmBadgePayload>(`/api/pickem/picks?userId=${encodeURIComponent(safeUserId)}&includeSettled=true&limit=200`),
-          fetchJson<ChallengesBadgePayload>(`/api/challenges?userId=${encodeURIComponent(safeUserId)}&includeResolved=true`),
+          fetchJson<PickEmBadgePayload>(
+            `/api/pickem/picks?userId=${encodeURIComponent(safeUserId)}&venueId=${encodeURIComponent(venueId)}&includeSettled=true&limit=200`
+          ),
+          fetchJson<FantasyBadgePayload>(
+            `/api/fantasy/entries?userId=${encodeURIComponent(safeUserId)}&venueId=${encodeURIComponent(venueId)}&includeSettled=true&refreshProgress=true&limit=120`
+          ),
           fetchJson<{ ok?: boolean }>("/api/pickem/sports"),
         ]);
 
@@ -937,7 +942,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         const prizesPayload = getValue<PrizesPayload>(results[5]);
         const bingoPayload = getValue<BingoBadgePayload>(results[6]);
         const pickEmPayload = getValue<PickEmBadgePayload>(results[7]);
-        const challengesPayload = getValue<ChallengesBadgePayload>(results[8]);
+        const fantasyPayload = getValue<FantasyBadgePayload>(results[8]);
 
         // Non-blocking venue validation: log but never throw.
         const venues = venuePayload?.ok && Array.isArray(venuePayload.venues) ? venuePayload.venues : [];
@@ -967,15 +972,19 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           });
         }
 
-        const activeBingoCount = (bingoPayload?.cards ?? []).filter((c) => c.status === "active").length;
+        const unclaimedBingoCount = (bingoPayload?.cards ?? []).filter(
+          (c) => c.status === "won" && !c.rewardClaimedAt && Number(c.rewardPoints ?? 0) > 0
+        ).length;
         if (bingoPayload?.ok && Array.isArray(bingoPayload.cards)) {
           writeBingoPrefetchCache(safeUserId, bingoPayload.cards);
         }
-        const pendingPickEmCount = (pickEmPayload?.picks ?? []).filter((p) => p.status === "pending").length;
-        const pendingFantasyCount = (challengesPayload?.challenges ?? []).filter(
-          (ch) => ch.status === "pending" && ch.receiverUserId === safeUserId
+        const unclaimedPickEmCount = (pickEmPayload?.picks ?? []).filter(
+          (p) => p.status === "won" && !p.rewardClaimedAt && Number(p.rewardPoints ?? 0) > 0
         ).length;
-        homeBadgeCounts = { bingo: activeBingoCount, pickem: pendingPickEmCount, fantasy: pendingFantasyCount };
+        const unclaimedFantasyCount = (fantasyPayload?.entries ?? []).filter(
+          (entry) => entry.status === "final" && !entry.rewardClaimedAt && Number(entry.points ?? 0) > 0
+        ).length;
+        homeBadgeCounts = { bingo: unclaimedBingoCount, pickem: unclaimedPickEmCount, fantasy: unclaimedFantasyCount };
 
         const weeklyPrize = prizesPayload?.ok ? (prizesPayload.weeklyPrize ?? null) : null;
         leaderboardEntries =

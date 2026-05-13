@@ -1656,6 +1656,7 @@ export async function updateFantasyEntryLineup(params: {
 
 export async function listUserFantasyEntries(params: {
   userId: string;
+  venueId?: string;
   includeSettled?: boolean;
   limit?: number;
   refreshProgress?: boolean;
@@ -1682,6 +1683,11 @@ export async function listUserFantasyEntries(params: {
     .eq("user_id", userId)
     .order("starts_at", { ascending: false })
     .limit(limit);
+
+  const venueId = String(params.venueId ?? "").trim();
+  if (venueId) {
+    query = query.eq("venue_id", venueId);
+  }
 
   if (!includeSettled) {
     query = query.in("status", ["pending", "live"]);

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getUserId } from "@/lib/storage";
+import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 
 type BingoCard = {
   id: string;
@@ -475,7 +476,7 @@ export function ActiveGamesPanel() {
   }
 
   if (loading) {
-    return <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">Loading active games...</div>;
+    return <BouncingBallLoader size="sm" label="Loading active games..." />;
   }
 
   if (errorMessage) {

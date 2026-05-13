@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getUserId } from "@/lib/storage";
+import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import type { Notification, PredictionStatus, UserPrediction } from "@/types";
 
 type PicksFilter = PredictionStatus | "all";
@@ -250,7 +251,7 @@ export function ActivityTimeline() {
           </div>
 
           {loadingPicks ? (
-            <p className="text-sm text-slate-600">Loading pick history...</p>
+            <BouncingBallLoader size="sm" label="Loading pick history..." />
           ) : picks.length === 0 ? (
             <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
               No picks found for this filter.
@@ -334,7 +335,7 @@ export function ActivityTimeline() {
           </div>
 
           {loadingNotifications ? (
-            <p className="text-sm text-slate-600">Loading notification history...</p>
+            <BouncingBallLoader size="sm" label="Loading notifications..." />
           ) : notifications.length === 0 ? (
             <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
               No notifications found for this filter.

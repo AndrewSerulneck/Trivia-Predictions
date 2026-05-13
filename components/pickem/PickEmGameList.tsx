@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
+import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { navigateBackToVenue } from "@/lib/venueGameTransition";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
-import { PointsBank } from "@/components/pickem/PointsBank";
 
 type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl";
 
@@ -169,6 +169,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
     Array<{ sportKey: string; path: string; url: string; statusCode: number; bodyPreview: string }>
   >([]);
   const [popAnim, setPopAnim] = useState<{ count: number; shake: boolean; id: number } | null>(null);
+  const [multiplierAnim, setMultiplierAnim] = useState<{ label: "Double Points!" | "Triple Points!"; id: number } | null>(null);
   const [limitPulse, setLimitPulse] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const popIdRef = useRef(0);
@@ -618,6 +619,21 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
     void loadDailyPickCount();
   }, [loadDailyPickCount]);
 
+  useEffect(() => {
+    if (!pointsBank || !userId || !venueId) return;
+    if (pointsBank.totalPicks !== PICKEM_PICK_LIMIT || pointsBank.pendingPicks !== 0) return;
+    if (pointsBank.correctPicks < 7) return;
+    const label: "Double Points!" | "Triple Points!" =
+      pointsBank.correctPicks >= PICKEM_PICK_LIMIT ? "Triple Points!" : "Double Points!";
+    const shownKey = `tp:pickem-multiplier-pop:${userId}:${venueId}:${pointsBank.localDate}:${label}`;
+    if (typeof window !== "undefined" && window.localStorage.getItem(shownKey) === "1") return;
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(shownKey, "1");
+    }
+    popIdRef.current += 1;
+    setMultiplierAnim({ label, id: popIdRef.current });
+  }, [pointsBank, userId, venueId]);
+
 
   return (
     <div className="tp-pickem-compact min-h-[100dvh] touch-pan-y space-y-3 sm:space-y-4">
@@ -701,14 +717,21 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           </div>
         </motion.div>
 
-        <div className={goldFlash ? "pickem-gold-flash rounded-2xl" : undefined}>
-          <PointsBank
-            bank={pointsBank ?? null}
-            collecting={isCollectingBank}
-            onCollect={() => void collectBankPoints()}
-            disabled={!userId || !venueId}
-          />
-        </div>
+        {Math.max(0, pointsBank?.pendingPoints ?? 0) > 0 ? (
+          <div className={goldFlash ? "pickem-gold-flash mt-3 rounded-2xl" : "mt-3"}>
+            <button
+              type="button"
+              data-pickem-bank-collect
+              onClick={() => void collectBankPoints()}
+              disabled={isCollectingBank || !userId || !venueId}
+              className="tp-clean-button inline-flex min-h-[44px] items-center rounded-full border border-cyan-300 bg-gradient-to-r from-cyan-100 via-sky-100 to-indigo-100 px-4 py-2 text-xs font-semibold text-slate-800 shadow-[0_6px_14px_rgba(56,189,248,0.22)] transition-all hover:brightness-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isCollectingBank
+                ? "Collecting..."
+                : `Collect Points (${Math.max(0, pointsBank?.pendingPoints ?? 0).toLocaleString()})`}
+            </button>
+          </div>
+        ) : null}
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {selectedSportSlug === "nfl" && nflWeekOptions.length > 0 ? (
@@ -743,7 +766,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         <div className="mt-4 w-full overflow-x-auto pb-1 [scrollbar-width:thin] touch-pan-x overscroll-x-contain">
           <div className="inline-flex w-max min-w-full gap-2 pr-1">
             {loadingSports ? (
-              <p className="text-sm text-slate-600">Loading sports...</p>
+              <BouncingBallLoader size="sm" label="Loading sports..." />
             ) : sports.length === 0 ? (
               <p className="text-sm text-slate-600">No sports available.</p>
             ) : (
@@ -809,7 +832,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
       ) : null}
 
       {loadingGames ? (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-600 sm:p-3 sm:text-sm">Loading games...</div>
+        <BouncingBallLoader size="sm" label="Loading games..." />
       ) : !sport ? (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800 sm:p-3 sm:text-sm">
           Choose a sport to load today&apos;s games.
@@ -993,10 +1016,42 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         placementKey="pickem-inline"
       />
 
-      {isMounted && popAnim
+      {isMounted && (popAnim || multiplierAnim)
         ? createPortal(
             <div className="pointer-events-none fixed inset-0 z-[7000] flex items-center justify-center">
               {(() => {
+                if (multiplierAnim) {
+                  return (
+                    <motion.span
+                      key={multiplierAnim.id}
+                      className="select-none whitespace-nowrap font-black leading-none transform-gpu will-change-transform"
+                      style={{
+                        color: "#facc15",
+                        fontSize: "clamp(2.1rem, 10vw, 4.6rem)",
+                        textShadow: "0 0 28px rgba(250,204,21,0.55), 0 0 56px rgba(250,204,21,0.35)",
+                      }}
+                      initial={{ scale: 0, y: 0, x: 0, rotate: 0, opacity: 0 }}
+                      animate={{
+                        scale: [0, 1.65, 1.25, 1.25, 0.9],
+                        y: [0, -35, -35, -35, 340],
+                        rotate: [0, 0, 0, 0, 13],
+                        opacity: [0, 1, 1, 1, 0],
+                      }}
+                      transition={{
+                        duration: 0.8,
+                        times: [0, 0.13, 0.23, 0.62, 1],
+                        ease: ["easeOut", "easeOut", "linear", "easeIn"],
+                      }}
+                      onAnimationComplete={() => setMultiplierAnim(null)}
+                    >
+                      {multiplierAnim.label}
+                    </motion.span>
+                  );
+                }
+                if (!popAnim) {
+                  return null;
+                }
+
                 const isLimitReached = popAnim.count >= PICKEM_PICK_LIMIT;
                 const useShake = popAnim.shake && !isLimitReached;
                 return (

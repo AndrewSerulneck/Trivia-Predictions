@@ -39,6 +39,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = String(searchParams.get("userId") ?? "").trim();
+    const venueId = String(searchParams.get("venueId") ?? "").trim();
     if (!userId) {
       return NextResponse.json({ ok: true, entries: [] });
     }
@@ -52,6 +53,7 @@ export async function GET(request: Request) {
 
     const entries = await listUserFantasyEntries({
       userId,
+      venueId: venueId || undefined,
       includeSettled: normalizeBoolean(searchParams.get("includeSettled"), true),
       refreshProgress: false,
       limit: Math.max(1, Math.min(300, normalizePositiveInt(searchParams.get("limit"), 120))),

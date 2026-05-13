@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import type { TouchEvent as ReactTouchEvent } from "react";
 import { getUserId } from "@/lib/storage";
 import { getVenueId } from "@/lib/storage";
@@ -71,6 +72,7 @@ const LINE_PATTERNS: number[][] = [
   [4, 8, 12, 16, 20],
 ];
 const BINGO_GAME_BUFFER_MS = 6 * 60 * 60 * 1000;
+const FINAL_SCORES_RETENTION_MS = 14 * 24 * 60 * 60 * 1000;
 
 function formatLocalDateTime(iso: string): string {
   const date = new Date(iso);
@@ -152,6 +154,22 @@ function compareCardsEarliestToLatest(a: BingoCard, b: BingoCard): number {
     return createdDelta;
   }
   return a.id.localeCompare(b.id);
+}
+
+function getFinalScoreTimestamp(card: BingoCard): number {
+  const settledAtMs = Date.parse(String(card.settledAt ?? ""));
+  if (Number.isFinite(settledAtMs)) return settledAtMs;
+  const startsAtMs = Date.parse(String(card.startsAt ?? ""));
+  if (Number.isFinite(startsAtMs)) return startsAtMs;
+  const createdAtMs = Date.parse(String(card.createdAt ?? ""));
+  if (Number.isFinite(createdAtMs)) return createdAtMs;
+  return Number.NEGATIVE_INFINITY;
+}
+
+function compareCardsLatestToEarliest(a: BingoCard, b: BingoCard): number {
+  const delta = getFinalScoreTimestamp(b) - getFinalScoreTimestamp(a);
+  if (delta !== 0) return delta;
+  return b.id.localeCompare(a.id);
 }
 
 function collectUpdatedSquareChanges(
@@ -345,9 +363,8 @@ function recoverBingoPageScrollState() {
 
 function LoadingState({ label }: { label: string }) {
   return (
-    <div className="mt-3 flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-      <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-cyan-600" />
-      {label}
+    <div className="mt-3">
+      <BouncingBallLoader size="sm" label={label} />
     </div>
   );
 }
@@ -708,7 +725,12 @@ export function SportsBingoHome() {
         active.push(card);
       }
     }
-    const finalized = Array.from(finalById.values()).sort(compareCardsEarliestToLatest);
+    const finalized = Array.from(finalById.values())
+      .filter((card) => {
+        const finalizedAtMs = getFinalScoreTimestamp(card);
+        return Number.isFinite(finalizedAtMs) && now - finalizedAtMs <= FINAL_SCORES_RETENTION_MS;
+      })
+      .sort(compareCardsLatestToEarliest);
     return {
       activeCards: active.sort(compareCardsEarliestToLatest),
       finalizedCards: finalized,

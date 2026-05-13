@@ -45,6 +45,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = (searchParams.get("userId") ?? "").trim();
+    const venueId = (searchParams.get("venueId") ?? "").trim();
     const sportSlug = (searchParams.get("sportSlug") ?? "").trim().toLowerCase();
     const includeSettled = normalizeBoolean(searchParams.get("includeSettled"), true);
     const refreshSettlement = normalizeBoolean(searchParams.get("refreshSettlement"), true);
@@ -61,6 +62,7 @@ export async function GET(request: Request) {
 
     const picks = await listUserPickEmPicks({
       userId,
+      venueId: venueId || undefined,
       sportSlug: sportSlug || undefined,
       includeSettled,
       limit,

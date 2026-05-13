@@ -344,8 +344,9 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       const quota = snapshot.triviaQuota ?? null;
       const isLocked = Boolean(quota && !quota.isAdminBypass && quota.questionsRemaining <= 0);
       setTriviaUnlockSeconds(isLocked ? Math.max(0, Math.floor(quota?.windowSecondsRemaining ?? 0)) : 0);
-      setHomeBadgeCounts(snapshot.homeBadgeCounts ?? {});
-      if (snapshot.homeBadgeCounts) setIsBadgeLoading(false);
+      // Ignore cached badge snapshots so stale red bubbles never appear.
+      // Badges are populated only from fresh unclaimed-points fetches.
+      setHomeBadgeCounts({});
       if (snapshot.leaderboardEntries && snapshot.leaderboardEntries.length > 0) {
         setLeaderboardBootstrapEntries(snapshot.leaderboardEntries);
       }
@@ -560,10 +561,10 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           `/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=true`
         ).then((payload) => payload ?? ({ ok: false } as BingoBadgePayload)),
         fetchJsonWithTimeout<PickEmBadgePayload>(
-          `/api/pickem/picks?userId=${encodeURIComponent(userId)}&includeSettled=true&limit=200`
+          `/api/pickem/picks?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venue.id)}&includeSettled=true&limit=200`
         ).then((payload) => payload ?? ({ ok: false } as PickEmBadgePayload)),
         fetchJsonWithTimeout<FantasyBadgePayload>(
-          `/api/fantasy/entries?userId=${encodeURIComponent(userId)}&includeSettled=true&refreshProgress=true&limit=120`
+          `/api/fantasy/entries?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venue.id)}&includeSettled=true&refreshProgress=true&limit=120`
         ).then((payload) => payload ?? ({ ok: false } as FantasyBadgePayload)),
       ]);
       const bingoPayload = results[0].status === "fulfilled" ? results[0].value : { ok: false as const };
@@ -575,7 +576,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           ).length
         : 0;
       const unclaimedPickEmCount = pickEmPayload.ok
-        ? (pickEmPayload.picks ?? []).filter((pick) => pick.status === "won" && !pick.rewardClaimedAt).length
+        ? (pickEmPayload.picks ?? []).filter(
+            (pick) =>
+              pick.status === "won" &&
+              !pick.rewardClaimedAt &&
+              Math.max(0, Number(pick.rewardPoints ?? 0)) > 0
+          ).length
         : 0;
       const unclaimedFantasyCount = fantasyPayload.ok
         ? (fantasyPayload.entries ?? []).filter(
@@ -598,7 +604,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         setIsBadgeLoading(false);
       }
     }
-  }, []);
+  }, [venue.id]);
 
   const loadChallengeCampaigns = useCallback(
     async (options?: { silent?: boolean }) => {
@@ -931,22 +937,28 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       className="relative z-[60] flex flex-col isolation-isolate"
     >
       <section className="relative shrink-0 px-2 pb-3">
-        <div className="relative min-h-[7.2rem] overflow-hidden rounded-[1.4rem] border-[2px] border-[#cbd5e1]/70 bg-[linear-gradient(172deg,#2f241d_0%,#2a1f19_45%,#211712_100%)] p-[18px] shadow-[0_8px_0_rgba(15,23,42,0.28),0_12px_24px_rgba(15,23,42,0.26)]">
-          <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(14deg,rgba(255,255,255,0.03)_0px,rgba(255,255,255,0.03)_2px,rgba(255,255,255,0)_2px,rgba(255,255,255,0)_9px)]" />
-          <div className="pointer-events-none absolute inset-[7px] rounded-[1rem] border border-[#94a3b8]/30" />
-          <div className="relative flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-[clamp(1.6rem,7.2vw,3.45rem)] font-black leading-[0.96] text-cyan-200 [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_0_10px_rgba(34,211,238,0.5),0_0_24px_rgba(34,211,238,0.35),0_2px_0_rgba(8,47,73,0.9)]">
+        <div className="relative min-h-[7.8rem] overflow-hidden rounded-[1.4rem] border-[2px] border-[#475569] bg-[linear-gradient(172deg,#1f2937_0%,#111827_50%,#0b1220_100%)] p-[18px] shadow-[0_8px_0_rgba(15,23,42,0.34),0_14px_26px_rgba(15,23,42,0.34)]">
+          <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.04)_0px,rgba(255,255,255,0.04)_2px,rgba(255,255,255,0)_2px,rgba(255,255,255,0)_9px)]" />
+          <div className="pointer-events-none absolute inset-[7px] rounded-[1rem] border border-[#94a3b8]/25" />
+          <div className="relative flex flex-col items-center justify-center gap-3">
+            <div className="w-full text-center">
+              <h2 className="text-center text-[clamp(1.55rem,7.1vw,3.3rem)] font-black uppercase leading-[0.95] tracking-[0.04em] text-[#facc15] [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_0_8px_rgba(250,204,21,0.72),0_0_20px_rgba(250,204,21,0.45),0_2px_0_rgba(69,26,3,0.95)]">
                 {venueDisplayName}
               </h2>
             </div>
             <button
               onMouseDown={triggerPulse}
               onClick={leaveVenue}
-              className="tp-clean-button inline-flex items-center justify-center rounded-md border-[2px] border-white bg-[linear-gradient(180deg,#dc2626_0%,#b91c1c_100%)] px-4 py-2 text-sm font-black uppercase tracking-[0.14em] text-white shadow-[0_0_0_1px_rgba(127,29,29,0.7)_inset,0_3px_0_rgba(127,29,29,0.9),0_10px_18px_rgba(15,23,42,0.35)] transition hover:brightness-110 active:translate-y-[1px]"
-              aria-label="Exit venue"
+              className="tp-clean-button inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full border border-[#fef3c7] bg-[linear-gradient(180deg,#dc2626_0%,#b91c1c_100%)] px-6 py-2 text-sm font-extrabold uppercase tracking-[0.12em] text-white shadow-[0_0_0_1px_rgba(127,29,29,0.75)_inset,0_4px_10px_rgba(15,23,42,0.38)] transition hover:brightness-110 active:translate-y-[1px]"
+              aria-label="Back and exit venue"
             >
-              <span className="leading-none">Exit</span>
+              <span aria-hidden="true" className="inline-flex items-center text-white">
+                <svg viewBox="0 0 40 16" className="h-4 w-10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M39 8H9" stroke="currentColor" strokeWidth="3.25" strokeLinecap="round" />
+                  <path d="M14 2L2 8L14 14" stroke="currentColor" strokeWidth="3.25" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+              <span className="leading-none font-black">Exit</span>
             </button>
           </div>
         </div>
@@ -974,7 +986,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         >
         <section className="venue-screen relative m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">
             <div className={`venue-home-panel-content venue-home-games-fit w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-3 pt-1 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(14,165,233,0.3)_0%,rgba(14,165,233,0)_36%),radial-gradient(circle_at_84%_22%,rgba(251,146,60,0.35)_0%,rgba(251,146,60,0)_35%),radial-gradient(circle_at_52%_84%,rgba(236,72,153,0.3)_0%,rgba(236,72,153,0)_43%)]" />
             {showFastPathSkeleton ? (
               <div className="mx-auto mb-2 w-full max-w-[24rem] rounded-2xl border border-cyan-200/80 bg-cyan-50/85 px-3 py-2 text-center text-xs font-semibold text-cyan-900">
                 <p>{arrivalStatusText}</p>

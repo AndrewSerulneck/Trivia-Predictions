@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getUserId, getVenueId } from "@/lib/storage";
+import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 import type { ChallengeGameType, ChallengeInvite } from "@/types";
 
@@ -203,7 +204,7 @@ export function PendingChallengesPanel() {
   }
 
   if (loading) {
-    return <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">Loading challenges...</div>;
+    return <BouncingBallLoader size="sm" label="Loading challenges..." />;
   }
 
   return (

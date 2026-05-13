@@ -2,6 +2,7 @@ import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { fetchBallDontLieList } from "@/lib/balldontlie";
+import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 
 export type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl";
 type PickEmPickStatus = "pending" | "won" | "lost" | "push" | "canceled";
@@ -1667,6 +1668,7 @@ export async function clearPickEmPick(params: {
 
 export async function listUserPickEmPicks(params: {
   userId: string;
+  venueId?: string;
   sportSlug?: string;
   limit?: number;
   includeSettled?: boolean;
@@ -1691,6 +1693,10 @@ export async function listUserPickEmPicks(params: {
     .limit(limit);
 
   const sportSlug = String(params.sportSlug ?? "").trim();
+  const venueId = String(params.venueId ?? "").trim();
+  if (venueId) {
+    query = query.eq("venue_id", venueId);
+  }
   if (sportSlug) {
     query = query.eq("sport_slug", sportSlug);
   }
@@ -1923,24 +1929,87 @@ export async function claimPickEmPoints(params: {
   const multiplierAppliedRaw = Number(row.multiplier_applied ?? 1);
   const multiplierApplied: 1 | 2 | 3 =
     multiplierAppliedRaw >= 3 ? 3 : multiplierAppliedRaw >= 2 ? 2 : 1;
+  const totalPicks = Math.max(0, Number(row.total_picks ?? 0));
+  const settledPicks = Math.max(0, Number(row.settled_picks ?? 0));
+  const correctPicks = Math.max(0, Number(row.correct_picks ?? 0));
+  const pendingPicks = Math.max(0, Number(row.pending_picks ?? 0));
+  const multiplierEligible = Boolean(row.multiplier_eligible);
+  const qualifyingMultiplier: 1 | 2 | 3 =
+    pendingPicks === 0 && totalPicks === PICKEM_DAILY_PICK_LIMIT
+      ? correctPicks >= PICKEM_DAILY_PICK_LIMIT
+        ? 3
+        : correctPicks >= 7
+        ? 2
+        : 1
+      : 1;
+
+  let bonusPoints = 0;
+  if (qualifyingMultiplier > 1) {
+    const { data: snapshot } = await supabaseAdmin
+      .from("pickem_daily_snapshots")
+      .select("collected_points")
+      .eq("user_id", userId)
+      .eq("venue_id", venueId)
+      .eq("local_date", range.date)
+      .maybeSingle<{ collected_points: number | null }>();
+
+    const collectedPoints = Math.max(0, Number(snapshot?.collected_points ?? 0));
+    const targetCollected = correctPicks * PICKEM_REWARD_POINTS * qualifyingMultiplier;
+    bonusPoints = Math.max(0, targetCollected - collectedPoints);
+
+    if (bonusPoints > 0) {
+      const { data: userRow } = await supabaseAdmin
+        .from("users")
+        .select("points")
+        .eq("id", userId)
+        .maybeSingle<{ points: number | null }>();
+      const currentPoints = Math.max(0, Number(userRow?.points ?? 0));
+      await supabaseAdmin.from("users").update({ points: currentPoints + bonusPoints }).eq("id", userId);
+      await supabaseAdmin
+        .from("pickem_daily_snapshots")
+        .update({
+          collected_points: collectedPoints + bonusPoints,
+          multiplier_if_settled_now: qualifyingMultiplier,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId)
+        .eq("venue_id", venueId)
+        .eq("local_date", range.date);
+    }
+  }
+
+  const totalAwarded = pointsAwarded + bonusPoints;
   const result = {
-    claimed: claimedPickCount > 0,
-    pointsAwarded,
+    claimed: claimedPickCount > 0 || totalAwarded > 0,
+    pointsAwarded: totalAwarded,
     claimedPickCount,
-    multiplierApplied,
-    multiplierEligible: Boolean(row.multiplier_eligible),
-    totalPicks: Math.max(0, Number(row.total_picks ?? 0)),
-    settledPicks: Math.max(0, Number(row.settled_picks ?? 0)),
-    correctPicks: Math.max(0, Number(row.correct_picks ?? 0)),
-    pendingPicks: Math.max(0, Number(row.pending_picks ?? 0)),
+    multiplierApplied: qualifyingMultiplier > 1 ? qualifyingMultiplier : multiplierApplied,
+    multiplierEligible,
+    totalPicks,
+    settledPicks,
+    correctPicks,
+    pendingPicks,
   };
 
-  if (result.claimed && pointsAwarded > 0) {
+  if (result.claimed && totalAwarded > 0) {
+    try {
+      await applyChallengeCampaignPoints({
+        userId,
+        venueId,
+        gameType: "pickem",
+        basePoints: totalAwarded,
+        occurredAt: new Date(),
+      });
+    } catch {}
+
     try {
       await supabaseAdmin.from("notifications").insert({
         user_id: userId,
         type: "success",
-        message: `Pick 'Em collected: +${pointsAwarded} points added to your credit allocation.`,
+        message:
+          bonusPoints > 0
+            ? `Pick 'Em collected: +${totalAwarded} points (includes ${result.multiplierApplied}x multiplier bonus).`
+            : `Pick 'Em collected: +${totalAwarded} points added to your credit allocation.`,
       });
     } catch {}
   }

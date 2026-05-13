@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getUserId } from "@/lib/storage";
+import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
 import type { ChallengeCampaign } from "@/types";
 
@@ -317,6 +318,7 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
           <ul className="mt-3 space-y-5">
             {activeCampaigns.map((campaign) => {
               const lastSeen = lastSeenProgress[campaign.id] ?? 0;
+              const progressDelta = Math.max(0, campaign.progressPoints - lastSeen);
               const initialPct =
                 campaign.pointsRequiredToWin > 0
                   ? Math.min(100, (lastSeen / campaign.pointsRequiredToWin) * 100)
@@ -328,6 +330,11 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
                     <div>
                       <p className="text-sm font-semibold leading-tight text-white">{campaign.name}</p>
                       <p className="text-[11px] text-cyan-400/70">{gameTypeLabel(campaign.gameTypes)}</p>
+                      {progressDelta > 0 ? (
+                        <span className="mt-1 inline-block rounded-full bg-emerald-400/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-emerald-300 animate-pulse">
+                          +{progressDelta.toLocaleString()} pts since last visit
+                        </span>
+                      ) : null}
                     </div>
                     {campaign.pointMultiplier > 1 && (
                       <span
@@ -367,7 +374,9 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
         </p>
 
         {loading ? (
-          <p className="mt-3 text-sm text-slate-600">Loading redemption details...</p>
+          <div className="mt-3">
+            <BouncingBallLoader size="sm" label="Loading redemption details..." />
+          </div>
         ) : null}
         {!loading && !latestWin ? (
           <p className="mt-3 text-sm text-slate-700">No redeemable challenge wins found for this venue.</p>

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getUserId, getVenueId } from "@/lib/storage";
+import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 
 type BingoGame = {
   id: string;
@@ -458,7 +459,9 @@ export function SportsBingoSelectBoard() {
         <h2 className="mt-1 text-lg font-semibold text-slate-900">Generate And Lock Board</h2>
 
         {loadingGame ? (
-          <p className="mt-2 text-sm text-slate-600">Loading game...</p>
+          <div className="mt-2">
+            <BouncingBallLoader size="sm" label="Loading game..." />
+          </div>
         ) : !game ? (
           <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
             That game is no longer available. Please pick another game.
