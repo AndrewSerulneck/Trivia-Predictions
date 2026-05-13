@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { refreshSportsBingoProgress } from "@/lib/sportsBingo";
 
 type LiveStatsSyncResult = {
   ok: boolean;
@@ -40,7 +41,7 @@ async function triggerLiveStatsSyncFromCron(): Promise<LiveStatsSyncResult> {
     return { ok: true, skipped: true };
   }
 
-  const pollMs = Math.max(15000, Math.min(60000, readPositiveIntEnv("FANTASY_LIVE_SYNC_POLL_MS", 15000)));
+  const pollMs = Math.max(2500, Math.min(60000, readPositiveIntEnv("FANTASY_LIVE_SYNC_ACTIVE_POLL_MS", 2500)));
   const loopMs = Math.max(15000, Math.min(300000, readPositiveIntEnv("FANTASY_LIVE_SYNC_LOOP_MS", 60000)));
   const finalReplayEveryCycle = Math.max(
     0,
@@ -91,7 +92,8 @@ export async function POST(request: Request) {
 
   try {
     const liveSync = await triggerLiveStatsSyncFromCron();
-    return NextResponse.json({ ok: true, liveSync });
+    const bingoRefresh = await refreshSportsBingoProgress({ limit: 500 });
+    return NextResponse.json({ ok: true, liveSync, bingoRefresh });
   } catch (error) {
     return NextResponse.json(
       {

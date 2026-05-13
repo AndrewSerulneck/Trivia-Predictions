@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { getUserId } from "@/lib/storage";
 import { getVenueId } from "@/lib/storage";
@@ -30,6 +31,8 @@ type SubmitResponse = {
     correctAnswer: number;
     saved: boolean;
     alreadyAnswered?: boolean;
+    pointsAwarded?: number;
+    multiplierApplied?: number;
   };
   quota?: TriviaQuota | null;
   error?: string;
@@ -201,6 +204,99 @@ function createFireworkToken(pool: readonly string[]): FireworkToken {
   };
 }
 
+type AnswerButtonProps = {
+  option: string;
+  optionIndex: number;
+  questionId: string;
+  selected: boolean;
+  isRevealedCorrect: boolean;
+  isSelectedWrong: boolean;
+  locked: boolean;
+  onChoose: (index: number) => void;
+};
+
+function AnswerButton({
+  option,
+  optionIndex,
+  questionId,
+  selected,
+  isRevealedCorrect,
+  isSelectedWrong,
+  locked,
+  onChoose,
+}: AnswerButtonProps) {
+  const controls = useAnimationControls();
+
+  // Instantly reset scale + filter whenever the question changes.
+  useEffect(() => {
+    void controls.set({ scale: 1, filter: "none" });
+  }, [controls, questionId]);
+
+  // Spring-driven scale and drop-shadow effects only — color is handled by CSS classes
+  // to keep background-color out of the animation engine and avoid layout conflicts.
+  useEffect(() => {
+    if (isRevealedCorrect) {
+      let active = true;
+      const seq = async () => {
+        // 1 → 1.05 pop with green glow
+        await controls.start({
+          scale: 1.05,
+          filter: "drop-shadow(0 0 14px rgba(16,185,129,0.9))",
+          transition: { type: "spring", stiffness: 400, damping: 30 },
+        });
+        if (!active) return;
+        // Settle back to 1 with a softer persistent glow
+        await controls.start({
+          scale: 1,
+          filter: "drop-shadow(0 0 6px rgba(16,185,129,0.55))",
+          transition: { type: "spring", stiffness: 400, damping: 30 },
+        });
+      };
+      void seq();
+      return () => {
+        active = false;
+      };
+    }
+    if (isSelectedWrong) {
+      void controls.start({
+        filter: "drop-shadow(0 0 12px rgba(239,68,68,0.85))",
+        transition: { type: "spring", stiffness: 400, damping: 30 },
+      });
+      return;
+    }
+    // Clear lingering effects on deselect / question reset
+    void controls.start({
+      scale: 1,
+      filter: "none",
+      transition: { duration: 0.1 },
+    });
+  }, [controls, isRevealedCorrect, isSelectedWrong]);
+
+  return (
+    <motion.button
+      type="button"
+      data-answer-token={`${questionId}-${optionIndex}`}
+      animate={controls}
+      // whileTap is additive on top of controls — springs back automatically
+      whileTap={{ scale: 0.96, transition: { duration: 0.06 } }}
+      onMouseDown={() => triggerHaptic()}
+      onClick={() => onChoose(optionIndex)}
+      disabled={locked}
+      className={`min-h-[56px] w-full rounded-xl border-2 border-slate-900 px-2.5 py-2 text-left text-[15px] font-bold leading-snug shadow-[2px_2px_0_#0f172a] transition-colors duration-[80ms] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 sm:min-h-[64px] sm:rounded-2xl sm:border-4 sm:px-3 sm:py-2.5 sm:text-base sm:shadow-[4px_4px_0_#0f172a] disabled:opacity-80 ${
+        isRevealedCorrect
+          ? "bg-emerald-500 text-white"
+          : isSelectedWrong
+          ? "bg-rose-500 text-white"
+          : selected
+          ? "bg-pink-500 text-white"
+          : "bg-white text-slate-900 enabled:hover:bg-cyan-100"
+      }`}
+    >
+      {option}
+    </motion.button>
+  );
+}
+
 export function TriviaGame({ questions: initialQuestions = [] }: { questions?: TriviaQuestion[] }) {
   const router = useRouter();
   const gameRootRef = useRef<HTMLDivElement>(null);
@@ -237,6 +333,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   const rainTimeoutRef = useRef<number | null>(null);
   const fireworkTimeoutRef = useRef<number | null>(null);
   const [currentUserPoints, setCurrentUserPoints] = useState<number | null>(null);
+  const [roundPointsAwarded, setRoundPointsAwarded] = useState(0);
 
   const question = questions[index] ?? null;
   const finished = index >= questions.length;
@@ -244,7 +341,8 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     if (attempted === 0) return 0;
     return Math.round((correctAnswers / attempted) * 100);
   }, [attempted, correctAnswers]);
-  const pointsWon = correctAnswers * POINTS_PER_CORRECT;
+  // Use server-confirmed points when available; fall back to base rate optimistically
+  const pointsWon = roundPointsAwarded > 0 ? roundPointsAwarded : correctAnswers * POINTS_PER_CORRECT;
   const estimatedRoundTotal = useMemo(() => {
     if (roundTotalPoints !== null) {
       return roundTotalPoints;
@@ -467,7 +565,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     };
   }, [clearLivePreviewSnapshot, forfeitQuestion]);
 
-  const triggerPointsFlow = useCallback((optionIndex: number) => {
+  const triggerPointsFlow = useCallback((optionIndex: number, points: number) => {
     if (typeof document === "undefined" || !gameRootRef.current) {
       return;
     }
@@ -493,7 +591,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
           },
           sourceX: destinationRect.left + destinationRect.width / 2,
           sourceY: destinationRect.top + destinationRect.height / 2,
-          delta: POINTS_PER_CORRECT,
+          delta: points,
           coins: 10,
         },
       })
@@ -826,6 +924,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         setRewardPulse(`🎉 Correct +${POINTS_PER_CORRECT}`);
         setShowRewardPulse(true);
         triggerHaptic([20, 50, 20]);
+        // Note: optimistic feedback uses base points; updated below once server confirms
       } else {
         setFeedback(`Incorrect. Correct answer: ${question.options[localCorrectAnswer]}.`);
         setFeedbackKind("incorrect");
@@ -863,6 +962,9 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         }
 
         const wasCorrect = payload.result.isCorrect;
+        const pointsAwarded = Math.max(0, Number(payload.result.pointsAwarded ?? POINTS_PER_CORRECT));
+        const multiplierApplied = Number(payload.result.multiplierApplied ?? 1);
+        const challengeActive = multiplierApplied > 1;
         setAttempted((value) => value + 1);
 
         if (payload.result.correctAnswer !== localCorrectAnswer) {
@@ -870,24 +972,37 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         }
 
         if (wasCorrect) {
+          const savedLabel = payload.result.saved ? "saved" : "recorded";
           setRewardPulse(
-            payload.result.saved
-              ? `🔥 +${POINTS_PER_CORRECT} points saved`
-              : `🔥 +${POINTS_PER_CORRECT} points recorded`
+            challengeActive
+              ? `⚡ ${multiplierApplied}x Challenge! +${pointsAwarded} pts ${savedLabel}`
+              : `🔥 +${pointsAwarded} pts ${savedLabel}`
           );
           setShowRewardPulse(true);
           triggerHaptic([35, 35, 35]);
-          setFeedback(`Correct! +${POINTS_PER_CORRECT} points added to your profile.`);
+          setFeedback(
+            challengeActive
+              ? `Correct! +${pointsAwarded} points (${multiplierApplied}x Challenge multiplier active).`
+              : `Correct! +${pointsAwarded} points added to your profile.`
+          );
           setFeedbackKind("correct");
           setCorrectAnswers((value) => value + 1);
-          triggerPointsFlow(answerIndex);
+          setRoundPointsAwarded((value) => value + pointsAwarded);
+          triggerPointsFlow(answerIndex, pointsAwarded);
           if (submittingUserId) {
-            setCurrentUserPoints((value) => (value ?? 0) + POINTS_PER_CORRECT);
+            setCurrentUserPoints((value) => (value ?? 0) + pointsAwarded);
             window.dispatchEvent(
               new CustomEvent("tp:points-updated", {
-                detail: { source: "trivia", delta: POINTS_PER_CORRECT },
+                detail: { source: "trivia", delta: pointsAwarded, multiplier: multiplierApplied },
               })
             );
+            if (challengeActive) {
+              window.dispatchEvent(
+                new CustomEvent("tp:success-particles", {
+                  detail: { source: "trivia-challenge", color: "gold", multiplier: multiplierApplied },
+                })
+              );
+            }
           }
         } else {
           setFeedback(`Incorrect. Correct answer: ${question.options[payload.result.correctAnswer]}.`);
@@ -992,6 +1107,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     }
     setIsPreparingNextRound(true);
     setRoundEndedMessage("");
+    setRoundPointsAwarded(0);
     try {
       await loadRoundQuestions({ showLoading: true, useWarmCache: false });
     } finally {
@@ -1192,7 +1308,14 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
             </div>
             <div className="rounded-2xl border border-cyan-200/55 bg-cyan-900/35 p-2">
               <p className="text-xs uppercase text-cyan-100/90">Round reward</p>
-              <p className="text-lg font-bold text-emerald-700">+{pointsWon} points</p>
+              <div className="flex items-center gap-2">
+                <p className="text-lg font-bold text-emerald-700">+{pointsWon} points</p>
+                {roundPointsAwarded > correctAnswers * POINTS_PER_CORRECT ? (
+                  <span className="inline-flex items-center rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-900">
+                    ⚡ Challenge
+                  </span>
+                ) : null}
+              </div>
               <p className="text-xs text-cyan-100">Keep the streak going in your next round.</p>
             </div>
             <div className="rounded-2xl border border-cyan-200/55 bg-cyan-900/35 p-2 sm:col-span-2">
@@ -1396,46 +1519,52 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         </div>
       </div>
 
-      <div className="min-h-0 flex flex-1 flex-col gap-2 overflow-y-auto pr-0.5 sm:gap-3">
-        <div className="min-h-[1.5rem] sm:min-h-[1.75rem]">
-          {showRewardPulse ? (
-            <p className="tp-pop-in px-0.5 text-sm font-black text-cyan-100">{rewardPulse}</p>
-          ) : null}
-        </div>
-        <h2 className="px-0.5 text-base font-black leading-snug text-white [text-shadow:0_1px_0_rgba(2,6,23,0.7),0_0_12px_rgba(255,255,255,0.24)] sm:text-xl">
-          {question.question}
-        </h2>
-        <div className="grid grid-cols-1 content-start gap-2 pb-2 sm:gap-3">
-          {question.options.map((option, optionIndex) => {
-            const selected = selectedAnswer === optionIndex;
-            const isRevealedCorrect = revealedCorrectAnswer === optionIndex;
-            const hasReveal = revealedCorrectAnswer !== null;
-            const isSelectedWrong = hasReveal && selectedAnswer !== null && selected && !isRevealedCorrect;
-            return (
-              <button
-                key={`${question.id}-${optionIndex}`}
-                type="button"
-                data-answer-token={`${question.id}-${optionIndex}`}
-                onMouseDown={() => triggerHaptic()}
-                onClick={() => {
-                  void chooseAnswer(optionIndex);
-                }}
-                disabled={selectedAnswer !== null || isSubmitting || secondsRemaining <= 0 || triviaQuotaLocked}
-                className={`${BUTTON_POP_CLASS} min-h-[56px] w-full rounded-xl border-2 px-2.5 py-2 text-left text-[15px] font-bold leading-snug shadow-[2px_2px_0_#0f172a] sm:min-h-[64px] sm:rounded-2xl sm:border-4 sm:px-3 sm:py-2.5 sm:text-base sm:shadow-[4px_4px_0_#0f172a] ${
-                  isRevealedCorrect
-                    ? "border-slate-900 bg-emerald-500 text-white"
-                    : isSelectedWrong
-                    ? "border-slate-900 bg-rose-500 text-white"
-                    : selected
-                    ? "border-slate-900 bg-pink-500 text-white"
-                    : "border-slate-900 bg-white text-slate-900 enabled:hover:bg-cyan-100"
-                } disabled:opacity-80`}
-              >
-                {option}
-              </button>
-            );
-          })}
-        </div>
+      {/* relative + overflow-y-auto — the popLayout exit uses position:absolute so no height jitter */}
+      <div className="relative min-h-0 flex flex-1 flex-col overflow-y-auto pr-0.5">
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.div
+            key={question.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ type: "spring", stiffness: 500, damping: 35 }}
+            className="flex flex-col gap-2 pb-2 sm:gap-3"
+          >
+            <div className="min-h-[1.5rem] sm:min-h-[1.75rem]">
+              {showRewardPulse ? (
+                <p className="tp-pop-in px-0.5 text-sm font-black text-cyan-100">{rewardPulse}</p>
+              ) : null}
+            </div>
+            <h2 className="px-0.5 text-base font-black leading-snug text-white [text-shadow:0_1px_0_rgba(2,6,23,0.7),0_0_12px_rgba(255,255,255,0.24)] sm:text-xl">
+              {question.question}
+            </h2>
+            {/* pointer-events:none fires the instant selectedAnswer is set — no re-render lag */}
+            <div
+              className="grid grid-cols-1 gap-2 sm:gap-3"
+              style={{ pointerEvents: selectedAnswer !== null ? "none" : undefined }}
+            >
+              {question.options.map((option, optionIndex) => {
+                const isSelected = selectedAnswer === optionIndex;
+                const isRevealedCorrect = revealedCorrectAnswer === optionIndex;
+                const hasReveal = revealedCorrectAnswer !== null;
+                const isSelectedWrong = hasReveal && selectedAnswer !== null && isSelected && !isRevealedCorrect;
+                return (
+                  <AnswerButton
+                    key={`${question.id}-${optionIndex}`}
+                    option={option}
+                    optionIndex={optionIndex}
+                    questionId={question.id}
+                    selected={isSelected}
+                    isRevealedCorrect={isRevealedCorrect}
+                    isSelectedWrong={isSelectedWrong}
+                    locked={selectedAnswer !== null || isSubmitting || secondsRemaining <= 0 || triviaQuotaLocked}
+                    onChoose={(idx) => { void chooseAnswer(idx); }}
+                  />
+                );
+              })}
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       <div className="z-40 mt-auto shrink-0 space-y-1.5 px-1 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-1 sm:space-y-2">

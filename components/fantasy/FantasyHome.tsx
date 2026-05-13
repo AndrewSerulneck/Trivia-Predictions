@@ -6,6 +6,8 @@ import { getUserId, getVenueId } from "@/lib/storage";
 import { supabase } from "@/lib/supabase";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
+import { PointsLedger } from "@/components/fantasy/PointsLedger";
+import type { LedgerEntry } from "@/components/fantasy/PointsLedger";
 import type { FantasyEntry, FantasyGame, FantasyLeaderboardEntry, FantasyPlayerPoolItem } from "@/lib/fantasy";
 import type { FantasyLineupPlayer } from "@/lib/fantasy";
 
@@ -24,21 +26,22 @@ type EntriesPayload = {
   error?: string;
 };
 
-type LiveStatsDebugRow = {
-  gameId: string;
-  playerId: number;
-  playerName: string;
-  teamName: string;
-  fantasyPoints: number;
-  gameStatus: string;
-  sourceUpdatedAt: string;
+type LiveStatsRealtimeRow = {
+  game_id: string;
+  player_id: number;
+  player_name: string;
+  team_name: string;
+  pts: number;
+  ast: number;
+  reb: number;
+  stl: number;
+  blk: number;
+  turnovers: number;
+  total_fantasy_points: number;
+  game_status: string;
 };
 
-type LiveStatsDebugPayload = {
-  ok: boolean;
-  rows?: LiveStatsDebugRow[];
-  error?: string;
-};
+type StatsSnapshot = Pick<LiveStatsRealtimeRow, "pts" | "ast" | "reb" | "stl" | "blk" | "turnovers" | "total_fantasy_points">;
 
 type FantasyEntryRealtimeRow = {
   id?: string;
@@ -291,33 +294,72 @@ function isIsoInCurrentLocalWeek(iso: string): boolean {
   return getLocalWeekStartMs(parsed) === getLocalWeekStartMs(new Date());
 }
 
+function describeStatChange(
+  prev: StatsSnapshot,
+  next: StatsSnapshot
+): { actionLabel: string; pointsDelta: number } | null {
+  const fpDelta = next.total_fantasy_points - prev.total_fantasy_points;
+  if (fpDelta < 0.01) return null;
+
+  const ptsDiff = Math.round(next.pts - prev.pts);
+  const astDiff = Math.round(next.ast - prev.ast);
+  const rebDiff = Math.round(next.reb - prev.reb);
+  const stlDiff = Math.round(next.stl - prev.stl);
+  const blkDiff = Math.round(next.blk - prev.blk);
+  const tovDiff = Math.round(next.turnovers - prev.turnovers);
+
+  const labels: string[] = [];
+  if (stlDiff > 0) labels.push(stlDiff === 1 ? "recorded a Steal" : `recorded ${stlDiff} Steals`);
+  if (blkDiff > 0) labels.push(blkDiff === 1 ? "recorded a Block" : `recorded ${blkDiff} Blocks`);
+  if (ptsDiff >= 3) labels.push("hit a 3-Pointer");
+  else if (ptsDiff === 2) labels.push("scored 2 points");
+  else if (ptsDiff === 1) labels.push("made a Free Throw");
+  else if (ptsDiff > 3) labels.push(`scored ${ptsDiff} points`);
+  if (astDiff > 0) labels.push(astDiff === 1 ? "recorded an Assist" : `recorded ${astDiff} Assists`);
+  if (rebDiff > 0) labels.push(rebDiff === 1 ? "grabbed a Rebound" : `grabbed ${rebDiff} Rebounds`);
+  if (tovDiff > 0) labels.push(tovDiff === 1 ? "committed a Turnover" : `committed ${tovDiff} Turnovers`);
+
+  const actionLabel =
+    labels.length === 0
+      ? "had a fantasy stat update"
+      : labels.length === 1
+        ? labels[0]!
+        : `${labels[0]} and more`;
+
+  return { actionLabel, pointsDelta: fpDelta };
+}
+
 function SpringPop({
   popKey,
   className,
   glowSize,
+  glowColor = "cyan",
   children,
 }: {
   popKey: number;
   className?: string;
   glowSize: number;
+  glowColor?: "cyan" | "gold";
   children: React.ReactNode;
 }) {
   const controls = useAnimationControls();
 
   useEffect(() => {
     let cancelled = false;
+    const rgba = glowColor === "gold" ? "rgba(255,215,0,0.95)" : "rgba(34,211,238,0.95)";
+    const rgbaFade = glowColor === "gold" ? "rgba(255,215,0,0)" : "rgba(34,211,238,0)";
     const run = async () => {
-      await controls.set({ scale: 1, filter: "drop-shadow(0 0 0 rgba(34,211,238,0))" });
+      await controls.set({ scale: 1, filter: `drop-shadow(0 0 0 ${rgbaFade})` });
       if (cancelled) return;
       await controls.start({
         scale: 1.2,
-        filter: `drop-shadow(0 0 ${glowSize}px rgba(34,211,238,0.95))`,
+        filter: `drop-shadow(0 0 ${glowSize}px ${rgba})`,
         transition: { type: "spring", stiffness: 300, damping: 30, mass: 1 },
       });
       if (cancelled) return;
       await controls.start({
         scale: 1,
-        filter: "drop-shadow(0 0 0 rgba(34,211,238,0))",
+        filter: `drop-shadow(0 0 0 ${rgbaFade})`,
         transition: { type: "spring", stiffness: 300, damping: 30, mass: 1 },
       });
     };
@@ -325,12 +367,31 @@ function SpringPop({
     return () => {
       cancelled = true;
     };
-  }, [controls, glowSize, popKey]);
+  }, [controls, glowColor, glowSize, popKey]);
 
   return (
     <motion.span animate={controls} className={className}>
       {children}
     </motion.span>
+  );
+}
+
+function BasketballLoader({ label = "Loading Fantasy..." }: { label?: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-orange-200 bg-gradient-to-b from-orange-50 to-amber-50 px-4 py-6">
+      <div className="relative h-14 w-20 overflow-hidden">
+        <motion.div
+          className="absolute left-1/2 top-0 h-8 w-8 -translate-x-1/2 rounded-full border-2 border-orange-900 bg-orange-400"
+          animate={{ y: [0, 22, 0], scaleX: [1, 1.04, 1], scaleY: [1, 0.94, 1] }}
+          transition={{ repeat: Infinity, duration: 0.9, ease: "easeInOut" }}
+        >
+          <div className="absolute inset-x-[47%] top-0 h-full w-[2px] bg-orange-900/80" />
+          <div className="absolute inset-y-[47%] left-0 h-[2px] w-full bg-orange-900/80" />
+        </motion.div>
+        <div className="absolute bottom-0 left-1/2 h-[3px] w-12 -translate-x-1/2 rounded-full bg-orange-900/20" />
+      </div>
+      <p className="text-xs font-semibold tracking-[0.08em] text-slate-700">{label}</p>
+    </div>
   );
 }
 
@@ -357,10 +418,9 @@ export function FantasyHome() {
   const [playerPopTickById, setPlayerPopTickById] = useState<Record<string, number>>({});
   const [lastRealtimeMessageAt, setLastRealtimeMessageAt] = useState<number | null>(null);
   const [isRealtimeFresh, setIsRealtimeFresh] = useState(false);
-  const [liveDebugRows, setLiveDebugRows] = useState<LiveStatsDebugRow[]>([]);
-  const [liveDebugGameId, setLiveDebugGameId] = useState("");
-  const [liveDebugLoading, setLiveDebugLoading] = useState(false);
+  const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>([]);
   const gameDetailsRequestNonceRef = useRef(0);
+  const prevStatsSnapshotRef = useRef<Map<number, StatsSnapshot>>(new Map());
   const fantasyKickoffRefreshTimerRef = useRef<number | null>(null);
   const fantasyLineupAutosaveTimerRef = useRef<number | null>(null);
   const fantasyRealtimeFallbackTimerRef = useRef<number | null>(null);
@@ -486,8 +546,7 @@ export function FantasyHome() {
         tzOffsetMinutes: String(new Date().getTimezoneOffset()),
         _t: String(Date.now()),
       });
-      // TODO: RESTORE ROSTER LOCK
-      params.set("includeStartedGames", "true");
+      params.set("includeStartedGames", "false");
       if (venueId) {
         params.set("venueId", venueId);
       }
@@ -549,11 +608,10 @@ export function FantasyHome() {
     if (!existingEntryForSelectedGame) {
       return false;
     }
-    // TODO: RESTORE ROSTER LOCK
-    if (existingEntryForSelectedGame.status === "canceled") {
+    if (existingEntryForSelectedGame.status === "canceled" || existingEntryForSelectedGame.status === "final") {
       return false;
     }
-    return true;
+    return !existingEntryForSelectedGame.lineup.some((playerName) => !playerPoolKeys.has(normalizePlayerKey(playerName)));
   }, [existingEntryForSelectedGame, playerPoolKeys]);
   const nextUnlockedGame = useMemo(() => games.find((game) => !game.isLocked) ?? null, [games]);
   const liveDebugTargetGame = useMemo(() => {
@@ -821,7 +879,7 @@ export function FantasyHome() {
                   .filter((player) => {
                   const before = getScoreFromBreakdown(previousEntry.scoreBreakdown, player);
                   const after = getScoreFromBreakdown(nextEntry.scoreBreakdown, player);
-                  return Math.abs(after - before) >= 0.01;
+                  return after - before >= 0.01;
                 })
                   .map((player) => player.playerId);
                 if (changedPlayers.length > 0) {
@@ -830,7 +888,7 @@ export function FantasyHome() {
                     triggerPlayerScorePop(changedPlayers);
                   });
                 }
-                if (Math.abs(Number(nextEntry.points ?? 0) - Number(previousEntry.points ?? 0)) >= 0.01 || changedPlayers.length > 0) {
+                if (Number(nextEntry.points ?? 0) - Number(previousEntry.points ?? 0) >= 0.01 || changedPlayers.length > 0) {
                   triggerTotalScorePop();
                 }
               }
@@ -874,6 +932,92 @@ export function FantasyHome() {
     };
   }, [loadEntries, markPlayersAsHot, triggerPlayerScorePop, triggerTotalScorePop, userId]);
 
+  // Refs so the live_player_stats subscription can read fresh values without re-subscribing.
+  const liveDebugTargetGameIdRef = useRef<string | null>(null);
+  liveDebugTargetGameIdRef.current = liveDebugTargetGame?.id ?? null;
+
+  const trackedEntryPlayerIdsRef = useRef<Set<number>>(new Set());
+  useEffect(() => {
+    const ids = (trackedEntry?.lineupPlayers ?? [])
+      .filter((p) => p.playerId > 0)
+      .map((p) => p.playerId);
+    trackedEntryPlayerIdsRef.current = new Set(ids);
+  }, [trackedEntry]);
+
+  useEffect(() => {
+    if (!supabase) return;
+    const client = supabase;
+    let active = true;
+    let ledgerIdCounter = 0;
+
+    const channel = client
+      .channel("live-player-stats-feed")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "live_player_stats" },
+        (payload) => {
+          if (!active) return;
+          const row = (payload.new ?? null) as LiveStatsRealtimeRow | null;
+          if (!row) return;
+
+          const gameId = String(row.game_id ?? "").trim();
+          const playerId = Number(row.player_id ?? 0);
+          if (!Number.isFinite(playerId) || playerId <= 0) return;
+
+          // Only process rows for the tracked live game or the user's roster players.
+          const isTrackedGame = liveDebugTargetGameIdRef.current && gameId === liveDebugTargetGameIdRef.current;
+          const isRosterPlayer = trackedEntryPlayerIdsRef.current.has(playerId);
+          if (!isTrackedGame && !isRosterPlayer) return;
+
+          const nextSnapshot: StatsSnapshot = {
+            pts: Number(row.pts ?? 0),
+            ast: Number(row.ast ?? 0),
+            reb: Number(row.reb ?? 0),
+            stl: Number(row.stl ?? 0),
+            blk: Number(row.blk ?? 0),
+            turnovers: Number(row.turnovers ?? 0),
+            total_fantasy_points: Number(row.total_fantasy_points ?? 0),
+          };
+
+          const prevSnapshot = prevStatsSnapshotRef.current.get(playerId);
+          prevStatsSnapshotRef.current.set(playerId, nextSnapshot);
+
+          // No baseline yet — store snapshot but don't generate a ledger entry.
+          if (!prevSnapshot) return;
+
+          const change = describeStatChange(prevSnapshot, nextSnapshot);
+          if (!change) return;
+
+          // Trigger pop on roster players only.
+          if (isRosterPlayer) {
+            window.requestAnimationFrame(() => {
+              markPlayersAsHot([playerId]);
+              triggerPlayerScorePop([playerId]);
+            });
+          }
+
+          ledgerIdCounter += 1;
+          const entry: LedgerEntry = {
+            id: `${playerId}-${Date.now()}-${ledgerIdCounter}`,
+            playerName: String(row.player_name ?? "").trim() || "Unknown Player",
+            teamName: String(row.team_name ?? "").trim() || "",
+            actionLabel: change.actionLabel,
+            pointsDelta: change.pointsDelta,
+            timestamp: Date.now(),
+          };
+
+          setLedgerEntries((prev) => [entry, ...prev].slice(0, 5));
+          setLastRealtimeMessageAt(Date.now());
+        }
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      void client.removeChannel(channel);
+    };
+  }, [markPlayersAsHot, triggerPlayerScorePop]);
+
   useEffect(() => {
     if (!userId || supabase) {
       return;
@@ -900,57 +1044,6 @@ export function FantasyHome() {
     };
   }, [loadSelectedGameDetails, selectedGameId]);
 
-  const loadLiveDebugRows = useCallback(async () => {
-    const targetGameId = String(liveDebugTargetGame?.id ?? "").trim();
-    const rosterPlayerIds = (
-      trackedEntry?.lineupPlayers.length
-        ? trackedEntry.lineupPlayers.map((player) => player.playerId)
-        : []
-    )
-      .filter((id) => Number.isFinite(id) && id > 0)
-      .map((id) => String(id));
-    if (!targetGameId && rosterPlayerIds.length === 0) {
-      setLiveDebugRows([]);
-      setLiveDebugGameId("");
-      return;
-    }
-    setLiveDebugLoading(true);
-    try {
-      const params = new URLSearchParams({
-        gameId: targetGameId,
-        limit: "120",
-      });
-      if (rosterPlayerIds.length > 0) {
-        params.set("rosterPlayerIds", rosterPlayerIds.join(","));
-      }
-      const response = await fetch(`/api/fantasy/live-stats-debug?${params.toString()}`, { cache: "no-store" });
-      const payload = (await response.json()) as LiveStatsDebugPayload;
-      if (!payload.ok) {
-        throw new Error(payload.error ?? "Failed to load live debug rows.");
-      }
-      setLiveDebugRows(payload.rows ?? []);
-      setLiveDebugGameId(targetGameId || "roster-fallback");
-    } catch (error) {
-      setLiveDebugRows([]);
-      setLiveDebugGameId(targetGameId || "roster-fallback");
-      setErrorMessage(error instanceof Error ? error.message : "Failed to load live debug rows.");
-    } finally {
-      setLiveDebugLoading(false);
-    }
-  }, [liveDebugTargetGame?.id, trackedEntry]);
-
-  useEffect(() => {
-    void loadLiveDebugRows();
-  }, [loadLiveDebugRows]);
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      void loadLiveDebugRows();
-    }, 5000);
-    return () => {
-      window.clearInterval(interval);
-    };
-  }, [loadLiveDebugRows]);
 
   useEffect(() => {
     if (!userId || hasLiveEntry || nextPendingEntryStartMs === null) {
@@ -1207,6 +1300,14 @@ export function FantasyHome() {
     );
   }
 
+  if (loadingGames && loadingEntries) {
+    return (
+      <div className="space-y-4">
+        <BasketballLoader label="Syncing today's games and rosters..." />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <VenueEntryRulesPanel gameKey="fantasy" shouldDisplay={entries.length === 0} />
@@ -1278,129 +1379,77 @@ export function FantasyHome() {
           <p className="mt-1 text-xs text-slate-700">
             {trackedEntry.gameLabel} · {formatLocalDateTime(trackedEntry.startsAt)}
           </p>
-          {showTrackedEntryClaimButton ? (
-            <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-              <p className="text-sm font-semibold text-emerald-900">Final fantasy score summary</p>
-              <div className="mt-2 rounded-md border border-emerald-200 bg-white px-3 py-2 text-xs text-emerald-900">
-                <p>Base fantasy score: {trackedEntryBasePoints.toFixed(2)} pts</p>
-                <p className="font-semibold">Total to collect: {trackedEntryClaimablePoints} points</p>
-              </div>
-              <button
-                type="button"
-                onClick={(event) => {
-                  const rect = event.currentTarget.getBoundingClientRect();
-                  void claimReward(trackedEntry, rect);
-                }}
-                disabled={claimingEntryId === trackedEntry.id}
-                className="tp-clean-button mt-3 rounded-lg border border-emerald-500 bg-emerald-100 px-3 py-2 text-sm font-semibold text-emerald-900 disabled:opacity-60"
-              >
-                {claimingEntryId === trackedEntry.id ? "Collecting..." : `Collect ${trackedEntryClaimablePoints} Points`}
-              </button>
+          <div className="mt-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-slate-900">{showTrackedEntryClaimButton ? "Final Score" : "Live Points"}</p>
+              <SpringPop popKey={totalScorePopTick} glowSize={12}>
+                <p className={`text-sm font-black ${isRealtimeFresh ? "text-cyan-700" : "text-slate-900"}`}>{liveTrackedEntryPoints.toFixed(2)} pts</p>
+              </SpringPop>
             </div>
+            <ul className="mt-2 space-y-1">
+              {(trackedEntry.lineupPlayers.length > 0
+                ? trackedEntry.lineupPlayers
+                : trackedEntry.lineup.map((playerName, index) => ({ playerId: -(index + 1), playerName })).map((player) => player)
+              ).map((player) => {
+                const playerName = player.playerName;
+                const livePoints = livePointsByPlayer.get(String(player.playerId));
+                const requireLiveRows = trackedEntry.status === "pending" || trackedEntry.status === "live";
+                const playerPoints =
+                  typeof livePoints === "number"
+                    ? livePoints
+                    : requireLiveRows
+                    ? 0
+                    : getScoreFromBreakdown(trackedEntry.scoreBreakdown, player);
+                const isHot = highlightedPlayerIds.includes(String(player.playerId));
+                return (
+                  <li
+                    key={`${trackedEntry.id}-${player.playerId}`}
+                    className={`flex items-center justify-between gap-2 text-xs transition-all duration-300 ${
+                      isHot ? "scale-[1.03] text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.95)]" : "text-slate-700"
+                    }`}
+                  >
+                    <span className="font-medium text-slate-800">{playerName}</span>
+                    <SpringPop
+                      popKey={playerPopTickById[String(player.playerId)] ?? 0}
+                      glowSize={10}
+                      className={`font-semibold ${isHot ? "text-cyan-200" : ""}`}
+                    >
+                      {playerPoints.toFixed(2)} pts
+                    </SpringPop>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+          {showTrackedEntryClaimButton ? (
+            <button
+              type="button"
+              onClick={(event) => {
+                const rect = event.currentTarget.getBoundingClientRect();
+                void claimReward(trackedEntry, rect);
+              }}
+              disabled={claimingEntryId === trackedEntry.id}
+              className="tp-clean-button mt-3 w-full rounded-lg border border-emerald-500 bg-emerald-100 px-3 py-2 text-sm font-semibold text-emerald-900 disabled:opacity-60"
+            >
+              {claimingEntryId === trackedEntry.id ? "Collecting..." : `Collect ${trackedEntryClaimablePoints} Points`}
+            </button>
+          ) : hasLiveEntry ? (
+            <p className="mt-2 text-[11px] font-semibold text-emerald-800">Live game detected. Streaming realtime updates.</p>
           ) : (
-            <>
-              <div className="mt-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-slate-900">Live Points</p>
-                  <SpringPop popKey={totalScorePopTick} glowSize={12}>
-                    <p className={`text-sm font-black ${isRealtimeFresh ? "text-cyan-700" : "text-slate-900"}`}>{liveTrackedEntryPoints.toFixed(2)} pts</p>
-                  </SpringPop>
-                </div>
-                <ul className="mt-2 space-y-1">
-                  {(trackedEntry.lineupPlayers.length > 0
-                    ? trackedEntry.lineupPlayers
-                    : trackedEntry.lineup.map((playerName, index) => ({ playerId: -(index + 1), playerName })).map((player) => player)
-                  ).map((player) => {
-                    const playerName = player.playerName;
-                    const livePoints = livePointsByPlayer.get(String(player.playerId));
-                    const requireLiveRows = trackedEntry.status === "pending" || trackedEntry.status === "live";
-                    const playerPoints =
-                      typeof livePoints === "number"
-                        ? livePoints
-                        : requireLiveRows
-                        ? 0
-                        : getScoreFromBreakdown(trackedEntry.scoreBreakdown, player);
-                    const isHot = highlightedPlayerIds.includes(String(player.playerId));
-                    return (
-                      <li
-                        key={`${trackedEntry.id}-${player.playerId}`}
-                        className={`flex items-center justify-between gap-2 text-xs transition-all duration-300 ${
-                          isHot ? "scale-[1.03] text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.95)]" : "text-slate-700"
-                        }`}
-                      >
-                        <span className="font-medium text-slate-800">{playerName}</span>
-                        <SpringPop
-                          popKey={playerPopTickById[String(player.playerId)] ?? 0}
-                          glowSize={10}
-                          className={`font-semibold ${isHot ? "text-cyan-200" : ""}`}
-                        >
-                          {playerPoints.toFixed(2)} pts
-                        </SpringPop>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-              {hasLiveEntry ? (
-                <p className="mt-2 text-[11px] font-semibold text-emerald-800">Live game detected. Streaming realtime updates.</p>
-              ) : (
-                <p className="mt-2 text-[11px] text-slate-600">No live game right now. Automatic updates will resume when your next game starts.</p>
-              )}
-            </>
+            <p className="mt-2 text-[11px] text-slate-600">No live game right now. Automatic updates will resume when your next game starts.</p>
           )}
         </section>
       ) : null}
 
-      <section className="rounded-2xl border border-cyan-200/70 bg-cyan-50/80 p-4 shadow-sm">
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <h3 className="text-base font-semibold text-slate-900">Live Player Feed (Debug)</h3>
-            <p className="mt-1 text-xs text-slate-700">
-              {liveDebugTargetGame
-                ? `${liveDebugTargetGame.awayTeam} vs ${liveDebugTargetGame.homeTeam} · Game ID ${liveDebugTargetGame.id}`
-                : "No live NBA game detected right now."}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => void loadLiveDebugRows()}
-            className="tp-clean-button rounded-lg border border-cyan-400 bg-cyan-100 px-2.5 py-1.5 text-xs font-semibold text-cyan-900"
-          >
-            Refresh
-          </button>
-        </div>
-        <p className="mt-2 text-[11px] text-slate-600">
-          {liveDebugLoading ? "Refreshing..." : `Rows: ${liveDebugRows.length}${liveDebugGameId ? ` · game_id=${liveDebugGameId}` : ""}`}
-        </p>
-        {liveDebugRows.length === 0 ? (
-          <p className="mt-2 text-xs text-slate-600">No live player rows returned yet.</p>
-        ) : (
-          <div className="mt-3 max-h-72 overflow-y-auto rounded-lg border border-cyan-200 bg-white">
-            <table className="min-w-full text-xs">
-              <thead className="sticky top-0 bg-cyan-100 text-slate-800">
-                <tr>
-                  <th className="px-2 py-1 text-left font-semibold">Team</th>
-                  <th className="px-2 py-1 text-left font-semibold">Player</th>
-                  <th className="px-2 py-1 text-right font-semibold">Pts</th>
-                  <th className="px-2 py-1 text-left font-semibold">Status</th>
-                  <th className="px-2 py-1 text-left font-semibold">Updated</th>
-                </tr>
-              </thead>
-              <tbody>
-                {liveDebugRows.map((row) => (
-                  <tr key={`${row.gameId}-${row.playerId}`} className="border-t border-cyan-100">
-                    <td className="px-2 py-1 text-slate-700">{row.teamName}</td>
-                    <td className="px-2 py-1 font-medium text-slate-900">{row.playerName}</td>
-                    <td className="px-2 py-1 text-right font-semibold text-slate-900">{row.fantasyPoints.toFixed(2)}</td>
-                    <td className="px-2 py-1 text-slate-700">{row.gameStatus}</td>
-                    <td className="px-2 py-1 text-slate-600">{formatLocalDateTime(row.sourceUpdatedAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+      <PointsLedger
+        entries={ledgerEntries}
+        gameLabel={
+          liveDebugTargetGame
+            ? `${liveDebugTargetGame.awayTeam} vs ${liveDebugTargetGame.homeTeam}`
+            : undefined
+        }
+        isLive={Boolean(liveDebugTargetGame)}
+      />
 
       {finalUnclaimedEntries.length > 1 ? (
         <section className="rounded-2xl border border-emerald-200/70 bg-emerald-50/70 p-4 shadow-sm">
@@ -1465,16 +1514,28 @@ export function FantasyHome() {
             <div className="text-xs font-semibold text-slate-700">Selected {selectedPlayers.length}/5</div>
           </div>
 
-          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
-            Scoring: 1 pt per point, 1.2 per rebound, 1.5 per assist, 3 per steal, 3 per block, -1 per turnover.
+          <div className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-3">
+            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Scoring System</p>
+            <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+              <span className="text-slate-600">Points</span><span className="text-right font-semibold text-slate-900">+1.0</span>
+              <span className="text-slate-600">Rebounds</span><span className="text-right font-semibold text-slate-900">+1.2</span>
+              <span className="text-slate-600">Assists</span><span className="text-right font-semibold text-slate-900">+1.5</span>
+              <span className="text-slate-600">Steals</span><span className="text-right font-semibold text-slate-900">+3.0</span>
+              <span className="text-slate-600">Blocks</span><span className="text-right font-semibold text-slate-900">+3.0</span>
+              <span className="text-slate-600">Turnovers</span><span className="text-right font-semibold text-rose-700">-1.0</span>
+            </div>
           </div>
           <p className="mt-2 text-xs text-slate-700">
             Tap any player once to add them instantly. Tap again to remove.
           </p>
 
           {playerPool.length === 0 ? (
-            <div className="mt-3 text-sm text-slate-600">
-              {nextUnlockedGame ? "Loading player pool..." : "All games have started. No eligible players remain for today."}
+            <div className="mt-3">
+              {nextUnlockedGame ? (
+                <BasketballLoader label="Loading today's eligible players..." />
+              ) : (
+                <div className="text-sm text-slate-600">All games have started. No eligible players remain for today.</div>
+              )}
             </div>
           ) : (
             <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -1499,9 +1560,6 @@ export function FantasyHome() {
                           Added
                         </span>
                       ) : null}
-                    </div>
-                    <div className="text-[11px] text-slate-600">
-                      Markets: {item.coverage} · Avg line: {item.projectedLine ?? "--"}
                     </div>
                   </button>
                 );
@@ -1531,7 +1589,7 @@ export function FantasyHome() {
         <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
           <h3 className="text-base font-semibold text-slate-900">Lineup Locked</h3>
           <p className="mt-1 text-sm text-slate-700">
-            Your team is already set for today. Changes are only allowed before any selected player&apos;s game starts.
+            Your roster is locked because at least one selected player is in an active or started game.
           </p>
         </section>
       ) : null}

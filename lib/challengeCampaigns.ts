@@ -382,6 +382,29 @@ export async function deleteChallengeCampaign(id: string): Promise<void> {
   if (error) throw new Error(error.message ?? "Failed to delete challenge campaign.");
 }
 
+export async function getActiveChallengeMultiplier(
+  venueId: string,
+  gameType: ChallengeGameType,
+  now?: Date
+): Promise<{ multiplier: number; campaign: ChallengeCampaign | null }> {
+  const vid = String(venueId ?? "").trim();
+  if (!vid || !supabaseAdmin) return { multiplier: 1, campaign: null };
+
+  const effectiveNow = now ?? new Date();
+  let campaigns: ChallengeCampaign[];
+  try {
+    campaigns = await listChallengeCampaigns({ venueId: vid, includeInactive: false, includeResolved: false });
+  } catch {
+    return { multiplier: 1, campaign: null };
+  }
+
+  const eligible = campaigns.filter((c) => isCampaignEligibleAtTime(c, effectiveNow, gameType));
+  if (eligible.length === 0) return { multiplier: 1, campaign: null };
+
+  const best = eligible.reduce((a, b) => (b.pointMultiplier > a.pointMultiplier ? b : a));
+  return { multiplier: best.pointMultiplier, campaign: best };
+}
+
 export async function applyChallengeCampaignPoints(params: {
   userId: string;
   venueId: string;

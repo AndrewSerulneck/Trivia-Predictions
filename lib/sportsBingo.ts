@@ -1,15 +1,10 @@
 import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { apiSportsGet } from "@/lib/apisports";
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 
-const ODDS_API_BASE_URL = process.env.ODDS_API_BASE_URL ?? "https://api.the-odds-api.com/v4";
-const ODDS_API_KEY = process.env.ODDS_API_KEY?.trim() ?? "";
 const BALLDONTLIE_API_BASE_URL = process.env.BALLDONTLIE_API_BASE_URL ?? "https://api.balldontlie.io";
 const BALLDONTLIE_API_KEY = process.env.BALLDONTLIE_API_KEY?.trim() ?? "";
-const APISPORTS_API_KEY = process.env.APISPORTS_API_KEY?.trim() ?? "";
-const APISPORTS_NBA_BASE_URL = process.env.APISPORTS_NBA_BASE_URL?.trim() ?? "";
 const DEFAULT_SPORT_KEY = "basketball_nba";
 const BINGO_REWARD_POINTS = Number.parseInt(process.env.BINGO_REWARD_POINTS ?? "50", 10);
 const BOARD_TARGET_WIN_RATE = Number.parseFloat(process.env.BINGO_BOARD_TARGET_WIN_RATE ?? "0.27");
@@ -17,7 +12,6 @@ const BOARD_TARGET_TOLERANCE = Number.parseFloat(process.env.BINGO_BOARD_TARGET_
 const BOARD_SIMULATION_TRIALS = Number.parseInt(process.env.BINGO_BOARD_SIM_TRIALS ?? "2500", 10);
 const MAX_ACTIVE_CARDS_PER_USER = 4;
 const GAME_CATALOG_CACHE_MS = 30_000;
-const PLAYER_PROPS_CACHE_MS = 10 * 60 * 1000;
 const SCORE_CACHE_MS = 15_000;
 const BINGO_FORCE_FINALIZE_AFTER_START_MS = 12 * 60 * 60 * 1000;
 const BINGO_ALLOW_POSSIBLE_SQUARES = String(process.env.BINGO_ALLOW_POSSIBLE_SQUARES ?? "")
@@ -31,45 +25,11 @@ const BALLDONTLIE_GAME_LOOKUP_WINDOW_DAYS_RAW = Number.parseInt(
 const BALLDONTLIE_GAME_LOOKUP_WINDOW_DAYS = Number.isFinite(BALLDONTLIE_GAME_LOOKUP_WINDOW_DAYS_RAW)
   ? Math.max(0, BALLDONTLIE_GAME_LOOKUP_WINDOW_DAYS_RAW)
   : 1;
-const ODDS_LOOKAHEAD_HOURS = 36;
-const PLAYER_PROP_REGION_FALLBACKS = ["us", "us,eu,uk"] as const;
+const BINGO_LOOKAHEAD_HOURS = 36;
+const BINGO_PLAYER_SPECIFIC_HARD_FLOOR = 8;
 const SPORTS_BINGO_MIGRATION_REQUIRED_ERROR =
   "Sports Bingo tables are not installed in this Supabase project yet. Run migration supabase/migrations/20260420113000_add_sports_bingo_tables.sql.";
 
-const PLAYER_PROP_MARKETS_BY_SPORT: Record<string, readonly string[]> = {
-  basketball_nba: [
-    "player_points",
-    "player_rebounds",
-    "player_assists",
-    "player_threes",
-    "player_blocks",
-    "player_steals",
-    "player_turnovers",
-  ],
-  americanfootball_nfl: [
-    "player_pass_tds",
-    "player_pass_yds",
-    "player_pass_attempts",
-    "player_pass_completions",
-    "player_pass_interceptions",
-    "player_rush_yds",
-    "player_rush_attempts",
-    "player_rush_tds",
-    "player_receptions",
-    "player_reception_yds",
-    "player_reception_tds",
-  ],
-  baseball_mlb: [
-    "player_hits",
-    "player_home_runs",
-    "player_rbis",
-    "player_runs",
-    "player_stolen_bases",
-    "player_strikeouts_pitcher",
-    "player_earned_runs",
-    "player_pitcher_outs",
-  ],
-};
 
 const PLAYER_PROP_MARKET_LABELS: Record<string, string> = {
   // NBA
@@ -186,10 +146,18 @@ type SportsBingoResolver =
   | { kind: "nba_player_perfect_fg"; player: string }
   | { kind: "nba_player_triple_threat"; player: string }
   | { kind: "nba_player_zero_turnovers"; player: string }
+  | { kind: "nba_player_plus_minus_at_least"; player: string; threshold: number }
   | { kind: "nba_team_has_double_double"; team: TeamSide }
   | { kind: "nba_team_three_pt_scorers"; team: TeamSide; threshold: number }
   | { kind: "nba_team_turnovers_at_most"; team: TeamSide; threshold: number }
   | { kind: "nba_team_outrebounds"; team: TeamSide }
+  | { kind: "nba_player_bench_scores"; player: string; threshold: number }
+  | { kind: "nba_team_scores_first"; team: TeamSide }
+  | { kind: "nba_team_leads_at_halftime"; team: TeamSide }
+  | { kind: "nba_team_points_in_any_quarter_at_least"; team: TeamSide; threshold: number }
+  | { kind: "nba_player_points_first_half_at_least"; player: string; threshold: number }
+  | { kind: "nba_player_assists_in_any_quarter_at_least"; player: string; threshold: number }
+  | { kind: "nba_player_steals_first_half_at_least"; player: string; threshold: number }
   | { kind: "replacement_auto" };
 
 type SportsBingoSquareTemplate = {
@@ -290,24 +258,6 @@ type SportsBingoSquareRow = {
   resolved_at: string | null;
 };
 
-type OddsEvent = {
-  id?: string;
-  commence_time?: string;
-  home_team?: string;
-  away_team?: string;
-  bookmakers?: Array<{
-    markets?: Array<{
-      key?: string;
-      outcomes?: Array<{
-        name?: string;
-        description?: string;
-        price?: number | string;
-        point?: number | string;
-      }>;
-    }>;
-  }>;
-};
-
 type SupabaseLikeError = {
   code?: string;
   message?: string;
@@ -329,18 +279,6 @@ function isMissingSportsBingoTablesError(error: SupabaseLikeError | null | undef
   );
 }
 
-type OddsScoreEvent = {
-  id?: string;
-  sport_key?: string;
-  completed?: boolean;
-  home_team?: string;
-  away_team?: string;
-  scores?: Array<{
-    name?: string;
-    score?: number | string | null;
-  }>;
-};
-
 type ScoreSnapshot = {
   gameId: string;
   sportKey: string;
@@ -352,6 +290,7 @@ type ScoreSnapshot = {
 };
 
 type BallDontLieTeam = {
+  id?: number;
   full_name?: string;
   name?: string;
   city?: string;
@@ -359,6 +298,7 @@ type BallDontLieTeam = {
 
 type BallDontLieGame = {
   id?: number;
+  season?: number;
   status?: string;
   datetime?: string;
   date?: string;
@@ -369,6 +309,7 @@ type BallDontLieGame = {
 };
 
 type BallDontLiePlayer = {
+  id?: number;
   first_name?: string;
   last_name?: string;
 };
@@ -389,9 +330,26 @@ type BallDontLieStat = {
   oreb?: number;
   dreb?: number;
   min?: string;
+  plus_minus?: number;
   player?: BallDontLiePlayer;
   team?: BallDontLieTeam;
   game?: BallDontLieGame;
+};
+
+type BallDontLieLineup = {
+  starter?: boolean;
+  player?: BallDontLiePlayer;
+  team?: BallDontLieTeam;
+};
+
+type BallDontLiePlay = {
+  period?: number;
+  home_score?: number;
+  away_score?: number;
+  is_scoring_play?: boolean;
+  points?: number;
+  player_ids?: number[];
+  team?: BallDontLieTeam;
 };
 
 type BallDontLieListResponse<T> = {
@@ -401,10 +359,9 @@ type BallDontLieListResponse<T> = {
   };
 };
 
-type ApiSportsNbaGame = Record<string, unknown>;
-type ApiSportsNbaPlayerStat = Record<string, unknown>;
 
 type NBAPlayerStatLine = {
+  playerId: number | null;
   playerName: string;
   teamSide: TeamSide | null;
   pts: number;
@@ -421,6 +378,7 @@ type NBAPlayerStatLine = {
   oreb: number;
   dreb: number;
   minSeconds: number;
+  plusMinus: number;
 };
 
 type NBAGamePlayerStatsSnapshot = {
@@ -433,6 +391,14 @@ type NBAGamePlayerStatsSnapshot = {
   homeHasTripleDouble: boolean;
   awayHasTripleDouble: boolean;
   anyHasTripleDouble: boolean;
+  lineupByPlayerId: Map<number, { starter: boolean; teamSide: TeamSide | null }>;
+  firstScoringTeam: TeamSide | null;
+  homeHalftimeScore: number | null;
+  awayHalftimeScore: number | null;
+  homeMaxQuarterPoints: number;
+  awayMaxQuarterPoints: number;
+  firstHalfByPlayerId: Map<number, { pts: number; ast: number; stl: number }>;
+  maxQuarterAssistsByPlayerId: Map<number, number>;
 };
 
 type GameCatalogEntry = {
@@ -445,9 +411,53 @@ type CatalogCacheEntry = {
   entries: GameCatalogEntry[];
 };
 
-type PlayerPropsCacheEntry = {
-  expiresAt: number;
-  candidates: SportsBingoSquareTemplate[];
+type NBAPlayerProfile = {
+  playerId: number;
+  playerName: string;
+  teamId: number;
+  teamSide: TeamSide | null;
+  stats: {
+    pts: number;
+    reb: number;
+    ast: number;
+    stl: number;
+    blk: number;
+    oreb: number;
+    dreb: number;
+    fg3m: number;
+    ftm: number;
+    fta: number;
+    fgm: number;
+    fga: number;
+    min: number;
+    plus_minus: number;
+  };
+  historical: {
+    sampleSize: number;
+    starterSampleSize: number;
+    benchSampleSize: number;
+    rates: {
+      threes1: number;
+      threes3: number;
+      threes5: number;
+      points10: number;
+      points20: number;
+      rebounds5: number;
+      rebounds10: number;
+      oreb3: number;
+      dreb5: number;
+      assists1: number;
+      assists5: number;
+      assists10: number;
+      steals1: number;
+      steals2: number;
+      blocks1: number;
+      blocks2: number;
+      minutes30: number;
+      plusMinus10: number;
+      benchPoints8: number;
+    };
+  };
 };
 
 const LINE_PATTERNS: number[][] = [
@@ -466,19 +476,13 @@ const LINE_PATTERNS: number[][] = [
 ];
 
 let gameCatalogCache = new Map<string, CatalogCacheEntry>();
-let playerPropsCache = new Map<string, PlayerPropsCacheEntry>();
 let scoreCache = new Map<string, { expiresAt: number; byGameId: Map<string, ScoreSnapshot> }>();
 let nbaPlayerStatsCache = new Map<string, { expiresAt: number; snapshot: NBAGamePlayerStatsSnapshot | null }>();
+let nbaPlayerProfilesCache = new Map<string, { expiresAt: number; profiles: NBAPlayerProfile[] }>();
 
 function assertSupabaseConfigured(): void {
   if (!supabaseAdmin) {
     throw new Error("Supabase admin client is not configured.");
-  }
-}
-
-function assertOddsConfigured(): void {
-  if (!ODDS_API_KEY) {
-    throw new Error("ODDS_API_KEY is not configured.");
   }
 }
 
@@ -596,56 +600,6 @@ function toIsoDate(value: string): string {
   return new Date(value).toISOString().slice(0, 10);
 }
 
-function inferTeamSide(name: string, homeTeam: string, awayTeam: string): TeamSide | null {
-  const normalized = normalizeTeamKey(name);
-  if (!normalized) {
-    return null;
-  }
-  if (normalizeTeamKey(homeTeam) === normalized) {
-    return "home";
-  }
-  if (normalizeTeamKey(awayTeam) === normalized) {
-    return "away";
-  }
-  return null;
-}
-
-function impliedProbabilityFromAmericanOdds(odds: number): number | null {
-  if (!Number.isFinite(odds) || odds === 0) {
-    return null;
-  }
-  if (odds < 0) {
-    return (-odds / (-odds + 100));
-  }
-  return (100 / (odds + 100));
-}
-
-function parseAmericanOdds(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-  if (typeof value === "string") {
-    const parsed = Number.parseFloat(value);
-    if (Number.isFinite(parsed)) {
-      return parsed;
-    }
-  }
-  return null;
-}
-
-function parseLineValue(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-  if (typeof value === "string") {
-    const parsed = Number.parseFloat(value);
-    if (Number.isFinite(parsed)) {
-      return parsed;
-    }
-  }
-  return null;
-}
-
 function parseScoreValue(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value;
@@ -659,32 +613,8 @@ function parseScoreValue(value: unknown): number | null {
   return null;
 }
 
-function isApiSportsConfigured(): boolean {
-  return Boolean(APISPORTS_API_KEY && APISPORTS_NBA_BASE_URL);
-}
-
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
-}
-
-function getPath(value: unknown, path: string[]): unknown {
-  let cursor: unknown = value;
-  for (const segment of path) {
-    const record = asRecord(cursor);
-    cursor = record[segment];
-    if (cursor === undefined || cursor === null) {
-      return cursor;
-    }
-  }
-  return cursor;
-}
-
-function parseApiSportsResponseRows(payload: unknown): Record<string, unknown>[] {
-  const response = getPath(payload, ["response"]);
-  if (!Array.isArray(response)) {
-    return [];
-  }
-  return response.map((row) => asRecord(row));
 }
 
 function sigmoid(value: number): number {
@@ -751,6 +681,35 @@ function toMascotDisplayName(team: string): string {
   return parts[parts.length - 1] ?? trimmed;
 }
 
+function toResolverPlayerRef(playerName: string, playerId: number | null | undefined): string {
+  const name = String(playerName ?? "").trim();
+  const id = Number(playerId ?? 0);
+  if (!name) {
+    return "";
+  }
+  if (Number.isFinite(id) && id > 0) {
+    return `${name}::${Math.trunc(id)}`;
+  }
+  return name;
+}
+
+function parseResolverPlayerRef(value: string): { displayName: string; playerId: number | null } {
+  const raw = String(value ?? "").trim();
+  if (!raw) {
+    return { displayName: "", playerId: null };
+  }
+  const match = raw.match(/^(.*)::(\d+)$/);
+  if (!match) {
+    return { displayName: raw, playerId: null };
+  }
+  const displayName = String(match[1] ?? "").trim();
+  const parsedId = Number.parseInt(String(match[2] ?? ""), 10);
+  return {
+    displayName: displayName || raw,
+    playerId: Number.isFinite(parsedId) && parsedId > 0 ? parsedId : null,
+  };
+}
+
 function resolverKey(resolver: SportsBingoResolver): string {
   switch (resolver.kind) {
     case "free":
@@ -795,6 +754,8 @@ function resolverKey(resolver: SportsBingoResolver): string {
       return `nba_player_triple_threat:${resolver.player.toLowerCase()}`;
     case "nba_player_zero_turnovers":
       return `nba_player_zero_turnovers:${resolver.player.toLowerCase()}`;
+    case "nba_player_plus_minus_at_least":
+      return `nba_player_plus_minus_at_least:${resolver.player.toLowerCase()}:${resolver.threshold.toFixed(1)}`;
     case "nba_team_has_double_double":
       return `nba_team_has_double_double:${resolver.team}`;
     case "nba_team_three_pt_scorers":
@@ -803,6 +764,20 @@ function resolverKey(resolver: SportsBingoResolver): string {
       return `nba_team_turnovers_at_most:${resolver.team}:${resolver.threshold.toFixed(1)}`;
     case "nba_team_outrebounds":
       return `nba_team_outrebounds:${resolver.team}`;
+    case "nba_player_bench_scores":
+      return `nba_player_bench_scores:${resolver.player.toLowerCase()}:${resolver.threshold.toFixed(1)}`;
+    case "nba_team_scores_first":
+      return `nba_team_scores_first:${resolver.team}`;
+    case "nba_team_leads_at_halftime":
+      return `nba_team_leads_at_halftime:${resolver.team}`;
+    case "nba_team_points_in_any_quarter_at_least":
+      return `nba_team_points_in_any_quarter_at_least:${resolver.team}:${resolver.threshold.toFixed(1)}`;
+    case "nba_player_points_first_half_at_least":
+      return `nba_player_points_first_half_at_least:${resolver.player.toLowerCase()}:${resolver.threshold.toFixed(1)}`;
+    case "nba_player_assists_in_any_quarter_at_least":
+      return `nba_player_assists_in_any_quarter_at_least:${resolver.player.toLowerCase()}:${resolver.threshold.toFixed(1)}`;
+    case "nba_player_steals_first_half_at_least":
+      return `nba_player_steals_first_half_at_least:${resolver.player.toLowerCase()}:${resolver.threshold.toFixed(1)}`;
     default:
       return "unknown";
   }
@@ -845,24 +820,26 @@ function buildSquareLabel(game: SportsBingoGame, resolver: SportsBingoResolver):
       return `${team}: under ${formatLine(resolver.line)} points.`;
     }
     case "player_prop": {
+      const playerLabel = parseResolverPlayerRef(resolver.player).displayName || resolver.player;
       const unit = playerPropUnitLabel(resolver.marketKey);
       if (resolver.direction === "under" && Math.abs(resolver.line - 0.5) < 1e-9) {
-        return `${resolver.player}: 0 ${pluralizeUnit(unit, 0)}.`;
+        return `${playerLabel}: 0 ${pluralizeUnit(unit, 0)}.`;
       }
       if (resolver.direction === "over" && isHalfLine(resolver.line)) {
         const threshold = Math.floor(resolver.line) + 1;
-        return `${resolver.player}: at least ${formatQuantity(threshold)} ${pluralizeUnit(unit, threshold)}.`;
+        return `${playerLabel}: at least ${formatQuantity(threshold)} ${pluralizeUnit(unit, threshold)}.`;
       }
       const directionText = resolver.direction === "over" ? "over" : "under";
-      return `${resolver.player}: ${directionText} ${formatLine(resolver.line)} ${pluralizeUnit(unit, resolver.line)}.`;
+      return `${playerLabel}: ${directionText} ${formatLine(resolver.line)} ${pluralizeUnit(unit, resolver.line)}.`;
     }
     case "nba_player_stat_at_least": {
+      const playerLabel = parseResolverPlayerRef(resolver.player).displayName || resolver.player;
       const statLabel = NBA_PLAYER_MILESTONE_METRIC_LABELS[resolver.metric] ?? "stat";
       const singularStatLabel = statLabel.endsWith("s") ? statLabel.slice(0, -1) : statLabel;
-      return `${resolver.player}: at least ${formatQuantity(resolver.threshold)} ${pluralizeUnit(singularStatLabel, resolver.threshold)}.`;
+      return `${playerLabel}: at least ${formatQuantity(resolver.threshold)} ${pluralizeUnit(singularStatLabel, resolver.threshold)}.`;
     }
     case "nba_player_double_double":
-      return `${resolver.player} records a double-double.`;
+      return `${parseResolverPlayerRef(resolver.player).displayName || resolver.player} records a double-double.`;
     case "team_triple_double": {
       const team = teamForSide(resolver.team);
       return `Any ${team} player records a triple-double.`;
@@ -895,15 +872,17 @@ function buildSquareLabel(game: SportsBingoGame, resolver: SportsBingoResolver):
       return `${team}: at least ${formatLine(resolver.threshold)} different players score.`;
     }
     case "nba_player_triple_double":
-      return `${resolver.player} records a triple-double.`;
+      return `${parseResolverPlayerRef(resolver.player).displayName || resolver.player} records a triple-double.`;
     case "nba_player_perfect_ft":
-      return `${resolver.player}: perfect free throws (3+ att).`;
+      return `${parseResolverPlayerRef(resolver.player).displayName || resolver.player}: perfect free throws (3+ att).`;
     case "nba_player_perfect_fg":
-      return `${resolver.player}: perfect FG% (4+ att).`;
+      return `${parseResolverPlayerRef(resolver.player).displayName || resolver.player}: perfect FG% (4+ att).`;
     case "nba_player_triple_threat":
-      return `${resolver.player}: 5+ pts, 5+ reb, 5+ ast.`;
+      return `${parseResolverPlayerRef(resolver.player).displayName || resolver.player}: 5+ pts, 5+ reb, 5+ ast.`;
     case "nba_player_zero_turnovers":
-      return `${resolver.player}: 0 turnovers.`;
+      return `${parseResolverPlayerRef(resolver.player).displayName || resolver.player}: 0 turnovers.`;
+    case "nba_player_plus_minus_at_least":
+      return `${parseResolverPlayerRef(resolver.player).displayName || resolver.player}: plus/minus ${formatLine(resolver.threshold)} or higher.`;
     case "nba_team_has_double_double": {
       const team = teamForSide(resolver.team);
       return `${team}: a player records a double-double.`;
@@ -921,23 +900,23 @@ function buildSquareLabel(game: SportsBingoGame, resolver: SportsBingoResolver):
       const opp = opponentForSide(resolver.team);
       return `${team} out-rebounds ${opp}.`;
     }
+    case "nba_player_bench_scores":
+      return `${parseResolverPlayerRef(resolver.player).displayName || resolver.player}: ${formatLine(resolver.threshold)}+ points off the bench.`;
+    case "nba_team_scores_first":
+      return `${teamForSide(resolver.team)} scores the first basket.`;
+    case "nba_team_leads_at_halftime":
+      return `${teamForSide(resolver.team)} leads at halftime.`;
+    case "nba_team_points_in_any_quarter_at_least":
+      return `${teamForSide(resolver.team)} score ${formatLine(resolver.threshold)}+ in any quarter.`;
+    case "nba_player_points_first_half_at_least":
+      return `${parseResolverPlayerRef(resolver.player).displayName || resolver.player}: ${formatLine(resolver.threshold)}+ points in the first half.`;
+    case "nba_player_assists_in_any_quarter_at_least":
+      return `${parseResolverPlayerRef(resolver.player).displayName || resolver.player}: ${formatLine(resolver.threshold)}+ assists in a quarter.`;
+    case "nba_player_steals_first_half_at_least":
+      return `${parseResolverPlayerRef(resolver.player).displayName || resolver.player}: ${formatLine(resolver.threshold)}+ steals in the first half.`;
     default:
       return "Sports Bingo square";
   }
-}
-
-async function fetchOddsJson(path: string, query: URLSearchParams): Promise<unknown> {
-  assertOddsConfigured();
-  const response = await fetch(`${ODDS_API_BASE_URL}${path}?${query.toString()}`, {
-    method: "GET",
-    next: { revalidate: 15 },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Sports Bingo odds request failed with status ${response.status}.`);
-  }
-
-  return response.json();
 }
 
 async function fetchBallDontLieJson(path: string, query: URLSearchParams): Promise<unknown> {
@@ -1074,220 +1053,22 @@ function pickBestMatchingBallDontLieGame(card: SportsBingoCardRow, games: BallDo
   return matching[0] ?? null;
 }
 
-function getApiSportsGameTimestamp(game: ApiSportsNbaGame): number {
-  const candidates = [
-    getPath(game, ["date", "start"]),
-    getPath(game, ["date"]),
-    getPath(game, ["datetime"]),
-  ];
-  for (const candidate of candidates) {
-    const text = String(candidate ?? "").trim();
-    if (!text) {
-      continue;
-    }
-    const parsed = Date.parse(text);
-    if (Number.isFinite(parsed)) {
-      return parsed;
-    }
-  }
-  return Number.POSITIVE_INFINITY;
-}
 
-function getApiSportsGameTeamName(game: ApiSportsNbaGame, side: TeamSide): string {
-  const sideKey = side === "home" ? "home" : "away";
-  const altSideKey = side === "home" ? "home" : "visitors";
-  const candidates = [
-    getPath(game, ["teams", sideKey, "name"]),
-    getPath(game, ["teams", altSideKey, "name"]),
-    getPath(game, [sideKey, "name"]),
-  ];
-  for (const candidate of candidates) {
-    const name = String(candidate ?? "").trim();
-    if (name) {
-      return name;
-    }
-  }
-  return "";
-}
-
-function getApiSportsGameId(game: ApiSportsNbaGame): string {
-  return String(getPath(game, ["id"]) ?? "").trim();
-}
-
-function isApiSportsGameFinal(game: ApiSportsNbaGame): boolean {
-  const statusText = String(getPath(game, ["status", "long"]) ?? getPath(game, ["status", "short"]) ?? "").trim().toLowerCase();
-  return (
-    statusText.startsWith("final") ||
-    statusText.startsWith("finish") ||
-    statusText.startsWith("complete") ||
-    statusText === "ft" ||
-    statusText === "aot"
-  );
-}
-
-function pickBestMatchingApiSportsGame(card: SportsBingoCardRow, games: ApiSportsNbaGame[]): ApiSportsNbaGame | null {
-  const matching = games.filter((game) => {
-    const home = getApiSportsGameTeamName(game, "home");
-    const away = getApiSportsGameTeamName(game, "away");
-    return teamsMatch(home, card.home_team) && teamsMatch(away, card.away_team);
-  });
-  if (matching.length === 0) {
-    return null;
-  }
-
-  const targetStart = Date.parse(card.starts_at);
-  matching.sort((left, right) => {
-    const leftDelta = Math.abs(getApiSportsGameTimestamp(left) - targetStart);
-    const rightDelta = Math.abs(getApiSportsGameTimestamp(right) - targetStart);
-    return leftDelta - rightDelta;
-  });
-  return matching[0] ?? null;
-}
-
-async function fetchApiSportsNbaGamesByDate(dateIso: string): Promise<ApiSportsNbaGame[]> {
-  const result = await apiSportsGet(APISPORTS_NBA_BASE_URL, `/games?date=${encodeURIComponent(dateIso)}`, APISPORTS_API_KEY);
-  if (!result.ok) {
-    return [];
-  }
-  return parseApiSportsResponseRows(result.json);
-}
-
-async function fetchApiSportsNbaPlayerStats(gameId: string): Promise<ApiSportsNbaPlayerStat[]> {
-  const result = await apiSportsGet(
-    APISPORTS_NBA_BASE_URL,
-    `/players/statistics?game=${encodeURIComponent(gameId)}`,
-    APISPORTS_API_KEY
-  );
-  if (!result.ok) {
-    return [];
-  }
-  return parseApiSportsResponseRows(result.json);
-}
-
-function extractApiSportsPlayerName(row: ApiSportsNbaPlayerStat): string {
-  const first = String(getPath(row, ["player", "firstname"]) ?? getPath(row, ["player", "first_name"]) ?? "").trim();
-  const last = String(getPath(row, ["player", "lastname"]) ?? getPath(row, ["player", "last_name"]) ?? "").trim();
-  const full = String(getPath(row, ["player", "name"]) ?? "").trim();
-  const combined = `${first} ${last}`.trim();
-  return combined || full;
-}
-
-function extractApiSportsPlayerTeamName(row: ApiSportsNbaPlayerStat): string {
-  return String(getPath(row, ["team", "name"]) ?? "").trim();
-}
-
-function pickFirstFiniteStat(row: ApiSportsNbaPlayerStat, keys: string[]): number {
-  for (const key of keys) {
-    const value = parseStatNumber((row as Record<string, unknown>)[key]);
-    if (Number.isFinite(value)) {
-      return value;
-    }
-  }
-  return 0;
-}
-
-function buildNBAGamePlayerStatsSnapshotFromApiSports(
+function buildNBAGamePlayerStatsSnapshot(
   card: SportsBingoCardRow,
-  game: ApiSportsNbaGame,
-  stats: ApiSportsNbaPlayerStat[]
+  game: BallDontLieGame,
+  stats: BallDontLieStat[],
+  extras?: {
+    lineupByPlayerId?: Map<number, { starter: boolean; teamSide: TeamSide | null }>;
+    firstScoringTeam?: TeamSide | null;
+    homeHalftimeScore?: number | null;
+    awayHalftimeScore?: number | null;
+    homeMaxQuarterPoints?: number;
+    awayMaxQuarterPoints?: number;
+    firstHalfByPlayerId?: Map<number, { pts: number; ast: number; stl: number }>;
+    maxQuarterAssistsByPlayerId?: Map<number, number>;
+  }
 ): NBAGamePlayerStatsSnapshot {
-  const lines: NBAPlayerStatLine[] = [];
-  const byPlayerKey = new Map<string, NBAPlayerStatLine[]>();
-
-  for (const raw of stats) {
-    const row = asRecord(raw);
-    const playerName = extractApiSportsPlayerName(row);
-    if (!playerName) {
-      continue;
-    }
-
-    const statLine: NBAPlayerStatLine = {
-      playerName,
-      teamSide: inferCardTeamSide(card, extractApiSportsPlayerTeamName(row)),
-      pts: pickFirstFiniteStat(row, ["points", "pts"]),
-      reb: pickFirstFiniteStat(row, ["totReb", "rebounds", "reb"]),
-      ast: pickFirstFiniteStat(row, ["assists", "ast"]),
-      stl: pickFirstFiniteStat(row, ["steals", "stl"]),
-      blk: pickFirstFiniteStat(row, ["blocks", "blk"]),
-      turnover: pickFirstFiniteStat(row, ["turnovers", "turnover", "to"]),
-      threes: pickFirstFiniteStat(row, ["tpm", "fg3m", "threePointMade"]),
-      fgm: pickFirstFiniteStat(row, ["fgm", "fieldGoalsMade"]),
-      fga: pickFirstFiniteStat(row, ["fga", "fieldGoalsAttempted"]),
-      ftm: pickFirstFiniteStat(row, ["ftm", "freeThrowsMade"]),
-      fta: pickFirstFiniteStat(row, ["fta", "freeThrowsAttempted"]),
-      oreb: pickFirstFiniteStat(row, ["offReb", "oreb"]),
-      dreb: pickFirstFiniteStat(row, ["defReb", "dreb"]),
-      minSeconds: parseMinutesString(String((row as Record<string, unknown>).min ?? "")),
-    };
-
-    lines.push(statLine);
-    const key = normalizeNameKey(playerName);
-    if (!key) {
-      continue;
-    }
-    const existing = byPlayerKey.get(key) ?? [];
-    existing.push(statLine);
-    byPlayerKey.set(key, existing);
-  }
-
-  const homeHasTripleDouble = lines.some((line) => line.teamSide === "home" && hasTripleDouble(line));
-  const awayHasTripleDouble = lines.some((line) => line.teamSide === "away" && hasTripleDouble(line));
-
-  return {
-    gameId: Number.parseInt(getApiSportsGameId(game), 10) || 0,
-    finalized: isApiSportsGameFinal(game),
-    homeScore: parseScoreValue(getPath(game, ["scores", "home", "points"]) ?? getPath(game, ["scores", "home", "total"])),
-    awayScore: parseScoreValue(getPath(game, ["scores", "away", "points"]) ?? getPath(game, ["scores", "visitors", "points"]) ?? getPath(game, ["scores", "away", "total"])),
-    lines,
-    byPlayerKey,
-    homeHasTripleDouble,
-    awayHasTripleDouble,
-    anyHasTripleDouble: homeHasTripleDouble || awayHasTripleDouble,
-  };
-}
-
-async function getNBAGamePlayerStatsSnapshotFromApiSports(card: SportsBingoCardRow): Promise<NBAGamePlayerStatsSnapshot | null> {
-  if (!isApiSportsConfigured()) {
-    return null;
-  }
-
-  const startsAt = Date.parse(card.starts_at);
-  if (!Number.isFinite(startsAt)) {
-    return null;
-  }
-  const dates = [
-    toIsoDate(new Date(startsAt - 24 * 60 * 60 * 1000).toISOString()),
-    toIsoDate(new Date(startsAt).toISOString()),
-    toIsoDate(new Date(startsAt + 24 * 60 * 60 * 1000).toISOString()),
-  ];
-
-  const games: ApiSportsNbaGame[] = [];
-  for (const date of dates) {
-    const rows = await fetchApiSportsNbaGamesByDate(date);
-    for (const row of rows) {
-      games.push(row);
-    }
-  }
-
-  const matchedGame = pickBestMatchingApiSportsGame(card, games);
-  if (!matchedGame) {
-    return null;
-  }
-
-  const apiSportsGameId = getApiSportsGameId(matchedGame);
-  if (!apiSportsGameId) {
-    return null;
-  }
-
-  const stats = await fetchApiSportsNbaPlayerStats(apiSportsGameId);
-  if (stats.length === 0) {
-    return null;
-  }
-
-  return buildNBAGamePlayerStatsSnapshotFromApiSports(card, matchedGame, stats);
-}
-
-function buildNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow, game: BallDontLieGame, stats: BallDontLieStat[]): NBAGamePlayerStatsSnapshot {
   const lines: NBAPlayerStatLine[] = [];
   const byPlayerKey = new Map<string, NBAPlayerStatLine[]>();
 
@@ -1300,6 +1081,7 @@ function buildNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow, game: BallDon
     }
 
     const statLine: NBAPlayerStatLine = {
+      playerId: Number.parseInt(String(row.player?.id ?? ""), 10) || null,
       playerName,
       teamSide: inferCardTeamSide(card, getTeamDisplayName(row.team)),
       pts: parseStatNumber(row.pts),
@@ -1316,6 +1098,7 @@ function buildNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow, game: BallDon
       oreb: parseStatNumber(row.oreb),
       dreb: parseStatNumber(row.dreb),
       minSeconds: parseMinutesString(row.min),
+      plusMinus: parseStatNumber(row.plus_minus),
     };
 
     lines.push(statLine);
@@ -1341,6 +1124,14 @@ function buildNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow, game: BallDon
     homeHasTripleDouble,
     awayHasTripleDouble,
     anyHasTripleDouble: homeHasTripleDouble || awayHasTripleDouble,
+    lineupByPlayerId: extras?.lineupByPlayerId ?? new Map(),
+    firstScoringTeam: extras?.firstScoringTeam ?? null,
+    homeHalftimeScore: extras?.homeHalftimeScore ?? null,
+    awayHalftimeScore: extras?.awayHalftimeScore ?? null,
+    homeMaxQuarterPoints: extras?.homeMaxQuarterPoints ?? 0,
+    awayMaxQuarterPoints: extras?.awayMaxQuarterPoints ?? 0,
+    firstHalfByPlayerId: extras?.firstHalfByPlayerId ?? new Map(),
+    maxQuarterAssistsByPlayerId: extras?.maxQuarterAssistsByPlayerId ?? new Map(),
   };
 }
 
@@ -1356,15 +1147,6 @@ async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
   }
 
   try {
-    const apiSportsSnapshot = await getNBAGamePlayerStatsSnapshotFromApiSports(card);
-    if (apiSportsSnapshot) {
-      nbaPlayerStatsCache.set(card.game_id, {
-        snapshot: apiSportsSnapshot,
-        expiresAt: now + NBA_PLAYER_STATS_CACHE_MS,
-      });
-      return apiSportsSnapshot;
-    }
-
     if (!isBallDontLieConfigured()) {
       nbaPlayerStatsCache.set(card.game_id, {
         snapshot: null,
@@ -1399,7 +1181,101 @@ async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
     });
     statsQuery.append("game_ids[]", String(matchedGame.id));
     const stats = await fetchBallDontLieList<BallDontLieStat>("/nba/v1/stats", statsQuery);
-    const snapshot = buildNBAGamePlayerStatsSnapshot(card, matchedGame, stats);
+
+    const lineupsQuery = new URLSearchParams({ per_page: "100" });
+    lineupsQuery.append("game_ids[]", String(matchedGame.id));
+    const lineups = await fetchBallDontLieList<BallDontLieLineup>("/nba/v1/lineups", lineupsQuery);
+    const lineupByPlayerId = new Map<number, { starter: boolean; teamSide: TeamSide | null }>();
+    for (const row of lineups) {
+      const playerId = Number(row.player?.id ?? 0);
+      if (!Number.isFinite(playerId) || playerId <= 0) {
+        continue;
+      }
+      const teamSide = inferCardTeamSide(card, getTeamDisplayName(row.team));
+      lineupByPlayerId.set(playerId, { starter: row.starter === true, teamSide });
+    }
+
+    const playsQuery = new URLSearchParams({ per_page: "100" });
+    playsQuery.append("game_ids[]", String(matchedGame.id));
+    const plays = await fetchBallDontLieList<BallDontLiePlay>("/nba/v1/plays", playsQuery);
+    let firstScoringTeam: TeamSide | null = null;
+    let homeHalftimeScore: number | null = null;
+    let awayHalftimeScore: number | null = null;
+    const quarterStarts = new Map<number, { home: number; away: number }>();
+    const quarterMax = new Map<number, { home: number; away: number }>();
+    const orderedPlays = [...plays].sort((a, b) => {
+      const pa = Number(a.period ?? 0);
+      const pb = Number(b.period ?? 0);
+      if (pa !== pb) return pa - pb;
+      const sa = Number(a.home_score ?? 0) + Number(a.away_score ?? 0);
+      const sb = Number(b.home_score ?? 0) + Number(b.away_score ?? 0);
+      return sa - sb;
+    });
+    for (const play of orderedPlays) {
+      const period = Number(play.period ?? 0);
+      const homeScore = parseScoreValue(play.home_score) ?? 0;
+      const awayScore = parseScoreValue(play.away_score) ?? 0;
+      if (period >= 1 && period <= 4) {
+        if (!quarterStarts.has(period)) {
+          const previous = quarterMax.get(period - 1) ?? { home: 0, away: 0 };
+          quarterStarts.set(period, { home: previous.home, away: previous.away });
+        }
+        const currentMax = quarterMax.get(period) ?? { home: 0, away: 0 };
+        quarterMax.set(period, { home: Math.max(currentMax.home, homeScore), away: Math.max(currentMax.away, awayScore) });
+      }
+      if (firstScoringTeam === null && play.is_scoring_play === true) {
+        const playSide = inferCardTeamSide(card, getTeamDisplayName(play.team));
+        if (playSide) {
+          firstScoringTeam = playSide;
+        } else if ((parseScoreValue(play.home_score) ?? 0) > 0 || (parseScoreValue(play.away_score) ?? 0) > 0) {
+          firstScoringTeam = (parseScoreValue(play.home_score) ?? 0) > (parseScoreValue(play.away_score) ?? 0) ? "home" : "away";
+        }
+      }
+      if (period <= 2) {
+        homeHalftimeScore = homeScore;
+        awayHalftimeScore = awayScore;
+      }
+    }
+
+    let homeMaxQuarterPoints = 0;
+    let awayMaxQuarterPoints = 0;
+    for (let period = 1; period <= 4; period += 1) {
+      const start = quarterStarts.get(period) ?? { home: 0, away: 0 };
+      const end = quarterMax.get(period) ?? { home: 0, away: 0 };
+      homeMaxQuarterPoints = Math.max(homeMaxQuarterPoints, Math.max(0, end.home - start.home));
+      awayMaxQuarterPoints = Math.max(awayMaxQuarterPoints, Math.max(0, end.away - start.away));
+    }
+
+    const firstHalfByPlayerId = new Map<number, { pts: number; ast: number; stl: number }>();
+    const maxQuarterAssistsByPlayerId = new Map<number, number>();
+    for (const period of [1, 2, 3, 4]) {
+      const periodQuery = new URLSearchParams({ per_page: "100", period: String(period) });
+      periodQuery.append("game_ids[]", String(matchedGame.id));
+      const periodStats = await fetchBallDontLieList<BallDontLieStat>("/nba/v1/stats", periodQuery);
+      for (const line of periodStats) {
+        const playerId = Number(line.player?.id ?? 0);
+        if (!Number.isFinite(playerId) || playerId <= 0) continue;
+        const ast = parseStatNumber(line.ast);
+        if (period <= 2) {
+          addFirstHalfAccumulator(firstHalfByPlayerId, playerId, parseStatNumber(line.pts), ast, parseStatNumber(line.stl));
+        }
+        const currentAstMax = maxQuarterAssistsByPlayerId.get(playerId) ?? 0;
+        if (ast > currentAstMax) {
+          maxQuarterAssistsByPlayerId.set(playerId, ast);
+        }
+      }
+    }
+
+    const snapshot = buildNBAGamePlayerStatsSnapshot(card, matchedGame, stats, {
+      lineupByPlayerId,
+      firstScoringTeam,
+      homeHalftimeScore,
+      awayHalftimeScore,
+      homeMaxQuarterPoints,
+      awayMaxQuarterPoints,
+      firstHalfByPlayerId,
+      maxQuarterAssistsByPlayerId,
+    });
 
     nbaPlayerStatsCache.set(card.game_id, {
       snapshot,
@@ -1435,6 +1311,20 @@ function toNBALiveScoreSnapshot(card: SportsBingoCardRow, snapshot: NBAGamePlaye
   };
 }
 
+function addFirstHalfAccumulator(
+  map: Map<number, { pts: number; ast: number; stl: number }>,
+  playerId: number,
+  pts: number,
+  ast: number,
+  stl: number
+): void {
+  const existing = map.get(playerId) ?? { pts: 0, ast: 0, stl: 0 };
+  existing.pts += pts;
+  existing.ast += ast;
+  existing.stl += stl;
+  map.set(playerId, existing);
+}
+
 function mergeLiveScores(
   primary: ScoreSnapshot | null | undefined,
   fallback: ScoreSnapshot | null | undefined
@@ -1466,12 +1356,20 @@ function pickLikeliestPlayerStatLine(lines: NBAPlayerStatLine[]): NBAPlayerStatL
 }
 
 function findNBAPlayerStatLine(snapshot: NBAGamePlayerStatsSnapshot, playerName: string): NBAPlayerStatLine | null {
-  const exact = snapshot.byPlayerKey.get(normalizeNameKey(playerName));
+  const ref = parseResolverPlayerRef(playerName);
+  if (ref.playerId) {
+    const byId = snapshot.lines.filter((line) => line.playerId === ref.playerId);
+    if (byId.length > 0) {
+      return pickLikeliestPlayerStatLine(byId);
+    }
+  }
+
+  const exact = snapshot.byPlayerKey.get(normalizeNameKey(ref.displayName || playerName));
   if (exact && exact.length > 0) {
     return pickLikeliestPlayerStatLine(exact);
   }
 
-  const targetTokens = tokenizeName(playerName);
+  const targetTokens = tokenizeName(ref.displayName || playerName);
   if (targetTokens.length === 0) {
     return null;
   }
@@ -1493,6 +1391,15 @@ function findNBAPlayerStatLine(snapshot: NBAGamePlayerStatsSnapshot, playerName:
   });
 
   return pickLikeliestPlayerStatLine(candidates);
+}
+
+function resolveSnapshotPlayerId(snapshot: NBAGamePlayerStatsSnapshot, playerName: string): number | null {
+  const parsed = parseResolverPlayerRef(playerName);
+  if (parsed.playerId) {
+    return parsed.playerId;
+  }
+  const line = findNBAPlayerStatLine(snapshot, playerName);
+  return line?.playerId ?? null;
 }
 
 function getNBAPlayerPropValue(line: NBAPlayerStatLine, marketKey: string): number | null {
@@ -1547,7 +1454,7 @@ function getNBAPlayerMilestoneValue(line: NBAPlayerStatLine, metric: NBAPlayerMi
     case "two_point_fg":
       return Math.max(0, line.fgm - line.threes);
     case "minutes_played":
-      return line.minSeconds;
+      return line.minSeconds / 60;
     default:
       return null;
   }
@@ -1683,544 +1590,6 @@ function aggregateCandidates(raw: SportsBingoSquareTemplate[]): SportsBingoSquar
   }));
 }
 
-function normalizePlayerPropName(value: string): string {
-  return value.trim().replace(/\s+/g, " ");
-}
-
-function getPlayerPropMarketsForSport(sportKey: string): readonly string[] {
-  return PLAYER_PROP_MARKETS_BY_SPORT[sportKey] ?? [];
-}
-
-function parsePlayerPropCandidates(game: SportsBingoGame, eventOdds: OddsEvent): SportsBingoSquareTemplate[] {
-  const grouped = new Map<
-    string,
-    {
-      marketKey: string;
-      player: string;
-      line: number;
-      overProbabilities: number[];
-      underProbabilities: number[];
-    }
-  >();
-
-  for (const bookmaker of eventOdds.bookmakers ?? []) {
-    for (const market of bookmaker.markets ?? []) {
-      const marketKey = String(market.key ?? "").trim();
-      if (!(marketKey in PLAYER_PROP_MARKET_LABELS)) {
-        continue;
-      }
-
-      const outcomes = market.outcomes ?? [];
-      for (const outcome of outcomes) {
-        const direction = String(outcome.name ?? "").trim().toLowerCase();
-        if (direction !== "over" && direction !== "under") {
-          continue;
-        }
-
-        const player = normalizePlayerPropName(String(outcome.description ?? ""));
-        const line = parseLineValue(outcome.point);
-        const price = parseAmericanOdds(outcome.price);
-        const implied = price === null ? null : impliedProbabilityFromAmericanOdds(price);
-        if (!player || line === null || implied === null) {
-          continue;
-        }
-
-        const key = `${marketKey}|${player.toLowerCase()}|${roundLine(line).toFixed(1)}`;
-        const existing = grouped.get(key) ?? {
-          marketKey,
-          player,
-          line: roundLine(line),
-          overProbabilities: [],
-          underProbabilities: [],
-        };
-
-        if (direction === "over") {
-          existing.overProbabilities.push(implied);
-        } else {
-          existing.underProbabilities.push(implied);
-        }
-
-        grouped.set(key, existing);
-      }
-    }
-  }
-
-  const templates: SportsBingoSquareTemplate[] = [];
-
-  for (const value of grouped.values()) {
-    const overRaw = average(value.overProbabilities, Number.NaN);
-    const underRaw = average(value.underProbabilities, Number.NaN);
-    if (!Number.isFinite(overRaw) || !Number.isFinite(underRaw)) {
-      continue;
-    }
-
-    const total = overRaw + underRaw;
-    if (total <= 0) {
-      continue;
-    }
-
-    const overProbability = clamp(overRaw / total, 0.05, 0.95);
-    const underProbability = clamp(underRaw / total, 0.05, 0.95);
-
-    const overResolver: SportsBingoResolver = {
-      kind: "player_prop",
-      marketKey: value.marketKey,
-      player: value.player,
-      line: value.line,
-      direction: "over",
-    };
-    templates.push({
-      key: resolverKey(overResolver),
-      label: buildSquareLabel(game, overResolver),
-      resolver: overResolver,
-      probability: overProbability,
-      bucket: "player-prop",
-      supportLevel: "supported",
-    });
-
-    const underResolver: SportsBingoResolver = {
-      kind: "player_prop",
-      marketKey: value.marketKey,
-      player: value.player,
-      line: value.line,
-      direction: "under",
-    };
-    templates.push({
-      key: resolverKey(underResolver),
-      label: buildSquareLabel(game, underResolver),
-      resolver: underResolver,
-      probability: underProbability,
-      bucket: "player-prop",
-      supportLevel: "supported",
-    });
-  }
-
-  return aggregateCandidates(templates).sort((a, b) => a.key.localeCompare(b.key));
-}
-
-type NBAPlayerPropReference = {
-  player: string;
-  markets: Map<string, { line: number; probability: number }>;
-};
-
-function buildNBAPlayerPropReference(candidates: SportsBingoSquareTemplate[]): NBAPlayerPropReference[] {
-  const byPlayer = new Map<string, NBAPlayerPropReference>();
-
-  for (const candidate of candidates) {
-    if (candidate.resolver.kind !== "player_prop" || candidate.resolver.direction !== "over") {
-      continue;
-    }
-    const player = candidate.resolver.player.trim();
-    if (!player) {
-      continue;
-    }
-    const playerKey = normalizeNameKey(player);
-    if (!playerKey) {
-      continue;
-    }
-
-    const existing = byPlayer.get(playerKey) ?? {
-      player,
-      markets: new Map<string, { line: number; probability: number }>(),
-    };
-
-    const marketKey = candidate.resolver.marketKey;
-    const current = existing.markets.get(marketKey);
-    const nextValue = {
-      line: candidate.resolver.line,
-      probability: clamp(candidate.probability, 0.05, 0.95),
-    };
-
-    if (!current || nextValue.probability > current.probability) {
-      existing.markets.set(marketKey, nextValue);
-    }
-    byPlayer.set(playerKey, existing);
-  }
-
-  return [...byPlayer.values()];
-}
-
-function projectProbabilityFromLine(params: {
-  reference?: { line: number; probability: number };
-  threshold: number;
-  scale: number;
-  fallback: number;
-}): number {
-  const fallback = clamp(params.fallback, 0.05, 0.95);
-  const reference = params.reference;
-  if (!reference) {
-    return fallback;
-  }
-  const baseline = clamp(reference.probability, 0.05, 0.95);
-  const delta = (reference.line - params.threshold) / Math.max(0.35, params.scale);
-  return clamp(sigmoid(logit(baseline) + delta), 0.05, 0.95);
-}
-
-function buildNBAAchievementCandidates(game: SportsBingoGame, candidates: SportsBingoSquareTemplate[]): SportsBingoSquareTemplate[] {
-  const templates: SportsBingoSquareTemplate[] = [];
-  const playerRefs = buildNBAPlayerPropReference(candidates);
-
-  const rankedPlayers = playerRefs
-    .map((item) => {
-      const points = item.markets.get("player_points")?.probability ?? 0;
-      const rebounds = item.markets.get("player_rebounds")?.probability ?? 0;
-      const assists = item.markets.get("player_assists")?.probability ?? 0;
-      const threes = item.markets.get("player_threes")?.probability ?? 0;
-      const blocks = item.markets.get("player_blocks")?.probability ?? 0;
-      const steals = item.markets.get("player_steals")?.probability ?? 0;
-      const score = points * 1.8 + rebounds * 1.2 + assists * 1.2 + threes + blocks * 0.8 + steals * 0.8;
-      return { ...item, score };
-    })
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 8);
-
-  const pushPlayerTemplate = (
-    resolver: SportsBingoResolver,
-    probability: number,
-    supportLevel: SquareSupportLevel
-  ): void => {
-    const baseLabel = buildSquareLabel(game, resolver);
-    templates.push({
-      key: resolverKey(resolver),
-      label: supportTaggedLabel(baseLabel, supportLevel),
-      resolver,
-      probability: clamp(probability, 0.05, 0.95),
-      bucket: "achievement",
-      supportLevel,
-    });
-  };
-
-  for (const player of rankedPlayers) {
-    const points = player.markets.get("player_points");
-    const rebounds = player.markets.get("player_rebounds");
-    const assists = player.markets.get("player_assists");
-    const threes = player.markets.get("player_threes");
-    const blocks = player.markets.get("player_blocks");
-    const steals = player.markets.get("player_steals");
-
-    // Smart filter helpers: only generate a square if the player's market
-    // line indicates the stat is actually within reach.
-    const shootsThrees = threes && threes.line >= 0.5;
-    const isRebounder = rebounds && rebounds.line >= 4.0;
-    const isPlaymaker = assists && assists.line >= 4.5;
-    const isShooter = points && points.line >= 12.0;
-    const isShooterElite = points && points.line >= 18.0;
-    const isShooterStar = points && points.line >= 22.0;
-    const isBigMan = blocks && blocks.line >= 0.5;
-    const isElitePlaymaker = assists && assists.line >= 7.5;
-
-    // --- Common tier (prob ~0.65–0.88) ---
-    pushPlayerTemplate(
-      { kind: "nba_player_stat_at_least", player: player.player, metric: "points", threshold: 10 },
-      projectProbabilityFromLine({ reference: points, threshold: 10, scale: 7.2, fallback: 0.64 }),
-      "supported"
-    );
-    pushPlayerTemplate(
-      { kind: "nba_player_stat_at_least", player: player.player, metric: "steals", threshold: 1 },
-      projectProbabilityFromLine({ reference: steals, threshold: 1, scale: 0.8, fallback: 0.31 }),
-      "supported"
-    );
-    pushPlayerTemplate(
-      { kind: "nba_player_stat_at_least", player: player.player, metric: "blocks", threshold: 1 },
-      projectProbabilityFromLine({ reference: blocks, threshold: 1, scale: 0.7, fallback: 0.28 }),
-      "supported"
-    );
-
-    // Only assign assist/rebound common squares to eligible players.
-    if (isPlaymaker) {
-      pushPlayerTemplate(
-        { kind: "nba_player_stat_at_least", player: player.player, metric: "assists", threshold: 1 },
-        projectProbabilityFromLine({ reference: assists, threshold: 1, scale: 2.8, fallback: 0.72 }),
-        "supported"
-      );
-    }
-    if (isRebounder) {
-      pushPlayerTemplate(
-        { kind: "nba_player_stat_at_least", player: player.player, metric: "rebounds", threshold: 5 },
-        projectProbabilityFromLine({ reference: rebounds, threshold: 5, scale: 3.6, fallback: 0.49 }),
-        "supported"
-      );
-    }
-    // Only assign 3-pointer squares to players who actually shoot threes.
-    if (shootsThrees) {
-      pushPlayerTemplate(
-        { kind: "nba_player_stat_at_least", player: player.player, metric: "threes", threshold: 1 },
-        projectProbabilityFromLine({ reference: threes, threshold: 1, scale: 0.9, fallback: 0.58 }),
-        "supported"
-      );
-      pushPlayerTemplate(
-        { kind: "nba_player_stat_at_least", player: player.player, metric: "threes", threshold: 3 },
-        projectProbabilityFromLine({ reference: threes, threshold: 3, scale: 0.9, fallback: 0.26 }),
-        "supported"
-      );
-    }
-
-    // --- Moderate tier (prob ~0.30–0.55) ---
-    pushPlayerTemplate(
-      { kind: "nba_player_stat_at_least", player: player.player, metric: "points", threshold: 20 },
-      projectProbabilityFromLine({ reference: points, threshold: 20, scale: 7.2, fallback: 0.44 }),
-      "supported"
-    );
-    if (isPlaymaker) {
-      pushPlayerTemplate(
-        { kind: "nba_player_stat_at_least", player: player.player, metric: "assists", threshold: 5 },
-        projectProbabilityFromLine({ reference: assists, threshold: 5, scale: 3.2, fallback: 0.42 }),
-        "supported"
-      );
-    }
-    if (isRebounder) {
-      pushPlayerTemplate(
-        { kind: "nba_player_stat_at_least", player: player.player, metric: "defensive_rebounds", threshold: 5 },
-        projectProbabilityFromLine({ reference: rebounds, threshold: 6.5, scale: 3.2, fallback: 0.33 }),
-        "supported"
-      );
-      pushPlayerTemplate(
-        { kind: "nba_player_stat_at_least", player: player.player, metric: "offensive_rebounds", threshold: 1 },
-        projectProbabilityFromLine({ reference: rebounds, threshold: 1.25, scale: 3.8, fallback: 0.35 }),
-        "supported"
-      );
-    }
-    if (isShooter) {
-      pushPlayerTemplate(
-        { kind: "nba_player_stat_at_least", player: player.player, metric: "two_point_fg", threshold: 3 },
-        projectProbabilityFromLine({ reference: points, threshold: 14, scale: 6.5, fallback: 0.43 }),
-        "supported"
-      );
-    }
-    // Only assign perfect FT to active FT shooters (market line implies they go to the line).
-    if (points && points.line >= 10) {
-      pushPlayerTemplate(
-        { kind: "nba_player_perfect_ft", player: player.player },
-        clamp(
-          projectProbabilityFromLine({ reference: points, threshold: 14, scale: 5.5, fallback: 0.14 }) * 0.7,
-          0.05,
-          0.30
-        ),
-        "supported"
-      );
-    }
-    if (isShooterElite) {
-      pushPlayerTemplate(
-        { kind: "nba_player_stat_at_least", player: player.player, metric: "free_throws_made", threshold: 2 },
-        projectProbabilityFromLine({ reference: points, threshold: 16, scale: 5.5, fallback: 0.38 }),
-        "supported"
-      );
-    }
-
-    // --- Rare tier (prob ~0.12–0.28) ---
-    if (isBigMan) {
-      pushPlayerTemplate(
-        { kind: "nba_player_stat_at_least", player: player.player, metric: "blocks", threshold: 2 },
-        projectProbabilityFromLine({ reference: blocks, threshold: 2, scale: 0.75, fallback: 0.15 }),
-        "possible"
-      );
-    }
-    if (isRebounder) {
-      pushPlayerTemplate(
-        { kind: "nba_player_stat_at_least", player: player.player, metric: "rebounds", threshold: 10 },
-        projectProbabilityFromLine({ reference: rebounds, threshold: 10, scale: 3.3, fallback: 0.24 }),
-        "possible"
-      );
-      pushPlayerTemplate(
-        { kind: "nba_player_stat_at_least", player: player.player, metric: "offensive_rebounds", threshold: 3 },
-        projectProbabilityFromLine({ reference: rebounds, threshold: 4.0, scale: 3.5, fallback: 0.13 }),
-        "possible"
-      );
-    }
-    if (isPlaymaker && isShooter) {
-      pushPlayerTemplate(
-        { kind: "nba_player_triple_threat", player: player.player },
-        clamp(
-          projectProbabilityFromLine({ reference: points, threshold: 8, scale: 5.5, fallback: 0.5 }) *
-            projectProbabilityFromLine({ reference: rebounds, threshold: 4, scale: 3.0, fallback: 0.45 }) *
-            projectProbabilityFromLine({ reference: assists, threshold: 4, scale: 2.8, fallback: 0.42 }),
-          0.05,
-          0.35
-        ),
-        "possible"
-      );
-    }
-    if (isShooterStar) {
-      pushPlayerTemplate(
-        { kind: "nba_player_stat_at_least", player: player.player, metric: "points", threshold: 30 },
-        projectProbabilityFromLine({ reference: points, threshold: 30, scale: 7.2, fallback: 0.16 }),
-        "possible"
-      );
-    }
-    pushPlayerTemplate(
-      { kind: "nba_player_zero_turnovers", player: player.player },
-      clamp(
-        projectProbabilityFromLine({ reference: points, threshold: 12, scale: 7.0, fallback: 0.24 }) * 0.6,
-        0.05,
-        0.28
-      ),
-      "possible"
-    );
-
-    // --- Extreme tier (prob < 0.12) ---
-    if (shootsThrees) {
-      pushPlayerTemplate(
-        { kind: "nba_player_stat_at_least", player: player.player, metric: "threes", threshold: 5 },
-        projectProbabilityFromLine({ reference: threes, threshold: 5, scale: 0.95, fallback: 0.11 }),
-        "possible"
-      );
-    }
-    if (isPlaymaker) {
-      pushPlayerTemplate(
-        { kind: "nba_player_stat_at_least", player: player.player, metric: "assists", threshold: 10 },
-        projectProbabilityFromLine({ reference: assists, threshold: 10, scale: 2.7, fallback: 0.13 }),
-        "possible"
-      );
-    }
-    if (isShooterElite && isRebounder) {
-      pushPlayerTemplate(
-        { kind: "nba_player_double_double", player: player.player },
-        clamp(
-          projectProbabilityFromLine({ reference: points, threshold: 13, scale: 6.5, fallback: 0.2 }) *
-            projectProbabilityFromLine({ reference: rebounds, threshold: 9, scale: 3.2, fallback: 0.14 }) *
-            1.45,
-          0.05,
-          0.45
-        ),
-        "possible"
-      );
-    }
-    // Only give triple-double squares to genuine all-around playmakers.
-    if (isElitePlaymaker && isRebounder && isShooterElite) {
-      pushPlayerTemplate(
-        { kind: "nba_player_triple_double", player: player.player },
-        clamp(
-          projectProbabilityFromLine({ reference: points, threshold: 14, scale: 6.0, fallback: 0.15 }) *
-            projectProbabilityFromLine({ reference: rebounds, threshold: 9, scale: 3.0, fallback: 0.10 }) *
-            projectProbabilityFromLine({ reference: assists, threshold: 9, scale: 2.5, fallback: 0.09 }) *
-            4.5,
-          0.03,
-          0.12
-        ),
-        "possible"
-      );
-    }
-    // Perfect FG% only for reliable interior/mid-range scorers (high FG% players).
-    if (isShooterElite) {
-      pushPlayerTemplate(
-        { kind: "nba_player_perfect_fg", player: player.player },
-        clamp(
-          projectProbabilityFromLine({ reference: points, threshold: 18, scale: 5.0, fallback: 0.1 }) * 0.45,
-          0.03,
-          0.15
-        ),
-        "possible"
-      );
-    }
-  }
-
-  const pushTeamTemplate = (
-    resolver: SportsBingoResolver,
-    probability: number,
-    supportLevel: SquareSupportLevel
-  ): void => {
-    const baseLabel = buildSquareLabel(game, resolver);
-    templates.push({
-      key: resolverKey(resolver),
-      label: supportTaggedLabel(baseLabel, supportLevel),
-      resolver,
-      probability: clamp(probability, 0.05, 0.95),
-      bucket: "achievement",
-      supportLevel,
-    });
-  };
-
-  for (const team of ["home", "away"] as const) {
-    // Common tier
-    pushTeamTemplate({ kind: "nba_team_stat_at_least", team, metric: "points", threshold: 100 }, 0.58, "supported");
-    pushTeamTemplate({ kind: "nba_team_players_scored_at_least", team, threshold: 5 }, 0.71, "supported");
-    pushTeamTemplate({ kind: "nba_team_stat_at_least", team, metric: "total_assists", threshold: 20 }, 0.68, "supported");
-    pushTeamTemplate({ kind: "nba_team_three_pt_scorers", team, threshold: 3 }, 0.66, "supported");
-    pushTeamTemplate({ kind: "nba_team_turnovers_at_most", team, threshold: 15 }, 0.70, "supported");
-
-    // Moderate tier
-    pushTeamTemplate({ kind: "nba_team_stat_at_least", team, metric: "blocks", threshold: 5 }, 0.46, "supported");
-    pushTeamTemplate({ kind: "nba_team_stat_at_least", team, metric: "made_threes", threshold: 10 }, 0.48, "supported");
-    pushTeamTemplate({ kind: "nba_team_stat_at_least", team, metric: "total_rebounds", threshold: 40 }, 0.50, "supported");
-    pushTeamTemplate({ kind: "nba_team_stat_at_least", team, metric: "total_assists", threshold: 25 }, 0.47, "supported");
-    pushTeamTemplate({ kind: "nba_team_has_double_double", team }, 0.45, "supported");
-    pushTeamTemplate({ kind: "nba_team_outrebounds", team }, 0.48, "supported");
-
-    // Rare tier
-    pushTeamTemplate({ kind: "nba_team_stat_at_least", team, metric: "steals", threshold: 10 }, 0.20, "possible");
-    pushTeamTemplate({ kind: "nba_team_stat_at_least", team, metric: "field_goal_pct", threshold: 50 }, 0.22, "possible");
-    pushTeamTemplate({ kind: "nba_team_stat_at_least", team, metric: "offensive_rebounds", threshold: 12 }, 0.30, "possible");
-    pushTeamTemplate({ kind: "nba_team_three_pt_scorers", team, threshold: 5 }, 0.32, "possible");
-    pushTeamTemplate({ kind: "nba_team_turnovers_at_most", team, threshold: 10 }, 0.28, "possible");
-    pushTeamTemplate({ kind: "nba_team_stat_at_least", team, metric: "total_rebounds", threshold: 50 }, 0.21, "possible");
-
-    // Extreme tier
-    pushTeamTemplate({ kind: "nba_team_stat_at_least", team, metric: "free_throw_pct", threshold: 90 }, 0.14, "possible");
-    pushTeamTemplate({ kind: "nba_team_stat_at_least", team, metric: "made_threes", threshold: 15 }, 0.17, "possible");
-    pushTeamTemplate({ kind: "nba_team_stat_at_least", team, metric: "points", threshold: 120 }, 0.18, "possible");
-  }
-
-  return aggregateCandidates(templates).sort((a, b) => a.key.localeCompare(b.key));
-}
-
-async function loadPlayerPropCandidatesForGame(game: SportsBingoGame): Promise<SportsBingoSquareTemplate[]> {
-  const markets = getPlayerPropMarketsForSport(game.sportKey);
-  if (markets.length === 0) {
-    return [];
-  }
-
-  const path = `/sports/${game.sportKey}/events/${game.id}/odds`;
-
-  let payload: unknown = null;
-  for (const regions of PLAYER_PROP_REGION_FALLBACKS) {
-    const query = new URLSearchParams({
-      apiKey: ODDS_API_KEY,
-      regions,
-      markets: markets.join(","),
-      oddsFormat: "american",
-    });
-
-    try {
-      const candidate = await fetchOddsJson(path, query);
-      payload = candidate;
-      const candidateBookmakers: unknown[] = (
-        candidate &&
-        typeof candidate === "object" &&
-        Array.isArray((candidate as OddsEvent).bookmakers)
-      )
-        ? ((candidate as OddsEvent).bookmakers as unknown[])
-        : [];
-      if (candidateBookmakers.length > 0) {
-        break;
-      }
-    } catch {
-      continue;
-    }
-  }
-
-  if (!payload || typeof payload !== "object") {
-    return [];
-  }
-
-  return parsePlayerPropCandidates(game, payload as OddsEvent);
-}
-
-async function getPlayerPropCandidatesForGame(game: SportsBingoGame): Promise<SportsBingoSquareTemplate[]> {
-  const cacheKey = `${game.sportKey}:${game.id}`;
-  const now = Date.now();
-  const cached = playerPropsCache.get(cacheKey);
-  if (cached && now < cached.expiresAt) {
-    return cached.candidates;
-  }
-
-  const candidates = await loadPlayerPropCandidatesForGame(game);
-  playerPropsCache.set(cacheKey, {
-    candidates,
-    expiresAt: now + PLAYER_PROPS_CACHE_MS,
-  });
-  return candidates;
-}
-
 async function getGameEntryWithCandidates(params: {
   sportKey: string;
   gameId: string;
@@ -2234,15 +1603,10 @@ async function getGameEntryWithCandidates(params: {
 
   let candidates = [...entry.candidates];
   let merged = [...candidates];
-  if (params.includePlayerProps !== false) {
-    const playerProps = await getPlayerPropCandidatesForGame(entry.game);
-    if (playerProps.length > 0) {
-      merged = aggregateCandidates([...candidates, ...playerProps]);
-    }
-  }
+  void params.includePlayerProps;
 
   if (entry.game.sportKey === "basketball_nba") {
-    const achievementCandidates = buildNBAAchievementCandidates(entry.game, merged);
+    const achievementCandidates = await buildNBAAchievementCandidates(entry.game, merged);
     if (achievementCandidates.length > 0) {
       merged = aggregateCandidates([...merged, ...achievementCandidates]);
     }
@@ -2262,11 +1626,11 @@ async function getGameEntryWithCandidates(params: {
   };
 }
 
-function buildGameAndCandidates(sportKey: string, event: OddsEvent): GameCatalogEntry | null {
-  const gameId = String(event.id ?? "").trim();
-  const homeTeam = String(event.home_team ?? "").trim();
-  const awayTeam = String(event.away_team ?? "").trim();
-  const startsAt = String(event.commence_time ?? "").trim();
+function buildGameAndCandidatesFromBallDontLie(sportKey: string, gameData: BallDontLieGame): GameCatalogEntry | null {
+  const gameId = String(gameData.id ?? "").trim();
+  const homeTeam = String(gameData.home_team?.full_name ?? gameData.home_team?.name ?? "").trim();
+  const awayTeam = String(gameData.visitor_team?.full_name ?? gameData.visitor_team?.name ?? "").trim();
+  const startsAt = String(gameData.datetime ?? gameData.date ?? "").trim();
   if (!gameId || !homeTeam || !awayTeam || !startsAt) {
     return null;
   }
@@ -2287,164 +1651,8 @@ function buildGameAndCandidates(sportKey: string, event: OddsEvent): GameCatalog
   };
 
   const rawCandidates: SportsBingoSquareTemplate[] = [];
-  const homeMoneylineSamples: number[] = [];
-  const awayMoneylineSamples: number[] = [];
-  const homeSpreadPoints: number[] = [];
-  const totalLineSamples: number[] = [];
-  const overAtBaseSamples: Array<{ line: number; probability: number }> = [];
-
-  for (const bookmaker of event.bookmakers ?? []) {
-    for (const market of bookmaker.markets ?? []) {
-      const marketKey = String(market.key ?? "").trim();
-      const outcomes = market.outcomes ?? [];
-      if (outcomes.length < 2) {
-        continue;
-      }
-
-      if (marketKey === "h2h") {
-        const homeOutcome = outcomes.find((item) => inferTeamSide(String(item.name ?? ""), homeTeam, awayTeam) === "home");
-        const awayOutcome = outcomes.find((item) => inferTeamSide(String(item.name ?? ""), homeTeam, awayTeam) === "away");
-        if (!homeOutcome || !awayOutcome) {
-          continue;
-        }
-
-        const homeOdds = parseAmericanOdds(homeOutcome.price);
-        const awayOdds = parseAmericanOdds(awayOutcome.price);
-        if (homeOdds === null || awayOdds === null) {
-          continue;
-        }
-
-        const homeProb = impliedProbabilityFromAmericanOdds(homeOdds);
-        const awayProb = impliedProbabilityFromAmericanOdds(awayOdds);
-        if (homeProb === null || awayProb === null) {
-          continue;
-        }
-
-        const total = homeProb + awayProb;
-        if (total <= 0) {
-          continue;
-        }
-
-        homeMoneylineSamples.push(homeProb / total);
-        awayMoneylineSamples.push(awayProb / total);
-        continue;
-      }
-
-      if (marketKey === "spreads") {
-        const homeOutcome = outcomes.find((item) => inferTeamSide(String(item.name ?? ""), homeTeam, awayTeam) === "home");
-        const awayOutcome = outcomes.find((item) => inferTeamSide(String(item.name ?? ""), homeTeam, awayTeam) === "away");
-        if (!homeOutcome || !awayOutcome) {
-          continue;
-        }
-
-        const homeOdds = parseAmericanOdds(homeOutcome.price);
-        const awayOdds = parseAmericanOdds(awayOutcome.price);
-        const homePointRaw = parseLineValue(homeOutcome.point);
-        const awayPointRaw = parseLineValue(awayOutcome.point);
-        if (homeOdds === null || awayOdds === null || homePointRaw === null || awayPointRaw === null) {
-          continue;
-        }
-
-        const homeProb = impliedProbabilityFromAmericanOdds(homeOdds);
-        const awayProb = impliedProbabilityFromAmericanOdds(awayOdds);
-        if (homeProb === null || awayProb === null) {
-          continue;
-        }
-
-        const total = homeProb + awayProb;
-        if (total <= 0) {
-          continue;
-        }
-
-        const normalizedHome = homeProb / total;
-        const normalizedAway = awayProb / total;
-
-        const homeLine = roundLine(Math.abs(homePointRaw));
-        const awayLine = roundLine(Math.abs(awayPointRaw));
-        homeSpreadPoints.push(homePointRaw);
-
-        const homeResolver: SportsBingoResolver = homePointRaw < 0
-          ? { kind: "spread_more_than", team: "home", line: homeLine }
-          : { kind: "spread_keep_close", team: "home", line: homeLine };
-        const awayResolver: SportsBingoResolver = awayPointRaw < 0
-          ? { kind: "spread_more_than", team: "away", line: awayLine }
-          : { kind: "spread_keep_close", team: "away", line: awayLine };
-
-        rawCandidates.push({
-          key: resolverKey(homeResolver),
-          label: buildSquareLabel(game, homeResolver),
-          resolver: homeResolver,
-          probability: normalizedHome,
-          bucket: "spread",
-        });
-
-        rawCandidates.push({
-          key: resolverKey(awayResolver),
-          label: buildSquareLabel(game, awayResolver),
-          resolver: awayResolver,
-          probability: normalizedAway,
-          bucket: "spread",
-        });
-
-        continue;
-      }
-
-      if (marketKey === "totals") {
-        const overOutcome = outcomes.find((item) => String(item.name ?? "").trim().toLowerCase() === "over");
-        const underOutcome = outcomes.find((item) => String(item.name ?? "").trim().toLowerCase() === "under");
-        if (!overOutcome || !underOutcome) {
-          continue;
-        }
-
-        const overOdds = parseAmericanOdds(overOutcome.price);
-        const underOdds = parseAmericanOdds(underOutcome.price);
-        const overLineRaw = parseLineValue(overOutcome.point);
-        const underLineRaw = parseLineValue(underOutcome.point);
-        if (overOdds === null || underOdds === null || overLineRaw === null || underLineRaw === null) {
-          continue;
-        }
-
-        const overProb = impliedProbabilityFromAmericanOdds(overOdds);
-        const underProb = impliedProbabilityFromAmericanOdds(underOdds);
-        if (overProb === null || underProb === null) {
-          continue;
-        }
-
-        const totalProb = overProb + underProb;
-        if (totalProb <= 0) {
-          continue;
-        }
-
-        const normalizedOver = overProb / totalProb;
-        const normalizedUnder = underProb / totalProb;
-        const totalLine = roundLine((overLineRaw + underLineRaw) / 2);
-
-        totalLineSamples.push(totalLine);
-        overAtBaseSamples.push({ line: totalLine, probability: normalizedOver });
-
-        const overResolver: SportsBingoResolver = { kind: "game_total_over", line: totalLine };
-        const underResolver: SportsBingoResolver = { kind: "game_total_under", line: totalLine };
-
-        rawCandidates.push({
-          key: resolverKey(overResolver),
-          label: buildSquareLabel(game, overResolver),
-          resolver: overResolver,
-          probability: normalizedOver,
-          bucket: "total",
-        });
-        rawCandidates.push({
-          key: resolverKey(underResolver),
-          label: buildSquareLabel(game, underResolver),
-          resolver: underResolver,
-          probability: normalizedUnder,
-          bucket: "total",
-        });
-      }
-    }
-  }
-
-  const homeWinProb = clamp(average(homeMoneylineSamples, 0.5), 0.1, 0.9);
-  const awayWinProb = clamp(average(awayMoneylineSamples, 1 - homeWinProb), 0.1, 0.9);
+  const homeWinProb = 0.55;
+  const awayWinProb = 0.45;
 
   const homeMoneylineResolver: SportsBingoResolver = { kind: "moneyline", team: "home" };
   const awayMoneylineResolver: SportsBingoResolver = { kind: "moneyline", team: "away" };
@@ -2500,19 +1708,9 @@ function buildGameAndCandidates(sportKey: string, event: OddsEvent): GameCatalog
     });
   }
 
-  const averageHomeSpread = average(homeSpreadPoints, (50 - homeWinProb * 100) * 0.35);
-  const averageTotal = average(totalLineSamples, 226);
-  const baseOverProbability = (() => {
-    if (overAtBaseSamples.length === 0) {
-      return 0.5;
-    }
-    const closest = overAtBaseSamples.reduce((best, item) => {
-      const bestDistance = Math.abs(best.line - averageTotal);
-      const currentDistance = Math.abs(item.line - averageTotal);
-      return currentDistance < bestDistance ? item : best;
-    });
-    return clamp(closest.probability, 0.1, 0.9);
-  })();
+  const averageHomeSpread = -3.5;
+  const averageTotal = sportKey === "americanfootball_nfl" ? 45 : sportKey === "baseball_mlb" ? 8 : sportKey === "icehockey_nhl" ? 6 : 226;
+  const baseOverProbability = 0.5;
 
   const favorite: TeamSide = homeWinProb >= awayWinProb ? "home" : "away";
   const underdog: TeamSide = favorite === "home" ? "away" : "home";
@@ -2618,28 +1816,58 @@ function buildGameAndCandidates(sportKey: string, event: OddsEvent): GameCatalog
 }
 
 async function loadGameCatalog(sportKey: string): Promise<GameCatalogEntry[]> {
-  assertOddsConfigured();
-
-  const now = new Date();
-  const to = new Date(Date.now() + ODDS_LOOKAHEAD_HOURS * 60 * 60 * 1000);
-
-  const query = new URLSearchParams({
-    apiKey: ODDS_API_KEY,
-    regions: "us",
-    markets: "h2h,spreads,totals",
-    oddsFormat: "american",
-    commenceTimeFrom: now.toISOString().replace(/\.\d{3}Z$/, "Z"),
-    commenceTimeTo: to.toISOString().replace(/\.\d{3}Z$/, "Z"),
-  });
-
-  const payload = await fetchOddsJson(`/sports/${sportKey}/odds`, query);
-  if (!Array.isArray(payload)) {
+  const sportPathByKey: Record<string, string> = {
+    basketball_nba: "/nba/v1/games",
+    americanfootball_nfl: "/nfl/v1/games",
+    baseball_mlb: "/mlb/v1/games",
+    icehockey_nhl: "/nhl/v1/games",
+    soccer_usa_mls: "/mls/v1/matches",
+    soccer_epl: "/epl/v2/matches",
+    soccer_spain_la_liga: "/laliga/v1/matches",
+    soccer_italy_serie_a: "/seriea/v1/matches",
+    soccer_germany_bundesliga: "/bundesliga/v1/matches",
+    soccer_uefa_champs_league: "/ucl/v1/matches",
+  };
+  const path = sportPathByKey[sportKey];
+  if (!path) {
     return [];
   }
 
+  const startMs = Date.now();
+  const endMs = startMs + BINGO_LOOKAHEAD_HOURS * 60 * 60 * 1000;
+  const daySet = new Set<string>();
+  for (
+    let cursor = Date.UTC(
+      new Date(startMs).getUTCFullYear(),
+      new Date(startMs).getUTCMonth(),
+      new Date(startMs).getUTCDate()
+    );
+    cursor <= Date.UTC(
+      new Date(endMs).getUTCFullYear(),
+      new Date(endMs).getUTCMonth(),
+      new Date(endMs).getUTCDate()
+    );
+    cursor += 24 * 60 * 60 * 1000
+  ) {
+    daySet.add(new Date(cursor).toISOString().slice(0, 10));
+  }
+
+  const payloadById = new Map<string, BallDontLieGame>();
+  for (const day of daySet) {
+    const query = new URLSearchParams({ per_page: "100" });
+    query.append("dates[]", day);
+    const rows = await fetchBallDontLieList<BallDontLieGame>(path, query);
+    for (const row of rows) {
+      const id = String(row.id ?? "").trim();
+      if (!id || payloadById.has(id)) continue;
+      payloadById.set(id, row);
+    }
+  }
+  const payload = [...payloadById.values()];
+
   const entries: GameCatalogEntry[] = [];
-  for (const item of payload as OddsEvent[]) {
-    const entry = buildGameAndCandidates(sportKey, item);
+  for (const item of payload) {
+    const entry = buildGameAndCandidatesFromBallDontLie(sportKey, item);
     if (entry) {
       entries.push(entry);
     }
@@ -2662,6 +1890,443 @@ async function getGameCatalog(sportKey: string): Promise<GameCatalogEntry[]> {
     expiresAt: now + GAME_CATALOG_CACHE_MS,
   });
   return entries;
+}
+
+function probabilityAtLeast(avg: number, threshold: number, spread = 0.35): number {
+  const safeAvg = Math.max(0, Number(avg || 0));
+  const safeThreshold = Math.max(0.01, Number(threshold || 0));
+  const scale = Math.max(0.7, safeThreshold * spread);
+  return clamp(sigmoid((safeAvg - safeThreshold) / scale), 0.01, 0.99);
+}
+
+function chunkArray<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  const safeSize = Math.max(1, Math.floor(size));
+  for (let i = 0; i < items.length; i += safeSize) {
+    out.push(items.slice(i, i + safeSize));
+  }
+  return out;
+}
+
+function smoothedRate(hits: number, attempts: number, alpha = 1, beta = 1): number {
+  const safeHits = Math.max(0, Math.floor(hits));
+  const safeAttempts = Math.max(0, Math.floor(attempts));
+  return (safeHits + alpha) / (safeAttempts + alpha + beta);
+}
+
+async function getNBAPlayerProfilesForGame(game: SportsBingoGame): Promise<NBAPlayerProfile[]> {
+  const cache = nbaPlayerProfilesCache.get(game.id);
+  const now = Date.now();
+  if (cache && now < cache.expiresAt) {
+    return cache.profiles;
+  }
+
+  const gameStartMs = Date.parse(game.startsAt);
+  const dayOffsets = [-1, 0, 1];
+  const gamesById = new Map<string, BallDontLieGame>();
+  for (const offset of dayOffsets) {
+    const dayIso = new Date(gameStartMs + offset * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const gameQuery = new URLSearchParams({ "dates[]": dayIso, per_page: "100" });
+    const rows = await fetchBallDontLieList<BallDontLieGame>("/nba/v1/games", gameQuery);
+    for (const row of rows) {
+      const rowId = String(row.id ?? "").trim();
+      if (!rowId || gamesById.has(rowId)) continue;
+      gamesById.set(rowId, row);
+    }
+  }
+  const games = [...gamesById.values()];
+  let matched = games.find((row) => String(row.id ?? "") === game.id);
+  if (!matched && games.length > 0) {
+    const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+    const targetHome = normalize(game.homeTeam);
+    const targetAway = normalize(game.awayTeam);
+    const teamMatches = games.filter((row) => {
+      const home = normalize(String(row.home_team?.full_name ?? row.home_team?.name ?? ""));
+      const away = normalize(String(row.visitor_team?.full_name ?? row.visitor_team?.name ?? ""));
+      return home === targetHome && away === targetAway;
+    });
+    const ranked = (teamMatches.length > 0 ? teamMatches : games).slice().sort((a, b) => {
+      const aTs = Date.parse(String(a.datetime ?? a.date ?? ""));
+      const bTs = Date.parse(String(b.datetime ?? b.date ?? ""));
+      const aDelta = Number.isFinite(aTs) ? Math.abs(aTs - gameStartMs) : Number.POSITIVE_INFINITY;
+      const bDelta = Number.isFinite(bTs) ? Math.abs(bTs - gameStartMs) : Number.POSITIVE_INFINITY;
+      return aDelta - bDelta;
+    });
+    matched = ranked[0];
+  }
+  if (!matched) {
+    nbaPlayerProfilesCache.set(game.id, { profiles: [], expiresAt: now + 60_000 });
+    return [];
+  }
+
+  const homeId = Number(matched.home_team?.id ?? 0);
+  const awayId = Number(matched.visitor_team?.id ?? 0);
+  const season = Number(matched.season ?? new Date(game.startsAt).getUTCFullYear());
+  const teamIds = [homeId, awayId].filter((id) => Number.isFinite(id) && id > 0);
+  if (teamIds.length === 0) {
+    nbaPlayerProfilesCache.set(game.id, { profiles: [], expiresAt: now + 60_000 });
+    return [];
+  }
+
+  const playersQuery = new URLSearchParams({ per_page: "100" });
+  for (const id of teamIds) {
+    playersQuery.append("team_ids[]", String(id));
+  }
+  const activePlayersRaw = await fetchBallDontLieList<Record<string, unknown>>("/nba/v1/players/active", playersQuery);
+  let activePlayers = activePlayersRaw.filter((raw) => {
+    const row = asRecord(raw);
+    const team = asRecord(row.team);
+    const teamId = Number(team.id ?? 0);
+    return Number.isFinite(teamId) && teamId > 0 && teamIds.includes(teamId);
+  });
+  if (activePlayers.length === 0) {
+    const fallbackQuery = new URLSearchParams({ per_page: "100" });
+    for (const id of teamIds) {
+      fallbackQuery.append("team_ids[]", String(id));
+    }
+    const fallbackPlayers = await fetchBallDontLieList<Record<string, unknown>>("/nba/v1/players", fallbackQuery);
+    activePlayers = fallbackPlayers.filter((raw) => {
+      const row = asRecord(raw);
+      const team = asRecord(row.team);
+      const teamId = Number(team.id ?? 0);
+      return Number.isFinite(teamId) && teamId > 0 && teamIds.includes(teamId);
+    });
+  }
+  const playerIds = activePlayers
+    .map((row) => Number(asRecord(row).id ?? 0))
+    .filter((id) => Number.isFinite(id) && id > 0)
+    .slice(0, 40);
+  if (playerIds.length === 0) {
+    nbaPlayerProfilesCache.set(game.id, { profiles: [], expiresAt: now + 60_000 });
+    return [];
+  }
+
+  const seasonTypeCandidates: Array<"regular" | "playoffs" | ""> = ["regular", "playoffs", ""];
+  let seasonRows: Record<string, unknown>[] = [];
+  for (const seasonType of seasonTypeCandidates) {
+    const seasonQuery = new URLSearchParams({
+      season: String(season),
+      type: "base",
+      per_page: "100",
+    });
+    if (seasonType) {
+      seasonQuery.set("season_type", seasonType);
+    }
+    for (const id of playerIds) {
+      seasonQuery.append("player_ids[]", String(id));
+    }
+    const rows = await fetchBallDontLieList<Record<string, unknown>>("/nba/v1/season_averages/general", seasonQuery);
+    if (rows.length > 0) {
+      seasonRows = rows;
+      break;
+    }
+  }
+  const byPlayerId = new Map<number, Record<string, unknown>>();
+  for (const row of seasonRows) {
+    const player = asRecord(row.player);
+    const playerId = Number(player.id ?? row.player_id ?? 0);
+    if (Number.isFinite(playerId) && playerId > 0) {
+      byPlayerId.set(playerId, row);
+    }
+  }
+
+  const historicalEnd = game.startsAt.slice(0, 10);
+  const historicalStart = new Date(Date.parse(`${historicalEnd}T00:00:00.000Z`) - 45 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  const historicalStatsByPlayerId = new Map<number, Array<Record<string, unknown>>>();
+  for (const playerChunk of chunkArray(playerIds, 12)) {
+    const historicalQuery = new URLSearchParams({
+      start_date: historicalStart,
+      end_date: historicalEnd,
+      per_page: "100",
+      period: "0",
+    });
+    for (const id of playerChunk) {
+      historicalQuery.append("player_ids[]", String(id));
+    }
+    const rows = await fetchBallDontLieList<Record<string, unknown>>("/nba/v1/stats", historicalQuery);
+    for (const raw of rows) {
+      const player = asRecord(asRecord(raw).player);
+      const playerId = Number(player.id ?? asRecord(raw).player_id ?? 0);
+      if (!Number.isFinite(playerId) || playerId <= 0) continue;
+      const existing = historicalStatsByPlayerId.get(playerId) ?? [];
+      existing.push(raw);
+      historicalStatsByPlayerId.set(playerId, existing);
+    }
+  }
+
+  const historicalGameIds = new Set<number>();
+  for (const rows of historicalStatsByPlayerId.values()) {
+    for (const raw of rows) {
+      const gameObj = asRecord(asRecord(raw).game);
+      const gameId = Number(gameObj.id ?? asRecord(raw).game_id ?? 0);
+      if (Number.isFinite(gameId) && gameId > 0) historicalGameIds.add(gameId);
+    }
+  }
+  const lineupStarterByGameAndPlayer = new Map<string, boolean>();
+  for (const gameChunk of chunkArray(Array.from(historicalGameIds), 25)) {
+    const lineupQuery = new URLSearchParams({ per_page: "100" });
+    for (const gameId of gameChunk) {
+      lineupQuery.append("game_ids[]", String(gameId));
+    }
+    const lineupRows = await fetchBallDontLieList<BallDontLieLineup>("/nba/v1/lineups", lineupQuery);
+    for (const row of lineupRows) {
+      const gameId = Number((row as unknown as Record<string, unknown>).game_id ?? 0);
+      const playerId = Number(row.player?.id ?? 0);
+      if (!Number.isFinite(gameId) || gameId <= 0 || !Number.isFinite(playerId) || playerId <= 0) continue;
+      lineupStarterByGameAndPlayer.set(`${gameId}:${playerId}`, row.starter === true);
+    }
+  }
+
+  const profiles: NBAPlayerProfile[] = activePlayers
+    .map((raw) => {
+      const row = asRecord(raw);
+      const team = asRecord(row.team);
+      const playerId = Number(row.id ?? 0);
+      if (!Number.isFinite(playerId) || playerId <= 0) {
+        return null;
+      }
+      const playerName = `${String(row.first_name ?? "").trim()} ${String(row.last_name ?? "").trim()}`.trim();
+      const statsRow = asRecord(byPlayerId.get(playerId));
+      const stats = asRecord(statsRow.stats);
+      const teamId = Number(team.id ?? 0);
+      const historicalRows = historicalStatsByPlayerId.get(playerId) ?? [];
+      let sampleSize = 0;
+      let starterSampleSize = 0;
+      let benchSampleSize = 0;
+      let threes1 = 0;
+      let threes3 = 0;
+      let threes5 = 0;
+      let points10 = 0;
+      let points20 = 0;
+      let rebounds5 = 0;
+      let rebounds10 = 0;
+      let oreb3 = 0;
+      let dreb5 = 0;
+      let assists1 = 0;
+      let assists5 = 0;
+      let assists10 = 0;
+      let steals1 = 0;
+      let steals2 = 0;
+      let blocks1 = 0;
+      let blocks2 = 0;
+      let minutes30 = 0;
+      let plusMinus10 = 0;
+      let benchPoints8 = 0;
+
+      for (const rawLine of historicalRows) {
+        const line = asRecord(rawLine);
+        const gameObj = asRecord(line.game);
+        const gameId = Number(gameObj.id ?? line.game_id ?? 0);
+        const pts = Number(line.pts ?? 0);
+        const reb = Number(line.reb ?? 0);
+        const ast = Number(line.ast ?? 0);
+        const stl = Number(line.stl ?? 0);
+        const blk = Number(line.blk ?? 0);
+        const fg3m = Number(line.fg3m ?? 0);
+        const oreb = Number(line.oreb ?? 0);
+        const dreb = Number(line.dreb ?? 0);
+        const plusMinus = Number(line.plus_minus ?? 0);
+        const minutes = parseMinutesString(String(line.min ?? "")) / 60;
+        sampleSize += 1;
+        if (fg3m >= 1) threes1 += 1;
+        if (fg3m >= 3) threes3 += 1;
+        if (fg3m >= 5) threes5 += 1;
+        if (pts >= 10) points10 += 1;
+        if (pts >= 20) points20 += 1;
+        if (reb >= 5) rebounds5 += 1;
+        if (reb >= 10) rebounds10 += 1;
+        if (oreb >= 3) oreb3 += 1;
+        if (dreb >= 5) dreb5 += 1;
+        if (ast >= 1) assists1 += 1;
+        if (ast >= 5) assists5 += 1;
+        if (ast >= 10) assists10 += 1;
+        if (stl >= 1) steals1 += 1;
+        if (stl >= 2) steals2 += 1;
+        if (blk >= 1) blocks1 += 1;
+        if (blk >= 2) blocks2 += 1;
+        if (minutes >= 30) minutes30 += 1;
+        if (plusMinus >= 10) plusMinus10 += 1;
+        const started = Number.isFinite(gameId) && gameId > 0 ? lineupStarterByGameAndPlayer.get(`${gameId}:${playerId}`) : undefined;
+        if (started === true) {
+          starterSampleSize += 1;
+        } else if (started === false) {
+          benchSampleSize += 1;
+          if (pts >= 8) benchPoints8 += 1;
+        }
+      }
+
+      return {
+        playerId,
+        playerName,
+        teamId,
+        teamSide: teamId === homeId ? "home" : teamId === awayId ? "away" : null,
+        stats: {
+          pts: Number(stats.pts ?? 0),
+          reb: Number(stats.reb ?? 0),
+          ast: Number(stats.ast ?? 0),
+          stl: Number(stats.stl ?? 0),
+          blk: Number(stats.blk ?? 0),
+          oreb: Number(stats.oreb ?? 0),
+          dreb: Number(stats.dreb ?? 0),
+          fg3m: Number(stats.fg3m ?? 0),
+          ftm: Number(stats.ftm ?? 0),
+          fta: Number(stats.fta ?? 0),
+          fgm: Number(stats.fgm ?? 0),
+          fga: Number(stats.fga ?? 0),
+          min: Number(stats.min ?? 0),
+          plus_minus: Number(stats.plus_minus ?? 0),
+        },
+        historical: {
+          sampleSize,
+          starterSampleSize,
+          benchSampleSize,
+          rates: {
+            threes1: smoothedRate(threes1, sampleSize),
+            threes3: smoothedRate(threes3, sampleSize),
+            threes5: smoothedRate(threes5, sampleSize),
+            points10: smoothedRate(points10, sampleSize),
+            points20: smoothedRate(points20, sampleSize),
+            rebounds5: smoothedRate(rebounds5, sampleSize),
+            rebounds10: smoothedRate(rebounds10, sampleSize),
+            oreb3: smoothedRate(oreb3, sampleSize),
+            dreb5: smoothedRate(dreb5, sampleSize),
+            assists1: smoothedRate(assists1, sampleSize),
+            assists5: smoothedRate(assists5, sampleSize),
+            assists10: smoothedRate(assists10, sampleSize),
+            steals1: smoothedRate(steals1, sampleSize),
+            steals2: smoothedRate(steals2, sampleSize),
+            blocks1: smoothedRate(blocks1, sampleSize),
+            blocks2: smoothedRate(blocks2, sampleSize),
+            minutes30: smoothedRate(minutes30, sampleSize),
+            plusMinus10: smoothedRate(plusMinus10, sampleSize),
+            benchPoints8: smoothedRate(benchPoints8, benchSampleSize),
+          },
+        },
+      } as NBAPlayerProfile;
+    })
+    .filter((row): row is NBAPlayerProfile => Boolean(row && row.playerName && row.teamSide));
+
+  nbaPlayerProfilesCache.set(game.id, { profiles, expiresAt: now + 5 * 60 * 1000 });
+  return profiles;
+}
+
+async function buildNBAAchievementCandidates(game: SportsBingoGame, _candidates: SportsBingoSquareTemplate[]): Promise<SportsBingoSquareTemplate[]> {
+  const profiles = await getNBAPlayerProfilesForGame(game);
+  const addTemplatesForThreshold = (minProbability: number): SportsBingoSquareTemplate[] => {
+    const templates: SportsBingoSquareTemplate[] = [];
+    const push = (resolver: SportsBingoResolver, probability: number, supportLevel: SquareSupportLevel) => {
+      if (probability < minProbability) {
+        return;
+      }
+      templates.push({
+        key: resolverKey(resolver),
+        label: supportTaggedLabel(buildSquareLabel(game, resolver), supportLevel),
+        resolver,
+        probability: clamp(probability, 0.05, 0.95),
+        bucket: "achievement",
+        supportLevel,
+      });
+    };
+
+    for (const p of profiles) {
+    const ref = toResolverPlayerRef(p.playerName, p.playerId);
+    const pm = p.stats.plus_minus;
+    const rate = p.historical.rates;
+    const hasSample = p.historical.sampleSize >= 6;
+    push({ kind: "nba_player_stat_at_least", player: ref, metric: "threes", threshold: 1 }, hasSample ? rate.threes1 : probabilityAtLeast(p.stats.fg3m, 1), "supported");
+    push({ kind: "nba_player_stat_at_least", player: ref, metric: "threes", threshold: 3 }, hasSample ? rate.threes3 : probabilityAtLeast(p.stats.fg3m, 3), "supported");
+    push({ kind: "nba_player_stat_at_least", player: ref, metric: "threes", threshold: 5 }, hasSample ? rate.threes5 : probabilityAtLeast(p.stats.fg3m, 5), "possible");
+    push({ kind: "nba_player_stat_at_least", player: ref, metric: "points", threshold: 10 }, hasSample ? rate.points10 : probabilityAtLeast(p.stats.pts, 10), "supported");
+    push({ kind: "nba_player_stat_at_least", player: ref, metric: "points", threshold: 20 }, hasSample ? rate.points20 : probabilityAtLeast(p.stats.pts, 20), "supported");
+    push({ kind: "nba_player_stat_at_least", player: ref, metric: "rebounds", threshold: 5 }, hasSample ? rate.rebounds5 : probabilityAtLeast(p.stats.reb, 5), "supported");
+    push({ kind: "nba_player_stat_at_least", player: ref, metric: "rebounds", threshold: 10 }, hasSample ? rate.rebounds10 : probabilityAtLeast(p.stats.reb, 10), "possible");
+    push({ kind: "nba_player_stat_at_least", player: ref, metric: "offensive_rebounds", threshold: 3 }, hasSample ? rate.oreb3 : probabilityAtLeast(p.stats.oreb, 3), "possible");
+    push({ kind: "nba_player_stat_at_least", player: ref, metric: "defensive_rebounds", threshold: 5 }, hasSample ? rate.dreb5 : probabilityAtLeast(p.stats.dreb, 5), "possible");
+    push({ kind: "nba_player_stat_at_least", player: ref, metric: "assists", threshold: 1 }, hasSample ? rate.assists1 : probabilityAtLeast(p.stats.ast, 1), "supported");
+    push({ kind: "nba_player_stat_at_least", player: ref, metric: "assists", threshold: 5 }, hasSample ? rate.assists5 : probabilityAtLeast(p.stats.ast, 5), "supported");
+    push({ kind: "nba_player_stat_at_least", player: ref, metric: "assists", threshold: 10 }, hasSample ? rate.assists10 : probabilityAtLeast(p.stats.ast, 10), "possible");
+    push({ kind: "nba_player_stat_at_least", player: ref, metric: "steals", threshold: 1 }, hasSample ? rate.steals1 : probabilityAtLeast(p.stats.stl, 1), "supported");
+    push({ kind: "nba_player_stat_at_least", player: ref, metric: "steals", threshold: 2 }, hasSample ? rate.steals2 : probabilityAtLeast(p.stats.stl, 2), "possible");
+    push({ kind: "nba_player_stat_at_least", player: ref, metric: "blocks", threshold: 1 }, hasSample ? rate.blocks1 : probabilityAtLeast(p.stats.blk, 1), "supported");
+    push({ kind: "nba_player_stat_at_least", player: ref, metric: "blocks", threshold: 2 }, hasSample ? rate.blocks2 : probabilityAtLeast(p.stats.blk, 2), "possible");
+    push({ kind: "nba_player_double_double", player: ref }, probabilityAtLeast((p.stats.pts >= 10 ? 1 : 0) + (p.stats.reb >= 10 ? 1 : 0) + (p.stats.ast >= 10 ? 1 : 0), 2, 0.6), "possible");
+    push({ kind: "nba_player_triple_double", player: ref }, probabilityAtLeast((p.stats.pts >= 10 ? 1 : 0) + (p.stats.reb >= 10 ? 1 : 0) + (p.stats.ast >= 10 ? 1 : 0), 3, 0.5), "possible");
+    push({ kind: "nba_player_perfect_ft", player: ref }, p.stats.fta >= 3 ? 0.24 : 0.08, "possible");
+    push({ kind: "nba_player_perfect_fg", player: ref }, p.stats.fga >= 4 ? 0.22 : 0.06, "possible");
+    push({ kind: "nba_player_triple_threat", player: ref }, Math.min(probabilityAtLeast(p.stats.pts, 5) * probabilityAtLeast(p.stats.reb, 5) * probabilityAtLeast(p.stats.ast, 5) * 2.4, 0.95), "possible");
+    push({ kind: "nba_player_stat_at_least", player: ref, metric: "minutes_played", threshold: 30 }, hasSample ? rate.minutes30 : probabilityAtLeast(p.stats.min, 30), "supported");
+    push({ kind: "nba_player_plus_minus_at_least", player: ref, threshold: 10 }, hasSample ? rate.plusMinus10 : probabilityAtLeast(pm + 10, 10), "possible");
+    push(
+      { kind: "nba_player_bench_scores", player: ref, threshold: 8 },
+      p.historical.benchSampleSize >= 3 ? rate.benchPoints8 : p.stats.pts >= 10 ? 0.32 : p.stats.pts >= 7 ? 0.24 : 0.12,
+      "possible"
+    );
+    push({ kind: "nba_player_points_first_half_at_least", player: ref, threshold: 10 }, probabilityAtLeast(p.stats.pts * 0.52, 10), "possible");
+    push({ kind: "nba_player_assists_in_any_quarter_at_least", player: ref, threshold: 3 }, probabilityAtLeast(p.stats.ast * 0.34, 3), "possible");
+    push({ kind: "nba_player_steals_first_half_at_least", player: ref, threshold: 2 }, probabilityAtLeast(p.stats.stl * 0.58, 2), "possible");
+  }
+
+  const hasPlayerSpecific = templates.some((item) => {
+    switch (item.resolver.kind) {
+      case "nba_player_stat_at_least":
+      case "nba_player_double_double":
+      case "nba_player_triple_double":
+      case "nba_player_perfect_ft":
+      case "nba_player_perfect_fg":
+      case "nba_player_triple_threat":
+      case "nba_player_zero_turnovers":
+      case "nba_player_plus_minus_at_least":
+      case "nba_player_bench_scores":
+      case "nba_player_points_first_half_at_least":
+      case "nba_player_assists_in_any_quarter_at_least":
+      case "nba_player_steals_first_half_at_least":
+        return true;
+      default:
+        return false;
+    }
+  });
+  if (!hasPlayerSpecific) {
+    for (const p of profiles.slice(0, 8)) {
+      const ref = toResolverPlayerRef(p.playerName, p.playerId);
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "points", threshold: 10 }, 0.36, "supported");
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "assists", threshold: 1 }, 0.62, "supported");
+    }
+  }
+
+  for (const team of ["home", "away"] as const) {
+    push({ kind: "nba_team_stat_at_least", team, metric: "made_threes", threshold: 10 }, 0.55, "supported");
+    push({ kind: "nba_team_three_pt_scorers", team, threshold: 5 }, 0.42, "supported");
+    push({ kind: "nba_team_stat_at_least", team, metric: "total_assists", threshold: 25 }, 0.46, "supported");
+    push({ kind: "nba_team_stat_at_least", team, metric: "total_rebounds", threshold: 40 }, 0.52, "supported");
+    push({ kind: "nba_team_outrebounds", team }, 0.48, "supported");
+    push({ kind: "nba_team_turnovers_at_most", team, threshold: 10 }, 0.28, "possible");
+    push({ kind: "nba_team_scores_first", team }, 0.5, "supported");
+    push({ kind: "nba_team_leads_at_halftime", team }, 0.5, "supported");
+    push({ kind: "nba_team_points_in_any_quarter_at_least", team, threshold: 30 }, 0.34, "possible");
+  }
+
+    return aggregateCandidates(templates).sort((a, b) => a.key.localeCompare(b.key));
+  };
+
+  let appliedThreshold = 0.2;
+  let candidates = addTemplatesForThreshold(appliedThreshold);
+  for (const threshold of [0.16, 0.12, 0.08, 0.05]) {
+    const playerSpecificCount = candidates.filter((item) => isPlayerSpecificAchievementResolver(item.resolver)).length;
+    if (playerSpecificCount >= BINGO_PLAYER_SPECIFIC_HARD_FLOOR) {
+      break;
+    }
+    appliedThreshold = threshold;
+    candidates = addTemplatesForThreshold(appliedThreshold);
+  }
+
+  console.info("[sportsBingo] candidate_threshold", {
+    gameId: game.id,
+    min_probability: appliedThreshold,
+    player_candidate_pool_size: candidates.filter((item) => isPlayerSpecificAchievementResolver(item.resolver)).length,
+  });
+  return candidates;
 }
 
 function estimateBoardWinProbability(squares: Array<{ index: number; probability: number; isFree: boolean }>): number {
@@ -2727,6 +2392,16 @@ function getPlayerPropMarketKey(candidate: SportsBingoSquareTemplate): string {
       return "milestone:triple_threat";
     case "nba_player_zero_turnovers":
       return "milestone:zero_turnovers";
+    case "nba_player_plus_minus_at_least":
+      return "milestone:plus_minus";
+    case "nba_player_bench_scores":
+      return "milestone:bench_points";
+    case "nba_player_points_first_half_at_least":
+      return "milestone:points_first_half";
+    case "nba_player_assists_in_any_quarter_at_least":
+      return "milestone:assists_quarter";
+    case "nba_player_steals_first_half_at_least":
+      return "milestone:steals_first_half";
     default:
       return "";
   }
@@ -2750,8 +2425,38 @@ function getPlayerPropAxisKey(candidate: SportsBingoSquareTemplate): string {
       return `milestone|triple_threat|${candidate.resolver.player.toLowerCase()}`;
     case "nba_player_zero_turnovers":
       return `milestone|zero_turnovers|${candidate.resolver.player.toLowerCase()}`;
+    case "nba_player_plus_minus_at_least":
+      return `milestone|plus_minus|${candidate.resolver.player.toLowerCase()}|${candidate.resolver.threshold.toFixed(1)}`;
+    case "nba_player_bench_scores":
+      return `milestone|bench_points|${candidate.resolver.player.toLowerCase()}|${candidate.resolver.threshold.toFixed(1)}`;
+    case "nba_player_points_first_half_at_least":
+      return `milestone|points_first_half|${candidate.resolver.player.toLowerCase()}|${candidate.resolver.threshold.toFixed(1)}`;
+    case "nba_player_assists_in_any_quarter_at_least":
+      return `milestone|assists_quarter|${candidate.resolver.player.toLowerCase()}|${candidate.resolver.threshold.toFixed(1)}`;
+    case "nba_player_steals_first_half_at_least":
+      return `milestone|steals_first_half|${candidate.resolver.player.toLowerCase()}|${candidate.resolver.threshold.toFixed(1)}`;
     default:
       return "";
+  }
+}
+
+function isPlayerSpecificAchievementResolver(resolver: SportsBingoResolver): boolean {
+  switch (resolver.kind) {
+    case "nba_player_stat_at_least":
+    case "nba_player_double_double":
+    case "nba_player_triple_double":
+    case "nba_player_perfect_ft":
+    case "nba_player_perfect_fg":
+    case "nba_player_triple_threat":
+    case "nba_player_zero_turnovers":
+    case "nba_player_plus_minus_at_least":
+    case "nba_player_bench_scores":
+    case "nba_player_points_first_half_at_least":
+    case "nba_player_assists_in_any_quarter_at_least":
+    case "nba_player_steals_first_half_at_least":
+      return true;
+    default:
+      return false;
   }
 }
 
@@ -2774,14 +2479,18 @@ function pickCandidateSet(candidates: SportsBingoSquareTemplate[], sportKey: str
   const selectedKeys = new Set<string>();
   const playerPropMarketCounts = new Map<string, number>();
   const selectedPlayerPropAxes = new Set<string>();
+  const rejectionReasons = new Map<string, number>();
+  const reject = (reason: string) => rejectionReasons.set(reason, (rejectionReasons.get(reason) ?? 0) + 1);
 
   const tryAdd = (candidate: SportsBingoSquareTemplate): boolean => {
     if (selected.length >= 24 || selectedKeys.has(candidate.key)) {
+      reject("full_or_duplicate_key");
       return false;
     }
     const axis = getPlayerPropAxisKey(candidate);
     if (axis) {
       if (selectedPlayerPropAxes.has(axis)) {
+        reject("duplicate_axis");
         return false;
       }
       selectedPlayerPropAxes.add(axis);
@@ -2824,6 +2533,15 @@ function pickCandidateSet(candidates: SportsBingoSquareTemplate[], sportKey: str
   const playerPropPool = shuffle(grouped["player-prop"]);
   let selectedPlayerProps = 0;
   const rejectedPlayerPropKeys = new Set<string>();
+
+  if (sportKey === "basketball_nba") {
+    const playerAchievementPool = shuffle(grouped.achievement.filter((item) => isPlayerSpecificAchievementResolver(item.resolver)));
+    let added = 0;
+    for (const candidate of playerAchievementPool) {
+      if (selected.length >= 24 || added >= 3) break;
+      if (tryAdd(candidate)) added += 1;
+    }
+  }
 
   if (sportKey === "basketball_nba") {
     const coreMarkets = shuffle([
@@ -2885,6 +2603,21 @@ function pickCandidateSet(candidates: SportsBingoSquareTemplate[], sportKey: str
 
   if (selected.length < 24) {
     throw new Error("Not enough candidate squares are available for this game.");
+  }
+
+  if (sportKey === "basketball_nba") {
+    const playerSpecificSelectedCount = selected.filter((item) => isPlayerSpecificAchievementResolver(item.resolver)).length;
+    console.info("[sportsBingo] board_diagnostics", {
+      player_candidate_pool_size: grouped.achievement.filter((item) => isPlayerSpecificAchievementResolver(item.resolver)).length,
+      player_specific_selected_count: playerSpecificSelectedCount,
+      hard_floor: BINGO_PLAYER_SPECIFIC_HARD_FLOOR,
+      rejection_reasons: Object.fromEntries(rejectionReasons.entries()),
+    });
+    if (playerSpecificSelectedCount < BINGO_PLAYER_SPECIFIC_HARD_FLOOR) {
+      throw new Error(
+        `Insufficient player-specific candidates for hard floor (${playerSpecificSelectedCount}/${BINGO_PLAYER_SPECIFIC_HARD_FLOOR}).`
+      );
+    }
   }
 
   return selected.slice(0, 24);
@@ -3181,10 +2914,18 @@ export type SportsBingoSquareTemplatePreview = {
     | "nba_player_perfect_fg"
     | "nba_player_triple_threat"
     | "nba_player_zero_turnovers"
+    | "nba_player_plus_minus_at_least"
     | "nba_team_has_double_double"
     | "nba_team_three_pt_scorers"
     | "nba_team_turnovers_at_most"
     | "nba_team_outrebounds"
+    | "nba_player_bench_scores"
+    | "nba_team_scores_first"
+    | "nba_team_leads_at_halftime"
+    | "nba_team_points_in_any_quarter_at_least"
+    | "nba_player_points_first_half_at_least"
+    | "nba_player_assists_in_any_quarter_at_least"
+    | "nba_player_steals_first_half_at_least"
     | "replacement_auto";
 };
 
@@ -3416,6 +3157,15 @@ function parseResolver(value: unknown): SportsBingoResolver | null {
         return { kind: "nba_player_zero_turnovers", player: resolver.player };
       }
       return null;
+    case "nba_player_plus_minus_at_least":
+      if (
+        typeof resolver.player === "string" &&
+        typeof resolver.threshold === "number" &&
+        Number.isFinite(resolver.threshold)
+      ) {
+        return { kind: "nba_player_plus_minus_at_least", player: resolver.player, threshold: resolver.threshold };
+      }
+      return null;
     case "nba_team_has_double_double":
       if (resolver.team === "home" || resolver.team === "away") {
         return { kind: "nba_team_has_double_double", team: resolver.team };
@@ -3442,6 +3192,41 @@ function parseResolver(value: unknown): SportsBingoResolver | null {
     case "nba_team_outrebounds":
       if (resolver.team === "home" || resolver.team === "away") {
         return { kind: "nba_team_outrebounds", team: resolver.team };
+      }
+      return null;
+    case "nba_player_bench_scores":
+      if (typeof resolver.player === "string" && typeof resolver.threshold === "number" && Number.isFinite(resolver.threshold)) {
+        return { kind: "nba_player_bench_scores", player: resolver.player, threshold: resolver.threshold };
+      }
+      return null;
+    case "nba_team_scores_first":
+      if (resolver.team === "home" || resolver.team === "away") {
+        return { kind: "nba_team_scores_first", team: resolver.team };
+      }
+      return null;
+    case "nba_team_leads_at_halftime":
+      if (resolver.team === "home" || resolver.team === "away") {
+        return { kind: "nba_team_leads_at_halftime", team: resolver.team };
+      }
+      return null;
+    case "nba_team_points_in_any_quarter_at_least":
+      if ((resolver.team === "home" || resolver.team === "away") && typeof resolver.threshold === "number" && Number.isFinite(resolver.threshold)) {
+        return { kind: "nba_team_points_in_any_quarter_at_least", team: resolver.team, threshold: resolver.threshold };
+      }
+      return null;
+    case "nba_player_points_first_half_at_least":
+      if (typeof resolver.player === "string" && typeof resolver.threshold === "number" && Number.isFinite(resolver.threshold)) {
+        return { kind: "nba_player_points_first_half_at_least", player: resolver.player, threshold: resolver.threshold };
+      }
+      return null;
+    case "nba_player_assists_in_any_quarter_at_least":
+      if (typeof resolver.player === "string" && typeof resolver.threshold === "number" && Number.isFinite(resolver.threshold)) {
+        return { kind: "nba_player_assists_in_any_quarter_at_least", player: resolver.player, threshold: resolver.threshold };
+      }
+      return null;
+    case "nba_player_steals_first_half_at_least":
+      if (typeof resolver.player === "string" && typeof resolver.threshold === "number" && Number.isFinite(resolver.threshold)) {
+        return { kind: "nba_player_steals_first_half_at_least", player: resolver.player, threshold: resolver.threshold };
       }
       return null;
     default:
@@ -3922,6 +3707,20 @@ function evaluateResolver(
       if (!completed && !nbaStatsSnapshot.finalized) return { status: "pending", resolved: false };
       return { status: line.turnover === 0 ? "hit" : "miss", resolved: true };
     }
+    case "nba_player_plus_minus_at_least": {
+      if (!nbaStatsSnapshot) {
+        if (!completed) return { status: "pending", resolved: false };
+        return { status: "miss", resolved: true };
+      }
+      const line = findNBAPlayerStatLine(nbaStatsSnapshot, resolver.player);
+      if (!line) {
+        if (!completed && !nbaStatsSnapshot.finalized) return { status: "pending", resolved: false };
+        return { status: "miss", resolved: true };
+      }
+      if (line.plusMinus >= resolver.threshold) return { status: "hit", resolved: true };
+      if (completed || nbaStatsSnapshot.finalized) return { status: "miss", resolved: true };
+      return { status: "pending", resolved: false };
+    }
     case "nba_team_has_double_double": {
       if (!nbaStatsSnapshot) {
         if (!completed) return { status: "pending", resolved: false };
@@ -3964,6 +3763,74 @@ function evaluateResolver(
       const oppSide: TeamSide = resolver.team === "home" ? "away" : "home";
       const oppAgg = buildNBATeamAggregates(nbaStatsSnapshot, oppSide);
       return { status: teamAgg.totalRebounds > oppAgg.totalRebounds ? "hit" : "miss", resolved: true };
+    }
+    case "nba_player_bench_scores": {
+      if (!nbaStatsSnapshot) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
+      const playerId = resolveSnapshotPlayerId(nbaStatsSnapshot, resolver.player);
+      if (!playerId) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
+      const lineup = nbaStatsSnapshot.lineupByPlayerId.get(playerId);
+      if (!lineup || lineup.starter) return { status: "miss", resolved: true };
+      const line = findNBAPlayerStatLine(nbaStatsSnapshot, resolver.player);
+      if (!line) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
+      if (line.pts >= resolver.threshold) return { status: "hit", resolved: true };
+      if (completed || nbaStatsSnapshot.finalized) return { status: "miss", resolved: true };
+      return { status: "pending", resolved: false };
+    }
+    case "nba_team_scores_first": {
+      if (!nbaStatsSnapshot) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
+      if (!nbaStatsSnapshot.firstScoringTeam) {
+        if (completed || nbaStatsSnapshot.finalized) return { status: "miss", resolved: true };
+        return { status: "pending", resolved: false };
+      }
+      return { status: nbaStatsSnapshot.firstScoringTeam === resolver.team ? "hit" : "miss", resolved: true };
+    }
+    case "nba_team_leads_at_halftime": {
+      if (!nbaStatsSnapshot) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
+      const homeHalf = nbaStatsSnapshot.homeHalftimeScore;
+      const awayHalf = nbaStatsSnapshot.awayHalftimeScore;
+      if (homeHalf === null || awayHalf === null) {
+        if (completed || nbaStatsSnapshot.finalized) return { status: "miss", resolved: true };
+        return { status: "pending", resolved: false };
+      }
+      if (homeHalf === awayHalf) return { status: "miss", resolved: true };
+      const teamLeads = resolver.team === "home" ? homeHalf > awayHalf : awayHalf > homeHalf;
+      return { status: teamLeads ? "hit" : "miss", resolved: true };
+    }
+    case "nba_team_points_in_any_quarter_at_least": {
+      if (!nbaStatsSnapshot) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
+      const maxPoints = resolver.team === "home" ? nbaStatsSnapshot.homeMaxQuarterPoints : nbaStatsSnapshot.awayMaxQuarterPoints;
+      if (maxPoints >= resolver.threshold) return { status: "hit", resolved: true };
+      if (completed || nbaStatsSnapshot.finalized) return { status: "miss", resolved: true };
+      return { status: "pending", resolved: false };
+    }
+    case "nba_player_points_first_half_at_least": {
+      if (!nbaStatsSnapshot) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
+      const playerId = resolveSnapshotPlayerId(nbaStatsSnapshot, resolver.player);
+      if (!playerId) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
+      const agg = nbaStatsSnapshot.firstHalfByPlayerId.get(playerId);
+      const pts = agg?.pts ?? 0;
+      if (pts >= resolver.threshold) return { status: "hit", resolved: true };
+      if (completed || nbaStatsSnapshot.finalized) return { status: "miss", resolved: true };
+      return { status: "pending", resolved: false };
+    }
+    case "nba_player_assists_in_any_quarter_at_least": {
+      if (!nbaStatsSnapshot) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
+      const playerId = resolveSnapshotPlayerId(nbaStatsSnapshot, resolver.player);
+      if (!playerId) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
+      const maxAst = nbaStatsSnapshot.maxQuarterAssistsByPlayerId.get(playerId) ?? 0;
+      if (maxAst >= resolver.threshold) return { status: "hit", resolved: true };
+      if (completed || nbaStatsSnapshot.finalized) return { status: "miss", resolved: true };
+      return { status: "pending", resolved: false };
+    }
+    case "nba_player_steals_first_half_at_least": {
+      if (!nbaStatsSnapshot) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
+      const playerId = resolveSnapshotPlayerId(nbaStatsSnapshot, resolver.player);
+      if (!playerId) return completed ? { status: "miss", resolved: true } : { status: "pending", resolved: false };
+      const agg = nbaStatsSnapshot.firstHalfByPlayerId.get(playerId);
+      const steals = agg?.stl ?? 0;
+      if (steals >= resolver.threshold) return { status: "hit", resolved: true };
+      if (completed || nbaStatsSnapshot.finalized) return { status: "miss", resolved: true };
+      return { status: "pending", resolved: false };
     }
     default:
       return { status: "void", resolved: true };
@@ -4038,10 +3905,18 @@ function isResolverEligibleForVoidRegrade(resolver: SportsBingoResolver): boolea
     case "nba_player_perfect_fg":
     case "nba_player_triple_threat":
     case "nba_player_zero_turnovers":
+    case "nba_player_plus_minus_at_least":
     case "nba_team_has_double_double":
     case "nba_team_three_pt_scorers":
     case "nba_team_turnovers_at_most":
     case "nba_team_outrebounds":
+    case "nba_player_bench_scores":
+    case "nba_team_scores_first":
+    case "nba_team_leads_at_halftime":
+    case "nba_team_points_in_any_quarter_at_least":
+    case "nba_player_points_first_half_at_least":
+    case "nba_player_assists_in_any_quarter_at_least":
+    case "nba_player_steals_first_half_at_least":
       return true;
     default:
       return false;
@@ -4049,55 +3924,55 @@ function isResolverEligibleForVoidRegrade(resolver: SportsBingoResolver): boolea
 }
 
 async function getScoresBySportKey(sportKey: string): Promise<Map<string, ScoreSnapshot>> {
-  if (!ODDS_API_KEY) {
-    return new Map<string, ScoreSnapshot>();
-  }
-
   const now = Date.now();
   const cached = scoreCache.get(sportKey);
   if (cached && now < cached.expiresAt) {
     return cached.byGameId;
   }
 
-  const query = new URLSearchParams({
-    apiKey: ODDS_API_KEY,
-    daysFrom: "3",
-  });
-  const payload = await fetchOddsJson(`/sports/${sportKey}/scores`, query);
-  if (!Array.isArray(payload)) {
+  const sportPathByKey: Record<string, string> = {
+    basketball_nba: "/nba/v1/games",
+    americanfootball_nfl: "/nfl/v1/games",
+    baseball_mlb: "/mlb/v1/games",
+    icehockey_nhl: "/nhl/v1/games",
+    soccer_usa_mls: "/mls/v1/games",
+    soccer_epl: "/epl/v1/games",
+    soccer_spain_la_liga: "/laliga/v1/games",
+    soccer_italy_serie_a: "/seriea/v1/games",
+    soccer_germany_bundesliga: "/bundesliga/v1/games",
+    soccer_uefa_champs_league: "/ucl/v1/games",
+  };
+  const path = sportPathByKey[sportKey];
+  if (!path) {
     return new Map<string, ScoreSnapshot>();
   }
 
+  const start = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const end = new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const query = new URLSearchParams({ start_date: start, end_date: end, per_page: "100" });
+  const payload = await fetchBallDontLieList<BallDontLieGame>(path, query);
+
   const byGameId = new Map<string, ScoreSnapshot>();
-  for (const event of payload as OddsScoreEvent[]) {
+  for (const event of payload) {
     const gameId = String(event.id ?? "").trim();
-    const homeTeam = String(event.home_team ?? "").trim();
-    const awayTeam = String(event.away_team ?? "").trim();
+    const homeTeam = String(event.home_team?.full_name ?? event.home_team?.name ?? "").trim();
+    const awayTeam = String(event.visitor_team?.full_name ?? event.visitor_team?.name ?? "").trim();
     if (!gameId || !homeTeam || !awayTeam) {
       continue;
     }
 
-    const byTeam = new Map<string, number>();
-    for (const scoreRow of event.scores ?? []) {
-      const name = String(scoreRow.name ?? "").trim();
-      const score = parseScoreValue(scoreRow.score);
-      if (!name || score === null) {
-        continue;
-      }
-      byTeam.set(normalizeTeamKey(name), score);
-    }
-
-    const homeScore = byTeam.get(normalizeTeamKey(homeTeam)) ?? null;
-    const awayScore = byTeam.get(normalizeTeamKey(awayTeam)) ?? null;
+    const homeScore = parseScoreValue(event.home_team_score);
+    const awayScore = parseScoreValue(event.visitor_team_score);
+    const status = String(event.status ?? "").toLowerCase();
 
     byGameId.set(gameId, {
       gameId,
-      sportKey: String(event.sport_key ?? sportKey).trim() || sportKey,
+      sportKey: sportKey,
       homeTeam,
       awayTeam,
       homeScore,
       awayScore,
-      completed: Boolean(event.completed),
+      completed: status.includes("final") || status.includes("ft"),
     });
   }
 

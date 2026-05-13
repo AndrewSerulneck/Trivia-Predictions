@@ -335,7 +335,7 @@ export async function submitTriviaAnswer(params: {
   answer: number;
   timeElapsed: number;
   forceAdminBypass?: boolean;
-}): Promise<{ isCorrect: boolean; correctAnswer: number; saved: boolean; alreadyAnswered?: boolean }> {
+}): Promise<{ isCorrect: boolean; correctAnswer: number; saved: boolean; alreadyAnswered?: boolean; pointsAwarded?: number; multiplierApplied?: number }> {
   const question = await getQuestionById(params.questionId);
   if (!question) {
     throw new Error("Question not found.");
@@ -401,6 +401,7 @@ export async function submitTriviaAnswer(params: {
           .maybeSingle<{ points: number; venue_id: string | null }>();
 
         let pointsAwarded = TRIVIA_POINTS_PER_CORRECT;
+        let multiplierApplied = 1;
         const venueId = String(userData?.venue_id ?? "").trim();
         if (venueId) {
           try {
@@ -411,11 +412,20 @@ export async function submitTriviaAnswer(params: {
               basePoints: TRIVIA_POINTS_PER_CORRECT,
             });
             pointsAwarded = Math.max(0, Number(campaignResult.finalPoints ?? TRIVIA_POINTS_PER_CORRECT));
+            multiplierApplied = Number(campaignResult.multiplierApplied ?? 1);
           } catch {}
         }
 
         const nextPoints = (userData?.points ?? 0) + pointsAwarded;
         await supabaseAdmin.from("users").update({ points: nextPoints }).eq("id", params.userId);
+
+        return {
+          isCorrect,
+          correctAnswer: question.correctAnswer,
+          saved,
+          pointsAwarded,
+          multiplierApplied,
+        };
       }
     }
   }
@@ -424,5 +434,7 @@ export async function submitTriviaAnswer(params: {
     isCorrect,
     correctAnswer: question.correctAnswer,
     saved,
+    pointsAwarded: 0,
+    multiplierApplied: 1,
   };
 }

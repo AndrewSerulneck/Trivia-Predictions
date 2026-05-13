@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
-import { claimPickEmReward, clearPickEmPick, listUserPickEmPicks, settlePendingPickEmPicks, submitPickEmPick } from "@/lib/pickem";
+import {
+  claimPickEmPoints,
+  claimPickEmReward,
+  clearPickEmPick,
+  listUserPickEmPicks,
+  settlePendingPickEmPicks,
+  submitPickEmPick,
+} from "@/lib/pickem";
 
 function normalizeBoolean(value: string | null, fallback: boolean): boolean {
   const normalized = String(value ?? "").trim().toLowerCase();
@@ -80,12 +87,23 @@ export async function POST(request: Request) {
       gameId?: string;
       pickTeam?: string;
       pickId?: string;
+      localDate?: string;
       date?: string;
       weekStartDate?: string;
       tzOffsetMinutes?: number | string;
     };
 
     const action = String(body.action ?? "").trim().toLowerCase();
+    if (action === "claim_points") {
+      const result = await claimPickEmPoints({
+        userId: String(body.userId ?? "").trim(),
+        venueId: String(body.venueId ?? "").trim(),
+        localDate: String(body.localDate ?? body.date ?? "").trim(),
+        tzOffsetMinutes: body.tzOffsetMinutes,
+      });
+
+      return NextResponse.json({ ok: true, result });
+    }
     if (action === "claim") {
       const result = await claimPickEmReward({
         userId: String(body.userId ?? "").trim(),

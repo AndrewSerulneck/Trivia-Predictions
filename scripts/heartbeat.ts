@@ -35,7 +35,14 @@ const APISPORTS_NBA_BASE_URL = String(process.env.APISPORTS_NBA_BASE_URL ?? "htt
 const APISPORTS_NFL_BASE_URL = String(process.env.APISPORTS_NFL_BASE_URL ?? "https://v1.american-football.api-sports.io").trim().replace(/\/+$/, "");
 const APISPORTS_RAPIDAPI_KEY = String(process.env.APISPORTS_RAPIDAPI_KEY ?? APISPORTS_API_KEY).trim();
 const APISPORTS_NBA_RAPIDAPI_HOST = String(process.env.APISPORTS_NBA_RAPIDAPI_HOST ?? "api-nba-v1.p.rapidapi.com").trim();
-const HEARTBEAT_POLL_MS = Math.max(15000, Number.parseInt(String(process.env.HEARTBEAT_POLL_MS ?? "15000"), 10) || 15000);
+const HEARTBEAT_ACTIVE_POLL_MS = Math.max(
+  2500,
+  Number.parseInt(String(process.env.HEARTBEAT_ACTIVE_POLL_MS ?? "2500"), 10) || 2500
+);
+const HEARTBEAT_INACTIVE_POLL_MS = Math.max(
+  30 * 60 * 1000,
+  Number.parseInt(String(process.env.HEARTBEAT_INACTIVE_POLL_MS ?? String(30 * 60 * 1000)), 10) || 30 * 60 * 1000
+);
 const SUPABASE_URL = String(process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").trim();
 const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY ?? "").trim();
 const SHADOW_MISMATCH_WINDOW_MS = 5 * 60 * 1000;
@@ -154,6 +161,72 @@ async function apiSportsGet(baseUrl: string, path: string): Promise<Record<strin
   return parseRows(json);
 }
 
+function parseStatisticsPlayersRows(payload: unknown): Record<string, unknown>[] {
+  const response = toRecord(payload).response;
+  if (!Array.isArray(response)) {
+    return [];
+  }
+  const rows: Record<string, unknown>[] = [];
+  for (const teamBlock of response) {
+    const teamRecord = toRecord(teamBlock);
+    const team = toRecord(teamRecord.team);
+    const statsContainer = teamRecord.statistics;
+    const candidateStats = Array.isArray(statsContainer) ? statsContainer.map((item) => toRecord(item)) : [toRecord(statsContainer)];
+    for (const statsRecord of candidateStats) {
+      const players = statsRecord.players;
+      if (!Array.isArray(players)) continue;
+      for (const player of players) {
+        const playerRow = toRecord(player);
+        const playerStats = toRecord(playerRow.statistics);
+        rows.push({
+          player: toRecord(playerRow.player),
+          team,
+          points: getPath(playerStats, ["points"]) ?? getPath(playerStats, ["pts"]) ?? playerRow.points ?? playerRow.pts,
+          rebounds:
+            getPath(playerStats, ["rebounds", "total"]) ??
+            getPath(playerStats, ["rebounds"]) ??
+            playerRow.rebounds ??
+            playerRow.reb,
+          assists: getPath(playerStats, ["assists"]) ?? playerRow.assists ?? playerRow.ast,
+          steals: getPath(playerStats, ["steals"]) ?? playerRow.steals ?? playerRow.stl,
+          blocks: getPath(playerStats, ["blocks"]) ?? playerRow.blocks ?? playerRow.blk,
+          turnovers:
+            getPath(playerStats, ["turnovers"]) ?? getPath(playerStats, ["ball_losses"]) ?? playerRow.turnovers ?? playerRow.to,
+        });
+      }
+    }
+  }
+  return rows;
+}
+
+async function fetchGameStats(baseUrl: string, gameId: string): Promise<Record<string, unknown>[]> {
+  const path = `/games/statistics?id=${encodeURIComponent(gameId)}`;
+  const url = `${baseUrl}${path}`;
+  const headers: Record<string, string> = { accept: "application/json" };
+  if (APISPORTS_PROVIDER === "rapidapi") {
+    headers["x-rapidapi-key"] = APISPORTS_RAPIDAPI_KEY;
+    headers["x-rapidapi-host"] = APISPORTS_NBA_RAPIDAPI_HOST;
+  } else {
+    headers["x-apisports-key"] = APISPORTS_API_KEY;
+  }
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const response = await fetch(url, { method: "GET", headers });
+    const json = await response.json().catch(() => null);
+    const rows = parseStatisticsPlayersRows(json);
+    if (response.status === 429 && attempt === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      continue;
+    }
+    if (!response.ok) {
+      throw new Error(`API-Sports request failed (${response.status}) for ${url}`);
+    }
+    return rows;
+  }
+
+  throw new Error(`API-Sports request failed (429 retry exhausted) for ${url}`);
+}
+
 function parseIsoMs(value: unknown): number | null {
   const raw = String(value ?? "").trim();
   if (!raw) return null;
@@ -250,11 +323,10 @@ const SPORT_CONFIG: Record<SportSlug, SportConfig> = {
     slug: "nba",
     sportKey: "nba",
     baseUrl: APISPORTS_NBA_BASE_URL,
-    gameStatusLive: new Set(["Q1", "Q2", "Q3", "Q4", "OT", "HT", "BT", "LIVE", "IN PLAY"]),
+    gameStatusLive: new Set(["1C", "2C", "3C", "4C", "Q1", "Q2", "Q3", "Q4", "OT", "HT", "BT", "LIVE", "IN PLAY"]),
     gameStatusFinal: new Set(["FT", "AOT", "FINAL"]),
     buildLiveGamesPath: () => "/games?live=all",
-    buildGameStatsPath: (gameId: string) => `/games/statistics/players?id=${encodeURIComponent(gameId)}`,
-    buildGameStatsFallbackPath: (gameId: string) => `/players/statistics?game=${encodeURIComponent(gameId)}`,
+    buildGameStatsPath: (gameId: string) => `/games/statistics?id=${encodeURIComponent(gameId)}`,
     toFantasyPoints: nbaFantasyPoints,
   },
   nfl: {
@@ -401,15 +473,7 @@ async function runCycle(config: SportConfig): Promise<CycleMetrics> {
     const leagueId = Math.round(num(getPath(game, ["league", "id"]))) || null;
     const gameStatus = parseGameStatus(game);
     metrics.apiCalls += 1;
-    let playerRows = await apiSportsGet(config.baseUrl, config.buildGameStatsPath(gameId));
-    if (playerRows.length === 0 && config.buildGameStatsFallbackPath) {
-      metrics.apiCalls += 1;
-      const fallbackRows = await apiSportsGet(config.baseUrl, config.buildGameStatsFallbackPath(gameId));
-      if (fallbackRows.length > 0) {
-        console.log(`[heartbeat] player stats fallback endpoint used for game=${gameId} rows=${fallbackRows.length}`);
-        playerRows = fallbackRows;
-      }
-    }
+    let playerRows = config.slug === "nba" ? await fetchGameStats(config.baseUrl, gameId) : await apiSportsGet(config.baseUrl, config.buildGameStatsPath(gameId));
     console.log(`[heartbeat] game=${gameId} player_rows=${playerRows.length} status=${gameStatus}`);
 
     const allRows: Array<Record<string, unknown>> = [];
@@ -535,13 +599,17 @@ async function runHeartbeat(): Promise<void> {
     throw new Error("Missing APISPORTS_API_KEY.");
   }
   const config = SPORT_CONFIG[ACTIVE_SPORT] ?? SPORT_CONFIG.nba;
-  console.log(`[heartbeat] Starting stat heartbeat for ${config.slug.toUpperCase()} (${config.sportKey}) every ${HEARTBEAT_POLL_MS}ms.`);
+  console.log(
+    `[heartbeat] Starting stat heartbeat for ${config.slug.toUpperCase()} (${config.sportKey}) active_poll=${HEARTBEAT_ACTIVE_POLL_MS}ms inactive_poll=${HEARTBEAT_INACTIVE_POLL_MS}ms.`
+  );
 
   // Persistent process intended for Railway/background worker.
   while (true) {
     const started = Date.now();
+    let liveGamesThisCycle = 0;
     try {
       const metrics = await runCycle(config);
+      liveGamesThisCycle = metrics.liveGames;
       const now = new Date().toISOString();
       console.log(
         `[heartbeat] ${now} cycle complete live_games=${metrics.liveGames} api_calls=${metrics.apiCalls} scanned=${metrics.scannedPlayers} queued_changed=${metrics.queuedChangedRows} upserted=${metrics.upsertedRows} skipped_unchanged=${metrics.skippedUnchangedRows} changed=${metrics.changedRows} stale=${metrics.staleRows} avg_source_lag_ms=${metrics.avgSourceLagMs} max_source_lag_ms=${metrics.maxSourceLagMs}`
@@ -551,7 +619,8 @@ async function runHeartbeat(): Promise<void> {
       console.error(`[heartbeat] ${new Date().toISOString()} ${message}`);
     }
     const elapsed = Date.now() - started;
-    const delay = Math.max(0, HEARTBEAT_POLL_MS - elapsed);
+    const targetPollMs = config.slug === "nba" && liveGamesThisCycle > 0 ? HEARTBEAT_ACTIVE_POLL_MS : HEARTBEAT_INACTIVE_POLL_MS;
+    const delay = Math.max(0, targetPollMs - elapsed);
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
 }

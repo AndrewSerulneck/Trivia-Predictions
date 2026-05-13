@@ -3,6 +3,7 @@ import "server-only";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { apiSportsGet } from "@/lib/apisports";
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
+import { fetchBallDontLieList } from "@/lib/balldontlie";
 
 const APISPORTS_NBA_BASE_URL = process.env.APISPORTS_NBA_BASE_URL?.trim() ?? "https://v2.nba.api-sports.io";
 const APISPORTS_API_KEY = process.env.APISPORTS_API_KEY?.trim() ?? "";
@@ -734,38 +735,59 @@ async function fetchApiSportsNbaTeamPlayers(teamId: number, season: number | nul
     return cached.value;
   }
 
-  const paths = normalizedSeason
-    ? [
-        `/players?team=${encodeURIComponent(String(normalizedTeamId))}&season=${encodeURIComponent(String(normalizedSeason))}`,
-        `/players?teamId=${encodeURIComponent(String(normalizedTeamId))}&season=${encodeURIComponent(String(normalizedSeason))}`,
-        `/players?team_id=${encodeURIComponent(String(normalizedTeamId))}&season=${encodeURIComponent(String(normalizedSeason))}`,
-        `/players?team=${encodeURIComponent(String(normalizedTeamId))}`,
-      ]
-    : [
-        `/players?team=${encodeURIComponent(String(normalizedTeamId))}`,
-        `/players?teamId=${encodeURIComponent(String(normalizedTeamId))}`,
-        `/players?team_id=${encodeURIComponent(String(normalizedTeamId))}`,
-      ];
+  // Use the active endpoint so we only expose currently rostered players
+  // for teams in today's slate, not historical team-season memberships.
+  const baseActiveQuery = new URLSearchParams({ per_page: "100", "team_ids[]": String(normalizedTeamId) });
+  const activeRowsRaw = await fetchBallDontLieList<Record<string, unknown>>("/nba/v1/players/active", baseActiveQuery, 5);
+  let rows = activeRowsRaw
+    .map((row) => asRecord(row))
+    .map((row) => {
+      const team = asRecord(row.team);
+      return {
+        player: {
+          id: row.id,
+          first_name: row.first_name,
+          last_name: row.last_name,
+          name: `${String(row.first_name ?? "").trim()} ${String(row.last_name ?? "").trim()}`.trim(),
+        },
+        team: {
+          id: team.id,
+          name: team.full_name ?? team.name,
+        },
+        active: true,
+      } as Record<string, unknown>;
+    });
 
-  for (const baseUrl of getApiSportsBaseCandidates()) {
-    for (const path of paths) {
-      const result = await apiSportsGet(baseUrl, path, APISPORTS_API_KEY);
-      if (!result.ok) {
-        continue;
-      }
-      const rows = parseApiSportsResponseRows(result.json).map((row) => asRecord(row));
-      if (rows.length === 0) {
-        continue;
-      }
-
-      // Some endpoints may ignore team filters and return broad league-wide lists.
-      // Only accept rows that explicitly resolve to the requested team id.
-      const matchedByTeamId = rows.filter((row) => extractApiSportsDirectoryTeamId(row) === normalizedTeamId);
-      if (matchedByTeamId.length > 0) {
-        apiSportsTeamPlayersCache.set(cacheKey, { value: matchedByTeamId, expiresAt: Date.now() + APISPORTS_TEAM_PLAYERS_TTL_MS });
-        return matchedByTeamId;
-      }
+  if (rows.length === 0) {
+    const fallbackQuery = new URLSearchParams({ per_page: "100", "team_ids[]": String(normalizedTeamId) });
+    if (normalizedSeason) {
+      fallbackQuery.set("seasons[]", String(normalizedSeason));
     }
+    const fallbackRowsRaw = await fetchBallDontLieList<Record<string, unknown>>("/nba/v1/players", fallbackQuery, 5);
+    rows = fallbackRowsRaw
+      .map((row) => asRecord(row))
+      .map((row) => {
+        const team = asRecord(row.team);
+        return {
+          player: {
+            id: row.id,
+            first_name: row.first_name,
+            last_name: row.last_name,
+            name: `${String(row.first_name ?? "").trim()} ${String(row.last_name ?? "").trim()}`.trim(),
+          },
+          team: {
+            id: team.id,
+            name: team.full_name ?? team.name,
+          },
+          active: true,
+        } as Record<string, unknown>;
+      });
+  }
+
+  const matchedByTeamId = rows.filter((row) => extractApiSportsDirectoryTeamId(row) === normalizedTeamId);
+  if (matchedByTeamId.length > 0) {
+    apiSportsTeamPlayersCache.set(cacheKey, { value: matchedByTeamId, expiresAt: Date.now() + APISPORTS_TEAM_PLAYERS_TTL_MS });
+    return matchedByTeamId;
   }
 
   apiSportsTeamPlayersCache.set(cacheKey, { value: [], expiresAt: Date.now() + 60_000 });
@@ -934,6 +956,19 @@ async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]
     return [];
   }
 
+  const allowedTeamIds = new Set<number>();
+  const allowedTeamNames = new Set<string>();
+  for (const game of games) {
+    const homeTeamId = getApiSportsGameTeamId(game, "home");
+    const awayTeamId = getApiSportsGameTeamId(game, "away");
+    if (homeTeamId) allowedTeamIds.add(homeTeamId);
+    if (awayTeamId) allowedTeamIds.add(awayTeamId);
+    const homeName = getApiSportsGameTeamName(game, "home");
+    const awayName = getApiSportsGameTeamName(game, "away");
+    if (homeName) allowedTeamNames.add(homeName);
+    if (awayName) allowedTeamNames.add(awayName);
+  }
+
   const poolSeedByName = new Map<string, ApiSportsPoolSeed>();
   const teamSeasonPairs = new Map<string, { teamId: number; season: number | null }>();
   const teamNameByTeamId = new Map<number, string>();
@@ -966,6 +1001,12 @@ async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]
       }
       const rowTeamId = extractApiSportsDirectoryTeamId(row);
       const rowTeamName = extractApiSportsDirectoryTeamName(row);
+      if (rowTeamId && allowedTeamIds.size > 0 && !allowedTeamIds.has(rowTeamId)) {
+        continue;
+      }
+      if (!rowTeamId && rowTeamName && allowedTeamNames.size > 0 && !Array.from(allowedTeamNames).some((name) => teamsMatch(name, rowTeamName))) {
+        continue;
+      }
       if (rowTeamId !== teamId && (!rowTeamName || !expectedTeamName || !teamsMatch(rowTeamName, expectedTeamName))) {
         continue;
       }
@@ -993,6 +1034,10 @@ async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]
         const row = asRecord(rowUnknown);
         const playerName = formatFantasyPlayerDisplayName(extractApiSportsPlayerName(row));
         if (!playerName) {
+          continue;
+        }
+        const statTeamName = String(getPath(row, ["team", "name"]) ?? "").trim();
+        if (statTeamName && allowedTeamNames.size > 0 && !Array.from(allowedTeamNames).some((name) => teamsMatch(name, statTeamName))) {
           continue;
         }
         addApiSportsPoolSeed(poolSeedByName, {
@@ -1384,7 +1429,7 @@ function validateLineup(lineup: unknown): string[] {
 }
 
 function shouldAllowStartedDraftingForTesting(): boolean {
-  return FANTASY_ALLOW_STARTED_DRAFTING_FOR_TESTING;
+  return false;
 }
 
 function buildStoredLineupWithIds(lineup: string[], playerPool: FantasyPlayerPoolItem[]): Array<{ player_id: number; player_name: string }> {
@@ -1818,13 +1863,19 @@ function computeFantasyFromLiveStats(
       }
       const gameMeta = gameMetaById.get(gameId);
       if (hasDailyGameId) {
-        if (!gameMeta || !Number.isFinite(startsAtMs)) {
+        if (!Number.isFinite(startsAtMs)) {
           return false;
         }
-        // Keep stats tied to the active slate window, not prior-day finals.
-        if (gameMeta.startMs < startsAtMs - 2 * 60 * 60 * 1000 || gameMeta.startMs > startsAtMs + 36 * 60 * 60 * 1000) {
-          return false;
+        if (gameMeta) {
+          // When API-Sports game metadata is available use a strict slate-window check.
+          // Keep stats tied to the active slate window, not prior-day finals.
+          if (gameMeta.startMs < startsAtMs - 2 * 60 * 60 * 1000 || gameMeta.startMs > startsAtMs + 36 * 60 * 60 * 1000) {
+            return false;
+          }
         }
+        // Without gameMeta (e.g. BallDontLie game IDs never match API-Sports keys) fall
+        // through — the rowTs time-window filter applied above already constrains the row
+        // to [startsAt, now + 2h], which is sufficient to exclude prior-day stats.
       } else if (entryTeamNames.size > 0) {
         const teamKey = normalizeTeamKey(String(row.team_name ?? ""));
         if (teamKey && !entryTeamNames.has(teamKey)) {
@@ -2050,58 +2101,96 @@ function isApiSportsGameStarted(game: ApiSportsNbaGame): boolean {
 }
 
 async function fetchApiSportsNbaGamesByDate(dateIso: string): Promise<ApiSportsNbaGame[]> {
-  if (!isApiSportsConfigured()) {
-    return [];
-  }
   const cacheKey = `games:${dateIso}`;
   const cached = apiSportsGamesCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.value;
   }
-  for (const baseUrl of getApiSportsBaseCandidates()) {
-    const result = await apiSportsGet(baseUrl, `/games?date=${encodeURIComponent(dateIso)}`, APISPORTS_API_KEY);
-    if (!result.ok) {
-      continue;
-    }
-    const rows = parseApiSportsResponseRows(result.json);
-    if (rows.length > 0) {
-      apiSportsGamesCache.set(cacheKey, { value: rows, expiresAt: Date.now() + APISPORTS_GAMES_TTL_MS });
-      return rows;
-    }
-  }
-  return [];
+
+  const query = new URLSearchParams({ "dates[]": dateIso, per_page: "100" });
+  const rowsRaw = await fetchBallDontLieList<Record<string, unknown>>("/nba/v1/games", query, 5);
+  const rows = rowsRaw.map((game) => {
+    const homeTeam = asRecord(game.home_team);
+    const awayTeam = asRecord(game.visitor_team);
+    const statusRaw = String(game.status ?? "").trim().toLowerCase();
+    const shortStatus = statusRaw.includes("final")
+      ? "FT"
+      : statusRaw.includes("qtr") || statusRaw.includes("half") || statusRaw.includes("ot")
+      ? "Q1"
+      : "NS";
+    return {
+      id: game.id,
+      date: {
+        start: game.datetime ?? game.date,
+      },
+      league: {
+        name: "NBA",
+        season: game.season,
+      },
+      teams: {
+        home: {
+          id: homeTeam.id,
+          name: homeTeam.full_name ?? homeTeam.name,
+        },
+        visitors: {
+          id: awayTeam.id,
+          name: awayTeam.full_name ?? awayTeam.name,
+        },
+      },
+      scores: {
+        home: {
+          points: game.home_team_score,
+        },
+        visitors: {
+          points: game.visitor_team_score,
+        },
+      },
+      status: {
+        long: game.status,
+        short: shortStatus,
+      },
+    } as ApiSportsNbaGame;
+  });
+
+  apiSportsGamesCache.set(cacheKey, { value: rows, expiresAt: Date.now() + APISPORTS_GAMES_TTL_MS });
+  return rows;
 }
 
 async function fetchApiSportsNbaPlayerStats(gameId: string): Promise<ApiSportsNbaPlayerStat[]> {
-  if (!isApiSportsConfigured()) {
-    return [];
-  }
   const cacheKey = `stats:${gameId}`;
   const cached = apiSportsPlayerStatsCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.value;
   }
-  const paths = [
-    `/players/statistics?game=${encodeURIComponent(gameId)}`,
-    `/players/statistics?id=${encodeURIComponent(gameId)}`,
-    `/games/statistics/players?id=${encodeURIComponent(gameId)}`,
-    `/games/statistics/players?ids=${encodeURIComponent(gameId)}`,
-  ];
-
-  for (const baseUrl of getApiSportsBaseCandidates()) {
-    for (const path of paths) {
-      const result = await apiSportsGet(baseUrl, path, APISPORTS_API_KEY);
-      if (!result.ok) {
-        continue;
-      }
-      const rows = parseApiSportsResponseRows(result.json);
-      if (rows.length > 0) {
-        apiSportsPlayerStatsCache.set(cacheKey, { value: rows, expiresAt: Date.now() + APISPORTS_PLAYER_STATS_TTL_MS });
-        return rows;
-      }
-    }
-  }
-  return [];
+  const query = new URLSearchParams({ per_page: "100", "game_ids[]": String(gameId) });
+  const rowsRaw = await fetchBallDontLieList<Record<string, unknown>>("/nba/v1/stats", query, 10);
+  const rows = rowsRaw.map((row) => {
+    const player = asRecord(row.player);
+    return {
+      player: {
+        id: player.id,
+        first_name: player.first_name,
+        last_name: player.last_name,
+        name: `${String(player.first_name ?? "").trim()} ${String(player.last_name ?? "").trim()}`.trim(),
+      },
+      points: row.pts,
+      totReb: row.reb,
+      assists: row.ast,
+      steals: row.stl,
+      blocks: row.blk,
+      turnovers: row.turnover,
+      statistics: {
+        points: row.pts,
+        totReb: row.reb,
+        assists: row.ast,
+        steals: row.stl,
+        blocks: row.blk,
+        turnovers: row.turnover,
+      },
+    } as ApiSportsNbaPlayerStat;
+  });
+  apiSportsPlayerStatsCache.set(cacheKey, { value: rows, expiresAt: Date.now() + APISPORTS_PLAYER_STATS_TTL_MS });
+  return rows;
 }
 
 function extractApiSportsPlayerName(row: ApiSportsNbaPlayerStat): string {
@@ -2461,9 +2550,13 @@ export async function refreshFantasyProgress(params?: {
       };
     }
 
-    // Safety net: stale single-game entries should never remain pending/live forever.
-    // Do not auto-finalize daily slates here; daily slates can span many game start times.
-    if (!parseFantasyDailyGameId(entry.game_id) && isStale && next.status !== "final") {
+    // Safety net: stale entries should never remain pending/live forever.
+    // Daily slates span many game start times so use a longer threshold (16 h covers
+    // even the latest West-Coast tip-offs finishing after midnight).
+    const isDailySlate = Boolean(parseFantasyDailyGameId(entry.game_id));
+    const DAILY_SLATE_STALE_MS = 16 * 60 * 60 * 1000;
+    const isDailySlateStale = isDailySlate && isStarted && nowMs - startsAtMs >= DAILY_SLATE_STALE_MS;
+    if ((!isDailySlate && isStale || isDailySlateStale) && next.status !== "final") {
       next = {
         status: "final",
         totalPoints: Number(entry.points ?? 0),

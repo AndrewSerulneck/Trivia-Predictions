@@ -3,7 +3,9 @@
     "allow": [
       "Bash(node -e ' *)",
       "Bash(git checkout *)",
-      "Bash(xargs ls -1)"
+      "Bash(xargs ls -1)",
+      "WebFetch(domain:www.balldontlie.io)",
+      "Bash(grep -v \"^$\")"
     ]
   }
 }

@@ -249,3 +249,49 @@ export async function POST(request: Request) {
     },
   });
 }
+
+export async function GET(request: Request) {
+  if (!supabaseAdmin) {
+    return NextResponse.json({ ok: false, error: "Supabase admin client is not configured." }, { status: 500 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const username = (searchParams.get("username") ?? "").trim();
+  const venueId = (searchParams.get("venueId") ?? "").trim();
+
+  if (!username || !venueId) {
+    return NextResponse.json(
+      { ok: false, error: "username and venueId are required." },
+      { status: 400 }
+    );
+  }
+
+  const query = await supabaseAdmin
+    .from("users")
+    .select("id, pin_salt, pin_hash")
+    .ilike("username", username)
+    .eq("venue_id", venueId)
+    .limit(1);
+
+  if (query.error) {
+    if (isMissingPinColumnError(query.error)) {
+      const fallback = await supabaseAdmin
+        .from("users")
+        .select("id")
+        .ilike("username", username)
+        .eq("venue_id", venueId)
+        .limit(1);
+      if (fallback.error) {
+        return NextResponse.json({ ok: false, error: fallback.error.message }, { status: 500 });
+      }
+      const exists = Boolean((fallback.data ?? [])[0]);
+      return NextResponse.json({ ok: true, exists, hasPin: false, isReturningUser: false });
+    }
+    return NextResponse.json({ ok: false, error: query.error.message }, { status: 500 });
+  }
+
+  const row = (query.data ?? [])[0] as { id?: string; pin_salt?: string | null; pin_hash?: string | null } | undefined;
+  const exists = Boolean(row?.id);
+  const hasPin = Boolean(String(row?.pin_salt ?? "").trim() && String(row?.pin_hash ?? "").trim());
+  return NextResponse.json({ ok: true, exists, hasPin, isReturningUser: exists && hasPin });
+}

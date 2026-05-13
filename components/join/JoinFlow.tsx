@@ -220,6 +220,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [loginStepDirection, setLoginStepDirection] = useState<1 | -1>(1);
   const [isPinShaking, setIsPinShaking] = useState(false);
   const [isAdvancingToPin, setIsAdvancingToPin] = useState(false);
+  const [isReturningUserForVenue, setIsReturningUserForVenue] = useState(false);
   const [loadingPhrase, setLoadingPhrase] = useState("Entering the arena...");
   const autoVerificationAttemptedRef = useRef(false);
   const loginAttemptIdRef = useRef(0);
@@ -565,6 +566,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setIsOptimisticallyEntering(false);
       setStatus("ready");
 
+      // Best-effort keyboard-first flow: move focus to username shortly after panel swap.
+      window.setTimeout(() => {
+        usernameInputRef.current?.focus();
+      }, 220);
+
       void verifyVenueAccess(selectedVenue).finally(() => {
         setPendingVenueSelectionId((current) => (current === selectedVenue.id ? null : current));
       });
@@ -598,9 +604,24 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     setIsAdvancingToPin(true);
     setLoginStepDirection(1);
     setLoginStep("pin");
+    setIsReturningUserForVenue(false);
     // Focus while still in the user-gesture call stack so iOS shows the numeric keypad.
     pinInputRef.current?.focus();
-  }, [isAdvancingToPin, username]);
+    if (venue && validateUsername(username)) {
+      void fetch(
+        `/api/join/profile?username=${encodeURIComponent(username.trim())}&venueId=${encodeURIComponent(venue.id)}`,
+        { cache: "no-store" }
+      )
+        .then((response) => response.json().catch(() => null))
+        .then((payload) => {
+          const isReturning = Boolean(payload?.ok && payload?.isReturningUser);
+          setIsReturningUserForVenue(isReturning);
+        })
+        .catch(() => {
+          setIsReturningUserForVenue(false);
+        });
+    }
+  }, [isAdvancingToPin, username, venue]);
 
   const handleBackFromPin = useCallback(() => {
     if (pinFocusTimerRef.current) {
@@ -611,6 +632,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     setLoginStepDirection(-1);
     setLoginStep("username");
     setPin("");
+    setIsReturningUserForVenue(false);
     setErrorMessage("");
   }, []);
 
@@ -618,6 +640,27 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     const cleaned = value.replace(/\D/g, "").slice(0, 4);
     setPin(cleaned);
   }, []);
+
+  const handleSubmitPinStep = useCallback(
+    (pinOverride?: string) => {
+      const candidatePin = String(pinOverride ?? pin).replace(/\D/g, "").slice(0, 4);
+      if (loginStep !== "pin" || !validatePin(candidatePin) || pinSubmittingRef.current) {
+        return;
+      }
+      pinSubmittingRef.current = true;
+      void createProfileRef.current?.(candidatePin).finally(() => {
+        pinSubmittingRef.current = false;
+      });
+    },
+    [loginStep, pin]
+  );
+
+  useEffect(() => {
+    if (loginStep !== "pin" || !isReturningUserForVenue || pin.length !== 4 || pinSubmittingRef.current) {
+      return;
+    }
+    handleSubmitPinStep(pin);
+  }, [handleSubmitPinStep, isReturningUserForVenue, loginStep, pin]);
 
   const canCreate = useMemo(() => {
     return Boolean(
@@ -838,14 +881,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
   useEffect(() => { createProfileRef.current = createProfile; });
 
-  useEffect(() => {
-    if (loginStep !== "pin" || pin.length !== 4 || pinSubmittingRef.current) return;
-    pinSubmittingRef.current = true;
-    void createProfileRef.current?.(pin).finally(() => {
-      pinSubmittingRef.current = false;
-    });
-  }, [pin, loginStep]);
-
   const preloadVenueHome = useCallback(
     async (selectedVenue: Venue, userId: string) => {
       const venueId = selectedVenue.id;
@@ -1041,7 +1076,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           username,
           venueId: venue.id,
           selectedVenueId: venue.id,
-          pin,
+          pin: effectivePin,
           signal: loginController.signal,
         }),
       ]);
@@ -1160,6 +1195,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                     ref={pinInputRef}
                     type="tel"
                     inputMode="numeric"
+                    enterKeyHint="go"
                     pattern="[0-9]*"
                     value={pin}
                     maxLength={4}
@@ -1167,6 +1203,12 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                     onChange={(e) => {
                       if (loginStep !== "pin") return;
                       setPin(e.target.value.replace(/\D/g, "").slice(0, 4));
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleSubmitPinStep();
+                      }
                     }}
                     className="absolute h-px w-px overflow-hidden opacity-0"
                     aria-label="4-digit PIN"
@@ -1181,7 +1223,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                         animate="center"
                         exit="exit"
                         transition={SWIPE_SPRING_TRANSITION}
-                        className="flex flex-col pt-4 pb-10"
+                        className="relative flex flex-col pt-4 pb-10"
                       >
                         <button
                           type="button"
@@ -1192,7 +1234,17 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                           Back
                         </button>
 
-                        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-3">
+                        <button
+                          type="button"
+                          onClick={handleGoToPinStep}
+                          disabled={!username.trim() || isAdvancingToPin}
+                          className="absolute right-0 top-4 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90 disabled:opacity-40"
+                        >
+                          {isAdvancingToPin ? "Loading..." : "Next"}
+                          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">→</span>
+                        </button>
+
+                        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-3 pr-28">
                           What&apos;s your username?
                         </h1>
                         <p className="mb-8 text-lg font-semibold text-slate-900">
@@ -1203,9 +1255,15 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                           ref={usernameInputRef}
                           id="username"
                           type="text"
+                          enterKeyHint="next"
                           value={username}
                           onChange={(e) => setUsername(e.target.value)}
-                          onKeyDown={(e) => { if (e.key === "Enter") handleGoToPinStep(); }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleGoToPinStep();
+                            }
+                          }}
                           placeholder=""
                           autoComplete="username"
                           autoCapitalize="none"
@@ -1219,16 +1277,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                         ) : (
                           <div className="mb-6" />
                         )}
-
-                        <button
-                          type="button"
-                          onClick={handleGoToPinStep}
-                          disabled={!username.trim() || isAdvancingToPin}
-                          className="self-end inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90 disabled:opacity-40"
-                        >
-                          {isAdvancingToPin ? "Loading..." : "Next"}
-                          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">→</span>
-                        </button>
 
                         {locationLoading ? (
                           <p className="mt-6 text-xs text-slate-400">Verifying your location...</p>
@@ -1246,7 +1294,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                         onAnimationComplete={() => {
                           setIsAdvancingToPin(false);
                         }}
-                        className="flex flex-col pt-4 pb-10"
+                        className="relative flex flex-col pt-4 pb-10"
                       >
                         <button
                           type="button"
@@ -1257,7 +1305,17 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                           Back
                         </button>
 
-                        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-3">
+                        <button
+                          type="button"
+                          onClick={() => handleSubmitPinStep()}
+                          disabled={!canCreate || pin.length !== 4 || isAuthLoading}
+                          className="absolute right-0 top-4 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90 disabled:opacity-40"
+                        >
+                          Enter
+                          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">↵</span>
+                        </button>
+
+                        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-3 pr-28">
                           What&apos;s your PIN?
                         </h1>
                         <p className="mb-10 text-lg font-semibold text-slate-900">
@@ -1290,6 +1348,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                         ) : connectionRetryMessage ? (
                           <p className="text-sm text-amber-700">{connectionRetryMessage}</p>
                         ) : null}
+
                       </motion.div>
                     )}
                   </AnimatePresence>

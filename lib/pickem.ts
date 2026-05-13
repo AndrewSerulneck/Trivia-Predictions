@@ -1,7 +1,7 @@
 import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
+import { fetchBallDontLieList } from "@/lib/balldontlie";
 
 export type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl";
 type PickEmPickStatus = "pending" | "won" | "lost" | "push" | "canceled";
@@ -23,6 +23,8 @@ export type PickEmGame = {
   sportSlug: PickEmSportSlug;
   sportKey: string;
   league: string;
+  homeTeamId: string | null;
+  awayTeamId: string | null;
   homeTeam: string;
   awayTeam: string;
   startsAt: string;
@@ -31,6 +33,7 @@ export type PickEmGame = {
   homeScore: number | null;
   awayScore: number | null;
   winnerTeam: string | null;
+  periodLabel: string | null;
   userPickId?: string;
   userPickTeam?: string;
   userPickStatus?: PickEmPickStatus;
@@ -46,6 +49,10 @@ export type PickEmPick = {
   sportKey: string;
   league: string;
   gameId: string;
+  homeTeamId: string | null;
+  awayTeamId: string | null;
+  selectedTeamId: string | null;
+  winningTeamId: string | null;
   gameLabel: string;
   homeTeam: string;
   awayTeam: string;
@@ -70,6 +77,10 @@ type PickEmPickRow = {
   sport_key: string;
   league: string;
   game_id: string;
+  home_team_id: string | null;
+  away_team_id: string | null;
+  selected_team_id: string | null;
+  winning_team_id: string | null;
   game_label: string;
   home_team: string;
   away_team: string;
@@ -86,22 +97,39 @@ type PickEmPickRow = {
   reward_claimed_at: string | null;
 };
 
-type OddsCatalogItem = {
-  key?: string;
-  title?: string;
-  active?: boolean;
+export type PickEmPointsBankSummary = {
+  localDate: string;
+  totalPicks: number;
+  settledPicks: number;
+  pendingPicks: number;
+  correctPicks: number;
+  incorrectPicks: number;
+  unclaimedCorrectPicks: number;
+  pendingPoints: number;
+  multiplierEligible: boolean;
+  multiplierIfSettledNow: 1 | 2 | 3;
+  collectedPointsToday: number;
 };
 
-type OddsEvent = {
-  id?: string;
-  sport_key?: string;
-  sport_title?: string;
-  commence_time?: string;
-  home_team?: string;
-  away_team?: string;
+type PickEmDailySnapshotRow = {
+  user_id: string;
+  venue_id: string;
+  local_date: string;
+  total_picks: number;
+  settled_picks: number;
+  pending_picks: number;
+  correct_picks: number;
+  incorrect_picks: number;
+  unclaimed_correct_picks: number;
+  pending_points: number;
+  collected_points: number;
+  multiplier_eligible: boolean;
+  multiplier_if_settled_now: number;
+  collected_at: string | null;
+  updated_at: string;
 };
 
-type OddsScoreEvent = {
+type BallDontLieScoreEvent = {
   id?: string;
   sport_key?: string;
   sport_title?: string;
@@ -115,35 +143,95 @@ type OddsScoreEvent = {
   }>;
 };
 
-type NormalizedOddsEvent = {
+type NormalizedBallDontLieEvent = {
   id: string;
-  oddsEventId: string;
+  providerEventId: string;
   sportKey: string;
   league: string;
+  homeTeamId: string | null;
+  awayTeamId: string | null;
   startsAt: string;
   homeTeam: string;
   awayTeam: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  isCompleted: boolean;
+  periodLabel: string | null;
 };
 
-const ODDS_API_BASE_URL = process.env.ODDS_API_BASE_URL ?? "https://api.the-odds-api.com/v4";
-const ODDS_API_KEY = process.env.ODDS_API_KEY?.trim() ?? "";
-const ODDS_SCORES_DAYS_FROM = Math.max(1, Math.min(3, Number.parseInt(process.env.ODDS_API_SCORES_DAYS ?? "3", 10) || 3));
+type PickEmDebugProbe = {
+  sportKey: string;
+  path: string;
+  url: string;
+  statusCode: number;
+  bodyPreview: string;
+};
+
+const BALLDONTLIE_API_BASE_URL = process.env.BALLDONTLIE_API_BASE_URL ?? "https://api.balldontlie.io";
+const BALLDONTLIE_API_KEY = process.env.BALLDONTLIE_API_KEY?.trim() ?? "";
+
+type BallDontLieGame = {
+  id?: number | string;
+  status?: string;
+  datetime?: string;
+  date?: string;
+  commence_time?: string;
+  start_time?: string;
+  scheduled_at?: string;
+  home_team_score?: number | string | null;
+  visitor_team_score?: number | string | null;
+  home_score?: number | string | null;
+  away_score?: number | string | null;
+  home_team?: { full_name?: string; name?: string; city?: string } | string;
+  visitor_team?: { full_name?: string; name?: string; city?: string };
+  home_team_id?: number | string;
+  away_team_id?: number | string;
+  name?: string;
+  home_team_data?: { full_name?: string; name?: string; city?: string; runs?: number | null } | string;
+  away_team_data?: { full_name?: string; name?: string; city?: string; runs?: number | null } | string;
+  // Soccer-style schemas
+  home_team_name?: string;
+  away_team_name?: string;
+  away_team?: { full_name?: string; name?: string; city?: string } | string;
+  starts_at?: string;
+  // Live game clock fields (NBA)
+  period?: number | null;
+  time?: string | null;
+  time_in_period?: string | null;
+};
+
+const BDL_PATH_BY_SPORT_KEY: Record<string, { path: string; league: string; isSoccerMatch?: boolean; embeddedTeams?: boolean }> = {
+  basketball_nba: { path: "/nba/v1/games", league: "NBA" },
+  baseball_mlb: { path: "/mlb/v1/games", league: "MLB" },
+  icehockey_nhl: { path: "/nhl/v1/games", league: "NHL" },
+  americanfootball_nfl: { path: "/nfl/v1/games", league: "NFL" },
+  soccer_usa_mls: { path: "/mls/v1/matches", league: "MLS", isSoccerMatch: true },
+  soccer_epl: { path: "/epl/v2/matches", league: "EPL", isSoccerMatch: true },
+  soccer_spain_la_liga: { path: "/laliga/v1/matches", league: "La Liga", isSoccerMatch: true },
+  soccer_italy_serie_a: { path: "/seriea/v1/matches", league: "Serie A", isSoccerMatch: true },
+  soccer_france_ligue_one: { path: "/ligue1/v1/matches", league: "Ligue 1", isSoccerMatch: true },
+  soccer_germany_bundesliga: { path: "/bundesliga/v1/matches", league: "Bundesliga", isSoccerMatch: true },
+  soccer_uefa_champs_league: { path: "/ucl/v1/matches", league: "UEFA Champions League", isSoccerMatch: true },
+  soccer_fifa_world_cup: { path: "/fifa/worldcup/v1/matches", league: "FIFA World Cup", isSoccerMatch: true, embeddedTeams: true },
+};
+
 const PICKEM_LOCK_GRACE_MS = 0;
 const PICKEM_DAILY_PICK_LIMIT = 10;
-const SPORTS_CATALOG_CACHE_MS = 5 * 60 * 1000;
 const PICKEM_TABLES_MISSING_ERROR =
   "Pick 'Em tables are not installed in this Supabase project yet. Run migration supabase/migrations/20260427113000_add_pickem_tables.sql.";
 const PICKEM_REWARD_POINTS = 10;
 const PICKEM_PICK_SELECT =
-  "id, user_id, venue_id, sport_slug, sport_key, league, game_id, game_label, home_team, away_team, starts_at, selected_team, selected_side, status, home_score, away_score, created_at, updated_at, resolved_at, reward_points, reward_claimed_at";
+  "id, user_id, venue_id, sport_slug, sport_key, league, game_id, home_team_id, away_team_id, selected_team_id, winning_team_id, game_label, home_team, away_team, starts_at, selected_team, selected_side, status, home_score, away_score, created_at, updated_at, resolved_at, reward_points, reward_claimed_at";
 
 const DEFAULT_SOCCER_KEYS = [
   "soccer_usa_mls",
   "soccer_epl",
   "soccer_spain_la_liga",
   "soccer_italy_serie_a",
+  "soccer_france_ligue_one",
   "soccer_germany_bundesliga",
   "soccer_uefa_champs_league",
+  "soccer_fifa_world_cup",
 ];
 
 const PICKEM_SPORTS: PickEmSportOption[] = [
@@ -191,9 +279,6 @@ const PICKEM_SPORTS: PickEmSportOption[] = [
 
 const SPORT_BY_SLUG = new Map(PICKEM_SPORTS.map((item) => [item.slug, item]));
 
-let sportsCatalogCache: { expiresAt: number; byKey: Map<string, string> } | null = null;
-let sportsCatalogInFlight: Promise<Map<string, string>> | null = null;
-
 function isMissingPickEmTablesError(error: { code?: string; message?: string } | null | undefined): boolean {
   if (!error) {
     return false;
@@ -217,14 +302,21 @@ function normalizeTeamKey(name: string): string {
 }
 
 function buildPickEmGameId(params: {
-  oddsEventId: string;
+  providerEventId: string;
   startsAt: string;
   homeTeam: string;
   awayTeam: string;
 }): string {
   const home = normalizeTeamKey(params.homeTeam);
   const away = normalizeTeamKey(params.awayTeam);
-  return `${params.oddsEventId}__${params.startsAt}__${home}__${away}`;
+  return `${params.providerEventId}__${params.startsAt}__${home}__${away}`;
+}
+
+function extractProviderEventIdFromGameId(gameId: string): string {
+  const raw = String(gameId ?? "").trim();
+  if (!raw) return "";
+  const idx = raw.indexOf("__");
+  return idx === -1 ? raw : raw.slice(0, idx);
 }
 
 function normalizeLeagueLabel(value: string): string {
@@ -275,6 +367,128 @@ function parseDateString(date: string | undefined): { year: number; month: numbe
   }
 
   return { year, month, day };
+}
+
+function normalizeBallDontLieGameStartIso(rawValue: string): string | null {
+  const raw = String(rawValue ?? "").trim();
+  if (!raw) {
+    return null;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const ts = Date.parse(`${raw}T12:00:00.000Z`);
+    return Number.isFinite(ts) ? new Date(ts).toISOString() : null;
+  }
+  const ts = Date.parse(raw);
+  return Number.isFinite(ts) ? new Date(ts).toISOString() : null;
+}
+
+function extractTeamName(value: unknown): string {
+  if (typeof value === "string") {
+    return value.trim();
+  }
+  if (value && typeof value === "object") {
+    const row = value as Record<string, unknown>;
+    const full = String(row.full_name ?? "").trim();
+    if (full) return full;
+    const display = String(row.display_name ?? "").trim();
+    if (display) return display;
+    const name = String(row.name ?? "").trim();
+    if (name) return name;
+    const short = String(row.short_name ?? "").trim();
+    if (short) return short;
+    const city = String(row.city ?? "").trim();
+    if (city) return city;
+    const location = String(row.location ?? "").trim();
+    return location;
+  }
+  return "";
+}
+
+function extractEventStartIso(event: Record<string, unknown>): string | null {
+  const rawCandidates = [
+    event.starts_at,
+    event.datetime,
+    event.date,
+    event.commence_time,
+    event.start_time,
+    event.scheduled_at,
+  ];
+  for (const candidate of rawCandidates) {
+    const normalized = normalizeBallDontLieGameStartIso(String(candidate ?? "").trim());
+    if (normalized) {
+      return normalized;
+    }
+  }
+  return null;
+}
+
+function extractNestedRuns(data: unknown): number | null {
+  if (data == null || typeof data !== "object") return null;
+  const runs = (data as Record<string, unknown>).runs;
+  return parseScore(runs as number | string | null | undefined);
+}
+
+function extractHomeScore(event: Record<string, unknown>): number | null {
+  return (
+    parseScore(
+      (event.home_team_score as number | string | null | undefined) ??
+        (event.home_score as number | string | null | undefined) ??
+        null
+    ) ?? extractNestedRuns(event.home_team_data)
+  );
+}
+
+function extractAwayScore(event: Record<string, unknown>): number | null {
+  return (
+    parseScore(
+      (event.visitor_team_score as number | string | null | undefined) ??
+        (event.away_score as number | string | null | undefined) ??
+        null
+    ) ?? extractNestedRuns(event.away_team_data)
+  );
+}
+
+function formatPeriodLabel(
+  time: string | null | undefined,
+  timeInPeriod: string | null | undefined,
+  isSoccer: boolean,
+  period?: number | null
+): string | null {
+  const t = String(time ?? "").trim();
+  if (t.toLowerCase() === "final" || t.toLowerCase() === "ft") return null;
+
+  if (isSoccer) {
+    if (!t) return null;
+    if (t.toLowerCase() === "ht" || t.toLowerCase() === "halftime") return "HT";
+    if (/^\d{1,3}'/.test(t)) return t;
+    return null;
+  }
+
+  // NBA-style quarter labels
+  if (t) {
+    const clock =
+      timeInPeriod && String(timeInPeriod).trim() && String(timeInPeriod).trim() !== " "
+        ? String(timeInPeriod).trim()
+        : null;
+    switch (t) {
+      case "1st Qtr": return clock ? `Q1 · ${clock}` : "Q1";
+      case "2nd Qtr": return clock ? `Q2 · ${clock}` : "Q2";
+      case "Halftime": return "Halftime";
+      case "3rd Qtr": return clock ? `Q3 · ${clock}` : "Q3";
+      case "4th Qtr": return clock ? `Q4 · ${clock}` : "Q4";
+      default:
+        if (t.toLowerCase().includes("ot") || t.toLowerCase().includes("overtime")) {
+          return clock ? `OT · ${clock}` : "OT";
+        }
+    }
+  }
+
+  // MLB-style inning: use numeric period field
+  if (typeof period === "number" && period > 0) {
+    return `Inn. ${period}`;
+  }
+
+  return null;
 }
 
 function getTodayDateInOffset(tzOffsetMinutes: number): string {
@@ -342,6 +556,28 @@ function parseTimezoneOffset(input: number | string | undefined): number {
   return Math.max(-14 * 60, Math.min(14 * 60, parsed));
 }
 
+function isBallDontLieFinalStatus(eventRecord: Record<string, unknown>): boolean {
+  const statusRaw = String(eventRecord.status ?? "").trim().toLowerCase();
+  const timeRaw = String(eventRecord.time ?? "").trim().toLowerCase();
+  const gameStatusRaw = String(
+    (eventRecord.game as Record<string, unknown> | undefined)?.status ?? ""
+  )
+    .trim()
+    .toLowerCase();
+
+  const statusValues = [statusRaw, timeRaw, gameStatusRaw].filter(Boolean);
+  return statusValues.some(
+    (value) =>
+      value.includes("final") ||
+      value.includes("full_time") ||
+      value.includes("full time") ||
+      value === "ft" ||
+      value === "aet" ||
+      value === "after ot" ||
+      value === "after overtime"
+  );
+}
+
 function mapPickRow(row: PickEmPickRow): PickEmPick {
   return {
     id: row.id,
@@ -351,6 +587,10 @@ function mapPickRow(row: PickEmPickRow): PickEmPick {
     sportKey: row.sport_key,
     league: row.league,
     gameId: row.game_id,
+    homeTeamId: row.home_team_id ?? null,
+    awayTeamId: row.away_team_id ?? null,
+    selectedTeamId: row.selected_team_id ?? null,
+    winningTeamId: row.winning_team_id ?? null,
     gameLabel: row.game_label,
     homeTeam: row.home_team,
     awayTeam: row.away_team,
@@ -368,64 +608,6 @@ function mapPickRow(row: PickEmPickRow): PickEmPick {
   };
 }
 
-async function fetchOddsJson(path: string, query: URLSearchParams, revalidateSeconds = 15): Promise<unknown> {
-  const response = await fetch(`${ODDS_API_BASE_URL}${path}?${query.toString()}`, {
-    method: "GET",
-    next: { revalidate: revalidateSeconds },
-  });
-
-  if (!response.ok) {
-    throw new Error(`The Odds API request failed with status ${response.status}.`);
-  }
-
-  return response.json();
-}
-
-async function getLeagueTitlesBySportKey(): Promise<Map<string, string>> {
-  if (!ODDS_API_KEY) {
-    return new Map();
-  }
-
-  const now = Date.now();
-  if (sportsCatalogCache && now < sportsCatalogCache.expiresAt) {
-    return sportsCatalogCache.byKey;
-  }
-
-  if (sportsCatalogInFlight) {
-    return sportsCatalogInFlight;
-  }
-
-  sportsCatalogInFlight = (async () => {
-    const query = new URLSearchParams({ apiKey: ODDS_API_KEY });
-    const payload = await fetchOddsJson("/sports", query, 120);
-    const byKey = new Map<string, string>();
-
-    if (Array.isArray(payload)) {
-      for (const item of payload as OddsCatalogItem[]) {
-        const key = String(item.key ?? "").trim();
-        if (!key) {
-          continue;
-        }
-        const title = String(item.title ?? "").trim();
-        byKey.set(key, title ? normalizeLeagueLabel(title) : normalizeLeagueLabel(key));
-      }
-    }
-
-    sportsCatalogCache = {
-      byKey,
-      expiresAt: Date.now() + SPORTS_CATALOG_CACHE_MS,
-    };
-
-    return byKey;
-  })()
-    .catch(() => new Map<string, string>())
-    .finally(() => {
-      sportsCatalogInFlight = null;
-    });
-
-  return sportsCatalogInFlight;
-}
-
 async function getSportKeysForSlug(sportSlug: PickEmSportSlug): Promise<string[]> {
   const sport = SPORT_BY_SLUG.get(sportSlug);
   if (!sport) {
@@ -436,67 +618,156 @@ async function getSportKeysForSlug(sportSlug: PickEmSportSlug): Promise<string[]
     return [];
   }
 
-  if (sportSlug !== "soccer") {
-    return sport.sportKeys;
-  }
-
-  if (!ODDS_API_KEY) {
-    return sport.sportKeys;
-  }
-
-  try {
-    const leagueTitles = await getLeagueTitlesBySportKey();
-    const dynamicKeys = [...leagueTitles.keys()].filter((key) => key.startsWith("soccer_"));
-    const preferred = dynamicKeys.filter(
-      (key) =>
-        key.includes("epl") ||
-        key.includes("la_liga") ||
-        key.includes("serie_a") ||
-        key.includes("bundesliga") ||
-        key.includes("mls") ||
-        key.includes("uefa_champs")
-    );
-
-    if (preferred.length > 0) {
-      return preferred;
-    }
-
-    return dynamicKeys.length > 0 ? dynamicKeys.slice(0, 12) : sport.sportKeys;
-  } catch {
-    return sport.sportKeys;
-  }
+  return sport.sportKeys;
 }
 
-async function fetchOddsEventsForSportKey(
+function listUtcDaysInclusive(fromIso: string, toIso: string): string[] {
+  const out: string[] = [];
+  const startMs = Date.parse(`${fromIso.slice(0, 10)}T00:00:00.000Z`);
+  const endMs = Date.parse(`${toIso.slice(0, 10)}T00:00:00.000Z`);
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) {
+    return out;
+  }
+  for (let ms = startMs; ms <= endMs; ms += 24 * 60 * 60 * 1000) {
+    out.push(new Date(ms).toISOString().slice(0, 10));
+  }
+  return out;
+}
+
+function buildQueryVariants(fromIso: string, toIso: string, perPage = "100"): URLSearchParams[] {
+  const variants: URLSearchParams[] = [];
+  const utcDays = listUtcDaysInclusive(fromIso, toIso);
+  for (const day of utcDays) {
+    variants.push(new URLSearchParams({ per_page: perPage, "dates[]": day }));
+  }
+  return variants;
+}
+
+function buildQueryVariantsForSportKey(
+  _sportKey: string,
+  fromIso: string,
+  toIso: string,
+  perPage = "100"
+): URLSearchParams[] {
+  return listUtcDaysInclusive(fromIso, toIso).map(
+    (day) => new URLSearchParams({ per_page: perPage, "dates[]": day })
+  );
+}
+
+function getPathVariantsForSportKey(sportKey: string): string[] {
+  const provider = BDL_PATH_BY_SPORT_KEY[sportKey];
+  if (!provider) return [];
+  return [provider.path];
+}
+
+function getTeamsPathForSportKey(sportKey: string): string | null {
+  const provider = BDL_PATH_BY_SPORT_KEY[sportKey];
+  if (!provider?.isSoccerMatch || provider.embeddedTeams) return null;
+  const base = provider.path.replace(/\/matches$/, "");
+  return `${base}/teams`;
+}
+
+async function fetchTeamNameMapForSportKey(sportKey: string): Promise<Map<string, string>> {
+  const path = getTeamsPathForSportKey(sportKey);
+  if (!path) {
+    return new Map();
+  }
+  const rows = await fetchBallDontLieList<Record<string, unknown>>(path, new URLSearchParams({ per_page: "200" }), 2);
+  const map = new Map<string, string>();
+  for (const row of rows) {
+    const id = String(row.id ?? "").trim();
+    const name =
+      String(row.full_name ?? "").trim() ||
+      String(row.display_name ?? "").trim() ||
+      String(row.name ?? "").trim() ||
+      String(row.short_name ?? "").trim();
+    if (id && name) {
+      map.set(id, name);
+    }
+  }
+  return map;
+}
+
+function splitMatchName(raw: string): { away: string; home: string } | null {
+  const value = String(raw ?? "").trim();
+  if (!value) return null;
+  const atMatch = value.match(/^(.+?)\s+at\s+(.+)$/i);
+  if (atMatch) {
+    return { away: atMatch[1].trim(), home: atMatch[2].trim() };
+  }
+  const vMatch = value.match(/^(.+?)\s+v\s+(.+)$/i);
+  if (vMatch) {
+    return { home: vMatch[1].trim(), away: vMatch[2].trim() };
+  }
+  const vsMatch = value.match(/^(.+?)\s+vs\.?\s+(.+)$/i);
+  if (vsMatch) {
+    return { home: vsMatch[1].trim(), away: vsMatch[2].trim() };
+  }
+  return null;
+}
+
+async function fetchBallDontLieEventsForSportKey(
   sportKey: string,
   fromIso: string,
   toIso: string,
   leagueLabel: string
-): Promise<NormalizedOddsEvent[]> {
-  if (!ODDS_API_KEY) {
+): Promise<NormalizedBallDontLieEvent[]> {
+  const provider = BDL_PATH_BY_SPORT_KEY[sportKey];
+  if (!provider) {
     return [];
   }
 
-  const query = new URLSearchParams({
-    apiKey: ODDS_API_KEY,
-    regions: "us",
-    markets: "h2h",
-    oddsFormat: "american",
-    commenceTimeFrom: fromIso,
-    commenceTimeTo: toIso,
-  });
+  const pathVariants = getPathVariantsForSportKey(sportKey);
+  const queryVariants = buildQueryVariantsForSportKey(sportKey, fromIso, toIso, "100");
 
-  const payload = await fetchOddsJson(`/sports/${sportKey}/odds`, query, 10);
-  if (!Array.isArray(payload)) {
-    return [];
+  const [batchResults, teamNameMap] = await Promise.all([
+    Promise.allSettled(
+      pathVariants.flatMap((path) =>
+        queryVariants.map((query) => fetchBallDontLieList<BallDontLieGame>(path, query, 2))
+      )
+    ),
+    fetchTeamNameMapForSportKey(sportKey),
+  ]);
+
+  const payload: BallDontLieGame[] = [];
+  const seenKeys = new Set<string>();
+  for (const result of batchResults) {
+    if (result.status !== "fulfilled") continue;
+    for (const row of result.value) {
+      const key = `${String(row.id ?? "")}::${String(row.date ?? row.datetime ?? row.starts_at ?? row.commence_time ?? "")}`;
+      if (!key || seenKeys.has(key)) continue;
+      seenKeys.add(key);
+      payload.push(row);
+    }
   }
-
-  const events: NormalizedOddsEvent[] = [];
-  for (const event of payload as OddsEvent[]) {
+  const events: NormalizedBallDontLieEvent[] = [];
+  for (const event of payload) {
+    const eventRecord = event as unknown as Record<string, unknown>;
     const id = String(event.id ?? "").trim();
-    const homeTeam = String(event.home_team ?? "").trim();
-    const awayTeam = String(event.away_team ?? "").trim();
-    const startsAt = String(event.commence_time ?? "").trim();
+    const homeId =
+      String(event.home_team_id ?? "").trim() ||
+      String((eventRecord.home_team as Record<string, unknown> | undefined)?.id ?? "").trim();
+    const awayId =
+      String(event.away_team_id ?? "").trim() ||
+      String((eventRecord.away_team as Record<string, unknown> | undefined)?.id ?? "").trim() ||
+      String((eventRecord.visitor_team as Record<string, unknown> | undefined)?.id ?? "").trim();
+    const splitNames = splitMatchName(String(event.name ?? "").trim());
+    const homeTeam =
+      String(event.home_team_name ?? "").trim() ||
+      extractTeamName(eventRecord.home_team) ||
+      extractTeamName(eventRecord.home_team_data) ||
+      teamNameMap.get(homeId) ||
+      splitNames?.home ||
+      "";
+    const awayTeam =
+      String(event.away_team_name ?? "").trim() ||
+      extractTeamName(eventRecord.away_team) ||
+      extractTeamName(eventRecord.away_team_data) ||
+      extractTeamName(eventRecord.visitor_team) ||
+      teamNameMap.get(awayId) ||
+      splitNames?.away ||
+      "";
+    const startsAt = extractEventStartIso(eventRecord);
 
     if (!id || !homeTeam || !awayTeam || !startsAt) {
       continue;
@@ -507,54 +778,144 @@ async function fetchOddsEventsForSportKey(
       continue;
     }
 
+    const homeScore = extractHomeScore(eventRecord);
+    const awayScore = extractAwayScore(eventRecord);
+    const isCompleted = isBallDontLieFinalStatus(eventRecord);
+    const periodLabel = formatPeriodLabel(event.time, event.time_in_period, provider.isSoccerMatch ?? false, typeof event.period === "number" ? event.period : null);
+
     events.push({
       id: buildPickEmGameId({
-        oddsEventId: id,
-        startsAt: new Date(startsTs).toISOString(),
+        providerEventId: id,
+        startsAt,
         homeTeam,
         awayTeam,
       }),
-      oddsEventId: id,
+      providerEventId: id,
       sportKey,
-      league: leagueLabel,
-      startsAt: new Date(startsTs).toISOString(),
+      league: leagueLabel || provider.league,
+      homeTeamId: homeId || null,
+      awayTeamId: awayId || null,
+      startsAt,
       homeTeam,
       awayTeam,
+      homeScore,
+      awayScore,
+      isCompleted,
+      periodLabel,
     });
   }
 
   return events;
 }
 
-async function fetchScoresForSportKey(sportKey: string): Promise<Map<string, OddsScoreEvent>> {
-  if (!ODDS_API_KEY) {
+async function fetchScoresForSportKey(sportKey: string): Promise<Map<string, BallDontLieScoreEvent>> {
+  const provider = BDL_PATH_BY_SPORT_KEY[sportKey];
+  if (!provider) {
     return new Map();
   }
 
-  const query = new URLSearchParams({
-    apiKey: ODDS_API_KEY,
-    daysFrom: String(ODDS_SCORES_DAYS_FROM),
-    dateFormat: "iso",
-  });
+  const now = Date.now();
+  const queryVariants = buildQueryVariantsForSportKey(
+    sportKey,
+    new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    new Date(now + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    "100"
+  );
 
-  const payload = await fetchOddsJson(`/sports/${sportKey}/scores`, query, 10);
-  if (!Array.isArray(payload)) {
-    return new Map();
+  const [batchResults, teamNameMap] = await Promise.all([
+    Promise.allSettled(
+      queryVariants.map((query) => fetchBallDontLieList<BallDontLieGame>(provider.path, query, 2))
+    ),
+    fetchTeamNameMapForSportKey(sportKey),
+  ]);
+
+  const payload: BallDontLieGame[] = [];
+  const seenKeys = new Set<string>();
+  for (const result of batchResults) {
+    if (result.status !== "fulfilled") continue;
+    for (const row of result.value) {
+      const key = `${String(row.id ?? "")}::${String(row.date ?? row.datetime ?? row.starts_at ?? row.commence_time ?? "")}`;
+      if (!key || seenKeys.has(key)) continue;
+      seenKeys.add(key);
+      payload.push(row);
+    }
   }
 
-  const byId = new Map<string, OddsScoreEvent>();
-  for (const event of payload as OddsScoreEvent[]) {
+  const byId = new Map<string, BallDontLieScoreEvent>();
+  for (const event of payload) {
+    const eventRecord = event as unknown as Record<string, unknown>;
     const id = String(event.id ?? "").trim();
     if (!id) {
       continue;
     }
-    byId.set(id, event);
+    const homeTeam =
+      String(event.home_team_name ?? "").trim() ||
+      extractTeamName(eventRecord.home_team) ||
+      extractTeamName(eventRecord.home_team_data) ||
+      teamNameMap.get(String(event.home_team_id ?? "").trim()) ||
+      splitMatchName(String(event.name ?? "").trim())?.home ||
+      "";
+    const awayTeam =
+      String(event.away_team_name ?? "").trim() ||
+      extractTeamName(eventRecord.away_team) ||
+      extractTeamName(eventRecord.away_team_data) ||
+      extractTeamName(eventRecord.visitor_team) ||
+      teamNameMap.get(String(event.away_team_id ?? "").trim()) ||
+      splitMatchName(String(event.name ?? "").trim())?.away ||
+      "";
+    const startsAtIso = extractEventStartIso(eventRecord);
+    const homeScore = extractHomeScore(eventRecord);
+    const awayScore = extractAwayScore(eventRecord);
+    const completed = isBallDontLieFinalStatus(eventRecord);
+    byId.set(id, {
+      id,
+      sport_key: sportKey,
+      sport_title: provider.league,
+      commence_time: startsAtIso ?? "",
+      completed,
+      home_team: homeTeam,
+      away_team: awayTeam,
+      scores: [
+        { name: homeTeam, score: homeScore },
+        { name: awayTeam, score: awayScore },
+      ],
+    });
   }
 
   return byId;
 }
 
-function getTeamScore(scores: OddsScoreEvent["scores"], teamName: string): number | null {
+async function probePathForDebug(sportKey: string, path: string, query: URLSearchParams): Promise<PickEmDebugProbe | null> {
+  const url = `${BALLDONTLIE_API_BASE_URL}${path}?${query.toString()}`;
+  if (!BALLDONTLIE_API_KEY) {
+    return { sportKey, path, url, statusCode: 0, bodyPreview: "BALLDONTLIE_API_KEY missing" };
+  }
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { Authorization: BALLDONTLIE_API_KEY },
+      cache: "no-store",
+    });
+    const raw = await response.text();
+    return {
+      sportKey,
+      path,
+      url,
+      statusCode: response.status,
+      bodyPreview: raw.slice(0, 100),
+    };
+  } catch (error) {
+    return {
+      sportKey,
+      path,
+      url,
+      statusCode: -1,
+      bodyPreview: error instanceof Error ? error.message.slice(0, 100) : "probe failed",
+    };
+  }
+}
+
+function getTeamScore(scores: BallDontLieScoreEvent["scores"], teamName: string): number | null {
   if (!Array.isArray(scores)) {
     return null;
   }
@@ -589,16 +950,26 @@ function resolveWinner(homeTeam: string, awayTeam: string, homeScore: number | n
   return "tie";
 }
 
-function getPickEmRoundMultiplier(totalPicks: number, correctPicks: number): number {
-  if (totalPicks <= 0) {
+function getPickEmRoundMultiplier(params: {
+  totalPicks: number;
+  pendingPicks: number;
+  correctPicks: number;
+  multiplierEligible: boolean;
+}): 1 | 2 | 3 {
+  if (!params.multiplierEligible) {
     return 1;
   }
-  // Revised rule: bonus multipliers are only based on a full 10-pick slate.
-  if (totalPicks === 10 && correctPicks === 10) {
-    return 2.0;
+  if (params.pendingPicks > 0) {
+    return 1;
   }
-  if (totalPicks === 10 && correctPicks >= 7) {
-    return 1.5;
+  if (params.totalPicks !== PICKEM_DAILY_PICK_LIMIT) {
+    return 1;
+  }
+  if (params.correctPicks >= PICKEM_DAILY_PICK_LIMIT) {
+    return 3;
+  }
+  if (params.correctPicks >= 7) {
+    return 2;
   }
   return 1;
 }
@@ -622,42 +993,144 @@ async function recomputePickEmRoundRewards(params: {
   venueId: string;
   startsAtIso: string;
 }): Promise<void> {
+  await getPickEmPointsBankSummary({
+    userId: params.userId,
+    venueId: params.venueId,
+    localDate: params.startsAtIso.slice(0, 10),
+    tzOffsetMinutes: 0,
+  });
+}
+
+function computePickEmDailySummary(
+  rows: Array<PickEmPickRow | { status: PickEmPickStatus; reward_claimed_at?: string | null }>
+): Omit<PickEmPointsBankSummary, "localDate" | "multiplierEligible" | "collectedPointsToday"> {
+  let settledPicks = 0;
+  let pendingPicks = 0;
+  let correctPicks = 0;
+  let incorrectPicks = 0;
+  let unclaimedCorrectPicks = 0;
+  for (const row of rows) {
+    if (row.status === "pending") {
+      pendingPicks += 1;
+      continue;
+    }
+    settledPicks += 1;
+    if (row.status === "won") {
+      correctPicks += 1;
+      if (!row.reward_claimed_at) {
+        unclaimedCorrectPicks += 1;
+      }
+      continue;
+    }
+    if (row.status === "lost") {
+      incorrectPicks += 1;
+    }
+  }
+  return {
+    totalPicks: rows.length,
+    settledPicks,
+    pendingPicks,
+    correctPicks,
+    incorrectPicks,
+    unclaimedCorrectPicks,
+    pendingPoints: unclaimedCorrectPicks * PICKEM_REWARD_POINTS,
+    multiplierIfSettledNow: 1,
+  };
+}
+
+export async function getPickEmPointsBankSummary(params: {
+  userId: string;
+  venueId: string;
+  localDate: string;
+  tzOffsetMinutes?: number | string;
+}): Promise<PickEmPointsBankSummary> {
+  const fallback: PickEmPointsBankSummary = {
+    localDate: params.localDate,
+    totalPicks: 0,
+    settledPicks: 0,
+    pendingPicks: 0,
+    correctPicks: 0,
+    incorrectPicks: 0,
+    unclaimedCorrectPicks: 0,
+    pendingPoints: 0,
+    multiplierEligible: true,
+    multiplierIfSettledNow: 1,
+    collectedPointsToday: 0,
+  };
   if (!supabaseAdmin) {
-    return;
+    return fallback;
+  }
+  const userId = String(params.userId ?? "").trim();
+  const venueId = String(params.venueId ?? "").trim();
+  if (!userId || !venueId) {
+    return fallback;
   }
 
-  const range = getUtcDateRangeForIsoDay(params.startsAtIso);
-  if (!range) {
-    return;
-  }
+  const tzOffsetMinutes = parseTimezoneOffset(params.tzOffsetMinutes);
+  const range = buildUtcRangeForLocalDay(params.localDate, tzOffsetMinutes);
+  const localDate = range.date;
 
-  const { data, error } = await supabaseAdmin
+  const { data: picks, error } = await supabaseAdmin
     .from("pickem_picks")
-    .select("id, status")
-    .eq("user_id", params.userId)
-    .eq("venue_id", params.venueId)
-    .gte("starts_at", range.dayStartIso)
-    .lte("starts_at", range.dayEndIso);
-
-  if (error || !data) {
-    return;
+    .select("status, reward_claimed_at, reward_points")
+    .eq("user_id", userId)
+    .eq("venue_id", venueId)
+    .gte("starts_at", range.fromIso)
+    .lte("starts_at", range.toIso);
+  if (error || !picks) {
+    return { ...fallback, localDate };
   }
 
-  const totalPicks = data.length;
-  const pendingPicks = data.filter((row) => row.status === "pending").length;
-  const correctPicks = data.filter((row) => row.status === "won").length;
-  const multiplier = pendingPicks === 0 ? getPickEmRoundMultiplier(totalPicks, correctPicks) : 1;
-  const rewardPointsPerWin = PICKEM_REWARD_POINTS * multiplier;
+  const computed = computePickEmDailySummary(
+    picks as Array<{ status: PickEmPickStatus; reward_claimed_at?: string | null }>
+  );
+
+  const { data: existing } = await supabaseAdmin
+    .from("pickem_daily_snapshots")
+    .select("multiplier_eligible, collected_points")
+    .eq("user_id", userId)
+    .eq("venue_id", venueId)
+    .eq("local_date", localDate)
+    .maybeSingle<{ multiplier_eligible: boolean | null; collected_points: number | null }>();
+
+  const multiplierEligible = existing?.multiplier_eligible ?? true;
+  const collectedPointsToday = Math.max(0, Number(existing?.collected_points ?? 0));
+  const multiplierIfSettledNow = getPickEmRoundMultiplier({
+    totalPicks: computed.totalPicks,
+    pendingPicks: computed.pendingPicks,
+    correctPicks: computed.correctPicks,
+    multiplierEligible,
+  });
+
+  const snapshotRow = {
+    user_id: userId,
+    venue_id: venueId,
+    local_date: localDate,
+    total_picks: computed.totalPicks,
+    settled_picks: computed.settledPicks,
+    pending_picks: computed.pendingPicks,
+    correct_picks: computed.correctPicks,
+    incorrect_picks: computed.incorrectPicks,
+    unclaimed_correct_picks: computed.unclaimedCorrectPicks,
+    pending_points: computed.pendingPoints,
+    multiplier_eligible: multiplierEligible,
+    multiplier_if_settled_now: multiplierIfSettledNow,
+    collected_points: collectedPointsToday,
+    collected_at: null as string | null,
+    updated_at: new Date().toISOString(),
+  };
 
   await supabaseAdmin
-    .from("pickem_picks")
-    .update({ reward_points: rewardPointsPerWin })
-    .eq("user_id", params.userId)
-    .eq("venue_id", params.venueId)
-    .gte("starts_at", range.dayStartIso)
-    .lte("starts_at", range.dayEndIso)
-    .eq("status", "won")
-    .is("reward_claimed_at", null);
+    .from("pickem_daily_snapshots")
+    .upsert(snapshotRow, { onConflict: "user_id,venue_id,local_date" });
+
+  return {
+    localDate,
+    ...computed,
+    multiplierEligible,
+    multiplierIfSettledNow,
+    collectedPointsToday,
+  };
 }
 
 async function insertPickEmSettlementNotification(params: {
@@ -770,7 +1243,16 @@ export async function listPickEmGames(params: {
   weekStartDate?: string;
   tzOffsetMinutes?: number | string;
   userId?: string;
-}): Promise<{ sport: PickEmSport; date: string; games: PickEmGame[]; weekOptions?: Array<{ label: string; value: string }>; selectedWeekStartDate?: string }> {
+  venueId?: string;
+}): Promise<{
+  sport: PickEmSport;
+  date: string;
+  games: PickEmGame[];
+  pointsBank?: PickEmPointsBankSummary;
+  weekOptions?: Array<{ label: string; value: string }>;
+  selectedWeekStartDate?: string;
+  debug?: { probes: PickEmDebugProbe[] };
+}> {
   const sport = getSportOrThrow(params.sportSlug);
   const tzOffsetMinutes = parseTimezoneOffset(params.tzOffsetMinutes);
   const dayRange = buildUtcRangeForLocalDay(params.date, tzOffsetMinutes);
@@ -781,7 +1263,7 @@ export async function listPickEmGames(params: {
   let selectedWeekStartDate: string | undefined;
 
   const sportKeys = await getSportKeysForSlug(sport.slug);
-  if (sportKeys.length === 0 || !ODDS_API_KEY) {
+  if (sportKeys.length === 0) {
     return {
       sport: {
         slug: sport.slug,
@@ -797,19 +1279,17 @@ export async function listPickEmGames(params: {
     };
   }
 
-  const leagueTitles = await getLeagueTitlesBySportKey();
-
   if (sport.slug === "nfl") {
     const nflKey = sportKeys[0];
     if (nflKey) {
       const now = Date.now();
       const horizonToIso = new Date(now + 140 * 24 * 60 * 60 * 1000).toISOString();
       const horizonFromIso = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const nflEvents = await fetchOddsEventsForSportKey(
+      const nflEvents = await fetchBallDontLieEventsForSportKey(
         nflKey,
         horizonFromIso,
         horizonToIso,
-        leagueTitles.get(nflKey) ?? normalizeLeagueLabel(nflKey)
+        normalizeLeagueLabel(nflKey)
       );
 
       const weekStartMsSet = new Set<number>();
@@ -861,117 +1341,51 @@ export async function listPickEmGames(params: {
     }
   }
 
-  const [eventsSettled, scoresSettled, picksByGameId] = await Promise.all([
+  const [eventsSettled, picksByGameId] = await Promise.all([
     Promise.allSettled(
       sportKeys.map((sportKey) =>
-        fetchOddsEventsForSportKey(sportKey, fromIso, toIso, leagueTitles.get(sportKey) ?? normalizeLeagueLabel(sportKey))
+        fetchBallDontLieEventsForSportKey(sportKey, fromIso, toIso, normalizeLeagueLabel(sportKey))
       )
     ),
-    Promise.allSettled(sportKeys.map((sportKey) => fetchScoresForSportKey(sportKey))),
     params.userId ? listUserPicksByGameId(params.userId.trim(), sport.slug, fromIso, toIso) : Promise.resolve(new Map()),
   ]);
 
-  const scoresBySportKey = new Map<string, Map<string, OddsScoreEvent>>();
-  for (let i = 0; i < scoresSettled.length; i += 1) {
-    const settled = scoresSettled[i];
-    const sportKey = sportKeys[i];
-    if (settled.status === "fulfilled") {
-      scoresBySportKey.set(sportKey, settled.value);
-    }
-  }
-
-  const eventsById = new Map<string, NormalizedOddsEvent>();
+  const eventsById = new Map<string, NormalizedBallDontLieEvent>();
   for (const settled of eventsSettled) {
     if (settled.status !== "fulfilled") {
       continue;
     }
     for (const event of settled.value) {
-      eventsById.set(event.id, event);
-    }
-  }
-
-  // Include games from scoreboards even when odds no longer returns them (in-progress/final games).
-  for (const sportKey of sportKeys) {
-    const scoreMap = scoresBySportKey.get(sportKey);
-    if (!scoreMap) {
-      continue;
-    }
-
-    for (const scoreEvent of scoreMap.values()) {
-      const id = String(scoreEvent.id ?? "").trim();
-      const startsAtRaw = String(scoreEvent.commence_time ?? "").trim();
-      const homeTeam = String(scoreEvent.home_team ?? "").trim();
-      const awayTeam = String(scoreEvent.away_team ?? "").trim();
-      if (!id || !startsAtRaw || !homeTeam || !awayTeam) {
-        continue;
-      }
-
-      const startsTs = new Date(startsAtRaw).getTime();
-      if (!Number.isFinite(startsTs)) {
-        continue;
-      }
-
-      const localDateKey = toLocalDateKey(new Date(startsTs).toISOString(), tzOffsetMinutes);
+      const localDateKey = toLocalDateKey(event.startsAt, tzOffsetMinutes);
       if (localDateKey !== date) {
         continue;
       }
-
-      const startsAtIso = new Date(startsTs).toISOString();
-      const gameId = buildPickEmGameId({
-        oddsEventId: id,
-        startsAt: startsAtIso,
-        homeTeam,
-        awayTeam,
-      });
-      if (eventsById.has(gameId)) {
-        continue;
-      }
-      eventsById.set(gameId, {
-        id: gameId,
-        oddsEventId: id,
-        sportKey,
-        league: leagueTitles.get(sportKey) ?? normalizeLeagueLabel(scoreEvent.sport_title ?? sportKey),
-        startsAt: startsAtIso,
-        homeTeam,
-        awayTeam,
-      });
-    }
-  }
-
-  const scoreByGameId = new Map<string, OddsScoreEvent>();
-  for (const event of eventsById.values()) {
-    const scoreMap = scoresBySportKey.get(event.sportKey);
-    if (!scoreMap) {
-      continue;
-    }
-    const scoreEvent = scoreMap.get(event.oddsEventId);
-    if (scoreEvent) {
-      scoreByGameId.set(event.id, scoreEvent);
+      eventsById.set(event.id, event);
     }
   }
 
   const games: PickEmGame[] = [];
   for (const event of eventsById.values()) {
-    const scoreEvent = scoreByGameId.get(event.id);
-
-    const homeScore = getTeamScore(scoreEvent?.scores, event.homeTeam);
-    const awayScore = getTeamScore(scoreEvent?.scores, event.awayTeam);
+    const homeScore = event.homeScore;
+    const awayScore = event.awayScore;
     const winner = resolveWinner(event.homeTeam, event.awayTeam, homeScore, awayScore);
 
     let status: PickEmGameStatus = "scheduled";
-    if (scoreEvent?.completed) {
+    if (event.isCompleted) {
       status = "final";
-    } else if (homeScore !== null || awayScore !== null || isPickLocked(event.startsAt)) {
+    } else if (isPickLocked(event.startsAt)) {
       status = "live";
     }
 
-    const pick = picksByGameId.get(event.id) ?? picksByGameId.get(event.oddsEventId);
+    const pick = picksByGameId.get(event.id) ?? picksByGameId.get(event.providerEventId);
 
     games.push({
       id: event.id,
       sportSlug: sport.slug,
       sportKey: event.sportKey,
       league: event.league,
+      homeTeamId: event.homeTeamId,
+      awayTeamId: event.awayTeamId,
       homeTeam: event.homeTeam,
       awayTeam: event.awayTeam,
       startsAt: event.startsAt,
@@ -980,6 +1394,7 @@ export async function listPickEmGames(params: {
       homeScore,
       awayScore,
       winnerTeam: winner === "tie" ? null : winner,
+      periodLabel: event.periodLabel,
       userPickId: pick?.id,
       userPickTeam: pick?.selected_team,
       userPickStatus: pick?.status,
@@ -996,6 +1411,32 @@ export async function listPickEmGames(params: {
     return +new Date(a.startsAt) - +new Date(b.startsAt);
   });
 
+  let debug: { probes: PickEmDebugProbe[] } | undefined;
+  if (games.length === 0) {
+    const probes: PickEmDebugProbe[] = [];
+    for (const sportKey of sportKeys) {
+      const paths = getPathVariantsForSportKey(sportKey);
+      const queries = buildQueryVariants(fromIso, toIso, "5");
+      for (const path of paths) {
+        for (const query of queries) {
+          const probe = await probePathForDebug(sportKey, path, query);
+          if (probe) probes.push(probe);
+        }
+      }
+    }
+    debug = { probes };
+  }
+
+  let pointsBank: PickEmPointsBankSummary | undefined;
+  if (params.userId && params.venueId) {
+    pointsBank = await getPickEmPointsBankSummary({
+      userId: params.userId.trim(),
+      venueId: params.venueId.trim(),
+      localDate: date,
+      tzOffsetMinutes,
+    }).catch(() => undefined);
+  }
+
   return {
     sport: {
       slug: sport.slug,
@@ -1006,8 +1447,10 @@ export async function listPickEmGames(params: {
     },
     date,
     games,
+    pointsBank,
     weekOptions,
     selectedWeekStartDate,
+    debug,
   };
 }
 
@@ -1063,6 +1506,7 @@ export async function submitPickEmPick(params: {
   }
 
   const selectedSide: "home" | "away" = pickTeam === game.homeTeam ? "home" : "away";
+  const selectedTeamId = selectedSide === "home" ? game.homeTeamId : game.awayTeamId;
   const gameLabel = `${game.awayTeam} vs ${game.homeTeam}`;
 
   const { data: existing, error: existingError } = await supabaseAdmin
@@ -1098,6 +1542,7 @@ export async function submitPickEmPick(params: {
         game_label: gameLabel,
         league: game.league,
         sport_key: game.sportKey,
+        selected_team_id: selectedTeamId,
       })
       .eq("id", existing.id)
       .select(PICKEM_PICK_SELECT)
@@ -1140,6 +1585,9 @@ export async function submitPickEmPick(params: {
       sport_key: game.sportKey,
       league: game.league,
       game_id: game.id,
+      home_team_id: game.homeTeamId,
+      away_team_id: game.awayTeamId,
+      selected_team_id: selectedTeamId,
       game_label: gameLabel,
       home_team: game.homeTeam,
       away_team: game.awayTeam,
@@ -1268,7 +1716,7 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
   lost: number;
   push: number;
 }> {
-  if (!supabaseAdmin || !ODDS_API_KEY) {
+  if (!supabaseAdmin) {
     return {
       pendingScanned: 0,
       settledCount: 0,
@@ -1313,7 +1761,7 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
   }
 
   const uniqueSportKeys = Array.from(new Set(pending.map((row) => row.sport_key).filter(Boolean)));
-  const scoresBySportKey = new Map<string, Map<string, OddsScoreEvent>>();
+  const scoresBySportKey = new Map<string, Map<string, BallDontLieScoreEvent>>();
 
   const scoresSettled = await Promise.allSettled(uniqueSportKeys.map((sportKey) => fetchScoresForSportKey(sportKey)));
   for (let i = 0; i < scoresSettled.length; i += 1) {
@@ -1328,27 +1776,61 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
   let won = 0;
   let lost = 0;
   let push = 0;
-  const roundsToRecompute = new Map<string, { userId: string; venueId: string; startsAtIso: string }>();
+  const staleFinalizeMs = 4 * 60 * 60 * 1000;
+  const nowMs = Date.now();
 
   for (const row of pending) {
     const scoreMap = scoresBySportKey.get(row.sport_key);
-    const scoreEvent = scoreMap?.get(row.game_id);
-    if (!scoreEvent?.completed) {
+    const providerEventId = extractProviderEventIdFromGameId(row.game_id);
+    let scoreEvent = scoreMap?.get(row.game_id);
+    if (!scoreEvent && providerEventId) {
+      scoreEvent = scoreMap?.get(providerEventId);
+    }
+    if (!scoreEvent && scoreMap) {
+      const rowHomeKey = normalizeTeamKey(row.home_team);
+      const rowAwayKey = normalizeTeamKey(row.away_team);
+      for (const candidate of scoreMap.values()) {
+        const homeKey = normalizeTeamKey(String(candidate.home_team ?? ""));
+        const awayKey = normalizeTeamKey(String(candidate.away_team ?? ""));
+        if (homeKey && awayKey && homeKey === rowHomeKey && awayKey === rowAwayKey) {
+          scoreEvent = candidate;
+          break;
+        }
+      }
+    }
+    if (!scoreEvent) {
       continue;
     }
 
     const homeScore = getTeamScore(scoreEvent.scores, row.home_team);
     const awayScore = getTeamScore(scoreEvent.scores, row.away_team);
+    const startsAtMs = Date.parse(row.starts_at);
+    const isStale = Number.isFinite(startsAtMs) && nowMs - startsAtMs >= staleFinalizeMs;
+    const canFinalizeFromScores = homeScore !== null && awayScore !== null && isStale;
+    if (!scoreEvent.completed && !canFinalizeFromScores) {
+      continue;
+    }
 
     let status: PickEmPickStatus = "canceled";
+    let winningTeamId: string | null = null;
     if (homeScore !== null && awayScore !== null) {
       const winner = resolveWinner(row.home_team, row.away_team, homeScore, awayScore);
-      if (winner === row.selected_team) {
-        status = "won";
-        won += 1;
-      } else {
-        status = "lost";
-        lost += 1;
+      if (winner === "tie") {
+        status = "push";
+        push += 1;
+      } else if (winner) {
+        winningTeamId = winner === row.home_team ? row.home_team_id : row.away_team_id;
+        const selectedTeamId = String(row.selected_team_id ?? "").trim() || null;
+        if (selectedTeamId && winningTeamId) {
+          status = selectedTeamId === winningTeamId ? "won" : "lost";
+        } else {
+          status = winner === row.selected_team ? "won" : "lost";
+        }
+        if (status === "won") {
+          won += 1;
+        } else {
+          lost += 1;
+        }
       }
     }
 
@@ -1358,6 +1840,7 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
         status,
         home_score: homeScore,
         away_score: awayScore,
+        winning_team_id: winningTeamId,
         resolved_at: new Date().toISOString(),
         reward_points: PICKEM_REWARD_POINTS,
       })
@@ -1380,15 +1863,6 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
     });
 
     settledCount += 1;
-    roundsToRecompute.set(`${row.user_id}::${row.venue_id}::${row.starts_at.slice(0, 10)}`, {
-      userId: row.user_id,
-      venueId: row.venue_id,
-      startsAtIso: row.starts_at,
-    });
-  }
-
-  for (const round of roundsToRecompute.values()) {
-    await recomputePickEmRoundRewards(round);
   }
 
   return {
@@ -1400,6 +1874,80 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
   };
 }
 
+export async function claimPickEmPoints(params: {
+  userId: string;
+  venueId: string;
+  localDate: string;
+  tzOffsetMinutes?: number | string;
+}): Promise<{
+  claimed: boolean;
+  pointsAwarded: number;
+  claimedPickCount: number;
+  multiplierApplied: 1 | 2 | 3;
+  multiplierEligible: boolean;
+  totalPicks: number;
+  settledPicks: number;
+  correctPicks: number;
+  pendingPicks: number;
+}> {
+  if (!supabaseAdmin) {
+    throw new Error("Supabase admin client is not configured.");
+  }
+
+  const userId = String(params.userId ?? "").trim();
+  const venueId = String(params.venueId ?? "").trim();
+  if (!userId || !venueId) {
+    throw new Error("userId and venueId are required.");
+  }
+  const tzOffsetMinutes = parseTimezoneOffset(params.tzOffsetMinutes);
+  const range = buildUtcRangeForLocalDay(params.localDate, tzOffsetMinutes);
+
+  const { data, error } = await supabaseAdmin.rpc("claim_pickem_points", {
+    p_user_id: userId,
+    p_venue_id: venueId,
+    p_local_date: range.date,
+    p_day_start: range.fromIso,
+    p_day_end: range.toIso,
+  });
+
+  if (error) {
+    throw new Error(error.message ?? "Failed to claim Pick 'Em points.");
+  }
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row) {
+    throw new Error("No claim result returned.");
+  }
+
+  const pointsAwarded = Math.max(0, Number(row.points_awarded ?? 0));
+  const claimedPickCount = Math.max(0, Number(row.claimed_pick_count ?? 0));
+  const multiplierAppliedRaw = Number(row.multiplier_applied ?? 1);
+  const multiplierApplied: 1 | 2 | 3 =
+    multiplierAppliedRaw >= 3 ? 3 : multiplierAppliedRaw >= 2 ? 2 : 1;
+  const result = {
+    claimed: claimedPickCount > 0,
+    pointsAwarded,
+    claimedPickCount,
+    multiplierApplied,
+    multiplierEligible: Boolean(row.multiplier_eligible),
+    totalPicks: Math.max(0, Number(row.total_picks ?? 0)),
+    settledPicks: Math.max(0, Number(row.settled_picks ?? 0)),
+    correctPicks: Math.max(0, Number(row.correct_picks ?? 0)),
+    pendingPicks: Math.max(0, Number(row.pending_picks ?? 0)),
+  };
+
+  if (result.claimed && pointsAwarded > 0) {
+    try {
+      await supabaseAdmin.from("notifications").insert({
+        user_id: userId,
+        type: "success",
+        message: `Pick 'Em collected: +${pointsAwarded} points added to your credit allocation.`,
+      });
+    } catch {}
+  }
+
+  return result;
+}
+
 export async function claimPickEmReward(params: {
   userId: string;
   pickId: string;
@@ -1407,148 +1955,25 @@ export async function claimPickEmReward(params: {
   if (!supabaseAdmin) {
     throw new Error("Supabase admin client is not configured.");
   }
-
-  const userId = String(params.userId ?? "").trim();
-  const pickId = String(params.pickId ?? "").trim();
-  if (!userId || !pickId) {
-    throw new Error("userId and pickId are required.");
-  }
-
   const pickLookup = await supabaseAdmin
     .from("pickem_picks")
-    .select("id, starts_at, venue_id, status, reward_claimed_at, reward_points")
-    .eq("id", pickId)
-    .eq("user_id", userId)
-    .maybeSingle<{
-      id: string;
-      starts_at: string;
-      venue_id: string;
-      status: PickEmPickStatus;
-      reward_claimed_at: string | null;
-      reward_points: number | null;
-    }>();
-
-  if (pickLookup.error) {
-    if (isMissingPickEmTablesError(pickLookup.error)) {
-      throw new Error(PICKEM_TABLES_MISSING_ERROR);
-    }
-    throw new Error(pickLookup.error.message ?? "Failed to verify Pick 'Em pick.");
+    .select("venue_id, starts_at")
+    .eq("id", String(params.pickId ?? "").trim())
+    .eq("user_id", String(params.userId ?? "").trim())
+    .maybeSingle<{ venue_id: string; starts_at: string }>();
+  if (pickLookup.error || !pickLookup.data) {
+    throw new Error(pickLookup.error?.message ?? "Pick not found.");
   }
-  if (!pickLookup.data) {
-    throw new Error("Pick not found.");
-  }
-
-  const range = getUtcDateRangeForIsoDay(pickLookup.data.starts_at);
-  if (!range) {
-    throw new Error("Invalid pick start time.");
-  }
-
-  const { data: roundPicks, error: roundError } = await supabaseAdmin
-    .from("pickem_picks")
-    .select("status")
-    .eq("user_id", userId)
-    .eq("venue_id", pickLookup.data.venue_id)
-    .gte("starts_at", range.dayStartIso)
-    .lte("starts_at", range.dayEndIso);
-
-  if (roundError || !roundPicks) {
-    throw new Error(roundError?.message ?? "Failed to verify Pick 'Em round status.");
-  }
-
-  if (roundPicks.some((row) => row.status === "pending")) {
-    throw new Error("Pick 'Em rewards unlock after all of your submitted picks are final.");
-  }
-
-  await recomputePickEmRoundRewards({
-    userId,
+  const localDate = pickLookup.data.starts_at.slice(0, 10);
+  const result = await claimPickEmPoints({
+    userId: params.userId,
     venueId: pickLookup.data.venue_id,
-    startsAtIso: pickLookup.data.starts_at,
+    localDate,
+    tzOffsetMinutes: 0,
   });
-
-  const nowIso = new Date().toISOString();
-  const { data, error } = await supabaseAdmin
-    .from("pickem_picks")
-    .update({ reward_claimed_at: nowIso })
-    .eq("id", pickId)
-    .eq("user_id", userId)
-    .eq("status", "won")
-    .is("reward_claimed_at", null)
-    .select("id, status, reward_points")
-    .maybeSingle<{ id: string; status: PickEmPickStatus; reward_points: number | null }>();
-
-  if (error) {
-    if (isMissingPickEmTablesError(error)) {
-      throw new Error(PICKEM_TABLES_MISSING_ERROR);
-    }
-    throw new Error(error.message ?? "Failed to claim Pick 'Em reward.");
-  }
-
-  if (!data) {
-    const { data: current, error: currentError } = await supabaseAdmin
-      .from("pickem_picks")
-      .select("status, reward_claimed_at, reward_points")
-      .eq("id", pickId)
-      .eq("user_id", userId)
-      .maybeSingle<{ status: PickEmPickStatus; reward_claimed_at: string | null; reward_points: number | null }>();
-
-    if (currentError) {
-      throw new Error(currentError.message ?? "Failed to verify Pick 'Em reward status.");
-    }
-    if (!current) {
-      throw new Error("Pick not found.");
-    }
-    if (current.status !== "won") {
-      throw new Error("This pick is not eligible for rewards.");
-    }
-
-    return {
-      claimed: false,
-      pointsAwarded: Number(current.reward_points ?? PICKEM_REWARD_POINTS),
-      status: current.status,
-    };
-  }
-
-  const basePointsAwarded = Number(data.reward_points ?? PICKEM_REWARD_POINTS);
-  let pointsAwarded = basePointsAwarded;
-  const venueId = String(pickLookup.data.venue_id ?? "").trim();
-  if (venueId && pointsAwarded > 0) {
-    try {
-      const campaignResult = await applyChallengeCampaignPoints({
-        userId,
-        venueId,
-        gameType: "pickem",
-        basePoints: pointsAwarded,
-      });
-      pointsAwarded = Math.max(0, Number(campaignResult.finalPoints ?? pointsAwarded));
-    } catch {}
-  }
-
-  const { data: userRow, error: userError } = await supabaseAdmin
-    .from("users")
-    .select("points")
-    .eq("id", userId)
-    .maybeSingle<{ points: number | null }>();
-  if (userError) {
-    throw new Error(userError.message ?? "Failed to load user points.");
-  }
-
-  const nextPoints = Number(userRow?.points ?? 0) + pointsAwarded;
-  const { error: updateUserError } = await supabaseAdmin.from("users").update({ points: nextPoints }).eq("id", userId);
-  if (updateUserError) {
-    throw new Error(updateUserError.message ?? "Failed to award Pick 'Em points.");
-  }
-
-  try {
-    await supabaseAdmin.from("notifications").insert({
-      user_id: userId,
-      type: "success",
-      message: `Pick 'Em reward claimed: +${pointsAwarded} points added to your total.`,
-    });
-  } catch {}
-
   return {
-    claimed: true,
-    pointsAwarded,
-    status: data.status,
+    claimed: result.claimed,
+    pointsAwarded: result.pointsAwarded,
+    status: result.claimed ? "won" : "pending",
   };
 }

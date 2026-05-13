@@ -1,14 +1,6 @@
 import { NextResponse } from "next/server";
 import { listPickEmGames, settlePendingPickEmPicks } from "@/lib/pickem";
 
-function normalizeBoolean(value: string | null, fallback: boolean): boolean {
-  const normalized = String(value ?? "").trim().toLowerCase();
-  if (!normalized) {
-    return fallback;
-  }
-  return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
-}
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -16,12 +8,11 @@ export async function GET(request: Request) {
     const date = (searchParams.get("date") ?? "").trim();
     const weekStartDate = (searchParams.get("weekStartDate") ?? "").trim();
     const userId = (searchParams.get("userId") ?? "").trim();
+    const venueId = (searchParams.get("venueId") ?? "").trim();
     const tzOffsetMinutes = searchParams.get("tzOffsetMinutes") ?? undefined;
-    const refreshSettlement = normalizeBoolean(searchParams.get("refreshSettlement"), true);
 
-    let settlement = null;
-    if (userId && refreshSettlement) {
-      settlement = await settlePendingPickEmPicks({ userId });
+    if (userId) {
+      await settlePendingPickEmPicks({ userId });
     }
 
     const result = await listPickEmGames({
@@ -29,8 +20,10 @@ export async function GET(request: Request) {
       date,
       weekStartDate: weekStartDate || undefined,
       userId: userId || undefined,
+      venueId: venueId || undefined,
       tzOffsetMinutes,
     });
+    const settlement = null;
 
     return NextResponse.json({
       ok: true,

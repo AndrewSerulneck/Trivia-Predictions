@@ -162,7 +162,7 @@ export function GameLandingExperience({
               style={{ WebkitOverflowScrolling: "touch" }}
             >
             {showPlayingBackButton ? (
-              <div className="sticky top-2 z-30 mb-2">
+              <div className="sticky top-0 z-30 mb-3">
                 <button
                   type="button"
                   onClick={backToVenue}

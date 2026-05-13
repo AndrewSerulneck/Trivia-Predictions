@@ -8,6 +8,7 @@ type ApiSportsPlayerRow = Record<string, unknown>;
 type SyncResult = {
   ok: boolean;
   scannedGames: number;
+  activeGames: number;
   scannedPlayers: number;
   upsertedPlayers: number;
   errors: string[];
@@ -34,7 +35,12 @@ const APISPORTS_FINAL_REPLAY_WINDOW_MS = Math.max(
   0,
   Number.parseInt(Deno.env.get("APISPORTS_FINAL_REPLAY_WINDOW_MS") ?? String(6 * 60 * 60 * 1000), 10) || 6 * 60 * 60 * 1000
 );
-const APISPORTS_DEFAULT_POLL_MS = Math.max(15000, Number.parseInt(Deno.env.get("FANTASY_LIVE_SYNC_POLL_MS") ?? "15000", 10) || 15000);
+const APISPORTS_ACTIVE_POLL_MS = Math.max(20000, Number.parseInt(Deno.env.get("FANTASY_LIVE_SYNC_ACTIVE_POLL_MS") ?? "20000", 10) || 20000);
+const APISPORTS_INACTIVE_POLL_MS = Math.max(
+  30 * 60 * 1000,
+  Number.parseInt(Deno.env.get("FANTASY_LIVE_SYNC_INACTIVE_POLL_MS") ?? String(30 * 60 * 1000), 10) || 30 * 60 * 1000
+);
+const APISPORTS_DEFAULT_POLL_MS = APISPORTS_ACTIVE_POLL_MS;
 const APISPORTS_DEFAULT_LOOP_MS = Math.max(15000, Number.parseInt(Deno.env.get("FANTASY_LIVE_SYNC_LOOP_MS") ?? "60000", 10) || 60000);
 const APISPORTS_FINAL_REPLAY_EVERY_CYCLE = Math.max(
   0,
@@ -117,6 +123,47 @@ function parseRows(json: unknown): Record<string, unknown>[] {
     return [];
   }
   return response.map((row) => asRecord(row));
+}
+
+function parseStatisticsPlayersRows(json: unknown): Record<string, unknown>[] {
+  const root = asRecord(json);
+  const response = root.response;
+  if (!Array.isArray(response)) {
+    return [];
+  }
+  const rows: Record<string, unknown>[] = [];
+  for (const teamBlock of response) {
+    const teamRecord = asRecord(teamBlock);
+    const team = asRecord(teamRecord.team);
+    const statsContainer = teamRecord.statistics;
+    const candidateStats = Array.isArray(statsContainer) ? statsContainer.map((item) => asRecord(item)) : [asRecord(statsContainer)];
+    for (const statsRecord of candidateStats) {
+      const players = statsRecord.players;
+      if (!Array.isArray(players)) {
+        continue;
+      }
+      for (const player of players) {
+        const playerRow = asRecord(player);
+        const playerStats = asRecord(playerRow.statistics);
+        rows.push({
+          player: asRecord(playerRow.player),
+          team,
+          points: getPath(playerStats, ["points"]) ?? getPath(playerStats, ["pts"]) ?? playerRow.points ?? playerRow.pts,
+          rebounds:
+            getPath(playerStats, ["rebounds", "total"]) ??
+            getPath(playerStats, ["rebounds"]) ??
+            playerRow.rebounds ??
+            playerRow.reb,
+          assists: getPath(playerStats, ["assists"]) ?? playerRow.assists ?? playerRow.ast,
+          steals: getPath(playerStats, ["steals"]) ?? playerRow.steals ?? playerRow.stl,
+          blocks: getPath(playerStats, ["blocks"]) ?? playerRow.blocks ?? playerRow.blk,
+          turnovers:
+            getPath(playerStats, ["turnovers"]) ?? getPath(playerStats, ["ball_losses"]) ?? playerRow.turnovers ?? playerRow.to,
+        });
+      }
+    }
+  }
+  return rows;
 }
 function parseGameId(row: Record<string, unknown>): string {
   return String(pickPath(row, [["id"], ["game", "id"], ["fixture", "id"]]) ?? "").trim();
@@ -221,6 +268,66 @@ async function fetchApiSports(pathWithQuery: string): Promise<{ rows: Record<str
   return { rows };
 }
 
+async function fetchGameStatsViaPath(gameId: string, path: string): Promise<{ rows: Record<string, unknown>[]; error?: string }> {
+  const url = `${APISPORTS_BASE_URL}${path}`;
+  const headers: Record<string, string> = { accept: "application/json" };
+  if (APISPORTS_PROVIDER === "rapidapi") {
+    headers["x-rapidapi-key"] = APISPORTS_RAPIDAPI_KEY;
+    headers["x-rapidapi-host"] = APISPORTS_NBA_RAPIDAPI_HOST;
+  } else {
+    headers["x-apisports-key"] = APISPORTS_KEY;
+  }
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const response = await fetch(url, { method: "GET", headers });
+    const json = await response.json().catch(() => null);
+    const rows =
+      path.startsWith("/games/statistics?")
+        ? parseStatisticsPlayersRows(json)
+        : parseRows(json).map((row) => normalizePlayerRow(asRecord(row)));
+    if (response.status === 429 && attempt === 0) {
+      await sleep(5000);
+      continue;
+    }
+    if (!response.ok) {
+      return { rows, error: `HTTP ${response.status}` };
+    }
+    const errors = asRecord(asRecord(json).errors);
+    if (Object.keys(errors).length > 0 && rows.length === 0) {
+      return { rows, error: `API errors: ${JSON.stringify(errors)}` };
+    }
+    return { rows };
+  }
+
+  return { rows: [], error: `HTTP 429 retry exhausted for ${path}` };
+}
+
+async function fetchGameStats(gameId: string): Promise<{ rows: Record<string, unknown>[]; error?: string }> {
+  const paths = [
+    `/games/statistics?id=${encodeURIComponent(gameId)}`,
+    `/games/statistics/players?id=${encodeURIComponent(gameId)}`,
+    `/players/statistics?game=${encodeURIComponent(gameId)}`,
+  ];
+
+  const attemptedErrors: string[] = [];
+  for (const path of paths) {
+    const result = await fetchGameStatsViaPath(gameId, path);
+    if (!result.error && result.rows.length > 0) {
+      if (path !== paths[0]) {
+        console.log(`[sync] game=${gameId} using stats fallback endpoint ${path}`);
+      }
+      return result;
+    }
+    if (!result.error && result.rows.length === 0) {
+      attemptedErrors.push(`${path}: empty response`);
+      continue;
+    }
+    attemptedErrors.push(`${path}: ${result.error}`);
+  }
+
+  return { rows: [], error: attemptedErrors.join(" | ") || "No supported stats endpoint returned data." };
+}
+
 function isFinalStatus(statusShort: string): boolean {
   const key = statusShort.trim().toUpperCase();
   if (!key) return false;
@@ -231,7 +338,7 @@ function isFinalStatus(statusShort: string): boolean {
 function isLiveStatus(statusShort: string): boolean {
   const key = statusShort.trim().toUpperCase();
   if (!key) return false;
-  const liveKeys = new Set(["Q1", "Q2", "Q3", "Q4", "HT", "BT", "OT", "LIVE", "IN PLAY"]);
+  const liveKeys = new Set(["1C", "2C", "3C", "4C", "Q1", "Q2", "Q3", "Q4", "HT", "BT", "OT", "LIVE", "IN PLAY"]);
   return liveKeys.has(key);
 }
 function isLiveGameStatus(game: Record<string, unknown>): boolean {
@@ -279,6 +386,7 @@ function formatDateUTC(offsetDays = 0): string {
 function mergeSyncResults(target: SyncResult, source: SyncResult): void {
   target.ok = target.ok && source.ok;
   target.scannedGames += source.scannedGames;
+  target.activeGames += source.activeGames;
   target.scannedPlayers += source.scannedPlayers;
   target.upsertedPlayers += source.upsertedPlayers;
   target.errors.push(...source.errors);
@@ -359,6 +467,7 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
   const result: SyncResult = {
     ok: true,
     scannedGames: 0,
+    activeGames: 0,
     scannedPlayers: 0,
     upsertedPlayers: 0,
     errors: [],
@@ -435,6 +544,7 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
   games = games.slice(0, APISPORTS_MAX_GAMES_PER_RUN);
 
   result.scannedGames = games.length;
+  result.activeGames = games.filter((game) => isLiveGameStatus(game)).length;
 
   let trackedRosterPlayerIds: Set<number> | null = null;
   let trackedRosterPlayersByName: Map<string, { playerId: number; playerName: string; entryId: string }> = new Map();
@@ -458,14 +568,7 @@ async function syncLivePlayerStatsCycle(options?: { includeRecentFinals?: boolea
       continue;
     }
 
-    let playersResponse = await fetchApiSports(`/games/statistics/players?id=${encodeURIComponent(gameId)}`);
-    if (!playersResponse.error && playersResponse.rows.length === 0) {
-      const fallbackPlayersResponse = await fetchApiSports(`/players/statistics?game=${encodeURIComponent(gameId)}`);
-      if (!fallbackPlayersResponse.error && fallbackPlayersResponse.rows.length > 0) {
-        console.log(`[sync] player stats fallback endpoint used for game=${gameId} rows=${fallbackPlayersResponse.rows.length}`);
-        playersResponse = fallbackPlayersResponse;
-      }
-    }
+    const playersResponse = await fetchGameStats(gameId);
     if (playersResponse.error) {
       result.errors.push(`game ${gameId}: ${playersResponse.error}`);
       await sleep(APISPORTS_REQUEST_DELAY_MS);
@@ -587,7 +690,8 @@ async function runHighVelocityLoop(options: { pollMs: number; loopMs: number; fi
     merged.cycles += 1;
 
     const elapsed = Date.now() - cycleStartedAt;
-    const delay = options.pollMs - elapsed;
+    const targetPollMs = cycle.activeGames > 0 ? APISPORTS_ACTIVE_POLL_MS : APISPORTS_INACTIVE_POLL_MS;
+    const delay = targetPollMs - elapsed;
     if (delay > 0) {
       await sleep(delay);
     }
@@ -617,7 +721,7 @@ Deno.serve(async (request) => {
         : Number.isFinite(legacyIntervalMs) && legacyIntervalMs > 0
         ? legacyIntervalMs
         : APISPORTS_DEFAULT_POLL_MS,
-      15000,
+      20000,
       60000
     );
     const loopMsFromBurst = burst > 0 ? burst * pollMs : 0;
