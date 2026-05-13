@@ -5198,5 +5198,174 @@
     "correctAnswer": 2,
     "category": "Animals",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-bird-is-known-for-laying-the-largest-eggs",
+    "question": "Which bird is known for laying the largest eggs?",
+    "options": [
+      "Chicken",
+      "Emu",
+      "Ostrich",
+      "Penguin"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-young-of-a-goat-called",
+    "question": "What is the young of a goat called?",
+    "options": [
+      "Calf",
+      "Lamb",
+      "Kid",
+      "Fawn"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "a-killer-whale-is-actually-a-type-of-which-animal",
+    "question": "A 'killer whale' is actually a type of which animal?",
+    "options": [
+      "Shark",
+      "Dolphin",
+      "Seal",
+      "Large Whale"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-recognized-by-its-distinctive-black-and-white-stripes",
+    "question": "Which animal is recognized by its distinctive black and white stripes?",
+    "options": [
+      "Tiger",
+      "Panda",
+      "Zebra",
+      "Badger"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-has-fingerprints-so-similar-to-humans-they-can-be-confused-at-a-crime-scene",
+    "question": "Which animal has fingerprints so similar to humans they can be confused at a crime scene?",
+    "options": [
+      "Chimpanzee",
+      "Gorilla",
+      "Koala",
+      "Raccoon"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-legs-do-most-insects-have",
+    "question": "How many legs do most insects have?",
+    "options": [
+      "Four",
+      "Six",
+      "Eight",
+      "Ten"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-slow-moving-animal-carries-its-shell-on-its-back",
+    "question": "Which slow-moving animal carries its shell on its back?",
+    "options": [
+      "Tortoise",
+      "Crab",
+      "Snail",
+      "Armadillo"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-big-cat-is-known-for-the-male-having-a-large-mane",
+    "question": "Which big cat is known for the male having a large mane?",
+    "options": [
+      "Leopard",
+      "Jaguar",
+      "Lion",
+      "Tiger"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-well-known-for-hibernating-during-winter",
+    "question": "Which animal is well-known for hibernating during winter?",
+    "options": [
+      "Deer",
+      "Rabbit",
+      "Squirrel",
+      "Bear"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-land-animal-is-known-for-having-the-longest-lifespan",
+    "question": "Which land animal is known for having the longest lifespan?",
+    "options": [
+      "African Elephant",
+      "Giant Tortoise",
+      "Rhinoceros",
+      "Hippopotamus"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-mammal-is-the-only-one-capable-of-true-sustained-flight",
+    "question": "Which mammal is the only one capable of true, sustained flight?",
+    "options": [
+      "Bat",
+      "Flying Squirrel",
+      "Sugar Glider",
+      "Colugo"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-the-following-animals-is-a-marsupial",
+    "question": "Which of the following animals is a marsupial?",
+    "options": [
+      "Bear",
+      "Rabbit",
+      "Kangaroo",
+      "Raccoon"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-well-known-for-building-dams-across-rivers-and-streams",
+    "question": "Which animal is well-known for building dams across rivers and streams?",
+    "options": [
+      "Beaver",
+      "Otter",
+      "Mink",
+      "Muskrat"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
   }
 ]

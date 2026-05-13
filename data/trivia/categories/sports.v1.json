@@ -5198,5 +5198,161 @@
     "correctAnswer": 3,
     "category": "Sports",
     "difficulty": "easy"
+  },
+  {
+    "slug": "which-country-won-the-very-first-fifa-world-cup-in-1930",
+    "question": "Which country won the very first FIFA World Cup in 1930?",
+    "options": [
+      "Brazil",
+      "Germany",
+      "Uruguay",
+      "Italy"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-official-length-of-a-marathon-race-in-miles",
+    "question": "What is the official length of a marathon race in miles?",
+    "options": [
+      "20 miles",
+      "26 miles",
+      "26.2 miles",
+      "28 miles"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-do-the-five-interlocking-rings-on-the-olympic-flag-symbolize",
+    "question": "What do the five interlocking rings on the Olympic flag symbolize?",
+    "options": [
+      "Five sports",
+      "Five continents",
+      "Five virtues",
+      "Five games"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-legendary-boxer-was-known-by-the-nickname-the-greatest",
+    "question": "Which legendary boxer was known by the nickname 'The Greatest'?",
+    "options": [
+      "Mike Tyson",
+      "Muhammad Ali",
+      "Joe Frazier",
+      "George Foreman"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-formula-1-driver-is-tied-with-michael-schumacher-for-the-most-world-championships-with-seven-titles",
+    "question": "Which Formula 1 driver is tied with Michael Schumacher for the most World Championships with seven titles?",
+    "options": [
+      "Sebastian Vettel",
+      "Lewis Hamilton",
+      "Ayrton Senna",
+      "Jim Clark"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-cricket-what-is-it-called-when-a-batsman-scores-100-runs-in-a-single-innings",
+    "question": "In cricket, what is it called when a batsman scores 100 runs in a single innings?",
+    "options": [
+      "Half-century",
+      "Century",
+      "Hat-trick",
+      "Wicket"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "besides-the-tour-de-france-and-giro-ditalia-what-is-the-third-grand-tour-in-professional-road-cycling",
+    "question": "Besides the Tour de France and Giro d'Italia, what is the third 'Grand Tour' in professional road cycling?",
+    "options": [
+      "Paris-Roubaix",
+      "Vuelta a España",
+      "Milan-San Remo",
+      "Liège-Bastogne-Liège"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "on-what-surface-is-the-wimbledon-tennis-tournament-traditionally-played",
+    "question": "On what surface is the Wimbledon tennis tournament traditionally played?",
+    "options": [
+      "Clay",
+      "Hard court",
+      "Grass",
+      "Carpet"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-of-golfs-four-major-championships-is-always-played-at-augusta-national-golf-club",
+    "question": "Which of golf's four major championships is always played at Augusta National Golf Club?",
+    "options": [
+      "The Open Championship",
+      "U.S. Open",
+      "PGA Championship",
+      "The Masters"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-winter-olympic-sport-involves-teams-sliding-down-an-ice-track-in-a-steerable-sled",
+    "question": "Which winter Olympic sport involves teams sliding down an ice track in a steerable sled?",
+    "options": [
+      "Luge",
+      "Skeleton",
+      "Bobsleigh",
+      "Curling"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-players-are-on-a-basketball-team-on-the-court-at-any-one-time-during-a-game",
+    "question": "How many players are on a basketball team on the court at any one time during a game?",
+    "options": [
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-of-these-sports-is-the-only-olympic-sport-where-male-and-female-competitors-compete-against-each-other-directly",
+    "question": "Which of these sports is the only Olympic sport where male and female competitors compete against each other directly?",
+    "options": [
+      "Archery",
+      "Equestrian",
+      "Sailing",
+      "Badminton"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
   }
 ]

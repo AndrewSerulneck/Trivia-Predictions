@@ -5198,5 +5198,174 @@
     "correctAnswer": 2,
     "category": "History",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-egyptian-pharaoh-is-famous-for-his-golden-burial-mask-and-was-discovered-largely-intact-by-howard-carter",
+    "question": "Which Egyptian pharaoh is famous for his golden burial mask and was discovered largely intact by Howard Carter?",
+    "options": [
+      "Tutankhamun",
+      "Akhenaten",
+      "Ramses II",
+      "Thutmose III"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-was-the-name-of-the-ancient-roman-amphitheatre-famous-for-gladiatorial-contests-completed-in-80-ad",
+    "question": "What was the name of the ancient Roman amphitheatre, famous for gladiatorial contests, completed in 80 AD?",
+    "options": [
+      "Pantheon",
+      "Circus Maximus",
+      "Colosseum",
+      "Roman Forum"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-famously-said-give-me-liberty-or-give-me-death-during-the-american-revolution",
+    "question": "Who famously said \"Give me liberty, or give me death!\" during the American Revolution?",
+    "options": [
+      "George Washington",
+      "Thomas Jefferson",
+      "Patrick Henry",
+      "Benjamin Franklin"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-event-on-december-7-1941-led-the-united-states-to-formally-enter-world-war-ii",
+    "question": "What event on December 7, 1941, led the United States to formally enter World War II?",
+    "options": [
+      "Battle of Midway",
+      "D-Day invasion",
+      "Attack on Pearl Harbor",
+      "Battle of the Bulge"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-renowned-persian-scholar-often-called-the-father-of-early-modern-medicine-authored-the-canon-of-medicine",
+    "question": "Which renowned Persian scholar, often called the \"father of early modern medicine,\" authored \"The Canon of Medicine\"?",
+    "options": [
+      "Al-Biruni",
+      "Ibn Sina (Avicenna)",
+      "Al-Khwarizmi",
+      "Omar Khayyam"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-storming-of-which-prison-on-july-14-1789-is-considered-a-symbolic-start-of-the-french-revolution",
+    "question": "The storming of which prison on July 14, 1789, is considered a symbolic start of the French Revolution?",
+    "options": [
+      "The Conciergerie",
+      "Château d'If",
+      "Bastille",
+      "Vincennes"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-greek-philosopher-was-the-teacher-of-alexander-the-great-and-founded-the-lyceum",
+    "question": "Which Greek philosopher was the teacher of Alexander the Great and founded the Lyceum?",
+    "options": [
+      "Plato",
+      "Socrates",
+      "Aristotle",
+      "Pythagoras"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-was-the-name-of-the-us-led-policy-aimed-at-preventing-the-spread-of-communism-during-the-cold-war",
+    "question": "What was the name of the US-led policy aimed at preventing the spread of communism during the Cold War?",
+    "options": [
+      "Marshall Plan",
+      "Truman Doctrine",
+      "Eisenhower Doctrine",
+      "Domino Theory"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-invention-by-james-watt-greatly-improved-the-efficiency-of-steam-engines-powering-the-industrial-revolution",
+    "question": "What invention by James Watt greatly improved the efficiency of steam engines, powering the Industrial Revolution?",
+    "options": [
+      "Spinning Jenny",
+      "Cotton Gin",
+      "Power Loom",
+      "Condensing Steam Engine"
+    ],
+    "correctAnswer": 3,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-city-of-machu-picchu-a-significant-archaeological-site-was-built-by-which-pre-columbian-civilization",
+    "question": "The city of Machu Picchu, a significant archaeological site, was built by which pre-Columbian civilization?",
+    "options": [
+      "Aztec",
+      "Maya",
+      "Inca",
+      "Olmec"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-year-did-martin-luther-post-his-95-theses-widely-regarded-as-the-start-of-the-protestant-reformation",
+    "question": "What year did Martin Luther post his 95 Theses, widely regarded as the start of the Protestant Reformation?",
+    "options": [
+      "1492",
+      "1517",
+      "1534",
+      "1555"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-portuguese-explorer-was-the-first-to-circumnavigate-the-earth-though-he-died-during-the-voyage",
+    "question": "Which Portuguese explorer was the first to circumnavigate the Earth, though he died during the voyage?",
+    "options": [
+      "Christopher Columbus",
+      "Ferdinand Magellan",
+      "Bartolomeu Dias",
+      "Amerigo Vespucci"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-was-the-primary-form-of-combat-on-the-western-front-during-much-of-world-war-i",
+    "question": "What was the primary form of combat on the Western Front during much of World War I?",
+    "options": [
+      "Guerrilla warfare",
+      "Naval battles",
+      "Air raids",
+      "Trench warfare"
+    ],
+    "correctAnswer": 3,
+    "category": "History",
+    "difficulty": "easy"
   }
 ]

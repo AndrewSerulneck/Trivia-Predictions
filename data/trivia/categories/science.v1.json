@@ -5198,5 +5198,161 @@
     "correctAnswer": 2,
     "category": "Science",
     "difficulty": "easy"
+  },
+  {
+    "slug": "through-which-state-of-matter-does-sound-travel-fastest",
+    "question": "Through which state of matter does sound travel fastest?",
+    "options": [
+      "Solid",
+      "Liquid",
+      "Gas",
+      "Vacuum"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-unit-measures-electrical-resistance",
+    "question": "What unit measures electrical resistance?",
+    "options": [
+      "Ampere",
+      "Volt",
+      "Ohm",
+      "Watt"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-hardest-known-natural-mineral",
+    "question": "What is the hardest known natural mineral?",
+    "options": [
+      "Quartz",
+      "Corundum",
+      "Talc",
+      "Diamond"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-is-known-as-the-father-of-genetics-for-his-work-with-pea-plants",
+    "question": "Who is known as the \"father of genetics\" for his work with pea plants?",
+    "options": [
+      "Charles Darwin",
+      "Gregor Mendel",
+      "Louis Pasteur",
+      "Albert Einstein"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "a-substance-with-a-ph-of-7-is-considered-what",
+    "question": "A substance with a pH of 7 is considered what?",
+    "options": [
+      "Acidic",
+      "Basic",
+      "Neutral",
+      "Alkaline"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-phenomenon-causes-a-rainbow-to-appear",
+    "question": "What phenomenon causes a rainbow to appear?",
+    "options": [
+      "Reflection",
+      "Refraction",
+      "Diffraction",
+      "Absorption"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-fundamental-force-is-responsible-for-radioactive-decay",
+    "question": "Which fundamental force is responsible for radioactive decay?",
+    "options": [
+      "Strong nuclear force",
+      "Weak nuclear force",
+      "Electromagnetic force",
+      "Gravitational force"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "approximately-how-fast-does-light-travel-in-a-vacuum",
+    "question": "Approximately how fast does light travel in a vacuum?",
+    "options": [
+      "300,000 km/s",
+      "30,000 km/s",
+      "3,000 km/s",
+      "300 km/s"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-process-called-when-a-solid-turns-directly-into-a-gas-without-passing-through-a-liquid-phase",
+    "question": "What is the process called when a solid turns directly into a gas without passing through a liquid phase?",
+    "options": [
+      "Sublimation",
+      "Evaporation",
+      "Condensation",
+      "Melting"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-planet-is-known-for-its-prominent-ring-system",
+    "question": "Which planet is known for its prominent ring system?",
+    "options": [
+      "Saturn",
+      "Jupiter",
+      "Uranus",
+      "Neptune"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-elementary-particle-is-responsible-for-mediating-the-strong-nuclear-force",
+    "question": "Which elementary particle is responsible for mediating the strong nuclear force?",
+    "options": [
+      "Gluon",
+      "Photon",
+      "Electron",
+      "Neutrino"
+    ],
+    "correctAnswer": 0,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-part-of-the-human-eye-is-responsible-for-detecting-color",
+    "question": "Which part of the human eye is responsible for detecting color?",
+    "options": [
+      "Cornea",
+      "Pupil",
+      "Retina",
+      "Optic Nerve"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
   }
 ]

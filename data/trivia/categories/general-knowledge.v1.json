@@ -5185,5 +5185,161 @@
     "correctAnswer": 2,
     "category": "General Knowledge",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-highest-mountain-in-the-world",
+    "question": "What is the highest mountain in the world?",
+    "options": [
+      "K2",
+      "Mount Everest",
+      "Kangchenjunga",
+      "Lhotse"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-of-these-metals-is-liquid-at-room-temperature",
+    "question": "Which of these metals is liquid at room temperature?",
+    "options": [
+      "Iron",
+      "Copper",
+      "Mercury",
+      "Aluminum"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-is-the-only-one-to-have-a-coastline-on-both-the-atlantic-and-indian-oceans",
+    "question": "Which country is the only one to have a coastline on both the Atlantic and Indian Oceans?",
+    "options": [
+      "Egypt",
+      "South Africa",
+      "Australia",
+      "India"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-the-following-is-the-largest-organ-in-the-human-body",
+    "question": "Which of the following is the largest organ in the human body?",
+    "options": [
+      "Heart",
+      "Brain",
+      "Skin",
+      "Liver"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-wrote-the-dystopian-novel-nineteen-eighty-four",
+    "question": "Who wrote the dystopian novel 'Nineteen Eighty-Four'?",
+    "options": [
+      "Aldous Huxley",
+      "George Orwell",
+      "Ray Bradbury",
+      "H.G. Wells"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-supermans-alter-ego-name",
+    "question": "What is Superman's alter-ego name?",
+    "options": [
+      "Bruce Wayne",
+      "Peter Parker",
+      "Clark Kent",
+      "Tony Stark"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "from-which-country-did-pizza-originate",
+    "question": "From which country did pizza originate?",
+    "options": [
+      "France",
+      "Italy",
+      "Greece",
+      "Spain"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-mythological-creature-is-said-to-turn-people-to-stone-with-its-gaze",
+    "question": "Which mythological creature is said to turn people to stone with its gaze?",
+    "options": [
+      "Minotaur",
+      "Griffin",
+      "Medusa",
+      "Cerberus"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-european-city-is-famously-known-as-the-city-of-love",
+    "question": "Which European city is famously known as the 'City of Love'?",
+    "options": [
+      "Paris",
+      "Rome",
+      "Venice",
+      "Prague"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-wrote-the-classic-american-novel-moby-dick",
+    "question": "Who wrote the classic American novel \"Moby Dick\"?",
+    "options": [
+      "Mark Twain",
+      "Herman Melville",
+      "Ernest Hemingway",
+      "F. Scott Fitzgerald"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-musical-instrument-is-considered-a-member-of-the-percussion-family-despite-having-keys-and-strings",
+    "question": "Which musical instrument is considered a member of the percussion family, despite having keys and strings?",
+    "options": [
+      "Violin",
+      "Clarinet",
+      "Piano",
+      "Guitar"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-gas-is-most-abundant-in-earths-atmosphere",
+    "question": "Which gas is most abundant in Earth's atmosphere?",
+    "options": [
+      "Oxygen",
+      "Carbon Dioxide",
+      "Nitrogen",
+      "Argon"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
   }
 ]

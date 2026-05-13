@@ -5198,5 +5198,174 @@
     "correctAnswer": 1,
     "category": "Geography",
     "difficulty": "easy"
+  },
+  {
+    "slug": "the-andes-mountains-are-primarily-located-on-which-continent",
+    "question": "The Andes Mountains are primarily located on which continent?",
+    "options": [
+      "North America",
+      "South America",
+      "Europe",
+      "Asia"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mount-everest-the-worlds-highest-peak-is-located-on-which-continent",
+    "question": "Mount Everest, the world's highest peak, is located on which continent?",
+    "options": [
+      "Europe",
+      "Asia",
+      "Africa",
+      "South America"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-largest-island-country-in-the-world-by-land-area",
+    "question": "What is the largest island country in the world by land area?",
+    "options": [
+      "Japan",
+      "Madagascar",
+      "Indonesia",
+      "United Kingdom"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-strait-of-gibraltar-connects-the-atlantic-ocean-to-which-sea",
+    "question": "The Strait of Gibraltar connects the Atlantic Ocean to which sea?",
+    "options": [
+      "North Sea",
+      "Baltic Sea",
+      "Mediterranean Sea",
+      "Red Sea"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-term-for-a-narrow-strip-of-land-connecting-two-larger-land-areas-with-water-on-either-side",
+    "question": "What is the term for a narrow strip of land connecting two larger land areas, with water on either side?",
+    "options": [
+      "Isthmus",
+      "Archipelago",
+      "Peninsula",
+      "Fjord"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "lake-baikal-the-worlds-deepest-freshwater-lake-is-located-in-which-country",
+    "question": "Lake Baikal, the world's deepest freshwater lake, is located in which country?",
+    "options": [
+      "Canada",
+      "Russia",
+      "United States",
+      "China"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-is-a-landlocked-country-in-europe",
+    "question": "Which of these is a landlocked country in Europe?",
+    "options": [
+      "Portugal",
+      "Greece",
+      "Switzerland",
+      "Belgium"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-mariana-trench-the-deepest-known-part-of-the-earths-oceans-is-located-in-which-ocean",
+    "question": "The Mariana Trench, the deepest known part of the Earth's oceans, is located in which ocean?",
+    "options": [
+      "Atlantic Ocean",
+      "Indian Ocean",
+      "Pacific Ocean",
+      "Arctic Ocean"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "lake-superior-part-of-the-great-lakes-borders-which-two-countries",
+    "question": "Lake Superior, part of the Great Lakes, borders which two countries?",
+    "options": [
+      "Canada and Mexico",
+      "United States and Mexico",
+      "Canada and United States",
+      "United States and Russia"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-continent-is-home-to-the-amazon-river-the-largest-river-by-discharge-volume",
+    "question": "Which continent is home to the Amazon River, the largest river by discharge volume?",
+    "options": [
+      "Africa",
+      "Asia",
+      "South America",
+      "North America"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-sea-is-almost-entirely-surrounded-by-europe-asia-and-africa",
+    "question": "Which sea is almost entirely surrounded by Europe, Asia, and Africa?",
+    "options": [
+      "Caribbean Sea",
+      "Mediterranean Sea",
+      "Red Sea",
+      "Black Sea"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-has-the-most-time-zones-including-its-overseas-territories",
+    "question": "Which country has the most time zones, including its overseas territories?",
+    "options": [
+      "Russia",
+      "United States",
+      "China",
+      "France"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-is-often-referred-to-as-the-land-of-the-rising-sun",
+    "question": "Which country is often referred to as the 'Land of the Rising Sun'?",
+    "options": [
+      "China",
+      "Japan",
+      "South Korea",
+      "Vietnam"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "easy"
   }
 ]

@@ -5198,5 +5198,161 @@
     "correctAnswer": 2,
     "category": "Pop Culture",
     "difficulty": "easy"
+  },
+  {
+    "slug": "which-actor-portrays-iron-man-in-the-marvel-cinematic-universe",
+    "question": "Which actor portrays Iron Man in the Marvel Cinematic Universe?",
+    "options": [
+      "Robert Downey Jr.",
+      "Chris Evans",
+      "Mark Ruffalo",
+      "Chris Hemsworth"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-coffee-shop-where-the-main-characters-often-hang-out-in-friends",
+    "question": "What is the name of the coffee shop where the main characters often hang out in 'Friends'?",
+    "options": [
+      "Central Perk",
+      "The Daily Grind",
+      "The Coffee Bean",
+      "Perk Place"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-artist-had-a-massive-hit-in-2023-with-the-song-flowers",
+    "question": "Which artist had a massive hit in 2023 with the song \"Flowers\"?",
+    "options": [
+      "Dua Lipa",
+      "Miley Cyrus",
+      "Olivia Rodrigo",
+      "Taylor Swift"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-the-harry-potter-series-what-is-the-name-of-voldemorts-snake",
+    "question": "In the 'Harry Potter' series, what is the name of Voldemort's snake?",
+    "options": [
+      "Nagini",
+      "Aragog",
+      "Hedwig",
+      "Fawkes"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-acclaimed-series-follows-the-roy-family-and-their-media-conglomerate-waystar-royco",
+    "question": "Which acclaimed series follows the Roy family and their media conglomerate Waystar RoyCo?",
+    "options": [
+      "Succession",
+      "Yellowstone",
+      "Billions",
+      "The Crown"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-artists-debut-album-was-titled-baduizm",
+    "question": "Which artist's debut album was titled 'Baduizm'?",
+    "options": [
+      "Lauryn Hill",
+      "Erykah Badu",
+      "Jill Scott",
+      "Alicia Keys"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-protagonist-in-the-halo-video-game-series",
+    "question": "What is the name of the protagonist in the 'Halo' video game series?",
+    "options": [
+      "Master Chief",
+      "Commander Shepard",
+      "Kratos",
+      "Solid Snake"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-year-was-facebook-originally-thefacebook-launched",
+    "question": "What year was Facebook (originally TheFacebook) launched?",
+    "options": [
+      "2002",
+      "2004",
+      "2006",
+      "2008"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-directed-the-critically-acclaimed-1994-film-pulp-fiction",
+    "question": "Who directed the critically acclaimed 1994 film 'Pulp Fiction'?",
+    "options": [
+      "Martin Scorsese",
+      "Steven Spielberg",
+      "Quentin Tarantino",
+      "Christopher Nolan"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-family-guy-what-is-the-name-of-the-talking-baby-who-often-tries-to-kill-his-mother",
+    "question": "In 'Family Guy,' what is the name of the talking baby who often tries to kill his mother?",
+    "options": [
+      "Chris",
+      "Brian",
+      "Stewie",
+      "Peter"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-artist-broke-the-record-for-most-grammy-awards-won-by-any-artist-in-2023",
+    "question": "Which artist broke the record for most Grammy Awards won by any artist in 2023?",
+    "options": [
+      "Beyoncé",
+      "Adele",
+      "Harry Styles",
+      "Taylor Swift"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-iconic-phrase-spoken-by-arnold-schwarzeneggers-character-in-terminator-2-judgment-day",
+    "question": "What is the iconic phrase spoken by Arnold Schwarzenegger's character in 'Terminator 2: Judgment Day'?",
+    "options": [
+      "\"May the Force be with you.\"",
+      "\"Here's looking at you, kid.\"",
+      "\"I'll be back.\"",
+      "\"Go ahead, make my day.\""
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
   }
 ]

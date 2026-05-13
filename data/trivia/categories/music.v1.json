@@ -5198,5 +5198,161 @@
     "correctAnswer": 0,
     "category": "Music",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-instrument-is-famously-played-by-yo-yo-ma",
+    "question": "What instrument is famously played by Yo-Yo Ma?",
+    "options": [
+      "Violin",
+      "Cello",
+      "Viola",
+      "Double Bass"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-pop-superstar-is-widely-known-as-the-king-of-pop",
+    "question": "Which pop superstar is widely known as the 'King of Pop'?",
+    "options": [
+      "Prince",
+      "Michael Jackson",
+      "Elvis Presley",
+      "Stevie Wonder"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-keyboard-instrument-features-both-black-and-white-keys-and-is-commonly-used-in-classical-music",
+    "question": "Which keyboard instrument features both black and white keys and is commonly used in classical music?",
+    "options": [
+      "Guitar",
+      "Drums",
+      "Piano",
+      "Trumpet"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-grunge-band-released-the-seminal-album-nevermind-in-1991",
+    "question": "Which grunge band released the seminal album 'Nevermind' in 1991?",
+    "options": [
+      "Pearl Jam",
+      "Soundgarden",
+      "Alice in Chains",
+      "Nirvana"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-highest-traditional-female-vocal-range",
+    "question": "What is the highest traditional female vocal range?",
+    "options": [
+      "Alto",
+      "Mezzo-Soprano",
+      "Soprano",
+      "Contralto"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-legendary-saxophonist-was-a-key-figure-in-the-development-of-bebop-jazz",
+    "question": "Which legendary saxophonist was a key figure in the development of bebop jazz?",
+    "options": [
+      "John Coltrane",
+      "Miles Davis",
+      "Charlie Parker",
+      "Thelonious Monk"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-musical-term-for-a-composition-usually-for-a-solo-instrument-often-accompanied-by-an-orchestra",
+    "question": "What is the musical term for a composition usually for a solo instrument, often accompanied by an orchestra?",
+    "options": [
+      "Symphony",
+      "Sonata",
+      "Concerto",
+      "Fugue"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-american-city-is-widely-recognized-as-the-birthplace-of-the-grunge-music-movement",
+    "question": "Which American city is widely recognized as the birthplace of the grunge music movement?",
+    "options": [
+      "Portland",
+      "Los Angeles",
+      "Seattle",
+      "New York City"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-originally-wrote-the-iconic-song-hallelujah",
+    "question": "Who originally wrote the iconic song 'Hallelujah'?",
+    "options": [
+      "Bob Dylan",
+      "Leonard Cohen",
+      "Joni Mitchell",
+      "Paul Simon"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-music-genre-originating-in-the-late-19th-and-early-20th-centuries-is-characterized-by-improvisation-and-syncopated-rhythms",
+    "question": "Which music genre, originating in the late 19th and early 20th centuries, is characterized by improvisation and syncopated rhythms?",
+    "options": [
+      "Blues",
+      "Rock and Roll",
+      "Country",
+      "Jazz"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-music-theory-what-is-the-interval-between-a-note-and-another-note-seven-half-steps-above-it",
+    "question": "In music theory, what is the interval between a note and another note seven half-steps above it?",
+    "options": [
+      "Major third",
+      "Perfect fourth",
+      "Perfect fifth",
+      "Minor seventh"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-iconic-british-band-released-the-album-sgt-peppers-lonely-hearts-club-band",
+    "question": "Which iconic British band released the album 'Sgt. Pepper's Lonely Hearts Club Band'?",
+    "options": [
+      "The Rolling Stones",
+      "Led Zeppelin",
+      "The Beatles",
+      "Queen"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
   }
 ]
