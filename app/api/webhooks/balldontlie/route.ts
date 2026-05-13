@@ -227,7 +227,7 @@ async function resolveBingoSquares(event: BdlNbaPlayerEvent): Promise<{ hit: num
   }
 
   const resolvedAt = now;
-  const updates: Promise<unknown>[] = [];
+  const updates: PromiseLike<unknown>[] = [];
 
   if (hitIds.length > 0) {
     updates.push(
