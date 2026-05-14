@@ -51,6 +51,7 @@ export async function POST(request: Request) {
   const root = body as Record<string, unknown>;
   const eventType = String(root?.type ?? root?.event ?? root?.event_type ?? "");
   const result: Record<string, unknown> = { ok: true, eventType };
+  const normalizedEventType = eventType.trim().toLowerCase();
 
   // BDL uses both "nba.player.*" and "nba.player_stat.*" — match the "nba.player" prefix
   // without the trailing dot so both variants are caught.
@@ -65,6 +66,26 @@ export async function POST(request: Request) {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
       console.error("[bdl-webhook] handleNbaPlayerEvent failed:", msg);
+      return NextResponse.json({ error: msg, eventType }, { status: 500 });
+    }
+  }
+  const isMlbLiveStatEvent =
+    normalizedEventType.startsWith("batter.") ||
+    normalizedEventType === "team.scored" ||
+    normalizedEventType.startsWith("mlb.player");
+  if (isMlbLiveStatEvent) {
+    try {
+      const gameId = extractGameIdFromWebhook(root);
+      const bingoResult = await refreshSportsBingoProgress({
+        sportKey: "baseball_mlb",
+        gameId: gameId || undefined,
+        limit: 500,
+        bypassCache: true,
+      });
+      result.mlbPlayerEvent = { gameId, bingo: bingoResult };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      console.error("[bdl-webhook] mlb player event refresh failed:", msg);
       return NextResponse.json({ error: msg, eventType }, { status: 500 });
     }
   }
@@ -85,7 +106,8 @@ export async function POST(request: Request) {
   const isGameFinalEventType =
     eventType.endsWith(".game.end") ||
     eventType.endsWith(".game.final") ||
-    eventType.endsWith(".game.complete");
+    eventType.endsWith(".game.complete") ||
+    normalizedEventType === "game.ended";
 
   const isGameFinal =
     isGameFinalEventType ||
@@ -101,7 +123,7 @@ export async function POST(request: Request) {
     const [pickEmResult, fantasyResult, bingoResult] = await Promise.allSettled([
       settlePendingPickEmPicks(),
       refreshFantasyProgress({ limit: 500 }),
-      refreshSportsBingoProgress({ limit: 500 }),
+      refreshSportsBingoProgress({ limit: 500, bypassCache: true }),
     ]);
 
     if (pickEmResult.status === "rejected") {
@@ -168,7 +190,29 @@ async function handleNbaPlayerEvent(
   }
 
   const { hit, miss } = await resolveBingoSquares(event);
+  await refreshSportsBingoProgress({
+    sportKey: "basketball_nba",
+    gameId: event.gameId,
+    limit: 500,
+    bypassCache: true,
+  });
   return { statsUpserted: true, hit, miss };
+}
+
+function extractGameIdFromWebhook(root: Record<string, unknown>): string {
+  const data = (root?.data as Record<string, unknown> | undefined) ?? root;
+  const fromNested = String(
+    ((data?.game as Record<string, unknown> | undefined)?.id ??
+      (root?.game as Record<string, unknown> | undefined)?.id ??
+      (data?.event as Record<string, unknown> | undefined)?.game_id ??
+      (data?.play as Record<string, unknown> | undefined)?.game_id ??
+      (root?.event as Record<string, unknown> | undefined)?.game_id ??
+      (root?.play as Record<string, unknown> | undefined)?.game_id ??
+      data?.game_id ??
+      root?.game_id ??
+      "")
+  ).trim();
+  return fromNested;
 }
 
 function isGameCompleted(gameStatus: string): boolean {

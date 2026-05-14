@@ -289,7 +289,8 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
           custom.detail?.source !== "trivia" &&
           custom.detail?.source !== "notifications" &&
           custom.detail?.source !== "bingo-claim" &&
-          custom.detail?.source !== "fantasy-claim"
+          custom.detail?.source !== "fantasy-claim" &&
+          custom.detail?.source !== "pickem-claim"
         ) {
           window.dispatchEvent(
             new CustomEvent("tp:coin-flight", {

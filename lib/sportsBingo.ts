@@ -77,6 +77,14 @@ const NBA_SETTLABLE_PLAYER_PROP_MARKETS = new Set([
   "player_points_rebounds_assists",
 ]);
 
+const MLB_SETTLABLE_PLAYER_PROP_MARKETS = new Set([
+  "player_hits",
+  "player_home_runs",
+  "player_rbis",
+  "player_runs",
+  "player_strikeouts_pitcher",
+]);
+
 const SUPPORT_LEVEL_LABEL: Record<SquareSupportLevel, string> = {
   supported: "SUPPORTED",
   possible: "POSSIBLE",
@@ -401,6 +409,29 @@ type NBAGamePlayerStatsSnapshot = {
   maxQuarterAssistsByPlayerId: Map<number, number>;
 };
 
+type MLBPlayerStatLine = {
+  playerId: number | null;
+  playerName: string;
+  teamSide: TeamSide | null;
+  hits: number;
+  homeRuns: number;
+  rbis: number;
+  runs: number;
+  stolenBases: number;
+  strikeoutsPitcher: number;
+  earnedRuns: number;
+  pitcherOuts: number;
+};
+
+type MLBGamePlayerStatsSnapshot = {
+  gameId: number;
+  finalized: boolean;
+  homeScore: number | null;
+  awayScore: number | null;
+  lines: MLBPlayerStatLine[];
+  byPlayerKey: Map<string, MLBPlayerStatLine[]>;
+};
+
 type GameCatalogEntry = {
   game: SportsBingoGame;
   candidates: SportsBingoSquareTemplate[];
@@ -478,6 +509,7 @@ const LINE_PATTERNS: number[][] = [
 let gameCatalogCache = new Map<string, CatalogCacheEntry>();
 let scoreCache = new Map<string, { expiresAt: number; byGameId: Map<string, ScoreSnapshot> }>();
 let nbaPlayerStatsCache = new Map<string, { expiresAt: number; snapshot: NBAGamePlayerStatsSnapshot | null }>();
+let mlbPlayerStatsCache = new Map<string, { expiresAt: number; snapshot: MLBGamePlayerStatsSnapshot | null }>();
 let nbaPlayerProfilesCache = new Map<string, { expiresAt: number; profiles: NBAPlayerProfile[] }>();
 
 function assertSupabaseConfigured(): void {
@@ -598,6 +630,63 @@ function teamsMatch(left: string, right: string): boolean {
 
 function toIsoDate(value: string): string {
   return new Date(value).toISOString().slice(0, 10);
+}
+
+function normalizeBallDontLieGameStartIso(rawValue: string): string | null {
+  const raw = String(rawValue ?? "").trim();
+  if (!raw) {
+    return null;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const ts = Date.parse(`${raw}T12:00:00.000Z`);
+    return Number.isFinite(ts) ? new Date(ts).toISOString() : null;
+  }
+  const ts = Date.parse(raw);
+  return Number.isFinite(ts) ? new Date(ts).toISOString() : null;
+}
+
+function extractEventStartIso(event: Record<string, unknown>): string | null {
+  const rawCandidates = [
+    event.starts_at,
+    event.datetime,
+    event.date,
+    event.game_date,
+    event.commence_time,
+    event.start_time,
+    event.start_time_utc,
+    event.main_card_start_time,
+    event.scheduled_at,
+  ];
+  for (const candidate of rawCandidates) {
+    const normalized = normalizeBallDontLieGameStartIso(String(candidate ?? "").trim());
+    if (normalized) {
+      return normalized;
+    }
+  }
+  return null;
+}
+
+function extractTeamName(event: Record<string, unknown>, side: "home" | "away"): string {
+  const sideKey = side === "home" ? "home" : "away";
+  const directTeam = side === "home" ? event.home_team : event.visitor_team ?? event.away_team;
+  const dataTeam = side === "home" ? event.home_team_data : event.away_team_data;
+  const namedTeam = event[`${sideKey}_team_name`];
+
+  const candidates: unknown[] = [directTeam, dataTeam, namedTeam];
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    if (typeof candidate === "string") {
+      const value = candidate.trim();
+      if (value) return value;
+      continue;
+    }
+    const record = asRecord(candidate);
+    const value = String(record.full_name ?? record.name ?? "").trim();
+    if (value) return value;
+    const city = String(record.city ?? "").trim();
+    if (city) return city;
+  }
+  return "";
 }
 
 function parseScoreValue(value: unknown): number | null {
@@ -920,15 +1009,18 @@ function buildSquareLabel(game: SportsBingoGame, resolver: SportsBingoResolver):
 }
 
 async function fetchBallDontLieJson(path: string, query: URLSearchParams): Promise<unknown> {
-  if (!isBallDontLieConfigured()) {
+  const isTestEnv = process.env.NODE_ENV === "test";
+  if (!isBallDontLieConfigured() && !isTestEnv) {
     throw new Error("BALLDONTLIE_API_KEY is not configured.");
   }
 
   const response = await fetch(`${BALLDONTLIE_API_BASE_URL}${path}?${query.toString()}`, {
     method: "GET",
-    headers: {
-      Authorization: BALLDONTLIE_API_KEY,
-    },
+    headers: BALLDONTLIE_API_KEY
+      ? {
+          Authorization: BALLDONTLIE_API_KEY,
+        }
+      : undefined,
     next: { revalidate: 15 },
   });
 
@@ -1291,8 +1383,165 @@ async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
   }
 }
 
+function parseMlbPitcherOutsFromIp(value: unknown): number {
+  const raw = String(value ?? "").trim();
+  if (!raw) {
+    return 0;
+  }
+  const parsed = Number.parseFloat(raw);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return 0;
+  }
+  const whole = Math.floor(parsed);
+  const fractionalDigit = Math.round((parsed - whole) * 10);
+  if (fractionalDigit <= 0) {
+    return whole * 3;
+  }
+  if (fractionalDigit === 1 || fractionalDigit === 2) {
+    return whole * 3 + fractionalDigit;
+  }
+  return whole * 3;
+}
+
+function buildMLBGamePlayerStatsSnapshot(
+  card: SportsBingoCardRow,
+  game: BallDontLieGame,
+  stats: Array<Record<string, unknown>>
+): MLBGamePlayerStatsSnapshot {
+  const lines: MLBPlayerStatLine[] = [];
+  const byPlayerKey = new Map<string, MLBPlayerStatLine[]>();
+
+  for (const row of stats) {
+    const playerObj = asRecord(row.player);
+    const firstName = String(playerObj.first_name ?? "").trim();
+    const lastName = String(playerObj.last_name ?? "").trim();
+    const playerName = `${firstName} ${lastName}`.trim() || String(playerObj.name ?? "").trim();
+    if (!playerName) {
+      continue;
+    }
+
+    const teamObj = asRecord(row.team);
+    const teamSide = inferCardTeamSide(card, getTeamDisplayName(teamObj as unknown as BallDontLieTeam));
+    const pitcherOutsDirect = parseStatNumber(
+      row.pitcher_outs ?? row.p_outs ?? row.outs_recorded ?? row.pitching_outs
+    );
+    const statLine: MLBPlayerStatLine = {
+      playerId: Number.parseInt(String(playerObj.id ?? ""), 10) || null,
+      playerName,
+      teamSide,
+      hits: parseStatNumber(row.hits ?? row.h),
+      homeRuns: parseStatNumber(row.home_runs ?? row.hr),
+      rbis: parseStatNumber(row.runs_batted_in ?? row.rbi),
+      runs: parseStatNumber(row.runs ?? row.r),
+      stolenBases: parseStatNumber(row.stolen_bases ?? row.sb),
+      strikeoutsPitcher: parseStatNumber(row.pitcher_strikeouts ?? row.p_strikeouts ?? row.so_pitcher ?? row.strikeouts),
+      earnedRuns: parseStatNumber(row.earned_runs ?? row.er),
+      pitcherOuts: pitcherOutsDirect > 0 ? pitcherOutsDirect : parseMlbPitcherOutsFromIp(row.ip),
+    };
+
+    lines.push(statLine);
+    const key = normalizeNameKey(playerName);
+    if (!key) {
+      continue;
+    }
+    const existing = byPlayerKey.get(key) ?? [];
+    existing.push(statLine);
+    byPlayerKey.set(key, existing);
+  }
+
+  return {
+    gameId: Number(game.id ?? 0),
+    finalized: isBallDontLieGameFinal(String(game.status ?? "")),
+    homeScore: parseScoreValue(game.home_team_score),
+    awayScore: parseScoreValue(game.visitor_team_score),
+    lines,
+    byPlayerKey,
+  };
+}
+
+async function getMLBGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<MLBGamePlayerStatsSnapshot | null> {
+  if (card.sport_key !== "baseball_mlb") {
+    return null;
+  }
+
+  const now = Date.now();
+  const cached = mlbPlayerStatsCache.get(card.game_id);
+  if (cached && now < cached.expiresAt) {
+    return cached.snapshot;
+  }
+
+  try {
+    if (!isBallDontLieConfigured()) {
+      mlbPlayerStatsCache.set(card.game_id, {
+        snapshot: null,
+        expiresAt: now + NBA_PLAYER_STATS_CACHE_MS,
+      });
+      return null;
+    }
+
+    const startsAt = +new Date(card.starts_at);
+    const lookbackMs = BALLDONTLIE_GAME_LOOKUP_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+    const startDate = toIsoDate(new Date(startsAt - lookbackMs).toISOString());
+    const endDate = toIsoDate(new Date(startsAt + lookbackMs).toISOString());
+
+    const gameQuery = new URLSearchParams({
+      per_page: "100",
+      start_date: startDate,
+      end_date: endDate,
+    });
+    const games = await fetchBallDontLieList<BallDontLieGame>("/mlb/v1/games", gameQuery);
+    const matchedGame = pickBestMatchingBallDontLieGame(card, games);
+    if (!matchedGame || typeof matchedGame.id !== "number") {
+      mlbPlayerStatsCache.set(card.game_id, {
+        snapshot: null,
+        expiresAt: now + NBA_PLAYER_STATS_CACHE_MS,
+      });
+      return null;
+    }
+
+    const statsQuery = new URLSearchParams({
+      per_page: "100",
+    });
+    statsQuery.append("game_ids[]", String(matchedGame.id));
+    const stats = await fetchBallDontLieList<Record<string, unknown>>("/mlb/v1/stats", statsQuery);
+
+    const snapshot = buildMLBGamePlayerStatsSnapshot(card, matchedGame, stats);
+    mlbPlayerStatsCache.set(card.game_id, {
+      snapshot,
+      expiresAt: now + NBA_PLAYER_STATS_CACHE_MS,
+    });
+    return snapshot;
+  } catch {
+    mlbPlayerStatsCache.set(card.game_id, {
+      snapshot: null,
+      expiresAt: now + NBA_PLAYER_STATS_CACHE_MS,
+    });
+    return null;
+  }
+}
+
 function toNBALiveScoreSnapshot(card: SportsBingoCardRow, snapshot: NBAGamePlayerStatsSnapshot | null): ScoreSnapshot | null {
   if (card.sport_key !== "basketball_nba" || !snapshot) {
+    return null;
+  }
+
+  if (snapshot.homeScore === null || snapshot.awayScore === null) {
+    return null;
+  }
+
+  return {
+    gameId: card.game_id,
+    sportKey: card.sport_key,
+    homeTeam: card.home_team,
+    awayTeam: card.away_team,
+    homeScore: snapshot.homeScore,
+    awayScore: snapshot.awayScore,
+    completed: snapshot.finalized,
+  };
+}
+
+function toMLBLiveScoreSnapshot(card: SportsBingoCardRow, snapshot: MLBGamePlayerStatsSnapshot | null): ScoreSnapshot | null {
+  if (card.sport_key !== "baseball_mlb" || !snapshot) {
     return null;
   }
 
@@ -1393,6 +1642,56 @@ function findNBAPlayerStatLine(snapshot: NBAGamePlayerStatsSnapshot, playerName:
   return pickLikeliestPlayerStatLine(candidates);
 }
 
+function pickLikeliestMLBPlayerStatLine(lines: MLBPlayerStatLine[]): MLBPlayerStatLine | null {
+  if (lines.length === 0) {
+    return null;
+  }
+  return lines.reduce((best, current) => {
+    const bestVolume = best.hits + best.runs + best.rbis + best.homeRuns + best.stolenBases + best.strikeoutsPitcher;
+    const currentVolume =
+      current.hits + current.runs + current.rbis + current.homeRuns + current.stolenBases + current.strikeoutsPitcher;
+    return currentVolume > bestVolume ? current : best;
+  });
+}
+
+function findMLBPlayerStatLine(snapshot: MLBGamePlayerStatsSnapshot, playerName: string): MLBPlayerStatLine | null {
+  const ref = parseResolverPlayerRef(playerName);
+  if (ref.playerId) {
+    const byId = snapshot.lines.filter((line) => line.playerId === ref.playerId);
+    if (byId.length > 0) {
+      return pickLikeliestMLBPlayerStatLine(byId);
+    }
+  }
+
+  const exact = snapshot.byPlayerKey.get(normalizeNameKey(ref.displayName || playerName));
+  if (exact && exact.length > 0) {
+    return pickLikeliestMLBPlayerStatLine(exact);
+  }
+
+  const targetTokens = tokenizeName(ref.displayName || playerName);
+  if (targetTokens.length === 0) {
+    return null;
+  }
+  const targetFirst = targetTokens[0] ?? "";
+  const targetLast = targetTokens[targetTokens.length - 1] ?? "";
+  const targetFirstInitial = targetFirst[0] ?? "";
+
+  const candidates = snapshot.lines.filter((line) => {
+    const tokens = tokenizeName(line.playerName);
+    if (tokens.length === 0) {
+      return false;
+    }
+    const candidateFirst = tokens[0] ?? "";
+    const candidateLast = tokens[tokens.length - 1] ?? "";
+    if (!targetLast || candidateLast !== targetLast) {
+      return false;
+    }
+    return candidateFirst === targetFirst || candidateFirst.startsWith(targetFirstInitial);
+  });
+
+  return pickLikeliestMLBPlayerStatLine(candidates);
+}
+
 function resolveSnapshotPlayerId(snapshot: NBAGamePlayerStatsSnapshot, playerName: string): number | null {
   const parsed = parseResolverPlayerRef(playerName);
   if (parsed.playerId) {
@@ -1426,6 +1725,29 @@ function getNBAPlayerPropValue(line: NBAPlayerStatLine, marketKey: string): numb
       return line.reb + line.ast;
     case "player_points_rebounds_assists":
       return line.pts + line.reb + line.ast;
+    default:
+      return null;
+  }
+}
+
+function getMLBPlayerPropValue(line: MLBPlayerStatLine, marketKey: string): number | null {
+  switch (marketKey) {
+    case "player_hits":
+      return line.hits;
+    case "player_home_runs":
+      return line.homeRuns;
+    case "player_rbis":
+      return line.rbis;
+    case "player_runs":
+      return line.runs;
+    case "player_stolen_bases":
+      return line.stolenBases;
+    case "player_strikeouts_pitcher":
+      return line.strikeoutsPitcher;
+    case "player_earned_runs":
+      return line.earnedRuns;
+    case "player_pitcher_outs":
+      return line.pitcherOuts;
     default:
       return null;
   }
@@ -1565,6 +1887,10 @@ function isNBAPlayerPropMarketSupported(marketKey: string): boolean {
   return NBA_SETTLABLE_PLAYER_PROP_MARKETS.has(marketKey);
 }
 
+function isMLBPlayerPropMarketSupported(marketKey: string): boolean {
+  return MLB_SETTLABLE_PLAYER_PROP_MARKETS.has(marketKey);
+}
+
 function aggregateCandidates(raw: SportsBingoSquareTemplate[]): SportsBingoSquareTemplate[] {
   const byKey = new Map<string, { template: SportsBingoSquareTemplate; sum: number; count: number }>();
 
@@ -1603,12 +1929,27 @@ async function getGameEntryWithCandidates(params: {
 
   let candidates = [...entry.candidates];
   let merged = [...candidates];
-  void params.includePlayerProps;
+  const includePlayerProps = params.includePlayerProps !== false;
 
   if (entry.game.sportKey === "basketball_nba") {
     const achievementCandidates = await buildNBAAchievementCandidates(entry.game, merged);
     if (achievementCandidates.length > 0) {
       merged = aggregateCandidates([...merged, ...achievementCandidates]);
+    }
+  }
+  if (includePlayerProps && entry.game.sportKey === "baseball_mlb") {
+    const mlbPlayerPropCandidates = await buildMLBPlayerPropCandidates(entry.game);
+    if (mlbPlayerPropCandidates.length > 0) {
+      merged = aggregateCandidates([...merged, ...mlbPlayerPropCandidates]);
+    }
+    // Always blend in player-specific achievements derived from historical MLB stat trends
+    // so boards stay realistic even when external player-prop feeds are sparse/noisy.
+    const mlbHistoricalCandidates = await buildMLBPlayerPropCandidatesFromRecentStats(entry.game);
+    if (mlbHistoricalCandidates.length > 0) {
+      const historicalAchievements = mlbHistoricalCandidates.filter((item) => item.bucket === "achievement");
+      if (historicalAchievements.length > 0) {
+        merged = aggregateCandidates([...merged, ...historicalAchievements]);
+      }
     }
   }
 
@@ -1628,9 +1969,10 @@ async function getGameEntryWithCandidates(params: {
 
 function buildGameAndCandidatesFromBallDontLie(sportKey: string, gameData: BallDontLieGame): GameCatalogEntry | null {
   const gameId = String(gameData.id ?? "").trim();
-  const homeTeam = String(gameData.home_team?.full_name ?? gameData.home_team?.name ?? "").trim();
-  const awayTeam = String(gameData.visitor_team?.full_name ?? gameData.visitor_team?.name ?? "").trim();
-  const startsAt = String(gameData.datetime ?? gameData.date ?? "").trim();
+  const eventRecord = gameData as unknown as Record<string, unknown>;
+  const homeTeam = extractTeamName(eventRecord, "home");
+  const awayTeam = extractTeamName(eventRecord, "away");
+  const startsAt = extractEventStartIso(gameData as unknown as Record<string, unknown>);
   if (!gameId || !homeTeam || !awayTeam || !startsAt) {
     return null;
   }
@@ -2329,6 +2671,425 @@ async function buildNBAAchievementCandidates(game: SportsBingoGame, _candidates:
   return candidates;
 }
 
+function impliedProbabilityFromAmericanOdds(odds: unknown): number | null {
+  const value = Number.parseFloat(String(odds ?? ""));
+  if (!Number.isFinite(value) || value === 0) {
+    return null;
+  }
+  if (value > 0) {
+    return clamp(100 / (value + 100), 0.02, 0.98);
+  }
+  return clamp((-value) / ((-value) + 100), 0.02, 0.98);
+}
+
+function defaultMlbOverProbability(marketKey: string, line: number): number {
+  switch (marketKey) {
+    case "player_hits":
+      return clamp(probabilityAtLeast(0.9, line, 0.5), 0.12, 0.82);
+    case "player_home_runs":
+      return clamp(probabilityAtLeast(0.22, line, 0.6), 0.06, 0.56);
+    case "player_rbis":
+      return clamp(probabilityAtLeast(0.7, line, 0.55), 0.1, 0.72);
+    case "player_runs":
+      return clamp(probabilityAtLeast(0.7, line, 0.55), 0.1, 0.72);
+    case "player_stolen_bases":
+      return clamp(probabilityAtLeast(0.14, line, 0.6), 0.04, 0.4);
+    case "player_strikeouts_pitcher":
+      return clamp(probabilityAtLeast(5.4, line, 0.33), 0.12, 0.86);
+    case "player_earned_runs":
+      return clamp(probabilityAtLeast(2.4, line, 0.35), 0.08, 0.78);
+    case "player_pitcher_outs":
+      return clamp(probabilityAtLeast(16.5, line, 0.22), 0.08, 0.9);
+    default:
+      return 0.5;
+  }
+}
+
+function toMlbPlayerAchievementLabel(playerRef: string, marketKey: string, line: number): string | null {
+  const playerName = parseResolverPlayerRef(playerRef).displayName || playerRef;
+  if (!playerName) {
+    return null;
+  }
+  const roundedLine = Math.max(0, Number(line.toFixed(1)));
+  switch (marketKey) {
+    case "player_hits":
+      return roundedLine <= 0.5 ? `${playerName} records a hit` : `${playerName} records ${Math.ceil(roundedLine)}+ hits`;
+    case "player_home_runs":
+      return `${playerName} hits a home run`;
+    case "player_rbis":
+      return roundedLine <= 0.5 ? `${playerName} records an RBI` : `${playerName} records ${Math.ceil(roundedLine)}+ RBIs`;
+    case "player_runs":
+      return roundedLine <= 0.5 ? `${playerName} scores a run` : `${playerName} scores ${Math.ceil(roundedLine)}+ runs`;
+    case "player_strikeouts_pitcher":
+      return `${playerName} records ${Math.max(3, Math.ceil(roundedLine))}+ strikeouts`;
+    default:
+      return null;
+  }
+}
+
+function toMlbPlayerAchievementCandidate(
+  game: SportsBingoGame,
+  resolver: Extract<SportsBingoResolver, { kind: "player_prop" }>,
+  probability: number
+): SportsBingoSquareTemplate | null {
+  if (resolver.direction !== "over") {
+    return null;
+  }
+  const label = toMlbPlayerAchievementLabel(resolver.player, resolver.marketKey, resolver.line);
+  if (!label) {
+    return null;
+  }
+  return {
+    key: `mlb_achievement:${resolver.marketKey}:${normalizeNameKey(resolver.player)}:${resolver.line.toFixed(1)}`,
+    label,
+    resolver,
+    probability: clamp(probability, 0.05, 0.95),
+    bucket: "achievement",
+    supportLevel: "supported",
+  };
+}
+
+async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame): Promise<SportsBingoSquareTemplate[]> {
+  if (!isBallDontLieConfigured()) {
+    return [];
+  }
+
+  try {
+    const gameStartMs = Date.parse(game.startsAt);
+    const referenceMs = Number.isFinite(gameStartMs) ? gameStartMs : Date.now();
+    const startDate = toIsoDate(new Date(referenceMs - 21 * 24 * 60 * 60 * 1000).toISOString());
+    const endDate = toIsoDate(new Date(referenceMs - 6 * 60 * 60 * 1000).toISOString());
+
+    const gameQuery = new URLSearchParams({
+      per_page: "100",
+      start_date: startDate,
+      end_date: endDate,
+    });
+    const recentGames = await fetchBallDontLieList<BallDontLieGame>("/mlb/v1/games", gameQuery);
+    const relatedGameIds = Array.from(
+      new Set(
+        recentGames
+          .filter((row) => {
+            const record = row as unknown as Record<string, unknown>;
+            const home = extractTeamName(record, "home");
+            const away = extractTeamName(record, "away");
+            return (
+              teamsMatch(home, game.homeTeam) ||
+              teamsMatch(home, game.awayTeam) ||
+              teamsMatch(away, game.homeTeam) ||
+              teamsMatch(away, game.awayTeam)
+            );
+          })
+          .map((row) => String(row.id ?? "").trim())
+          .filter(Boolean)
+      )
+    ).slice(0, 40);
+
+    if (relatedGameIds.length === 0) {
+      return [];
+    }
+
+    type MlbPlayerAggregate = {
+      playerId: number | null;
+      playerName: string;
+      teamName: string;
+      games: Set<string>;
+      hits: number;
+      homeRuns: number;
+      rbis: number;
+      runs: number;
+      strikeoutsPitcher: number;
+      pitcherOuts: number;
+    };
+    const byPlayer = new Map<string, MlbPlayerAggregate>();
+
+    for (const gameIdChunk of chunkArray(relatedGameIds, 8)) {
+      const statsQuery = new URLSearchParams({ per_page: "100" });
+      for (const gameId of gameIdChunk) {
+        statsQuery.append("game_ids[]", gameId);
+      }
+      const rows = await fetchBallDontLieList<Record<string, unknown>>("/mlb/v1/stats", statsQuery);
+
+      for (const row of rows) {
+        const playerObj = asRecord(row.player);
+        const firstName = String(playerObj.first_name ?? "").trim();
+        const lastName = String(playerObj.last_name ?? "").trim();
+        const playerName = `${firstName} ${lastName}`.trim() || String(playerObj.name ?? "").trim();
+        if (!playerName) {
+          continue;
+        }
+        const teamName = getTeamDisplayName(asRecord(row.team) as unknown as BallDontLieTeam);
+        if (!teamName || (!teamsMatch(teamName, game.homeTeam) && !teamsMatch(teamName, game.awayTeam))) {
+          continue;
+        }
+
+        const playerId = Number.parseInt(String(playerObj.id ?? row.player_id ?? ""), 10);
+        const playerKey = `${normalizeNameKey(playerName)}:${Number.isFinite(playerId) && playerId > 0 ? playerId : "na"}`;
+        if (!playerKey) {
+          continue;
+        }
+        const current = byPlayer.get(playerKey) ?? {
+          playerId: Number.isFinite(playerId) && playerId > 0 ? playerId : null,
+          playerName,
+          teamName,
+          games: new Set<string>(),
+          hits: 0,
+          homeRuns: 0,
+          rbis: 0,
+          runs: 0,
+          strikeoutsPitcher: 0,
+          pitcherOuts: 0,
+        };
+
+        current.games.add(String(row.game_id ?? asRecord(row.game).id ?? "").trim());
+        current.hits += parseStatNumber(row.hits ?? row.h);
+        current.homeRuns += parseStatNumber(row.home_runs ?? row.hr);
+        current.rbis += parseStatNumber(row.runs_batted_in ?? row.rbi);
+        current.runs += parseStatNumber(row.runs ?? row.r);
+        current.strikeoutsPitcher += parseStatNumber(row.pitcher_strikeouts ?? row.p_strikeouts ?? row.so_pitcher ?? row.strikeouts);
+        current.pitcherOuts += parseStatNumber(row.pitcher_outs ?? row.p_outs ?? row.outs_recorded ?? row.pitching_outs);
+        byPlayer.set(playerKey, current);
+      }
+    }
+
+    const templates: SportsBingoSquareTemplate[] = [];
+    const achievementTemplates: SportsBingoSquareTemplate[] = [];
+    const players = [...byPlayer.values()].filter((player) => player.games.size > 0);
+    const hitters = players
+      .map((player) => ({
+        player,
+        games: player.games.size,
+        avgHits: player.hits / player.games.size,
+        avgRbis: player.rbis / player.games.size,
+        avgRuns: player.runs / player.games.size,
+        avgHomeRuns: player.homeRuns / player.games.size,
+        score: (player.hits + player.rbis + player.runs + player.homeRuns * 2) / player.games.size,
+      }))
+      .filter((entry) => entry.games >= 2)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8);
+
+    for (const hitter of hitters) {
+      const playerRef = toResolverPlayerRef(hitter.player.playerName, hitter.player.playerId);
+      if (hitter.avgHits >= 0.55) {
+        const line = hitter.avgHits >= 1.35 ? 1.5 : 0.5;
+        const resolver: SportsBingoResolver = { kind: "player_prop", marketKey: "player_hits", player: playerRef, line, direction: "over" };
+        const candidate: SportsBingoSquareTemplate = {
+          key: resolverKey(resolver),
+          label: buildSquareLabel(game, resolver),
+          resolver,
+          probability: clamp(probabilityAtLeast(hitter.avgHits, line, 0.42), 0.12, 0.84),
+          bucket: "player-prop",
+          supportLevel: "supported",
+        };
+        templates.push(candidate);
+        const achievement = toMlbPlayerAchievementCandidate(game, resolver, candidate.probability);
+        if (achievement) {
+          achievementTemplates.push(achievement);
+        }
+      }
+      if (hitter.avgRbis >= 0.45) {
+        const resolver: SportsBingoResolver = { kind: "player_prop", marketKey: "player_rbis", player: playerRef, line: 0.5, direction: "over" };
+        const candidate: SportsBingoSquareTemplate = {
+          key: resolverKey(resolver),
+          label: buildSquareLabel(game, resolver),
+          resolver,
+          probability: clamp(probabilityAtLeast(hitter.avgRbis, 0.5, 0.52), 0.08, 0.74),
+          bucket: "player-prop",
+          supportLevel: "supported",
+        };
+        templates.push(candidate);
+        const achievement = toMlbPlayerAchievementCandidate(game, resolver, candidate.probability);
+        if (achievement) {
+          achievementTemplates.push(achievement);
+        }
+      }
+      if (hitter.avgRuns >= 0.45) {
+        const resolver: SportsBingoResolver = { kind: "player_prop", marketKey: "player_runs", player: playerRef, line: 0.5, direction: "over" };
+        const candidate: SportsBingoSquareTemplate = {
+          key: resolverKey(resolver),
+          label: buildSquareLabel(game, resolver),
+          resolver,
+          probability: clamp(probabilityAtLeast(hitter.avgRuns, 0.5, 0.52), 0.08, 0.74),
+          bucket: "player-prop",
+          supportLevel: "supported",
+        };
+        templates.push(candidate);
+        const achievement = toMlbPlayerAchievementCandidate(game, resolver, candidate.probability);
+        if (achievement) {
+          achievementTemplates.push(achievement);
+        }
+      }
+      if (hitter.avgHomeRuns >= 0.12) {
+        const resolver: SportsBingoResolver = { kind: "player_prop", marketKey: "player_home_runs", player: playerRef, line: 0.5, direction: "over" };
+        const candidate: SportsBingoSquareTemplate = {
+          key: resolverKey(resolver),
+          label: buildSquareLabel(game, resolver),
+          resolver,
+          probability: clamp(probabilityAtLeast(hitter.avgHomeRuns, 0.5, 0.72), 0.04, 0.45),
+          bucket: "player-prop",
+          supportLevel: "supported",
+        };
+        templates.push(candidate);
+        const achievement = toMlbPlayerAchievementCandidate(game, resolver, candidate.probability);
+        if (achievement) {
+          achievementTemplates.push(achievement);
+        }
+      }
+    }
+
+    const pitchers = players
+      .map((player) => ({
+        player,
+        games: player.games.size,
+        avgKs: player.strikeoutsPitcher / player.games.size,
+        avgOuts: player.pitcherOuts / player.games.size,
+      }))
+      .filter((entry) => entry.games >= 2 && (entry.avgKs >= 2.5 || entry.avgOuts >= 8))
+      .sort((a, b) => b.avgKs - a.avgKs)
+      .slice(0, 4);
+
+    for (const pitcher of pitchers) {
+      const playerRef = toResolverPlayerRef(pitcher.player.playerName, pitcher.player.playerId);
+      const line = pitcher.avgKs >= 7 ? 6.5 : pitcher.avgKs >= 6 ? 5.5 : pitcher.avgKs >= 5 ? 4.5 : 3.5;
+      const resolver: SportsBingoResolver = {
+        kind: "player_prop",
+        marketKey: "player_strikeouts_pitcher",
+        player: playerRef,
+        line,
+        direction: "over",
+      };
+      const candidate: SportsBingoSquareTemplate = {
+        key: resolverKey(resolver),
+        label: buildSquareLabel(game, resolver),
+        resolver,
+        probability: clamp(probabilityAtLeast(pitcher.avgKs, line, 0.35), 0.1, 0.86),
+        bucket: "player-prop",
+        supportLevel: "supported",
+      };
+      templates.push(candidate);
+      const achievement = toMlbPlayerAchievementCandidate(game, resolver, candidate.probability);
+      if (achievement) {
+        achievementTemplates.push(achievement);
+      }
+    }
+
+    return aggregateCandidates([...templates, ...achievementTemplates]).sort((a, b) => a.key.localeCompare(b.key));
+  } catch {
+    return [];
+  }
+}
+
+async function buildMLBPlayerPropCandidates(game: SportsBingoGame): Promise<SportsBingoSquareTemplate[]> {
+  if (!isBallDontLieConfigured()) {
+    return [];
+  }
+  let rows: Array<Record<string, unknown>> = [];
+  try {
+    const query = new URLSearchParams({ per_page: "100" });
+    query.append("game_ids[]", game.id);
+    rows = await fetchBallDontLieList<Record<string, unknown>>("/mlb/v1/player_props", query);
+  } catch {
+    rows = [];
+  }
+  if (rows.length === 0) {
+    return buildMLBPlayerPropCandidatesFromRecentStats(game);
+  }
+
+  const byAxis = new Map<string, SportsBingoSquareTemplate[]>();
+  for (const row of rows) {
+    const playerObj = asRecord(row.player);
+    const playerId = Number(playerObj.id ?? row.player_id ?? 0);
+    const playerName = `${String(playerObj.first_name ?? "").trim()} ${String(playerObj.last_name ?? "").trim()}`.trim();
+    if (!playerName) {
+      continue;
+    }
+    const marketKey = String(row.market_key ?? row.market ?? row.prop_type ?? "").trim();
+    if (!marketKey || !MLB_SETTLABLE_PLAYER_PROP_MARKETS.has(marketKey)) {
+      continue;
+    }
+    const rawLine = Number.parseFloat(String(row.line ?? row.prop_line ?? row.value ?? ""));
+    if (!Number.isFinite(rawLine)) {
+      continue;
+    }
+    const line = roundLine(rawLine);
+    if (!Number.isFinite(line) || line <= 0) {
+      continue;
+    }
+    const playerRef = toResolverPlayerRef(playerName, Number.isFinite(playerId) && playerId > 0 ? playerId : null);
+    const overResolver: SportsBingoResolver = {
+      kind: "player_prop",
+      marketKey,
+      player: playerRef,
+      line,
+      direction: "over",
+    };
+    const underResolver: SportsBingoResolver = {
+      kind: "player_prop",
+      marketKey,
+      player: playerRef,
+      line,
+      direction: "under",
+    };
+
+    const overOddsProb = impliedProbabilityFromAmericanOdds(row.over_odds ?? row.odds_over ?? row.over);
+    const underOddsProb = impliedProbabilityFromAmericanOdds(row.under_odds ?? row.odds_under ?? row.under);
+    const fallbackOver = defaultMlbOverProbability(marketKey, line);
+    const overProbability = clamp(overOddsProb ?? fallbackOver, 0.05, 0.95);
+    const underProbability = clamp(underOddsProb ?? 1 - overProbability, 0.05, 0.95);
+
+    const overTemplate: SportsBingoSquareTemplate = {
+      key: resolverKey(overResolver),
+      label: buildSquareLabel(game, overResolver),
+      resolver: overResolver,
+      probability: overProbability,
+      bucket: "player-prop",
+      supportLevel: "supported",
+    };
+    const underTemplate: SportsBingoSquareTemplate = {
+      key: resolverKey(underResolver),
+      label: buildSquareLabel(game, underResolver),
+      resolver: underResolver,
+      probability: underProbability,
+      bucket: "player-prop",
+      supportLevel: "supported",
+    };
+    const axisKey = `${marketKey}|${normalizeNameKey(playerRef)}|${line.toFixed(1)}`;
+    const existing = byAxis.get(axisKey) ?? [];
+    existing.push(overTemplate, underTemplate);
+    byAxis.set(axisKey, existing);
+  }
+
+  const selected: SportsBingoSquareTemplate[] = [];
+  const achievementCandidates: SportsBingoSquareTemplate[] = [];
+  for (const templates of byAxis.values()) {
+    const overCandidate = templates.find(
+      (item) => item.resolver.kind === "player_prop" && item.resolver.direction === "over"
+    );
+    if (overCandidate && overCandidate.resolver.kind === "player_prop") {
+      const achievement = toMlbPlayerAchievementCandidate(
+        game,
+        overCandidate.resolver,
+        overCandidate.probability
+      );
+      if (achievement) {
+        achievementCandidates.push(achievement);
+      }
+    }
+    templates.sort((a, b) => Math.abs(a.probability - 0.5) - Math.abs(b.probability - 0.5));
+    const best = templates[0];
+    if (best) {
+      selected.push(best);
+    }
+  }
+
+  const parsed = aggregateCandidates(selected).sort((a, b) => a.key.localeCompare(b.key));
+  if (parsed.length > 0) {
+    return aggregateCandidates([...parsed, ...achievementCandidates]).sort((a, b) => a.key.localeCompare(b.key));
+  }
+  return buildMLBPlayerPropCandidatesFromRecentStats(game);
+}
+
 function estimateBoardWinProbability(squares: Array<{ index: number; probability: number; isFree: boolean }>): number {
   const trials = Math.max(500, Math.min(12_000, BOARD_SIMULATION_TRIALS));
   let wins = 0;
@@ -2510,7 +3271,7 @@ function pickCandidateSet(candidates: SportsBingoSquareTemplate[], sportKey: str
     ["total", 3],
     ["team-total", 3],
     ["special", sportKey === "basketball_nba" ? 1 : 0],
-    ["achievement", sportKey === "basketball_nba" ? 5 : 0],
+    ["achievement", sportKey === "basketball_nba" ? 5 : sportKey === "baseball_mlb" ? 4 : 0],
   ];
 
   for (const [bucket, desired] of planByBucket) {
@@ -3292,6 +4053,8 @@ async function listCardRows(params: {
   userId?: string;
   activeOnly?: boolean;
   limit?: number;
+  sportKey?: string;
+  gameId?: string;
 }): Promise<Array<{ card: SportsBingoCardRow; squares: SportsBingoSquareRow[] }>> {
   assertSupabaseConfigured();
 
@@ -3308,6 +4071,12 @@ async function listCardRows(params: {
   }
   if (params.activeOnly) {
     query = query.eq("status", "active");
+  }
+  if (params.sportKey) {
+    query = query.eq("sport_key", params.sportKey);
+  }
+  if (params.gameId) {
+    query = query.eq("game_id", params.gameId);
   }
 
   const { data: cardsData, error: cardsError } = await query;
@@ -3353,7 +4122,8 @@ async function listCardRows(params: {
 function evaluateResolver(
   resolver: SportsBingoResolver,
   snapshot: ScoreSnapshot,
-  nbaStatsSnapshot: NBAGamePlayerStatsSnapshot | null = null
+  nbaStatsSnapshot: NBAGamePlayerStatsSnapshot | null = null,
+  mlbStatsSnapshot: MLBGamePlayerStatsSnapshot | null = null
 ): { status: "pending" | "hit" | "miss" | "void"; resolved: boolean } {
   const home = snapshot.homeScore;
   const away = snapshot.awayScore;
@@ -3464,53 +4234,73 @@ function evaluateResolver(
       };
     }
     case "player_prop": {
-      if (!isNBAPlayerPropMarketSupported(resolver.marketKey)) {
+      const isNba = snapshot.sportKey === "basketball_nba";
+      const isMlb = snapshot.sportKey === "baseball_mlb";
+      const supported = isNba
+        ? isNBAPlayerPropMarketSupported(resolver.marketKey)
+        : isMlb
+        ? isMLBPlayerPropMarketSupported(resolver.marketKey)
+        : false;
+      if (!supported) {
         return { status: "miss", resolved: true };
       }
-      if (!nbaStatsSnapshot) {
+
+      if (isNba && !nbaStatsSnapshot) {
+        if (!completed) {
+          return { status: "pending", resolved: false };
+        }
+        return { status: "miss", resolved: true };
+      }
+      if (isMlb && !mlbStatsSnapshot) {
         if (!completed) {
           return { status: "pending", resolved: false };
         }
         return { status: "miss", resolved: true };
       }
 
-      const line = findNBAPlayerStatLine(nbaStatsSnapshot, resolver.player);
-      if (!line) {
-        if (!completed && !nbaStatsSnapshot.finalized) {
+      const nbaLine = isNba && nbaStatsSnapshot ? findNBAPlayerStatLine(nbaStatsSnapshot, resolver.player) : null;
+      const mlbLine = isMlb && mlbStatsSnapshot ? findMLBPlayerStatLine(mlbStatsSnapshot, resolver.player) : null;
+      const isFinalized = Boolean((isNba && nbaStatsSnapshot?.finalized) || (isMlb && mlbStatsSnapshot?.finalized));
+      if (!nbaLine && !mlbLine) {
+        if (!completed && !isFinalized) {
           return { status: "pending", resolved: false };
         }
         return { status: "miss", resolved: true };
       }
-
-      const value = getNBAPlayerPropValue(line, resolver.marketKey);
+      const value = nbaLine
+        ? getNBAPlayerPropValue(nbaLine, resolver.marketKey)
+        : mlbLine
+        ? getMLBPlayerPropValue(mlbLine, resolver.marketKey)
+        : null;
       if (value === null || !Number.isFinite(value)) {
-        if (!completed && !nbaStatsSnapshot.finalized) {
+        if (!completed && !isFinalized) {
           return { status: "pending", resolved: false };
         }
         return { status: "miss", resolved: true };
       }
 
-      if (value === resolver.line) {
-        if (!completed && !nbaStatsSnapshot.finalized) {
+      const line = value;
+      if (line === resolver.line) {
+        if (!completed && !isFinalized) {
           return { status: "pending", resolved: false };
         }
         return { status: "miss", resolved: true };
       }
 
       if (resolver.direction === "over") {
-        if (value > resolver.line) {
+        if (line > resolver.line) {
           return { status: "hit", resolved: true };
         }
-        if (completed || nbaStatsSnapshot.finalized) {
+        if (completed || isFinalized) {
           return { status: "miss", resolved: true };
         }
         return { status: "pending", resolved: false };
       }
-      if (value >= resolver.line) {
+      if (line >= resolver.line) {
         return { status: "miss", resolved: true };
       }
-      if (completed || nbaStatsSnapshot.finalized) {
-        return { status: value < resolver.line ? "hit" : "miss", resolved: true };
+      if (completed || isFinalized) {
+        return { status: line < resolver.line ? "hit" : "miss", resolved: true };
       }
       return { status: "pending", resolved: false };
     }
@@ -4024,6 +4814,9 @@ async function addNotification(userId: string, type: "success" | "warning" | "in
 export async function refreshSportsBingoProgress(params: {
   userId?: string;
   limit?: number;
+  sportKey?: string;
+  gameId?: string;
+  bypassCache?: boolean;
 } = {}): Promise<{
   scannedCards: number;
   updatedSquares: number;
@@ -4032,10 +4825,26 @@ export async function refreshSportsBingoProgress(params: {
   nearWinAlerts: number;
 }> {
   assertSupabaseConfigured();
+  if (params.bypassCache) {
+    if (params.sportKey) {
+      scoreCache.delete(params.sportKey);
+    } else {
+      scoreCache.clear();
+    }
+    if (params.gameId) {
+      nbaPlayerStatsCache.delete(params.gameId);
+      mlbPlayerStatsCache.delete(params.gameId);
+    } else {
+      nbaPlayerStatsCache.clear();
+      mlbPlayerStatsCache.clear();
+    }
+  }
 
   const activeCardRows = await listCardRows({
     userId: params.userId,
     activeOnly: true,
+    sportKey: params.sportKey,
+    gameId: params.gameId,
     limit: params.limit ?? 200,
   });
 
@@ -4064,6 +4873,7 @@ export async function refreshSportsBingoProgress(params: {
   let settledLosses = 0;
   let nearWinAlerts = 0;
   const nbaStatsSnapshotsByOddsGameId = new Map<string, NBAGamePlayerStatsSnapshot | null>();
+  const mlbStatsSnapshotsByOddsGameId = new Map<string, MLBGamePlayerStatsSnapshot | null>();
 
   for (const entry of activeCardRows) {
     const cardRow = entry.card;
@@ -4071,6 +4881,7 @@ export async function refreshSportsBingoProgress(params: {
     const oddsScore = scoresBySport.get(cardRow.sport_key)?.get(cardRow.game_id) ?? null;
 
     let nbaStatsSnapshot: NBAGamePlayerStatsSnapshot | null = null;
+    let mlbStatsSnapshot: MLBGamePlayerStatsSnapshot | null = null;
     if (cardRow.sport_key === "basketball_nba") {
       if (nbaStatsSnapshotsByOddsGameId.has(cardRow.game_id)) {
         nbaStatsSnapshot = nbaStatsSnapshotsByOddsGameId.get(cardRow.game_id) ?? null;
@@ -4078,12 +4889,22 @@ export async function refreshSportsBingoProgress(params: {
         nbaStatsSnapshot = await getNBAGamePlayerStatsSnapshot(cardRow);
         nbaStatsSnapshotsByOddsGameId.set(cardRow.game_id, nbaStatsSnapshot);
       }
+    } else if (cardRow.sport_key === "baseball_mlb") {
+      if (mlbStatsSnapshotsByOddsGameId.has(cardRow.game_id)) {
+        mlbStatsSnapshot = mlbStatsSnapshotsByOddsGameId.get(cardRow.game_id) ?? null;
+      } else {
+        mlbStatsSnapshot = await getMLBGamePlayerStatsSnapshot(cardRow);
+        mlbStatsSnapshotsByOddsGameId.set(cardRow.game_id, mlbStatsSnapshot);
+      }
     }
 
     const startsAtMs = Date.parse(cardRow.starts_at);
     const isPastForceFinalizeWindow =
       Number.isFinite(startsAtMs) && Date.now() - startsAtMs >= BINGO_FORCE_FINALIZE_AFTER_START_MS;
-    const score = mergeLiveScores(oddsScore, toNBALiveScoreSnapshot(cardRow, nbaStatsSnapshot));
+    const score = mergeLiveScores(
+      mergeLiveScores(oddsScore, toNBALiveScoreSnapshot(cardRow, nbaStatsSnapshot)),
+      toMLBLiveScoreSnapshot(cardRow, mlbStatsSnapshot)
+    );
     if (!score && !isPastForceFinalizeWindow) {
       continue;
     }
@@ -4146,7 +4967,7 @@ export async function refreshSportsBingoProgress(params: {
         continue;
       }
 
-      const evaluation = evaluateResolver(resolver, effectiveScore, nbaStatsSnapshot);
+      const evaluation = evaluateResolver(resolver, effectiveScore, nbaStatsSnapshot, mlbStatsSnapshot);
       if (evaluation.status === "pending" && !mustForceFinalize) {
         if (square.status === "void" && isResolverEligibleForVoidRegrade(resolver)) {
           const { data, error } = await supabaseAdmin!

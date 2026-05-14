@@ -103,15 +103,18 @@ function shortenLabel(label: string, maxLength = 18): string {
 
 function getCardSquareStyle(status: BingoCardSquare["status"], isFree: boolean): string {
   if (isFree) {
-    return "border-emerald-200 bg-emerald-100 text-emerald-800";
+    return "border-emerald-300 bg-[linear-gradient(165deg,#bbf7d0_0%,#86efac_50%,#4ade80_100%)] text-emerald-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]";
   }
   if (status === "hit") {
-    return "border-emerald-300 bg-emerald-500 text-white";
+    return "border-lime-300 bg-[linear-gradient(165deg,#fde047_0%,#bef264_55%,#4ade80_100%)] text-emerald-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]";
   }
   if (status === "miss") {
-    return "border-rose-200 bg-rose-100 text-rose-700";
+    return "border-rose-300 bg-[linear-gradient(165deg,#fee2e2_0%,#fecaca_50%,#fca5a5_100%)] text-rose-900";
   }
-  return "border-slate-200 bg-white text-slate-700";
+  if (status === "void") {
+    return "border-slate-300 bg-[linear-gradient(165deg,#e2e8f0_0%,#cbd5e1_60%,#94a3b8_100%)] text-slate-700";
+  }
+  return "border-cyan-200 bg-[linear-gradient(165deg,#ecfeff_0%,#e0f2fe_55%,#bae6fd_100%)] text-slate-800";
 }
 
 function renderSquareStatusGlyph(square: BingoCardSquare) {
@@ -268,7 +271,8 @@ function renderCompactGrid(
   }
 
   return (
-    <div className="grid grid-cols-5 gap-1.5">
+    <div className="rounded-xl border-2 border-cyan-300/80 bg-[linear-gradient(180deg,#0f172a_0%,#1e293b_100%)] p-2 shadow-[0_8px_20px_rgba(15,23,42,0.28)]">
+      <div className="grid grid-cols-5 gap-1.5">
       {Array.from({ length: 25 }).map((_, index) => {
         const square = byIndex.get(index);
         if (!square) {
@@ -283,7 +287,7 @@ function renderCompactGrid(
           <div
             key={index}
             title={square.label}
-            className={`relative flex h-10 items-center justify-center rounded-md border px-1 text-center text-[9px] font-semibold leading-tight ${getCardSquareStyle(
+            className={`relative flex h-10 items-center justify-center rounded-md border px-1 text-center text-[9px] font-bold leading-tight [font-family:'Bree_Serif','Nunito',serif] ${getCardSquareStyle(
               square.status,
               isFree
             )} ${
@@ -299,6 +303,7 @@ function renderCompactGrid(
           </div>
         );
       })}
+      </div>
     </div>
   );
 }
@@ -315,7 +320,7 @@ function renderExpandedGrid(
   }
 
   return (
-    <div className="pb-1">
+    <div className="rounded-xl border-2 border-cyan-300/80 bg-[linear-gradient(180deg,#0f172a_0%,#1e293b_100%)] p-2 pb-1 shadow-[0_8px_20px_rgba(15,23,42,0.3)]">
       <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
         {Array.from({ length: 25 }).map((_, index) => {
           const square = byIndex.get(index);
@@ -330,7 +335,7 @@ function renderExpandedGrid(
           return (
             <div
               key={index}
-              className={`relative flex min-h-[72px] items-center justify-center rounded-lg border px-1.5 py-1.5 text-center text-[10px] font-semibold leading-tight sm:min-h-[82px] sm:px-2 sm:py-2 sm:text-[11px] ${getCardSquareStyle(
+                className={`relative flex min-h-[72px] items-center justify-center rounded-lg border px-1.5 py-1.5 text-center text-[10px] font-bold leading-tight [font-family:'Bree_Serif','Nunito',serif] sm:min-h-[82px] sm:px-2 sm:py-2 sm:text-[11px] ${getCardSquareStyle(
                 square.status,
                 isFree
               )} ${
@@ -985,7 +990,7 @@ export function SportsBingoHome() {
             </Link>
           )}
           <span className="inline-flex min-h-[42px] items-center rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-[12px] font-semibold text-blue-700">
-            Active Cards: {activeCards.length}/4
+            Active Boards: {activeCards.length}/4
           </span>
         </div>
       </div>

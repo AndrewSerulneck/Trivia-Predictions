@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { motion, useAnimationControls } from "framer-motion";
+import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { supabase } from "@/lib/supabase";
@@ -301,9 +301,9 @@ function isIsoInCurrentLocalWeek(iso: string): boolean {
 function describeStatChange(
   prev: StatsSnapshot,
   next: StatsSnapshot
-): { actionLabel: string; pointsDelta: number } | null {
+): { actionLabel: string; flashLabel: string; pointsDelta: number } | null {
   const fpDelta = next.total_fantasy_points - prev.total_fantasy_points;
-  if (fpDelta < 0.01) return null;
+  if (Math.abs(fpDelta) < 0.01) return null;
 
   const ptsDiff = Math.round(next.pts - prev.pts);
   const astDiff = Math.round(next.ast - prev.ast);
@@ -313,24 +313,75 @@ function describeStatChange(
   const tovDiff = Math.round(next.turnovers - prev.turnovers);
 
   const labels: string[] = [];
-  if (stlDiff > 0) labels.push(stlDiff === 1 ? "recorded a Steal" : `recorded ${stlDiff} Steals`);
-  if (blkDiff > 0) labels.push(blkDiff === 1 ? "recorded a Block" : `recorded ${blkDiff} Blocks`);
-  if (ptsDiff >= 3) labels.push("hit a 3-Pointer");
-  else if (ptsDiff === 2) labels.push("scored 2 points");
-  else if (ptsDiff === 1) labels.push("made a Free Throw");
-  else if (ptsDiff > 3) labels.push(`scored ${ptsDiff} points`);
-  if (astDiff > 0) labels.push(astDiff === 1 ? "recorded an Assist" : `recorded ${astDiff} Assists`);
-  if (rebDiff > 0) labels.push(rebDiff === 1 ? "grabbed a Rebound" : `grabbed ${rebDiff} Rebounds`);
-  if (tovDiff > 0) labels.push(tovDiff === 1 ? "committed a Turnover" : `committed ${tovDiff} Turnovers`);
+  const pushDiffLabel = (diff: number, positiveSingular: string, positivePlural: string, negativeLabel: string) => {
+    if (diff > 0) {
+      labels.push(diff === 1 ? positiveSingular : `${positivePlural} (${diff})`);
+      return;
+    }
+    if (diff < 0) {
+      labels.push(negativeLabel);
+    }
+  };
+  pushDiffLabel(stlDiff, "recorded a Steal", "recorded Steals", "had a Steal correction");
+  pushDiffLabel(blkDiff, "recorded a Block", "recorded Blocks", "had a Block correction");
+  if (ptsDiff >= 3) labels.push("scored from long range");
+  else if (ptsDiff > 0) labels.push(ptsDiff === 1 ? "made a Free Throw" : `scored ${ptsDiff} points`);
+  else if (ptsDiff < 0) labels.push("had a scoring correction");
+  pushDiffLabel(astDiff, "recorded an Assist", "recorded Assists", "had an Assist correction");
+  pushDiffLabel(rebDiff, "grabbed a Rebound", "grabbed Rebounds", "had a Rebound correction");
+  pushDiffLabel(tovDiff, "committed a Turnover", "committed Turnovers", "had a Turnover correction");
 
   const actionLabel =
     labels.length === 0
-      ? "had a fantasy stat update"
+      ? fpDelta > 0
+        ? "had a fantasy stat update"
+        : "had a fantasy stat correction"
       : labels.length === 1
         ? labels[0]!
         : `${labels[0]} and more`;
 
-  return { actionLabel, pointsDelta: fpDelta };
+  const contributions = [
+    { key: "steal", value: stlDiff * 3 },
+    { key: "block", value: blkDiff * 3 },
+    { key: "assist", value: astDiff * 1.5 },
+    { key: "rebound", value: rebDiff * 1.2 },
+    { key: "points", value: ptsDiff * 1 },
+    { key: "turnover", value: tovDiff * -1 },
+  ].filter((item) => Math.abs(item.value) > 0.0001);
+  contributions.sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+  const top = contributions[0]?.key ?? "update";
+  const flashLabel =
+    top === "rebound"
+      ? rebDiff >= 0
+        ? "REBOUND!"
+        : "REBOUND CORRECTION!"
+      : top === "assist"
+      ? astDiff >= 0
+        ? "ASSIST!"
+        : "ASSIST CORRECTION!"
+      : top === "steal"
+      ? stlDiff >= 0
+        ? "STEAL!"
+        : "STEAL CORRECTION!"
+      : top === "block"
+      ? blkDiff >= 0
+        ? "BLOCK!"
+        : "BLOCK CORRECTION!"
+      : top === "turnover"
+      ? tovDiff > 0
+        ? "TURNOVER!"
+        : "TURNOVER FIX!"
+      : top === "points"
+      ? ptsDiff >= 3
+        ? "3-POINTER!"
+        : ptsDiff >= 0
+        ? "BUCKET!"
+        : "SCORING CORRECTION!"
+      : fpDelta >= 0
+      ? "STAT UPDATE!"
+      : "STAT CORRECTION!";
+
+  return { actionLabel, flashLabel, pointsDelta: fpDelta };
 }
 
 function SpringPop({
@@ -343,15 +394,29 @@ function SpringPop({
   popKey: number;
   className?: string;
   glowSize: number;
-  glowColor?: "cyan" | "gold";
+  glowColor?: "cyan" | "gold" | "green" | "red";
   children: React.ReactNode;
 }) {
   const controls = useAnimationControls();
 
   useEffect(() => {
     let cancelled = false;
-    const rgba = glowColor === "gold" ? "rgba(255,215,0,0.95)" : "rgba(34,211,238,0.95)";
-    const rgbaFade = glowColor === "gold" ? "rgba(255,215,0,0)" : "rgba(34,211,238,0)";
+    const rgba =
+      glowColor === "gold"
+        ? "rgba(255,215,0,0.95)"
+        : glowColor === "green"
+        ? "rgba(34,197,94,0.95)"
+        : glowColor === "red"
+        ? "rgba(239,68,68,0.95)"
+        : "rgba(34,211,238,0.95)";
+    const rgbaFade =
+      glowColor === "gold"
+        ? "rgba(255,215,0,0)"
+        : glowColor === "green"
+        ? "rgba(34,197,94,0)"
+        : glowColor === "red"
+        ? "rgba(239,68,68,0)"
+        : "rgba(34,211,238,0)";
     const run = async () => {
       await controls.set({ scale: 1, filter: `drop-shadow(0 0 0 ${rgbaFade})` });
       if (cancelled) return;
@@ -423,11 +488,16 @@ export function FantasyHome() {
   const [highlightedPlayerIds, setHighlightedPlayerIds] = useState<string[]>([]);
   const [totalScorePopTick, setTotalScorePopTick] = useState(0);
   const [playerPopTickById, setPlayerPopTickById] = useState<Record<string, number>>({});
+  const [totalScorePopTone, setTotalScorePopTone] = useState<"gain" | "loss">("gain");
+  const [playerPopToneById, setPlayerPopToneById] = useState<Record<string, "gain" | "loss">>({});
   const [lastRealtimeMessageAt, setLastRealtimeMessageAt] = useState<number | null>(null);
   const [isRealtimeFresh, setIsRealtimeFresh] = useState(false);
   const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>([]);
+  const [statFlashes, setStatFlashes] = useState<Array<{ id: string; label: string; pointsDelta: number }>>([]);
   const gameDetailsRequestNonceRef = useRef(0);
   const prevStatsSnapshotRef = useRef<Map<number, StatsSnapshot>>(new Map());
+  const statFlashCounterRef = useRef(0);
+  const statFlashTimersRef = useRef<Map<string, number>>(new Map());
   const fantasyKickoffRefreshTimerRef = useRef<number | null>(null);
   const fantasyLineupAutosaveTimerRef = useRef<number | null>(null);
   const fantasyRealtimeFallbackTimerRef = useRef<number | null>(null);
@@ -519,15 +589,43 @@ export function FantasyHome() {
     }, 900);
   }, []);
 
-  const triggerTotalScorePop = useCallback(() => {
+  const pushStatFlash = useCallback((label: string, pointsDelta: number) => {
+    statFlashCounterRef.current += 1;
+    const id = `flash-${Date.now()}-${statFlashCounterRef.current}`;
+    setStatFlashes((prev) => [{ id, label, pointsDelta }, ...prev].slice(0, 3));
+    const timer = window.setTimeout(() => {
+      statFlashTimersRef.current.delete(id);
+      setStatFlashes((prev) => prev.filter((item) => item.id !== id));
+    }, 1300);
+    statFlashTimersRef.current.set(id, timer);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      for (const timer of statFlashTimersRef.current.values()) {
+        window.clearTimeout(timer);
+      }
+      statFlashTimersRef.current.clear();
+    };
+  }, []);
+
+  const triggerTotalScorePop = useCallback((tone: "gain" | "loss" = "gain") => {
+    setTotalScorePopTone(tone);
     setTotalScorePopTick((value) => value + 1);
   }, []);
 
-  const triggerPlayerScorePop = useCallback((playerIds: Array<number | string>) => {
+  const triggerPlayerScorePop = useCallback((playerIds: Array<number | string>, tone: "gain" | "loss" = "gain") => {
     const keys = Array.from(new Set(playerIds.map((id) => String(id).trim()).filter(Boolean)));
     if (keys.length === 0) {
       return;
     }
+    setPlayerPopToneById((previous) => {
+      const next = { ...previous };
+      for (const key of keys) {
+        next[key] = tone;
+      }
+      return next;
+    });
     setPlayerPopTickById((previous) => {
       const next = { ...previous };
       for (const key of keys) {
@@ -1009,10 +1107,13 @@ export function FantasyHome() {
 
           // Trigger pop on roster players only.
           if (isRosterPlayer) {
+            const tone = change.pointsDelta >= 0 ? "gain" : "loss";
             window.requestAnimationFrame(() => {
               markPlayersAsHot([playerId]);
-              triggerPlayerScorePop([playerId]);
+              triggerPlayerScorePop([playerId], tone);
+              triggerTotalScorePop(tone);
             });
+            pushStatFlash(change.flashLabel, change.pointsDelta);
           }
 
           ledgerIdCounter += 1;
@@ -1035,7 +1136,7 @@ export function FantasyHome() {
       active = false;
       void client.removeChannel(channel);
     };
-  }, [markPlayersAsHot, triggerPlayerScorePop]);
+  }, [markPlayersAsHot, pushStatFlash, triggerPlayerScorePop, triggerTotalScorePop]);
 
   useEffect(() => {
     if (!userId || supabase) {
@@ -1329,6 +1430,27 @@ export function FantasyHome() {
 
   return (
     <div className="space-y-4">
+      <div className="pointer-events-none fixed left-1/2 top-[5.25rem] z-[2200] -translate-x-1/2 space-y-2">
+        <AnimatePresence initial={false}>
+          {statFlashes.map((flash) => (
+            <motion.div
+              key={flash.id}
+              initial={{ opacity: 0, y: -18, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1.05 }}
+              exit={{ opacity: 0, y: -22, scale: 0.92 }}
+              transition={{ type: "spring", stiffness: 340, damping: 26, mass: 0.8 }}
+              className={`rounded-full border px-4 py-1.5 text-sm font-black shadow-[0_8px_24px_rgba(15,23,42,0.35)] ${
+                flash.pointsDelta >= 0
+                  ? "border-emerald-300 bg-emerald-100/95 text-emerald-900"
+                  : "border-rose-300 bg-rose-100/95 text-rose-900"
+              }`}
+            >
+              {flash.label} {flash.pointsDelta >= 0 ? "+" : ""}
+              {flash.pointsDelta.toFixed(1)}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
       <VenueEntryRulesPanel gameKey="fantasy" shouldDisplay={entries.length === 0} />
 
       {finalUnclaimedEntries.length > 0 ? (
@@ -1403,8 +1525,22 @@ export function FantasyHome() {
           <div className="mt-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
             <div className="flex items-center justify-between gap-2">
               <p className="text-sm font-semibold text-slate-900">{showTrackedEntryClaimButton ? "Final Score" : "Live Points"}</p>
-              <SpringPop popKey={totalScorePopTick} glowSize={12}>
-                <p className={`text-sm font-black ${isRealtimeFresh ? "text-cyan-700" : "text-slate-900"}`}>{liveTrackedEntryPoints.toFixed(2)} pts</p>
+              <SpringPop
+                popKey={totalScorePopTick}
+                glowSize={12}
+                glowColor={totalScorePopTone === "loss" ? "red" : "green"}
+              >
+                <p
+                  className={`text-sm font-black ${
+                    totalScorePopTone === "loss"
+                      ? "text-rose-700"
+                      : isRealtimeFresh
+                      ? "text-emerald-700"
+                      : "text-slate-900"
+                  }`}
+                >
+                  {liveTrackedEntryPoints.toFixed(2)} pts
+                </p>
               </SpringPop>
             </div>
             <ul className="mt-2 space-y-1">
@@ -1428,11 +1564,16 @@ export function FantasyHome() {
                     ? 0
                     : getScoreFromBreakdown(trackedEntry.scoreBreakdown, player);
                 const isHot = highlightedPlayerIds.includes(String(player.playerId));
+                const popTone = playerPopToneById[String(player.playerId)] ?? "gain";
                 return (
                   <li
                     key={`${trackedEntry.id}-${player.playerId}`}
                     className={`flex items-center justify-between gap-2 text-xs transition-all duration-300 ${
-                      isHot ? "scale-[1.03] text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.95)]" : "text-slate-700"
+                      isHot
+                        ? popTone === "loss"
+                          ? "scale-[1.03] text-rose-300 drop-shadow-[0_0_10px_rgba(244,63,94,0.95)]"
+                          : "scale-[1.03] text-emerald-300 drop-shadow-[0_0_10px_rgba(34,197,94,0.95)]"
+                        : "text-slate-700"
                     }`}
                   >
                     <div className="flex min-w-0 items-center gap-2">
@@ -1442,7 +1583,8 @@ export function FantasyHome() {
                     <SpringPop
                       popKey={playerPopTickById[String(player.playerId)] ?? 0}
                       glowSize={10}
-                      className={`font-semibold ${isHot ? "text-cyan-200" : ""}`}
+                      glowColor={popTone === "loss" ? "red" : "green"}
+                      className={`font-semibold ${isHot ? (popTone === "loss" ? "text-rose-200" : "text-emerald-200") : ""}`}
                     >
                       {playerPoints.toFixed(2)} pts
                     </SpringPop>

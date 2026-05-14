@@ -77,6 +77,20 @@ type GamesResponse = {
   error?: string;
 };
 
+type PickEmPickHistoryItem = {
+  id: string;
+  venueId: string;
+  sportSlug: PickEmSportSlug;
+  league: string;
+  gameLabel: string;
+  homeTeam: string;
+  awayTeam: string;
+  startsAt: string;
+  selectedTeam: string;
+  status: "pending" | "won" | "lost" | "push" | "canceled";
+  rewardPoints: number;
+};
+
 async function readJsonResponse<T>(response: Response, label: string): Promise<T> {
   const raw = await response.text();
   try {
@@ -210,6 +224,8 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
   const [multiplierAnim, setMultiplierAnim] = useState<{ label: "Double Points!" | "Triple Points!"; id: number } | null>(null);
   const [limitPulse, setLimitPulse] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [historicalPicks, setHistoricalPicks] = useState<PickEmPickHistoryItem[]>([]);
+  const [loadingHistoricalPicks, setLoadingHistoricalPicks] = useState(false);
   const popIdRef = useRef(0);
 
   useEffect(() => {
@@ -393,6 +409,14 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
   const pickCount = Math.max(0, dailyPickCount + dailyPickCountDelta);
   const picksRemaining = Math.max(0, PICKEM_PICK_LIMIT - pickCount);
   const isViewingToday = selectedDate === todayDateKey;
+
+  const toLocalDateKey = useCallback((iso: string) => {
+    const ms = Date.parse(iso);
+    if (!Number.isFinite(ms)) return "";
+    const localMs = ms - new Date().getTimezoneOffset() * 60_000;
+    const d = new Date(localMs);
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+  }, []);
 
   const scheduleBackgroundRefresh = useCallback(() => {
     if (refreshTimerRef.current !== null) {
@@ -676,6 +700,41 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
   }, [loadDailyPickCount]);
 
   useEffect(() => {
+    const run = async () => {
+      if (isViewingToday || !userId || !venueId) {
+        setHistoricalPicks([]);
+        setLoadingHistoricalPicks(false);
+        return;
+      }
+      setLoadingHistoricalPicks(true);
+      try {
+        const response = await fetch(
+          `/api/pickem/picks?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venueId)}&includeSettled=true&refreshSettlement=true&limit=500`,
+          { cache: "no-store" }
+        );
+        const payload = (await response.json()) as {
+          ok: boolean;
+          picks?: PickEmPickHistoryItem[];
+          error?: string;
+        };
+        if (!payload.ok) {
+          throw new Error(payload.error ?? "Failed to load pick history.");
+        }
+        const filtered = (payload.picks ?? [])
+          .filter((pick) => toLocalDateKey(pick.startsAt) === selectedDate)
+          .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
+        setHistoricalPicks(filtered);
+      } catch (error) {
+        setHistoricalPicks([]);
+        setSubmitMessage(error instanceof Error ? error.message : "Failed to load pick history.");
+      } finally {
+        setLoadingHistoricalPicks(false);
+      }
+    };
+    void run();
+  }, [isViewingToday, selectedDate, toLocalDateKey, userId, venueId]);
+
+  useEffect(() => {
     if (!pointsBank || !userId || !venueId) return;
     if (pointsBank.totalPicks !== PICKEM_PICK_LIMIT || pointsBank.pendingPicks !== 0) return;
     if (pointsBank.correctPicks < 7) return;
@@ -789,10 +848,15 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
             </button>
             <span className="text-center text-xs font-semibold sm:text-sm">
               {new Date(`${selectedDate}T00:00:00.000Z`).toLocaleDateString(undefined, {
+                weekday: "short",
+                timeZone: "UTC",
+              })}{" · "}
+              {new Date(`${selectedDate}T00:00:00.000Z`).toLocaleDateString(undefined, {
                 month: "short",
                 day: "numeric",
                 timeZone: "UTC",
               })}
+              {isViewingToday ? " (Today)" : ""}
             </span>
             <button
               type="button"
@@ -918,7 +982,57 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         <div className="rounded-xl border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-800 sm:p-3 sm:text-sm">{submitMessage}</div>
       ) : null}
 
-      {loadingGames ? (
+      {!isViewingToday ? (
+        loadingHistoricalPicks ? (
+          <BouncingBallLoader size="sm" label="Loading your picks..." />
+        ) : historicalPicks.length === 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-600 sm:p-3 sm:text-sm">
+            No picks found for this date.
+          </div>
+        ) : (
+          <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm sm:p-5">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-700 sm:text-sm">Your Picks</h3>
+              <span className="text-[11px] font-medium text-slate-500">{historicalPicks.length} picks</span>
+            </div>
+            <ul className="space-y-3">
+              {historicalPicks.map((pick) => {
+                const statusClass =
+                  pick.status === "won"
+                    ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                    : pick.status === "lost"
+                    ? "border-rose-300 bg-rose-50 text-rose-700"
+                    : pick.status === "pending"
+                    ? "border-amber-300 bg-amber-50 text-amber-700"
+                    : "border-slate-300 bg-slate-100 text-slate-700";
+                return (
+                  <li key={pick.id} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm font-bold text-slate-900">
+                        <span className="mr-1.5" aria-hidden="true">{getSportIcon(pick.sportSlug)}</span>
+                        {pick.league}
+                      </p>
+                      <span className={`rounded-full border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider ${statusClass}`}>
+                        {pick.status}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs font-semibold text-slate-700">{pick.awayTeam} at {pick.homeTeam}</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {new Date(pick.startsAt).toLocaleString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                    <p className="mt-2 text-xs font-semibold text-slate-700">Your pick: {pick.selectedTeam}</p>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )
+      ) : loadingGames ? (
         <BouncingBallLoader size="sm" label="Loading games..." />
       ) : !sport ? (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800 sm:p-3 sm:text-sm">
@@ -1104,9 +1218,10 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                       key={multiplierAnim.id}
                       className="select-none whitespace-nowrap font-black leading-none transform-gpu will-change-transform"
                       style={{
-                        color: "#facc15",
+                        color: "#fde68a",
                         fontSize: "clamp(2.1rem, 10vw, 4.6rem)",
-                        textShadow: "0 0 28px rgba(250,204,21,0.55), 0 0 56px rgba(250,204,21,0.35)",
+                        textShadow: "0 0 30px rgba(250,204,21,0.62), 0 0 62px rgba(250,204,21,0.42)",
+                        filter: "drop-shadow(0 0 14px rgba(250,204,21,0.75))",
                       }}
                       initial={{ scale: 0, y: 0, x: 0, rotate: 0, opacity: 0 }}
                       animate={{

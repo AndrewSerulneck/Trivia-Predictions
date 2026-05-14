@@ -137,16 +137,16 @@ function compactSquareLabel(label: string): string {
 
 function getPreviewSquareStyle(isFree: boolean): string {
   if (isFree) {
-    return "border-emerald-200 bg-emerald-100 text-emerald-800";
+    return "border-emerald-300 bg-[linear-gradient(165deg,#bbf7d0_0%,#86efac_50%,#4ade80_100%)] text-emerald-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]";
   }
-  return "border-blue-200 bg-blue-50 text-blue-700";
+  return "border-cyan-200 bg-[linear-gradient(165deg,#ecfeff_0%,#e0f2fe_55%,#bae6fd_100%)] text-slate-800";
 }
 
 function getExpandedSquareStyle(isFree: boolean): string {
   if (isFree) {
-    return "border-emerald-200 bg-emerald-100 text-emerald-800";
+    return "border-emerald-300 bg-[linear-gradient(165deg,#bbf7d0_0%,#86efac_50%,#4ade80_100%)] text-emerald-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]";
   }
-  return "border-slate-200 bg-white text-slate-700";
+  return "border-cyan-200 bg-[linear-gradient(165deg,#ecfeff_0%,#e0f2fe_55%,#bae6fd_100%)] text-slate-800";
 }
 
 function toMascotDisplayName(team: string): string {
@@ -360,7 +360,7 @@ export function SportsBingoSelectBoard() {
     }
 
     return (
-      <div className="rounded-xl border-2 border-slate-300 bg-slate-100 p-2">
+      <div className="rounded-xl border-2 border-cyan-300/80 bg-[linear-gradient(180deg,#0f172a_0%,#1e293b_100%)] p-2 shadow-[0_8px_20px_rgba(15,23,42,0.28)]">
         <div className="grid grid-cols-5 gap-1.5">
           {Array.from({ length: 25 }).map((_, index) => {
             const square = byIndex.get(index);
@@ -373,7 +373,7 @@ export function SportsBingoSelectBoard() {
               <div
                 key={index}
                 title={square.label}
-                className={`flex aspect-square items-center justify-center rounded-md border px-1 text-center text-[8px] font-semibold leading-tight ${getPreviewSquareStyle(
+                className={`flex aspect-square items-center justify-center rounded-md border px-1 text-center text-[8px] font-bold leading-tight [font-family:'Bree_Serif','Nunito',serif] ${getPreviewSquareStyle(
                   isFree
                 )}`}
               >
@@ -395,7 +395,7 @@ export function SportsBingoSelectBoard() {
     }
 
     return (
-      <div className="pb-1">
+      <div className="rounded-xl border-2 border-cyan-300/80 bg-[linear-gradient(180deg,#0f172a_0%,#1e293b_100%)] p-2 pb-1 shadow-[0_8px_20px_rgba(15,23,42,0.3)]">
         <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
           {Array.from({ length: 25 }).map((_, index) => {
             const square = byIndex.get(index);
@@ -407,7 +407,7 @@ export function SportsBingoSelectBoard() {
             return (
               <div
                 key={index}
-                className={`flex min-h-[72px] items-center justify-center rounded-lg border px-1.5 py-1.5 text-center text-[10px] font-semibold leading-tight sm:min-h-[82px] sm:px-2 sm:py-2 sm:text-[11px] ${getExpandedSquareStyle(
+                className={`flex min-h-[72px] items-center justify-center rounded-lg border px-1.5 py-1.5 text-center text-[10px] font-bold leading-tight [font-family:'Bree_Serif','Nunito',serif] sm:min-h-[82px] sm:px-2 sm:py-2 sm:text-[11px] ${getExpandedSquareStyle(
                   isFree
                 )}`}
               >
