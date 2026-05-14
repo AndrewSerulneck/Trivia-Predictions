@@ -1,0 +1,3118 @@
+
+<!doctype html>
+<html>
+  <head>
+    <link href="images/favicon-86637cd1.ico" rel="icon" type="image/ico" />
+    <meta charset="utf-8">
+
+
+
+
+
+
+
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>BALLDONTLIE FIFA World Cup API</title>
+
+    <style media="screen">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .gh {
+  color: #999999;
+}
+.highlight .sr {
+  color: #f6aa11;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .nb {
+  color: #f6aa11;
+}
+.highlight .cm {
+  color: #75715e;
+}
+.highlight .cp {
+  color: #75715e;
+}
+.highlight .c1 {
+  color: #75715e;
+}
+.highlight .cs {
+  color: #75715e;
+}
+.highlight .c, .highlight .ch, .highlight .cd, .highlight .cpf {
+  color: #75715e;
+}
+.highlight .err {
+  color: #960050;
+}
+.highlight .gr {
+  color: #960050;
+}
+.highlight .gt {
+  color: #960050;
+}
+.highlight .gd {
+  color: #49483e;
+}
+.highlight .gi {
+  color: #49483e;
+}
+.highlight .ge {
+  color: #49483e;
+}
+.highlight .kc {
+  color: #66d9ef;
+}
+.highlight .kd {
+  color: #66d9ef;
+}
+.highlight .kr {
+  color: #66d9ef;
+}
+.highlight .no {
+  color: #66d9ef;
+}
+.highlight .kt {
+  color: #66d9ef;
+}
+.highlight .mf {
+  color: #ae81ff;
+}
+.highlight .mh {
+  color: #ae81ff;
+}
+.highlight .il {
+  color: #ae81ff;
+}
+.highlight .mi {
+  color: #ae81ff;
+}
+.highlight .mo {
+  color: #ae81ff;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #ae81ff;
+}
+.highlight .sc {
+  color: #ae81ff;
+}
+.highlight .se {
+  color: #ae81ff;
+}
+.highlight .ss {
+  color: #ae81ff;
+}
+.highlight .sd {
+  color: #e6db74;
+}
+.highlight .s2 {
+  color: #e6db74;
+}
+.highlight .sb {
+  color: #e6db74;
+}
+.highlight .sh {
+  color: #e6db74;
+}
+.highlight .si {
+  color: #e6db74;
+}
+.highlight .sx {
+  color: #e6db74;
+}
+.highlight .s1 {
+  color: #e6db74;
+}
+.highlight .s, .highlight .sa, .highlight .dl {
+  color: #e6db74;
+}
+.highlight .na {
+  color: #a6e22e;
+}
+.highlight .nc {
+  color: #a6e22e;
+}
+.highlight .nd {
+  color: #a6e22e;
+}
+.highlight .ne {
+  color: #a6e22e;
+}
+.highlight .nf, .highlight .fm {
+  color: #a6e22e;
+}
+.highlight .vc {
+  color: #ffffff;
+}
+.highlight .nn {
+  color: #ffffff;
+}
+.highlight .ni {
+  color: #ffffff;
+}
+.highlight .bp {
+  color: #ffffff;
+}
+.highlight .vg {
+  color: #ffffff;
+}
+.highlight .vi {
+  color: #ffffff;
+}
+.highlight .nv, .highlight .vm {
+  color: #ffffff;
+}
+.highlight .w {
+  color: #ffffff;
+}
+.highlight {
+  color: #ffffff;
+}
+.highlight .n, .highlight .py, .highlight .nx {
+  color: #ffffff;
+}
+.highlight .nl {
+  color: #f92672;
+}
+.highlight .ow {
+  color: #f92672;
+}
+.highlight .nt {
+  color: #f92672;
+}
+.highlight .k, .highlight .kv {
+  color: #f92672;
+}
+.highlight .kn {
+  color: #f92672;
+}
+.highlight .kp {
+  color: #f92672;
+}
+.highlight .o {
+  color: #f92672;
+}
+    </style>
+    <style media="print">
+      * {
+        -webkit-transition:none!important;
+        transition:none!important;
+      }
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight, .highlight .w {
+  color: #586e75;
+}
+.highlight .err {
+  color: #002b36;
+  background-color: #dc322f;
+}
+.highlight .c, .highlight .ch, .highlight .cd, .highlight .cm, .highlight .cpf, .highlight .c1, .highlight .cs {
+  color: #657b83;
+}
+.highlight .cp {
+  color: #b58900;
+}
+.highlight .nt {
+  color: #b58900;
+}
+.highlight .o, .highlight .ow {
+  color: #93a1a1;
+}
+.highlight .p, .highlight .pi {
+  color: #93a1a1;
+}
+.highlight .gi {
+  color: #859900;
+}
+.highlight .gd {
+  color: #dc322f;
+}
+.highlight .gh {
+  color: #268bd2;
+  background-color: #002b36;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kn, .highlight .kp, .highlight .kr, .highlight .kv {
+  color: #6c71c4;
+}
+.highlight .kc {
+  color: #cb4b16;
+}
+.highlight .kt {
+  color: #cb4b16;
+}
+.highlight .kd {
+  color: #cb4b16;
+}
+.highlight .s, .highlight .sb, .highlight .sc, .highlight .dl, .highlight .sd, .highlight .s2, .highlight .sh, .highlight .sx, .highlight .s1 {
+  color: #859900;
+}
+.highlight .sa {
+  color: #6c71c4;
+}
+.highlight .sr {
+  color: #2aa198;
+}
+.highlight .si {
+  color: #d33682;
+}
+.highlight .se {
+  color: #d33682;
+}
+.highlight .nn {
+  color: #b58900;
+}
+.highlight .nc {
+  color: #b58900;
+}
+.highlight .no {
+  color: #b58900;
+}
+.highlight .na {
+  color: #268bd2;
+}
+.highlight .m, .highlight .mb, .highlight .mf, .highlight .mh, .highlight .mi, .highlight .il, .highlight .mo, .highlight .mx {
+  color: #859900;
+}
+.highlight .ss {
+  color: #859900;
+}
+    </style>
+    <link href="stylesheets/screen-a4600c6c.css" rel="stylesheet" media="screen" />
+    <link href="stylesheets/print-966d6edc.css" rel="stylesheet" media="print" />
+      <script src="javascripts/all-024da600.js"></script>
+
+    <script>
+      $(function() { setupCodeCopy(); });
+    </script>
+  </head>
+
+  <body class="index" data-languages="[&quot;shell&quot;,&quot;javascript&quot;,&quot;python&quot;]">
+    <a href="#" id="nav-button">
+      <span>
+        NAV
+        <img src="images/navbar-cad8cdcb.png" alt="" />
+      </span>
+    </a>
+    <div class="toc-wrapper">
+      <img src="images/logo-bbff08f4.png" class="logo" alt="" />
+        <div class="lang-selector">
+              <a href="#" data-language-name="shell">shell</a>
+              <a href="#" data-language-name="javascript">javascript</a>
+              <a href="#" data-language-name="python">python</a>
+        </div>
+        <div class="search">
+          <input type="text" class="search" id="input-search" placeholder="Search">
+        </div>
+        <ul class="search-results"></ul>
+      <ul id="toc" class="toc-list-h1">
+          <li>
+            <a href="#fifa-world-cup-api" class="toc-h1 toc-link" data-title="FIFA World Cup API">FIFA World Cup API</a>
+          </li>
+          <li>
+            <a href="#ai-powered-integration" class="toc-h1 toc-link" data-title="AI-Powered Integration">AI-Powered Integration</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#using-the-openapi-specification-with-ai" class="toc-h2 toc-link" data-title="Using the OpenAPI Specification with AI">Using the OpenAPI Specification with AI</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#google-sheets-integration" class="toc-h1 toc-link" data-title="Google Sheets Integration">Google Sheets Integration</a>
+          </li>
+          <li>
+            <a href="#account-tiers" class="toc-h1 toc-link" data-title="Account Tiers">Account Tiers</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#48-hour-free-trial" class="toc-h2 toc-link" data-title="48-hour free trial">48-hour free trial</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#authentication" class="toc-h1 toc-link" data-title="Authentication">Authentication</a>
+          </li>
+          <li>
+            <a href="#errors" class="toc-h1 toc-link" data-title="Errors">Errors</a>
+          </li>
+          <li>
+            <a href="#teams" class="toc-h1 toc-link" data-title="Teams">Teams</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-all-teams" class="toc-h2 toc-link" data-title="Get All Teams">Get All Teams</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#stadiums" class="toc-h1 toc-link" data-title="Stadiums">Stadiums</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-all-stadiums" class="toc-h2 toc-link" data-title="Get All Stadiums">Get All Stadiums</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#group-standings" class="toc-h1 toc-link" data-title="Group Standings">Group Standings</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-group-standings" class="toc-h2 toc-link" data-title="Get Group Standings">Get Group Standings</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#matches" class="toc-h1 toc-link" data-title="Matches">Matches</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-all-matches" class="toc-h2 toc-link" data-title="Get All Matches">Get All Matches</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#odds" class="toc-h1 toc-link" data-title="Odds">Odds</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-betting-odds" class="toc-h2 toc-link" data-title="Get Betting Odds">Get Betting Odds</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#futures" class="toc-h1 toc-link" data-title="Futures">Futures</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-futures-odds" class="toc-h2 toc-link" data-title="Get Futures Odds">Get Futures Odds</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#players" class="toc-h1 toc-link" data-title="Players">Players</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-players" class="toc-h2 toc-link" data-title="Get Players">Get Players</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#rosters" class="toc-h1 toc-link" data-title="Rosters">Rosters</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-tournament-rosters" class="toc-h2 toc-link" data-title="Get Tournament Rosters">Get Tournament Rosters</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#match-lineups" class="toc-h1 toc-link" data-title="Match Lineups">Match Lineups</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-match-lineups" class="toc-h2 toc-link" data-title="Get Match Lineups">Get Match Lineups</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#match-events" class="toc-h1 toc-link" data-title="Match Events">Match Events</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-match-events" class="toc-h2 toc-link" data-title="Get Match Events">Get Match Events</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#player-match-stats" class="toc-h1 toc-link" data-title="Player Match Stats">Player Match Stats</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-player-match-stats" class="toc-h2 toc-link" data-title="Get Player Match Stats">Get Player Match Stats</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#team-match-stats" class="toc-h1 toc-link" data-title="Team Match Stats">Team Match Stats</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-team-match-stats" class="toc-h2 toc-link" data-title="Get Team Match Stats">Get Team Match Stats</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#match-shots" class="toc-h1 toc-link" data-title="Match Shots">Match Shots</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-match-shots" class="toc-h2 toc-link" data-title="Get Match Shots">Get Match Shots</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#match-momentum" class="toc-h1 toc-link" data-title="Match Momentum">Match Momentum</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-match-momentum" class="toc-h2 toc-link" data-title="Get Match Momentum">Get Match Momentum</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#match-best-players" class="toc-h1 toc-link" data-title="Match Best Players">Match Best Players</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-match-best-players" class="toc-h2 toc-link" data-title="Get Match Best Players">Get Match Best Players</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#match-avg-positions" class="toc-h1 toc-link" data-title="Match Avg Positions">Match Avg Positions</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-match-avg-positions" class="toc-h2 toc-link" data-title="Get Match Avg Positions">Get Match Avg Positions</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#match-team-form" class="toc-h1 toc-link" data-title="Match Team Form">Match Team Form</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-match-team-form" class="toc-h2 toc-link" data-title="Get Match Team Form">Get Match Team Form</a>
+                  </li>
+              </ul>
+          </li>
+      </ul>
+        <ul class="toc-footer">
+            <li><a href='https://app.balldontlie.io'>Sign Up for an API Key</a></li>
+        </ul>
+    </div>
+    <div class="page-wrapper">
+      <div class="dark-box"></div>
+      <div class="content">
+        <h1 id='fifa-world-cup-api'>FIFA World Cup API</h1>
+<p>Welcome to the <strong>BALLDONTLIE FIFA World Cup API</strong>, your source for World Cup data across the <strong>2018, 2022, and 2026</strong> tournaments — teams, stadiums, players, rosters, matches, standings, lineups, events, per-match player and team stats, shot maps, attack momentum, and betting odds. An API key is required. You can obtain an API key by creating a free account on <a href="https://app.balldontlie.io">our website</a>. Read the <a href="#authentication">authentication section</a> to learn how to use the API key.</p>
+
+<p>Endpoints that filter by season accept a <code>seasons[]</code> query parameter (allowed values: <code>2018</code>, <code>2022</code>, <code>2026</code>). When omitted, queries default to the current edition (2026) so existing integrations continue to work without changes.</p>
+
+<p>Take a look at our <a href="https://www.balldontlie.io/docs">other APIs</a>.</p>
+
+<p>Join us on <a href="https://discord.gg/cQJhfTPn8j">discord</a>.</p>
+<h1 id='ai-powered-integration'>AI-Powered Integration</h1>
+<aside class="notice">
+<strong>New to programming?</strong> Our API is designed to work seamlessly with AI assistants like ChatGPT, the agent, and Gemini. You don't need coding experience to get started!
+</aside>
+<h2 id='using-the-openapi-specification-with-ai'>Using the OpenAPI Specification with AI</h2>
+<p>Our complete <a href="https://www.balldontlie.io/openapi/fifa.yml">OpenAPI specification</a> allows AI assistants to automatically understand and interact with our API. Simply share the spec URL with your AI assistant and describe what you want to build—the AI will handle the technical implementation.</p>
+
+<p><strong>Getting Started with AI:</strong></p>
+
+<ol>
+<li>Copy this URL: <code>https://www.balldontlie.io/openapi/fifa.yml</code></li>
+<li>Share it with your preferred AI assistant (ChatGPT, the agent, Gemini, etc.)</li>
+<li>Tell the AI what you want to build (e.g., &quot;Create a dashboard showing FIFA World Cup matches&quot;)</li>
+<li>The AI will read the OpenAPI spec and write the code for you</li>
+</ol>
+
+<p><strong>Example prompts to try:</strong></p>
+
+<ul>
+<li>&quot;Using the OpenAPI spec at https://www.balldontlie.io/openapi/fifa.yml, show me how to get FIFA World Cup team information&quot;</li>
+<li>&quot;Read the BALLDONTLIE OpenAPI spec and create a Python script that fetches FIFA World Cup matches&quot;</li>
+<li>&quot;Help me understand the available FIFA World Cup endpoints from this OpenAPI spec: https://www.balldontlie.io/openapi/fifa.yml&quot;</li>
+</ul>
+
+<p>This makes it incredibly easy for non-technical users, analysts, and researchers to leverage our FIFA World Cup data without needing to learn programming from scratch.</p>
+<h1 id='google-sheets-integration'>Google Sheets Integration</h1>
+<aside class="notice">
+<strong>Prefer spreadsheets over code?</strong> Pull live sports data directly into Google Sheets with our custom functions - no programming required!
+</aside>
+
+<p>Our Google Sheets integration lets you access all the same data available through our API using simple spreadsheet formulas. Perfect for fantasy sports tracking, betting analysis, and sports research.</p>
+
+<p><strong>Quick Start:</strong></p>
+
+<ol>
+<li>Get your API key from <a href="https://app.balldontlie.io/signup">app.balldontlie.io</a></li>
+<li>Copy our <a href="https://www.balldontlie.io/google-sheets/balldontlie.gs">Google Sheets script</a></li>
+<li>Paste it into your Google Sheet (Extensions &gt; Apps Script)</li>
+<li>Start using functions in your cells</li>
+</ol>
+
+<p><strong>Example functions:</strong></p>
+
+<ul>
+<li><code>=BDL_FIFA_TEAMS()</code> - Get all teams</li>
+<li><code>=BDL_FIFA_PLAYERS(&quot;search&quot;)</code> - Search for players</li>
+<li><code>=BDL_FIFA_MATCHES(&quot;2026-01-27&quot;)</code> - Get matches by date</li>
+<li><code>=BDL_FIFA_STANDINGS(2025)</code> - Get standings</li>
+</ul>
+
+<p>For full setup instructions and the complete list of 150+ functions, see our <a href="https://www.balldontlie.io/blog/google-sheets-integration/">Google Sheets Integration Guide</a>.</p>
+<h1 id='account-tiers'>Account Tiers</h1>
+<p>There are three different account tiers which provide you access to different types of data. <a href="https://app.balldontlie.io">Visit our website</a> to create an account for free.</p>
+
+<p><strong>Paid tiers do not apply across sports. The tier you purchase for the FIFA World Cup will not automatically be applied to other sports. You can purchase the ALL-ACCESS ($299.99/mo) tier to get access to every endpoint for every sport.</strong></p>
+
+<p>Read the table below to see the breakdown.</p>
+
+<table><thead>
+<tr>
+<th>Endpoint</th>
+<th>Free</th>
+<th>ALL-STAR</th>
+<th>GOAT</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><a href="#teams">Teams</a></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#stadiums">Stadiums</a></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#group-standings">Group Standings</a></td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#matches">Matches</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#odds">Odds</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#futures">Futures</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#players">Players</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#rosters">Rosters</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#match-lineups">Match Lineups</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#match-events">Match Events</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#player-match-stats">Player Match Stats</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#team-match-stats">Team Match Stats</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#match-shots">Match Shots</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#match-momentum">Match Momentum</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#match-best-players">Match Best Players</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#match-avg-positions">Match Avg Positions</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#match-team-form">Match Team Form</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+</tbody></table>
+
+<p>The feature breakdown per tier is shown in the table below.</p>
+
+<table><thead>
+<tr>
+<th>Tier</th>
+<th>Requests / Min</th>
+<th>$USD / mo.</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>GOAT</td>
+<td>600</td>
+<td>39.99</td>
+</tr>
+<tr>
+<td>ALL-STAR</td>
+<td>60</td>
+<td>9.99</td>
+</tr>
+<tr>
+<td>Free</td>
+<td>5</td>
+<td>0</td>
+</tr>
+</tbody></table>
+<h3 id='48-hour-free-trial'>48-hour free trial</h3>
+<p>Every paid sport offers a 48-hour trial of the GOAT tier (all endpoints, 5 req/min during the trial). ALL-ACCESS is also available as a 48-hour trial with the same 5 req/min trial limit. A payment method is required at signup; there is no charge until the trial ends, and you can cancel anytime from your dashboard. One trial per sport per account. Existing ALL-STAR subscribers may trial the GOAT upgrade for their sports.</p>
+<h1 id='authentication'>Authentication</h1>
+<blockquote>
+<p>To authorize, use this code:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"api_endpoint_here"</span> <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/fifa/worldcup/v1/teams</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+<span class="kd">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/fifa/worldcup/v1/teams'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">'Error: </span><span class="si">{</span><span class="n">response</span><span class="p">.</span><span class="n">status_code</span><span class="si">}</span><span class="s">'</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>Make sure to replace <code>YOUR_API_KEY</code> with your API key.</p>
+</blockquote>
+
+<p>BALLDONTLIE uses API keys to allow access to the API. You can obtain an API key by creating a free account at <a href="https://app.balldontlie.io">our website</a></p>
+
+<p>We expect the API key to be included in all API requests to the server in a header that looks like the following:</p>
+
+<p><code>Authorization: YOUR_API_KEY</code></p>
+
+<aside class="notice">
+You must replace <code>YOUR_API_KEY</code> with your personal API key.
+</aside>
+
+<aside class="notice">
+Trial keys use the same <code>api_key</code> and <code>Authorization</code> header as paid keys. During the trial window, requests are capped at 5 req/min; when the trial converts to paid GOAT or ALL-ACCESS, the key uses the paid 600 req/min limit automatically. No integration change is required when the trial expires or converts.
+</aside>
+<h1 id='errors'>Errors</h1>
+<p>The API uses the following error codes:</p>
+
+<table><thead>
+<tr>
+<th>Error Code</th>
+<th>Meaning</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>401</td>
+<td>Unauthorized - You either need an API key or your account tier does not have access to the endpoint.</td>
+</tr>
+<tr>
+<td>400</td>
+<td>Bad Request -- The request is invalid. The request parameters are probably incorrect.</td>
+</tr>
+<tr>
+<td>404</td>
+<td>Not Found -- The specified resource could not be found.</td>
+</tr>
+<tr>
+<td>406</td>
+<td>Not Acceptable -- You requested a format that isn&#39;t json.</td>
+</tr>
+<tr>
+<td>429</td>
+<td>Too Many Requests -- You&#39;re rate limited.</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Internal Server Error -- We had a problem with our server. Try again later.</td>
+</tr>
+<tr>
+<td>503</td>
+<td>Service Unavailable -- We&#39;re temporarily offline for maintenance. Please try again later.</td>
+</tr>
+</tbody></table>
+<h1 id='teams'>Teams</h1><h2 id='get-all-teams'>Get All Teams</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/fifa/worldcup/v1/teams"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/fifa/worldcup/v1/teams</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+<span class="kd">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/fifa/worldcup/v1/teams'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">teams</span> <span class="o">=</span> <span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">()[</span><span class="s">'data'</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">team</span> <span class="ow">in</span> <span class="n">teams</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">team</span><span class="p">[</span><span class="s">'name'</span><span class="p">]</span><span class="si">}</span><span class="s"> (</span><span class="si">{</span><span class="n">team</span><span class="p">[</span><span class="s">'abbreviation'</span><span class="p">]</span><span class="si">}</span><span class="s">)"</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">13</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Algeria"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"abbreviation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ALG"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ALG"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"confederation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CAF"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Argentina"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"abbreviation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ARG"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ARG"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"confederation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CONMEBOL"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Australia"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"abbreviation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AUS"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AUS"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"confederation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AFC"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+    </span><span class="err">...</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves all participating nations for the requested World Cup edition(s). Defaults to 2026 when <code>seasons[]</code> is omitted.</p>
+<h3 id='http-request'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/fifa/worldcup/v1/teams</code></p>
+<h3 id='query-parameters'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>seasons[]</td>
+<td>int[]</td>
+<td>Optional. World Cup years to include. Allowed: <code>2018</code>, <code>2022</code>, <code>2026</code>. Default: <code>[2026]</code>.</td>
+</tr>
+</tbody></table>
+<h3 id='response-fields'>Response Fields</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>int</td>
+<td>Team ID</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>Full country name</td>
+</tr>
+<tr>
+<td>abbreviation</td>
+<td>string</td>
+<td>Three-letter country code (e.g., USA, BRA, GER)</td>
+</tr>
+<tr>
+<td>country_code</td>
+<td>string</td>
+<td>ISO country code</td>
+</tr>
+<tr>
+<td>confederation</td>
+<td>string</td>
+<td>FIFA confederation (UEFA, CONMEBOL, CONCACAF, CAF, AFC, OFC)</td>
+</tr>
+</tbody></table>
+<h1 id='stadiums'>Stadiums</h1><h2 id='get-all-stadiums'>Get All Stadiums</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/fifa/worldcup/v1/stadiums"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/fifa/worldcup/v1/stadiums</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+<span class="kd">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/fifa/worldcup/v1/stadiums'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">stadiums</span> <span class="o">=</span> <span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">()[</span><span class="s">'data'</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">stadium</span> <span class="ow">in</span> <span class="n">stadiums</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">stadium</span><span class="p">[</span><span class="s">'name'</span><span class="p">]</span><span class="si">}</span><span class="s"> - </span><span class="si">{</span><span class="n">stadium</span><span class="p">[</span><span class="s">'city'</span><span class="p">]</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">13</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Atlanta Stadium"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Atlanta"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"USA"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"capacity"</span><span class="p">:</span><span class="w"> </span><span class="mi">71000</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"latitude"</span><span class="p">:</span><span class="w"> </span><span class="mf">33.7553</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"longitude"</span><span class="p">:</span><span class="w"> </span><span class="mf">-84.4006</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BC Place Vancouver"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Vancouver"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CAN"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"capacity"</span><span class="p">:</span><span class="w"> </span><span class="mi">54500</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"latitude"</span><span class="p">:</span><span class="w"> </span><span class="mf">49.2767</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"longitude"</span><span class="p">:</span><span class="w"> </span><span class="mf">-123.1119</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+    </span><span class="err">...</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves the host stadiums used by the requested World Cup edition(s). Defaults to 2026 when <code>seasons[]</code> is omitted.</p>
+<h3 id='http-request-2'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/fifa/worldcup/v1/stadiums</code></p>
+<h3 id='query-parameters-2'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>seasons[]</td>
+<td>int[]</td>
+<td>Optional. World Cup years to include. Allowed: <code>2018</code>, <code>2022</code>, <code>2026</code>. Default: <code>[2026]</code>.</td>
+</tr>
+</tbody></table>
+<h3 id='response-fields-2'>Response Fields</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>int</td>
+<td>Stadium ID</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>Stadium name</td>
+</tr>
+<tr>
+<td>city</td>
+<td>string</td>
+<td>Host city</td>
+</tr>
+<tr>
+<td>country</td>
+<td>string</td>
+<td>Country code</td>
+</tr>
+<tr>
+<td>capacity</td>
+<td>int</td>
+<td>Seating capacity (nullable)</td>
+</tr>
+<tr>
+<td>latitude</td>
+<td>float</td>
+<td>Geographic latitude (nullable)</td>
+</tr>
+<tr>
+<td>longitude</td>
+<td>float</td>
+<td>Geographic longitude (nullable)</td>
+</tr>
+</tbody></table>
+<h1 id='group-standings'>Group Standings</h1><h2 id='get-group-standings'>Get Group Standings</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/fifa/worldcup/v1/group_standings"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/fifa/worldcup/v1/group_standings</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+<span class="kd">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/fifa/worldcup/v1/group_standings'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">standings</span> <span class="o">=</span> <span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">()[</span><span class="s">'data'</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">standing</span> <span class="ow">in</span> <span class="n">standings</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">standing</span><span class="p">[</span><span class="s">'group'</span><span class="p">][</span><span class="s">'name'</span><span class="p">]</span><span class="si">}</span><span class="s">: </span><span class="si">{</span><span class="n">standing</span><span class="p">[</span><span class="s">'team'</span><span class="p">][</span><span class="s">'name'</span><span class="p">]</span><span class="si">}</span><span class="s"> - </span><span class="si">{</span><span class="n">standing</span><span class="p">[</span><span class="s">'points'</span><span class="p">]</span><span class="si">}</span><span class="s"> pts"</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nl">"year"</span><span class="p">:</span><span class="w"> </span><span class="mi">2026</span><span class="w"> </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"team"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Mexico"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"abbreviation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MEX"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MEX"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"confederation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CONCACAF"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"group"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Group A"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"position"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"played"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"won"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"drawn"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"lost"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"goals_for"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"goals_against"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"goal_difference"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"points"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+    </span><span class="err">...</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves group stage standings for the requested World Cup edition(s). Defaults to 2026 when <code>seasons[]</code> is omitted.</p>
+<h3 id='http-request-3'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/fifa/worldcup/v1/group_standings</code></p>
+<h3 id='query-parameters-3'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>seasons[]</td>
+<td>int[]</td>
+<td>Optional. World Cup years to include. Allowed: <code>2018</code>, <code>2022</code>, <code>2026</code>. Default: <code>[2026]</code>.</td>
+</tr>
+</tbody></table>
+<h3 id='response-fields-3'>Response Fields</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>season</td>
+<td>object</td>
+<td>Season <code>{ id, year }</code></td>
+</tr>
+<tr>
+<td>team</td>
+<td>object</td>
+<td>Team object</td>
+</tr>
+<tr>
+<td>group</td>
+<td>object</td>
+<td>Group object (id, name)</td>
+</tr>
+<tr>
+<td>position</td>
+<td>int</td>
+<td>Position within the group</td>
+</tr>
+<tr>
+<td>played</td>
+<td>int</td>
+<td>Games played</td>
+</tr>
+<tr>
+<td>won</td>
+<td>int</td>
+<td>Games won</td>
+</tr>
+<tr>
+<td>drawn</td>
+<td>int</td>
+<td>Games drawn</td>
+</tr>
+<tr>
+<td>lost</td>
+<td>int</td>
+<td>Games lost</td>
+</tr>
+<tr>
+<td>goals_for</td>
+<td>int</td>
+<td>Goals scored</td>
+</tr>
+<tr>
+<td>goals_against</td>
+<td>int</td>
+<td>Goals conceded</td>
+</tr>
+<tr>
+<td>goal_difference</td>
+<td>int</td>
+<td>Goal difference</td>
+</tr>
+<tr>
+<td>points</td>
+<td>int</td>
+<td>Total points</td>
+</tr>
+</tbody></table>
+<h1 id='matches'>Matches</h1>
+<aside class="notice">Match data is updated in real-time for games that are in progress. Scores refresh automatically as goals are scored.</aside>
+<h2 id='get-all-matches'>Get All Matches</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/fifa/worldcup/v1/matches"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/fifa/worldcup/v1/matches</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+<span class="kd">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/fifa/worldcup/v1/matches'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">matches</span> <span class="o">=</span> <span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">()[</span><span class="s">'data'</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+        <span class="n">home</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="s">'home_team'</span><span class="p">][</span><span class="s">'name'</span><span class="p">]</span> <span class="k">if</span> <span class="n">match</span><span class="p">[</span><span class="s">'home_team'</span><span class="p">]</span> <span class="k">else</span> <span class="s">'TBD'</span>
+        <span class="n">away</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="s">'away_team'</span><span class="p">][</span><span class="s">'name'</span><span class="p">]</span> <span class="k">if</span> <span class="n">match</span><span class="p">[</span><span class="s">'away_team'</span><span class="p">]</span> <span class="k">else</span> <span class="s">'TBD'</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">home</span><span class="si">}</span><span class="s"> vs </span><span class="si">{</span><span class="n">away</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1030</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"match_number"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"datetime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2022-11-20T16:00:00.000Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"completed"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nl">"year"</span><span class="p">:</span><span class="w"> </span><span class="mi">2022</span><span class="w"> </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"stage"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span><span class="w"> </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Group Stage"</span><span class="p">,</span><span class="w"> </span><span class="nl">"order"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"group"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Group A"</span><span class="w"> </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"stadium"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">476</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Al Bayt Stadium"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Al Khor"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"QAT"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"capacity"</span><span class="p">:</span><span class="w"> </span><span class="mi">60000</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"latitude"</span><span class="p">:</span><span class="w"> </span><span class="mf">51.31667</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"longitude"</span><span class="p">:</span><span class="w"> </span><span class="mf">25.76667</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"home_team"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Qatar"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"abbreviation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"QAT"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"QAT"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"confederation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AFC"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"away_team"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Ecuador"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"abbreviation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ECU"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ECU"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"confederation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CONMEBOL"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"home_team_source"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"away_team_source"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"home_score"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"away_score"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"home_score_penalties"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"away_score_penalties"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"first_half_home_score"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"first_half_away_score"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"second_half_home_score"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"second_half_away_score"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"extra_time_home_score"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"extra_time_away_score"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"has_extra_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"has_penalty_shootout"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"round_number"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"round_name"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"home_formation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5-3-2"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"away_formation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"4-4-2"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"referee"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">168</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Daniele Orsato"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ITA"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Italy"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"home_manager"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">369</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Félix Sánchez"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"short_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"F. Sánchez"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"away_manager"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">372</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Gustavo Alfaro"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"short_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"G. Alfaro"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">73</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"match_number"</span><span class="p">:</span><span class="w"> </span><span class="mi">73</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"datetime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-06-28T15:00:00.000Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"scheduled"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"stage"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Round of 32"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"order"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"group"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"stadium"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Los Angeles Stadium"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Los Angeles"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"USA"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"home_team"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"away_team"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"home_team_source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"group_2nd"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"source_match_id"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"source_match_number"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"source_group_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"source_group_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Group A"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"placeholder"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2A"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2nd place in Group Group A"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"away_team_source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"group_2nd"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"source_match_id"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"source_match_number"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"source_group_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"source_group_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Group B"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"placeholder"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2B"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2nd place in Group Group B"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"home_score"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"away_score"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"home_score_penalties"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"away_score_penalties"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="err">...</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves matches for the requested World Cup edition(s) — group stage and knockout rounds. Defaults to 2026 when <code>seasons[]</code> is omitted. Results are paginated by cursor.</p>
+<h3 id='http-request-4'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/fifa/worldcup/v1/matches</code></p>
+<h3 id='query-parameters-4'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>seasons[]</td>
+<td>int[]</td>
+<td>Optional. Allowed: <code>2018</code>, <code>2022</code>, <code>2026</code>. Default: <code>[2026]</code>.</td>
+</tr>
+<tr>
+<td>match_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific match IDs.</td>
+</tr>
+<tr>
+<td>team_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to matches where one of these team IDs played.</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>int</td>
+<td>Optional. Page size, max 100. Default 25.</td>
+</tr>
+<tr>
+<td>cursor</td>
+<td>int</td>
+<td>Optional. Cursor for the next page.</td>
+</tr>
+</tbody></table>
+<h3 id='response-fields-4'>Response Fields</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>int</td>
+<td>Match ID</td>
+</tr>
+<tr>
+<td>match_number</td>
+<td>int</td>
+<td>Official match number</td>
+</tr>
+<tr>
+<td>datetime</td>
+<td>string</td>
+<td>Match date and time in UTC</td>
+</tr>
+<tr>
+<td>status</td>
+<td>string</td>
+<td>Match status (scheduled, in_progress, completed, postponed, cancelled)</td>
+</tr>
+<tr>
+<td>season</td>
+<td>object</td>
+<td>Season <code>{ id, year }</code></td>
+</tr>
+<tr>
+<td>stage</td>
+<td>object</td>
+<td>Stage object (id, name, order)</td>
+</tr>
+<tr>
+<td>group</td>
+<td>object</td>
+<td>Group object (null for knockout matches)</td>
+</tr>
+<tr>
+<td>stadium</td>
+<td>object</td>
+<td>Stadium object</td>
+</tr>
+<tr>
+<td>home_team</td>
+<td>object</td>
+<td>Home team (null if TBD in knockout stage)</td>
+</tr>
+<tr>
+<td>away_team</td>
+<td>object</td>
+<td>Away team (null if TBD in knockout stage)</td>
+</tr>
+<tr>
+<td>home_team_source</td>
+<td>object</td>
+<td>Source info when home team is TBD</td>
+</tr>
+<tr>
+<td>away_team_source</td>
+<td>object</td>
+<td>Source info when away team is TBD</td>
+</tr>
+<tr>
+<td>home_score</td>
+<td>int</td>
+<td>Home team score (null if not started)</td>
+</tr>
+<tr>
+<td>away_score</td>
+<td>int</td>
+<td>Away team score (null if not started)</td>
+</tr>
+<tr>
+<td>home_score_penalties</td>
+<td>int</td>
+<td>Home team penalty shootout score (null if no shootout)</td>
+</tr>
+<tr>
+<td>away_score_penalties</td>
+<td>int</td>
+<td>Away team penalty shootout score (null if no shootout)</td>
+</tr>
+<tr>
+<td>first_half_home_score</td>
+<td>int</td>
+<td>First-half home score (nullable)</td>
+</tr>
+<tr>
+<td>first_half_away_score</td>
+<td>int</td>
+<td>First-half away score (nullable)</td>
+</tr>
+<tr>
+<td>second_half_home_score</td>
+<td>int</td>
+<td>Second-half home score (nullable)</td>
+</tr>
+<tr>
+<td>second_half_away_score</td>
+<td>int</td>
+<td>Second-half away score (nullable)</td>
+</tr>
+<tr>
+<td>extra_time_home_score</td>
+<td>int</td>
+<td>Extra-time home score (nullable; null unless <code>has_extra_time</code>)</td>
+</tr>
+<tr>
+<td>extra_time_away_score</td>
+<td>int</td>
+<td>Extra-time away score (nullable)</td>
+</tr>
+<tr>
+<td>has_extra_time</td>
+<td>boolean</td>
+<td>Whether extra time was played</td>
+</tr>
+<tr>
+<td>has_penalty_shootout</td>
+<td>boolean</td>
+<td>Whether a penalty shootout was played</td>
+</tr>
+<tr>
+<td>round_number</td>
+<td>int</td>
+<td>Round number within the tournament (nullable)</td>
+</tr>
+<tr>
+<td>round_name</td>
+<td>string</td>
+<td>Round name, e.g. &quot;Round of 16&quot; (nullable)</td>
+</tr>
+<tr>
+<td>home_formation</td>
+<td>string</td>
+<td>Home team formation, e.g. &quot;4-3-3&quot; (nullable until lineups confirmed)</td>
+</tr>
+<tr>
+<td>away_formation</td>
+<td>string</td>
+<td>Away team formation (nullable)</td>
+</tr>
+<tr>
+<td>referee</td>
+<td>object</td>
+<td>Referee <code>{ id, name, country_code, country_name }</code> (nullable)</td>
+</tr>
+<tr>
+<td>home_manager</td>
+<td>object</td>
+<td>Home manager <code>{ id, name, short_name }</code> (nullable)</td>
+</tr>
+<tr>
+<td>away_manager</td>
+<td>object</td>
+<td>Away manager (nullable)</td>
+</tr>
+</tbody></table>
+<h3 id='team-source-object'>Team Source Object</h3>
+<p>For knockout matches where teams are not yet determined, the <code>home_team_source</code> or <code>away_team_source</code> provides information about how the team will be determined:</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>type</td>
+<td>string</td>
+<td>Source type (group_1st, group_2nd, winner, loser, etc.)</td>
+</tr>
+<tr>
+<td>source_match_id</td>
+<td>int</td>
+<td>ID of the match that determines this team</td>
+</tr>
+<tr>
+<td>source_match_number</td>
+<td>int</td>
+<td>Match number that determines this team</td>
+</tr>
+<tr>
+<td>source_group_id</td>
+<td>int</td>
+<td>ID of the group (for group placement sources)</td>
+</tr>
+<tr>
+<td>source_group_name</td>
+<td>string</td>
+<td>Group name (e.g., &quot;A&quot;, &quot;B&quot;)</td>
+</tr>
+<tr>
+<td>placeholder</td>
+<td>string</td>
+<td>Placeholder text</td>
+</tr>
+<tr>
+<td>description</td>
+<td>string</td>
+<td>Human-readable description (e.g., &quot;Winner of Match 49&quot;)</td>
+</tr>
+</tbody></table>
+<h3 id='understanding-knockout-match-data'>Understanding Knockout Match Data</h3>
+<p>The 2026 World Cup includes 104 matches total; the 2018 and 2022 editions had 64 each. Before the knockout rounds begin, many matches will have <code>home_team</code> and/or <code>away_team</code> set to <code>null</code> because the participating teams have not yet been determined. You can construct the knockout bracket in addition to the group stages with this data.</p>
+
+<p><strong>How to interpret the data:</strong></p>
+
+<ol>
+<li><p><strong>Check if teams are determined:</strong> If <code>home_team</code> or <code>away_team</code> is <code>null</code>, the team has not yet qualified for that match.</p></li>
+<li><p><strong>Use the source object:</strong> When a team is <code>null</code>, look at the corresponding <code>home_team_source</code> or <code>away_team_source</code> object to understand how the team will be determined.</p></li>
+<li><p><strong>Source types explained:</strong></p></li>
+</ol>
+
+<ul>
+<li><code>group_1st</code> - Winner of a group (check <code>source_group_name</code> for which group)</li>
+<li><code>group_2nd</code> - Runner-up of a group (check <code>source_group_name</code> for which group)</li>
+<li><code>group_3rd</code> - Third place finisher from a group</li>
+<li><code>winner</code> - Winner of a previous match (check <code>source_match_id</code> or <code>source_match_number</code>)</li>
+<li><code>loser</code> - Loser of a previous match (used for third-place playoff)</li>
+</ul>
+
+<ol>
+<li><strong>Display placeholder text:</strong> Use the <code>description</code> field for a human-readable label (e.g., &quot;Winner of Group A&quot; or &quot;Winner of Match 49&quot;).</li>
+</ol>
+<h1 id='odds'>Odds</h1><h2 id='get-betting-odds'>Get Betting Odds</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/fifa/worldcup/v1/odds"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/fifa/worldcup/v1/odds</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+<span class="kd">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/fifa/worldcup/v1/odds'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">odds</span> <span class="o">=</span> <span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">()[</span><span class="s">'data'</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">odd</span> <span class="ow">in</span> <span class="n">odds</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Match </span><span class="si">{</span><span class="n">odd</span><span class="p">[</span><span class="s">'match_id'</span><span class="p">]</span><span class="si">}</span><span class="s">: Home </span><span class="si">{</span><span class="n">odd</span><span class="p">[</span><span class="s">'moneyline_home_odds'</span><span class="p">]</span><span class="si">}</span><span class="s">, Draw </span><span class="si">{</span><span class="n">odd</span><span class="p">[</span><span class="s">'moneyline_draw_odds'</span><span class="p">]</span><span class="si">}</span><span class="s">, Away </span><span class="si">{</span><span class="n">odd</span><span class="p">[</span><span class="s">'moneyline_away_odds'</span><span class="p">]</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">37515873</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"match_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"vendor"</span><span class="p">:</span><span class="w"> </span><span class="s2">"draftkings"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"moneyline_home_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">-115</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"moneyline_away_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">320</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"moneyline_draw_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">250</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2025-12-18T20:39:00.295Z"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">37515874</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"match_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"vendor"</span><span class="p">:</span><span class="w"> </span><span class="s2">"draftkings"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"moneyline_home_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">230</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"moneyline_away_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">130</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"moneyline_draw_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">210</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2025-12-18T20:39:00.295Z"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+    </span><span class="err">...</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves moneyline betting odds for World Cup matches. Defaults to 2026 when <code>seasons[]</code> is omitted. Results are paginated by cursor.</p>
+
+<aside class="warning"><strong>Pagination notice:</strong> this endpoint now uses cursor-based pagination — the response includes a <code>meta.next_cursor</code> instead of returning every row in a single payload. If you previously consumed the full list in one request, switch to following the cursor.</aside>
+
+<p><strong>Available Vendors:</strong></p>
+
+<table><thead>
+<tr>
+<th>Vendor</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>draftkings</td>
+<td>DraftKings</td>
+</tr>
+<tr>
+<td>fanduel</td>
+<td>FanDuel</td>
+</tr>
+</tbody></table>
+<h3 id='http-request-5'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/fifa/worldcup/v1/odds</code></p>
+<h3 id='query-parameters-5'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>seasons[]</td>
+<td>int[]</td>
+<td>Optional. Allowed: <code>2018</code>, <code>2022</code>, <code>2026</code>. Default: <code>[2026]</code>.</td>
+</tr>
+<tr>
+<td>match_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific match IDs.</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>int</td>
+<td>Optional. Page size, max 100. Default 25.</td>
+</tr>
+<tr>
+<td>cursor</td>
+<td>int</td>
+<td>Optional. Cursor for the next page.</td>
+</tr>
+</tbody></table>
+<h3 id='response-fields-5'>Response Fields</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>int</td>
+<td>Odds ID</td>
+</tr>
+<tr>
+<td>match_id</td>
+<td>int</td>
+<td>Match ID</td>
+</tr>
+<tr>
+<td>vendor</td>
+<td>string</td>
+<td>Sportsbook vendor</td>
+</tr>
+<tr>
+<td>moneyline_home_odds</td>
+<td>int</td>
+<td>Home team moneyline odds</td>
+</tr>
+<tr>
+<td>moneyline_away_odds</td>
+<td>int</td>
+<td>Away team moneyline odds</td>
+</tr>
+<tr>
+<td>moneyline_draw_odds</td>
+<td>number</td>
+<td>Draw moneyline odds</td>
+</tr>
+<tr>
+<td>updated_at</td>
+<td>string</td>
+<td>Last update timestamp</td>
+</tr>
+</tbody></table>
+<h1 id='futures'>Futures</h1><h2 id='get-futures-odds'>Get Futures Odds</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/fifa/worldcup/v1/odds/futures"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/fifa/worldcup/v1/odds/futures</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+<span class="kd">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/fifa/worldcup/v1/odds/futures'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">futures</span> <span class="o">=</span> <span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">()[</span><span class="s">'data'</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">futures</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">future</span><span class="p">[</span><span class="s">'subject'</span><span class="p">][</span><span class="s">'name'</span><span class="p">]</span><span class="si">}</span><span class="s">: </span><span class="si">{</span><span class="n">future</span><span class="p">[</span><span class="s">'american_odds'</span><span class="p">]</span><span class="si">}</span><span class="s"> (</span><span class="si">{</span><span class="n">future</span><span class="p">[</span><span class="s">'market_name'</span><span class="p">]</span><span class="si">}</span><span class="s">)"</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1297</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"market_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"finish_bottom"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"market_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Group G"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"subject"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">41</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"New Zealand"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"abbreviation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"NZL"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"NZL"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"confederation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"OFC"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"vendor"</span><span class="p">:</span><span class="w"> </span><span class="s2">"draftkings"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"american_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">-185</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"decimal_odds"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.5405</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2025-12-18T15:12:26.494Z"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1283</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"market_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"finish_bottom"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"market_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Group C"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"subject"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">44</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scotland"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"abbreviation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SCO"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SCO"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"confederation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"UEFA"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"vendor"</span><span class="p">:</span><span class="w"> </span><span class="s2">"draftkings"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"american_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">500</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"decimal_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2025-12-18T15:12:26.494Z"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+    </span><span class="err">...</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves futures betting odds for the FIFA World Cup (e.g., tournament winner odds). Defaults to 2026 when <code>seasons[]</code> is omitted.</p>
+
+<p><strong>Available Vendors:</strong></p>
+
+<table><thead>
+<tr>
+<th>Vendor</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>draftkings</td>
+<td>DraftKings</td>
+</tr>
+<tr>
+<td>fanduel</td>
+<td>FanDuel</td>
+</tr>
+</tbody></table>
+<h3 id='http-request-6'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/fifa/worldcup/v1/odds/futures</code></p>
+<h3 id='query-parameters-6'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>seasons[]</td>
+<td>int[]</td>
+<td>Optional. Allowed: <code>2018</code>, <code>2022</code>, <code>2026</code>. Default: <code>[2026]</code>.</td>
+</tr>
+</tbody></table>
+<h3 id='response-fields-6'>Response Fields</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>int</td>
+<td>Futures odds ID</td>
+</tr>
+<tr>
+<td>market_type</td>
+<td>string</td>
+<td>Type of futures market</td>
+</tr>
+<tr>
+<td>market_name</td>
+<td>string</td>
+<td>Name of the futures market</td>
+</tr>
+<tr>
+<td>subject</td>
+<td>object</td>
+<td>Team object the odds are for</td>
+</tr>
+<tr>
+<td>vendor</td>
+<td>string</td>
+<td>Sportsbook vendor</td>
+</tr>
+<tr>
+<td>american_odds</td>
+<td>int</td>
+<td>American odds format</td>
+</tr>
+<tr>
+<td>decimal_odds</td>
+<td>number</td>
+<td>Decimal odds format</td>
+</tr>
+<tr>
+<td>updated_at</td>
+<td>string</td>
+<td>Last update timestamp</td>
+</tr>
+</tbody></table>
+<h3 id='market-types'>Market Types</h3>
+<table><thead>
+<tr>
+<th>Market Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>outright</td>
+<td>Tournament winner</td>
+</tr>
+<tr>
+<td>group_winner</td>
+<td>Win their group</td>
+</tr>
+<tr>
+<td>qualify_from_group</td>
+<td>Advance from group stage</td>
+</tr>
+<tr>
+<td>finish_bottom</td>
+<td>Finish last in their group</td>
+</tr>
+<tr>
+<td>win_all_group_games</td>
+<td>Win all three group stage matches</td>
+</tr>
+<tr>
+<td>to_reach_quarters</td>
+<td>Advance to the quarterfinals</td>
+</tr>
+<tr>
+<td>to_reach_semis</td>
+<td>Advance to the semifinals</td>
+</tr>
+<tr>
+<td>to_reach_final</td>
+<td>Advance to the final</td>
+</tr>
+<tr>
+<td>stage_of_elimination</td>
+<td>Stage at which a team will be eliminated</td>
+</tr>
+</tbody></table>
+<h1 id='players'>Players</h1><h2 id='get-players'>Get Players</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/fifa/worldcup/v1/players?search=pulisic"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">142</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Christian Pulisic"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"short_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"C. Pulisic"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"position"</span><span class="p">:</span><span class="w"> </span><span class="s2">"M"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"date_of_birth"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1998-09-18T00:00:00.000Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"USA"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"United States"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="mi">172</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"jersey_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="mi">142</span><span class="p">,</span><span class="w"> </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>Lists biographical data for every player who has appeared in a FIFA World Cup squad. By default returns all players across every ingested edition; pass <code>seasons[]</code> and/or <code>team_ids[]</code> to filter.</p>
+<h3 id='http-request-7'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/fifa/worldcup/v1/players</code></p>
+<h3 id='query-parameters-7'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>seasons[]</td>
+<td>int[]</td>
+<td>Optional. Allowed: <code>2018</code>, <code>2022</code>, <code>2026</code>. When omitted, returns players across all editions.</td>
+</tr>
+<tr>
+<td>team_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to players who appeared on these team IDs.</td>
+</tr>
+<tr>
+<td>search</td>
+<td>string</td>
+<td>Optional. Case-insensitive substring match on player name.</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>int</td>
+<td>Optional. Page size, max 100. Default 25.</td>
+</tr>
+<tr>
+<td>cursor</td>
+<td>int</td>
+<td>Optional. Cursor for the next page.</td>
+</tr>
+</tbody></table>
+<h3 id='response-fields-7'>Response Fields</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>int</td>
+<td>Player ID</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>Full name</td>
+</tr>
+<tr>
+<td>short_name</td>
+<td>string</td>
+<td>Short / display form (nullable)</td>
+</tr>
+<tr>
+<td>position</td>
+<td>string</td>
+<td>Primary position code (nullable)</td>
+</tr>
+<tr>
+<td>date_of_birth</td>
+<td>string</td>
+<td>ISO date (nullable)</td>
+</tr>
+<tr>
+<td>country_code</td>
+<td>string</td>
+<td>Three-letter country code (nullable)</td>
+</tr>
+<tr>
+<td>country_name</td>
+<td>string</td>
+<td>Country name (nullable)</td>
+</tr>
+<tr>
+<td>height_cm</td>
+<td>int</td>
+<td>Height in centimeters (nullable)</td>
+</tr>
+<tr>
+<td>jersey_number</td>
+<td>string</td>
+<td>Last known jersey number (nullable)</td>
+</tr>
+</tbody></table>
+<h1 id='rosters'>Rosters</h1><h2 id='get-tournament-rosters'>Get Tournament Rosters</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/fifa/worldcup/v1/rosters?team_ids[]=12"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nl">"year"</span><span class="p">:</span><span class="w"> </span><span class="mi">2026</span><span class="w"> </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"team_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">142</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Christian Pulisic"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"short_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"C. Pulisic"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"position"</span><span class="p">:</span><span class="w"> </span><span class="s2">"M"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"date_of_birth"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1998-09-18T00:00:00.000Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"USA"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"United States"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="mi">172</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"jersey_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"position"</span><span class="p">:</span><span class="w"> </span><span class="s2">"M"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"appearances"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"starts"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"minutes_played"</span><span class="p">:</span><span class="w"> </span><span class="mi">360</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"goals"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"assists"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"yellow_cards"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"red_cards"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"avg_rating"</span><span class="p">:</span><span class="w"> </span><span class="mf">7.6</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>Returns the per-tournament squad (one row per player per team per edition) with cumulative tournament stats. By default returns rosters across all ingested editions; pass <code>seasons[]</code> to filter.</p>
+<h3 id='http-request-8'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/fifa/worldcup/v1/rosters</code></p>
+<h3 id='query-parameters-8'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>seasons[]</td>
+<td>int[]</td>
+<td>Optional. Allowed: <code>2018</code>, <code>2022</code>, <code>2026</code>. When omitted, returns rosters across all editions.</td>
+</tr>
+<tr>
+<td>team_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific team IDs.</td>
+</tr>
+<tr>
+<td>player_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific player IDs.</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>int</td>
+<td>Optional. Page size, max 100. Default 25.</td>
+</tr>
+<tr>
+<td>cursor</td>
+<td>int</td>
+<td>Optional. Cursor for the next page.</td>
+</tr>
+</tbody></table>
+<h3 id='response-fields-8'>Response Fields</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>season</td>
+<td>object</td>
+<td>Season <code>{ id, year }</code></td>
+</tr>
+<tr>
+<td>team_id</td>
+<td>int</td>
+<td>Team ID</td>
+</tr>
+<tr>
+<td>player</td>
+<td>object</td>
+<td>Full player object</td>
+</tr>
+<tr>
+<td>position</td>
+<td>string</td>
+<td>Primary position code (nullable)</td>
+</tr>
+<tr>
+<td>appearances</td>
+<td>int</td>
+<td>Tournament appearances (matches with any minutes)</td>
+</tr>
+<tr>
+<td>starts</td>
+<td>int</td>
+<td>Tournament starts</td>
+</tr>
+<tr>
+<td>minutes_played</td>
+<td>int</td>
+<td>Total minutes played in the tournament</td>
+</tr>
+<tr>
+<td>goals</td>
+<td>int</td>
+<td>Tournament goals</td>
+</tr>
+<tr>
+<td>assists</td>
+<td>int</td>
+<td>Tournament assists</td>
+</tr>
+<tr>
+<td>yellow_cards</td>
+<td>int</td>
+<td>Tournament yellow cards</td>
+</tr>
+<tr>
+<td>red_cards</td>
+<td>int</td>
+<td>Tournament red cards</td>
+</tr>
+<tr>
+<td>avg_rating</td>
+<td>number</td>
+<td>Average match rating (nullable)</td>
+</tr>
+</tbody></table>
+<h1 id='match-lineups'>Match Lineups</h1><h2 id='get-match-lineups'>Get Match Lineups</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/fifa/worldcup/v1/match_lineups?match_ids[]=1"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"match_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"team_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">142</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Christian Pulisic"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"short_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"C. Pulisic"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"position"</span><span class="p">:</span><span class="w"> </span><span class="s2">"M"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"date_of_birth"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1998-09-18T00:00:00.000Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"USA"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"United States"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="mi">172</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"jersey_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"is_starter"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"is_substitute"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"shirt_number"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"position"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AM"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"formation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"4-3-3"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>Returns the registered match-day squad (starters + bench) for one or more matches.</p>
+<h3 id='http-request-9'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/fifa/worldcup/v1/match_lineups</code></p>
+<h3 id='query-parameters-9'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>match_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific match IDs.</td>
+</tr>
+<tr>
+<td>team_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific team IDs.</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>int</td>
+<td>Optional. Page size, max 100. Default 25.</td>
+</tr>
+<tr>
+<td>cursor</td>
+<td>int</td>
+<td>Optional. Cursor for the next page.</td>
+</tr>
+</tbody></table>
+<h3 id='response-fields-9'>Response Fields</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>match_id</td>
+<td>int</td>
+<td>Match ID</td>
+</tr>
+<tr>
+<td>team_id</td>
+<td>int</td>
+<td>Team ID</td>
+</tr>
+<tr>
+<td>player</td>
+<td>object</td>
+<td>Full player object</td>
+</tr>
+<tr>
+<td>is_starter</td>
+<td>boolean</td>
+<td>Whether the player started the match</td>
+</tr>
+<tr>
+<td>is_substitute</td>
+<td>boolean</td>
+<td>Whether the player was on the bench</td>
+</tr>
+<tr>
+<td>shirt_number</td>
+<td>int</td>
+<td>Shirt number worn for this match</td>
+</tr>
+<tr>
+<td>position</td>
+<td>string</td>
+<td>Position code for this match (nullable)</td>
+</tr>
+<tr>
+<td>formation</td>
+<td>string</td>
+<td>Team formation, e.g. &quot;4-3-3&quot; (nullable)</td>
+</tr>
+</tbody></table>
+<h1 id='match-events'>Match Events</h1><h2 id='get-match-events'>Get Match Events</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/fifa/worldcup/v1/match_events?match_ids[]=1"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">3713</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"match_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1030</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"incident_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"goal"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"incident_class"</span><span class="p">:</span><span class="w"> </span><span class="s2">"penalty"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"time_minute"</span><span class="p">:</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"added_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"period"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"is_home"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">8760</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Enner Valencia"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"short_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"E. Valencia"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"position"</span><span class="p">:</span><span class="w"> </span><span class="s2">"F"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"date_of_birth"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1989-11-04T00:00:00.000Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ECU"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Ecuador"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="mi">177</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"jersey_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"assist_player"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player_in"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player_out"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"home_score"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"away_score"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"shootout_sequence"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"shootout_description"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"rescinded"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="mi">3713</span><span class="p">,</span><span class="w"> </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>Returns time-ordered match events: goals, cards, substitutions, period markers, and penalty-shootout kicks. Most events surface <code>home_score</code>/<code>away_score</code> reflecting the running tally; non-goal events leave them <code>null</code>. The <code>period</code> field is sparse and usually <code>null</code>.</p>
+<h3 id='http-request-10'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/fifa/worldcup/v1/match_events</code></p>
+<h3 id='query-parameters-10'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>match_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific match IDs.</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>int</td>
+<td>Optional. Page size, max 100. Default 25.</td>
+</tr>
+<tr>
+<td>cursor</td>
+<td>int</td>
+<td>Optional. Cursor for the next page.</td>
+</tr>
+</tbody></table>
+<h3 id='response-fields-10'>Response Fields</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>int</td>
+<td>Event ID</td>
+</tr>
+<tr>
+<td>match_id</td>
+<td>int</td>
+<td>Match ID</td>
+</tr>
+<tr>
+<td>incident_type</td>
+<td>string</td>
+<td>One of: goal, card, substitution, period, injuryTime, penaltyShootout</td>
+</tr>
+<tr>
+<td>incident_class</td>
+<td>string</td>
+<td>E.g. regular, penalty, owngoal, yellow, red, yellowRed, shootoutScored</td>
+</tr>
+<tr>
+<td>time_minute</td>
+<td>int</td>
+<td>Minute of the match (nullable)</td>
+</tr>
+<tr>
+<td>added_time</td>
+<td>int</td>
+<td>Stoppage-time minute (nullable)</td>
+</tr>
+<tr>
+<td>period</td>
+<td>string</td>
+<td>Period label (e.g. &quot;1H&quot;, &quot;2H&quot;, &quot;ET1&quot;, &quot;ET2&quot;) — nullable</td>
+</tr>
+<tr>
+<td>is_home</td>
+<td>boolean</td>
+<td>Whether the event belongs to the home team (nullable for non-team events)</td>
+</tr>
+<tr>
+<td>player</td>
+<td>object</td>
+<td>Primary player (nullable)</td>
+</tr>
+<tr>
+<td>assist_player</td>
+<td>object</td>
+<td>Assist player on goals (nullable)</td>
+</tr>
+<tr>
+<td>player_in</td>
+<td>object</td>
+<td>Substitution: player coming on (nullable)</td>
+</tr>
+<tr>
+<td>player_out</td>
+<td>object</td>
+<td>Substitution: player coming off (nullable)</td>
+</tr>
+<tr>
+<td>home_score</td>
+<td>int</td>
+<td>Running home score after this event (nullable)</td>
+</tr>
+<tr>
+<td>away_score</td>
+<td>int</td>
+<td>Running away score after this event (nullable)</td>
+</tr>
+<tr>
+<td>shootout_sequence</td>
+<td>int</td>
+<td>Penalty shootout kick sequence number (nullable)</td>
+</tr>
+<tr>
+<td>shootout_description</td>
+<td>string</td>
+<td>Shootout outcome (Scored, Missed, Saved) — nullable</td>
+</tr>
+<tr>
+<td>rescinded</td>
+<td>boolean</td>
+<td>Whether a card was later rescinded (nullable)</td>
+</tr>
+<tr>
+<td>reason</td>
+<td>string</td>
+<td>Free-form reason text (nullable)</td>
+</tr>
+</tbody></table>
+<h1 id='player-match-stats'>Player Match Stats</h1><h2 id='get-player-match-stats'>Get Player Match Stats</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/fifa/worldcup/v1/player_match_stats?match_ids[]=1"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"match_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">142</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"team_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"is_home"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"rating"</span><span class="p">:</span><span class="w"> </span><span class="mf">7.8</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"minutes_played"</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"expected_goals"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.42</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"expected_assists"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.18</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"goals"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"assists"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"shots_on_target"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"passes_total"</span><span class="p">:</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"passes_accurate"</span><span class="p">:</span><span class="w"> </span><span class="mi">45</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"key_passes"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"tackles"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"tackles_won"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"interceptions"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"duels_won"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"duels_lost"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"fouls_committed"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"was_fouled"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"touches"</span><span class="p">:</span><span class="w"> </span><span class="mi">60</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"saves"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="mi">5000</span><span class="p">,</span><span class="w"> </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>Returns per-player per-match performance statistics. Goalkeeper-only fields (<code>saves</code>, <code>saves_inside_box</code>, <code>punches</code>, <code>high_claims</code>) are returned <code>null</code> for outfield players.</p>
+<h3 id='http-request-11'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/fifa/worldcup/v1/player_match_stats</code></p>
+<h3 id='query-parameters-11'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>match_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific match IDs.</td>
+</tr>
+<tr>
+<td>player_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific player IDs.</td>
+</tr>
+<tr>
+<td>team_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific team IDs.</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>int</td>
+<td>Optional. Page size, max 100. Default 25.</td>
+</tr>
+<tr>
+<td>cursor</td>
+<td>int</td>
+<td>Optional. Cursor for the next page.</td>
+</tr>
+</tbody></table>
+<h3 id='response-fields-11'>Response Fields</h3>
+<p>The response includes <code>match_id</code>, <code>player_id</code>, <code>team_id</code>, <code>is_home</code>, plus the following nullable numeric fields: <code>rating</code>, <code>minutes_played</code>, <code>expected_goals</code>, <code>expected_assists</code>, <code>goals</code>, <code>assists</code>, <code>shots_on_target</code>, <code>passes_total</code>, <code>passes_accurate</code>, <code>key_passes</code>, <code>long_balls_total</code>, <code>long_balls_accurate</code>, <code>crosses_total</code>, <code>crosses_accurate</code>, <code>dribbles_attempted</code>, <code>dribbles_completed</code>, <code>tackles</code>, <code>tackles_won</code>, <code>interceptions</code>, <code>clearances</code>, <code>blocked_shots</code>, <code>duels_won</code>, <code>duels_lost</code>, <code>aerial_duels_won</code>, <code>aerial_duels_lost</code>, <code>fouls_committed</code>, <code>was_fouled</code>, <code>touches</code>, <code>possession_lost</code>, <code>ball_recoveries</code>, <code>big_chances_created</code>, <code>big_chances_missed</code>, <code>saves</code>, <code>saves_inside_box</code>, <code>punches</code>, <code>high_claims</code>.</p>
+<h1 id='team-match-stats'>Team Match Stats</h1><h2 id='get-team-match-stats'>Get Team Match Stats</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/fifa/worldcup/v1/team_match_stats?match_ids[]=1"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"match_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"team_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"is_home"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"possession_pct"</span><span class="p">:</span><span class="w"> </span><span class="mi">60</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"expected_goals"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.42</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"big_chances"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"big_chances_missed"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"shots_total"</span><span class="p">:</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"shots_on_target"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"shots_off_target"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"shots_blocked"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"shots_inside_box"</span><span class="p">:</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"shots_outside_box"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"hit_woodwork"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"corners"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"offsides"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"fouls"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"yellow_cards"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"passes_total"</span><span class="p">:</span><span class="w"> </span><span class="mi">500</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"passes_accurate"</span><span class="p">:</span><span class="w"> </span><span class="mi">440</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"passes_final_third"</span><span class="p">:</span><span class="w"> </span><span class="mi">80</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"long_balls_total"</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"long_balls_accurate"</span><span class="p">:</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"crosses_total"</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"crosses_accurate"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"tackles"</span><span class="p">:</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"interceptions"</span><span class="p">:</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"clearances"</span><span class="p">:</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"saves"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"ground_duels_won"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"ground_duels_total"</span><span class="p">:</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"aerial_duels_won"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"aerial_duels_total"</span><span class="p">:</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"dribbles_completed"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"dribbles_total"</span><span class="p">:</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"throw_ins"</span><span class="p">:</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"goal_kicks"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"free_kicks"</span><span class="p">:</span><span class="w"> </span><span class="mi">14</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>Per-team per-match aggregates. The <code>possession_pct</code> field is normalized 0-100. Field names follow the BALLDONTLIE soccer API conventions (<code>shots_total</code>, <code>passes_accurate</code>, etc.).</p>
+<h3 id='http-request-12'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/fifa/worldcup/v1/team_match_stats</code></p>
+<h3 id='query-parameters-12'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>match_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific match IDs.</td>
+</tr>
+<tr>
+<td>team_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific team IDs.</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>int</td>
+<td>Optional. Page size, max 100. Default 25.</td>
+</tr>
+<tr>
+<td>cursor</td>
+<td>int</td>
+<td>Optional. Cursor for the next page.</td>
+</tr>
+</tbody></table>
+<h1 id='match-shots'>Match Shots</h1><h2 id='get-match-shots'>Get Match Shots</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/fifa/worldcup/v1/match_shots?match_ids[]=1"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">5073</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"match_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1030</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">8760</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"team_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"is_home"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"shot_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"goal"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"situation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"penalty"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"body_part"</span><span class="p">:</span><span class="w"> </span><span class="s2">"right-foot"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"goal_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"penalty"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"xg"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.7884</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"xgot"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9937</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">11.5</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player_y"</span><span class="p">:</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"goal_mouth_x"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"goal_mouth_y"</span><span class="p">:</span><span class="w"> </span><span class="mi">46</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"block_x"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"block_y"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"time_minute"</span><span class="p">:</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"added_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"time_seconds"</span><span class="p">:</span><span class="w"> </span><span class="mi">949</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="mi">5073</span><span class="p">,</span><span class="w"> </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>Returns the shot map for one or more matches. Coordinates are normalized 0-100. <code>xg</code> and <code>xgot</code> are populated for 2022 and 2026 matches; 2018 shots have coordinates and <code>body_part</code> only.</p>
+<h3 id='http-request-13'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/fifa/worldcup/v1/match_shots</code></p>
+<h3 id='query-parameters-13'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>match_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific match IDs.</td>
+</tr>
+<tr>
+<td>player_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific player IDs.</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>int</td>
+<td>Optional. Page size, max 100. Default 25.</td>
+</tr>
+<tr>
+<td>cursor</td>
+<td>int</td>
+<td>Optional. Cursor for the next page.</td>
+</tr>
+</tbody></table>
+<h3 id='response-fields-12'>Response Fields</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>int</td>
+<td>Shot ID</td>
+</tr>
+<tr>
+<td>match_id</td>
+<td>int</td>
+<td>Match ID</td>
+</tr>
+<tr>
+<td>player_id</td>
+<td>int</td>
+<td>Shooter ID</td>
+</tr>
+<tr>
+<td>team_id</td>
+<td>int</td>
+<td>Team ID</td>
+</tr>
+<tr>
+<td>is_home</td>
+<td>boolean</td>
+<td>Whether the shooter&#39;s team was the home team</td>
+</tr>
+<tr>
+<td>shot_type</td>
+<td>string</td>
+<td>One of: goal, save, miss, block, post</td>
+</tr>
+<tr>
+<td>situation</td>
+<td>string</td>
+<td>Play situation (e.g. regular, set-piece) — nullable</td>
+</tr>
+<tr>
+<td>body_part</td>
+<td>string</td>
+<td>Body part used (e.g. right-foot, left-foot, header) — nullable</td>
+</tr>
+<tr>
+<td>goal_type</td>
+<td>string</td>
+<td>Type of goal (e.g. header, freekick) — nullable</td>
+</tr>
+<tr>
+<td>xg</td>
+<td>number</td>
+<td>Expected goals value (nullable for 2018)</td>
+</tr>
+<tr>
+<td>xgot</td>
+<td>number</td>
+<td>Expected goals on target value (nullable for 2018)</td>
+</tr>
+<tr>
+<td>player_x</td>
+<td>number</td>
+<td>Shooter X position 0-100 (nullable)</td>
+</tr>
+<tr>
+<td>player_y</td>
+<td>number</td>
+<td>Shooter Y position 0-100 (nullable)</td>
+</tr>
+<tr>
+<td>goal_mouth_x</td>
+<td>number</td>
+<td>Goal-mouth X coordinate (nullable)</td>
+</tr>
+<tr>
+<td>goal_mouth_y</td>
+<td>number</td>
+<td>Goal-mouth Y coordinate (nullable)</td>
+</tr>
+<tr>
+<td>block_x</td>
+<td>number</td>
+<td>Block X coordinate (nullable)</td>
+</tr>
+<tr>
+<td>block_y</td>
+<td>number</td>
+<td>Block Y coordinate (nullable)</td>
+</tr>
+<tr>
+<td>time_minute</td>
+<td>int</td>
+<td>Match minute</td>
+</tr>
+<tr>
+<td>added_time</td>
+<td>int</td>
+<td>Stoppage-time minute (nullable)</td>
+</tr>
+<tr>
+<td>time_seconds</td>
+<td>int</td>
+<td>Time within the match in seconds (nullable)</td>
+</tr>
+</tbody></table>
+<h1 id='match-momentum'>Match Momentum</h1><h2 id='get-match-momentum'>Get Match Momentum</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/fifa/worldcup/v1/match_momentum?match_ids[]=1"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w"> </span><span class="nl">"match_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nl">"minute"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w"> </span><span class="nl">"match_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nl">"minute"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="w"> </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w"> </span><span class="nl">"match_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nl">"minute"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">-8</span><span class="w"> </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>Returns per-minute attack momentum values. Positive values favor the home side; negative values favor the away side.</p>
+<h3 id='http-request-14'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/fifa/worldcup/v1/match_momentum</code></p>
+<h3 id='query-parameters-14'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>match_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific match IDs.</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>int</td>
+<td>Optional. Page size, max 100. Default 25.</td>
+</tr>
+<tr>
+<td>cursor</td>
+<td>int</td>
+<td>Optional. Cursor for the next page.</td>
+</tr>
+</tbody></table>
+<h3 id='response-fields-13'>Response Fields</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>match_id</td>
+<td>int</td>
+<td>Match ID</td>
+</tr>
+<tr>
+<td>minute</td>
+<td>number</td>
+<td>Match minute (may include fractions)</td>
+</tr>
+<tr>
+<td>value</td>
+<td>number</td>
+<td>Momentum value</td>
+</tr>
+</tbody></table>
+<h1 id='match-best-players'>Match Best Players</h1><h2 id='get-match-best-players'>Get Match Best Players</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/fifa/worldcup/v1/match_best_players?match_ids[]=1"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"match_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">142</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"team_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"is_home"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"side_rank"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"is_man_of_match"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"rating"</span><span class="p">:</span><span class="w"> </span><span class="mf">9.1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"scored 1 goal, 3 key passes"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>Returns the top-rated players for each match (best XI per side plus the man of the match).</p>
+<h3 id='http-request-15'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/fifa/worldcup/v1/match_best_players</code></p>
+<h3 id='query-parameters-15'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>match_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific match IDs.</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>int</td>
+<td>Optional. Page size, max 100. Default 25.</td>
+</tr>
+<tr>
+<td>cursor</td>
+<td>int</td>
+<td>Optional. Cursor for the next page.</td>
+</tr>
+</tbody></table>
+<h3 id='response-fields-14'>Response Fields</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>match_id</td>
+<td>int</td>
+<td>Match ID</td>
+</tr>
+<tr>
+<td>player_id</td>
+<td>int</td>
+<td>Player ID</td>
+</tr>
+<tr>
+<td>team_id</td>
+<td>int</td>
+<td>Team ID</td>
+</tr>
+<tr>
+<td>is_home</td>
+<td>boolean</td>
+<td>Whether the player was on the home side</td>
+</tr>
+<tr>
+<td>side_rank</td>
+<td>int</td>
+<td>Rank within the player&#39;s side (1 = top)</td>
+</tr>
+<tr>
+<td>is_man_of_match</td>
+<td>boolean</td>
+<td>Whether the player was named MOTM</td>
+</tr>
+<tr>
+<td>rating</td>
+<td>number</td>
+<td>Match rating (nullable)</td>
+</tr>
+<tr>
+<td>reason</td>
+<td>string</td>
+<td>Highlight summary (nullable)</td>
+</tr>
+</tbody></table>
+<h1 id='match-avg-positions'>Match Avg Positions</h1><h2 id='get-match-avg-positions'>Get Match Avg Positions</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/fifa/worldcup/v1/match_avg_positions?match_ids[]=1"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"match_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">142</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"team_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"is_home"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"avg_x"</span><span class="p">:</span><span class="w"> </span><span class="mf">50.5</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"avg_y"</span><span class="p">:</span><span class="w"> </span><span class="mf">60.2</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>Returns each player&#39;s average pitch position (heatmap centroid) for a given match. Coordinates are normalized 0-100 from the home side&#39;s perspective.</p>
+<h3 id='http-request-16'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/fifa/worldcup/v1/match_avg_positions</code></p>
+<h3 id='query-parameters-16'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>match_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific match IDs.</td>
+</tr>
+<tr>
+<td>team_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific team IDs.</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>int</td>
+<td>Optional. Page size, max 100. Default 25.</td>
+</tr>
+<tr>
+<td>cursor</td>
+<td>int</td>
+<td>Optional. Cursor for the next page.</td>
+</tr>
+</tbody></table>
+<h3 id='response-fields-15'>Response Fields</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>match_id</td>
+<td>int</td>
+<td>Match ID</td>
+</tr>
+<tr>
+<td>player_id</td>
+<td>int</td>
+<td>Player ID</td>
+</tr>
+<tr>
+<td>team_id</td>
+<td>int</td>
+<td>Team ID</td>
+</tr>
+<tr>
+<td>is_home</td>
+<td>boolean</td>
+<td>Whether the player was on the home side</td>
+</tr>
+<tr>
+<td>avg_x</td>
+<td>number</td>
+<td>Average X coordinate (0-100)</td>
+</tr>
+<tr>
+<td>avg_y</td>
+<td>number</td>
+<td>Average Y coordinate (0-100)</td>
+</tr>
+</tbody></table>
+<h1 id='match-team-form'>Match Team Form</h1><h2 id='get-match-team-form'>Get Match Team Form</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/fifa/worldcup/v1/match_team_form?match_ids[]=1"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"match_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">762</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"team_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">27</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"is_home"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"avg_rating"</span><span class="p">:</span><span class="w"> </span><span class="mf">6.6</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"position"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>Returns a pre-match team form summary: each side&#39;s recent average rating, group standings position going in, and a <code>value</code> summary string (a single-digit metric — typically points earned across recent matches).</p>
+<h3 id='http-request-17'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/fifa/worldcup/v1/match_team_form</code></p>
+<h3 id='query-parameters-17'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>match_ids[]</td>
+<td>int[]</td>
+<td>Optional. Filter to specific match IDs.</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>int</td>
+<td>Optional. Page size, max 100. Default 25.</td>
+</tr>
+<tr>
+<td>cursor</td>
+<td>int</td>
+<td>Optional. Cursor for the next page.</td>
+</tr>
+</tbody></table>
+<h3 id='response-fields-16'>Response Fields</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>match_id</td>
+<td>int</td>
+<td>Match ID</td>
+</tr>
+<tr>
+<td>team_id</td>
+<td>int</td>
+<td>Team ID</td>
+</tr>
+<tr>
+<td>is_home</td>
+<td>boolean</td>
+<td>Whether the team is the home side</td>
+</tr>
+<tr>
+<td>avg_rating</td>
+<td>number</td>
+<td>Average rating across recent matches (nullable)</td>
+</tr>
+<tr>
+<td>position</td>
+<td>int</td>
+<td>Position going into the match (nullable)</td>
+</tr>
+<tr>
+<td>value</td>
+<td>string</td>
+<td>Form summary value (typically recent-match points as a single-digit string, e.g. &quot;3&quot;)</td>
+</tr>
+</tbody></table>
+
+      </div>
+      <div class="dark-box">
+          <div class="lang-selector">
+                <a href="#" data-language-name="shell">shell</a>
+                <a href="#" data-language-name="javascript">javascript</a>
+                <a href="#" data-language-name="python">python</a>
+          </div>
+      </div>
+    </div>
+  </body>
+</html>

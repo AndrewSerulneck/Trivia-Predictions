@@ -905,3 +905,32 @@ a[role="button"][class*="text-[11px]"] {
 .tp-coin-idle-shimmer {
   animation: tp-coin-idle-shimmer 2.8s ease-in-out infinite;
 }
+/* --- HIGHTOP BRANDING ADDITIONS --- */
+@layer components {
+  .bg-stadium-turf {
+    background: repeating-linear-gradient(
+      0deg,
+      #22c55e,
+      #22c55e 40px,
+      #86efac 40px,
+      #86efac 80px
+    );
+  }
+
+  .stadium-beam {
+    background: conic-gradient(
+      from 165deg at 50% 0%,
+      transparent 0deg,
+      rgba(255, 255, 255, 0.2) 15deg,
+      rgba(255, 255, 255, 0.2) 30deg,
+      transparent 45deg
+    );
+    filter: blur(25px);
+    pointer-events: none;
+  }
+
+  .light-bulb {
+    background: radial-gradient(circle, #fff 0%, #e2e8f0 40%, transparent 70%);
+    box-shadow: 0 0 12px 2px rgba(255, 255, 255, 0.7);
+  }
+}

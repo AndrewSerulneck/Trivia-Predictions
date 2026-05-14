@@ -1,0 +1,1901 @@
+
+<!doctype html>
+<html>
+  <head>
+    <link href="images/favicon-1712c0b2.ico" rel="icon" type="image/ico" />
+    <meta charset="utf-8">
+
+
+
+
+
+
+
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>BALLDONTLIE WTA API</title>
+
+    <style media="screen">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .gh {
+  color: #999999;
+}
+.highlight .sr {
+  color: #f6aa11;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .nb {
+  color: #f6aa11;
+}
+.highlight .cm {
+  color: #75715e;
+}
+.highlight .cp {
+  color: #75715e;
+}
+.highlight .c1 {
+  color: #75715e;
+}
+.highlight .cs {
+  color: #75715e;
+}
+.highlight .c, .highlight .ch, .highlight .cd, .highlight .cpf {
+  color: #75715e;
+}
+.highlight .err {
+  color: #960050;
+}
+.highlight .gr {
+  color: #960050;
+}
+.highlight .gt {
+  color: #960050;
+}
+.highlight .gd {
+  color: #49483e;
+}
+.highlight .gi {
+  color: #49483e;
+}
+.highlight .ge {
+  color: #49483e;
+}
+.highlight .kc {
+  color: #66d9ef;
+}
+.highlight .kd {
+  color: #66d9ef;
+}
+.highlight .kr {
+  color: #66d9ef;
+}
+.highlight .no {
+  color: #66d9ef;
+}
+.highlight .kt {
+  color: #66d9ef;
+}
+.highlight .mf {
+  color: #ae81ff;
+}
+.highlight .mh {
+  color: #ae81ff;
+}
+.highlight .il {
+  color: #ae81ff;
+}
+.highlight .mi {
+  color: #ae81ff;
+}
+.highlight .mo {
+  color: #ae81ff;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #ae81ff;
+}
+.highlight .sc {
+  color: #ae81ff;
+}
+.highlight .se {
+  color: #ae81ff;
+}
+.highlight .ss {
+  color: #ae81ff;
+}
+.highlight .sd {
+  color: #e6db74;
+}
+.highlight .s2 {
+  color: #e6db74;
+}
+.highlight .sb {
+  color: #e6db74;
+}
+.highlight .sh {
+  color: #e6db74;
+}
+.highlight .si {
+  color: #e6db74;
+}
+.highlight .sx {
+  color: #e6db74;
+}
+.highlight .s1 {
+  color: #e6db74;
+}
+.highlight .s, .highlight .sa, .highlight .dl {
+  color: #e6db74;
+}
+.highlight .na {
+  color: #a6e22e;
+}
+.highlight .nc {
+  color: #a6e22e;
+}
+.highlight .nd {
+  color: #a6e22e;
+}
+.highlight .ne {
+  color: #a6e22e;
+}
+.highlight .nf, .highlight .fm {
+  color: #a6e22e;
+}
+.highlight .vc {
+  color: #ffffff;
+}
+.highlight .nn {
+  color: #ffffff;
+}
+.highlight .ni {
+  color: #ffffff;
+}
+.highlight .bp {
+  color: #ffffff;
+}
+.highlight .vg {
+  color: #ffffff;
+}
+.highlight .vi {
+  color: #ffffff;
+}
+.highlight .nv, .highlight .vm {
+  color: #ffffff;
+}
+.highlight .w {
+  color: #ffffff;
+}
+.highlight {
+  color: #ffffff;
+}
+.highlight .n, .highlight .py, .highlight .nx {
+  color: #ffffff;
+}
+.highlight .nl {
+  color: #f92672;
+}
+.highlight .ow {
+  color: #f92672;
+}
+.highlight .nt {
+  color: #f92672;
+}
+.highlight .k, .highlight .kv {
+  color: #f92672;
+}
+.highlight .kn {
+  color: #f92672;
+}
+.highlight .kp {
+  color: #f92672;
+}
+.highlight .o {
+  color: #f92672;
+}
+    </style>
+    <style media="print">
+      * {
+        -webkit-transition:none!important;
+        transition:none!important;
+      }
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight, .highlight .w {
+  color: #586e75;
+}
+.highlight .err {
+  color: #002b36;
+  background-color: #dc322f;
+}
+.highlight .c, .highlight .ch, .highlight .cd, .highlight .cm, .highlight .cpf, .highlight .c1, .highlight .cs {
+  color: #657b83;
+}
+.highlight .cp {
+  color: #b58900;
+}
+.highlight .nt {
+  color: #b58900;
+}
+.highlight .o, .highlight .ow {
+  color: #93a1a1;
+}
+.highlight .p, .highlight .pi {
+  color: #93a1a1;
+}
+.highlight .gi {
+  color: #859900;
+}
+.highlight .gd {
+  color: #dc322f;
+}
+.highlight .gh {
+  color: #268bd2;
+  background-color: #002b36;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kn, .highlight .kp, .highlight .kr, .highlight .kv {
+  color: #6c71c4;
+}
+.highlight .kc {
+  color: #cb4b16;
+}
+.highlight .kt {
+  color: #cb4b16;
+}
+.highlight .kd {
+  color: #cb4b16;
+}
+.highlight .s, .highlight .sb, .highlight .sc, .highlight .dl, .highlight .sd, .highlight .s2, .highlight .sh, .highlight .sx, .highlight .s1 {
+  color: #859900;
+}
+.highlight .sa {
+  color: #6c71c4;
+}
+.highlight .sr {
+  color: #2aa198;
+}
+.highlight .si {
+  color: #d33682;
+}
+.highlight .se {
+  color: #d33682;
+}
+.highlight .nn {
+  color: #b58900;
+}
+.highlight .nc {
+  color: #b58900;
+}
+.highlight .no {
+  color: #b58900;
+}
+.highlight .na {
+  color: #268bd2;
+}
+.highlight .m, .highlight .mb, .highlight .mf, .highlight .mh, .highlight .mi, .highlight .il, .highlight .mo, .highlight .mx {
+  color: #859900;
+}
+.highlight .ss {
+  color: #859900;
+}
+    </style>
+    <link href="stylesheets/screen-a4600c6c.css" rel="stylesheet" media="screen" />
+    <link href="stylesheets/print-966d6edc.css" rel="stylesheet" media="print" />
+      <script src="javascripts/all-024da600.js"></script>
+
+    <script>
+      $(function() { setupCodeCopy(); });
+    </script>
+  </head>
+
+  <body class="index" data-languages="[&quot;shell&quot;,&quot;javascript&quot;,&quot;python&quot;]">
+    <a href="#" id="nav-button">
+      <span>
+        NAV
+        <img src="images/navbar-cad8cdcb.png" alt="" />
+      </span>
+    </a>
+    <div class="toc-wrapper">
+      <img src="images/logo-e2bd575e.png" class="logo" alt="" />
+        <div class="lang-selector">
+              <a href="#" data-language-name="shell">shell</a>
+              <a href="#" data-language-name="javascript">javascript</a>
+              <a href="#" data-language-name="python">python</a>
+        </div>
+        <div class="search">
+          <input type="text" class="search" id="input-search" placeholder="Search">
+        </div>
+        <ul class="search-results"></ul>
+      <ul id="toc" class="toc-list-h1">
+          <li>
+            <a href="#wta-api" class="toc-h1 toc-link" data-title="WTA API">WTA API</a>
+          </li>
+          <li>
+            <a href="#ai-powered-integration" class="toc-h1 toc-link" data-title="AI-Powered Integration">AI-Powered Integration</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#using-the-openapi-specification-with-ai" class="toc-h2 toc-link" data-title="Using the OpenAPI Specification with AI">Using the OpenAPI Specification with AI</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#google-sheets-integration" class="toc-h1 toc-link" data-title="Google Sheets Integration">Google Sheets Integration</a>
+          </li>
+          <li>
+            <a href="#account-tiers" class="toc-h1 toc-link" data-title="Account Tiers">Account Tiers</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#48-hour-free-trial" class="toc-h2 toc-link" data-title="48-hour free trial">48-hour free trial</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#authentication" class="toc-h1 toc-link" data-title="Authentication">Authentication</a>
+          </li>
+          <li>
+            <a href="#pagination" class="toc-h1 toc-link" data-title="Pagination">Pagination</a>
+          </li>
+          <li>
+            <a href="#errors" class="toc-h1 toc-link" data-title="Errors">Errors</a>
+          </li>
+          <li>
+            <a href="#players" class="toc-h1 toc-link" data-title="Players">Players</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-all-players" class="toc-h2 toc-link" data-title="Get All Players">Get All Players</a>
+                  </li>
+                  <li>
+                    <a href="#get-specific-player" class="toc-h2 toc-link" data-title="Get Specific Player">Get Specific Player</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#tournaments" class="toc-h1 toc-link" data-title="Tournaments">Tournaments</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-all-tournaments" class="toc-h2 toc-link" data-title="Get All Tournaments">Get All Tournaments</a>
+                  </li>
+                  <li>
+                    <a href="#get-specific-tournament" class="toc-h2 toc-link" data-title="Get Specific Tournament">Get Specific Tournament</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#rankings" class="toc-h1 toc-link" data-title="Rankings">Rankings</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-rankings" class="toc-h2 toc-link" data-title="Get Rankings">Get Rankings</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#matches" class="toc-h1 toc-link" data-title="Matches">Matches</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-all-matches" class="toc-h2 toc-link" data-title="Get All Matches">Get All Matches</a>
+                  </li>
+                  <li>
+                    <a href="#get-specific-match" class="toc-h2 toc-link" data-title="Get Specific Match">Get Specific Match</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#head-to-head" class="toc-h1 toc-link" data-title="Head to Head">Head to Head</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-head-to-head-record" class="toc-h2 toc-link" data-title="Get Head to Head Record">Get Head to Head Record</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#match-statistics" class="toc-h1 toc-link" data-title="Match Statistics">Match Statistics</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-match-statistics" class="toc-h2 toc-link" data-title="Get Match Statistics">Get Match Statistics</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#betting-odds" class="toc-h1 toc-link" data-title="Betting Odds">Betting Odds</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-betting-odds" class="toc-h2 toc-link" data-title="Get Betting Odds">Get Betting Odds</a>
+                  </li>
+              </ul>
+          </li>
+      </ul>
+        <ul class="toc-footer">
+            <li><a href='https://app.balldontlie.io'>Sign Up for an API Key</a></li>
+        </ul>
+    </div>
+    <div class="page-wrapper">
+      <div class="dark-box"></div>
+      <div class="content">
+        <h1 id='wta-api'>WTA API</h1>
+<p>Welcome to the <strong>BALLDONTLIE WTA API</strong>, your comprehensive source for WTA Tour data. <strong>This API covers women&#39;s singles tennis only.</strong> Data includes player profiles, tournament information, WTA rankings, match results, and betting odds from the WTA Tour. An API key is required. You can obtain an API key by creating a free account on <a href="https://app.balldontlie.io">our website</a>. Read the <a href="#authentication">authentication section</a> to learn how to use the API key.</p>
+
+<p>Take a look at our <a href="https://www.balldontlie.io/docs">other APIs</a>.</p>
+
+<p>Join us on <a href="https://discord.gg/cQJhfTPn8j">discord</a>.</p>
+<h1 id='ai-powered-integration'>AI-Powered Integration</h1>
+<aside class="notice">
+<strong>New to programming?</strong> Our API is designed to work seamlessly with AI assistants like ChatGPT, the agent, and Gemini. You don't need coding experience to get started!
+</aside>
+<h2 id='using-the-openapi-specification-with-ai'>Using the OpenAPI Specification with AI</h2>
+<p>Our complete <a href="https://www.balldontlie.io/openapi/wta.yml">OpenAPI specification</a> allows AI assistants to automatically understand and interact with our API. Simply share the spec URL with your AI assistant and describe what you want to build—the AI will handle the technical implementation.</p>
+
+<p><strong>Getting Started with AI:</strong></p>
+
+<ol>
+<li>Copy this URL: <code>https://www.balldontlie.io/openapi/wta.yml</code></li>
+<li>Share it with your preferred AI assistant (ChatGPT, the agent, Gemini, etc.)</li>
+<li>Tell the AI what you want to build (e.g., &quot;Create a dashboard showing WTA rankings&quot;)</li>
+<li>The AI will read the OpenAPI spec and write the code for you</li>
+</ol>
+
+<p><strong>Example prompts to try:</strong></p>
+
+<ul>
+<li>&quot;Using the OpenAPI spec at https://www.balldontlie.io/openapi/wta.yml, show me how to get Iga Swiatek&#39;s match history&quot;</li>
+<li>&quot;Read the BALLDONTLIE OpenAPI spec and create a Python script that fetches the current WTA rankings&quot;</li>
+<li>&quot;Help me understand the available WTA Tennis endpoints from this OpenAPI spec: https://www.balldontlie.io/openapi/wta.yml&quot;</li>
+</ul>
+
+<p>This makes it incredibly easy for non-technical users, analysts, and researchers to leverage our tennis data without needing to learn programming from scratch.</p>
+<h1 id='google-sheets-integration'>Google Sheets Integration</h1>
+<aside class="notice">
+<strong>Prefer spreadsheets over code?</strong> Pull live sports data directly into Google Sheets with our custom functions - no programming required!
+</aside>
+
+<p>Our Google Sheets integration lets you access all the same data available through our API using simple spreadsheet formulas. Perfect for fantasy sports tracking, betting analysis, and sports research.</p>
+
+<p><strong>Quick Start:</strong></p>
+
+<ol>
+<li>Get your API key from <a href="https://app.balldontlie.io/signup">app.balldontlie.io</a></li>
+<li>Copy our <a href="https://www.balldontlie.io/google-sheets/balldontlie.gs">Google Sheets script</a></li>
+<li>Paste it into your Google Sheet (Extensions &gt; Apps Script)</li>
+<li>Start using functions in your cells</li>
+</ol>
+
+<p><strong>Example functions:</strong></p>
+
+<ul>
+<li><code>=BDL_WTA_PLAYERS(&quot;Gauff&quot;)</code> - Search for players</li>
+<li><code>=BDL_WTA_TOURNAMENTS(2026)</code> - Get tournaments</li>
+<li><code>=BDL_WTA_RANKINGS(2026)</code> - Get WTA rankings</li>
+<li><code>=BDL_WTA_ODDS(&quot;2026-01-27&quot;)</code> - Get betting odds</li>
+</ul>
+
+<p>For full setup instructions and the complete list of 150+ functions, see our <a href="https://www.balldontlie.io/blog/google-sheets-integration/">Google Sheets Integration Guide</a>.</p>
+<h1 id='account-tiers'>Account Tiers</h1>
+<p>There are three different account tiers which provide you access to different types of data. <a href="https://app.balldontlie.io">Visit our website</a> to create an account for free.</p>
+
+<p><strong>Paid tiers do not apply across sports. The tier you purchase for WTA will not automatically be applied to other sports. You can purchase the ALL-ACCESS ($299.99/mo) tier to get access to every endpoint for every sport.</strong></p>
+
+<p>Read the table below to see the breakdown.</p>
+
+<table><thead>
+<tr>
+<th>Endpoint</th>
+<th>Free</th>
+<th>ALL-STAR</th>
+<th>GOAT</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><a href="#players">Players</a></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#tournaments">Tournaments</a></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#rankings">Rankings</a></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#matches">Matches</a></td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#head-to-head">Head to Head</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#betting-odds">Betting Odds</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+</tbody></table>
+
+<p>The feature breakdown per tier is shown in the table below.</p>
+
+<table><thead>
+<tr>
+<th>Tier</th>
+<th>Requests / Min</th>
+<th>$USD / mo.</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>GOAT</td>
+<td>600</td>
+<td>39.99</td>
+</tr>
+<tr>
+<td>ALL-STAR</td>
+<td>60</td>
+<td>9.99</td>
+</tr>
+<tr>
+<td>Free</td>
+<td>5</td>
+<td>0</td>
+</tr>
+</tbody></table>
+<h3 id='48-hour-free-trial'>48-hour free trial</h3>
+<p>Every paid sport offers a 48-hour trial of the GOAT tier (all endpoints, 5 req/min during the trial). ALL-ACCESS is also available as a 48-hour trial with the same 5 req/min trial limit. A payment method is required at signup; there is no charge until the trial ends, and you can cancel anytime from your dashboard. One trial per sport per account. Existing ALL-STAR subscribers may trial the GOAT upgrade for their sports.</p>
+<h1 id='authentication'>Authentication</h1>
+<blockquote>
+<p>To authorize, use this code:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"api_endpoint_here"</span> <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="dl">'</span><span class="s1">https://api.balldontlie.io/wta/v1/players</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">Authorization</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">YOUR_API_KEY</span><span class="dl">'</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+<span class="kd">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/wta/v1/players'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">'Error: </span><span class="si">{</span><span class="n">response</span><span class="p">.</span><span class="n">status_code</span><span class="si">}</span><span class="s">'</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>Make sure to replace <code>YOUR_API_KEY</code> with your API key.</p>
+</blockquote>
+
+<p>BALLDONTLIE uses API keys to allow access to the API. You can obtain an API key by creating a free account at <a href="https://app.balldontlie.io">our website</a></p>
+
+<p>We expect the API key to be included in all API requests to the server in a header that looks like the following:</p>
+
+<p><code>Authorization: YOUR_API_KEY</code></p>
+
+<aside class="notice">
+You must replace <code>YOUR_API_KEY</code> with your personal API key.
+</aside>
+
+<aside class="notice">
+Trial keys use the same <code>api_key</code> and <code>Authorization</code> header as paid keys. During the trial window, requests are capped at 5 req/min; when the trial converts to paid GOAT or ALL-ACCESS, the key uses the paid 600 req/min limit automatically. No integration change is required when the trial expires or converts.
+</aside>
+<h1 id='pagination'>Pagination</h1>
+<p>This API uses cursor based pagination rather than limit/offset. Endpoints that support pagination will send back responses with a <code>meta</code> key that looks like what is displayed on the right.</p>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>You can use <code>per_page</code> to specify the maximum number of results. It defaults to 25 and doesn&#39;t allow values larger than 100.</p>
+
+<p>You can use <code>next_cursor</code> to get the next page of results. Specify it in the request parameters like this: <code>?cursor=NEXT_CURSOR</code>.</p>
+<h1 id='errors'>Errors</h1>
+<p>The API uses the following error codes:</p>
+
+<table><thead>
+<tr>
+<th>Error Code</th>
+<th>Meaning</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>401</td>
+<td>Unauthorized - You either need an API key or your account tier does not have access to the endpoint.</td>
+</tr>
+<tr>
+<td>400</td>
+<td>Bad Request -- The request is invalid. The request parameters are probably incorrect.</td>
+</tr>
+<tr>
+<td>404</td>
+<td>Not Found -- The specified resource could not be found.</td>
+</tr>
+<tr>
+<td>406</td>
+<td>Not Acceptable -- You requested a format that isn&#39;t json.</td>
+</tr>
+<tr>
+<td>429</td>
+<td>Too Many Requests -- You&#39;re rate limited.</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Internal Server Error -- We had a problem with our server. Try again later.</td>
+</tr>
+<tr>
+<td>503</td>
+<td>Service Unavailable -- We&#39;re temporarily offline for maintenance. Please try again later.</td>
+</tr>
+</tbody></table>
+<h1 id='players'>Players</h1><h2 id='get-all-players'>Get All Players</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/wta/v1/players?search=Sabalenka"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="dl">'</span><span class="s1">https://api.balldontlie.io/wta/v1/players?search=Sabalenka</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">Authorization</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">YOUR_API_KEY</span><span class="dl">'</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+<span class="kd">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/wta/v1/players'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">},</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">'search'</span><span class="p">:</span> <span class="s">'Sabalenka'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">players</span> <span class="o">=</span> <span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">()[</span><span class="s">'data'</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">player</span> <span class="ow">in</span> <span class="n">players</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">player</span><span class="p">[</span><span class="s">'full_name'</span><span class="p">]</span><span class="si">}</span><span class="s"> - </span><span class="si">{</span><span class="n">player</span><span class="p">[</span><span class="s">'country_code'</span><span class="p">]</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sabalenka"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna Sabalenka"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BLR"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves all WTA players with optional search and filtering.</p>
+
+<aside class="notice">
+This API covers <strong>women's singles only</strong>. Men's tennis (ATP) and doubles are not included.
+</aside>
+<h3 id='http-request'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/wta/v1/players</code></p>
+<h3 id='query-parameters'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>cursor</td>
+<td>integer</td>
+<td>Cursor for pagination</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>integer</td>
+<td>Number of results per page (max 100)</td>
+</tr>
+<tr>
+<td>search</td>
+<td>string</td>
+<td>Search players by name</td>
+</tr>
+<tr>
+<td>first_name</td>
+<td>string</td>
+<td>Filter by first name</td>
+</tr>
+<tr>
+<td>last_name</td>
+<td>string</td>
+<td>Filter by last name</td>
+</tr>
+<tr>
+<td>country</td>
+<td>string</td>
+<td>Filter by country name</td>
+</tr>
+<tr>
+<td>country_code</td>
+<td>string</td>
+<td>Filter by country code (e.g., &quot;POL&quot;)</td>
+</tr>
+<tr>
+<td>player_ids</td>
+<td>array</td>
+<td>Filter by specific player IDs</td>
+</tr>
+</tbody></table>
+<h2 id='get-specific-player'>Get Specific Player</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/wta/v1/players/1"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="dl">'</span><span class="s1">https://api.balldontlie.io/wta/v1/players/1</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">Authorization</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">YOUR_API_KEY</span><span class="dl">'</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+<span class="kd">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">player_id</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Aryna Sabalenka
+</span><span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s">'https://api.balldontlie.io/wta/v1/players/</span><span class="si">{</span><span class="n">player_id</span><span class="si">}</span><span class="s">'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">player</span> <span class="o">=</span> <span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">()[</span><span class="s">'data'</span><span class="p">]</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">player</span><span class="p">[</span><span class="s">'full_name'</span><span class="p">]</span><span class="si">}</span><span class="s"> (</span><span class="si">{</span><span class="n">player</span><span class="p">[</span><span class="s">'country_code'</span><span class="p">]</span><span class="si">}</span><span class="s">)"</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sabalenka"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna Sabalenka"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BLR"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves a specific player.</p>
+<h3 id='http-request-2'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/wta/v1/players/{id}</code></p>
+<h3 id='url-parameters'>URL Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>The ID of the player</td>
+</tr>
+</tbody></table>
+<h1 id='tournaments'>Tournaments</h1><h2 id='get-all-tournaments'>Get All Tournaments</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/wta/v1/tournaments?season=2026&amp;category=Grand%20Slam"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="dl">'</span><span class="s1">https://api.balldontlie.io/wta/v1/tournaments?season=2026&amp;category=Grand%20Slam</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">Authorization</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">YOUR_API_KEY</span><span class="dl">'</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+<span class="kd">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/wta/v1/tournaments'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">},</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">'season'</span><span class="p">:</span> <span class="mi">2026</span><span class="p">,</span> <span class="s">'category'</span><span class="p">:</span> <span class="s">'Grand Slam'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">tournaments</span> <span class="o">=</span> <span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">()[</span><span class="s">'data'</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">tournament</span> <span class="ow">in</span> <span class="n">tournaments</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">tournament</span><span class="p">[</span><span class="s">'name'</span><span class="p">]</span><span class="si">}</span><span class="s"> - </span><span class="si">{</span><span class="n">tournament</span><span class="p">[</span><span class="s">'surface'</span><span class="p">]</span><span class="si">}</span><span class="s"> - </span><span class="si">{</span><span class="n">tournament</span><span class="p">[</span><span class="s">'category'</span><span class="p">]</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AUSTRALIAN OPEN"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"location"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MELBOURNE, AUSTRALIA"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"surface"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Hard"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"category"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grand Slam"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2026</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"start_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-01-18"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"end_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-02-01"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"prize_money"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"prize_currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"USD"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"draw_size"</span><span class="p">:</span><span class="w"> </span><span class="mi">128</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">38</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ROLAND GARROS"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"location"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PARIS, FRANCE"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"surface"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Clay"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"category"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grand Slam"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2026</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"start_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-05-24"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"end_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-06-07"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"prize_money"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"prize_currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"USD"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"draw_size"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WIMBLEDON"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"location"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WIMBLEDON, GREAT BRITAIN"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"surface"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grass"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"category"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grand Slam"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2026</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"start_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-06-29"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"end_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-07-12"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"prize_money"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"prize_currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"USD"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"draw_size"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">66</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"US OPEN"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"location"</span><span class="p">:</span><span class="w"> </span><span class="s2">"NEW YORK, NY, UNITED STATES"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"surface"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Hard"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"category"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grand Slam"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2026</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"start_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-08-30"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"end_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-09-13"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"prize_money"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"prize_currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"USD"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"draw_size"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves all WTA tournaments with optional filtering.</p>
+
+<aside class="notice">
+<strong>Understanding Tournament IDs and Seasons:</strong> Each tournament has a unique ID that remains the same across all years. For example, the US Open always has the same ID regardless of year. Season-specific details like <code>start_date</code>, <code>end_date</code>, <code>prize_money</code>, and <code>draw_size</code> vary by year. Use the <code>season</code> parameter to get data for a specific year.
+</aside>
+<h3 id='http-request-3'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/wta/v1/tournaments</code></p>
+<h3 id='query-parameters-2'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>cursor</td>
+<td>integer</td>
+<td>Cursor for pagination</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>integer</td>
+<td>Number of results per page (max 100)</td>
+</tr>
+<tr>
+<td>tournament_ids</td>
+<td>array</td>
+<td>Filter by specific tournament IDs</td>
+</tr>
+<tr>
+<td>season</td>
+<td>integer</td>
+<td>Filter by season year</td>
+</tr>
+<tr>
+<td>surface</td>
+<td>string</td>
+<td>Filter by surface (Hard, Clay, Grass, Carpet)</td>
+</tr>
+<tr>
+<td>category</td>
+<td>string</td>
+<td>Filter by category (Grand Slam, WTA 1000, etc.)</td>
+</tr>
+</tbody></table>
+<h2 id='get-specific-tournament'>Get Specific Tournament</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/wta/v1/tournaments/7?season=2026"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="dl">'</span><span class="s1">https://api.balldontlie.io/wta/v1/tournaments/7?season=2026</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">Authorization</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">YOUR_API_KEY</span><span class="dl">'</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+<span class="kd">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">tournament_id</span> <span class="o">=</span> <span class="mi">7</span>  <span class="c1"># Australian Open
+</span><span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s">'https://api.balldontlie.io/wta/v1/tournaments/</span><span class="si">{</span><span class="n">tournament_id</span><span class="si">}</span><span class="s">'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">},</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">'season'</span><span class="p">:</span> <span class="mi">2026</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">tournament</span> <span class="o">=</span> <span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">()[</span><span class="s">'data'</span><span class="p">]</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">tournament</span><span class="p">[</span><span class="s">'name'</span><span class="p">]</span><span class="si">}</span><span class="s"> - </span><span class="si">{</span><span class="n">tournament</span><span class="p">[</span><span class="s">'location'</span><span class="p">]</span><span class="si">}</span><span class="s"> - </span><span class="si">{</span><span class="n">tournament</span><span class="p">[</span><span class="s">'surface'</span><span class="p">]</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AUSTRALIAN OPEN"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"location"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MELBOURNE, AUSTRALIA"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"surface"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Hard"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"category"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grand Slam"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2026</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"start_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-01-18"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"end_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-02-01"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"prize_money"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"prize_currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"USD"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"draw_size"</span><span class="p">:</span><span class="w"> </span><span class="mi">128</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves a specific tournament.</p>
+
+<aside class="notice">
+<strong>Default Behavior:</strong> If you omit the <code>season</code> parameter, the API returns data for the tournament's <strong>most recent season</strong>. The tournament's core attributes (<code>id</code>, <code>name</code>, <code>location</code>, <code>surface</code>, <code>category</code>) remain constant, while season-specific fields (<code>season</code>, <code>start_date</code>, <code>end_date</code>, <code>prize_money</code>, <code>prize_currency</code>, <code>draw_size</code>) reflect the requested or most recent year.
+</aside>
+<h3 id='http-request-4'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/wta/v1/tournaments/{id}</code></p>
+<h3 id='url-parameters-2'>URL Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>The ID of the tournament</td>
+</tr>
+</tbody></table>
+<h3 id='query-parameters-3'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>season</td>
+<td>integer</td>
+<td>Get tournament info for a specific year. Defaults to most recent if omitted</td>
+</tr>
+</tbody></table>
+<h1 id='rankings'>Rankings</h1><h2 id='get-rankings'>Get Rankings</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/wta/v1/rankings"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="dl">'</span><span class="s1">https://api.balldontlie.io/wta/v1/rankings</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">Authorization</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">YOUR_API_KEY</span><span class="dl">'</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+<span class="kd">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/wta/v1/rankings'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">rankings</span> <span class="o">=</span> <span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">()[</span><span class="s">'data'</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">ranking</span> <span class="ow">in</span> <span class="n">rankings</span><span class="p">[:</span><span class="mi">10</span><span class="p">]:</span>
+        <span class="n">player</span> <span class="o">=</span> <span class="n">ranking</span><span class="p">[</span><span class="s">'player'</span><span class="p">]</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"#</span><span class="si">{</span><span class="n">ranking</span><span class="p">[</span><span class="s">'rank'</span><span class="p">]</span><span class="si">}</span><span class="s">: </span><span class="si">{</span><span class="n">player</span><span class="p">[</span><span class="s">'full_name'</span><span class="p">]</span><span class="si">}</span><span class="s"> - </span><span class="si">{</span><span class="n">ranking</span><span class="p">[</span><span class="s">'points'</span><span class="p">]</span><span class="si">}</span><span class="s"> pts"</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1131</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sabalenka"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna Sabalenka"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BLR"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"rank"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"points"</span><span class="p">:</span><span class="w"> </span><span class="mi">10990</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"movement"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"ranking_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-01-19"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1132</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Iga"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Swiatek"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Iga Swiatek"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POL"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"rank"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"points"</span><span class="p">:</span><span class="w"> </span><span class="mi">8328</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"movement"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"ranking_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-01-19"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1133</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Coco"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Gauff"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Coco Gauff"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"USA"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"rank"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"points"</span><span class="p">:</span><span class="w"> </span><span class="mi">6423</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"movement"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"ranking_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-01-19"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="mi">1133</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves current WTA rankings.</p>
+<h3 id='http-request-5'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/wta/v1/rankings</code></p>
+<h3 id='query-parameters-4'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>cursor</td>
+<td>integer</td>
+<td>Cursor for pagination</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>integer</td>
+<td>Number of results per page (max 100)</td>
+</tr>
+<tr>
+<td>player_ids</td>
+<td>array</td>
+<td>Filter rankings for specific player IDs</td>
+</tr>
+<tr>
+<td>date</td>
+<td>string</td>
+<td>Get rankings for a specific date (YYYY-MM-DD)</td>
+</tr>
+</tbody></table>
+<h1 id='matches'>Matches</h1><h2 id='get-all-matches'>Get All Matches</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/wta/v1/matches?tournament_ids[]=7&amp;season=2026&amp;round=M1"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">params</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">URLSearchParams</span><span class="p">();</span>
+<span class="nx">params</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="dl">'</span><span class="s1">tournament_ids[]</span><span class="dl">'</span><span class="p">,</span> <span class="mi">7</span><span class="p">);</span>  <span class="c1">// Australian Open</span>
+<span class="nx">params</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="dl">'</span><span class="s1">season</span><span class="dl">'</span><span class="p">,</span> <span class="mi">2026</span><span class="p">);</span>
+<span class="nx">params</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="dl">'</span><span class="s1">round</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">M1</span><span class="dl">'</span><span class="p">);</span>  <span class="c1">// Round 1</span>
+
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="s2">`https://api.balldontlie.io/wta/v1/matches?</span><span class="p">${</span><span class="nx">params</span><span class="p">}</span><span class="s2">`</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">Authorization</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">YOUR_API_KEY</span><span class="dl">'</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+<span class="kd">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/wta/v1/matches'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">},</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">'tournament_ids[]'</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span> <span class="s">'season'</span><span class="p">:</span> <span class="mi">2026</span><span class="p">,</span> <span class="s">'round'</span><span class="p">:</span> <span class="s">'M1'</span><span class="p">}</span>  <span class="c1"># Australian Open Round 1
+</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">matches</span> <span class="o">=</span> <span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">()[</span><span class="s">'data'</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="s">'player1'</span><span class="p">][</span><span class="s">'full_name'</span><span class="p">]</span>
+        <span class="n">p2</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="s">'player2'</span><span class="p">][</span><span class="s">'full_name'</span><span class="p">]</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="s">'score'</span><span class="p">]</span> <span class="ow">or</span> <span class="s">'TBD'</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">p1</span><span class="si">}</span><span class="s"> vs </span><span class="si">{</span><span class="n">p2</span><span class="si">}</span><span class="s">: </span><span class="si">{</span><span class="n">score</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">45</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"tournament"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AUSTRALIAN OPEN"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"location"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MELBOURNE, AUSTRALIA"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"surface"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Hard"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"category"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grand Slam"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2026</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"start_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-01-18"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"end_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-02-01"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"prize_money"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"prize_currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"USD"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"draw_size"</span><span class="p">:</span><span class="w"> </span><span class="mi">128</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2026</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"round"</span><span class="p">:</span><span class="w"> </span><span class="s2">"M1"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sabalenka"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna Sabalenka"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BLR"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"player2"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">180</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tiantsoa Sarah"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Rakotomanga Rajaonah"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tiantsoa Sarah Rakotomanga Rajaonah"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FRA"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"winner"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sabalenka"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna Sabalenka"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BLR"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"score"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6-4 6-1"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"set_scores"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w"> </span><span class="nl">"set_number"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nl">"player1_games"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="nl">"player2_games"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="nl">"player1_tiebreak"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nl">"player2_tiebreak"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w"> </span><span class="nl">"set_number"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nl">"player1_games"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="nl">"player2_games"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nl">"player1_tiebreak"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nl">"player2_tiebreak"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">}</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="nl">"player1_game_score"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player2_game_score"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"server"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"duration"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"number_of_sets"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"match_status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"completed"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"is_live"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves all matches with optional filtering.</p>
+<h3 id='http-request-6'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/wta/v1/matches</code></p>
+<h3 id='query-parameters-5'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>cursor</td>
+<td>integer</td>
+<td>Cursor for pagination</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>integer</td>
+<td>Number of results per page (max 100)</td>
+</tr>
+<tr>
+<td>tournament_ids</td>
+<td>array</td>
+<td>Filter matches by tournament IDs</td>
+</tr>
+<tr>
+<td>player_ids</td>
+<td>array</td>
+<td>Filter matches involving specific players</td>
+</tr>
+<tr>
+<td>season</td>
+<td>integer</td>
+<td>Filter matches by season year</td>
+</tr>
+<tr>
+<td>round</td>
+<td>string</td>
+<td>Filter by round (Finals, Semi-Finals, etc.)</td>
+</tr>
+<tr>
+<td>is_live</td>
+<td>boolean</td>
+<td>Filter for live matches only</td>
+</tr>
+</tbody></table>
+<h2 id='get-specific-match'>Get Specific Match</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/wta/v1/matches/45"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="dl">'</span><span class="s1">https://api.balldontlie.io/wta/v1/matches/45</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">Authorization</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">YOUR_API_KEY</span><span class="dl">'</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+<span class="kd">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">match_id</span> <span class="o">=</span> <span class="mi">45</span>  <span class="c1"># Australian Open 2026 Round 1 - Sabalenka
+</span><span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s">'https://api.balldontlie.io/wta/v1/matches/</span><span class="si">{</span><span class="n">match_id</span><span class="si">}</span><span class="s">'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">()[</span><span class="s">'data'</span><span class="p">]</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">match</span><span class="p">[</span><span class="s">'player1'</span><span class="p">][</span><span class="s">'full_name'</span><span class="p">]</span><span class="si">}</span><span class="s"> vs </span><span class="si">{</span><span class="n">match</span><span class="p">[</span><span class="s">'player2'</span><span class="p">][</span><span class="s">'full_name'</span><span class="p">]</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Score: </span><span class="si">{</span><span class="n">match</span><span class="p">[</span><span class="s">'score'</span><span class="p">]</span><span class="si">}</span><span class="s"> | Round: </span><span class="si">{</span><span class="n">match</span><span class="p">[</span><span class="s">'round'</span><span class="p">]</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">45</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"tournament"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AUSTRALIAN OPEN"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"location"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MELBOURNE, AUSTRALIA"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"surface"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Hard"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"category"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Grand Slam"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2026</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"start_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-01-18"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"end_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-02-01"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"prize_money"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"prize_currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"USD"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"draw_size"</span><span class="p">:</span><span class="w"> </span><span class="mi">128</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2026</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"round"</span><span class="p">:</span><span class="w"> </span><span class="s2">"M1"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"player1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sabalenka"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna Sabalenka"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BLR"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"player2"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">180</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tiantsoa Sarah"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Rakotomanga Rajaonah"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tiantsoa Sarah Rakotomanga Rajaonah"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FRA"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"winner"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sabalenka"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna Sabalenka"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BLR"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"score"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6-4 6-1"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"set_scores"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w"> </span><span class="nl">"set_number"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nl">"player1_games"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="nl">"player2_games"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="nl">"player1_tiebreak"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nl">"player2_tiebreak"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">},</span><span class="w">
+      </span><span class="p">{</span><span class="w"> </span><span class="nl">"set_number"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nl">"player1_games"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="nl">"player2_games"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nl">"player1_tiebreak"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nl">"player2_tiebreak"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">}</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"player1_game_score"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"player2_game_score"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"server"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"duration"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"number_of_sets"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"match_status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"completed"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"is_live"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves a specific match.</p>
+<h3 id='http-request-7'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/wta/v1/matches/{id}</code></p>
+<h3 id='url-parameters-3'>URL Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>The ID of the match</td>
+</tr>
+</tbody></table>
+<h1 id='head-to-head'>Head to Head</h1><h2 id='get-head-to-head-record'>Get Head to Head Record</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/wta/v1/head_to_head?player1_id=1&amp;player2_id=2"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="c1">// Get Swiatek vs Sabalenka head-to-head</span>
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="dl">'</span><span class="s1">https://api.balldontlie.io/wta/v1/head_to_head?player1_id=1&amp;player2_id=2</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">Authorization</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">YOUR_API_KEY</span><span class="dl">'</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+<span class="kd">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="c1"># Get head-to-head record between Swiatek and Sabalenka
+</span><span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/wta/v1/head_to_head'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">},</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">'player1_id'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">'player2_id'</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>  <span class="c1"># Swiatek vs Sabalenka
+</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">h2h</span> <span class="o">=</span> <span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">()[</span><span class="s">'data'</span><span class="p">]</span>
+    <span class="n">p1</span> <span class="o">=</span> <span class="n">h2h</span><span class="p">[</span><span class="s">'player1'</span><span class="p">][</span><span class="s">'full_name'</span><span class="p">]</span>
+    <span class="n">p2</span> <span class="o">=</span> <span class="n">h2h</span><span class="p">[</span><span class="s">'player2'</span><span class="p">][</span><span class="s">'full_name'</span><span class="p">]</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">p1</span><span class="si">}</span><span class="s"> vs </span><span class="si">{</span><span class="n">p2</span><span class="si">}</span><span class="s">: </span><span class="si">{</span><span class="n">h2h</span><span class="p">[</span><span class="s">'player1_wins'</span><span class="p">]</span><span class="si">}</span><span class="s">-</span><span class="si">{</span><span class="n">h2h</span><span class="p">[</span><span class="s">'player2_wins'</span><span class="p">]</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">39</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"player1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sabalenka"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna Sabalenka"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BLR"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"player2"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Iga"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Swiatek"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Iga Swiatek"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POL"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"player1_wins"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"player2_wins"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves the head-to-head record between two players.</p>
+<h3 id='http-request-8'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/wta/v1/head_to_head</code></p>
+<h3 id='query-parameters-6'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>player1_id</td>
+<td>integer</td>
+<td>Yes</td>
+<td>The ID of the first player</td>
+</tr>
+<tr>
+<td>player2_id</td>
+<td>integer</td>
+<td>Yes</td>
+<td>The ID of the second player</td>
+</tr>
+</tbody></table>
+
+<aside class="notice">
+Both <code>player1_id</code> and <code>player2_id</code> are required and must be different.
+</aside>
+<h1 id='match-statistics'>Match Statistics</h1><h2 id='get-match-statistics'>Get Match Statistics</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/wta/v1/match_stats?match_ids[]=1"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">params</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">URLSearchParams</span><span class="p">();</span>
+<span class="nx">params</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="dl">'</span><span class="s1">match_ids[]</span><span class="dl">'</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>  <span class="c1">// 2026 Australian Open Quarterfinal</span>
+
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="s2">`https://api.balldontlie.io/wta/v1/match_stats?</span><span class="p">${</span><span class="nx">params</span><span class="p">}</span><span class="s2">`</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">Authorization</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">YOUR_API_KEY</span><span class="dl">'</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+<span class="kd">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/wta/v1/match_stats'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">},</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">'match_ids[]'</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>  <span class="c1"># 2026 Australian Open Quarterfinal
+</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">()[</span><span class="s">'data'</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">stat</span> <span class="ow">in</span> <span class="n">stats</span><span class="p">:</span>
+        <span class="n">player</span> <span class="o">=</span> <span class="n">stat</span><span class="p">[</span><span class="s">'player'</span><span class="p">][</span><span class="s">'full_name'</span><span class="p">]</span>
+        <span class="n">aces</span> <span class="o">=</span> <span class="n">stat</span><span class="p">[</span><span class="s">'aces'</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">stat</span><span class="p">[</span><span class="s">'double_faults'</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">player</span><span class="si">}</span><span class="s">: Aces </span><span class="si">{</span><span class="n">aces</span><span class="si">}</span><span class="s">, Double Faults </span><span class="si">{</span><span class="n">df</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">384169</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"match"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"tournament_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2026</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"round"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Quarterfinals"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"player1_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">91</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"player2_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">92</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"winner_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">91</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"player"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">91</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Zeynep"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sonmez"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Zeynep Sonmez"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"TUR"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"set_number"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"serve_rating"</span><span class="p">:</span><span class="w"> </span><span class="mi">117</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"aces"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"double_faults"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"first_serve_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">73.85</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"first_serve_points_won_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">66.67</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"second_serve_points_won_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">47.06</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"break_points_saved_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">71.43</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"return_rating"</span><span class="p">:</span><span class="w"> </span><span class="mi">138</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"first_return_won_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">69.7</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"second_return_won_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">66.67</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"break_points_converted_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">71.43</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"total_service_points_won_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">61.54</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"total_return_points_won_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">54.76</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"total_points_won_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">58.88</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">384170</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"match"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"tournament_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2026</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"round"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Quarterfinals"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"player1_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">91</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"player2_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">92</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"winner_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">91</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"player"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">92</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Anastasia"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Gasanova"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Anastasia Gasanova"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RSA"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"set_number"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"serve_rating"</span><span class="p">:</span><span class="w"> </span><span class="mi">94</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"aces"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"double_faults"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"first_serve_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">78.57</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"first_serve_points_won_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">48.48</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"second_serve_points_won_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">33.33</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"break_points_saved_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">28.57</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"return_rating"</span><span class="p">:</span><span class="w"> </span><span class="mi">91</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"first_return_won_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">52.08</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"second_return_won_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">52.94</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"break_points_converted_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">28.57</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"total_service_points_won_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">45.24</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"total_return_points_won_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">38.46</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"total_points_won_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">41.12</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves detailed match statistics for players.</p>
+<h3 id='http-request-9'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/wta/v1/match_stats</code></p>
+<h3 id='query-parameters-7'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>cursor</td>
+<td>integer</td>
+<td>Cursor for pagination</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>integer</td>
+<td>Number of results per page (max 100)</td>
+</tr>
+<tr>
+<td>match_ids</td>
+<td>array</td>
+<td>Filter by specific match IDs</td>
+</tr>
+<tr>
+<td>player_ids</td>
+<td>array</td>
+<td>Filter statistics for specific players</td>
+</tr>
+<tr>
+<td>set_number</td>
+<td>integer</td>
+<td>Filter by set number (0 for full match stats)</td>
+</tr>
+</tbody></table>
+<h1 id='betting-odds'>Betting Odds</h1><h2 id='get-betting-odds'>Get Betting Odds</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/wta/v1/odds?tournament_ids[]=7&amp;season=2026"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">params</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">URLSearchParams</span><span class="p">();</span>
+<span class="nx">params</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="dl">'</span><span class="s1">tournament_ids[]</span><span class="dl">'</span><span class="p">,</span> <span class="mi">7</span><span class="p">);</span>  <span class="c1">// Australian Open</span>
+<span class="nx">params</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="dl">'</span><span class="s1">season</span><span class="dl">'</span><span class="p">,</span> <span class="mi">2026</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="s2">`https://api.balldontlie.io/wta/v1/odds?</span><span class="p">${</span><span class="nx">params</span><span class="p">}</span><span class="s2">`</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">Authorization</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">YOUR_API_KEY</span><span class="dl">'</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+<span class="kd">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="c1"># Get betting odds for the 2026 Australian Open
+</span><span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/wta/v1/odds'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">},</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">'tournament_ids[]'</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span> <span class="s">'season'</span><span class="p">:</span> <span class="mi">2026</span><span class="p">}</span>  <span class="c1"># Australian Open 2026
+</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">odds</span> <span class="o">=</span> <span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">()[</span><span class="s">'data'</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">odd</span> <span class="ow">in</span> <span class="n">odds</span><span class="p">:</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">odd</span><span class="p">[</span><span class="s">'player1'</span><span class="p">][</span><span class="s">'full_name'</span><span class="p">]</span> <span class="k">if</span> <span class="n">odd</span><span class="p">[</span><span class="s">'player1'</span><span class="p">]</span> <span class="k">else</span> <span class="s">'TBD'</span>
+        <span class="n">p2</span> <span class="o">=</span> <span class="n">odd</span><span class="p">[</span><span class="s">'player2'</span><span class="p">][</span><span class="s">'full_name'</span><span class="p">]</span> <span class="k">if</span> <span class="n">odd</span><span class="p">[</span><span class="s">'player2'</span><span class="p">]</span> <span class="k">else</span> <span class="s">'TBD'</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">odd</span><span class="p">[</span><span class="s">'vendor'</span><span class="p">]</span><span class="si">}</span><span class="s">: </span><span class="si">{</span><span class="n">p1</span><span class="si">}</span><span class="s"> (</span><span class="si">{</span><span class="n">odd</span><span class="p">[</span><span class="s">'player1_odds'</span><span class="p">]</span><span class="si">}</span><span class="s">) vs </span><span class="si">{</span><span class="n">p2</span><span class="si">}</span><span class="s"> (</span><span class="si">{</span><span class="n">odd</span><span class="p">[</span><span class="s">'player2_odds'</span><span class="p">]</span><span class="si">}</span><span class="s">)"</span><span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">90174375</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"match_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">45</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"vendor"</span><span class="p">:</span><span class="w"> </span><span class="s2">"draftkings"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sabalenka"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna Sabalenka"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BLR"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"player2"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">180</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tiantsoa Sarah"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Rakotomanga Rajaonah"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tiantsoa Sarah Rakotomanga Rajaonah"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FRA"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"player1_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">-50000</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player2_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">3500</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-01-18T09:10:22.599Z"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">90174439</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"match_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">45</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"vendor"</span><span class="p">:</span><span class="w"> </span><span class="s2">"draftkings"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sabalenka"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna Sabalenka"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BLR"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"player2"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">180</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tiantsoa Sarah"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Rakotomanga Rajaonah"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tiantsoa Sarah Rakotomanga Rajaonah"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FRA"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"player1_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">-50000</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player2_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">6900</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-01-18T09:00:38.079Z"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">90174297</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"match_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">45</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"vendor"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fanduel"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sabalenka"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Aryna Sabalenka"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BLR"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"player2"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">180</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tiantsoa Sarah"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Rakotomanga Rajaonah"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tiantsoa Sarah Rakotomanga Rajaonah"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"country_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FRA"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"height_cm"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"weight_kg"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"plays"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"turned_pro"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"player1_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">-50000</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player2_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">10000</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-01-18T09:30:05.437Z"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="mi">90174297</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves betting odds for WTA matches from various sportsbooks.</p>
+
+<p><strong>Important:</strong> At least one of <code>match_ids</code>, <code>tournament_ids</code>, <code>player_ids</code>, or <code>season</code> is required.</p>
+<h3 id='http-request-10'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/wta/v1/odds</code></p>
+<h3 id='query-parameters-8'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>cursor</td>
+<td>integer</td>
+<td>Cursor for pagination</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>integer</td>
+<td>Number of results per page (max 100)</td>
+</tr>
+<tr>
+<td>match_ids</td>
+<td>array</td>
+<td>Filter odds by match IDs</td>
+</tr>
+<tr>
+<td>tournament_ids</td>
+<td>array</td>
+<td>Filter odds by tournament IDs</td>
+</tr>
+<tr>
+<td>player_ids</td>
+<td>array</td>
+<td>Filter odds by player IDs</td>
+</tr>
+<tr>
+<td>season</td>
+<td>integer</td>
+<td>Filter odds by season year</td>
+</tr>
+</tbody></table>
+
+<aside class="warning">
+At least one of <code>match_ids</code>, <code>tournament_ids</code>, <code>player_ids</code>, or <code>season</code> must be provided.
+</aside>
+<h3 id='available-vendors'>Available Vendors</h3>
+<table><thead>
+<tr>
+<th>Vendor</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>draftkings</td>
+<td>DraftKings</td>
+</tr>
+<tr>
+<td>fanduel</td>
+<td>FanDuel</td>
+</tr>
+</tbody></table>
+<h3 id='odds-format'>Odds Format</h3>
+<p>Odds are returned in American format:
+- Negative odds (e.g., -180) indicate the favorite and show how much you need to bet to win $100
+- Positive odds (e.g., +150) indicate the underdog and show how much you win on a $100 bet</p>
+
+      </div>
+      <div class="dark-box">
+          <div class="lang-selector">
+                <a href="#" data-language-name="shell">shell</a>
+                <a href="#" data-language-name="javascript">javascript</a>
+                <a href="#" data-language-name="python">python</a>
+          </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -22,6 +22,14 @@ const config: Config = {
       animation: {
         shake: "shake 0.55s ease-in-out",
       },
+      colors: {
+        brand: {
+          orange: "#FF7E33",
+          grass: "#22C55E",
+          "grass-light": "#86EFAC",
+          text: "#1E293B",
+        }
+      },
     },
   },
   plugins: [],

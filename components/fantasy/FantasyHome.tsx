@@ -66,6 +66,8 @@ type FantasyEntryRealtimeRow = {
   updated_at?: string;
 };
 
+const FALLBACK_HEADSHOT_SRC = "/images/player-silhouette.svg";
+
 function parseRealtimeLineup(raw: unknown): string[] {
   if (!Array.isArray(raw)) {
     return [];
@@ -100,11 +102,12 @@ function parseRealtimeLineupPlayers(raw: unknown): FantasyLineupPlayer[] {
     const row = item as Record<string, unknown>;
     const playerId = Number.parseInt(String(row.player_id ?? row.playerId ?? ""), 10);
     const playerName = String(row.player_name ?? row.playerName ?? "").trim();
+    const headshotUrlRaw = String(row.headshot_url ?? row.headshotUrl ?? "").trim();
     if (!Number.isFinite(playerId) || playerId <= 0 || !playerName || seen.has(playerId)) {
       continue;
     }
     seen.add(playerId);
-    players.push({ playerId, playerName });
+    players.push({ playerId, playerName, headshotUrl: headshotUrlRaw || null });
   }
   return players;
 }
@@ -381,6 +384,24 @@ function BasketballLoader({ label = "Loading Fantasy..." }: { label?: string }) 
   return <BouncingBallLoader size="md" label={label} />;
 }
 
+function PlayerHeadshot({ src, name, sizeClass = "h-7 w-7" }: { src?: string | null; name: string; sizeClass?: string }) {
+  return (
+    <img
+      src={src || FALLBACK_HEADSHOT_SRC}
+      alt={`${name} headshot`}
+      className={`${sizeClass} rounded-full border border-white/70 bg-slate-200 object-cover shadow-sm`}
+      loading="lazy"
+      onError={(event) => {
+        const target = event.currentTarget;
+        if (target.src.endsWith(FALLBACK_HEADSHOT_SRC)) {
+          return;
+        }
+        target.src = FALLBACK_HEADSHOT_SRC;
+      }}
+    />
+  );
+}
+
 export function FantasyHome() {
   const [userId, setUserId] = useState("");
   const [venueId, setVenueId] = useState("");
@@ -590,6 +611,18 @@ export function FantasyHome() {
     () => new Set(playerPool.map((item) => normalizePlayerKey(item.playerName)).filter(Boolean)),
     [playerPool]
   );
+  const playerPoolHeadshotByName = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const item of playerPool) {
+      const key = normalizePlayerKey(item.playerName);
+      const src = String(item.headshotUrl ?? "").trim();
+      if (!key || !src || map.has(key)) {
+        continue;
+      }
+      map.set(key, src);
+    }
+    return map;
+  }, [playerPool]);
   const canEditExistingEntryLineup = useMemo(() => {
     if (!existingEntryForSelectedGame) {
       return false;
@@ -1327,7 +1360,9 @@ export function FantasyHome() {
         <div className="flex items-center justify-between gap-2">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Hightop Fantasy™</h2>
-            <p className="text-sm text-slate-700">Build a 5-player lineup and compete live with your venue.</p>
+            <p className="text-sm leading-relaxed text-slate-700">
+              Build one NBA lineup for today&apos;s slate. Only players in games that have not started yet are eligible.
+            </p>
           </div>
           <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-white/80 px-2 py-1">
             <span className={`inline-flex h-2 w-2 rounded-full bg-emerald-500 ${isRealtimeFresh ? "animate-pulse" : "opacity-40"}`} />
@@ -1362,7 +1397,7 @@ export function FantasyHome() {
               {toStatusLabel(trackedEntry.status)}
             </span>
           </div>
-          <p className="mt-1 text-xs text-slate-700">
+          <p className="mt-1 text-xs leading-relaxed text-slate-700">
             {trackedEntry.gameLabel} · {formatLocalDateTime(trackedEntry.startsAt)}
           </p>
           <div className="mt-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
@@ -1375,7 +1410,13 @@ export function FantasyHome() {
             <ul className="mt-2 space-y-1">
               {(trackedEntry.lineupPlayers.length > 0
                 ? trackedEntry.lineupPlayers
-                : trackedEntry.lineup.map((playerName, index) => ({ playerId: -(index + 1), playerName })).map((player) => player)
+                : trackedEntry.lineup
+                    .map((playerName, index) => ({
+                      playerId: -(index + 1),
+                      playerName,
+                      headshotUrl: playerPoolHeadshotByName.get(normalizePlayerKey(playerName)) ?? null,
+                    }))
+                    .map((player) => player)
               ).map((player) => {
                 const playerName = player.playerName;
                 const livePoints = livePointsByPlayer.get(String(player.playerId));
@@ -1394,7 +1435,10 @@ export function FantasyHome() {
                       isHot ? "scale-[1.03] text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.95)]" : "text-slate-700"
                     }`}
                   >
-                    <span className="font-medium text-slate-800">{playerName}</span>
+                    <div className="flex min-w-0 items-center gap-2">
+                      <PlayerHeadshot src={player.headshotUrl ?? null} name={playerName} />
+                      <span className="truncate font-medium text-slate-800">{playerName}</span>
+                    </div>
                     <SpringPop
                       popKey={playerPopTickById[String(player.playerId)] ?? 0}
                       glowSize={10}
@@ -1440,9 +1484,9 @@ export function FantasyHome() {
       {finalUnclaimedEntries.length > 1 ? (
         <section className="rounded-2xl border border-emerald-200/70 bg-emerald-50/70 p-4 shadow-sm">
           <h3 className="text-base font-semibold text-slate-900">Completed Games Ready To Collect</h3>
-          <p className="mt-1 text-xs text-slate-700">
-            Finalized rosters stay here until you collect points.
-          </p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-700">
+              Finalized rosters stay here until you collect points.
+            </p>
           <div className="mt-3 space-y-2">
             {finalUnclaimedEntries.map((entry) => (
               <div key={entry.id} className="rounded-lg border border-emerald-200 bg-white px-3 py-2">
@@ -1472,15 +1516,6 @@ export function FantasyHome() {
       {selectedGameId && hasResolvedEntries && !hasActiveDraftedEntry && !existingEntryForSelectedGame && !hasStartedGame ? (
         <section className="rounded-2xl border border-cyan-200 bg-cyan-50/80 p-4 shadow-sm">
           <p className="text-xs font-black uppercase tracking-[0.12em] text-cyan-800">Game Start</p>
-          <h3 className="mt-1 text-base font-semibold text-slate-900">Hightop Fantasy™ Rules</h3>
-          <p className="mt-1 text-sm text-slate-700">
-            Build one NBA lineup for today&apos;s slate. Only players in games that have not started are eligible.
-          </p>
-          <div className="mt-3 space-y-1 rounded-lg border border-cyan-200 bg-white px-3 py-2">
-            <p className="text-xs text-slate-700">- Draft a team</p>
-            <p className="text-xs text-slate-700">- Earn points based on player stats</p>
-            <p className="text-xs text-slate-700">- Teams are locked once games begin</p>
-          </div>
           <button
             type="button"
             onClick={() => setHasStartedGame(true)}
@@ -1511,7 +1546,7 @@ export function FantasyHome() {
               <span className="text-slate-600">Turnovers</span><span className="text-right font-semibold text-rose-700">-1.0</span>
             </div>
           </div>
-          <p className="mt-2 text-xs text-slate-700">
+          <p className="mt-2 text-xs leading-relaxed text-slate-700">
             Tap any player once to add them instantly. Tap again to remove.
           </p>
 
@@ -1540,7 +1575,10 @@ export function FantasyHome() {
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <div className="text-sm font-semibold text-slate-900">{item.playerName}</div>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <PlayerHeadshot src={item.headshotUrl} name={item.playerName} />
+                        <div className="truncate text-sm font-semibold text-slate-900">{item.playerName}</div>
+                      </div>
                       {selected ? (
                         <span className="rounded-full border border-emerald-300 bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-emerald-900">
                           Added
@@ -1561,7 +1599,7 @@ export function FantasyHome() {
             ))}
           </div>
 
-          <p className="mt-3 text-xs font-semibold text-slate-700">
+          <p className="mt-3 text-xs font-semibold leading-relaxed text-slate-700">
             {submitting
               ? "Saving lineup..."
               : selectedPlayers.length === 5

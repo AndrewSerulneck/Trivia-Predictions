@@ -1,0 +1,2520 @@
+
+<!doctype html>
+<html>
+  <head>
+    <link href="images/favicon-3a3a582c.ico" rel="icon" type="image/ico" />
+    <meta charset="utf-8">
+
+
+
+
+
+
+
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>BALLDONTLIE NHL API</title>
+
+    <style media="screen">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .gh {
+  color: #999999;
+}
+.highlight .sr {
+  color: #f6aa11;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .nb {
+  color: #f6aa11;
+}
+.highlight .cm {
+  color: #75715e;
+}
+.highlight .cp {
+  color: #75715e;
+}
+.highlight .c1 {
+  color: #75715e;
+}
+.highlight .cs {
+  color: #75715e;
+}
+.highlight .c, .highlight .ch, .highlight .cd, .highlight .cpf {
+  color: #75715e;
+}
+.highlight .err {
+  color: #960050;
+}
+.highlight .gr {
+  color: #960050;
+}
+.highlight .gt {
+  color: #960050;
+}
+.highlight .gd {
+  color: #49483e;
+}
+.highlight .gi {
+  color: #49483e;
+}
+.highlight .ge {
+  color: #49483e;
+}
+.highlight .kc {
+  color: #66d9ef;
+}
+.highlight .kd {
+  color: #66d9ef;
+}
+.highlight .kr {
+  color: #66d9ef;
+}
+.highlight .no {
+  color: #66d9ef;
+}
+.highlight .kt {
+  color: #66d9ef;
+}
+.highlight .mf {
+  color: #ae81ff;
+}
+.highlight .mh {
+  color: #ae81ff;
+}
+.highlight .il {
+  color: #ae81ff;
+}
+.highlight .mi {
+  color: #ae81ff;
+}
+.highlight .mo {
+  color: #ae81ff;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #ae81ff;
+}
+.highlight .sc {
+  color: #ae81ff;
+}
+.highlight .se {
+  color: #ae81ff;
+}
+.highlight .ss {
+  color: #ae81ff;
+}
+.highlight .sd {
+  color: #e6db74;
+}
+.highlight .s2 {
+  color: #e6db74;
+}
+.highlight .sb {
+  color: #e6db74;
+}
+.highlight .sh {
+  color: #e6db74;
+}
+.highlight .si {
+  color: #e6db74;
+}
+.highlight .sx {
+  color: #e6db74;
+}
+.highlight .s1 {
+  color: #e6db74;
+}
+.highlight .s, .highlight .sa, .highlight .dl {
+  color: #e6db74;
+}
+.highlight .na {
+  color: #a6e22e;
+}
+.highlight .nc {
+  color: #a6e22e;
+}
+.highlight .nd {
+  color: #a6e22e;
+}
+.highlight .ne {
+  color: #a6e22e;
+}
+.highlight .nf, .highlight .fm {
+  color: #a6e22e;
+}
+.highlight .vc {
+  color: #ffffff;
+}
+.highlight .nn {
+  color: #ffffff;
+}
+.highlight .ni {
+  color: #ffffff;
+}
+.highlight .bp {
+  color: #ffffff;
+}
+.highlight .vg {
+  color: #ffffff;
+}
+.highlight .vi {
+  color: #ffffff;
+}
+.highlight .nv, .highlight .vm {
+  color: #ffffff;
+}
+.highlight .w {
+  color: #ffffff;
+}
+.highlight {
+  color: #ffffff;
+}
+.highlight .n, .highlight .py, .highlight .nx {
+  color: #ffffff;
+}
+.highlight .nl {
+  color: #f92672;
+}
+.highlight .ow {
+  color: #f92672;
+}
+.highlight .nt {
+  color: #f92672;
+}
+.highlight .k, .highlight .kv {
+  color: #f92672;
+}
+.highlight .kn {
+  color: #f92672;
+}
+.highlight .kp {
+  color: #f92672;
+}
+.highlight .o {
+  color: #f92672;
+}
+    </style>
+    <style media="print">
+      * {
+        -webkit-transition:none!important;
+        transition:none!important;
+      }
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight, .highlight .w {
+  color: #586e75;
+}
+.highlight .err {
+  color: #002b36;
+  background-color: #dc322f;
+}
+.highlight .c, .highlight .ch, .highlight .cd, .highlight .cm, .highlight .cpf, .highlight .c1, .highlight .cs {
+  color: #657b83;
+}
+.highlight .cp {
+  color: #b58900;
+}
+.highlight .nt {
+  color: #b58900;
+}
+.highlight .o, .highlight .ow {
+  color: #93a1a1;
+}
+.highlight .p, .highlight .pi {
+  color: #93a1a1;
+}
+.highlight .gi {
+  color: #859900;
+}
+.highlight .gd {
+  color: #dc322f;
+}
+.highlight .gh {
+  color: #268bd2;
+  background-color: #002b36;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kn, .highlight .kp, .highlight .kr, .highlight .kv {
+  color: #6c71c4;
+}
+.highlight .kc {
+  color: #cb4b16;
+}
+.highlight .kt {
+  color: #cb4b16;
+}
+.highlight .kd {
+  color: #cb4b16;
+}
+.highlight .s, .highlight .sb, .highlight .sc, .highlight .dl, .highlight .sd, .highlight .s2, .highlight .sh, .highlight .sx, .highlight .s1 {
+  color: #859900;
+}
+.highlight .sa {
+  color: #6c71c4;
+}
+.highlight .sr {
+  color: #2aa198;
+}
+.highlight .si {
+  color: #d33682;
+}
+.highlight .se {
+  color: #d33682;
+}
+.highlight .nn {
+  color: #b58900;
+}
+.highlight .nc {
+  color: #b58900;
+}
+.highlight .no {
+  color: #b58900;
+}
+.highlight .na {
+  color: #268bd2;
+}
+.highlight .m, .highlight .mb, .highlight .mf, .highlight .mh, .highlight .mi, .highlight .il, .highlight .mo, .highlight .mx {
+  color: #859900;
+}
+.highlight .ss {
+  color: #859900;
+}
+    </style>
+    <link href="stylesheets/screen-a4600c6c.css" rel="stylesheet" media="screen" />
+    <link href="stylesheets/print-966d6edc.css" rel="stylesheet" media="print" />
+      <script src="javascripts/all-024da600.js"></script>
+
+    <script>
+      $(function() { setupCodeCopy(); });
+    </script>
+  </head>
+
+  <body class="index" data-languages="[&quot;shell&quot;,&quot;javascript&quot;,&quot;python&quot;]">
+    <a href="#" id="nav-button">
+      <span>
+        NAV
+        <img src="images/navbar-cad8cdcb.png" alt="" />
+      </span>
+    </a>
+    <div class="toc-wrapper">
+      <img src="images/logo-16f6dab8.png" class="logo" alt="" />
+        <div class="lang-selector">
+              <a href="#" data-language-name="shell">shell</a>
+              <a href="#" data-language-name="javascript">javascript</a>
+              <a href="#" data-language-name="python">python</a>
+        </div>
+        <div class="search">
+          <input type="text" class="search" id="input-search" placeholder="Search">
+        </div>
+        <ul class="search-results"></ul>
+      <ul id="toc" class="toc-list-h1">
+          <li>
+            <a href="#nhl-api" class="toc-h1 toc-link" data-title="NHL API">NHL API</a>
+          </li>
+          <li>
+            <a href="#ai-powered-integration" class="toc-h1 toc-link" data-title="AI-Powered Integration">AI-Powered Integration</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#using-the-openapi-specification-with-ai" class="toc-h2 toc-link" data-title="Using the OpenAPI Specification with AI">Using the OpenAPI Specification with AI</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#google-sheets-integration" class="toc-h1 toc-link" data-title="Google Sheets Integration">Google Sheets Integration</a>
+          </li>
+          <li>
+            <a href="#account-tiers" class="toc-h1 toc-link" data-title="Account Tiers">Account Tiers</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#48-hour-free-trial" class="toc-h2 toc-link" data-title="48-hour free trial">48-hour free trial</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#authentication" class="toc-h1 toc-link" data-title="Authentication">Authentication</a>
+          </li>
+          <li>
+            <a href="#pagination" class="toc-h1 toc-link" data-title="Pagination">Pagination</a>
+          </li>
+          <li>
+            <a href="#errors" class="toc-h1 toc-link" data-title="Errors">Errors</a>
+          </li>
+          <li>
+            <a href="#teams" class="toc-h1 toc-link" data-title="Teams">Teams</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-all-teams" class="toc-h2 toc-link" data-title="Get All Teams">Get All Teams</a>
+                  </li>
+                  <li>
+                    <a href="#get-a-specific-team" class="toc-h2 toc-link" data-title="Get a Specific Team">Get a Specific Team</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#team-season-stats" class="toc-h1 toc-link" data-title="Team Season Stats">Team Season Stats</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-season-stats-for-a-team" class="toc-h2 toc-link" data-title="Get Season Stats for a Team">Get Season Stats for a Team</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#team-stats-leaders" class="toc-h1 toc-link" data-title="Team Stats Leaders">Team Stats Leaders</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-leaders-for-team-stats" class="toc-h2 toc-link" data-title="Get Leaders for Team Stats">Get Leaders for Team Stats</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#players" class="toc-h1 toc-link" data-title="Players">Players</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-all-players" class="toc-h2 toc-link" data-title="Get All Players">Get All Players</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#player-season-stats" class="toc-h1 toc-link" data-title="Player Season Stats">Player Season Stats</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-player-season-stats" class="toc-h2 toc-link" data-title="Get Player Season Stats">Get Player Season Stats</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#player-stats-leaders" class="toc-h1 toc-link" data-title="Player Stats Leaders">Player Stats Leaders</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-leaders-for-player-stats" class="toc-h2 toc-link" data-title="Get Leaders for Player Stats">Get Leaders for Player Stats</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#games" class="toc-h1 toc-link" data-title="Games">Games</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-all-games" class="toc-h2 toc-link" data-title="Get All Games">Get All Games</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#standings" class="toc-h1 toc-link" data-title="Standings">Standings</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-team-standings" class="toc-h2 toc-link" data-title="Get Team Standings">Get Team Standings</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#box-scores" class="toc-h1 toc-link" data-title="Box Scores">Box Scores</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-box-scores" class="toc-h2 toc-link" data-title="Get Box Scores">Get Box Scores</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#play-by-play" class="toc-h1 toc-link" data-title="Play-by-Play">Play-by-Play</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-play-by-play-data" class="toc-h2 toc-link" data-title="Get Play-by-Play Data">Get Play-by-Play Data</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#player-injuries" class="toc-h1 toc-link" data-title="Player Injuries">Player Injuries</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-player-injuries" class="toc-h2 toc-link" data-title="Get Player Injuries">Get Player Injuries</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#betting-odds" class="toc-h1 toc-link" data-title="Betting Odds">Betting Odds</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-betting-odds" class="toc-h2 toc-link" data-title="Get Betting Odds">Get Betting Odds</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#player-props" class="toc-h1 toc-link" data-title="Player Props">Player Props</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#market-types" class="toc-h2 toc-link" data-title="Market Types">Market Types</a>
+                  </li>
+                  <li>
+                    <a href="#get-player-props" class="toc-h2 toc-link" data-title="Get Player Props">Get Player Props</a>
+                  </li>
+              </ul>
+          </li>
+      </ul>
+        <ul class="toc-footer">
+            <li><a href='https://app.balldontlie.io'>Sign Up for an API Key</a></li>
+        </ul>
+    </div>
+    <div class="page-wrapper">
+      <div class="dark-box"></div>
+      <div class="content">
+        <h1 id='nhl-api'>NHL API</h1>
+<p>Welcome to the <strong>BALLDONTLIE NHL API</strong>, the best HOCKEY API on the planet. This API contains comprehensive NHL data. An API key is required. You can obtain an API key by creating a free account on <a href="https://app.balldontlie.io">our website</a>. Read the <a href="#authentication">authentication section</a> to learn how to use the API key.</p>
+
+<p>Take a look at our <a href="https://www.balldontlie.io/docs">other APIs</a>.</p>
+
+<p>Join us on <a href="https://discord.gg/cQJhfTPn8j">discord</a>.</p>
+<h1 id='ai-powered-integration'>AI-Powered Integration</h1>
+<aside class="notice">
+<strong>New to programming?</strong> Our API is designed to work seamlessly with AI assistants like ChatGPT, the agent, and Gemini. You don't need coding experience to get started!
+</aside>
+<h2 id='using-the-openapi-specification-with-ai'>Using the OpenAPI Specification with AI</h2>
+<p>Our complete <a href="https://www.balldontlie.io/openapi/nhl.yml">OpenAPI specification</a> allows AI assistants to automatically understand and interact with our API. Simply share the spec URL with your AI assistant and describe what you want to build—the AI will handle the technical implementation.</p>
+
+<p><strong>Getting Started with AI:</strong></p>
+
+<ol>
+<li>Copy this URL: <code>https://www.balldontlie.io/openapi/nhl.yml</code></li>
+<li>Share it with your preferred AI assistant (ChatGPT, the agent, Gemini, etc.)</li>
+<li>Tell the AI what you want to build (e.g., &quot;Create a dashboard showing tonight&#39;s NHL games&quot;)</li>
+<li>The AI will read the OpenAPI spec and write the code for you</li>
+</ol>
+
+<p><strong>Example prompts to try:</strong></p>
+
+<ul>
+<li>&quot;Using the OpenAPI spec at https://www.balldontlie.io/openapi/nhl.yml, show me how to get Connor McDavid&#39;s season stats&quot;</li>
+<li>&quot;Read the BALLDONTLIE OpenAPI spec and create a Python script that fetches tonight&#39;s NHL games&quot;</li>
+<li>&quot;Help me understand the available NHL endpoints from this OpenAPI spec: https://www.balldontlie.io/openapi/nhl.yml&quot;</li>
+</ul>
+
+<p>This makes it incredibly easy for non-technical users, analysts, and researchers to leverage our sports data without needing to learn programming from scratch.</p>
+<h1 id='google-sheets-integration'>Google Sheets Integration</h1>
+<aside class="notice">
+<strong>Prefer spreadsheets over code?</strong> Pull live sports data directly into Google Sheets with our custom functions - no programming required!
+</aside>
+
+<p>Our Google Sheets integration lets you access all the same data available through our API using simple spreadsheet formulas. Perfect for fantasy sports tracking, betting analysis, and sports research.</p>
+
+<p><strong>Quick Start:</strong></p>
+
+<ol>
+<li>Get your API key from <a href="https://app.balldontlie.io/signup">app.balldontlie.io</a></li>
+<li>Copy our <a href="https://www.balldontlie.io/google-sheets/balldontlie.gs">Google Sheets script</a></li>
+<li>Paste it into your Google Sheet (Extensions &gt; Apps Script)</li>
+<li>Start using functions in your cells</li>
+</ol>
+
+<p><strong>Example functions:</strong></p>
+
+<ul>
+<li><code>=BDL_NHL_PLAYERS(&quot;McDavid&quot;)</code> - Search for players</li>
+<li><code>=BDL_NHL_GAMES(&quot;2026-01-27&quot;)</code> - Get games by date</li>
+<li><code>=BDL_NHL_STANDINGS(2026)</code> - Get current standings</li>
+<li><code>=BDL_NHL_ODDS(&quot;2026-01-27&quot;)</code> - Get betting odds</li>
+</ul>
+
+<p>For full setup instructions and the complete list of 150+ functions, see our <a href="https://www.balldontlie.io/blog/google-sheets-integration/">Google Sheets Integration Guide</a>.</p>
+<h1 id='account-tiers'>Account Tiers</h1>
+<p>There are three different account tiers which provide you access to different types of data. <a href="https://app.balldontlie.io">Visit our website</a> to create an account for free.</p>
+
+<p><strong>Paid tiers do not apply across sports. The tier you purchase for NHL will not automatically be applied to other sports. You can purchase the ALL-ACCESS ($299.99/mo) tier to get access to every endpoint for every sport.</strong></p>
+
+<p>Read the table below to see the breakdown.</p>
+
+<table><thead>
+<tr>
+<th>Endpoint</th>
+<th>Free</th>
+<th>ALL-STAR</th>
+<th>GOAT</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><a href="#teams">Teams</a></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#players">Players</a></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#games">Games</a></td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#standings">Standings</a></td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#box-scores">Box Scores</a></td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#play-by-play">Play-by-Play</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#player-injuries">Player Injuries</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#player-season-stats">Player Season Stats</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#team-season-stats">Team Season Stats</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#player-stats-leaders">Player Stats Leaders</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#team-stats-leaders">Team Stats Leaders</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#betting-odds">Betting Odds</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><a href="#player-props">Player Props</a></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+</tbody></table>
+
+<p>The feature breakdown per tier is shown in the table below.</p>
+
+<table><thead>
+<tr>
+<th>Tier</th>
+<th>Requests / Min</th>
+<th>$USD / mo.</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>GOAT</td>
+<td>600</td>
+<td>39.99</td>
+</tr>
+<tr>
+<td>ALL-STAR</td>
+<td>60</td>
+<td>9.99</td>
+</tr>
+<tr>
+<td>Free</td>
+<td>5</td>
+<td>0</td>
+</tr>
+</tbody></table>
+<h3 id='48-hour-free-trial'>48-hour free trial</h3>
+<p>Every paid sport offers a 48-hour trial of the GOAT tier (all endpoints, 5 req/min during the trial). ALL-ACCESS is also available as a 48-hour trial with the same 5 req/min trial limit. A payment method is required at signup; there is no charge until the trial ends, and you can cancel anytime from your dashboard. One trial per sport per account. Existing ALL-STAR subscribers may trial the GOAT upgrade for their sports.</p>
+<h1 id='authentication'>Authentication</h1>
+<blockquote>
+<p>To authorize, use this code:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"api_endpoint_here"</span> <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">axios</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">axios</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">axios</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="dl">"</span><span class="s2">api_endpoint_here</span><span class="dl">"</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">},</span>
+<span class="p">});</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'api_endpoint_here'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">())</span>
+</code></pre></div>
+<blockquote>
+<p>Make sure to replace <code>YOUR_API_KEY</code> with your API key.</p>
+</blockquote>
+
+<p>BALLDONTLIE uses API keys to allow access to the API. You can obtain an API key by creating a free account at <a href="https://app.balldontlie.io">our website</a></p>
+
+<p>We expect the API key to be included in all API requests to the server in a header that looks like the following:</p>
+
+<p><code>Authorization: YOUR_API_KEY</code></p>
+
+<aside class="notice">
+You must replace <code>YOUR_API_KEY</code> with your personal API key.
+</aside>
+
+<aside class="notice">
+Trial keys use the same <code>api_key</code> and <code>Authorization</code> header as paid keys. During the trial window, requests are capped at 5 req/min; when the trial converts to paid GOAT or ALL-ACCESS, the key uses the paid 600 req/min limit automatically. No integration change is required when the trial expires or converts.
+</aside>
+<h1 id='pagination'>Pagination</h1>
+<p>This API uses cursor based pagination rather than limit/offset. Endpoints that support pagination will send back responses with a <code>meta</code> key that looks like what is displayed on the right.</p>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>You can use <code>per_page</code> to specify the maximum number of results. It defaults to 25 and doesn&#39;t allow values larger than 100.</p>
+
+<p>You can use <code>next_cursor</code> to get the next page of results. Specify it in the request parameters like this: <code>?cursor=NEXT_CURSOR</code>.</p>
+<h1 id='errors'>Errors</h1>
+<p>The API uses the following error codes:</p>
+
+<table><thead>
+<tr>
+<th>Error Code</th>
+<th>Meaning</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>401</td>
+<td>Unauthorized - You either need an API key or your account tier does not have access to the endpoint.</td>
+</tr>
+<tr>
+<td>400</td>
+<td>Bad Request -- The request is invalid. The request parameters are probably incorrect.</td>
+</tr>
+<tr>
+<td>404</td>
+<td>Not Found -- The specified resource could not be found.</td>
+</tr>
+<tr>
+<td>406</td>
+<td>Not Acceptable -- You requested a format that isn&#39;t json.</td>
+</tr>
+<tr>
+<td>429</td>
+<td>Too Many Requests -- You&#39;re rate limited.</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Internal Server Error -- We had a problem with our server. Try again later.</td>
+</tr>
+<tr>
+<td>503</td>
+<td>Service Unavailable -- We&#39;re temporarily offline for maintenance. Please try again later.</td>
+</tr>
+</tbody></table>
+<h1 id='teams'>Teams</h1><h2 id='get-all-teams'>Get All Teams</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/nhl/v1/teams"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">axios</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">axios</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">axios</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="dl">"</span><span class="s2">https://api.balldontlie.io/nhl/v1/teams</span><span class="dl">"</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">},</span>
+<span class="p">});</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/nhl/v1/teams'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">())</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">55</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Philadelphia Flyers"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"tricode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PHI"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"conference_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Eastern"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"division_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Metropolitan"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">56</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Anaheim Ducks"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"tricode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ANA"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"conference_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Western"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"division_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Pacific"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">57</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Seattle Kraken"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"tricode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SEA"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"conference_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Western"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"division_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Pacific"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="err">...</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves all teams.</p>
+<h3 id='http-request'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/nhl/v1/teams</code></p>
+<h3 id='query-parameters'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>conference</td>
+<td>false</td>
+<td>Filter by conference name</td>
+</tr>
+<tr>
+<td>division</td>
+<td>false</td>
+<td>Filter by division name</td>
+</tr>
+</tbody></table>
+<h2 id='get-a-specific-team'>Get a Specific Team</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/nhl/v1/teams/13"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">axios</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">axios</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">axios</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/nhl/v1/teams/13</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/nhl/v1/teams/13'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">())</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">13</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"San Jose Sharks"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"tricode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SJS"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"conference_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Western"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"division_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Pacific"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves a specific team.</p>
+<h3 id='http-request-2'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/nhl/v1/teams/:id</code></p>
+<h3 id='url-parameters'>URL Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>Team ID</td>
+</tr>
+</tbody></table>
+<h1 id='team-season-stats'>Team Season Stats</h1><h2 id='get-season-stats-for-a-team'>Get Season Stats for a Team</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/nhl/v1/teams/61/season_stats?season=2024"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">axios</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">axios</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">axios</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/nhl/v1/teams/61/season_stats</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">params</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">season</span><span class="p">:</span> <span class="mi">2024</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/nhl/v1/teams/61/season_stats'</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">'season'</span><span class="p">:</span> <span class="mi">2024</span><span class="p">},</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">())</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">39</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"wins"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">36</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"losses"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ot_losses"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">85</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"points"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.51829</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"points_pct"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">255</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"goals_for"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">82</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"games_played"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">255</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"goals_against"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"goal_differential"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mf">3.10975</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"goals_for_per_game"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mf">3.10975</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"goals_against_per_game"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.17619</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"power_play_percentage"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.803348</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"penalty_kill_percentage"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mf">28.58536</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shots_for_per_game"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mf">29.89024</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shots_against_per_game"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.535706</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"faceoff_win_percentage"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves season statistics for a specific team.</p>
+<h3 id='http-request-3'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/nhl/v1/teams/:id/season_stats</code></p>
+<h3 id='url-parameters-2'>URL Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>Team ID</td>
+</tr>
+</tbody></table>
+<h3 id='query-parameters-2'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>season</td>
+<td>true</td>
+<td>Returns stats for this season</td>
+</tr>
+<tr>
+<td>postseason</td>
+<td>false</td>
+<td>If true, return postseason stats</td>
+</tr>
+</tbody></table>
+<h1 id='team-stats-leaders'>Team Stats Leaders</h1><h2 id='get-leaders-for-team-stats'>Get Leaders for Team Stats</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/nhl/v1/team_stats/leaders?season=2024&amp;type=goals_for"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">axios</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">axios</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">axios</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/nhl/v1/team_stats/leaders</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">params</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">season</span><span class="p">:</span> <span class="mi">2024</span><span class="p">,</span>
+      <span class="na">type</span><span class="p">:</span> <span class="dl">"</span><span class="s2">goals_for</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/nhl/v1/team_stats/leaders'</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">'season'</span><span class="p">:</span> <span class="mi">2024</span><span class="p">,</span> <span class="s">'type'</span><span class="p">:</span> <span class="s">'goals_for'</span><span class="p">},</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">())</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"team"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">21</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Winnipeg Jets"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"tricode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WPG"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"conference_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Western"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"division_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Central"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"points"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">116</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2024</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"postseason"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"team"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">36</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Washington Capitals"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"tricode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WSH"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"conference_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Eastern"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"division_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Metropolitan"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"points"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">111</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2024</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"postseason"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="err">...</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves team statistical leaders.</p>
+<h3 id='http-request-4'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/nhl/v1/team_stats/leaders</code></p>
+<h3 id='query-parameters-3'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>season</td>
+<td>true</td>
+<td>Returns leaders for this season</td>
+</tr>
+<tr>
+<td>type</td>
+<td>true</td>
+<td>The stat type to get leaders for</td>
+</tr>
+<tr>
+<td>postseason</td>
+<td>false</td>
+<td>If true, return postseason leaders</td>
+</tr>
+</tbody></table>
+<h3 id='available-stat-types'>Available Stat Types</h3>
+<p>The <code>type</code> parameter must be one of:</p>
+
+<p><code>faceoff_win_percentage</code>, <code>shots_for_per_game</code>, <code>penalty_kill_percentage</code>, <code>goals_against_per_game</code>, <code>games_played</code>, <code>goals_for_per_game</code>, <code>goals_against</code>, <code>points_pct</code>, <code>points</code>, <code>power_play_percentage</code>, <code>shots_against_per_game</code>, <code>goals_for</code>, <code>wins</code>, <code>goal_differential</code>, <code>ot_losses</code>, <code>losses</code></p>
+<h1 id='players'>Players</h1><h2 id='get-all-players'>Get All Players</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/nhl/v1/players?team_ids[]=61&amp;seasons[]=2024"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">axios</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">axios</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">axios</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/nhl/v1/players</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">params</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">team_ids</span><span class="p">:</span> <span class="p">[</span><span class="mi">61</span><span class="p">],</span>
+      <span class="na">seasons</span><span class="p">:</span> <span class="p">[</span><span class="mi">2024</span><span class="p">],</span>
+    <span class="p">},</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/nhl/v1/players'</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">'team_ids[]'</span><span class="p">:</span> <span class="mi">61</span><span class="p">,</span> <span class="s">'seasons[]'</span><span class="p">:</span> <span class="mi">2024</span><span class="p">},</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">())</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">13</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Jonathan"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Quick"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Jonathan Quick"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"position_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"G"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"shoots_catches"</span><span class="p">:</span><span class="w"> </span><span class="s2">"L"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"height_in_inches"</span><span class="p">:</span><span class="w"> </span><span class="mi">73</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"weight_in_pounds"</span><span class="p">:</span><span class="w"> </span><span class="mi">220</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"birth_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1986-01-20"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Milford, CT, USA"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"teams"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+              </span><span class="p">{</span><span class="w">
+                  </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">61</span><span class="p">,</span><span class="w">
+                  </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"New York Rangers"</span><span class="p">,</span><span class="w">
+                  </span><span class="nl">"tricode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"NYR"</span><span class="p">,</span><span class="w">
+                  </span><span class="nl">"conference_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Eastern"</span><span class="p">,</span><span class="w">
+                  </span><span class="nl">"division_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Metropolitan"</span><span class="p">,</span><span class="w">
+                  </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2024</span><span class="w">
+              </span><span class="p">}</span><span class="w">
+          </span><span class="p">]</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">71</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Calvin"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"de Haan"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Calvin de Haan"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"position_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"D"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"shoots_catches"</span><span class="p">:</span><span class="w"> </span><span class="s2">"L"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"height_in_inches"</span><span class="p">:</span><span class="w"> </span><span class="mi">73</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"weight_in_pounds"</span><span class="p">:</span><span class="w"> </span><span class="mi">192</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"birth_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1991-05-08"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Carp, ON, CAN"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"teams"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+              </span><span class="p">{</span><span class="w">
+                  </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">61</span><span class="p">,</span><span class="w">
+                  </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"New York Rangers"</span><span class="p">,</span><span class="w">
+                  </span><span class="nl">"tricode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"NYR"</span><span class="p">,</span><span class="w">
+                  </span><span class="nl">"conference_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Eastern"</span><span class="p">,</span><span class="w">
+                  </span><span class="nl">"division_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Metropolitan"</span><span class="p">,</span><span class="w">
+                  </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2024</span><span class="w">
+              </span><span class="p">}</span><span class="w">
+          </span><span class="p">]</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="err">...</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves all players based on the provided filters.</p>
+<h3 id='http-request-5'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/nhl/v1/players</code></p>
+<h3 id='query-parameters-4'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>cursor</td>
+<td>false</td>
+<td>The cursor for pagination</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>false</td>
+<td>Number of results per page (max 100)</td>
+</tr>
+<tr>
+<td>name</td>
+<td>false</td>
+<td>Filter by player name</td>
+</tr>
+<tr>
+<td>player_ids</td>
+<td>false</td>
+<td>Filter by player IDs</td>
+</tr>
+<tr>
+<td>team_ids</td>
+<td>false</td>
+<td>Filter by team IDs</td>
+</tr>
+<tr>
+<td>seasons</td>
+<td>false</td>
+<td>Filter by seasons</td>
+</tr>
+</tbody></table>
+<h1 id='player-season-stats'>Player Season Stats</h1><h2 id='get-player-season-stats'>Get Player Season Stats</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/nhl/v1/players/35/season_stats?season=2024"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">axios</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">axios</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">axios</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/nhl/v1/players/35/season_stats</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">params</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">season</span><span class="p">:</span> <span class="mi">2024</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/nhl/v1/players/35/season_stats'</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">'season'</span><span class="p">:</span> <span class="mi">2024</span><span class="p">},</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">())</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"assists"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"even_strength_goals"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">54</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"even_strength_points"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"faceoff_win_pct"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">75</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"games_played"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="err">...</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves season statistics for a specific player.</p>
+<h3 id='http-request-6'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/nhl/v1/players/:id/season_stats</code></p>
+<h3 id='url-parameters-3'>URL Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>Player ID</td>
+</tr>
+</tbody></table>
+<h3 id='query-parameters-5'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>season</td>
+<td>true</td>
+<td>Returns stats for this season</td>
+</tr>
+<tr>
+<td>postseason</td>
+<td>false</td>
+<td>If true, return postseason stats</td>
+</tr>
+</tbody></table>
+<h1 id='player-stats-leaders'>Player Stats Leaders</h1><h2 id='get-leaders-for-player-stats'>Get Leaders for Player Stats</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/nhl/v1/player_stats/leaders?season=2024&amp;type=points"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">axios</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">axios</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">axios</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/nhl/v1/player_stats/leaders</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">params</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">season</span><span class="p">:</span> <span class="mi">2024</span><span class="p">,</span>
+      <span class="na">type</span><span class="p">:</span> <span class="dl">"</span><span class="s2">points</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/nhl/v1/player_stats/leaders'</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">'season'</span><span class="p">:</span> <span class="mi">2024</span><span class="p">,</span> <span class="s">'type'</span><span class="p">:</span> <span class="s">'points'</span><span class="p">},</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">())</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"player"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">155</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Nikita"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Kucherov"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Nikita Kucherov"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"position_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"R"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"shoots_catches"</span><span class="p">:</span><span class="w"> </span><span class="s2">"L"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"height_in_inches"</span><span class="p">:</span><span class="w"> </span><span class="mi">72</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"weight_in_pounds"</span><span class="p">:</span><span class="w"> </span><span class="mi">180</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"birth_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1993-06-16"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Maykop, RUS"</span><span class="p">,</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"points"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">121</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2024</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"postseason"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"player"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">267</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Nathan"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MacKinnon"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Nathan MacKinnon"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"position_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"C"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"shoots_catches"</span><span class="p">:</span><span class="w"> </span><span class="s2">"R"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"height_in_inches"</span><span class="p">:</span><span class="w"> </span><span class="mi">72</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"weight_in_pounds"</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"birth_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1995-08-31"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Halifax, NS, CAN"</span><span class="p">,</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"points"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">116</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2024</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"postseason"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="err">...</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves player statistical leaders.</p>
+<h3 id='http-request-7'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/nhl/v1/player_stats/leaders</code></p>
+<h3 id='query-parameters-6'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>season</td>
+<td>true</td>
+<td>Returns leaders for this season</td>
+</tr>
+<tr>
+<td>type</td>
+<td>true</td>
+<td>The stat type to get leaders for</td>
+</tr>
+<tr>
+<td>postseason</td>
+<td>false</td>
+<td>If true, return postseason stats</td>
+</tr>
+</tbody></table>
+<h3 id='available-stat-types-2'>Available Stat Types</h3>
+<p>The <code>type</code> parameter must be one of:</p>
+
+<p><code>goals</code>, <code>power_play_points</code>, <code>game_winning_goals</code>, <code>plus_minus</code>, <code>even_strength_points</code>, <code>shots_against</code>, <code>goals_against_average</code>, <code>games_played</code>, <code>goals_against</code>, <code>shots</code>, <code>games_started</code>, <code>short_handed_goals</code>, <code>short_handed_points</code>, <code>faceoff_win_pct</code>, <code>assists</code>, <code>save_pct</code>, <code>power_play_goals</code>, <code>time_on_ice_per_game</code>, <code>wins</code>, <code>ot_losses</code>, <code>overtime_goals</code>, <code>penalty_minutes</code>, <code>saves</code>, <code>points</code>, <code>even_strength_goals</code>, <code>shutouts</code>, <code>shooting_pct</code>, <code>time_on_ice</code>, <code>points_per_game</code>, <code>losses</code></p>
+<h1 id='games'>Games</h1>
+<aside class="notice">Game data is updated in real-time for games currently in progress.</aside>
+<h2 id='get-all-games'>Get All Games</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/nhl/v1/games?seasons[]=2024&amp;team_ids[]=61"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">axios</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">axios</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">axios</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/nhl/v1/games</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">params</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">seasons</span><span class="p">:</span> <span class="p">[</span><span class="mi">2024</span><span class="p">],</span>
+      <span class="na">team_ids</span><span class="p">:</span> <span class="p">[</span><span class="mi">61</span><span class="p">],</span>
+    <span class="p">},</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/nhl/v1/games'</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">'seasons[]'</span><span class="p">:</span> <span class="mi">2024</span><span class="p">,</span> <span class="s">'team_ids[]'</span><span class="p">:</span> <span class="mi">61</span><span class="p">},</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">())</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2024</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"game_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-10-09"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"start_time_utc"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-10-09T23:30:00.000Z"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"home_team"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">59</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Pittsburgh Penguins"</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"tricode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PIT"</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"conference_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Eastern"</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"division_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Metropolitan"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nl">"away_team"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">61</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"New York Rangers"</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"tricode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"NYR"</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"conference_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Eastern"</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"division_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Metropolitan"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nl">"home_sog"</span><span class="p">:</span><span class="w"> </span><span class="mi">31</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"away_sog"</span><span class="p">:</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"home_score"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"away_score"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"venue"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PPG Paints Arena"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"game_state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"OFF"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"period"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"time_remaining"</span><span class="p">:</span><span class="w"> </span><span class="s2">"00:00"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"in_intermission"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"postseason"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+    </span><span class="err">...</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves all games based on the provided filters.</p>
+<h3 id='http-request-8'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/nhl/v1/games</code></p>
+<h3 id='query-parameters-7'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>cursor</td>
+<td>false</td>
+<td>The cursor for pagination</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>false</td>
+<td>Number of results per page (max 100)</td>
+</tr>
+<tr>
+<td>team_ids</td>
+<td>false</td>
+<td>Filter by team IDs</td>
+</tr>
+<tr>
+<td>dates</td>
+<td>false</td>
+<td>Filter by specific dates (YYYY-MM-DD)</td>
+</tr>
+<tr>
+<td>seasons</td>
+<td>false</td>
+<td>Filter by seasons</td>
+</tr>
+<tr>
+<td>postseason</td>
+<td>false</td>
+<td>Filter by postseason status</td>
+</tr>
+<tr>
+<td>game_ids</td>
+<td>false</td>
+<td>Filter by specific game IDs</td>
+</tr>
+</tbody></table>
+<h1 id='standings'>Standings</h1><h2 id='get-team-standings'>Get Team Standings</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/nhl/v1/standings?season=2024&amp;division=Atlantic"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">axios</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">axios</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">axios</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/nhl/v1/standings</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">params</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">season</span><span class="p">:</span> <span class="mi">2024</span><span class="p">,</span>
+      <span class="na">division</span><span class="p">:</span> <span class="dl">"</span><span class="s2">Atlantic</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/nhl/v1/standings'</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">'season'</span><span class="p">:</span> <span class="mi">2024</span><span class="p">,</span> <span class="s">'division'</span><span class="p">:</span> <span class="s">'Atlantic'</span><span class="p">},</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">())</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"team"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">46</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Toronto Maple Leafs"</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"tricode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"TOR"</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"conference_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Eastern"</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"division_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Atlantic"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2024</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"conference_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Eastern"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"division_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Atlantic"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"games_played"</span><span class="p">:</span><span class="w"> </span><span class="mi">82</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"points"</span><span class="p">:</span><span class="w"> </span><span class="mi">108</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"regulation_wins"</span><span class="p">:</span><span class="w"> </span><span class="mi">41</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"regulation_plus_ot_wins"</span><span class="p">:</span><span class="w"> </span><span class="mi">51</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"wins"</span><span class="p">:</span><span class="w"> </span><span class="mi">52</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"losses"</span><span class="p">:</span><span class="w"> </span><span class="mi">26</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"ot_losses"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"points_pctg"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.658537</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"goals_for"</span><span class="p">:</span><span class="w"> </span><span class="mi">268</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"goals_against"</span><span class="p">:</span><span class="w"> </span><span class="mi">231</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"goal_differential"</span><span class="p">:</span><span class="w"> </span><span class="mi">37</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"home_record"</span><span class="p">:</span><span class="w"> </span><span class="s2">"27-13-1"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"road_record"</span><span class="p">:</span><span class="w"> </span><span class="s2">"25-13-3"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"streak"</span><span class="p">:</span><span class="w"> </span><span class="s2">"W5"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"team"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tampa Bay Lightning"</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"tricode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"TBL"</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"conference_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Eastern"</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"division_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Atlantic"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2024</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"conference_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Eastern"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"division_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Atlantic"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"games_played"</span><span class="p">:</span><span class="w"> </span><span class="mi">82</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"points"</span><span class="p">:</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"regulation_wins"</span><span class="p">:</span><span class="w"> </span><span class="mi">41</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"regulation_plus_ot_wins"</span><span class="p">:</span><span class="w"> </span><span class="mi">45</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"wins"</span><span class="p">:</span><span class="w"> </span><span class="mi">47</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"losses"</span><span class="p">:</span><span class="w"> </span><span class="mi">27</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"ot_losses"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"points_pctg"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.621951</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"goals_for"</span><span class="p">:</span><span class="w"> </span><span class="mi">294</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"goals_against"</span><span class="p">:</span><span class="w"> </span><span class="mi">219</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"goal_differential"</span><span class="p">:</span><span class="w"> </span><span class="mi">75</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"home_record"</span><span class="p">:</span><span class="w"> </span><span class="s2">"29-8-4"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"road_record"</span><span class="p">:</span><span class="w"> </span><span class="s2">"18-19-4"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"streak"</span><span class="p">:</span><span class="w"> </span><span class="s2">"L1"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+    </span><span class="err">...</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves team standings.</p>
+<h3 id='http-request-9'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/nhl/v1/standings</code></p>
+<h3 id='query-parameters-8'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>season</td>
+<td>false</td>
+<td>Filter by season</td>
+</tr>
+<tr>
+<td>conference</td>
+<td>false</td>
+<td>Filter by conference name</td>
+</tr>
+<tr>
+<td>division</td>
+<td>false</td>
+<td>Filter by division name</td>
+</tr>
+</tbody></table>
+<h1 id='box-scores'>Box Scores</h1>
+<aside class="notice">Box scores are updated in real-time for games currently in progress.</aside>
+<h2 id='get-box-scores'>Get Box Scores</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/nhl/v1/box_scores?game_ids[]=74509"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">axios</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">axios</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">axios</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/nhl/v1/box_scores</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">params</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">game_ids</span><span class="p">:</span> <span class="p">[</span><span class="mi">74509</span><span class="p">],</span>
+    <span class="p">},</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/nhl/v1/box_scores'</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">'game_ids[]'</span><span class="p">:</span> <span class="mi">74509</span><span class="p">},</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">())</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"player"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Jordan"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Staal"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Jordan Staal"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"position_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"C"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"shoots_catches"</span><span class="p">:</span><span class="w"> </span><span class="s2">"L"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"height_in_inches"</span><span class="p">:</span><span class="w"> </span><span class="mi">76</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"weight_in_pounds"</span><span class="p">:</span><span class="w"> </span><span class="mi">220</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"birth_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1988-09-09"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Thunder Bay, ON, CAN"</span><span class="p">,</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"team"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Carolina Hurricanes"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"tricode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CAR"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"conference_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Eastern"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"division_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Metropolitan"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"game"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">74509</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2024</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"game_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2025-05-20"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"start_time_utc"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2025-05-21T00:00:00.000Z"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"home_team"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Carolina Hurricanes"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"tricode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CAR"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"conference_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Eastern"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"division_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Metropolitan"</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"away_team"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">17</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Florida Panthers"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"tricode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FLA"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"conference_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Eastern"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"division_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Atlantic"</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"home_sog"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"away_sog"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"home_score"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"away_score"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"venue"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Lenovo Center"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"game_state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"LIVE"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"period"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"time_remaining"</span><span class="p">:</span><span class="w"> </span><span class="s2">"06:30"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"in_intermission"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"postseason"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"position"</span><span class="p">:</span><span class="w"> </span><span class="s2">"C"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"goals"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"assists"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"points"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"plus_minus"</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"penalty_minutes"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"power_play_goals"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"shots_on_goal"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"faceoff_winning_pctg"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.625</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"time_on_ice"</span><span class="p">:</span><span class="w"> </span><span class="s2">"06:03"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"blocked_shots"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"hits"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"shifts"</span><span class="p">:</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"giveaways"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"takeaways"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"sweater_number"</span><span class="p">:</span><span class="w"> </span><span class="mi">11</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+      </span><span class="err">...</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves box scores for games.</p>
+<h3 id='http-request-10'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/nhl/v1/box_scores</code></p>
+<h3 id='query-parameters-9'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>cursor</td>
+<td>false</td>
+<td>The cursor for pagination</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>false</td>
+<td>Number of results per page (max 100)</td>
+</tr>
+<tr>
+<td>season</td>
+<td>false</td>
+<td>Filter by season</td>
+</tr>
+<tr>
+<td>game_ids</td>
+<td>false</td>
+<td>Filter by specific game IDs</td>
+</tr>
+<tr>
+<td>team_ids</td>
+<td>false</td>
+<td>Filter by team IDs</td>
+</tr>
+<tr>
+<td>player_ids</td>
+<td>false</td>
+<td>Filter by player IDs</td>
+</tr>
+<tr>
+<td>dates</td>
+<td>false</td>
+<td>Filter by specific dates (YYYY-MM-DD)</td>
+</tr>
+</tbody></table>
+<h1 id='play-by-play'>Play-by-Play</h1><h2 id='get-play-by-play-data'>Get Play-by-Play Data</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/nhl/v1/plays?game_id=74509"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">axios</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">axios</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">axios</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/nhl/v1/plays</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">params</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">game_id</span><span class="p">:</span> <span class="mi">74509</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/nhl/v1/plays'</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">'game_id'</span><span class="p">:</span> <span class="mi">74509</span><span class="p">},</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">())</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"game_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">74509</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"order"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"period"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"period_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"REG"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"time_in_period"</span><span class="p">:</span><span class="w"> </span><span class="s2">"20:00"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"time_remaining"</span><span class="p">:</span><span class="w"> </span><span class="s2">"20:00"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"faceoff"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"away_score"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"home_score"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"xCoord"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"yCoord"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"zoneCode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"N"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"winningPlayerId"</span><span class="p">:</span><span class="w"> </span><span class="mi">8478427</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"losingPlayerId"</span><span class="p">:</span><span class="w"> </span><span class="mi">8480039</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"game_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">74509</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"order"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"period"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"period_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"REG"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"time_in_period"</span><span class="p">:</span><span class="w"> </span><span class="s2">"19:45"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"time_remaining"</span><span class="p">:</span><span class="w"> </span><span class="s2">"19:45"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shot-on-goal"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"away_score"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"home_score"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"xCoord"</span><span class="p">:</span><span class="w"> </span><span class="mi">72</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"yCoord"</span><span class="p">:</span><span class="w"> </span><span class="mi">-5</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"zoneCode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"O"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"shootingPlayerId"</span><span class="p">:</span><span class="w"> </span><span class="mi">8480039</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"goalieInNetId"</span><span class="p">:</span><span class="w"> </span><span class="mi">8479394</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"shotType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"wrist"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"game_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">74509</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"order"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"period"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"period_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"REG"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"time_in_period"</span><span class="p">:</span><span class="w"> </span><span class="s2">"19:30"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"time_remaining"</span><span class="p">:</span><span class="w"> </span><span class="s2">"19:30"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"goal"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"away_score"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"home_score"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"xCoord"</span><span class="p">:</span><span class="w"> </span><span class="mi">85</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"yCoord"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"zoneCode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"O"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"scoringPlayerId"</span><span class="p">:</span><span class="w"> </span><span class="mi">8478550</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"goalieInNetId"</span><span class="p">:</span><span class="w"> </span><span class="mi">8479394</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"shotType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"snap"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"assist1PlayerId"</span><span class="p">:</span><span class="w"> </span><span class="mi">8477956</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"assist2PlayerId"</span><span class="p">:</span><span class="w"> </span><span class="mi">8480039</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves play-by-play data for a specific game. Plays are returned in chronological order with a sequential <code>order</code> field starting from 1.</p>
+<h3 id='http-request-11'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/nhl/v1/plays</code></p>
+<h3 id='query-parameters-10'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>game_id</td>
+<td>true</td>
+<td>The game ID</td>
+</tr>
+</tbody></table>
+<h3 id='response-fields'>Response Fields</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>game_id</td>
+<td>The ID of the game</td>
+</tr>
+<tr>
+<td>order</td>
+<td>Sequential play number (1, 2, 3, ...)</td>
+</tr>
+<tr>
+<td>period</td>
+<td>Period number (1, 2, 3 for regular, 4+ for overtime)</td>
+</tr>
+<tr>
+<td>period_type</td>
+<td>Type of period (REG, OT, SO)</td>
+</tr>
+<tr>
+<td>time_in_period</td>
+<td>Time elapsed in the period</td>
+</tr>
+<tr>
+<td>time_remaining</td>
+<td>Time remaining in the period</td>
+</tr>
+<tr>
+<td>type</td>
+<td>The type of play (see Play Types below)</td>
+</tr>
+<tr>
+<td>away_score</td>
+<td>Away team score after this play</td>
+</tr>
+<tr>
+<td>home_score</td>
+<td>Home team score after this play</td>
+</tr>
+<tr>
+<td>details</td>
+<td>Object containing play-specific details (coordinates, player IDs, etc.)</td>
+</tr>
+</tbody></table>
+<h3 id='play-types'>Play Types</h3>
+<table><thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>blocked-shot</td>
+<td>A shot that was blocked by a player</td>
+</tr>
+<tr>
+<td>delayed-penalty</td>
+<td>A delayed penalty call</td>
+</tr>
+<tr>
+<td>faceoff</td>
+<td>A faceoff</td>
+</tr>
+<tr>
+<td>game-end</td>
+<td>End of the game</td>
+</tr>
+<tr>
+<td>giveaway</td>
+<td>A giveaway by a player</td>
+</tr>
+<tr>
+<td>goal</td>
+<td>A goal scored</td>
+</tr>
+<tr>
+<td>hit</td>
+<td>A hit on an opposing player</td>
+</tr>
+<tr>
+<td>missed-shot</td>
+<td>A shot that missed the net</td>
+</tr>
+<tr>
+<td>penalty</td>
+<td>A penalty called</td>
+</tr>
+<tr>
+<td>period-end</td>
+<td>End of a period</td>
+</tr>
+<tr>
+<td>period-start</td>
+<td>Start of a period</td>
+</tr>
+<tr>
+<td>shootout-complete</td>
+<td>Shootout completed</td>
+</tr>
+<tr>
+<td>shot-on-goal</td>
+<td>A shot on goal</td>
+</tr>
+<tr>
+<td>stoppage</td>
+<td>A stoppage in play</td>
+</tr>
+<tr>
+<td>takeaway</td>
+<td>A takeaway by a player</td>
+</tr>
+</tbody></table>
+<h1 id='player-injuries'>Player Injuries</h1><h2 id='get-player-injuries'>Get Player Injuries</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/nhl/v1/player_injuries"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">axios</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">axios</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">axios</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/nhl/v1/player_injuries</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/nhl/v1/player_injuries'</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">())</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"player"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">352</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Frank"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Vatrano"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Frank Vatrano"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"position_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"R"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"shoots_catches"</span><span class="p">:</span><span class="w"> </span><span class="s2">"L"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"height_in_inches"</span><span class="p">:</span><span class="w"> </span><span class="mi">71</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"weight_in_pounds"</span><span class="p">:</span><span class="w"> </span><span class="mi">203</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"birth_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1994-03-13"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="s2">"East Longmeadow, MA, USA"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"teams"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                    </span><span class="p">{</span><span class="w">
+                        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">56</span><span class="p">,</span><span class="w">
+                        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Anaheim Ducks"</span><span class="p">,</span><span class="w">
+                        </span><span class="nl">"tricode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ANA"</span><span class="p">,</span><span class="w">
+                        </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2025</span><span class="w">
+                    </span><span class="p">}</span><span class="w">
+                </span><span class="p">]</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Day-To-Day"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"status_abbreviation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DD"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"injury_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Upper Body"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"return_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2025-12-29"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"comment"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Vatrano sustained an apparent upper-body injury Saturday versus the Kings, but there was no update on his status after the game, Andrew Knoll of the L.A. Daily News reports."</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"player"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">489</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"first_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tanner"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"last_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Jeannot"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tanner Jeannot"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"position_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"L"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"shoots_catches"</span><span class="p">:</span><span class="w"> </span><span class="s2">"L"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"height_in_inches"</span><span class="p">:</span><span class="w"> </span><span class="mi">74</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"weight_in_pounds"</span><span class="p">:</span><span class="w"> </span><span class="mi">221</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"birth_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1997-05-28"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"birth_place"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Estevan, SK, CAN"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"teams"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                    </span><span class="p">{</span><span class="w">
+                        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">51</span><span class="p">,</span><span class="w">
+                        </span><span class="nl">"full_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Boston Bruins"</span><span class="p">,</span><span class="w">
+                        </span><span class="nl">"tricode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BOS"</span><span class="p">,</span><span class="w">
+                        </span><span class="nl">"season"</span><span class="p">:</span><span class="w"> </span><span class="mi">2025</span><span class="w">
+                    </span><span class="p">}</span><span class="w">
+                </span><span class="p">]</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Day-To-Day"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"status_abbreviation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DD"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"injury_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Undisclosed"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"return_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2025-12-29"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"comment"</span><span class="p">:</span><span class="w"> </span><span class="s2">"day-to-day"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="err">...</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves all currently injured players. The data is updated regularly to reflect the latest injury reports.</p>
+<h3 id='http-request-12'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/nhl/v1/player_injuries</code></p>
+<h3 id='injury-status-types'>Injury Status Types</h3>
+<table><thead>
+<tr>
+<th>Status</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Out</td>
+<td>Player is out and not expected to play</td>
+</tr>
+<tr>
+<td>Day-To-Day</td>
+<td>Player&#39;s status is uncertain and evaluated on a daily basis</td>
+</tr>
+<tr>
+<td>Injured Reserve</td>
+<td>Player is on the injured reserve list</td>
+</tr>
+</tbody></table>
+<h1 id='betting-odds'>Betting Odds</h1>
+<aside class="notice">Odds are updated live and reflect real-time changes from sportsbooks.</aside>
+<h2 id='get-betting-odds'>Get Betting Odds</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/nhl/v1/odds?dates[]=2024-01-09"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">axios</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">axios</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">axios</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="dl">"</span><span class="s2">https://api.balldontlie.io/nhl/v1/odds</span><span class="dl">"</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">params</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">dates</span><span class="p">:</span> <span class="p">[</span><span class="dl">"</span><span class="s2">2024-01-09</span><span class="dl">"</span><span class="p">],</span>
+  <span class="p">},</span>
+  <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">},</span>
+<span class="p">});</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/nhl/v1/odds'</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">'dates'</span><span class="p">:</span> <span class="p">[</span><span class="s">'2024-01-09'</span><span class="p">]},</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">())</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">12345</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"game_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">67890</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"vendor"</span><span class="p">:</span><span class="w"> </span><span class="s2">"draftkings"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"spread_home_value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"-1.5"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"spread_home_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">150</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"spread_away_value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.5"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"spread_away_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">-180</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"moneyline_home_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">-200</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"moneyline_away_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">170</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"total_value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6.5"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"total_over_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">-110</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"total_under_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">-110</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-01-09T12:00:00.000Z"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">12346</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"game_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">67890</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"vendor"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fanduel"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"spread_home_value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"-1.5"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"spread_home_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">145</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"spread_away_value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.5"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"spread_away_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">-175</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"moneyline_home_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">-195</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"moneyline_away_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">165</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"total_value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6.0"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"total_over_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">-108</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"total_under_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">-112</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-01-09T12:00:00.000Z"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"next_cursor"</span><span class="p">:</span><span class="w"> </span><span class="mi">12347</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves betting odds for NHL games. Either <code>dates</code> or <code>game_ids</code> must be provided.</p>
+
+<p><strong>Available Vendors:</strong></p>
+
+<table><thead>
+<tr>
+<th>Vendor</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>caesars</td>
+<td>Caesars Sportsbook</td>
+</tr>
+<tr>
+<td>draftkings</td>
+<td>DraftKings</td>
+</tr>
+<tr>
+<td>fanatics</td>
+<td>Fanatics Sportsbook</td>
+</tr>
+<tr>
+<td>fanduel</td>
+<td>FanDuel</td>
+</tr>
+<tr>
+<td>kalshi</td>
+<td>Kalshi (prediction market)</td>
+</tr>
+<tr>
+<td>polymarket</td>
+<td>Polymarket (prediction market)</td>
+</tr>
+</tbody></table>
+<h3 id='http-request-13'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/nhl/v1/odds</code></p>
+<h3 id='query-parameters-11'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>cursor</td>
+<td>false</td>
+<td>The cursor, used for pagination</td>
+</tr>
+<tr>
+<td>per_page</td>
+<td>false</td>
+<td>The number of results per page. Default to 25. Max is 100</td>
+</tr>
+<tr>
+<td>dates</td>
+<td>false</td>
+<td>Returns odds for games on these dates. This should be an array: <code>?dates[]=2024-01-09</code></td>
+</tr>
+<tr>
+<td>game_ids</td>
+<td>false</td>
+<td>Returns odds for these game ids. This should be an array: <code>?game_ids[]=67890&amp;game_ids[]=67891</code></td>
+</tr>
+</tbody></table>
+<h1 id='player-props'>Player Props</h1>
+<aside class="notice">Player prop betting data is LIVE and updated in real-time. We do not store historical data.</aside>
+
+<aside class="notice">As games near completion, many (or all) player props may be removed from sportsbooks.</aside>
+
+<p>The Player Props API provides real-time player prop betting odds for NHL games. Player props allow betting on individual player performances such as goals, assists, points, shots on goal, saves, and more.</p>
+<h2 id='market-types'>Market Types</h2>
+<p>The API supports two market types:</p>
+
+<ul>
+<li><strong>over_under</strong>: Traditional over/under markets where users can bet on whether a player will go over or under a specific line value</li>
+<li><strong>milestone</strong>: Milestone markets where users bet on whether a player will reach a specific achievement (e.g., 2+ goals)</li>
+</ul>
+<h2 id='get-player-props'>Get Player Props</h2><div class="highlight"><pre class="highlight shell tab-shell"><code>curl <span class="s2">"https://api.balldontlie.io/nhl/v1/odds/player_props?game_id=67890"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: YOUR_API_KEY"</span>
+</code></pre></div><div class="highlight"><pre class="highlight javascript tab-javascript"><code><span class="kd">const</span> <span class="nx">axios</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">axios</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">axios</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span>
+  <span class="dl">"</span><span class="s2">https://api.balldontlie.io/nhl/v1/odds/player_props</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">{</span>
+    <span class="na">params</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">game_id</span><span class="p">:</span> <span class="mi">67890</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">Authorization</span><span class="p">:</span> <span class="dl">"</span><span class="s2">YOUR_API_KEY</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="highlight python tab-python"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s">'https://api.balldontlie.io/nhl/v1/odds/player_props'</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">'game_id'</span><span class="p">:</span> <span class="mi">67890</span><span class="p">},</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Authorization'</span><span class="p">:</span> <span class="s">'YOUR_API_KEY'</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">json</span><span class="p">())</span>
+</code></pre></div>
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">12345678</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"game_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">67890</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">123</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"vendor"</span><span class="p">:</span><span class="w"> </span><span class="s2">"draftkings"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"prop_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"points"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"line_value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.5"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"market"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"over_under"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"over_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">120</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"under_odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">-145</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-01-09T12:00:00.000Z"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">87654321</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"game_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">67890</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"player_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">123</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"vendor"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fanduel"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"prop_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"goals"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"line_value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"market"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"milestone"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"odds"</span><span class="p">:</span><span class="w"> </span><span class="mi">250</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-01-09T12:00:00.000Z"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"per_page"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>This endpoint retrieves player prop betting odds for a specific NHL game. The <code>game_id</code> parameter is required.</p>
+
+<aside class="notice">This endpoint returns all player props for the specified game in a single response. Pagination is not supported.</aside>
+
+<p><strong>Available Vendors:</strong></p>
+
+<table><thead>
+<tr>
+<th>Vendor</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>caesars</td>
+<td>Caesars Sportsbook</td>
+</tr>
+<tr>
+<td>draftkings</td>
+<td>DraftKings</td>
+</tr>
+<tr>
+<td>fanduel</td>
+<td>FanDuel</td>
+</tr>
+</tbody></table>
+<h3 id='http-request-14'>HTTP Request</h3>
+<p><code>GET https://api.balldontlie.io/nhl/v1/odds/player_props</code></p>
+<h3 id='query-parameters-12'>Query Parameters</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>game_id</td>
+<td>true</td>
+<td>The game ID to retrieve player props for</td>
+</tr>
+<tr>
+<td>player_id</td>
+<td>false</td>
+<td>Filter props for a specific player</td>
+</tr>
+<tr>
+<td>prop_type</td>
+<td>false</td>
+<td>Filter by prop type. See supported prop types below.</td>
+</tr>
+<tr>
+<td>vendors</td>
+<td>false</td>
+<td>Filter by specific sportsbook vendors. This should be an array: <code>?vendors[]=draftkings&amp;vendors[]=fanduel</code></td>
+</tr>
+</tbody></table>
+<h3 id='supported-prop-types'>Supported Prop Types</h3>
+<p>The following <code>prop_type</code> values are supported:</p>
+
+<table><thead>
+<tr>
+<th>Prop Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>anytime_goal</td>
+<td>Score a goal anytime in the game</td>
+</tr>
+<tr>
+<td>anytime_goal_1p</td>
+<td>Score a goal in the 1st period</td>
+</tr>
+<tr>
+<td>anytime_goal_2p</td>
+<td>Score a goal in the 2nd period</td>
+</tr>
+<tr>
+<td>anytime_goal_3p</td>
+<td>Score a goal in the 3rd period</td>
+</tr>
+<tr>
+<td>assists</td>
+<td>Total assists</td>
+</tr>
+<tr>
+<td>first_goal</td>
+<td>Score the first goal of the game</td>
+</tr>
+<tr>
+<td>first_goal_2p</td>
+<td>Score the first goal of the 2nd period</td>
+</tr>
+<tr>
+<td>first_goal_3p</td>
+<td>Score the first goal of the 3rd period</td>
+</tr>
+<tr>
+<td>goals</td>
+<td>Total goals scored</td>
+</tr>
+<tr>
+<td>last_goal</td>
+<td>Score the last goal of the game</td>
+</tr>
+<tr>
+<td>overtime_goal</td>
+<td>Score a goal in overtime</td>
+</tr>
+<tr>
+<td>points</td>
+<td>Total points (goals + assists)</td>
+</tr>
+<tr>
+<td>points_1p</td>
+<td>Points in the 1st period</td>
+</tr>
+<tr>
+<td>points_2p</td>
+<td>Points in the 2nd period</td>
+</tr>
+<tr>
+<td>points_3p</td>
+<td>Points in the 3rd period</td>
+</tr>
+<tr>
+<td>power_play_points</td>
+<td>Power play points</td>
+</tr>
+<tr>
+<td>saves</td>
+<td>Total saves (goalies)</td>
+</tr>
+<tr>
+<td>second_goal</td>
+<td>Score the second goal of the game</td>
+</tr>
+<tr>
+<td>shots_on_goal</td>
+<td>Total shots on goal</td>
+</tr>
+<tr>
+<td>shots_on_goal_1p</td>
+<td>Shots on goal in the 1st period</td>
+</tr>
+<tr>
+<td>shots_on_goal_2p</td>
+<td>Shots on goal in the 2nd period</td>
+</tr>
+<tr>
+<td>shots_on_goal_3p</td>
+<td>Shots on goal in the 3rd period</td>
+</tr>
+<tr>
+<td>third_goal</td>
+<td>Score the third goal of the game</td>
+</tr>
+</tbody></table>
+
+<p>Note: The actual prop types available may vary by game and sportsbook vendor.</p>
+
+      </div>
+      <div class="dark-box">
+          <div class="lang-selector">
+                <a href="#" data-language-name="shell">shell</a>
+                <a href="#" data-language-name="javascript">javascript</a>
+                <a href="#" data-language-name="python">python</a>
+          </div>
+      </div>
+    </div>
+  </body>
+</html>

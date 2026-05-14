@@ -937,12 +937,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       className="relative z-[60] flex flex-col isolation-isolate"
     >
       <section className="relative shrink-0 px-2 pb-3">
-        <div className="relative min-h-[7.8rem] overflow-hidden rounded-[1.4rem] border-[2px] border-[#475569] bg-[linear-gradient(172deg,#1f2937_0%,#111827_50%,#0b1220_100%)] p-[18px] shadow-[0_8px_0_rgba(15,23,42,0.34),0_14px_26px_rgba(15,23,42,0.34)]">
-          <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.04)_0px,rgba(255,255,255,0.04)_2px,rgba(255,255,255,0)_2px,rgba(255,255,255,0)_9px)]" />
-          <div className="pointer-events-none absolute inset-[7px] rounded-[1rem] border border-[#94a3b8]/25" />
+        <div className="relative min-h-[7.8rem] overflow-hidden rounded-[1.2rem] border-[3px] border-[#0f3f2a] bg-[linear-gradient(180deg,#14532d_0%,#0f4427_55%,#0b3420_100%)] p-[18px] shadow-[0_6px_0_rgba(6,24,15,0.55),0_14px_26px_rgba(15,23,42,0.28)]">
+          <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.06)_0px,rgba(255,255,255,0.06)_1px,rgba(255,255,255,0)_1px,rgba(255,255,255,0)_12px)]" />
+          <div className="pointer-events-none absolute inset-[7px] rounded-[0.85rem] border border-[#86efac]/30" />
           <div className="relative flex flex-col items-center justify-center gap-3">
             <div className="w-full text-center">
-              <h2 className="text-center text-[clamp(1.55rem,7.1vw,3.3rem)] font-black uppercase leading-[0.95] tracking-[0.04em] text-[#facc15] [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_0_8px_rgba(250,204,21,0.72),0_0_20px_rgba(250,204,21,0.45),0_2px_0_rgba(69,26,3,0.95)]">
+              <h2 className="text-center text-[clamp(1.55rem,7.1vw,3.3rem)] font-black uppercase leading-[0.95] tracking-[0.04em] text-white [font-family:'Bree_Serif','Nunito',serif]">
                 {venueDisplayName}
               </h2>
             </div>

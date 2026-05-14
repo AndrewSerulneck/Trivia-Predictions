@@ -8,7 +8,7 @@ import { getUserId, getVenueId } from "@/lib/storage";
 import { navigateBackToVenue } from "@/lib/venueGameTransition";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 
-type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl";
+type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl" | "mma";
 
 type PickEmSport = {
   slug: PickEmSportSlug;
@@ -93,8 +93,36 @@ const SPORT_ICONS: Record<string, string> = {
   soccer: "⚽",
   nfl: "🏈",
   nhl: "🏒",
+  mma: "🥊",
 };
 const PICKEM_PICK_LIMIT = 10;
+
+function GoldCoinIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true" className={`${className} drop-shadow-[0_2px_2px_rgba(106,64,0,0.45)]`}>
+      <defs>
+        <linearGradient id="tp-pickem-coin-rim-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fff5bf" />
+          <stop offset="28%" stopColor="#ffd769" />
+          <stop offset="62%" stopColor="#f2b437" />
+          <stop offset="100%" stopColor="#b67612" />
+        </linearGradient>
+        <linearGradient id="tp-pickem-coin-core-gradient" x1="10%" y1="8%" x2="82%" y2="92%">
+          <stop offset="0%" stopColor="#fff9d8" />
+          <stop offset="44%" stopColor="#ffdc73" />
+          <stop offset="100%" stopColor="#d98b12" />
+        </linearGradient>
+      </defs>
+      <ellipse cx="32" cy="54" rx="17" ry="4.8" fill="rgba(74,40,0,0.24)" />
+      <circle cx="32" cy="32" r="24.5" fill="url(#tp-pickem-coin-rim-gradient)" stroke="#774600" strokeWidth="2.4" />
+      <circle cx="32" cy="32" r="17.5" fill="url(#tp-pickem-coin-core-gradient)" stroke="#8a5200" strokeWidth="1.9" />
+      <ellipse cx="26.5" cy="22.5" rx="9.6" ry="5.5" fill="rgba(255,255,255,0.46)" />
+      <path d="M23 35h18" stroke="#8a5200" strokeWidth="3.2" strokeLinecap="round" />
+      <path d="M27 28h10" stroke="#8a5200" strokeWidth="3.2" strokeLinecap="round" />
+      <path d="M27 42h10" stroke="#8a5200" strokeWidth="3.2" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 function getSportIcon(slug: string): string {
   return SPORT_ICONS[slug] ?? "🏟️";
@@ -119,6 +147,14 @@ function getLocalDateKey(): string {
   return `${y}-${m}-${d}`;
 }
 
+function shiftDateKey(dateKey: string, deltaDays: number): string {
+  const parsed = Date.parse(`${dateKey}T00:00:00.000Z`);
+  if (!Number.isFinite(parsed)) {
+    return dateKey;
+  }
+  return new Date(parsed + deltaDays * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
 function resultLabel(game: PickEmGame): string {
   if (!game.userPickStatus || game.userPickStatus === "pending") {
     return "";
@@ -137,6 +173,7 @@ function resultLabel(game: PickEmGame): string {
 
 export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: string }) {
   const normalizedInitialSportSlug = String(initialSportSlug ?? "").trim().toLowerCase();
+  const todayDateKey = getLocalDateKey();
   const [userId, setUserId] = useState("");
   const [venueId, setVenueId] = useState("");
   const [nflWeekStartDate, setNflWeekStartDate] = useState("");
@@ -148,6 +185,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
   const [optimisticPickByGame, setOptimisticPickByGame] = useState<Record<string, string | undefined>>({});
   const [sports, setSports] = useState<PickEmSport[]>([]);
   const [selectedSportSlug, setSelectedSportSlug] = useState("");
+  const [selectedDate, setSelectedDate] = useState(todayDateKey);
   const [sport, setSport] = useState<PickEmSport | null>(null);
   const [games, setGames] = useState<PickEmGame[]>([]);
   const latestGameMapRef = useRef<Map<string, PickEmGame>>(new Map());
@@ -250,7 +288,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
       try {
         const params = new URLSearchParams({
           sportSlug: selectedSportSlug,
-          date: getLocalDateKey(),
+          date: selectedDate,
           tzOffsetMinutes: String(new Date().getTimezoneOffset()),
         });
         if (selectedSportSlug === "nfl" && nflWeekStartDate) {
@@ -286,15 +324,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           setNflWeekStartDate(payload.selectedWeekStartDate);
         }
         if (!background) {
-          const probes = payload.debug?.probes ?? [];
-          const failedProbe = probes.find((probe) => probe.statusCode !== 200);
-          if (nextGames.length === 0 && failedProbe) {
-            setErrorMessage(
-              `Data provider debug (${failedProbe.sportKey} ${failedProbe.path}): HTTP ${failedProbe.statusCode} - ${failedProbe.bodyPreview}`
-            );
-          } else {
-            setErrorMessage("");
-          }
+          setErrorMessage("");
         }
       } catch (error) {
         setLastDebugProbes([]);
@@ -317,7 +347,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         }
       }
     },
-    [nflWeekStartDate, selectedSportSlug, userId, venueId]
+    [nflWeekStartDate, selectedDate, selectedSportSlug, userId, venueId]
   );
 
   useEffect(() => {
@@ -325,8 +355,28 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
   }, [loadGames]);
 
   useEffect(() => {
+    // Always refresh when the user lands on Pick 'Em.
     void loadGames();
   }, [loadGames]);
+
+  useEffect(() => {
+    const refreshNow = () => {
+      if (loadGamesRef.current) {
+        void loadGamesRef.current({ background: true });
+      }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        refreshNow();
+      }
+    };
+    window.addEventListener("focus", refreshNow);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", refreshNow);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
 
 
   const grouped = useMemo(() => {
@@ -342,6 +392,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
 
   const pickCount = Math.max(0, dailyPickCount + dailyPickCountDelta);
   const picksRemaining = Math.max(0, PICKEM_PICK_LIMIT - pickCount);
+  const isViewingToday = selectedDate === todayDateKey;
 
   const scheduleBackgroundRefresh = useCallback(() => {
     if (refreshTimerRef.current !== null) {
@@ -396,6 +447,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           sportSlug: selectedSportSlug,
           gameId,
           pickTeam,
+          date: selectedDate,
           weekStartDate: selectedSportSlug === "nfl" ? nflWeekStartDate : undefined,
           tzOffsetMinutes: new Date().getTimezoneOffset(),
         }),
@@ -406,7 +458,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         throw new Error(payload.error ?? "Failed to save your pick.");
       }
     },
-    [nflWeekStartDate, selectedSportSlug, userId, venueId]
+    [nflWeekStartDate, selectedDate, selectedSportSlug, userId, venueId]
   );
 
   const clearPickRequest = useCallback(
@@ -473,6 +525,10 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
     async (game: PickEmGame, pickTeam: string) => {
       if (!userId || !venueId) {
         setSubmitMessage("Join a venue first to submit Pick 'Em selections.");
+        return;
+      }
+      if (!isViewingToday) {
+        setSubmitMessage("You can only place picks for today. Switch back to today to make picks.");
         return;
       }
       const displayedPickTeam = optimisticPickByGame[game.id] ?? game.userPickTeam;
@@ -544,7 +600,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         void flushGamePick(game.id, pickTeam);
       }
     },
-    [clearPickRequest, flushGamePick, loadDailyPickCount, optimisticPickByGame, pickCount, scheduleBackgroundRefresh, userId, venueId]
+    [clearPickRequest, flushGamePick, isViewingToday, loadDailyPickCount, optimisticPickByGame, pickCount, scheduleBackgroundRefresh, userId, venueId]
   );
 
   const collectBankPoints = useCallback(async () => {
@@ -717,23 +773,42 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           </div>
         </motion.div>
 
-        {Math.max(0, pointsBank?.pendingPoints ?? 0) > 0 ? (
-          <div className={goldFlash ? "pickem-gold-flash mt-3 rounded-2xl" : "mt-3"}>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="flex w-full items-center justify-between rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-2 py-1.5 text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35">
             <button
               type="button"
-              data-pickem-bank-collect
-              onClick={() => void collectBankPoints()}
-              disabled={isCollectingBank || !userId || !venueId}
-              className="tp-clean-button inline-flex min-h-[44px] items-center rounded-full border border-cyan-300 bg-gradient-to-r from-cyan-100 via-sky-100 to-indigo-100 px-4 py-2 text-xs font-semibold text-slate-800 shadow-[0_6px_14px_rgba(56,189,248,0.22)] transition-all hover:brightness-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => {
+                setSelectedDate((current) => shiftDateKey(current, -1));
+                setSubmitMessage("");
+                setErrorMessage("");
+              }}
+              className="tp-clean-button inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#fff7ea]/24 text-base font-black text-[#fff7ea] transition-all active:scale-95 active:brightness-90"
+              aria-label="Previous day"
             >
-              {isCollectingBank
-                ? "Collecting..."
-                : `Collect Points (${Math.max(0, pointsBank?.pendingPoints ?? 0).toLocaleString()})`}
+              ◀
+            </button>
+            <span className="text-center text-xs font-semibold sm:text-sm">
+              {new Date(`${selectedDate}T00:00:00.000Z`).toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric",
+                timeZone: "UTC",
+              })}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                if (isViewingToday) return;
+                setSelectedDate((current) => shiftDateKey(current, 1));
+                setSubmitMessage("");
+                setErrorMessage("");
+              }}
+              disabled={isViewingToday}
+              className="tp-clean-button inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#fff7ea]/24 text-base font-black text-[#fff7ea] transition-all active:scale-95 active:brightness-90 disabled:cursor-not-allowed disabled:opacity-35"
+              aria-label="Next day"
+            >
+              ▶
             </button>
           </div>
-        ) : null}
-
-        <div className="mt-3 flex flex-wrap items-center gap-2">
           {selectedSportSlug === "nfl" && nflWeekOptions.length > 0 ? (
             <>
               <label htmlFor="pickem-nfl-week" className="text-xs font-medium text-slate-700">
@@ -805,7 +880,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
 
       </section>
 
-      <div className="sticky top-0 z-30 mb-3">
+      <div className="sticky top-0 z-30 mb-3 flex w-full items-center gap-2">
         <button
           type="button"
           onClick={() => {
@@ -816,10 +891,22 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
               });
             }
           }}
-          className="tp-clean-button inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90"
+          className="tp-clean-button inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90"
         >
           <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">←</span>
           Back to Venue
+        </button>
+        <button
+          type="button"
+          data-pickem-bank-collect
+          onClick={() => void collectBankPoints()}
+          disabled={isCollectingBank || !userId || !venueId || Math.max(0, pointsBank?.pendingPoints ?? 0) === 0}
+          className={`tp-clean-button inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-full border border-[#2b1c57] bg-gradient-to-r from-[#5b2ca5] via-[#7b3fd6] to-[#8f4de8] px-4 py-2.5 text-sm font-semibold text-[#f7f1ff] shadow-sm shadow-[#2b1c57]/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8f4de8]/60 active:scale-95 active:brightness-90 disabled:cursor-not-allowed disabled:opacity-55 ${goldFlash ? "pickem-gold-flash" : ""}`}
+        >
+          <GoldCoinIcon className="h-5 w-5" />
+          {isCollectingBank
+            ? "Collecting..."
+            : `Collect Points (${Math.max(0, pointsBank?.pendingPoints ?? 0).toLocaleString()})`}
         </button>
       </div>
 
@@ -843,16 +930,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         </div>
       ) : grouped.length === 0 ? (
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-600 sm:p-3 sm:text-sm">
-          No scheduled games found for this date.
-          {lastDebugProbes.length > 0 ? (
-            <div className="mt-2 space-y-1 rounded-lg border border-slate-300 bg-white p-2 text-[11px] leading-relaxed text-slate-700">
-              {lastDebugProbes.slice(0, 4).map((probe) => (
-                <div key={`${probe.sportKey}-${probe.path}-${probe.url}`}>
-                  {probe.sportKey} {probe.path} {"->"} HTTP {probe.statusCode}: {probe.bodyPreview}
-                </div>
-              ))}
-            </div>
-          ) : null}
+          Sorry, no games availalbe. Check back later!
         </div>
       ) : (
         <div className="space-y-5">
@@ -866,7 +944,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
               <ul className="mt-4 space-y-4">
                 {leagueGames.map((game) => {
                   const displayedPickTeam = optimisticPickByGame[game.id] ?? game.userPickTeam;
-                  const baseDisabled = !sport.isClickable || !userId || !venueId;
+                  const baseDisabled = !sport.isClickable || !userId || !venueId || !isViewingToday;
                   const awaySelected = displayedPickTeam === game.awayTeam;
                   const homeSelected = displayedPickTeam === game.homeTeam;
                   const pickLimitReached = pickCount >= PICKEM_PICK_LIMIT;

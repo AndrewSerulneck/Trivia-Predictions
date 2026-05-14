@@ -110,6 +110,7 @@ export type FantasyGame = {
 export type FantasyPlayerPoolItem = {
   playerId: number | null;
   playerName: string;
+  headshotUrl: string | null;
   coverage: number;
   projectedLine: number | null;
 };
@@ -117,6 +118,7 @@ export type FantasyPlayerPoolItem = {
 export type FantasyLineupPlayer = {
   playerId: number;
   playerName: string;
+  headshotUrl?: string | null;
 };
 
 export type FantasyEntry = {
@@ -460,6 +462,7 @@ function parseLineupPlayers(raw: unknown): FantasyLineupPlayer[] {
     const row = item as Record<string, unknown>;
     const playerIdRaw = Number.parseInt(String(row.player_id ?? row.playerId ?? ""), 10);
     const playerName = String(row.player_name ?? row.playerName ?? "").trim();
+    const headshotUrlRaw = String(row.headshot_url ?? row.headshotUrl ?? "").trim();
     if (!Number.isFinite(playerIdRaw) || playerIdRaw <= 0 || !playerName) {
       continue;
     }
@@ -467,7 +470,7 @@ function parseLineupPlayers(raw: unknown): FantasyLineupPlayer[] {
       continue;
     }
     seen.add(playerIdRaw);
-    players.push({ playerId: playerIdRaw, playerName });
+    players.push({ playerId: playerIdRaw, playerName, headshotUrl: headshotUrlRaw || null });
   }
 
   return players.slice(0, FANTASY_LINEUP_SIZE);
@@ -1079,6 +1082,7 @@ async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]
     return {
       playerId: seed.playerId,
       playerName: seed.playerName,
+      headshotUrl: null,
       coverage: sample?.samples ?? 1,
       projectedLine: sample?.avg ?? null,
     };
@@ -1094,7 +1098,12 @@ async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]
     return left.playerName.localeCompare(right.playerName);
   });
 
-  return attachPlayerIdsToPool(pool.slice(0, FANTASY_PLAYER_POOL_LIMIT));
+  const poolWithIds = await attachPlayerIdsToPool(pool.slice(0, FANTASY_PLAYER_POOL_LIMIT));
+  const headshotByName = await loadNbaHeadshotsByName(poolWithIds.map((item) => item.playerName));
+  return poolWithIds.map((item) => ({
+    ...item,
+    headshotUrl: headshotByName.get(normalizeNameKey(item.playerName)) ?? null,
+  }));
 }
 
 async function findApiSportsGameByIdNearby(gameId: string): Promise<ApiSportsNbaGame | null> {
@@ -1432,7 +1441,10 @@ function shouldAllowStartedDraftingForTesting(): boolean {
   return false;
 }
 
-function buildStoredLineupWithIds(lineup: string[], playerPool: FantasyPlayerPoolItem[]): Array<{ player_id: number; player_name: string }> {
+function buildStoredLineupWithIds(
+  lineup: string[],
+  playerPool: FantasyPlayerPoolItem[]
+): Array<{ player_id: number; player_name: string; headshot_url: string | null }> {
   const poolByKey = new Map<string, FantasyPlayerPoolItem>();
   for (const item of playerPool) {
     const key = normalizeNameKey(item.playerName);
@@ -1454,6 +1466,7 @@ function buildStoredLineupWithIds(lineup: string[], playerPool: FantasyPlayerPoo
     return {
       player_id: Math.trunc(playerId),
       player_name: playerName,
+      headshot_url: String(item?.headshotUrl ?? "").trim() || null,
     };
   });
 }
@@ -1701,7 +1714,16 @@ export async function listUserFantasyEntries(params: {
     throw new Error(error?.message ?? "Failed to load fantasy entries.");
   }
 
-  return (data as FantasyEntryRow[]).map((row) => mapFantasyEntryRow(row));
+  const mapped = (data as FantasyEntryRow[]).map((row) => mapFantasyEntryRow(row));
+  const names = mapped.flatMap((entry) => entry.lineupPlayers.map((player) => player.playerName));
+  const headshotByName = await loadNbaHeadshotsByName(names);
+  return mapped.map((entry) => ({
+    ...entry,
+    lineupPlayers: entry.lineupPlayers.map((player) => ({
+      ...player,
+      headshotUrl: player.headshotUrl ?? headshotByName.get(normalizeNameKey(player.playerName)) ?? null,
+    })),
+  }));
 }
 
 function computeFantasyPoints(stat: {
@@ -1780,6 +1802,47 @@ async function loadRecentLivePlayerStatsRows(): Promise<LivePlayerStatRow[]> {
     return [];
   }
   return data as LivePlayerStatRow[];
+}
+
+async function loadNbaHeadshotsByName(playerNames: string[]): Promise<Map<string, string>> {
+  if (!supabaseAdmin) {
+    return new Map();
+  }
+  const normalizedKeys = Array.from(
+    new Set(
+      playerNames
+        .map((value) => normalizeNameKey(value))
+        .filter(Boolean)
+    )
+  );
+  if (normalizedKeys.length === 0) {
+    return new Map();
+  }
+  const normalizedSet = new Set(normalizedKeys);
+  const { data, error } = await supabaseAdmin
+    .from("players")
+    .select("player_name, headshot_url")
+    .eq("league", "NBA")
+    .not("headshot_url", "is", null)
+    .neq("headshot_url", "")
+    .limit(2000);
+  if (error || !Array.isArray(data)) {
+    return new Map();
+  }
+  const headshotByName = new Map<string, string>();
+  for (const row of data as Array<Record<string, unknown>>) {
+    const playerName = String(row.player_name ?? "").trim();
+    const headshotUrl = String(row.headshot_url ?? "").trim();
+    if (!playerName || !headshotUrl) {
+      continue;
+    }
+    const key = normalizeNameKey(playerName);
+    if (!key || !normalizedSet.has(key) || headshotByName.has(key)) {
+      continue;
+    }
+    headshotByName.set(key, headshotUrl);
+  }
+  return headshotByName;
 }
 
 function getLatestRowsByGameId(rows: LivePlayerStatRow[]): LivePlayerStatRow[] {

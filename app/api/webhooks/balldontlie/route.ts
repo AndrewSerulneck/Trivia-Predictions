@@ -73,6 +73,8 @@ export async function POST(request: Request) {
   const gameStatus = String(
     ((root?.data as Record<string, unknown> | undefined)?.game as Record<string, unknown> | undefined)?.status ??
       (root?.game as Record<string, unknown> | undefined)?.status ??
+      ((root?.data as Record<string, unknown> | undefined)?.game as Record<string, unknown> | undefined)?.game_state ??
+      (root?.game as Record<string, unknown> | undefined)?.game_state ??
       root?.status ??
       ""
   )
@@ -88,6 +90,9 @@ export async function POST(request: Request) {
   const isGameFinal =
     isGameFinalEventType ||
     gameStatus === "final" ||
+    gameStatus === "post" ||
+    gameStatus === "off" ||
+    gameStatus === "completed" ||
     gameStatus === "status_final" ||
     gameStatus === "ft" ||
     gameStatus === "status_full_time";

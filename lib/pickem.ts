@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { fetchBallDontLieList } from "@/lib/balldontlie";
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 
-export type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl";
+export type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl" | "mma";
 type PickEmPickStatus = "pending" | "won" | "lost" | "push" | "canceled";
 type PickEmGameStatus = "scheduled" | "live" | "final";
 
@@ -203,9 +203,17 @@ type BallDontLieGame = {
 
 const BDL_PATH_BY_SPORT_KEY: Record<string, { path: string; league: string; isSoccerMatch?: boolean; embeddedTeams?: boolean }> = {
   basketball_nba: { path: "/nba/v1/games", league: "NBA" },
+  nba: { path: "/nba/v1/games", league: "NBA" },
+  basketball_wnba: { path: "/wnba/v1/games", league: "WNBA" },
+  wnba: { path: "/wnba/v1/games", league: "WNBA" },
   baseball_mlb: { path: "/mlb/v1/games", league: "MLB" },
+  mlb: { path: "/mlb/v1/games", league: "MLB" },
   icehockey_nhl: { path: "/nhl/v1/games", league: "NHL" },
+  nhl: { path: "/nhl/v1/games", league: "NHL" },
   americanfootball_nfl: { path: "/nfl/v1/games", league: "NFL" },
+  nfl: { path: "/nfl/v1/games", league: "NFL" },
+  mma_ufc: { path: "/mma/v1/fights", league: "UFC" },
+  mma: { path: "/mma/v1/fights", league: "MMA" },
   soccer_usa_mls: { path: "/mls/v1/matches", league: "MLS", isSoccerMatch: true },
   soccer_epl: { path: "/epl/v2/matches", league: "EPL", isSoccerMatch: true },
   soccer_spain_la_liga: { path: "/laliga/v1/matches", league: "La Liga", isSoccerMatch: true },
@@ -238,11 +246,11 @@ const DEFAULT_SOCCER_KEYS = [
 const PICKEM_SPORTS: PickEmSportOption[] = [
   {
     slug: "nba",
-    label: "NBA",
-    subtitle: "National Basketball Association",
+    label: "Basketball",
+    subtitle: "NBA + WNBA",
     isInSeason: true,
     isClickable: true,
-    sportKeys: ["basketball_nba"],
+    sportKeys: ["basketball_nba", "basketball_wnba"],
   },
   {
     slug: "mlb",
@@ -256,8 +264,8 @@ const PICKEM_SPORTS: PickEmSportOption[] = [
     slug: "nhl",
     label: "NHL",
     subtitle: "National Hockey League",
-    isInSeason: false,
-    isClickable: false,
+    isInSeason: true,
+    isClickable: true,
     sportKeys: ["icehockey_nhl"],
   },
   {
@@ -276,9 +284,25 @@ const PICKEM_SPORTS: PickEmSportOption[] = [
     isClickable: false,
     sportKeys: ["americanfootball_nfl"],
   },
+  {
+    slug: "mma",
+    label: "MMA",
+    subtitle: "UFC & major cards",
+    isInSeason: true,
+    isClickable: true,
+    sportKeys: ["mma_ufc"],
+  },
 ];
 
 const SPORT_BY_SLUG = new Map(PICKEM_SPORTS.map((item) => [item.slug, item]));
+
+function getLeagueLabelForSportKey(sportKey: string): string {
+  const provider = BDL_PATH_BY_SPORT_KEY[sportKey];
+  if (provider?.league) {
+    return provider.league;
+  }
+  return normalizeLeagueLabel(sportKey);
+}
 
 function isMissingPickEmTablesError(error: { code?: string; message?: string } | null | undefined): boolean {
   if (!error) {
@@ -338,6 +362,9 @@ function normalizeLeagueLabel(value: string): string {
       if (lower === "mlb") return "MLB";
       if (lower === "nfl") return "NFL";
       if (lower === "nhl") return "NHL";
+      if (lower === "wnba") return "WNBA";
+      if (lower === "mma") return "MMA";
+      if (lower === "ufc") return "UFC";
       if (lower === "usa") return "USA";
       if (lower === "uefa") return "UEFA";
       if (lower === "epl") return "EPL";
@@ -410,8 +437,11 @@ function extractEventStartIso(event: Record<string, unknown>): string | null {
     event.starts_at,
     event.datetime,
     event.date,
+    event.game_date,
     event.commence_time,
     event.start_time,
+    event.start_time_utc,
+    event.main_card_start_time,
     event.scheduled_at,
   ];
   for (const candidate of rawCandidates) {
@@ -565,10 +595,17 @@ function isBallDontLieFinalStatus(eventRecord: Record<string, unknown>): boolean
   )
     .trim()
     .toLowerCase();
+  const gameStateRaw = String(eventRecord.game_state ?? "").trim().toLowerCase();
+  const eventStatusRaw = String((eventRecord.event as Record<string, unknown> | undefined)?.status ?? "")
+    .trim()
+    .toLowerCase();
 
-  const statusValues = [statusRaw, timeRaw, gameStatusRaw].filter(Boolean);
+  const statusValues = [statusRaw, timeRaw, gameStatusRaw, gameStateRaw, eventStatusRaw].filter(Boolean);
   return statusValues.some(
     (value) =>
+      value === "post" ||
+      value === "off" ||
+      value === "completed" ||
       value.includes("final") ||
       value.includes("full_time") ||
       value.includes("full time") ||
@@ -713,6 +750,104 @@ async function fetchBallDontLieEventsForSportKey(
   toIso: string,
   leagueLabel: string
 ): Promise<NormalizedBallDontLieEvent[]> {
+  if (sportKey === "mma_ufc") {
+    const mmaProvider = BDL_PATH_BY_SPORT_KEY[sportKey];
+    if (!mmaProvider) {
+      return [];
+    }
+    const start = new Date(fromIso);
+    const end = new Date(toIso);
+    const years = new Set<number>([start.getUTCFullYear(), end.getUTCFullYear()]);
+    const eventsById = new Map<number, Record<string, unknown>>();
+
+    for (const year of years) {
+      const rows = await fetchBallDontLieList<Record<string, unknown>>(
+        "/mma/v1/events",
+        new URLSearchParams({ year: String(year), per_page: "100" }),
+        2
+      ).catch(() => []);
+      for (const row of rows) {
+        const id = Number(row.id);
+        if (Number.isFinite(id)) {
+          eventsById.set(id, row);
+        }
+      }
+    }
+
+    const fromMs = Date.parse(fromIso);
+    const toMs = Date.parse(toIso);
+    const relevantEventIds: number[] = [];
+    for (const row of eventsById.values()) {
+      const ts = Date.parse(String(row.date ?? ""));
+      if (!Number.isFinite(ts)) continue;
+      if (ts >= fromMs && ts <= toMs) {
+        const id = Number(row.id);
+        if (Number.isFinite(id)) {
+          relevantEventIds.push(id);
+        }
+      }
+    }
+
+    if (relevantEventIds.length === 0) {
+      return [];
+    }
+
+    const query = new URLSearchParams({ per_page: "100" });
+    for (const eventId of relevantEventIds.slice(0, 50)) {
+      query.append("event_ids[]", String(eventId));
+    }
+    const fights = await fetchBallDontLieList<Record<string, unknown>>("/mma/v1/fights", query, 2).catch(() => []);
+    const mmaEvents: NormalizedBallDontLieEvent[] = [];
+
+    for (const fight of fights) {
+      const fightId = String(fight.id ?? "").trim();
+      const event = (fight.event ?? {}) as Record<string, unknown>;
+      const fighter1 = (fight.fighter1 ?? {}) as Record<string, unknown>;
+      const fighter2 = (fight.fighter2 ?? {}) as Record<string, unknown>;
+      const winner = (fight.winner ?? {}) as Record<string, unknown>;
+
+      const homeTeam = String(fighter1.name ?? "").trim();
+      const awayTeam = String(fighter2.name ?? "").trim();
+      const homeTeamId = String(fighter1.id ?? "").trim() || null;
+      const awayTeamId = String(fighter2.id ?? "").trim() || null;
+      const startsAt = normalizeBallDontLieGameStartIso(String(event.date ?? ""));
+      if (!fightId || !homeTeam || !awayTeam || !startsAt) continue;
+
+      const winnerId = String(winner.id ?? "").trim();
+      const isCompleted = isBallDontLieFinalStatus({ event });
+      const homeScore = isCompleted ? (winnerId && homeTeamId && winnerId === homeTeamId ? 1 : 0) : null;
+      const awayScore = isCompleted ? (winnerId && awayTeamId && winnerId === awayTeamId ? 1 : 0) : null;
+      const league =
+        String((event.league as Record<string, unknown> | undefined)?.abbreviation ?? "").trim() ||
+        String((event.league as Record<string, unknown> | undefined)?.name ?? "").trim() ||
+        leagueLabel ||
+        mmaProvider.league;
+
+      mmaEvents.push({
+        id: buildPickEmGameId({
+          providerEventId: fightId,
+          startsAt,
+          homeTeam,
+          awayTeam,
+        }),
+        providerEventId: fightId,
+        sportKey,
+        league,
+        homeTeamId,
+        awayTeamId,
+        startsAt,
+        homeTeam,
+        awayTeam,
+        homeScore,
+        awayScore,
+        isCompleted,
+        periodLabel: null,
+      });
+    }
+
+    return mmaEvents;
+  }
+
   const provider = BDL_PATH_BY_SPORT_KEY[sportKey];
   if (!provider) {
     return [];
@@ -813,6 +948,63 @@ async function fetchScoresForSportKey(sportKey: string): Promise<Map<string, Bal
   const provider = BDL_PATH_BY_SPORT_KEY[sportKey];
   if (!provider) {
     return new Map();
+  }
+
+  if (sportKey === "mma_ufc") {
+    const currentYear = new Date().getUTCFullYear();
+    const events = await fetchBallDontLieList<Record<string, unknown>>(
+      "/mma/v1/events",
+      new URLSearchParams({ year: String(currentYear), per_page: "100" }),
+      2
+    ).catch(() => []);
+    const completedEventIds: string[] = [];
+    for (const event of events) {
+      const status = String(event.status ?? "").trim().toLowerCase();
+      if (status === "completed" || status === "post" || status === "final") {
+        const id = String(event.id ?? "").trim();
+        if (id) completedEventIds.push(id);
+      }
+    }
+    if (completedEventIds.length === 0) {
+      return new Map();
+    }
+
+    const query = new URLSearchParams({ per_page: "100" });
+    for (const eventId of completedEventIds.slice(0, 50)) {
+      query.append("event_ids[]", eventId);
+    }
+    const fights = await fetchBallDontLieList<Record<string, unknown>>("/mma/v1/fights", query, 2).catch(() => []);
+    const byId = new Map<string, BallDontLieScoreEvent>();
+    for (const fight of fights) {
+      const id = String(fight.id ?? "").trim();
+      if (!id) continue;
+      const event = (fight.event ?? {}) as Record<string, unknown>;
+      const fighter1 = (fight.fighter1 ?? {}) as Record<string, unknown>;
+      const fighter2 = (fight.fighter2 ?? {}) as Record<string, unknown>;
+      const winner = (fight.winner ?? {}) as Record<string, unknown>;
+      const homeTeam = String(fighter1.name ?? "").trim();
+      const awayTeam = String(fighter2.name ?? "").trim();
+      const winnerId = String(winner.id ?? "").trim();
+      const fighter1Id = String(fighter1.id ?? "").trim();
+      const fighter2Id = String(fighter2.id ?? "").trim();
+      const completed = isBallDontLieFinalStatus({ event });
+      const homeScore = completed ? (winnerId && fighter1Id && winnerId === fighter1Id ? 1 : 0) : null;
+      const awayScore = completed ? (winnerId && fighter2Id && winnerId === fighter2Id ? 1 : 0) : null;
+      byId.set(id, {
+        id,
+        sport_key: sportKey,
+        sport_title: provider.league,
+        commence_time: normalizeBallDontLieGameStartIso(String(event.date ?? "")) ?? "",
+        completed,
+        home_team: homeTeam,
+        away_team: awayTeam,
+        scores: [
+          { name: homeTeam, score: homeScore },
+          { name: awayTeam, score: awayScore },
+        ],
+      });
+    }
+    return byId;
   }
 
   const now = Date.now();
@@ -1290,7 +1482,7 @@ export async function listPickEmGames(params: {
         nflKey,
         horizonFromIso,
         horizonToIso,
-        normalizeLeagueLabel(nflKey)
+        getLeagueLabelForSportKey(nflKey)
       );
 
       const weekStartMsSet = new Set<number>();
@@ -1345,7 +1537,7 @@ export async function listPickEmGames(params: {
   const [eventsSettled, picksByGameId] = await Promise.all([
     Promise.allSettled(
       sportKeys.map((sportKey) =>
-        fetchBallDontLieEventsForSportKey(sportKey, fromIso, toIso, normalizeLeagueLabel(sportKey))
+        fetchBallDontLieEventsForSportKey(sportKey, fromIso, toIso, getLeagueLabelForSportKey(sportKey))
       )
     ),
     params.userId ? listUserPicksByGameId(params.userId.trim(), sport.slug, fromIso, toIso) : Promise.resolve(new Map()),
@@ -1496,6 +1688,12 @@ export async function submitPickEmPick(params: {
   const game = gameList.games.find((entry) => entry.id === gameId);
   if (!game) {
     throw new Error("Game not found for selected date/sport.");
+  }
+
+  const gameLocalDate = toLocalDateKey(game.startsAt, tzOffsetMinutes);
+  const todayLocalDate = getTodayDateInOffset(tzOffsetMinutes);
+  if (gameLocalDate !== todayLocalDate) {
+    throw new Error("You can only place picks for today.");
   }
 
   if (game.isLocked) {

@@ -22,9 +22,7 @@ export function SportsBingoSelectSport() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Step 1 of 3</p>
-        <h2 className="mt-1 text-lg font-semibold text-slate-900">Choose A Sport</h2>
-        <p className="mt-1 text-sm text-slate-700">Select the sport for your next Sports Bingo card.</p>
+        <h2 className="text-center text-3xl font-semibold text-slate-900">Sports Bingo</h2>
         <p className="mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
           Tip: For best board readability, rotate your phone to landscape during board selection.
         </p>

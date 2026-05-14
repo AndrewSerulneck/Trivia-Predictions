@@ -42,9 +42,7 @@ export function PointsLedger({
           <h3 className="text-base font-semibold text-slate-900">Live Points Ledger</h3>
           {gameLabel ? (
             <p className="mt-0.5 truncate text-xs text-slate-500">{gameLabel}</p>
-          ) : (
-            <p className="mt-0.5 text-xs text-slate-500">Real-time scoring activity</p>
-          )}
+          ) : null}
         </div>
         <div className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-cyan-200 bg-white/80 px-2 py-1">
           <span
@@ -59,11 +57,7 @@ export function PointsLedger({
       </div>
 
       {visible.length === 0 ? (
-        <p className="mt-3 text-xs text-slate-500">
-          {isLive
-            ? "Waiting for scoring activity..."
-            : "No live games detected right now."}
-        </p>
+        <p className="mt-3 text-xs text-slate-500">{isLive ? "Waiting for scoring activity..." : "No Live Games"}</p>
       ) : (
         <ul className="mt-3 space-y-1.5">
           <AnimatePresence initial={false} mode="popLayout">

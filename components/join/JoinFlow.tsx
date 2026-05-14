@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
@@ -189,7 +190,62 @@ const LOADING_PHRASES = [
   "Taking the field...",
   "Game time...",
 ];
+const LIGHTS_MAX_WIDTH = 860;
+const LIGHTS_ASPECT_RATIO = 1.0;
 
+function getLightsSize(viewportWidth: number) {
+  const width = Math.min(LIGHTS_MAX_WIDTH, Math.max(440, Math.round(viewportWidth * 1.65)));
+  const height = Math.round(LIGHTS_ASPECT_RATIO * width);
+  return { width, height };
+}
+
+const JoinHeaderLights = () => {
+  const [viewport, setViewport] = useState({ width: 0, height: 0 });
+  const [hydrated, setHydrated] = useState(false);
+  const lightsSize = getLightsSize(viewport.width || 390);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const nextViewport = { width: window.innerWidth, height: window.innerHeight };
+    setViewport(nextViewport);
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated || typeof window === "undefined") return;
+    const handleResize = () => {
+      const nextViewport = { width: window.innerWidth, height: window.innerHeight };
+      setViewport(nextViewport);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [hydrated]);
+
+  if (!hydrated) return null;
+
+  return (
+    <div className="pointer-events-none fixed inset-0 z-[1200]">
+      <div
+        role="presentation"
+        className="absolute left-1/2 top-0 select-none"
+        style={{
+          width: `${lightsSize.width}px`,
+          height: `${lightsSize.height}px`,
+          transform: `translate(-50%, -${Math.round(lightsSize.height * 0.31)}px)`,
+        }}
+      >
+        <Image
+          src="/brand/stadium-lights-overlay-processed.png"
+          alt="Stadium lights overlay"
+          draggable={false}
+          width={lightsSize.width}
+          height={lightsSize.height}
+          className="h-full w-full object-contain opacity-80 [mix-blend-mode:screen] [mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.95)_0%,rgba(0,0,0,0.82)_30%,rgba(0,0,0,0.5)_62%,rgba(0,0,0,0.18)_82%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.95)_0%,rgba(0,0,0,0.82)_30%,rgba(0,0,0,0.5)_62%,rgba(0,0,0,0.18)_82%,transparent_100%)]"
+        />
+      </div>
+    </div>
+  );
+};
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -1169,6 +1225,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
   return (
     <>
+      <JoinHeaderLights />
       <PageShell
         title={APP_PAGE_NAMES.join}
         showBranding
