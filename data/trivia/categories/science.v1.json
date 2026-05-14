@@ -5354,5 +5354,174 @@
     "correctAnswer": 2,
     "category": "Science",
     "difficulty": "medium"
+  },
+  {
+    "slug": "what-part-of-a-plant-absorbs-water-and-nutrients-from-the-soil",
+    "question": "What part of a plant absorbs water and nutrients from the soil?",
+    "options": [
+      "Leaves",
+      "Stem",
+      "Flowers",
+      "Roots"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-most-abundant-element-in-the-earths-atmosphere",
+    "question": "What is the most abundant element in the Earth's atmosphere?",
+    "options": [
+      "Oxygen",
+      "Carbon Dioxide",
+      "Nitrogen",
+      "Argon"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-principle-explains-why-a-boat-floats-on-water",
+    "question": "What principle explains why a boat floats on water?",
+    "options": [
+      "Bernoulli's Principle",
+      "Pascal's Principle",
+      "Archimedes' Principle",
+      "Newton's Third Law"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-type-of-blood-cell-is-primarily-responsible-for-carrying-oxygen-throughout-the-body",
+    "question": "Which type of blood cell is primarily responsible for carrying oxygen throughout the body?",
+    "options": [
+      "White blood cells",
+      "Platelets",
+      "Red blood cells",
+      "Lymphocytes"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-celestial-body-is-primarily-responsible-for-earths-ocean-tides",
+    "question": "What celestial body is primarily responsible for Earth's ocean tides?",
+    "options": [
+      "The Sun",
+      "Mars",
+      "The Moon",
+      "Venus"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-common-name-for-the-chemical-compound-h2o",
+    "question": "What is the common name for the chemical compound H2O?",
+    "options": [
+      "Salt",
+      "Sugar",
+      "Water",
+      "Acid"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-phenomenon-causes-light-to-bend-when-passing-from-air-into-water",
+    "question": "What phenomenon causes light to bend when passing from air into water?",
+    "options": [
+      "Reflection",
+      "Diffraction",
+      "Refraction",
+      "Absorption"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-human-organ-produces-insulin-to-regulate-blood-sugar",
+    "question": "Which human organ produces insulin to regulate blood sugar?",
+    "options": [
+      "Liver",
+      "Pancreas",
+      "Kidneys",
+      "Spleen"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-force-keeps-planets-in-orbit-around-the-sun",
+    "question": "Which force keeps planets in orbit around the sun?",
+    "options": [
+      "Electromagnetic force",
+      "Strong nuclear force",
+      "Gravity",
+      "Weak nuclear force"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-primary-function-of-the-myelin-sheath-in-the-nervous-system",
+    "question": "What is the primary function of the myelin sheath in the nervous system?",
+    "options": [
+      "Produce neurotransmitters",
+      "Insulate axons",
+      "Store energy",
+      "Facilitate blood flow"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-scientist-developed-the-theory-of-relativity",
+    "question": "Which scientist developed the theory of relativity?",
+    "options": [
+      "Isaac Newton",
+      "Albert Einstein",
+      "Stephen Hawking",
+      "Marie Curie"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-phenomenon-describes-the-bending-and-spreading-of-light-waves-as-they-pass-around-an-obstacle-or-through-an-aperture",
+    "question": "Which phenomenon describes the bending and spreading of light waves as they pass around an obstacle or through an aperture?",
+    "options": [
+      "Refraction",
+      "Reflection",
+      "Diffraction",
+      "Dispersion"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-process-called-when-a-solid-turns-directly-into-a-gas-without-first-becoming-a-liquid",
+    "question": "What is the process called when a solid turns directly into a gas without first becoming a liquid?",
+    "options": [
+      "Evaporation",
+      "Condensation",
+      "Sublimation",
+      "Melting"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
   }
 ]

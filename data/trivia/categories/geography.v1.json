@@ -5367,5 +5367,161 @@
     "correctAnswer": 1,
     "category": "Geography",
     "difficulty": "easy"
+  },
+  {
+    "slug": "which-country-is-known-as-the-land-of-fire-and-ice",
+    "question": "Which country is known as the 'Land of Fire and Ice'?",
+    "options": [
+      "Norway",
+      "Finland",
+      "Iceland",
+      "New Zealand"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-european-city-is-famous-for-its-canals-and-gondolas",
+    "question": "Which European city is famous for its canals and gondolas?",
+    "options": [
+      "Amsterdam",
+      "Bruges",
+      "Venice",
+      "Stockholm"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-ocean-located-between-europe-and-north-america",
+    "question": "What is the name of the ocean located between Europe and North America?",
+    "options": [
+      "Pacific Ocean",
+      "Indian Ocean",
+      "Atlantic Ocean",
+      "Arctic Ocean"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-major-river-flows-through-cairo-egypt",
+    "question": "Which major river flows through Cairo, Egypt?",
+    "options": [
+      "Tigris",
+      "Euphrates",
+      "Nile",
+      "Jordan"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-island-nation-is-located-off-the-southeast-coast-of-africa",
+    "question": "Which island nation is located off the southeast coast of Africa?",
+    "options": [
+      "Sri Lanka",
+      "Madagascar",
+      "Philippines",
+      "Cuba"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-lowest-point-on-land-in-north-america",
+    "question": "What is the lowest point on land in North America?",
+    "options": [
+      "Death Valley Junction",
+      "Badwater Basin",
+      "Salton Sea",
+      "Lake Eyre"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "greenland-the-worlds-largest-island-is-an-autonomous-territory-of-which-country",
+    "question": "Greenland, the world's largest island, is an autonomous territory of which country?",
+    "options": [
+      "Norway",
+      "Canada",
+      "Denmark",
+      "Sweden"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-strait-separates-the-iberian-peninsula-from-africa",
+    "question": "Which strait separates the Iberian Peninsula from Africa?",
+    "options": [
+      "Strait of Hormuz",
+      "Strait of Magellan",
+      "Strait of Gibraltar",
+      "Bering Strait"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-highest-mountain-in-north-america",
+    "question": "What is the highest mountain in North America?",
+    "options": [
+      "Mount Everest",
+      "Mount Kilimanjaro",
+      "Denali",
+      "Mount Elbrus"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-european-country-is-known-as-the-netherlands-and-is-famous-for-its-tulips-and-windmills",
+    "question": "Which European country is known as the \"Netherlands\" and is famous for its tulips and windmills?",
+    "options": [
+      "Belgium",
+      "Denmark",
+      "Netherlands",
+      "Switzerland"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-strait-of-hormuz-connects-the-persian-gulf-with-which-body-of-water",
+    "question": "The Strait of Hormuz connects the Persian Gulf with which body of water?",
+    "options": [
+      "Red Sea",
+      "Arabian Sea",
+      "Gulf of Oman",
+      "Mediterranean Sea"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-these-african-countries-is-an-island-nation",
+    "question": "Which of these African countries is an island nation?",
+    "options": [
+      "Nigeria",
+      "Ethiopia",
+      "Madagascar",
+      "Kenya"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
   }
 ]

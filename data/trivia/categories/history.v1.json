@@ -5367,5 +5367,161 @@
     "correctAnswer": 3,
     "category": "History",
     "difficulty": "easy"
+  },
+  {
+    "slug": "which-ancient-civilization-is-credited-with-inventing-paper",
+    "question": "Which ancient civilization is credited with inventing paper?",
+    "options": [
+      "India",
+      "Egypt",
+      "Mesopotamia",
+      "China"
+    ],
+    "correctAnswer": 3,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-was-the-name-of-the-code-of-laws-established-by-the-babylonian-king-hammurabi",
+    "question": "What was the name of the code of laws established by the Babylonian king Hammurabi?",
+    "options": [
+      "Code of Ur-Nammu",
+      "Code of Hammurabi",
+      "Law of Moses",
+      "Edicts of Ashoka"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-was-the-roman-general-who-conquered-gaul-and-later-became-dictator",
+    "question": "Who was the Roman general who conquered Gaul and later became dictator?",
+    "options": [
+      "Pompey",
+      "Mark Antony",
+      "Julius Caesar",
+      "Augustus"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-byzantine-emperor-is-famous-for-his-codification-of-roman-law-known-as-the-corpus-juris-civilis",
+    "question": "Which Byzantine emperor is famous for his codification of Roman law, known as the Corpus Juris Civilis?",
+    "options": [
+      "Constantine I",
+      "Theodosius I",
+      "Justinian I",
+      "Heraclius"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-15th-century-invention-revolutionized-the-spread-of-information-in-europe",
+    "question": "What 15th-century invention revolutionized the spread of information in Europe?",
+    "options": [
+      "Telescope",
+      "Printing press",
+      "Compass",
+      "Steam engine"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-glorious-revolution-of-1688-established-a-constitutional-monarchy-in-which-country",
+    "question": "The 'Glorious Revolution' of 1688 established a constitutional monarchy in which country?",
+    "options": [
+      "France",
+      "Spain",
+      "England",
+      "Russia"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-led-the-haitian-revolution-resulting-in-the-first-free-black-republic",
+    "question": "Who led the Haitian Revolution, resulting in the first free black republic?",
+    "options": [
+      "Toussaint Louverture",
+      "Jean-Jacques Dessalines",
+      "Simon Bolivar",
+      "José de San Martín"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-american-civil-war-was-fought-between-which-years",
+    "question": "The American Civil War was fought between which years?",
+    "options": [
+      "1775-1783",
+      "1812-1815",
+      "1861-1865",
+      "1914-1918"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-was-the-primary-purpose-of-the-league-of-nations-formed-after-wwi",
+    "question": "What was the primary purpose of the League of Nations, formed after WWI?",
+    "options": [
+      "Promote economic trade",
+      "Prevent future wars",
+      "Establish colonial empires",
+      "Regulate global finance"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-ancient-city-served-as-the-capital-of-the-inca-empire",
+    "question": "Which ancient city served as the capital of the Inca Empire?",
+    "options": [
+      "Tikal",
+      "Teotihuacan",
+      "Tenochtitlan",
+      "Cusco"
+    ],
+    "correctAnswer": 3,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-was-the-first-human-to-journey-into-outer-space",
+    "question": "Who was the first human to journey into outer space?",
+    "options": [
+      "Neil Armstrong",
+      "Buzz Aldrin",
+      "Yuri Gagarin",
+      "John Glenn"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-event-is-generally-considered-to-have-started-world-war-i",
+    "question": "What event is generally considered to have started World War I?",
+    "options": [
+      "The sinking of the Lusitania",
+      "The assassination of Archduke Franz Ferdinand",
+      "Germany's invasion of Poland",
+      "The bombing of Pearl Harbor"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
   }
 ]

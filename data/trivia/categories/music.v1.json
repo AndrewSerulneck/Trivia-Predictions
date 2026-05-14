@@ -5354,5 +5354,174 @@
     "correctAnswer": 2,
     "category": "Music",
     "difficulty": "easy"
+  },
+  {
+    "slug": "who-is-the-lead-singer-of-the-legendary-british-rock-band-queen",
+    "question": "Who is the lead singer of the legendary British rock band Queen?",
+    "options": [
+      "Freddie Mercury",
+      "Robert Plant",
+      "Mick Jagger",
+      "Steven Tyler"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-large-bass-guitar-like-instrument-is-a-crucial-part-of-a-traditional-mariachi-ensemble",
+    "question": "What large, bass guitar-like instrument is a crucial part of a traditional mariachi ensemble?",
+    "options": [
+      "Vihuela",
+      "Guitarrón mexicano",
+      "Requinto",
+      "Charango"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-baroque-composer-is-best-known-for-his-violin-concertos-collectively-known-as-the-four-seasons",
+    "question": "Which Baroque composer is best known for his violin concertos collectively known as 'The Four Seasons'?",
+    "options": [
+      "Johann Sebastian Bach",
+      "George Frideric Handel",
+      "Antonio Vivaldi",
+      "Claudio Monteverdi"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-pop-icon-is-often-referred-to-as-the-queen-of-pop",
+    "question": "Which pop icon is often referred to as the 'Queen of Pop'?",
+    "options": [
+      "Mariah Carey",
+      "Beyoncé",
+      "Madonna",
+      "Janet Jackson"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-iconic-pink-floyd-album-features-a-prism-refracting-light-on-its-cover-art",
+    "question": "Which iconic Pink Floyd album features a prism refracting light on its cover art?",
+    "options": [
+      "The Wall",
+      "Wish You Were Here",
+      "Animals",
+      "The Dark Side of the Moon"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-music-what-is-a-short-recurring-melodic-phrase-or-theme-often-associated-with-a-character-place-or-idea",
+    "question": "In music, what is a short, recurring melodic phrase or theme, often associated with a character, place, or idea?",
+    "options": [
+      "Cadenza",
+      "Rondo",
+      "Motif",
+      "Fugue"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-american-city-is-the-birthplace-of-motown-records",
+    "question": "Which American city is the birthplace of Motown Records?",
+    "options": [
+      "Chicago",
+      "New York City",
+      "Detroit",
+      "Los Angeles"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-originally-wrote-and-released-the-song-i-will-always-love-you-later-a-massive-hit-for-whitney-houston",
+    "question": "Who originally wrote and released the song 'I Will Always Love You,' later a massive hit for Whitney Houston?",
+    "options": [
+      "Dolly Parton",
+      "Carole King",
+      "Joni Mitchell",
+      "Aretha Franklin"
+    ],
+    "correctAnswer": 0,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "to-which-family-of-musical-instruments-does-the-oboe-belong",
+    "question": "To which family of musical instruments does the oboe belong?",
+    "options": [
+      "Brass",
+      "Percussion",
+      "Woodwind",
+      "String"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-famous-tchaikovsky-ballet-includes-the-beloved-dance-of-the-sugar-plum-fairy",
+    "question": "Which famous Tchaikovsky ballet includes the beloved 'Dance of the Sugar Plum Fairy'?",
+    "options": [
+      "Swan Lake",
+      "The Sleeping Beauty",
+      "The Nutcracker",
+      "Romeo and Juliet"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-what-year-was-the-legendary-woodstock-music-art-fair-first-held",
+    "question": "In what year was the legendary Woodstock Music & Art Fair first held?",
+    "options": [
+      "1967",
+      "1969",
+      "1971",
+      "1965"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-was-the-first-female-artist-inducted-into-the-rock-and-roll-hall-of-fame",
+    "question": "Who was the first female artist inducted into the Rock and Roll Hall of Fame?",
+    "options": [
+      "Tina Turner",
+      "Diana Ross",
+      "Aretha Franklin",
+      "Janis Joplin"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-musical-technique-involves-placing-accents-on-normally-unaccented-beats-creating-a-rhythmic-surprise",
+    "question": "What musical technique involves placing accents on normally unaccented beats, creating a rhythmic surprise?",
+    "options": [
+      "Legato",
+      "Staccato",
+      "Syncopation",
+      "Crescendo"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
   }
 ]

@@ -5354,5 +5354,174 @@
     "correctAnswer": 2,
     "category": "Pop Culture",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-fictional-african-country-in-marvels-black-panther",
+    "question": "What is the name of the fictional African country in Marvel's 'Black Panther'?",
+    "options": [
+      "Zamunda",
+      "Genosha",
+      "Wakanda",
+      "Latveria"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-the-tv-show-the-office-us-what-is-michael-scotts-favorite-catchphrase",
+    "question": "In the TV show 'The Office' (US), what is Michael Scott's favorite catchphrase?",
+    "options": [
+      "Bears, beets, Battlestar Galactica.",
+      "That's what she said!",
+      "Dwight, you ignorant slut!",
+      "Identity theft is not a joke, Jim!"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-artist-is-known-for-hits-like-bad-romance-and-poker-face",
+    "question": "Which artist is known for hits like \"Bad Romance\" and \"Poker Face\"?",
+    "options": [
+      "Rihanna",
+      "Adele",
+      "Lady Gaga",
+      "Katy Perry"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-year-was-the-original-super-mario-bros-game-released-in-japan",
+    "question": "What year was the original 'Super Mario Bros.' game released in Japan?",
+    "options": [
+      "1987",
+      "1985",
+      "1990",
+      "1983"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-wrote-the-hunger-games-book-series",
+    "question": "Who wrote 'The Hunger Games' book series?",
+    "options": [
+      "Veronica Roth",
+      "Suzanne Collins",
+      "Stephenie Meyer",
+      "J.K. Rowling"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-social-media-platform-is-primarily-known-for-short-form-video-content",
+    "question": "Which social media platform is primarily known for short-form video content?",
+    "options": [
+      "Instagram",
+      "Twitter",
+      "Snapchat",
+      "TikTok"
+    ],
+    "correctAnswer": 3,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-director-is-known-for-films-such-as-inception-the-dark-knight-and-oppenheimer",
+    "question": "Which director is known for films such as 'Inception', 'The Dark Knight', and 'Oppenheimer'?",
+    "options": [
+      "Quentin Tarantino",
+      "Martin Scorsese",
+      "Christopher Nolan",
+      "Denis Villeneuve"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "before-starring-in-breaking-bad-bryan-cranston-was-widely-known-for-his-role-in-which-sitcom",
+    "question": "Before starring in 'Breaking Bad', Bryan Cranston was widely known for his role in which sitcom?",
+    "options": [
+      "Seinfeld",
+      "The Drew Carey Show",
+      "Everybody Loves Raymond",
+      "Malcolm in the Middle"
+    ],
+    "correctAnswer": 3,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-k-pop-group-released-the-hit-song-dynamite-in-2020",
+    "question": "Which K-pop group released the hit song \"Dynamite\" in 2020?",
+    "options": [
+      "BLACKPINK",
+      "EXO",
+      "BTS",
+      "TWICE"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-protagonist-in-the-video-game-the-witcher-3-wild-hunt",
+    "question": "What is the name of the protagonist in the video game 'The Witcher 3: Wild Hunt'?",
+    "options": [
+      "Kratos",
+      "Geralt of Rivia",
+      "Commander Shepard",
+      "Arthur Morgan"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-streaming-service-launched-the-hit-series-squid-game",
+    "question": "Which streaming service launched the hit series 'Squid Game'?",
+    "options": [
+      "Hulu",
+      "Amazon Prime Video",
+      "HBO Max",
+      "Netflix"
+    ],
+    "correctAnswer": 3,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animated-film-studio-is-responsible-for-toy-story-finding-nemo-and-up",
+    "question": "Which animated film studio is responsible for 'Toy Story', 'Finding Nemo', and 'Up'?",
+    "options": [
+      "DreamWorks",
+      "Illumination",
+      "Blue Sky Studios",
+      "Pixar"
+    ],
+    "correctAnswer": 3,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-iconic-pop-star-is-often-referred-to-as-the-queen-of-pop",
+    "question": "Which iconic pop star is often referred to as the \"Queen of Pop\"?",
+    "options": [
+      "Mariah Carey",
+      "Janet Jackson",
+      "Madonna",
+      "Whitney Houston"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
   }
 ]

@@ -5367,5 +5367,148 @@
     "correctAnswer": 0,
     "category": "Animals",
     "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-known-for-having-the-longest-neck-among-all-land-animals",
+    "question": "Which animal is known for having the longest neck among all land animals?",
+    "options": [
+      "Elephant",
+      "Giraffe",
+      "Ostrich",
+      "Camel"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "from-which-animal-do-we-get-natural-silk-fibers",
+    "question": "From which animal do we get natural silk fibers?",
+    "options": [
+      "Spider",
+      "Silkworm",
+      "Caterpillar",
+      "Moth"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "on-which-continent-would-you-primarily-find-penguins-in-their-natural-habitat",
+    "question": "On which continent would you primarily find penguins in their natural habitat?",
+    "options": [
+      "Africa",
+      "South America",
+      "Antarctica",
+      "Australia"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-largest-living-reptile-species-in-the-world",
+    "question": "What is the largest living reptile species in the world?",
+    "options": [
+      "Komodo Dragon",
+      "Green Anaconda",
+      "Saltwater Crocodile",
+      "Alligator"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-the-only-known-bird-capable-of-sustained-backward-flight",
+    "question": "Which animal is the only known bird capable of sustained backward flight?",
+    "options": [
+      "Kingfisher",
+      "Swallow",
+      "Hummingbird",
+      "Sparrow"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-possesses-the-largest-brain-of-any-known-animal-species",
+    "question": "Which animal possesses the largest brain of any known animal species?",
+    "options": [
+      "Blue Whale",
+      "Elephant",
+      "Sperm Whale",
+      "Dolphin"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-amphibian-is-renowned-for-its-extraordinary-ability-to-regenerate-entire-limbs-spinal-cords-and-even-parts-of-its-brain",
+    "question": "Which amphibian is renowned for its extraordinary ability to regenerate entire limbs, spinal cords, and even parts of its brain?",
+    "options": [
+      "Frog",
+      "Salamander",
+      "Axolotl",
+      "Newt"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-specialized-form-of-locomotion-involving-swinging-from-branch-to-branch-is-characteristic-of-gibbons",
+    "question": "What specialized form of locomotion, involving swinging from branch to branch, is characteristic of gibbons?",
+    "options": [
+      "Leaping",
+      "Quadrupedalism",
+      "Brachiation",
+      "Knuckle-walking"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-scientific-study-of-fish-called",
+    "question": "What is the scientific study of fish called?",
+    "options": [
+      "Herpetology",
+      "Ornithology",
+      "Ichthyology",
+      "Entomology"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-group-of-reptiles-is-unique-for-having-a-four-chambered-heart-similar-to-birds-and-mammals",
+    "question": "Which group of reptiles is unique for having a four-chambered heart, similar to birds and mammals?",
+    "options": [
+      "Snakes",
+      "Lizards",
+      "Turtles",
+      "Crocodilians"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-uses-echolocation-to-navigate-and-hunt-in-its-environment",
+    "question": "Which animal uses echolocation to navigate and hunt in its environment?",
+    "options": [
+      "Bat",
+      "Owl",
+      "Shark",
+      "Wolf"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
   }
 ]

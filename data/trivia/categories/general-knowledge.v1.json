@@ -5341,5 +5341,174 @@
     "correctAnswer": 2,
     "category": "General Knowledge",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-famous-painting-by-leonardo-da-vinci-features-a-woman-with-an-enigmatic-smile",
+    "question": "Which famous painting by Leonardo da Vinci features a woman with an enigmatic smile?",
+    "options": [
+      "The Last Supper",
+      "Starry Night",
+      "Mona Lisa",
+      "The Scream"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-film-won-the-very-first-academy-award-for-best-picture",
+    "question": "Which film won the very first Academy Award for Best Picture?",
+    "options": [
+      "Sunrise: A Song of Two Humans",
+      "Wings",
+      "The Circus",
+      "7th Heaven"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-composer-is-known-for-his-moonlight-sonata",
+    "question": "Which composer is known for his \"Moonlight Sonata\"?",
+    "options": [
+      "Wolfgang Amadeus Mozart",
+      "Johann Sebastian Bach",
+      "Ludwig van Beethoven",
+      "Pyotr Ilyich Tchaikovsky"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-does-www-stand-for",
+    "question": "What does \"WWW\" stand for?",
+    "options": [
+      "World Wide Web",
+      "Western Washington Wonders",
+      "Worldly Wide Widgets",
+      "Wild Wild West"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-of-these-cities-is-not-a-national-capital",
+    "question": "Which of these cities is NOT a national capital?",
+    "options": [
+      "Canberra",
+      "Geneva",
+      "Ottawa",
+      "Brussels"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-element-has-the-chemical-symbol-hg",
+    "question": "Which element has the chemical symbol 'Hg'?",
+    "options": [
+      "Hydrogen",
+      "Helium",
+      "Mercury",
+      "Gold"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-is-credited-with-writing-the-famous-play-romeo-and-juliet",
+    "question": "Who is credited with writing the famous play 'Romeo and Juliet'?",
+    "options": [
+      "Charles Dickens",
+      "William Shakespeare",
+      "Jane Austen",
+      "Mark Twain"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "on-which-continent-is-the-amazon-rainforest-primarily-located",
+    "question": "On which continent is the Amazon Rainforest primarily located?",
+    "options": [
+      "Africa",
+      "Asia",
+      "South America",
+      "North America"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-country-is-the-suez-canal-located",
+    "question": "In which country is the Suez Canal located?",
+    "options": [
+      "Turkey",
+      "Egypt",
+      "Saudi Arabia",
+      "Greece"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-name-of-the-ancient-roman-city-preserved-by-a-volcanic-eruption-in-79-ad",
+    "question": "What is the name of the ancient Roman city preserved by a volcanic eruption in 79 AD?",
+    "options": [
+      "Troy",
+      "Babylon",
+      "Pompeii",
+      "Athens"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-invented-the-printing-press-with-movable-type-in-europe",
+    "question": "Who invented the printing press with movable type in Europe?",
+    "options": [
+      "Leonardo da Vinci",
+      "Johannes Gutenberg",
+      "Isaac Newton",
+      "Galileo Galilei"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-is-not-a-primary-color-of-light-rgb",
+    "question": "Which of these is NOT a primary color of light (RGB)?",
+    "options": [
+      "Red",
+      "Green",
+      "Blue",
+      "Yellow"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-is-home-to-the-most-pyramids",
+    "question": "Which country is home to the most pyramids?",
+    "options": [
+      "Egypt",
+      "Mexico",
+      "Sudan",
+      "China"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
   }
 ]

@@ -5354,5 +5354,161 @@
     "correctAnswer": 1,
     "category": "Sports",
     "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-players-are-on-each-team-on-the-field-in-a-standard-soccer-match",
+    "question": "How many players are on each team on the field in a standard soccer match?",
+    "options": [
+      "9",
+      "10",
+      "11",
+      "12"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-highest-scoring-play-in-american-football",
+    "question": "What is the highest scoring play in American football?",
+    "options": [
+      "Field Goal",
+      "Safety",
+      "Touchdown",
+      "Extra Point"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-stroke-is-not-one-of-the-four-competitive-strokes-in-swimming",
+    "question": "Which stroke is NOT one of the four competitive strokes in swimming?",
+    "options": [
+      "Butterfly",
+      "Backstroke",
+      "Sidestroke",
+      "Breaststroke"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-golf-what-is-the-term-for-a-score-of-one-stroke-under-par-on-a-hole",
+    "question": "In golf, what is the term for a score of one stroke under par on a hole?",
+    "options": [
+      "Bogey",
+      "Eagle",
+      "Birdie",
+      "Albatross"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-throwing-event-in-athletics-uses-a-heavy-metal-ball",
+    "question": "Which throwing event in athletics uses a heavy metal ball?",
+    "options": [
+      "Javelin",
+      "Discus",
+      "Shot Put",
+      "Hammer Throw"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-winter-olympic-sport-where-athletes-race-down-an-ice-track-on-a-small-sled-feet-first",
+    "question": "What is the name of the winter Olympic sport where athletes race down an ice track on a small sled, feet first?",
+    "options": [
+      "Luge",
+      "Bobsled",
+      "Skeleton",
+      "Snowboarding"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-rounds-are-typically-in-a-professional-boxing-championship-fight",
+    "question": "How many rounds are typically in a professional boxing championship fight?",
+    "options": [
+      "10",
+      "12",
+      "15",
+      "8"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-is-not-one-of-the-three-weapons-used-in-olympic-fencing",
+    "question": "Which of these is NOT one of the three weapons used in Olympic fencing?",
+    "options": [
+      "Foil",
+      "Sabre",
+      "Epee",
+      "Rapier"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-most-famous-horse-race-in-the-united-states-known-as-the-run-for-the-roses",
+    "question": "What is the most famous horse race in the United States, known as 'The Run for the Roses'?",
+    "options": [
+      "Preakness Stakes",
+      "Belmont Stakes",
+      "Kentucky Derby",
+      "Breeders' Cup Classic"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-is-a-womens-artistic-gymnastics-event-but-not-a-mens",
+    "question": "Which of these is a women's artistic gymnastics event but not a men's?",
+    "options": [
+      "Pommel Horse",
+      "Uneven Bars",
+      "Vault",
+      "Floor Exercise"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-another-common-name-for-the-sport-of-table-tennis",
+    "question": "What is another common name for the sport of table tennis?",
+    "options": [
+      "Badminton",
+      "Squash",
+      "Ping-Pong",
+      "Racquetball"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-rings-are-on-the-official-olympic-flag-symbol",
+    "question": "How many rings are on the official Olympic flag symbol?",
+    "options": [
+      "3",
+      "4",
+      "5",
+      "6"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
   }
 ]
