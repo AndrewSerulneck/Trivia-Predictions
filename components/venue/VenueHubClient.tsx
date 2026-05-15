@@ -171,6 +171,25 @@ function venueDebugLog(message: string, details?: Record<string, unknown>) {
   console.log(`[tp-debug][venue-home] ${message}`, details ?? {});
 }
 
+const GAME_LOCKUP_SRC: Record<VenueGameKey, string> = {
+  trivia: "/brand/Trivia_Icon.png",
+  bingo: "/brand/Bingo_icon.png",
+  pickem: "/brand/pickem_icon.png",
+  fantasy: "/brand/Fantasy_icon.png",
+  predictions: "/brand/Trivia_Icon.png",
+};
+
+function GameLockup({ gameKey }: { gameKey: VenueGameKey }) {
+  return (
+    <img
+      src={GAME_LOCKUP_SRC[gameKey]}
+      alt=""
+      aria-hidden="true"
+      className="w-full h-full object-contain"
+    />
+  );
+}
+
 function TriviaGlyph({ className = "h-10 w-10" }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
@@ -999,16 +1018,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 {homeCards.map((card) => {
                   const isOpening = pendingDestination === card.key;
                   const badge = visibleBadgeByGame.get(card.key);
-                  const titleLines = GAME_TITLE_LINES_BY_KEY[card.key];
                   return (
                     <button key={card.key} type="button" onMouseDown={triggerPulse} onClick={(event) => { void goTo(card.key, event.currentTarget); }} disabled={pendingDestination !== null} data-venue-game-card={card.key} className={`tp-clean-button tp-game-card-btn group relative aspect-square w-full max-w-[clamp(8.2rem,40vw,11.5rem)] justify-self-center overflow-hidden !rounded-[22%] !border-[2px] !border-white/90 !shadow-[0_10px_20px_rgba(15,23,42,0.35)] p-0 text-left${isOpening ? " is-opening" : ""}`}>
                       <div className={`absolute inset-0 ${GAME_ICON_BG_BY_KEY[card.key]}`} />
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_26%_18%,rgba(255,255,255,0.38)_0%,rgba(255,255,255,0.1)_40%,rgba(255,255,255,0)_72%)]" />
-                      <div className="relative flex h-full flex-col items-center justify-center gap-2 p-2 text-center">
-                        <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-white/65 bg-white/20 shadow-[0_3px_10px_rgba(2,6,23,0.35)]"><GameGlyph gameKey={card.key} /></span>
-                        <span className="text-[clamp(1.7rem,6.9vw,2.5rem)] font-black leading-[0.8] text-white [font-family:'Kalam','Bree_Serif','Nunito',cursive] [text-shadow:0_2px_0_rgba(15,23,42,0.58),0_4px_10px_rgba(2,6,23,0.45)]">
-                          {titleLines.map((line) => <span key={`${card.key}-${line}`} className="block">{line}</span>)}
-                        </span>
+                      <div className="relative flex h-full items-center justify-center p-2 text-white">
+                        <GameLockup gameKey={card.key} />
                       </div>
                       {badge ? <span className="absolute right-1.5 top-1.5 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black leading-none text-white shadow-[0_2px_8px_rgba(15,23,42,0.45)]">{badge}</span> : null}
                     </button>

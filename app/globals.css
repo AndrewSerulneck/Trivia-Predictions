@@ -32,7 +32,6 @@ body {
   @apply text-slate-900 antialiased;
   overflow-x: hidden;
   overflow-y: auto;
-  scrollbar-gutter: stable both-edges;
   overflow-anchor: none;
   overscroll-behavior-y: auto;
   text-size-adjust: 100%;
@@ -61,7 +60,6 @@ body {
 html {
   overflow-x: hidden;
   overflow-y: auto;
-  scrollbar-gutter: stable both-edges;
   overflow-anchor: none;
   text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
@@ -82,6 +80,15 @@ html {
     100% var(--stripe-height),
     100% calc(var(--stripe-height) * 2);
   background-attachment: fixed;
+}
+
+/* Reserve scrollbar space on both sides only on desktop — prevents layout shift
+   when a scrollbar appears without off-centering content on mobile. */
+@media (hover: hover) and (pointer: fine) {
+  html,
+  body {
+    scrollbar-gutter: stable both-edges;
+  }
 }
 
 /* Ensure text does not inflate unpredictably on iOS narrow screens. */
