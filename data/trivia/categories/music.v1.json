@@ -5523,5 +5523,161 @@
     "correctAnswer": 2,
     "category": "Music",
     "difficulty": "hard"
+  },
+  {
+    "slug": "which-composer-wrote-the-moonlight-sonata",
+    "question": "Which composer wrote the \"Moonlight Sonata\"?",
+    "options": [
+      "Wolfgang Amadeus Mozart",
+      "Ludwig van Beethoven",
+      "Johann Sebastian Bach",
+      "Frédéric Chopin"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-which-decade-did-disco-music-gain-widespread-popularity",
+    "question": "In which decade did disco music gain widespread popularity?",
+    "options": [
+      "1960s",
+      "1970s",
+      "1980s",
+      "1990s"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-band-is-known-for-the-hit-song-bohemian-rhapsody",
+    "question": "Which band is known for the hit song \"Bohemian Rhapsody\"?",
+    "options": [
+      "The Beatles",
+      "Led Zeppelin",
+      "Queen",
+      "The Rolling Stones"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-rock-band-released-the-album-led-zeppelin-iv-featuring-stairway-to-heaven",
+    "question": "Which rock band released the album \"Led Zeppelin IV\" featuring \"Stairway to Heaven\"?",
+    "options": [
+      "The Rolling Stones",
+      "Pink Floyd",
+      "Led Zeppelin",
+      "The Who"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-musical-features-songs-like-memory-and-is-based-on-a-collection-of-poems-by-ts-eliot",
+    "question": "Which musical features songs like \"Memory\" and is based on a collection of poems by T.S. Eliot?",
+    "options": [
+      "Les Misérables",
+      "Phantom of the Opera",
+      "Cats",
+      "Wicked"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-artist-is-often-credited-with-pioneering-the-genre-of-reggae-music",
+    "question": "Which artist is often credited with pioneering the genre of reggae music?",
+    "options": [
+      "Peter Tosh",
+      "Jimmy Cliff",
+      "Bob Marley",
+      "Toots Hibbert"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-opera-features-the-famous-habanera-aria",
+    "question": "Which opera features the famous \"Habanera\" aria?",
+    "options": [
+      "The Marriage of Figaro",
+      "La Traviata",
+      "Carmen",
+      "Aida"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-company-developed-the-mp3-audio-file-format",
+    "question": "What company developed the MP3 audio file format?",
+    "options": [
+      "Sony",
+      "Fraunhofer Society",
+      "Apple",
+      "Microsoft"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-jazz-musician-was-a-virtuoso-trumpeter-and-a-key-figure-in-the-development-of-bebop",
+    "question": "Which jazz musician was a virtuoso trumpeter and a key figure in the development of bebop?",
+    "options": [
+      "Louis Armstrong",
+      "Miles Davis",
+      "Dizzy Gillespie",
+      "John Coltrane"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-iconic-british-band-is-known-for-hits-like-stairway-to-heaven-and-whole-lotta-love",
+    "question": "Which iconic British band is known for hits like 'Stairway to Heaven' and 'Whole Lotta Love'?",
+    "options": [
+      "The Rolling Stones",
+      "Led Zeppelin",
+      "Pink Floyd",
+      "The Who"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-composed-the-four-seasons-a-series-of-four-violin-concertos",
+    "question": "Who composed the Four Seasons, a series of four violin concertos?",
+    "options": [
+      "Johann Sebastian Bach",
+      "Antonio Vivaldi",
+      "George Frideric Handel",
+      "Joseph Haydn"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-rock-band-released-the-hit-song-sweet-child-o-mine",
+    "question": "Which rock band released the hit song \"Sweet Child o' Mine\"?",
+    "options": [
+      "Aerosmith",
+      "Bon Jovi",
+      "Guns N' Roses",
+      "Metallica"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
   }
 ]

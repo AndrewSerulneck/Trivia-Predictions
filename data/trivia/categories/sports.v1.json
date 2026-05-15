@@ -5510,5 +5510,174 @@
     "correctAnswer": 2,
     "category": "Sports",
     "difficulty": "easy"
+  },
+  {
+    "slug": "in-tennis-what-term-is-used-when-the-score-is-40-40",
+    "question": "In tennis, what term is used when the score is 40-40?",
+    "options": [
+      "Advantage",
+      "Deuce",
+      "Break Point",
+      "Game Point"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-legendary-baseball-player-is-known-as-the-great-bambino",
+    "question": "Which legendary baseball player is known as 'The Great Bambino'?",
+    "options": [
+      "Babe Ruth",
+      "Jackie Robinson",
+      "Ted Williams",
+      "Willie Mays"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-sport-would-you-perform-a-salchow-jump",
+    "question": "In which sport would you perform a 'Salchow' jump?",
+    "options": [
+      "Gymnastics",
+      "Diving",
+      "Figure Skating",
+      "Ski Jumping"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-nfl-team-plays-its-home-games-at-lambeau-field",
+    "question": "Which NFL team plays its home games at Lambeau Field?",
+    "options": [
+      "Chicago Bears",
+      "Green Bay Packers",
+      "Minnesota Vikings",
+      "Detroit Lions"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-boxer-was-famously-known-as-the-greatest",
+    "question": "Which boxer was famously known as \"The Greatest\"?",
+    "options": [
+      "Mike Tyson",
+      "Muhammad Ali",
+      "Joe Frazier",
+      "George Foreman"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-points-is-a-touchdown-worth-in-american-football-before-the-extra-point",
+    "question": "How many points is a touchdown worth in American football (before the extra point)?",
+    "options": [
+      "3",
+      "6",
+      "7",
+      "9"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-equipment-is-a-shuttlecock-used-in",
+    "question": "What equipment is a shuttlecock used in?",
+    "options": [
+      "Tennis",
+      "Volleyball",
+      "Badminton",
+      "Squash"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-country-won-the-first-fifa-world-cup-in-1930",
+    "question": "What country won the first FIFA World Cup in 1930?",
+    "options": [
+      "Brazil",
+      "Italy",
+      "Uruguay",
+      "Germany"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-term-for-a-score-of-one-stroke-under-par-on-a-golf-hole",
+    "question": "What is the term for a score of one stroke under par on a golf hole?",
+    "options": [
+      "Bogey",
+      "Eagle",
+      "Birdie",
+      "Albatross"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-famous-multi-stage-bicycle-race-primarily-takes-place-in-france",
+    "question": "Which famous multi-stage bicycle race primarily takes place in France?",
+    "options": [
+      "Giro d'Italia",
+      "Vuelta a España",
+      "Tour de France",
+      "Paris-Roubaix"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-of-these-is-not-an-official-olympic-swimming-stroke",
+    "question": "Which of these is not an official Olympic swimming stroke?",
+    "options": [
+      "Freestyle",
+      "Backstroke",
+      "Sidestroke",
+      "Breaststroke"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-holds-the-record-for-the-most-goals-scored-in-fifa-world-cup-tournament-history",
+    "question": "Who holds the record for the most goals scored in FIFA World Cup tournament history?",
+    "options": [
+      "Pelé",
+      "Miroslav Klose",
+      "Ronaldo (Brazilian)",
+      "Gerd Müller"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-athlete-holds-the-world-record-for-the-mens-100-meter-dash",
+    "question": "Which athlete holds the world record for the men's 100-meter dash?",
+    "options": [
+      "Tyson Gay",
+      "Usain Bolt",
+      "Carl Lewis",
+      "Jesse Owens"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
   }
 ]

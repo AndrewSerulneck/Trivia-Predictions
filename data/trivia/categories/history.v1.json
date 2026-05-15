@@ -5523,5 +5523,161 @@
     "correctAnswer": 1,
     "category": "History",
     "difficulty": "easy"
+  },
+  {
+    "slug": "the-edict-of-nantes-granting-substantial-rights-to-calvinist-protestants-huguenots-in-largely-catholic-france-was-issued-by-which-king",
+    "question": "The Edict of Nantes, granting substantial rights to Calvinist Protestants (Huguenots) in largely Catholic France, was issued by which king?",
+    "options": [
+      "Louis XIV",
+      "Henry IV",
+      "Francis I",
+      "Louis XIII"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-dynasty-is-traditionally-credited-with-unifying-china-and-initiating-the-construction-of-the-great-wall",
+    "question": "Which dynasty is traditionally credited with unifying China and initiating the construction of the Great Wall?",
+    "options": [
+      "Han",
+      "Tang",
+      "Song",
+      "Qin"
+    ],
+    "correctAnswer": 3,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-was-the-name-of-the-ship-on-which-charles-darwin-made-his-famous-voyage-leading-to-his-theory-of-evolution",
+    "question": "What was the name of the ship on which Charles Darwin made his famous voyage, leading to his theory of evolution?",
+    "options": [
+      "HMS Beagle",
+      "HMS Endeavour",
+      "USS Constitution",
+      "Santa Maria"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-treaty-of-tordesillas-signed-in-1494-divided-newly-discovered-lands-outside-europe-between-which-two-powers",
+    "question": "The Treaty of Tordesillas, signed in 1494, divided newly discovered lands outside Europe between which two powers?",
+    "options": [
+      "Spain and France",
+      "Portugal and England",
+      "Spain and Portugal",
+      "England and France"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-magna-carta-a-foundational-document-in-english-constitutional-law-was-signed-by-which-king-in-1215",
+    "question": "The Magna Carta, a foundational document in English constitutional law, was signed by which king in 1215?",
+    "options": [
+      "King John",
+      "King Henry VIII",
+      "King Richard I",
+      "King Edward III"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-country-did-the-industrial-revolution-largely-begin",
+    "question": "In which country did the Industrial Revolution largely begin?",
+    "options": [
+      "United States",
+      "Germany",
+      "Great Britain",
+      "France"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-event-marked-the-beginning-of-the-great-depression-in-the-united-states",
+    "question": "What event marked the beginning of the Great Depression in the United States?",
+    "options": [
+      "The bombing of Pearl Harbor",
+      "The Wall Street Crash of 1929",
+      "The Dust Bowl",
+      "The assassination of JFK"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-battle-of-cannae-a-major-defeat-for-the-roman-republic-was-fought-against-the-forces-of-which-carthaginian-general",
+    "question": "The Battle of Cannae, a major defeat for the Roman Republic, was fought against the forces of which Carthaginian general?",
+    "options": [
+      "Hannibal",
+      "Scipio Africanus",
+      "Hamilcar Barca",
+      "Pyrrhus"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-major-battle-was-a-turning-point-on-the-eastern-front-during-world-war-ii",
+    "question": "Which major battle was a turning point on the Eastern Front during World War II?",
+    "options": [
+      "Battle of Britain",
+      "Battle of Midway",
+      "Battle of Stalingrad",
+      "Battle of the Bulge"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-portuguese-explorer-was-the-first-european-to-reach-india-by-sea-sailing-around-the-cape-of-good-hope",
+    "question": "Which Portuguese explorer was the first European to reach India by sea, sailing around the Cape of Good Hope?",
+    "options": [
+      "Christopher Columbus",
+      "Ferdinand Magellan",
+      "Vasco da Gama",
+      "Bartolomeu Dias"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-was-the-last-pharaoh-of-ancient-egypt-famous-for-her-relationships-with-julius-caesar-and-mark-antony",
+    "question": "Who was the last pharaoh of ancient Egypt, famous for her relationships with Julius Caesar and Mark Antony?",
+    "options": [
+      "Cleopatra VII",
+      "Nefertiti",
+      "Hatshepsut",
+      "Twosret"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-renaissance-artist-is-famous-for-painting-the-sistine-chapel-ceiling",
+    "question": "Which Renaissance artist is famous for painting the Sistine Chapel ceiling?",
+    "options": [
+      "Leonardo da Vinci",
+      "Raphael",
+      "Michelangelo",
+      "Donatello"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
   }
 ]

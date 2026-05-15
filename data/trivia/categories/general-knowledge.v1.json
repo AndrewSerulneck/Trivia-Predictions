@@ -5510,5 +5510,161 @@
     "correctAnswer": 2,
     "category": "General Knowledge",
     "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-rings-are-on-the-official-olympic-flag",
+    "question": "How many rings are on the official Olympic flag?",
+    "options": [
+      "Four",
+      "Five",
+      "Six",
+      "Seven"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-greek-mythology-who-is-considered-the-king-of-the-gods",
+    "question": "In Greek mythology, who is considered the king of the gods?",
+    "options": [
+      "Poseidon",
+      "Hades",
+      "Zeus",
+      "Apollo"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-which-decade-was-the-world-wide-web-first-made-available-to-the-public",
+    "question": "In which decade was the World Wide Web first made available to the public?",
+    "options": [
+      "1970s",
+      "1980s",
+      "1990s",
+      "2000s"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-european-country-is-renowned-for-its-extensive-fjords",
+    "question": "Which European country is renowned for its extensive fjords?",
+    "options": [
+      "Sweden",
+      "Finland",
+      "Denmark",
+      "Norway"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-sea-creature-is-known-for-having-the-longest-lifespan",
+    "question": "Which sea creature is known for having the longest lifespan?",
+    "options": [
+      "Blue Whale",
+      "Greenland Shark",
+      "Orca",
+      "Great White Shark"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-planets-are-there-in-our-solar-system-excluding-dwarf-planets",
+    "question": "How many planets are there in our solar system (excluding dwarf planets)?",
+    "options": [
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-only-letter-in-the-english-alphabet-that-is-not-found-in-the-name-of-any-us-state",
+    "question": "What is the only letter in the English alphabet that is not found in the name of any US state?",
+    "options": [
+      "Q",
+      "J",
+      "Z",
+      "X"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-classical-element-was-believed-to-be-unchangeable-and-perfect-often-associated-with-celestial-bodies",
+    "question": "Which classical element was believed to be unchangeable and perfect, often associated with celestial bodies?",
+    "options": [
+      "Aether",
+      "Water",
+      "Earth",
+      "Fire"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-largest-land-animal-in-the-world",
+    "question": "What is the largest land animal in the world?",
+    "options": [
+      "Blue Whale",
+      "African Elephant",
+      "Giraffe",
+      "Polar Bear"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-famous-leaning-tower-is-located-in-italy",
+    "question": "Which famous leaning tower is located in Italy?",
+    "options": [
+      "Eiffel Tower",
+      "Tower of London",
+      "Leaning Tower of Pisa",
+      "Tokyo Skytree"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-wrote-the-epic-poem-paradise-lost",
+    "question": "Who wrote the epic poem \"Paradise Lost\"?",
+    "options": [
+      "William Shakespeare",
+      "John Milton",
+      "Geoffrey Chaucer",
+      "Homer"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-gas-constitutes-the-largest-percentage-of-earths-atmosphere",
+    "question": "Which gas constitutes the largest percentage of Earth's atmosphere?",
+    "options": [
+      "Oxygen",
+      "Carbon Dioxide",
+      "Nitrogen",
+      "Argon"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
   }
 ]

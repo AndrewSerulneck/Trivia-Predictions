@@ -5510,5 +5510,174 @@
     "correctAnswer": 0,
     "category": "Animals",
     "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-unique-for-having-fingerprints-almost-identical-to-humans",
+    "question": "Which animal is unique for having fingerprints almost identical to humans?",
+    "options": [
+      "Koala",
+      "Chimpanzee",
+      "Gorilla",
+      "Orangutan"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-a-young-goat-called",
+    "question": "What is a young goat called?",
+    "options": [
+      "Kid",
+      "Lamb",
+      "Calf",
+      "Fawn"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-bird-lays-the-largest-eggs-in-the-world",
+    "question": "Which bird lays the largest eggs in the world?",
+    "options": [
+      "Ostrich",
+      "Emu",
+      "Kiwi",
+      "Penguin"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-marine-animal-is-famous-for-its-ability-to-change-color-and-texture-to-blend-with-its-environment",
+    "question": "Which marine animal is famous for its ability to change color and texture to blend with its environment?",
+    "options": [
+      "Octopus",
+      "Dolphin",
+      "Jellyfish",
+      "Shark"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "how-many-hearts-does-an-octopus-typically-have",
+    "question": "How many hearts does an octopus typically have?",
+    "options": [
+      "One",
+      "Two",
+      "Three",
+      "Four"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-term-for-the-dormant-state-that-some-amphibians-and-reptiles-enter-during-periods-of-cold-weather",
+    "question": "What is the term for the dormant state that some amphibians and reptiles enter during periods of cold weather?",
+    "options": [
+      "Estivation",
+      "Hibernation",
+      "Brummation",
+      "Diapause"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-foul-smelling-spray-as-a-defense-mechanism",
+    "question": "Which animal is known for its foul-smelling spray as a defense mechanism?",
+    "options": [
+      "Skunk",
+      "Raccoon",
+      "Badger",
+      "Weasel"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-ability-to-regenerate-lost-limbs-and-even-significant-portions-of-its-nervous-system",
+    "question": "Which animal is known for its ability to regenerate lost limbs and even significant portions of its nervous system?",
+    "options": [
+      "Starfish",
+      "Crab",
+      "Lizard",
+      "Earthworm"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-do-pandas-primarily-eat",
+    "question": "What do pandas primarily eat?",
+    "options": [
+      "Bamboo",
+      "Fish",
+      "Insects",
+      "Berries"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-large-cat-is-known-for-having-the-strongest-bite-among-all-felines",
+    "question": "Which large cat is known for having the strongest bite among all felines?",
+    "options": [
+      "Lion",
+      "Tiger",
+      "Jaguar",
+      "Leopard"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "a-group-of-owls-is-commonly-known-by-what-collective-noun",
+    "question": "A group of owls is commonly known by what collective noun?",
+    "options": [
+      "Flock",
+      "Parliament",
+      "Gaggle",
+      "Herd"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-has-the-longest-lifespan-of-any-known-vertebrate",
+    "question": "Which animal has the longest lifespan of any known vertebrate?",
+    "options": [
+      "Greenland Shark",
+      "Bowhead Whale",
+      "Galápagos Tortoise",
+      "Red Sea Urchin"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-only-mammal-capable-of-sustained-flight",
+    "question": "What is the only mammal capable of sustained flight?",
+    "options": [
+      "Flying Squirrel",
+      "Bat",
+      "Sugar Glider",
+      "Colugo"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
   }
 ]

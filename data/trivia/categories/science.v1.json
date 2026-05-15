@@ -5523,5 +5523,148 @@
     "correctAnswer": 2,
     "category": "Science",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-moon-in-our-solar-system-is-known-to-have-a-thick-atmosphere-of-nitrogen",
+    "question": "Which moon in our solar system is known to have a thick atmosphere of nitrogen?",
+    "options": [
+      "Europa",
+      "Titan",
+      "Ganymede",
+      "Triton"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-property-of-a-fluid-describes-its-resistance-to-flow",
+    "question": "What property of a fluid describes its resistance to flow?",
+    "options": [
+      "Density",
+      "Viscosity",
+      "Buoyancy",
+      "Surface Tension"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-gas-is-responsible-for-the-fizz-in-carbonated-drinks",
+    "question": "Which gas is responsible for the fizz in carbonated drinks?",
+    "options": [
+      "Oxygen",
+      "Nitrogen",
+      "Carbon Dioxide",
+      "Methane"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-primary-function-of-mitochondria-in-a-cell",
+    "question": "What is the primary function of mitochondria in a cell?",
+    "options": [
+      "Protein synthesis",
+      "Waste removal",
+      "Energy production",
+      "Genetic information storage"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-layer-of-the-earth-is-composed-mainly-of-molten-iron-and-nickel",
+    "question": "Which layer of the Earth is composed mainly of molten iron and nickel?",
+    "options": [
+      "Crust",
+      "Mantle",
+      "Outer Core",
+      "Inner Core"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-ph-value-of-a-neutral-solution",
+    "question": "What is the pH value of a neutral solution?",
+    "options": [
+      "0",
+      "7",
+      "14",
+      "5"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-exoplanet-was-the-first-to-be-discovered-orbiting-a-sun-like-star",
+    "question": "Which exoplanet was the first to be discovered orbiting a sun-like star?",
+    "options": [
+      "Proxima Centauri b",
+      "51 Pegasi b",
+      "TRAPPIST-1e",
+      "Kepler-186f"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-element-has-the-chemical-symbol-na",
+    "question": "What element has the chemical symbol 'Na'?",
+    "options": [
+      "Nitrogen",
+      "Nickel",
+      "Sodium",
+      "Neon"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-part-of-a-plant-conducts-water-and-nutrients-from-the-roots-to-the-leaves",
+    "question": "What part of a plant conducts water and nutrients from the roots to the leaves?",
+    "options": [
+      "Phloem",
+      "Xylem",
+      "Cortex",
+      "Stomata"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-fundamental-particle-mediates-the-strong-nuclear-force",
+    "question": "What fundamental particle mediates the strong nuclear force?",
+    "options": [
+      "Photon",
+      "Electron",
+      "Gluon",
+      "Neutrino"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-type-of-star-is-characterized-by-its-high-luminosity-and-relatively-low-surface-temperature-representing-a-late-stage-in-stellar-evolution",
+    "question": "Which type of star is characterized by its high luminosity and relatively low surface temperature, representing a late stage in stellar evolution?",
+    "options": [
+      "White Dwarf",
+      "Red Giant",
+      "Neutron Star",
+      "Main-Sequence Star"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "medium"
   }
 ]

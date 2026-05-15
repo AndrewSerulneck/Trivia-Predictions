@@ -5523,5 +5523,174 @@
     "correctAnswer": 2,
     "category": "Geography",
     "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-name-of-the-narrow-land-bridge-connecting-north-and-south-america",
+    "question": "What is the name of the narrow land bridge connecting North and South America?",
+    "options": [
+      "Suez Isthmus",
+      "Bering Isthmus",
+      "Isthmus of Panama",
+      "Kra Isthmus"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-mountain-range-traditionally-separates-europe-and-asia",
+    "question": "Which mountain range traditionally separates Europe and Asia?",
+    "options": [
+      "Alps",
+      "Himalayas",
+      "Andes",
+      "Ural Mountains"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-the-following-is-a-landlocked-country-in-europe",
+    "question": "Which of the following is a landlocked country in Europe?",
+    "options": [
+      "Portugal",
+      "Italy",
+      "Switzerland",
+      "Greece"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-lake-is-the-largest-freshwater-lake-by-surface-area-in-north-america",
+    "question": "Which lake is the largest freshwater lake by surface area in North America?",
+    "options": [
+      "Lake Huron",
+      "Great Bear Lake",
+      "Lake Superior",
+      "Lake Michigan"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-city-is-famously-located-on-two-continents",
+    "question": "Which city is famously located on two continents?",
+    "options": [
+      "Cairo",
+      "Moscow",
+      "Istanbul",
+      "Athens"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-amazon-river-primarily-flows-through-which-country",
+    "question": "The Amazon River primarily flows through which country?",
+    "options": [
+      "Colombia",
+      "Peru",
+      "Brazil",
+      "Ecuador"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-galpagos-islands-famous-for-their-unique-wildlife-belong-to-which-south-american-nation",
+    "question": "The Galápagos Islands, famous for their unique wildlife, belong to which South American nation?",
+    "options": [
+      "Colombia",
+      "Peru",
+      "Ecuador",
+      "Chile"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-andes-mountains-run-along-the-western-coast-of-which-continent",
+    "question": "The Andes Mountains run along the western coast of which continent?",
+    "options": [
+      "Africa",
+      "Asia",
+      "South America",
+      "Europe"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-sea-is-the-largest-enclosed-inland-body-of-water-on-earth",
+    "question": "Which sea is the largest enclosed inland body of water on Earth?",
+    "options": [
+      "Black Sea",
+      "Mediterranean Sea",
+      "Caspian Sea",
+      "Aral Sea"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-sahara-desert-primarily-covers-the-northern-part-of-which-continent",
+    "question": "The Sahara Desert primarily covers the northern part of which continent?",
+    "options": [
+      "Asia",
+      "Africa",
+      "South America",
+      "Australia"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-is-home-to-mount-everest-the-worlds-highest-peak-along-its-border",
+    "question": "Which country is home to Mount Everest, the world's highest peak, along its border?",
+    "options": [
+      "China",
+      "India",
+      "Nepal",
+      "Bhutan"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-deepest-point-in-the-worlds-oceans-the-mariana-trench-is-located-in-which-ocean",
+    "question": "The deepest point in the world's oceans, the Mariana Trench, is located in which ocean?",
+    "options": [
+      "Atlantic Ocean",
+      "Indian Ocean",
+      "Arctic Ocean",
+      "Pacific Ocean"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-large-island-nation-is-located-southeast-of-mainland-australia",
+    "question": "Which large island nation is located southeast of mainland Australia?",
+    "options": [
+      "New Zealand",
+      "Papua New Guinea",
+      "Fiji",
+      "Indonesia"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "easy"
   }
 ]
