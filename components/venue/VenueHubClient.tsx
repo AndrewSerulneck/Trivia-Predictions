@@ -172,11 +172,11 @@ function venueDebugLog(message: string, details?: Record<string, unknown>) {
 }
 
 const GAME_LOCKUP_SRC: Record<VenueGameKey, string> = {
-  trivia: "/brand/Trivia_Icon.png",
-  bingo: "/brand/Bingo_icon.png",
+  trivia: "/brand/trivia_icon.png",
+  bingo: "/brand/bingo_icon.png",
   pickem: "/brand/pickem_icon.png",
-  fantasy: "/brand/Fantasy_icon.png",
-  predictions: "/brand/Trivia_Icon.png",
+  fantasy: "/brand/fantasy_icon.png",
+  predictions: "/brand/trivia_icon.png",
 };
 
 function GameLockup({ gameKey }: { gameKey: VenueGameKey }) {
