@@ -11,6 +11,7 @@ const BOARD_TARGET_WIN_RATE = Number.parseFloat(process.env.BINGO_BOARD_TARGET_W
 const BOARD_TARGET_TOLERANCE = Number.parseFloat(process.env.BINGO_BOARD_TARGET_TOLERANCE ?? "0.03");
 const BOARD_SIMULATION_TRIALS = Number.parseInt(process.env.BINGO_BOARD_SIM_TRIALS ?? "2500", 10);
 const MAX_ACTIVE_CARDS_PER_USER = 4;
+const ACTIVE_CARD_SLOT_BUFFER_HOURS = 6;
 const GAME_CATALOG_CACHE_MS = 30_000;
 const SCORE_CACHE_MS = 15_000;
 const BINGO_FORCE_FINALIZE_AFTER_START_MS = 12 * 60 * 60 * 1000;
@@ -166,6 +167,27 @@ type SportsBingoResolver =
   | { kind: "nba_player_points_first_half_at_least"; player: string; threshold: number }
   | { kind: "nba_player_assists_in_any_quarter_at_least"; player: string; threshold: number }
   | { kind: "nba_player_steals_first_half_at_least"; player: string; threshold: number }
+  | {
+      kind: "mlb_webhook_player_event_at_least";
+      player: string;
+      event: "hit" | "home_run" | "walk" | "hit_by_pitch";
+      threshold: number;
+      currentCount?: number;
+    }
+  | {
+      kind: "mlb_webhook_player_event_at_most";
+      player: string;
+      event: "strikeout";
+      threshold: number;
+      currentCount?: number;
+    }
+  | {
+      kind: "mlb_webhook_team_event_at_least";
+      team: TeamSide;
+      event: "groundout" | "flyout" | "strikeout" | "walk" | "hit_by_pitch" | "hit" | "quick_out_under_3_pitches";
+      threshold: number;
+      currentCount?: number;
+    }
   | { kind: "replacement_auto" };
 
 type SportsBingoSquareTemplate = {
@@ -211,6 +233,7 @@ export type SportsBingoCardSquare = {
   isFree: boolean;
   status: SquareStatus;
   resolvedAt?: string;
+  propProgress?: { current: number; target: number; unit: string };
 };
 
 export type SportsBingoCard = {
@@ -430,6 +453,21 @@ type MLBGamePlayerStatsSnapshot = {
   awayScore: number | null;
   lines: MLBPlayerStatLine[];
   byPlayerKey: Map<string, MLBPlayerStatLine[]>;
+};
+
+export type MlbWebhookBingoEvent = {
+  gameId: string;
+  eventType:
+    | "groundout"
+    | "flyout"
+    | "strikeout"
+    | "hit"
+    | "home_run"
+    | "walk"
+    | "hit_by_pitch";
+  playerName: string;
+  teamName: string;
+  pitchCount: number | null;
 };
 
 type GameCatalogEntry = {
@@ -799,6 +837,53 @@ function parseResolverPlayerRef(value: string): { displayName: string; playerId:
   };
 }
 
+function mlbWebhookEventUnitLabel(event: string): string {
+  switch (event) {
+    case "home_run":
+      return "home runs";
+    case "hit_by_pitch":
+      return "HBPs";
+    case "quick_out_under_3_pitches":
+      return "quick outs";
+    default:
+      return `${event.replaceAll("_", " ")}s`;
+  }
+}
+
+function mlbWebhookEventDisplayLabel(event: string): string {
+  switch (event) {
+    case "home_run":
+      return "home run";
+    case "hit_by_pitch":
+      return "hit-by-pitch";
+    case "quick_out_under_3_pitches":
+      return "out in under 3 pitches";
+    default:
+      return event.replaceAll("_", " ");
+  }
+}
+
+function resolverProgressPayload(resolver: SportsBingoResolver): { current: number; target: number; unit: string } | null {
+  switch (resolver.kind) {
+    case "mlb_webhook_player_event_at_least":
+      return {
+        current: Math.max(0, Math.floor(Number(resolver.currentCount ?? 0))),
+        target: Math.max(1, Math.floor(Number(resolver.threshold ?? 1))),
+        unit: mlbWebhookEventUnitLabel(resolver.event),
+      };
+    case "mlb_webhook_player_event_at_most":
+      return null;
+    case "mlb_webhook_team_event_at_least":
+      return {
+        current: Math.max(0, Math.floor(Number(resolver.currentCount ?? 0))),
+        target: Math.max(1, Math.floor(Number(resolver.threshold ?? 1))),
+        unit: mlbWebhookEventUnitLabel(resolver.event),
+      };
+    default:
+      return null;
+  }
+}
+
 function resolverKey(resolver: SportsBingoResolver): string {
   switch (resolver.kind) {
     case "free":
@@ -867,6 +952,12 @@ function resolverKey(resolver: SportsBingoResolver): string {
       return `nba_player_assists_in_any_quarter_at_least:${resolver.player.toLowerCase()}:${resolver.threshold.toFixed(1)}`;
     case "nba_player_steals_first_half_at_least":
       return `nba_player_steals_first_half_at_least:${resolver.player.toLowerCase()}:${resolver.threshold.toFixed(1)}`;
+    case "mlb_webhook_player_event_at_least":
+      return `mlb_webhook_player_event_at_least:${resolver.player.toLowerCase()}:${resolver.event}:${resolver.threshold.toFixed(1)}`;
+    case "mlb_webhook_player_event_at_most":
+      return `mlb_webhook_player_event_at_most:${resolver.player.toLowerCase()}:${resolver.event}:${resolver.threshold.toFixed(1)}`;
+    case "mlb_webhook_team_event_at_least":
+      return `mlb_webhook_team_event_at_least:${resolver.team}:${resolver.event}:${resolver.threshold.toFixed(1)}`;
     default:
       return "unknown";
   }
@@ -890,23 +981,31 @@ function buildSquareLabel(game: SportsBingoGame, resolver: SportsBingoResolver):
     }
     case "spread_more_than": {
       const team = teamForSide(resolver.team);
-      return `${team} win by ${formatLine(resolver.line)}+ points.`;
+      const unit = game.sportKey === "baseball_mlb" ? "runs" : "points";
+      return `${team} win by ${formatLine(resolver.line)}+ ${unit}.`;
     }
     case "spread_keep_close": {
       const team = teamForSide(resolver.team);
-      return `${team} win or lose by less than ${formatLine(resolver.line)} points.`;
+      const unit = game.sportKey === "baseball_mlb" ? "runs" : "points";
+      return `${team} win or lose by less than ${formatLine(resolver.line)} ${unit}.`;
     }
-    case "game_total_over":
-      return `Total points: over ${formatLine(resolver.line)}.`;
-    case "game_total_under":
-      return `Total points: under ${formatLine(resolver.line)}.`;
+    case "game_total_over": {
+      const unit = game.sportKey === "baseball_mlb" ? "runs" : "points";
+      return `Total ${unit}: over ${formatLine(resolver.line)}.`;
+    }
+    case "game_total_under": {
+      const unit = game.sportKey === "baseball_mlb" ? "runs" : "points";
+      return `Total ${unit}: under ${formatLine(resolver.line)}.`;
+    }
     case "team_total_over": {
       const team = teamForSide(resolver.team);
-      return `${team}: over ${formatLine(resolver.line)} points.`;
+      const unit = game.sportKey === "baseball_mlb" ? "runs" : "points";
+      return `${team}: over ${formatLine(resolver.line)} ${unit}.`;
     }
     case "team_total_under": {
       const team = teamForSide(resolver.team);
-      return `${team}: under ${formatLine(resolver.line)} points.`;
+      const unit = game.sportKey === "baseball_mlb" ? "runs" : "points";
+      return `${team}: under ${formatLine(resolver.line)} ${unit}.`;
     }
     case "player_prop": {
       const playerLabel = parseResolverPlayerRef(resolver.player).displayName || resolver.player;
@@ -1003,6 +1102,24 @@ function buildSquareLabel(game: SportsBingoGame, resolver: SportsBingoResolver):
       return `${parseResolverPlayerRef(resolver.player).displayName || resolver.player}: ${formatLine(resolver.threshold)}+ assists in a quarter.`;
     case "nba_player_steals_first_half_at_least":
       return `${parseResolverPlayerRef(resolver.player).displayName || resolver.player}: ${formatLine(resolver.threshold)}+ steals in the first half.`;
+    case "mlb_webhook_player_event_at_least": {
+      const player = parseResolverPlayerRef(resolver.player).displayName || resolver.player;
+      if (resolver.event === "home_run") {
+        return `${player} hits ${formatLine(resolver.threshold)}+ home runs.`;
+      }
+      return `${player}: ${formatLine(resolver.threshold)}+ ${mlbWebhookEventUnitLabel(resolver.event)}.`;
+    }
+    case "mlb_webhook_player_event_at_most": {
+      const player = parseResolverPlayerRef(resolver.player).displayName || resolver.player;
+      return `${player}: ${formatLine(resolver.threshold)} or fewer ${mlbWebhookEventUnitLabel(resolver.event)}.`;
+    }
+    case "mlb_webhook_team_event_at_least": {
+      const team = teamForSide(resolver.team);
+      if (resolver.event === "quick_out_under_3_pitches") {
+        return `${team}: record ${formatLine(resolver.threshold)}+ outs in under 3 pitches.`;
+      }
+      return `${team}: ${formatLine(resolver.threshold)}+ ${mlbWebhookEventUnitLabel(resolver.event)}.`;
+    }
     default:
       return "Sports Bingo square";
   }
@@ -2057,7 +2174,8 @@ function buildGameAndCandidatesFromBallDontLie(sportKey: string, gameData: BallD
   const favorite: TeamSide = homeWinProb >= awayWinProb ? "home" : "away";
   const underdog: TeamSide = favorite === "home" ? "away" : "home";
   const favoriteBaseLine = Math.max(0.5, Math.abs(averageHomeSpread));
-  const spreadLevels = Array.from(new Set([-4, -2, 0, 2, 4, 6, 8].map((offset) => roundLine(favoriteBaseLine + offset)))).filter(
+  const spreadOffsets = sportKey === "baseball_mlb" ? [-0.5, 0, 0.5, 1, 1.5, 2] : [-4, -2, 0, 2, 4, 6, 8];
+  const spreadLevels = Array.from(new Set(spreadOffsets.map((offset) => roundLine(favoriteBaseLine + offset)))).filter(
     (line) => line >= 0.5
   );
 
@@ -2084,9 +2202,8 @@ function buildGameAndCandidatesFromBallDontLie(sportKey: string, gameData: BallD
     });
   }
 
-  const totalLevels = Array.from(
-    new Set([-15, -10, -6, -3, 0, 3, 6, 10, 15].map((offset) => roundLine(averageTotal + offset)))
-  );
+  const totalOffsets = sportKey === "baseball_mlb" ? [-3, -2, -1, 0, 1, 2, 3] : [-15, -10, -6, -3, 0, 3, 6, 10, 15];
+  const totalLevels = Array.from(new Set(totalOffsets.map((offset) => roundLine(averageTotal + offset))));
   for (const line of totalLevels) {
     const overProbability = clamp(sigmoid(logit(baseOverProbability) + (averageTotal - line) / 8.5), 0.08, 0.92);
     const underProbability = clamp(1 - overProbability, 0.08, 0.92);
@@ -2115,8 +2232,12 @@ function buildGameAndCandidatesFromBallDontLie(sportKey: string, gameData: BallD
   const impliedAwayTotal = averageTotal - impliedHomeTotal;
 
   const buildTeamTotalCandidates = (team: TeamSide, impliedTotal: number) => {
-    const levels = Array.from(new Set([-14, -10, -6, -3, 0, 3, 6, 10, 14].map((offset) => roundLine(impliedTotal + offset))));
+    const offsets = sportKey === "baseball_mlb" ? [-2, -1, 0, 1, 2, 3] : [-14, -10, -6, -3, 0, 3, 6, 10, 14];
+    const levels = Array.from(new Set(offsets.map((offset) => roundLine(impliedTotal + offset))));
     for (const line of levels) {
+      if (sportKey === "baseball_mlb" && (line < 0.5 || line > 11.5)) {
+        continue;
+      }
       const overProbability = clamp(sigmoid((impliedTotal - line) / 7.8), 0.05, 0.95);
       const underProbability = clamp(1 - overProbability, 0.05, 0.95);
 
@@ -2798,6 +2919,10 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
       homeRuns: number;
       rbis: number;
       runs: number;
+      batterStrikeouts: number;
+      walks: number;
+      hitByPitch: number;
+      plateAppearances: number;
       strikeoutsPitcher: number;
       pitcherOuts: number;
     };
@@ -2837,6 +2962,10 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
           homeRuns: 0,
           rbis: 0,
           runs: 0,
+          batterStrikeouts: 0,
+          walks: 0,
+          hitByPitch: 0,
+          plateAppearances: 0,
           strikeoutsPitcher: 0,
           pitcherOuts: 0,
         };
@@ -2846,7 +2975,15 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
         current.homeRuns += parseStatNumber(row.home_runs ?? row.hr);
         current.rbis += parseStatNumber(row.runs_batted_in ?? row.rbi);
         current.runs += parseStatNumber(row.runs ?? row.r);
-        current.strikeoutsPitcher += parseStatNumber(row.pitcher_strikeouts ?? row.p_strikeouts ?? row.so_pitcher ?? row.strikeouts);
+        const rowStrikeouts = parseStatNumber(row.strikeouts ?? row.so);
+        const rowWalks = parseStatNumber(row.walks ?? row.bb);
+        const rowHitByPitch = parseStatNumber(row.hit_by_pitch ?? row.hbp);
+        const rowPlateAppearances = parseStatNumber(row.plate_appearances ?? row.pa ?? row.at_bats ?? row.ab);
+        current.batterStrikeouts += rowStrikeouts;
+        current.walks += rowWalks;
+        current.hitByPitch += rowHitByPitch;
+        current.plateAppearances += rowPlateAppearances + rowWalks + rowHitByPitch;
+        current.strikeoutsPitcher += parseStatNumber(row.pitcher_strikeouts ?? row.p_strikeouts ?? row.so_pitcher);
         current.pitcherOuts += parseStatNumber(row.pitcher_outs ?? row.p_outs ?? row.outs_recorded ?? row.pitching_outs);
         byPlayer.set(playerKey, current);
       }
@@ -2863,6 +3000,9 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
         avgRbis: player.rbis / player.games.size,
         avgRuns: player.runs / player.games.size,
         avgHomeRuns: player.homeRuns / player.games.size,
+        avgStrikeouts: player.batterStrikeouts / player.games.size,
+        avgWalks: player.walks / player.games.size,
+        avgHitByPitch: player.hitByPitch / player.games.size,
         score: (player.hits + player.rbis + player.runs + player.homeRuns * 2) / player.games.size,
       }))
       .filter((entry) => entry.games >= 2)
@@ -2888,6 +3028,84 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
           achievementTemplates.push(achievement);
         }
       }
+      const playerHitResolver: SportsBingoResolver = {
+        kind: "mlb_webhook_player_event_at_least",
+        player: playerRef,
+        event: "hit",
+        threshold: 1,
+      };
+      templates.push({
+        key: resolverKey(playerHitResolver),
+        label: buildSquareLabel(game, playerHitResolver),
+        resolver: playerHitResolver,
+        probability: clamp(probabilityAtLeast(hitter.avgHits, 1, 0.45), 0.12, 0.9),
+        bucket: "achievement",
+        supportLevel: "supported",
+      });
+
+      const hrResolver: SportsBingoResolver = {
+        kind: "mlb_webhook_player_event_at_least",
+        player: playerRef,
+        event: "home_run",
+        threshold: 1,
+      };
+      const hrProbability = clamp(probabilityAtLeast(hitter.avgHomeRuns, 1, 0.7), 0.02, 0.6);
+      if (hitter.avgHomeRuns > 0 && hrProbability >= 0.25) {
+        templates.push({
+          key: resolverKey(hrResolver),
+          label: buildSquareLabel(game, hrResolver),
+          resolver: hrResolver,
+          probability: hrProbability,
+          bucket: "achievement",
+          supportLevel: "supported",
+        });
+      } else {
+        const avoidKResolver: SportsBingoResolver = {
+          kind: "mlb_webhook_player_event_at_most",
+          player: playerRef,
+          event: "strikeout",
+          threshold: 0,
+        };
+        const avoidKProbability = clamp(1 - probabilityAtLeast(hitter.avgStrikeouts, 1, 0.62), 0.08, 0.88);
+        templates.push({
+          key: resolverKey(avoidKResolver),
+          label: buildSquareLabel(game, avoidKResolver),
+          resolver: avoidKResolver,
+          probability: avoidKProbability,
+          bucket: "achievement",
+          supportLevel: "supported",
+        });
+      }
+
+      const walkResolver: SportsBingoResolver = {
+        kind: "mlb_webhook_player_event_at_least",
+        player: playerRef,
+        event: "walk",
+        threshold: 1,
+      };
+      templates.push({
+        key: resolverKey(walkResolver),
+        label: buildSquareLabel(game, walkResolver),
+        resolver: walkResolver,
+        probability: clamp(probabilityAtLeast(hitter.avgWalks, 1, 0.6), 0.08, 0.85),
+        bucket: "achievement",
+        supportLevel: "supported",
+      });
+
+      const hbpResolver: SportsBingoResolver = {
+        kind: "mlb_webhook_player_event_at_least",
+        player: playerRef,
+        event: "hit_by_pitch",
+        threshold: 1,
+      };
+      templates.push({
+        key: resolverKey(hbpResolver),
+        label: buildSquareLabel(game, hbpResolver),
+        resolver: hbpResolver,
+        probability: clamp(probabilityAtLeast(hitter.avgHitByPitch, 1, 0.75), 0.04, 0.55),
+        bucket: "achievement",
+        supportLevel: "supported",
+      });
       if (hitter.avgRbis >= 0.45) {
         const resolver: SportsBingoResolver = { kind: "player_prop", marketKey: "player_rbis", player: playerRef, line: 0.5, direction: "over" };
         const candidate: SportsBingoSquareTemplate = {
@@ -2920,7 +3138,7 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
           achievementTemplates.push(achievement);
         }
       }
-      if (hitter.avgHomeRuns >= 0.12) {
+      if (hitter.avgHomeRuns > 0) {
         const resolver: SportsBingoResolver = { kind: "player_prop", marketKey: "player_home_runs", player: playerRef, line: 0.5, direction: "over" };
         const candidate: SportsBingoSquareTemplate = {
           key: resolverKey(resolver),
@@ -2935,6 +3153,73 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
         if (achievement) {
           achievementTemplates.push(achievement);
         }
+      }
+    }
+
+    for (const teamSide of ["home", "away"] as const) {
+      const quickOutResolver: SportsBingoResolver = {
+        kind: "mlb_webhook_team_event_at_least",
+        team: teamSide,
+        event: "quick_out_under_3_pitches",
+        threshold: 1,
+      };
+      templates.push({
+        key: resolverKey(quickOutResolver),
+        label: buildSquareLabel(game, quickOutResolver),
+        resolver: quickOutResolver,
+        probability: 0.58,
+        bucket: "achievement",
+        supportLevel: "supported",
+      });
+
+      const teamOutKinds: Array<"groundout" | "flyout" | "strikeout"> = ["groundout", "flyout", "strikeout"];
+      for (const eventKind of teamOutKinds) {
+        const outResolver: SportsBingoResolver = {
+          kind: "mlb_webhook_team_event_at_least",
+          team: teamSide,
+          event: eventKind,
+          threshold: eventKind === "strikeout" ? 5 : 4,
+        };
+        templates.push({
+          key: resolverKey(outResolver),
+          label: buildSquareLabel(game, outResolver),
+          resolver: outResolver,
+          probability: eventKind === "strikeout" ? 0.67 : 0.74,
+          bucket: "achievement",
+          supportLevel: "supported",
+        });
+      }
+
+      const teamHitsResolver: SportsBingoResolver = {
+        kind: "mlb_webhook_team_event_at_least",
+        team: teamSide,
+        event: "hit",
+        threshold: 5,
+      };
+      templates.push({
+        key: resolverKey(teamHitsResolver),
+        label: buildSquareLabel(game, teamHitsResolver),
+        resolver: teamHitsResolver,
+        probability: 0.78,
+        bucket: "achievement",
+        supportLevel: "supported",
+      });
+
+      for (const plateEvent of ["walk", "hit_by_pitch"] as const) {
+        const onBaseResolver: SportsBingoResolver = {
+          kind: "mlb_webhook_team_event_at_least",
+          team: teamSide,
+          event: plateEvent,
+          threshold: plateEvent === "walk" ? 2 : 1,
+        };
+        templates.push({
+          key: resolverKey(onBaseResolver),
+          label: buildSquareLabel(game, onBaseResolver),
+          resolver: onBaseResolver,
+          probability: plateEvent === "walk" ? 0.62 : 0.38,
+          bucket: "achievement",
+          supportLevel: "supported",
+        });
       }
     }
 
@@ -2974,7 +3259,19 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
       }
     }
 
-    return aggregateCandidates([...templates, ...achievementTemplates]).sort((a, b) => a.key.localeCompare(b.key));
+    const merged = aggregateCandidates([...templates, ...achievementTemplates]).filter((candidate) => {
+      if (candidate.resolver.kind === "player_prop") {
+        return candidate.probability >= 0.25;
+      }
+      if (
+        candidate.resolver.kind === "mlb_webhook_player_event_at_least" ||
+        candidate.resolver.kind === "mlb_webhook_player_event_at_most"
+      ) {
+        return candidate.probability >= 0.25;
+      }
+      return true;
+    });
+    return merged.sort((a, b) => a.key.localeCompare(b.key));
   } catch {
     return [];
   }
@@ -3083,9 +3380,24 @@ async function buildMLBPlayerPropCandidates(game: SportsBingoGame): Promise<Spor
     }
   }
 
-  const parsed = aggregateCandidates(selected).sort((a, b) => a.key.localeCompare(b.key));
+  const parsed = aggregateCandidates(selected)
+    .filter((candidate) => candidate.probability >= 0.25)
+    .sort((a, b) => a.key.localeCompare(b.key));
   if (parsed.length > 0) {
-    return aggregateCandidates([...parsed, ...achievementCandidates]).sort((a, b) => a.key.localeCompare(b.key));
+    return aggregateCandidates([...parsed, ...achievementCandidates])
+      .filter((candidate) => {
+        if (candidate.resolver.kind === "player_prop") {
+          return candidate.probability >= 0.25;
+        }
+        if (
+          candidate.resolver.kind === "mlb_webhook_player_event_at_least" ||
+          candidate.resolver.kind === "mlb_webhook_player_event_at_most"
+        ) {
+          return candidate.probability >= 0.25;
+        }
+        return true;
+      })
+      .sort((a, b) => a.key.localeCompare(b.key));
   }
   return buildMLBPlayerPropCandidatesFromRecentStats(game);
 }
@@ -3163,6 +3475,10 @@ function getPlayerPropMarketKey(candidate: SportsBingoSquareTemplate): string {
       return "milestone:assists_quarter";
     case "nba_player_steals_first_half_at_least":
       return "milestone:steals_first_half";
+    case "mlb_webhook_player_event_at_least":
+      return `mlb_event:${candidate.resolver.event}`;
+    case "mlb_webhook_player_event_at_most":
+      return `mlb_event:${candidate.resolver.event}`;
     default:
       return "";
   }
@@ -3196,6 +3512,10 @@ function getPlayerPropAxisKey(candidate: SportsBingoSquareTemplate): string {
       return `milestone|assists_quarter|${candidate.resolver.player.toLowerCase()}|${candidate.resolver.threshold.toFixed(1)}`;
     case "nba_player_steals_first_half_at_least":
       return `milestone|steals_first_half|${candidate.resolver.player.toLowerCase()}|${candidate.resolver.threshold.toFixed(1)}`;
+    case "mlb_webhook_player_event_at_least":
+      return `mlb_event_at_least|${candidate.resolver.event}|${candidate.resolver.player.toLowerCase()}|${candidate.resolver.threshold.toFixed(1)}`;
+    case "mlb_webhook_player_event_at_most":
+      return `mlb_event_at_most|${candidate.resolver.event}|${candidate.resolver.player.toLowerCase()}|${candidate.resolver.threshold.toFixed(1)}`;
     default:
       return "";
   }
@@ -3215,6 +3535,8 @@ function isPlayerSpecificAchievementResolver(resolver: SportsBingoResolver): boo
     case "nba_player_points_first_half_at_least":
     case "nba_player_assists_in_any_quarter_at_least":
     case "nba_player_steals_first_half_at_least":
+    case "mlb_webhook_player_event_at_least":
+    case "mlb_webhook_player_event_at_most":
       return true;
     default:
       return false;
@@ -3301,6 +3623,35 @@ function pickCandidateSet(candidates: SportsBingoSquareTemplate[], sportKey: str
     for (const candidate of playerAchievementPool) {
       if (selected.length >= 24 || added >= 3) break;
       if (tryAdd(candidate)) added += 1;
+    }
+  }
+
+  if (sportKey === "baseball_mlb") {
+    const playerAchievementPool = shuffle(
+      grouped.achievement.filter(
+        (item) =>
+          item.resolver.kind === "mlb_webhook_player_event_at_least" ||
+          item.resolver.kind === "mlb_webhook_player_event_at_most"
+      )
+    );
+    let added = 0;
+    for (const candidate of playerAchievementPool) {
+      if (selected.length >= 24 || added >= 3) break;
+      if (tryAdd(candidate)) added += 1;
+    }
+  }
+
+  if (sportKey === "baseball_mlb") {
+    const mlbPlayerAchievementSelectedCount = selected.filter(
+      (item) =>
+        item.resolver.kind === "mlb_webhook_player_event_at_least" ||
+        item.resolver.kind === "mlb_webhook_player_event_at_most"
+    ).length;
+    if (mlbPlayerAchievementSelectedCount < 2) {
+      console.warn("[sportsBingo] mlb_player_achievement_shortfall", {
+        selected: mlbPlayerAchievementSelectedCount,
+        desired: 2,
+      });
     }
   }
 
@@ -3687,6 +4038,9 @@ export type SportsBingoSquareTemplatePreview = {
     | "nba_player_points_first_half_at_least"
     | "nba_player_assists_in_any_quarter_at_least"
     | "nba_player_steals_first_half_at_least"
+    | "mlb_webhook_player_event_at_least"
+    | "mlb_webhook_player_event_at_most"
+    | "mlb_webhook_team_event_at_least"
     | "replacement_auto";
 };
 
@@ -3990,6 +4344,69 @@ function parseResolver(value: unknown): SportsBingoResolver | null {
         return { kind: "nba_player_steals_first_half_at_least", player: resolver.player, threshold: resolver.threshold };
       }
       return null;
+    case "mlb_webhook_player_event_at_least":
+      if (
+        typeof resolver.player === "string" &&
+        typeof resolver.threshold === "number" &&
+        Number.isFinite(resolver.threshold) &&
+        (resolver.event === "hit" || resolver.event === "home_run" || resolver.event === "walk" || resolver.event === "hit_by_pitch")
+      ) {
+        return {
+          kind: "mlb_webhook_player_event_at_least",
+          player: resolver.player,
+          event: resolver.event,
+          threshold: resolver.threshold,
+          currentCount:
+            typeof resolver.currentCount === "number" && Number.isFinite(resolver.currentCount)
+              ? resolver.currentCount
+              : undefined,
+        };
+      }
+      return null;
+    case "mlb_webhook_player_event_at_most":
+      if (
+        typeof resolver.player === "string" &&
+        typeof resolver.threshold === "number" &&
+        Number.isFinite(resolver.threshold) &&
+        resolver.event === "strikeout"
+      ) {
+        return {
+          kind: "mlb_webhook_player_event_at_most",
+          player: resolver.player,
+          event: "strikeout",
+          threshold: resolver.threshold,
+          currentCount:
+            typeof resolver.currentCount === "number" && Number.isFinite(resolver.currentCount)
+              ? resolver.currentCount
+              : undefined,
+        };
+      }
+      return null;
+    case "mlb_webhook_team_event_at_least":
+      if (
+        (resolver.team === "home" || resolver.team === "away") &&
+        typeof resolver.threshold === "number" &&
+        Number.isFinite(resolver.threshold) &&
+        (resolver.event === "groundout" ||
+          resolver.event === "flyout" ||
+          resolver.event === "strikeout" ||
+          resolver.event === "walk" ||
+          resolver.event === "hit_by_pitch" ||
+          resolver.event === "hit" ||
+          resolver.event === "quick_out_under_3_pitches")
+      ) {
+        return {
+          kind: "mlb_webhook_team_event_at_least",
+          team: resolver.team,
+          event: resolver.event,
+          threshold: resolver.threshold,
+          currentCount:
+            typeof resolver.currentCount === "number" && Number.isFinite(resolver.currentCount)
+              ? resolver.currentCount
+              : undefined,
+        };
+      }
+      return null;
     default:
       return null;
   }
@@ -4017,16 +4434,20 @@ function mapCardRow(row: SportsBingoCardRow, squares: SportsBingoSquareRow[]): S
   };
 
   const mappedSquares = squares
-    .map((square) => ({
-      id: square.id,
-      index: square.square_index,
-      key: resolverKey(parseResolver(square.resolver) ?? { kind: "free" }),
-      label: squareLabelForCard(square),
-      probability: Number(square.probability),
-      isFree: square.is_free,
-      status: square.status,
-      resolvedAt: square.resolved_at ?? undefined,
-    }))
+    .map((square) => {
+      const resolver = parseResolver(square.resolver);
+      return {
+        id: square.id,
+        index: square.square_index,
+        key: resolverKey(resolver ?? { kind: "free" }),
+        label: squareLabelForCard(square),
+        probability: Number(square.probability),
+        isFree: square.is_free,
+        status: square.status,
+        resolvedAt: square.resolved_at ?? undefined,
+        propProgress: resolver ? resolverProgressPayload(resolver) ?? undefined : undefined,
+      };
+    })
     .sort((a, b) => a.index - b.index);
 
   return {
@@ -4622,6 +5043,39 @@ function evaluateResolver(
       if (completed || nbaStatsSnapshot.finalized) return { status: "miss", resolved: true };
       return { status: "pending", resolved: false };
     }
+    case "mlb_webhook_player_event_at_least": {
+      const current = Math.max(0, Number(resolver.currentCount ?? 0));
+      const target = Math.max(1, Number(resolver.threshold ?? 1));
+      if (current >= target) {
+        return { status: "hit", resolved: true };
+      }
+      if (completed) {
+        return { status: "miss", resolved: true };
+      }
+      return { status: "pending", resolved: false };
+    }
+    case "mlb_webhook_player_event_at_most": {
+      const current = Math.max(0, Number(resolver.currentCount ?? 0));
+      const maxAllowed = Math.max(0, Number(resolver.threshold ?? 0));
+      if (current > maxAllowed) {
+        return { status: "miss", resolved: true };
+      }
+      if (completed) {
+        return { status: "hit", resolved: true };
+      }
+      return { status: "pending", resolved: false };
+    }
+    case "mlb_webhook_team_event_at_least": {
+      const current = Math.max(0, Number(resolver.currentCount ?? 0));
+      const target = Math.max(1, Number(resolver.threshold ?? 1));
+      if (current >= target) {
+        return { status: "hit", resolved: true };
+      }
+      if (completed) {
+        return { status: "miss", resolved: true };
+      }
+      return { status: "pending", resolved: false };
+    }
     default:
       return { status: "void", resolved: true };
   }
@@ -4707,10 +5161,180 @@ function isResolverEligibleForVoidRegrade(resolver: SportsBingoResolver): boolea
     case "nba_player_points_first_half_at_least":
     case "nba_player_assists_in_any_quarter_at_least":
     case "nba_player_steals_first_half_at_least":
+    case "mlb_webhook_player_event_at_least":
+    case "mlb_webhook_player_event_at_most":
+    case "mlb_webhook_team_event_at_least":
       return true;
     default:
       return false;
   }
+}
+
+function resolverPlayerMatchesEventName(playerRef: string, eventPlayerName: string): boolean {
+  const parsed = parseResolverPlayerRef(playerRef);
+  const targetTokens = tokenizeName(parsed.displayName || playerRef);
+  const eventTokens = tokenizeName(eventPlayerName);
+  if (targetTokens.length === 0 || eventTokens.length === 0) {
+    return false;
+  }
+  const targetLast = targetTokens[targetTokens.length - 1] ?? "";
+  const eventLast = eventTokens[eventTokens.length - 1] ?? "";
+  if (!targetLast || targetLast !== eventLast) {
+    return false;
+  }
+  const targetFirst = targetTokens[0] ?? "";
+  const eventFirst = eventTokens[0] ?? "";
+  if (!targetFirst || !eventFirst) {
+    return false;
+  }
+  return eventFirst === targetFirst || eventFirst.startsWith(targetFirst[0] ?? "");
+}
+
+function getMlbWebhookEventAliases(eventType: MlbWebhookBingoEvent["eventType"]): Set<string> {
+  const set = new Set<string>();
+  set.add(eventType);
+  if (eventType === "home_run") {
+    set.add("hit");
+  }
+  return set;
+}
+
+function resolveTeamSideFromEvent(card: SportsBingoCardRow, eventTeamName: string): TeamSide | null {
+  if (!eventTeamName) {
+    return null;
+  }
+  if (teamsMatch(eventTeamName, card.home_team)) {
+    return "home";
+  }
+  if (teamsMatch(eventTeamName, card.away_team)) {
+    return "away";
+  }
+  return null;
+}
+
+function isOutEvent(eventType: MlbWebhookBingoEvent["eventType"]): boolean {
+  return eventType === "groundout" || eventType === "flyout" || eventType === "strikeout";
+}
+
+function applyWebhookCountToResolver(
+  resolver: SportsBingoResolver,
+  event: MlbWebhookBingoEvent,
+  teamSide: TeamSide | null
+): SportsBingoResolver | null {
+  const aliases = getMlbWebhookEventAliases(event.eventType);
+  if (resolver.kind === "mlb_webhook_player_event_at_least") {
+    if (!aliases.has(resolver.event)) {
+      return null;
+    }
+    if (!resolverPlayerMatchesEventName(resolver.player, event.playerName)) {
+      return null;
+    }
+    return { ...resolver, currentCount: Math.max(0, Number(resolver.currentCount ?? 0)) + 1 };
+  }
+  if (resolver.kind === "mlb_webhook_player_event_at_most") {
+    if (!aliases.has(resolver.event)) {
+      return null;
+    }
+    if (!resolverPlayerMatchesEventName(resolver.player, event.playerName)) {
+      return null;
+    }
+    return { ...resolver, currentCount: Math.max(0, Number(resolver.currentCount ?? 0)) + 1 };
+  }
+  if (resolver.kind === "mlb_webhook_team_event_at_least") {
+    if (!teamSide || resolver.team !== teamSide) {
+      return null;
+    }
+    if (resolver.event === "quick_out_under_3_pitches") {
+      if (!isOutEvent(event.eventType)) {
+        return null;
+      }
+      if (!Number.isFinite(event.pitchCount) || Number(event.pitchCount) >= 3) {
+        return null;
+      }
+      return { ...resolver, currentCount: Math.max(0, Number(resolver.currentCount ?? 0)) + 1 };
+    }
+    if (!aliases.has(resolver.event)) {
+      return null;
+    }
+    return { ...resolver, currentCount: Math.max(0, Number(resolver.currentCount ?? 0)) + 1 };
+  }
+  return null;
+}
+
+export async function applyMlbWebhookPropEvent(event: MlbWebhookBingoEvent): Promise<{ updatedSquares: number; completedSquares: number }> {
+  assertSupabaseConfigured();
+
+  const gameId = String(event.gameId ?? "").trim();
+  const playerName = String(event.playerName ?? "").trim();
+  const teamName = String(event.teamName ?? "").trim();
+  if (!gameId || !playerName || !teamName) {
+    return { updatedSquares: 0, completedSquares: 0 };
+  }
+
+  const rows = await listCardRows({
+    activeOnly: true,
+    sportKey: "baseball_mlb",
+    gameId,
+    limit: 300,
+  });
+  if (rows.length === 0) {
+    return { updatedSquares: 0, completedSquares: 0 };
+  }
+
+  let updatedSquares = 0;
+  let completedSquares = 0;
+  const nowIso = new Date().toISOString();
+
+  for (const { card, squares } of rows) {
+    const teamSide = resolveTeamSideFromEvent(card, teamName);
+    for (const square of squares) {
+      if (square.status !== "pending" || square.is_free) {
+        continue;
+      }
+      const resolver = parseResolver(square.resolver);
+      if (!resolver) {
+        continue;
+      }
+      const updatedResolver = applyWebhookCountToResolver(resolver, event, teamSide);
+      if (!updatedResolver) {
+        continue;
+      }
+
+      let nextStatus: SquareStatus = square.status;
+      let resolvedAt = square.resolved_at;
+      if (updatedResolver.kind === "mlb_webhook_player_event_at_least" || updatedResolver.kind === "mlb_webhook_team_event_at_least") {
+        const current = Math.max(0, Number(updatedResolver.currentCount ?? 0));
+        const target = Math.max(1, Number(updatedResolver.threshold ?? 1));
+        if (current >= target) {
+          nextStatus = "hit";
+          resolvedAt = nowIso;
+          completedSquares += 1;
+        }
+      } else if (updatedResolver.kind === "mlb_webhook_player_event_at_most") {
+        const current = Math.max(0, Number(updatedResolver.currentCount ?? 0));
+        const maxAllowed = Math.max(0, Number(updatedResolver.threshold ?? 0));
+        if (current > maxAllowed) {
+          nextStatus = "miss";
+          resolvedAt = nowIso;
+          completedSquares += 1;
+        }
+      }
+
+      const { error } = await supabaseAdmin!
+        .from("sports_bingo_squares")
+        .update({
+          resolver: updatedResolver,
+          status: nextStatus,
+          resolved_at: nextStatus === "pending" ? null : resolvedAt,
+        })
+        .eq("id", square.id);
+      if (!error) {
+        updatedSquares += 1;
+      }
+    }
+  }
+
+  return { updatedSquares, completedSquares };
 }
 
 async function getScoresBySportKey(sportKey: string): Promise<Map<string, ScoreSnapshot>> {
@@ -5187,6 +5811,9 @@ export async function createSportsBingoCard(params: {
     throw new Error("Games are locked once they begin. Select a game that has not started.");
   }
 
+  // Regrade stale active cards first so slot checks reflect current reality.
+  await refreshSportsBingoProgress({ userId, limit: 100, bypassCache: true });
+
   const byKey = new Map(entry.candidates.map((candidate) => [candidate.key, candidate]));
 
   const boardSquares: Array<{ index: number; template: SportsBingoSquareTemplate | null; isFree: boolean }> = [];
@@ -5226,11 +5853,15 @@ export async function createSportsBingoCard(params: {
     }))
   );
 
+  const activeWindowStartIso = new Date(Date.now() - ACTIVE_CARD_SLOT_BUFFER_HOURS * 60 * 60 * 1000).toISOString();
+
   const { count: activeCount } = await supabaseAdmin!
     .from("sports_bingo_cards")
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
-    .eq("status", "active");
+    .eq("venue_id", venueId)
+    .eq("status", "active")
+    .gt("starts_at", activeWindowStartIso);
 
   // Missing-table errors surface as null counts in the SDK call path above.
   // Detect explicitly before proceeding so users see a clear migration message.
@@ -5247,8 +5878,10 @@ export async function createSportsBingoCard(params: {
     .from("sports_bingo_cards")
     .select("id")
     .eq("user_id", userId)
+    .eq("venue_id", venueId)
     .eq("game_id", gameId)
     .eq("status", "active")
+    .gt("starts_at", activeWindowStartIso)
     .limit(1);
 
   if ((existingSameGame?.length ?? 0) > 0) {

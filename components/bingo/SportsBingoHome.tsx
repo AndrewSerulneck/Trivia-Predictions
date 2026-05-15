@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import type { TouchEvent as ReactTouchEvent } from "react";
+import { createPortal } from "react-dom";
 import { getUserId } from "@/lib/storage";
 import { getVenueId } from "@/lib/storage";
 import { supabase } from "@/lib/supabase";
@@ -11,6 +12,7 @@ import { consumeBingoPrefetchCache } from "@/lib/bingoPrefetchCache";
 import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
+import { ActionPop, type ActionPopTone } from "@/components/bingo/ActionPop";
 
 type BingoCardSquare = {
   id: string;
@@ -21,6 +23,7 @@ type BingoCardSquare = {
   isFree: boolean;
   status: "pending" | "hit" | "miss" | "void" | "replaced";
   resolvedAt?: string;
+  propProgress?: { current: number; target: number; unit: string };
 };
 
 type BingoCard = {
@@ -55,6 +58,40 @@ type ClaimResponse = {
     rewardPoints: number;
   };
   error?: string;
+};
+
+type LivePlayerStatRealtimeRow = {
+  game_id: string;
+  player_id: number;
+  player_name: string;
+  game_status: string;
+  pts: number;
+  ast: number;
+  reb: number;
+  stl: number;
+  blk: number;
+  turnovers: number;
+  total_fantasy_points: number;
+  sport_key?: string;
+  stat_type?: string;
+  value?: number;
+};
+
+type ActionPopItem = {
+  id: string;
+  text: string;
+  tone: ActionPopTone;
+  x: number;
+  y: number;
+};
+
+type VisualEngagementEvent = {
+  text: string;
+  tone: ActionPopTone;
+  squareKey?: string;
+  cardId?: string;
+  shouldShake?: boolean;
+  majorGlow?: boolean;
 };
 
 const LINE_PATTERNS: number[][] = [
@@ -147,6 +184,16 @@ function toTimestamp(value?: string): number {
   return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
 }
 
+function normalizeKey(value: string): string {
+  return String(value ?? "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9\s]/g, " ")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function compareCardsEarliestToLatest(a: BingoCard, b: BingoCard): number {
   const startsDelta = toTimestamp(a.startsAt) - toTimestamp(b.startsAt);
   if (startsDelta !== 0) {
@@ -178,13 +225,13 @@ function compareCardsLatestToEarliest(a: BingoCard, b: BingoCard): number {
 function collectUpdatedSquareChanges(
   previousCards: BingoCard[],
   nextCards: BingoCard[]
-): Array<{ key: string; status: BingoCardSquare["status"] }> {
+): Array<{ squareKey: string; resolverKey: string; status: BingoCardSquare["status"] }> {
   const previousByCardId = new Map<string, BingoCard>();
   for (const card of previousCards) {
     previousByCardId.set(card.id, card);
   }
 
-  const updates: Array<{ key: string; status: BingoCardSquare["status"] }> = [];
+  const updates: Array<{ squareKey: string; resolverKey: string; status: BingoCardSquare["status"] }> = [];
   for (const nextCard of nextCards) {
     const previousCard = previousByCardId.get(nextCard.id);
     if (!previousCard) {
@@ -200,7 +247,11 @@ function collectUpdatedSquareChanges(
         continue;
       }
       if (previousSquare.status !== nextSquare.status) {
-        updates.push({ key: toCardSquareKey(nextCard.id, nextSquare.index), status: nextSquare.status });
+        updates.push({
+          squareKey: toCardSquareKey(nextCard.id, nextSquare.index),
+          resolverKey: String(nextSquare.key ?? ""),
+          status: nextSquare.status,
+        });
       }
     }
   }
@@ -259,11 +310,62 @@ function summarizeCardState(card: BingoCard): {
   return { hitCount, nearWin, completedLines };
 }
 
+function classifyLiveDeltaEvent(previous: LivePlayerStatRealtimeRow, next: LivePlayerStatRealtimeRow): VisualEngagementEvent[] {
+  const events: VisualEngagementEvent[] = [];
+  const sportKey = String(next.sport_key ?? "").toLowerCase();
+  const statType = String(next.stat_type ?? "").toLowerCase();
+  const prevValue = Number(previous.value ?? previous.total_fantasy_points ?? 0);
+  const nextValue = Number(next.value ?? next.total_fantasy_points ?? 0);
+  const valueDelta = nextValue - prevValue;
+
+  const ptsDelta = Number(next.pts ?? 0) - Number(previous.pts ?? 0);
+  const stlDelta = Number(next.stl ?? 0) - Number(previous.stl ?? 0);
+  const blkDelta = Number(next.blk ?? 0) - Number(previous.blk ?? 0);
+  const astDelta = Number(next.ast ?? 0) - Number(previous.ast ?? 0);
+  const rebDelta = Number(next.reb ?? 0) - Number(previous.reb ?? 0);
+
+  const isHomeRunEvent =
+    statType.includes("home_run") ||
+    statType.includes("home-run") ||
+    (sportKey.includes("baseball") && statType.includes("hr"));
+  const isTouchdownEvent = statType.includes("touchdown") || statType.includes("td");
+  const isStrikeoutEvent = statType.includes("strikeout") || statType.includes("k");
+
+  if (isHomeRunEvent && valueDelta >= 1) {
+    events.push({ text: "HOME RUN!", tone: "gold", shouldShake: true, majorGlow: true });
+  }
+  if (isTouchdownEvent && valueDelta >= 1) {
+    events.push({ text: "TOUCHDOWN!", tone: "gold", majorGlow: true });
+  }
+  if (ptsDelta >= 3) {
+    events.push({ text: "3-POINTER!", tone: "gold", majorGlow: true });
+  }
+  if (blkDelta >= 1) {
+    events.push({ text: "BLOCK!", tone: "cyan" });
+  }
+  if (stlDelta >= 1) {
+    events.push({ text: "STEAL!", tone: "cyan" });
+  }
+  if (isStrikeoutEvent && valueDelta >= 1) {
+    events.push({ text: "STRIKEOUT!", tone: "cyan" });
+  }
+
+  if (events.length === 0) {
+    const scoreDelta = Math.max(valueDelta, ptsDelta, astDelta * 1.5, rebDelta * 1.2);
+    if (scoreDelta >= 0.5) {
+      events.push({ text: `+${scoreDelta.toFixed(0)} PTS`, tone: "cyan" });
+    }
+  }
+
+  return events;
+}
+
 function renderCompactGrid(
   cardId: string,
   squares: BingoCardSquare[],
   recentlyUpdatedSquareKeys: ReadonlySet<string>,
-  recentlySucceededSquareKeys: ReadonlySet<string>
+  recentlySucceededSquareKeys: ReadonlySet<string>,
+  glowingSquareKeys: ReadonlySet<string>
 ) {
   const byIndex = new Map<number, BingoCardSquare>();
   for (const square of squares) {
@@ -283,10 +385,16 @@ function renderCompactGrid(
         const squareKey = toCardSquareKey(cardId, index);
         const shouldPop = recentlyUpdatedSquareKeys.has(squareKey);
         const isSuccessPop = recentlySucceededSquareKeys.has(squareKey);
+        const isGlowing = glowingSquareKeys.has(squareKey);
+        const progressText =
+          square.propProgress && square.status === "pending"
+            ? `${Math.min(square.propProgress.current, square.propProgress.target)}/${square.propProgress.target}`
+            : "";
         return (
           <div
             key={index}
             title={square.label}
+            data-bingo-square-key={squareKey}
             className={`relative flex h-10 items-center justify-center rounded-md border px-1 text-center text-[9px] font-bold leading-tight [font-family:'Bree_Serif','Nunito',serif] ${getCardSquareStyle(
               square.status,
               isFree
@@ -298,8 +406,19 @@ function renderCompactGrid(
                 : ""
             }`}
           >
+            <span
+              className={`pointer-events-none absolute inset-0 rounded-md bg-cyan-300/35 blur-[1px] transition duration-200 ${
+                isGlowing ? "scale-110 opacity-100" : "scale-95 opacity-0"
+              }`}
+              style={{ willChange: "transform, opacity" }}
+            />
             {renderSquareStatusGlyph(square)}
-            {isFree ? "FREE" : shortenLabel(square.label)}
+            <span>{isFree ? "FREE" : shortenLabel(square.label)}</span>
+            {progressText ? (
+              <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 text-[8px] font-black text-cyan-900/85">
+                {progressText}
+              </span>
+            ) : null}
           </div>
         );
       })}
@@ -312,7 +431,8 @@ function renderExpandedGrid(
   cardId: string,
   squares: BingoCardSquare[],
   recentlyUpdatedSquareKeys: ReadonlySet<string>,
-  recentlySucceededSquareKeys: ReadonlySet<string>
+  recentlySucceededSquareKeys: ReadonlySet<string>,
+  glowingSquareKeys: ReadonlySet<string>
 ) {
   const byIndex = new Map<number, BingoCardSquare>();
   for (const square of squares) {
@@ -332,9 +452,15 @@ function renderExpandedGrid(
           const squareKey = toCardSquareKey(cardId, index);
           const shouldPop = recentlyUpdatedSquareKeys.has(squareKey);
           const isSuccessPop = recentlySucceededSquareKeys.has(squareKey);
+          const isGlowing = glowingSquareKeys.has(squareKey);
+          const progressText =
+            square.propProgress && square.status === "pending"
+              ? `${Math.min(square.propProgress.current, square.propProgress.target)}/${square.propProgress.target}`
+              : "";
           return (
             <div
               key={index}
+                data-bingo-square-key={squareKey}
                 className={`relative flex min-h-[72px] items-center justify-center rounded-lg border px-1.5 py-1.5 text-center text-[10px] font-bold leading-tight [font-family:'Bree_Serif','Nunito',serif] sm:min-h-[82px] sm:px-2 sm:py-2 sm:text-[11px] ${getCardSquareStyle(
                 square.status,
                 isFree
@@ -346,8 +472,19 @@ function renderExpandedGrid(
                   : ""
               }`}
             >
+              <span
+                className={`pointer-events-none absolute inset-0 rounded-lg bg-cyan-300/35 blur-[1px] transition duration-200 ${
+                  isGlowing ? "scale-110 opacity-100" : "scale-95 opacity-0"
+                }`}
+                style={{ willChange: "transform, opacity" }}
+              />
               {renderSquareStatusGlyph(square)}
-              {isFree ? "FREE" : square.label}
+              <span>{isFree ? "FREE" : square.label}</span>
+              {progressText ? (
+                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-black text-cyan-900/85 sm:text-[10px]">
+                  {progressText}
+                </span>
+              ) : null}
             </div>
           );
         })}
@@ -375,6 +512,7 @@ function LoadingState({ label }: { label: string }) {
 }
 
 export function SportsBingoHome() {
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const [userId, setUserId] = useState("");
   const [venueId, setVenueId] = useState("");
   const [cards, setCards] = useState<BingoCard[]>([]);
@@ -389,9 +527,20 @@ export function SportsBingoHome() {
   const [showBoardLimitMessage, setShowBoardLimitMessage] = useState(false);
   const [lastRealtimeMessageAt, setLastRealtimeMessageAt] = useState<number | null>(null);
   const [isRealtimeFresh, setIsRealtimeFresh] = useState(false);
+  const [actionPops, setActionPops] = useState<ActionPopItem[]>([]);
+  const [glowCardIds, setGlowCardIds] = useState<Set<string>>(new Set());
+  const [glowSquareKeys, setGlowSquareKeys] = useState<Set<string>>(new Set());
+  const [isScreenShaking, setIsScreenShaking] = useState(false);
   const prefetchUsedRef = useRef(false);
   const clearSquarePopTimerRef = useRef<number | null>(null);
   const kickoffRefreshTimerRef = useRef<number | null>(null);
+  const screenShakeTimerRef = useRef<number | null>(null);
+  const glowSquareTimersRef = useRef<Map<string, number>>(new Map());
+  const glowCardTimersRef = useRef<Map<string, number>>(new Map());
+  const actionPopTimersRef = useRef<number[]>([]);
+  const nextActionPopAtRef = useRef<number>(0);
+  const liveStatsPrevByPlayerRef = useRef<Map<string, LivePlayerStatRealtimeRow>>(new Map());
+  const actionPopCounterRef = useRef(0);
   const swipeViewportRef = useRef<HTMLDivElement | null>(null);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
@@ -434,6 +583,155 @@ export function SportsBingoHome() {
     };
   }, []);
 
+  const triggerScreenShake = useCallback(() => {
+    setIsScreenShaking(true);
+    if (screenShakeTimerRef.current) {
+      window.clearTimeout(screenShakeTimerRef.current);
+    }
+    screenShakeTimerRef.current = window.setTimeout(() => {
+      setIsScreenShaking(false);
+      screenShakeTimerRef.current = null;
+    }, 200);
+  }, []);
+
+  const pulseSquareGlow = useCallback((squareKey: string) => {
+    if (!squareKey) return;
+    setGlowSquareKeys((current) => {
+      const next = new Set(current);
+      next.add(squareKey);
+      return next;
+    });
+    const existing = glowSquareTimersRef.current.get(squareKey);
+    if (existing) {
+      window.clearTimeout(existing);
+    }
+    const timer = window.setTimeout(() => {
+      setGlowSquareKeys((current) => {
+        const next = new Set(current);
+        next.delete(squareKey);
+        return next;
+      });
+      glowSquareTimersRef.current.delete(squareKey);
+    }, 700);
+    glowSquareTimersRef.current.set(squareKey, timer);
+  }, []);
+
+  const pulseCardGlow = useCallback((cardId: string) => {
+    if (!cardId) return;
+    setGlowCardIds((current) => {
+      const next = new Set(current);
+      next.add(cardId);
+      return next;
+    });
+    const existing = glowCardTimersRef.current.get(cardId);
+    if (existing) {
+      window.clearTimeout(existing);
+    }
+    const timer = window.setTimeout(() => {
+      setGlowCardIds((current) => {
+        const next = new Set(current);
+        next.delete(cardId);
+        return next;
+      });
+      glowCardTimersRef.current.delete(cardId);
+    }, 700);
+    glowCardTimersRef.current.set(cardId, timer);
+  }, []);
+
+  const findRelevantSquareForEvent = useCallback(
+    (playerName: string, text: string): { squareKey?: string; cardId?: string } => {
+      const playerKey = normalizeKey(playerName);
+      const playerTokens = playerKey.split(" ").filter(Boolean);
+      const lastName = playerTokens[playerTokens.length - 1] ?? "";
+      const textKey = normalizeKey(text);
+
+      for (const card of cards) {
+        for (const square of card.squares) {
+          if (square.status === "hit" || square.status === "miss" || square.status === "void") {
+            continue;
+          }
+          const labelKey = normalizeKey(square.label);
+          if (!labelKey) continue;
+          const hasPlayerMatch =
+            (playerKey && labelKey.includes(playerKey)) || (lastName && labelKey.includes(lastName));
+          if (!hasPlayerMatch) {
+            continue;
+          }
+          if (textKey.includes("3 pointer") && !labelKey.includes("3")) continue;
+          if (textKey.includes("block") && !labelKey.includes("block")) continue;
+          if (textKey.includes("steal") && !labelKey.includes("steal")) continue;
+          if (textKey.includes("home run") && !labelKey.includes("home run")) continue;
+          return { squareKey: toCardSquareKey(card.id, square.index), cardId: card.id };
+        }
+      }
+      return {};
+    },
+    [cards]
+  );
+
+  const findActionAnchor = useCallback((event: VisualEngagementEvent): { x: number; y: number } => {
+    const escapeKey = (value: string) => value.replaceAll('"', '\\"');
+    if (event.squareKey) {
+      const squareEl = document.querySelector<HTMLElement>(`[data-bingo-square-key="${escapeKey(event.squareKey)}"]`);
+      if (squareEl) {
+        const rect = squareEl.getBoundingClientRect();
+        return { x: rect.left + rect.width * 0.5, y: rect.top + rect.height * 0.35 };
+      }
+    }
+    if (event.cardId) {
+      const cardEl = document.querySelector<HTMLElement>(`[data-bingo-card-id="${escapeKey(event.cardId)}"]`);
+      if (cardEl) {
+        const rect = cardEl.getBoundingClientRect();
+        return { x: rect.left + rect.width * 0.5, y: rect.top + 34 };
+      }
+    }
+    const rootRect = rootRef.current?.getBoundingClientRect();
+    if (rootRect) {
+      return { x: rootRect.left + rootRect.width * 0.5, y: rootRect.top + 80 };
+    }
+    return { x: window.innerWidth * 0.5, y: window.innerHeight * 0.3 };
+  }, []);
+
+  const queueVisualEvents = useCallback(
+    (events: VisualEngagementEvent[]) => {
+      if (events.length === 0) {
+        return;
+      }
+      for (const event of events) {
+        const now = Date.now();
+        const startAt = Math.max(now, nextActionPopAtRef.current);
+        const delayMs = Math.max(0, startAt - now);
+        nextActionPopAtRef.current = startAt + 100;
+        const timerId = window.setTimeout(() => {
+          const anchor = findActionAnchor(event);
+          actionPopCounterRef.current += 1;
+          const id = `bingo-pop-${Date.now()}-${actionPopCounterRef.current}`;
+          setActionPops((current) => [
+            ...current,
+            {
+              id,
+              text: event.text,
+              tone: event.tone,
+              x: anchor.x,
+              y: anchor.y,
+            },
+          ]);
+          if (event.squareKey) {
+            pulseSquareGlow(event.squareKey);
+          }
+          if (event.cardId && event.majorGlow) {
+            pulseCardGlow(event.cardId);
+          }
+          if (event.shouldShake) {
+            triggerScreenShake();
+          }
+        }, delayMs);
+        actionPopTimersRef.current.push(timerId);
+      }
+    },
+    [findActionAnchor, pulseCardGlow, pulseSquareGlow, triggerScreenShake]
+  );
+
   useEffect(() => {
     return () => {
       if (clearSquarePopTimerRef.current) {
@@ -442,50 +740,99 @@ export function SportsBingoHome() {
       if (kickoffRefreshTimerRef.current) {
         window.clearTimeout(kickoffRefreshTimerRef.current);
       }
+      if (screenShakeTimerRef.current) {
+        window.clearTimeout(screenShakeTimerRef.current);
+      }
+      for (const timer of actionPopTimersRef.current) {
+        window.clearTimeout(timer);
+      }
+      actionPopTimersRef.current = [];
+      for (const timer of glowSquareTimersRef.current.values()) {
+        window.clearTimeout(timer);
+      }
+      glowSquareTimersRef.current.clear();
+      for (const timer of glowCardTimersRef.current.values()) {
+        window.clearTimeout(timer);
+      }
+      glowCardTimersRef.current.clear();
     };
   }, []);
 
-  const queueSquarePop = useCallback((updates: Array<{ key: string; status: BingoCardSquare["status"] }>) => {
-    if (updates.length === 0) {
-      return;
-    }
-    const keys = updates.map((item) => item.key);
-    const successKeys = updates.filter((item) => item.status === "hit").map((item) => item.key);
-
-    setRecentlyUpdatedSquareKeys((current) => {
-      const next = new Set(current);
-      for (const key of keys) {
-        next.add(key);
+  const queueSquarePop = useCallback(
+    (updates: Array<{ squareKey: string; resolverKey: string; status: BingoCardSquare["status"] }>) => {
+      if (updates.length === 0) {
+        return;
       }
-      return next;
-    });
-    if (successKeys.length > 0) {
-      setRecentlySucceededSquareKeys((current) => {
+      const keys = updates.map((item) => item.squareKey);
+      const successKeys = updates.filter((item) => item.status === "hit").map((item) => item.squareKey);
+
+      setRecentlyUpdatedSquareKeys((current) => {
         const next = new Set(current);
-        for (const key of successKeys) {
+        for (const key of keys) {
           next.add(key);
         }
         return next;
       });
-      window.dispatchEvent(
-        new CustomEvent("tp:success-particles", {
-          detail: {
-            source: "bingo-square",
-            squareKeys: successKeys,
-          },
+      if (successKeys.length > 0) {
+        setRecentlySucceededSquareKeys((current) => {
+          const next = new Set(current);
+          for (const key of successKeys) {
+            next.add(key);
+          }
+          return next;
+        });
+        window.dispatchEvent(
+          new CustomEvent("tp:success-particles", {
+            detail: {
+              source: "bingo-square",
+              squareKeys: successKeys,
+            },
+          })
+        );
+      }
+
+      queueVisualEvents(
+        updates.map((item) => {
+          const [cardId] = item.squareKey.split(":");
+          const isPropSquare = item.resolverKey.startsWith("mlb_webhook_");
+          if (item.status === "hit") {
+            return {
+              text: isPropSquare ? "PROP COMPLETED!" : "BINGO HIT!",
+              tone: "gold" as const,
+              squareKey: item.squareKey,
+              cardId,
+              majorGlow: true,
+              shouldShake: isPropSquare,
+            };
+          }
+          if (item.status === "miss") {
+            return {
+              text: "MISS",
+              tone: "cyan" as const,
+              squareKey: item.squareKey,
+              cardId,
+            };
+          }
+          return {
+            text: "UPDATE",
+            tone: "cyan" as const,
+            squareKey: item.squareKey,
+            cardId,
+          };
         })
       );
-    }
 
-    if (clearSquarePopTimerRef.current) {
-      window.clearTimeout(clearSquarePopTimerRef.current);
-    }
-    clearSquarePopTimerRef.current = window.setTimeout(() => {
-      setRecentlyUpdatedSquareKeys(new Set());
-      setRecentlySucceededSquareKeys(new Set());
-      clearSquarePopTimerRef.current = null;
-    }, 2200);
-  }, []);
+      if (clearSquarePopTimerRef.current) {
+        window.clearTimeout(clearSquarePopTimerRef.current);
+      }
+      clearSquarePopTimerRef.current = window.setTimeout(() => {
+        setRecentlyUpdatedSquareKeys(new Set());
+        setRecentlySucceededSquareKeys(new Set());
+        clearSquarePopTimerRef.current = null;
+      }, 2200);
+    },
+    [queueVisualEvents]
+  );
 
   const loadCards = useCallback(async ({ background = false, refreshProgress = true }: { background?: boolean; refreshProgress?: boolean } = {}) => {
     if (!userId) {
@@ -551,6 +898,7 @@ export function SportsBingoHome() {
   }, [lastRealtimeMessageAt]);
 
   const subscribedCardIds = useMemo(() => Array.from(new Set(cards.map((card) => card.id).filter(Boolean))), [cards]);
+  const subscribedGameIds = useMemo(() => Array.from(new Set(cards.map((card) => card.gameId).filter(Boolean))), [cards]);
   const subscribedCardFilter = useMemo(() => {
     if (subscribedCardIds.length === 0) {
       return "";
@@ -624,6 +972,60 @@ export function SportsBingoHome() {
       }
     };
   }, [loadCards, subscribedCardFilter, subscribedCardIds.length, userId]);
+
+  useEffect(() => {
+    if (!supabase || subscribedGameIds.length === 0) {
+      return;
+    }
+    const client = supabase;
+    let active = true;
+    const gameIdSet = new Set(subscribedGameIds);
+
+    const liveChannel = client
+      .channel(`bingo-live-events:${userId || "anon"}:${subscribedGameIds.length}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "live_player_stats" }, (payload) => {
+        if (!active) return;
+        const next = (payload.new ?? null) as LivePlayerStatRealtimeRow | null;
+        if (!next) return;
+        const gameId = String(next.game_id ?? "").trim();
+        if (!gameIdSet.has(gameId)) {
+          return;
+        }
+        const playerId = Number(next.player_id ?? 0);
+        if (!Number.isFinite(playerId) || playerId <= 0) {
+          return;
+        }
+        const mapKey = `${gameId}:${playerId}`;
+        const previous = liveStatsPrevByPlayerRef.current.get(mapKey);
+        liveStatsPrevByPlayerRef.current.set(mapKey, next);
+        if (!previous) {
+          return;
+        }
+
+        const baseEvents = classifyLiveDeltaEvent(previous, next);
+        if (baseEvents.length === 0) {
+          return;
+        }
+
+        const events: VisualEngagementEvent[] = [];
+        for (const base of baseEvents) {
+          const relevance = findRelevantSquareForEvent(next.player_name, base.text);
+          events.push({
+            ...base,
+            squareKey: relevance.squareKey,
+            cardId: relevance.cardId ?? cards[0]?.id,
+          });
+        }
+        queueVisualEvents(events);
+      })
+      .subscribe();
+
+    return () => {
+      active = false;
+      void client.removeChannel(liveChannel);
+      liveStatsPrevByPlayerRef.current.clear();
+    };
+  }, [cards, findRelevantSquareForEvent, queueVisualEvents, subscribedGameIds, userId]);
 
   const goToScreen = useCallback((screen: BingoScreenIndex) => {
     const viewport = swipeViewportRef.current;
@@ -911,7 +1313,7 @@ export function SportsBingoHome() {
   };
 
   return (
-    <div className="space-y-4">
+    <div ref={rootRef} className={`space-y-4 ${isScreenShaking ? "tp-bingo-screen-shake" : ""}`}>
       <VenueEntryRulesPanel
         gameKey="bingo"
         shouldDisplay={Boolean(userId) && !loadingCards && activeCards.length === 0}
@@ -1040,10 +1442,11 @@ export function SportsBingoHome() {
                   return (
                     <li
                       key={card.id}
+                      data-bingo-card-id={card.id}
                       onClick={() => {
                         setExpandedActiveCardId(card.id);
                       }}
-                      className="cursor-pointer rounded-xl border border-slate-200 bg-slate-50 p-3 transition-all hover:shadow-md hover:shadow-slate-300/60"
+                      className="relative cursor-pointer rounded-xl border border-slate-200 bg-slate-50 p-3 transition-all hover:shadow-md hover:shadow-slate-300/60"
                       style={{
                         touchAction: "pan-y",
                         WebkitTouchCallout: "none",
@@ -1051,6 +1454,12 @@ export function SportsBingoHome() {
                         userSelect: "none",
                       }}
                     >
+                      <span
+                        className={`pointer-events-none absolute inset-0 rounded-xl bg-cyan-300/30 transition duration-200 ${
+                          glowCardIds.has(card.id) ? "scale-105 opacity-100" : "scale-95 opacity-0"
+                        }`}
+                        style={{ willChange: "transform, opacity" }}
+                      />
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <p className="text-sm font-semibold text-slate-900">{card.gameLabel}</p>
                         <span className="rounded-full bg-blue-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-blue-700">
@@ -1058,7 +1467,15 @@ export function SportsBingoHome() {
                         </span>
                       </div>
                       <p className="mt-1 text-xs text-slate-600">Starts {formatLocalDateTime(card.startsAt)}</p>
-                      <div className="mt-2">{renderCompactGrid(card.id, card.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys)}</div>
+                      <div className="mt-2">
+                        {renderCompactGrid(
+                          card.id,
+                          card.squares,
+                          recentlyUpdatedSquareKeys,
+                          recentlySucceededSquareKeys,
+                          glowSquareKeys
+                        )}
+                      </div>
                     </li>
                   );
                 })}
@@ -1091,6 +1508,7 @@ export function SportsBingoHome() {
               return (
                 <li
                   key={card.id}
+                  data-bingo-card-id={card.id}
                   className={`rounded-xl border p-3 ${
                     showClaimOverlay
                       ? "cursor-pointer border-emerald-300 bg-emerald-50 ring-2 ring-emerald-400 animate-pulse"
@@ -1124,7 +1542,13 @@ export function SportsBingoHome() {
                   </p>
                   {card.status === "won" ? (
                     <div className="relative mt-2">
-                      {renderCompactGrid(card.id, card.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys)}
+                      {renderCompactGrid(
+                        card.id,
+                        card.squares,
+                        recentlyUpdatedSquareKeys,
+                        recentlySucceededSquareKeys,
+                        glowSquareKeys
+                      )}
                       {showClaimOverlay ? (
                         <>
                           <div className="pointer-events-none absolute inset-0 rounded-lg bg-slate-900/10" />
@@ -1201,7 +1625,13 @@ export function SportsBingoHome() {
               </button>
             </div>
             <p className="mb-2 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-cyan-700">Active Board</p>
-            {renderExpandedGrid(expandedActiveCard.id, expandedActiveCard.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys)}
+            {renderExpandedGrid(
+              expandedActiveCard.id,
+              expandedActiveCard.squares,
+              recentlyUpdatedSquareKeys,
+              recentlySucceededSquareKeys,
+              glowSquareKeys
+            )}
           </div>
         </div>
       ) : null}
@@ -1232,10 +1662,61 @@ export function SportsBingoHome() {
             <p className="mb-2 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-cyan-700">
               Final Score Board
             </p>
-            {renderExpandedGrid(expandedFinalCard.id, expandedFinalCard.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys)}
+            {renderExpandedGrid(
+              expandedFinalCard.id,
+              expandedFinalCard.squares,
+              recentlyUpdatedSquareKeys,
+              recentlySucceededSquareKeys,
+              glowSquareKeys
+            )}
           </div>
         </div>
       ) : null}
+      {typeof document !== "undefined"
+        ? createPortal(
+            <div className="pointer-events-none fixed inset-0 z-[2400]" aria-hidden="true">
+              {actionPops.map((pop) => (
+                <ActionPop
+                  key={pop.id}
+                  text={pop.text}
+                  x={pop.x}
+                  y={pop.y}
+                  tone={pop.tone}
+                  onDone={() => {
+                    setActionPops((current) => current.filter((item) => item.id !== pop.id));
+                  }}
+                />
+              ))}
+            </div>,
+            document.body
+          )
+        : null}
+      <style jsx global>{`
+        @keyframes tp-bingo-screen-shake {
+          0% {
+            transform: translate3d(0, 0, 0);
+          }
+          20% {
+            transform: translate3d(-1px, 0, 0);
+          }
+          40% {
+            transform: translate3d(1px, 0, 0);
+          }
+          60% {
+            transform: translate3d(-1px, 0, 0);
+          }
+          80% {
+            transform: translate3d(1px, 0, 0);
+          }
+          100% {
+            transform: translate3d(0, 0, 0);
+          }
+        }
+        .tp-bingo-screen-shake {
+          animation: tp-bingo-screen-shake 200ms linear;
+          will-change: transform;
+        }
+      `}</style>
     </div>
   );
 }

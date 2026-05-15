@@ -1322,6 +1322,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                           id="username"
                           type="text"
                           enterKeyHint="next"
+                          autoFocus
                           value={username}
                           onChange={(e) => setUsername(e.target.value)}
                           onKeyDown={(e) => {

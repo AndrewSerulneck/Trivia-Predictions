@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+
+
+<html lang="en">
+
+<head> <!--######## Header ########-->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Free Sports API Documentation">
+    <meta name="author" content="TheSportsDB.com">
+    <title>TheSportsDB Free Sports API Documentation - TheSportsDB.com</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+<link href="/css/font-awesome.min.css" rel="stylesheet">
+<link href="/css/main2.css" rel="stylesheet">
+<meta name="insight-app-sec-validation" content="b724337f-e21c-4197-a250-1172b24ad088">
+<link rel="apple-touch-icon" sizes="57x57" href="/images/ico/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="/images/ico/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="/images/ico/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="/images/ico/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="/images/ico/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/images/ico/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="/images/ico/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/images/ico/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/images/ico/apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/images/ico/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/ico/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/images/ico/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/images/ico/favicon-16x16.png">
+<link rel="manifest" href="/images/ico/manifest.json">
+
+<!-- Stats Script 
+<script
+    src="https://app.rybbit.io/api/script.js"
+    data-site-id="a4e06f799a48"
+    defer></script>
+-->    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/json.min.js"></script>
+    <script>
+        hljs.highlightAll();
+    </script>
+</head> <!--######## Header ########-->
+
+<body class="homepage">
+
+    <!-- Navbar -->
+
+<nav class="navbar navbar-expand-lg navbar-inverse navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="/"><img src="/images/svg/site_logo_dark.svg" alt="website logo" width="245" height="75"></a>
+        <!-- Burger Menu -->
+        <button class="navbar-toggler collapsed navbar-inverse" type="button" data-bs-toggle="collapse" data-bs-target="#mynavbar" aria-expanded="false">
+            <span class="navbar-toggler-icon white"></span>
+        </button>
+        <!-- Large Menu -->
+        <div class="navbar-collapse collapse" id="mynavbar">
+            <ul class="navbar-nav ms-auto">
+                <!-- Browse Dropdown -->
+                <li class=" nav-item dropdown dropdown-menu-dark nav-item">
+                    <a href="#" class="dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">Data</a>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li class='py-2'><a href="/activity">Site Activity</a></li>
+                        <li class='py-2'><a href="/sport/leagues">Browse Leagues</a></li>
+                        <!-- <li class='py-2'><a href="/browse_teams">Teams</a></li> -->
+                        <li class='py-2'><a href="/browse_venues">Browse Venues</a></li>
+                        <!-- <li class='py-2'><a href="/browse_players">Players</a></li> -->
+                        <!-- <li class='py-2'><a href="/browse_seasons">Seasons</a></li> -->
+                        <li class='py-2'><a href="/browse_collections">Browse Collections</a></li>
+                        <li class='py-2'><a href="/browse_honours">Browse Honours</a></li>
+                        <li class='py-2'><a href="/browse_milestones">Browse Milestones</a></li>
+                        <!-- <li class='py-2'><a href="/browse_events">Events</a></li> -->
+                        <li class='py-2'><a href="/browse_tv">TV Sport Listings</a></li>
+                        <li class='py-2'><a href="/browse_calendar">Sport Calendar</a></li>
+                        <li class='py-2'><a href="/browse_highlights">Event Highlights</a></li>
+                    </ul>
+                </li>
+
+                <!-- Contribute Dropdown -->
+                <li class="nav-item dropdown nav-item">
+                    <a href='#' class="dropdown-toggle" type="button" id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">Edit</a>
+                    <ul class="dropdown-menu dropdown-menu-dark px-1">
+                        <li class='py-2'><a href="/contribute_guide">Contribute Guide</a></li>
+                        <li class='py-2'><a href="https://www.thesportsdb.com/forum_topic.php?t=5726">Apply Editor</a></li>
+                        <li class='py-2'><a href="/player_birthday">Player Birthdays</a></li>
+                        <li class='py-2'><a href="/missing_scores">Missing Scores</a></li>
+                        <li class='py-2'><a href="/missing_highlights">Missing Highlights</a></li>
+                        <!-- <li class='py-2'><a href="/missing_artwork">Missing Artwork</a></li> -->
+                        <li class='py-2'><a href="/missing_seasons">Missing Seasons</a></li>
+                        <li class='py-2'><a href="/latest_transfers">Latest Transfers</a></li>
+                        <li class='py-2'><a href="/latest_honours">Latest Honours</a></li>
+                        <li class='py-2'><a href="/latest_stats">Latest Stats</a></li>
+                    </ul>
+                </li>
+
+                <!-- Developers Dropdown-->
+                <li class="dropdown nav-item">
+                    <a href='#' class="dropdown-toggle" type="button" id="dropdownMenuButton4" data-bs-toggle="dropdown" aria-expanded="false">Develop</a>
+                    <ul class="dropdown-menu dropdown-menu-dark px-1">
+                        <li class='py-2'><a href="/pricing">Pricing</a></li>
+                        <li class='py-2'><a href="/free_sports_api">Free Sports API</a></li>
+                        <li class='py-2'><a href="/documentation">API Documentation</a></li>
+                        <li class='py-2'><a href="/docs_api_examples">API Code Examples</a></li>
+                        <li class='py-2'><a href="/docs_api_testing">API Testing Guide</a></li>
+                        <li class='py-2'><a href="/docs_api_data">API Data Guide</a></li>
+                        <li class='py-2'><a href="/docs_artwork">Artwork Types</a></li>
+                        <li class='py-2'><a href="https://trello.com/b/PMumZYQg/thesportsdb">Roadmap</a></li>
+                        <li class='py-2'><a href="/docs_libraries">3rd Party Libraries</a></li>
+                        <li class='py-2'><a href="/docs_kodi_scraper">Kodi Scraper</a></li>
+                        <li class='py-2'><a href="/forum_topic.php?t=1807">Plex Scraper</a></li>
+                    </ul>
+                </li>
+
+                <!-- Tools -->
+                <li class="dropdown nav-item">
+                    <a href='#' class="dropdown-toggle" type="button" id="dropdownMenuButton5" data-bs-toggle="dropdown" aria-expanded="false">Tools</a>
+                    <ul class="dropdown-menu dropdown-menu-dark px-1">
+                        <li class='py-2'><a href="/forum">Forum</a></li>
+                        <li class='py-2'><a href="https://discord.gg/pFvgaXV">Discord Chat</a></li>
+                        <li class='py-2'><a href="/top100">Top 100 Events</a></li>
+                        <li class='py-2'><a href="/hall_of_fame_player">Charts Player</a></li>
+                        <li class='py-2'><a href="/hall_of_fame_team">Charts Team</a></li>
+                        <li class='py-2'><a href="https://image-viewer--thedatadb.replit.app/">Quick Image (Beta)</a></li>
+                    </ul>
+                </li>
+
+                <!-- Username -->
+                <li class='dropdown nav-item px-1'>
+                                <img src='/images/icons/user.png' alt='login icon'><a href='/user/AndrewSerulneck'>AndrewSerulneck</a></li>
+                <!-- Search Box -->
+                <li class="dropdown nav-item">
+                    <div class="search">
+                        <form role="form" action="/browse.php">
+                            <input type="text" name="s" class="search-form" autocomplete="off" placeholder=" Search" />
+                        </form>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+    <section id="feature">
+        <div class="container">
+            <div class="row">
+
+                <!-- ###### Left Side ###### -->
+                <div class="col-sm-3">
+                    <!-- Getting Started -->
+                    <h2>Getting Started</h2>
+                    <h3><a href='#Introduction'>Introduction</a></h3>
+                    <h3><a href='#free_vs_premium'>Free vs Premium</a></h3>
+                    <h3><a href='#v1_vs_v2'>v1 vs v2 API</a></h3><br>
+
+                    <h2>Choose an API version</h2>
+                    <a href="#v1"> <button type="button" class="btn btn-success btn-sm">V1 API</button></a> /
+                    <a href="#v2"> <button type="button" class="btn btn-success btn-sm">V2 API</button></a><br><br><br>
+
+                    <!-- API Reference Guide -->
+                    <h2>API Reference Guide</h2>
+                    <h3><a href='#base_url'>Base URL</a></h3>
+                    <h3><a href='#authentication_v1'>Authentication</a></h3>
+                    <h3><a href='#images'>Images</a></h3>
+                    <h3><a href='#rate_limit'>Rate Limit</a></h3><br><br>
+
+                    <!-- Rest API Reference -->
+                    <h2>v1 Rest API Reference</h2>
+                    <h3><a href='#search_v1'>v1 Search</a></h3>
+                    <h3><a href='#lookup_v1'>v1 Lookup</a></h3>
+                    <h3><a href='#list_v1'>v1 List</a></h3>
+                    <h3><a href='#schedule_v1'>v1 Schedule</a></h3>
+                    <h3><a href='#video_v1'>v1 Video</a></h3><br><br>
+
+                    <!-- Rest API Reference -->
+                    <h2>v2 Rest API Reference</h2>
+                    <h3><a href='#search_v2'>v2 Search</a></h3>
+                    <h3><a href='#lookup_v2'>v2 Lookup</a></h3>
+                    <h3><a href='#list_v2'>v2 List</a></h3>
+                    <h3><a href='#filter_v2'>v2 Filter</a></h3>
+                    <h3><a href='#all_v2'>v2 All</a></h3>
+                    <h3><a href='#schedule_v2'>v2 Schedule</a></h3>
+                    <h3><a href='#livescores_v2'>v2 Livescores</a></h3><br><br>
+
+                    <!-- REST API Extra-->
+                    <h2>API Extras</h2>
+                    <h3><a href='#readme'>Readme.io Docs</a></h3>
+                    <h3><a href='#openapi'>Swagger / OpenAPI</a></h3>
+                    <h3><a href='#postman'>Postman Collection</a></h3>
+                    <h3><a href='#mcp'>AI MCP</a></h3>
+                </div>
+
+                <!-- ###### Right Side ###### -->
+                <div class="col-sm-9">
+                    <!-- Title -->
+                    <h1 class='center'>TheSportsDB API Documentation</h1>
+                    <!-- Introduction -->
+                    <h1 id="Introduction">Introduction</h1>
+                    <div>
+                        Welcome to TheSportsDB API, your ultimate destination for seamless access to free, real-time sports data.
+                        Whether you're building an app, running a fantasy league, or simply want to stay updated with live scores, player stats, team standings,
+                        or match schedules, our powerful and easy-to-use API has you covered.
+                        With support for a wide range of sports and leagues worldwide, TheSportsDB API is designed for developers, enthusiasts,
+                        and startups looking to integrate reliable sports data without the hassle of expensive subscriptions.
+                        Get started today and bring the game to life in your application!
+                    </div><br><br>
+
+                    <!-- Free Vs Premium -->
+                    <h1 id="free_vs_premium">Free vs Premium</h1>
+                    <div>
+                        We offer a free API that anyone can use. The site originally had all methods available to use under the free API with no limits,
+                        but sadly it became too popular and was abused.
+                        So over the years we have had to limit certain methods, while trying to keep the core functionality.
+                        The Free API should work in many use cases, so please do test it out.<br><br>
+                        The current free API key is: 123<br>
+                        Premium API keys can be found on your user profile, once upgraded.<br><br>
+                        The Premium API includes all methods in V1 with larger limits as well as some extra stuff like livescores and video highlight links.
+                        Premium also allows you to use the more modern V2 API. You can find your Premium API key on your user profile if you are a supporter.
+                    </div><br>
+                    <div class="center">
+                        <a href='/pricing'> <button type='button' class='btn btn-warning'>Go Premium ($9 per month)</button></a><br><br>
+                    </div><br>
+
+                    <!-- V1 vs V2 -->
+                    <h1 id="v1_vs_v2">API v1 vs v2</h1>
+                    <div>
+                        The v1 API was written over 10 years ago and has been addded to since with many extra features.
+                        It uses basic PHP code to produce JSON objects that are returned to the user.
+                        API users are authenticated with a simple numeric API key in the URL.
+                        The naming is a little messy and the authentication is not great, as the key is visible to anyone who wants to poke around your web requests.
+                        Saying that, it works and is simple to use and easy to test in any web browser. Ideal for beginners!<br><br>
+                        V2 API is more modern and verbous API.
+                        This means it should be easier to understand in a logical way.
+                        It also uses more modern authentication requiring the API key to be sent in the header.
+                        When something goes wrong, the API will return standard HTTP response codes.
+                        V2 is only for premium subscribers and will be the only version developed going forward.
+                    </div><br><br>
+
+                    <!-- Base URL -->
+                    <h1 id="base_url">Base URL</h1>
+                    <div>
+                        The Base URL is a crucial element for making API calls, enabling you to clearly specify the root URL(s) for API requests.
+                        When making API calls, you combine the base URL with the specific endpoint path to form the complete request URL.<br><br>
+
+                        <pre><code class="language-html">v1 Base URL = https://www.thesportsdb.com/api/v1/json
+v2 Base URL = https://www.thesportsdb.com/api/v2/json</code></pre>
+
+                    </div><br><br>
+
+                    <!-- Authentication -->
+                    <h1 id="authentication_v1">V1 Authentication</h1>
+                    <div>
+                        v1 of the API has a very simple authentication process.
+                        Simply use the base URL above and append the number /123/ to the URL for the free key or replace with your premium API key.<br><br>
+                        Using the free key:
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=Arsenal</code></pre>
+                        Using your premium API key:
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/YOUR_API_KEY_GOES_HERE/searchteams.php?t=Arsenal</code></pre>
+                    </div>
+                    You can see an example below using a simple web browser using the free '123' API key:<br><br>
+                    <div class="center">
+                        <a href="https://www.thesportsdb.com/images/v1_browser.jpg">
+                            <img class="center" src="https://www.thesportsdb.com/images/v1_browser.jpg" width="60%" alt="Httpie Example Auth">
+                        </a>
+                        <br><br>
+                    </div>
+
+                    <h1 id="authentication_v2">V2 Authentication</h1>
+                    <div>
+                        v2 takes a more secure, modern approach to Authentication.<br>
+                        When sending a request to the API base URL, you must include API key in the header using this attribute 'X-API-KEY'.<br><br>
+                        You can see an example below using the popular free API testing software: <a href="https://httpie.io/" target="_blank">Httpie</a><br><br>
+                        <div class="center">
+                            <a href="https://www.thesportsdb.com/images/v2_httpie.jpg">
+                                <img class="center" src="https://www.thesportsdb.com/images/v2_httpie.jpg" width="60%" alt="Httpie Example Auth">
+                            </a>
+                        </div>
+
+                    </div><br><br>
+
+                    <!-- Images -->
+                    <h1 id="images">Images</h1>
+                    <div>
+                        Our site has a huge amount of images for things like events, players and teams. Most are fan created.<br>
+                        There are 2 types of images available. JPEG fanart and transparent PNG mostly used for badges and logos.<br>
+                        You can see the different <a href="/docs_artwork.php">types of artwork and sizes </a>on this page.<br>
+                        You can access any image from the front-end using the image URL from the returned JSON data.<br>
+                        <br><b>Preview Images</b><br>
+                        Most of the time you won't want to download the original large image, just get a small preview.<br>
+                        This is possible simple by appending '/medium', '/small', '/tiny' onto the end URL. This will give you a smaller version.<br><br>
+                        Original 720px- <a href="https://r2.thesportsdb.com/images/media/league/fanart/xpwsrw1421853005.jpg">/league/fanart/xpwsrw1421853005.jpg</a><br>
+                        <img src="https://r2.thesportsdb.com/images/media/league/fanart/xpwsrw1421853005.jpg" width='350px' alt="Medium version of league fanart"><br>
+                        Medium 500px - <a href="https://r2.thesportsdb.com/images/media/league/fanart/xpwsrw1421853005.jpg/medium">/league/fanart/xpwsrw1421853005.jpg/medium</a><br>
+                        <img src="https://r2.thesportsdb.com/images/media/league/fanart/xpwsrw1421853005.jpg/medium" width='250px' alt="Medium version of league fanart"><br>
+                        Small 250px - <a href="https://r2.thesportsdb.com/images/media/league/fanart/xpwsrw1421853005.jpg/small">/league/fanart/xpwsrw1421853005.jpg/small</a><br>
+                        <img src="https://r2.thesportsdb.com/images/media/league/fanart/xpwsrw1421853005.jpg/small" width='150px' alt="Small version of league fanart"><br>
+                        Tiny 50px - <a href="https://r2.thesportsdb.com/images/media/league/fanart/xpwsrw1421853005.jpg/tiny">/league/fanart/xpwsrw1421853005.jpg/tiny</a><br>
+                        <img src="https://r2.thesportsdb.com/images/media/league/fanart/xpwsrw1421853005.jpg/tiny" width='100px' alt="Tiny version of league fanart"><br>
+                    </div>
+
+                    <!-- Rate Limit -->
+                    <br><br>
+                    <h1 id="rate_limit">Rate Limit</h1>
+                    The site has different rate limits for different levels of users.
+                    You will recieve a "429" http header if you breach the limit, then you will need to wait another minute until requests will work again.
+                    We enforce these not just to differentiate our tiers, but to keep the overall performance of the site stable.
+                    <br><br>
+                    <img src="https://www.thesportsdb.com/images/icons/bullet-arrow.png" width="16" height="16" alt="arrow list"> Free users 30 requests per minute.<br>
+                    <img src="https://www.thesportsdb.com/images/icons/bullet-arrow.png" width="16" height="16" alt="arrow list"> Premium 100 per minute<br>
+                    <img src="https://www.thesportsdb.com/images/icons/bullet-arrow.png" width="16" height="16" alt="arrow list"> Business 120 per minute<br>
+                    <div>
+
+                    </div>
+
+
+                    <br><img src="/images/divider.png" alt="seperator bar" style="width:100%" /><br><br>
+
+                    <div id="v1" class="center">
+                        <h1>V1 API Documentation</h1>
+                    </div><br>
+
+                    <!-- v1 Search -->
+                    <div id="search_v1" class="alert alert-success center" role="alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"></path>
+                        </svg>
+                        <b>v1 API Search</b>
+                    </div>
+                    <div>
+                        Most API requests will start with a string search. Examples of this may be to find a team or player details.<br>
+                        All searches will return the entities data but also an ID number which can be used for later faster lookups.<br><br>
+
+                        <!-- Search Teams -->
+                        <b style="color:#daa900;">Search Teams</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">t</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">1</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">10</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=Arsenal"> JSON Data</a><br>
+                        Search for any sports team by its name. {strTeam}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=Arsenal</code>NOTE: Free tier limited to just "Arsenal". <a href='https://www.thesportsdb.com/pricing'>Upgrade</a> for full search.</pre>
+                        <br>
+
+
+                        <!-- Search Events: -->
+                        <b style="color:#daa900;">Search Events:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">e</button><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{Date}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">d</button><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">s</button><br>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">1</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">10</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/searchevents.php?e=Arsenal_vs_Chelsea"> JSON Data</a><br>
+                        Example with season: <a href="https://www.thesportsdb.com/api/v1/json/123/searchevents.php?e=Arsenal_vs_Chelsea&s=2016-2017"> JSON Data</a><br>
+                        Example with date: <a href="https://www.thesportsdb.com/api/v1/json/123/searchevents.php?e=Arsenal_vs_Chelsea&d=2015-04-26"> JSON Data</a><br>
+                        Example with filename: <a href="https://www.thesportsdb.com/api/v1/json/123/searchevents.php?f=English_Premier_League_2015-04-26_Arsenal_vs_Chelsea"> JSON Data</a><br>
+                        Description: Search for any sports event by it's title with extra filters for season, date or filename: {strEvent}
+                        <br>Optional strings: {strSeason} {strDate} {strFilename}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/searchevents.php?e=Arsenal_vs_Chelsea
+https://www.thesportsdb.com/api/v1/json/123/searchevents.php?e=Arsenal_vs_Chelsea&s=2016-2017
+https://www.thesportsdb.com/api/v1/json/123/searchevents.php?e=Arsenal_vs_Chelsea&d=2015-04-26
+https://www.thesportsdb.com/api/v1/json/123/searchevents.php?f=English_Premier_League_2015-04-26_Arsenal_vs_Chelsea</code></pre>
+                        <br>
+
+
+                        <!-- Search Filename: -->
+                        <b style="color:#daa900;">Search Filename:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">e</button><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">s</button><br>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">1</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">10</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/searchfilename.php?e=English_Premier_League_2015-04-26_Arsenal_vs_Chelsea"> JSON Data</a><br>
+                        Example with season: <a href="https://www.thesportsdb.com/api/v1/json/123/searchfilename.php?e=English_Premier_League_2015-04-26_Arsenal_vs_Chelsea&s=2016-2017"> JSON Data</a><br>
+                        Description: Search for any sports event by filename with an optional season filter. {strFilename}
+                        <br>Optional strings: {strSeason}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/searchfilename.php?e=English_Premier_League_2015-04-26_Arsenal_vs_Chelsea
+https://www.thesportsdb.com/api/v1/json/123/searchfilename.php?e=English_Premier_League_2015-04-26_Arsenal_vs_Chelsea&s=2016-2017</code></pre>
+                        <br>
+
+
+                        <!-- Search Players: -->
+                        <b style="color:#daa900;">Search Players:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">p</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">1</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">10</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/searchplayers.php?p=Danny_Welbeck"> JSON Data</a><br>
+                        Description: Search for any sports person by their main or alternate name. {strPlayer}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/searchplayers.php?p=Danny_Welbeck</code></pre>
+                        <br>
+
+
+                        <!-- Search Venues: -->
+                        <b style="color:#daa900;">Search Venues:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">v</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">1</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">10</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/searchvenues.php?v=Wembley"> JSON Data</a><br>
+                        Description: Search any venue by its name or alternate name {strVenue}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/searchvenues.php?v=Wembley</code></pre>
+
+                    </div>
+
+
+                    <!-- v1 Lookup-->
+                    <br><img src="/images/divider.png" alt="seperator bar" style="width:100%" /><br><br><br>
+                    <div id="lookup_v1" class="alert alert-success center" role="alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tag-fill" viewBox="0 0 16 16">
+                            <path d="M2 1a1 1 0 0 0-1 1v4.586a1 1 0 0 0 .293.707l7 7a1 1 0 0 0 1.414 0l4.586-4.586a1 1 0 0 0 0-1.414l-7-7A1 1 0 0 0 6.586 1zm4 3.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"></path>
+                        </svg>
+                        <b>v1 API Lookup</b>
+                    </div>
+                    <div>
+                        While the string search is useful above to find things, it is actually much quicker and simpler to retrieve data using the unique ID.<br>
+                        Lookups will return all data from that entity, you can find any ID by simply looking at the frontend websites URL usually. <br>
+                        For example the British Premier League's ID is 4328, or Formula 1's is 4370.<br><br>
+
+                        <!-- Lookup League: -->
+                        <b style="color:#daa900;">Lookup League:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">1</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/lookupleague.php?id=4328">JSON Data</a><br>
+                        Lookup a leagues details using its ID {idLeague}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/lookupleague.php?id=4328</code></pre>
+                        <br>
+
+                        <!-- Lookup League Table: -->
+                        <b style="color:#daa900;">Lookup League Table:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">5</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/lookuptable.php?l=4328&s=2020-2021">JSON Data</a><br>
+                        Lookup a current league points table using its ID: {idLeague}
+                        Optional: {strSeason} (*Limited to featured soccer leagues ONLY)
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/lookuptable.php?l=4328
+https://www.thesportsdb.com/api/v1/json/123/lookuptable.php?l=4328&s=2020-2021</code></pre>
+                        <br>
+
+                        <!-- Lookup Team -->
+                        <b style="color:#daa900;">Lookup Team</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">1</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/lookupteam.php?id=133604">JSON Data</a><br>
+                        Lookup a teams details using its ID. {idTeam}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/lookupteam.php?id=133604</code></pre>
+                        <br>
+
+                        <!-- Lookup Team Equipment -->
+                        <b style="color:#daa900;">Lookup Team Equipment</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">2</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/lookupequipment.php?id=133597">JSON Data</a><br>
+                        Lookup a teams historical and current equipment using its ID. {idTeam}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/lookupequipment.php?id=133597</code></pre>
+                        <br>
+
+                        <!-- Lookup Player -->
+                        <b style="color:#daa900;">Lookup Player</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">1</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/lookupplayer.php?id=34145937">JSON Data</a><br>
+                        Lookup a players details using their ID. {idPlayer}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/lookupplayer.php?id=34145937</code></pre>
+                        <br>
+
+                        <!-- Lookup Player Honours -->
+                        <b style="color:#daa900;">Lookup Player Honours</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">5</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">500</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/lookuphonours.php?id=34147178">JSON Data</a><br>
+                        Lookup all honours for a player using their ID. {idPlayer}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/lookuphonours.php?id=34147178</code></pre>
+                        <br>
+
+                        <!-- Lookup Player Former Teams -->
+                        <b style="color:#daa900;">Lookup Player Former Teams</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">5</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/lookupformerteams.php?id=34147178">JSON Data</a><br>
+                        Lookup all former teams for a player using their ID. {idPlayer}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/lookupformerteams.php?id=34147178</code></pre>
+                        <br>
+
+                        <!-- Lookup Player Milestones -->
+                        <b style="color:#daa900;">Lookup Player Milestones</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">5</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/lookupmilestones.php?id=34161397">JSON Data</a><br>
+                        Lookup all Milestones for a player using their ID. {idPlayer}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/lookupmilestones.php?id=34161397</code></pre>
+                        <br>
+
+                        <!-- Lookup Player Contracts -->
+                        <b style="color:#daa900;">Lookup Player Contracts</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">1</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/lookupcontracts.php?id=34147178">JSON Data</a><br>
+                        Lookup all contracts for a player using their ID. {idPlayer}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/lookupcontracts.php?id=34147178</code></pre>
+                        <br>
+
+                        <!-- Lookup Player Results -->
+                        <b style="color:#daa900;">Lookup Player Results</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">5</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">500</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/playerresults.php?id=34160573">JSON Data</a><br>
+                        Lookup all results for a player using their ID. {idPlayer}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/playerresults.php?id=34160573</code></pre>
+                        <br>
+
+                        <!-- Lookup Event -->
+                        <b style="color:#daa900;">Lookup Event</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">1</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/lookupevent.php?id=441613">JSON Data</a><br>
+                        Lookup a teams details using its ID. {idEvent}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/lookupevent.php?id=441613</code></pre>
+                        <br>
+
+                        <!-- Lookup Event Results -->
+                        <b style="color:#daa900;">Lookup Event Results</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">5</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/eventresults.php?id=652890">JSON Data</a><br>
+                        Lookup all results for an event using its ID. {idEvent}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/eventresults.php?id=652890</code></pre>
+                        <br>
+
+                        <!-- Lookup Event Lineup -->
+                        <b style="color:#daa900;">Lookup Event Lineup</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">5</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/lookuplineup.php?id=1032723">JSON Data</a><br>
+                        Lookup the team lineups for an event using its ID. {idEvent}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/lookuplineup.php?id=1032723</code></pre>
+                        <br>
+
+                        <!-- Lookup Event Timeline -->
+                        <b style="color:#daa900;">Lookup Event Timeline</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">5</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/lookuptimeline.php?id=1032718">JSON Data</a><br>
+                        Lookup the timeline for an event using its ID. {idEvent}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/lookuptimeline.php?id=1032718</code></pre>
+                        <br>
+
+                        <!-- Lookup Event Statistics -->
+                        <b style="color:#daa900;">Lookup Event Statistics</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">5</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/lookupeventstats.php?id=1032723">JSON Data</a><br>
+                        Lookup the statistics for an event using its ID. {idEvent}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/lookupeventstats.php?id=1032723</code></pre>
+                        <br>
+
+                        <!-- Lookup Event TV Broadcasts -->
+                        <b style="color:#daa900;">Lookup Event TV Broadcasts</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">2</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/lookuptv.php?id=584911">JSON Data</a><br>
+                        Lookup all TV channels showing an event using its ID. {idEvent}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/lookuptv.php?id=584911</code></pre>
+                        <br>
+
+                        <!-- Lookup Venue -->
+                        <b style="color:#daa900;">Lookup Venue</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">1</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/lookupvenue.php?id=16163"> JSON Data</a><br>
+                        Lookup a team using its ID. {idTeam}
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/lookupvenue.php?id=16163</code></pre>
+                        <br>
+
+                    </div>
+
+                    <!-- v1 List-->
+                    <br><img src="/images/divider.png" alt="seperator bar" style="width:100%" /><br><br><br>
+                    <div id="list_v1" class="alert alert-success center" role="alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-card-list" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2z"></path>
+                            <path d="M5 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 5 8m0-2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m0 5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m-1-5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0M4 8a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m0 2.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0"></path>
+                        </svg>
+                        <b>v1 API List</b>
+                    </div>
+                    <div>
+                        Using the list API means we can return more than one record. <br>
+                        This can be useful for example to list sports or countries<br><br>
+
+                        <!-- All Sports: -->
+                        <b style="color:#daa900;">All Sports:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">NULL</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">none</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">2</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">50</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/all_sports.php"> JSON Data</a><br>
+                        List all the sport categories supported on the website.
+                        <pre><code class=" language-html">https://www.thesportsdb.com/api/v1/json/123/all_sports.php</code></pre>
+                        <br>
+
+                        <!-- All Countries: -->
+                        <b style="color:#daa900;">All Countries:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">NULL</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">none</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">50</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">500</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/all_countries.php"> JSON Data</a><br>
+                        List all the geographical countries supported on the website.
+                        <pre><code class=" language-html">https://www.thesportsdb.com/api/v1/json/123/all_countries.php</code></pre>
+                        <br>
+
+                        <!-- All Leagues: -->
+                        <b style="color:#daa900;">All Leagues:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{NULL}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">None</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">10</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">3000</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/all_leagues.php"> JSON Data</a><br>
+                        List all the leagues on TheSportsDB.
+                        <pre><code class=" language-html">https://www.thesportsdb.com/api/v1/json/123/all_leagues.php</code></pre>
+                        <br>
+
+                        <!-- List Leagues: -->
+                        <b style="color:#daa900;">List Leagues:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">c</button>
+                        The country name<br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">s</button>
+                        The sport name<br>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">10</button>limit:
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/search_all_leagues.php?c=England&s=Soccer">JSON Data</a><br>
+                        List all the leagues in a country for a specific sport. {strCountry} {strSport}
+                        <pre><code class=" language-html">https://www.thesportsdb.com/api/v1/json/123/search_all_leagues.php?c=England&s=Soccer</code></pre>
+                        <br>
+
+                        <!-- List Seasons: -->
+                        <b style="color:#daa900;">List Seasons:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">Integer</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">5</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">500</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/search_all_seasons.php?id=4328">JSON Data</a><br>
+                        Example2: <a href="https://www.thesportsdb.com/api/v1/json/123/search_all_seasons.php?id=4328&poster=1">JSON Data</a><br>
+                        Example3: <a href="https://www.thesportsdb.com/api/v1/json/123/search_all_seasons.php?id=4328&badge=1">JSON Data</a><br>
+                        Example4: <a href="https://www.thesportsdb.com/api/v1/json/123/search_all_seasons.php?id=4328&description=1">JSON Data</a><br>
+                        List all the seasons available for a specific league ID. {idLeague}
+                        <pre><code class=" language-html">https://www.thesportsdb.com/api/v1/json/123/search_all_seasons.php?id=4328
+https://www.thesportsdb.com/api/v1/json/123/search_all_seasons.php?id=4328&poster=1
+https://www.thesportsdb.com/api/v1/json/123/search_all_seasons.php?id=4328&badge=1
+https://www.thesportsdb.com/api/v1/json/123/search_all_seasons.php?id=4328&description=1</code></pre>
+                        <br>
+
+                        <!-- List Teams: -->
+                        <b style="color:#daa900;">List Teams:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">String</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">l</button><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">String</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">s</button><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">String</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">c</button><br>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">10</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">3000</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/search_all_teams.php?l=English_Premier_League">JSON Data</a><br>
+                        Example2: <a href="https://www.thesportsdb.com/api/v1/json/123/search_all_teams.php?s=Soccer&c=Spain">JSON Data</a><br>
+                        List all the teams in a specific league by the leagues name, country and sport or ID. {strLeague} {strCountry} {strSport}
+                        <pre><code class=" language-html">https://www.thesportsdb.com/api/v1/json/123/search_all_teams.php?l=English_Premier_League
+https://www.thesportsdb.com/api/v1/json/123/search_all_teams.php?s=Soccer&c=Spain</code></pre>
+                        <br>
+
+                        <!-- List Players: -->
+                        <b style="color:#daa900;">List Players:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">Integer</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">10</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">3000</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/lookup_all_players.php?id=133604">JSON Data</a><br>
+                        List all the Players who play for a team by the teams ID. {idTeam}
+                        <pre><code class=" language-html">https://www.thesportsdb.com/api/v1/json/123/lookup_all_players.php?id=133604</code></pre>
+                        <br>
+                    </div>
+
+                    <!-- v1 Schedule-->
+                    <br><img src="/images/divider.png" alt="seperator bar" style="width:100%" /><br><br><br>
+                    <div id="schedule_v1" class="alert alert-success center" role="alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-calendar-date-fill" viewBox="0 0 16 16">
+                            <path d="M4 .5a.5.5 0 0 0-1 0V1H2a2 2 0 0 0-2 2v1h16V3a2 2 0 0 0-2-2h-1V.5a.5.5 0 0 0-1 0V1H4zm5.402 9.746c.625 0 1.184-.484 1.184-1.18 0-.832-.527-1.23-1.16-1.23-.586 0-1.168.387-1.168 1.21 0 .817.543 1.2 1.144 1.2"></path>
+                            <path d="M16 14V5H0v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2m-6.664-1.21c-1.11 0-1.656-.767-1.703-1.407h.683c.043.37.387.82 1.051.82.844 0 1.301-.848 1.305-2.164h-.027c-.153.414-.637.79-1.383.79-.852 0-1.676-.61-1.676-1.77 0-1.137.871-1.809 1.797-1.809 1.172 0 1.953.734 1.953 2.668 0 1.805-.742 2.871-2 2.871zm-2.89-5.435v5.332H5.77V8.079h-.012c-.29.156-.883.52-1.258.777V8.16a13 13 0 0 1 1.313-.805h.632z"></path>
+                        </svg>
+                        <b>v1 API Schedule</b>
+                    </div>
+                    <div>
+                        The Schedule API allows you to look up past, present and future events.<br>
+                        It includes the ability to lookup entire seasons as well as the just a few of the next and past events.<br><br>
+
+                        <!-- Schedule Team Next: -->
+                        <b style="color:#daa900;">Schedule Team Next:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">Integer</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">1</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">10</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/eventsnext.php?id=133602"> JSON Data</a><br>
+                        See the next few upcoming events for a team using the Team ID. *free key only shows home event
+                        <pre><code class=" language-html">https://www.thesportsdb.com/api/v1/json/123/eventsnext.php?id=133602</code></pre>
+                        <br>
+
+                        <!-- Schedule Team Previous: -->
+                        <b style="color:#daa900;">Schedule Team Previous:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">Integer</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">1</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">10</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/eventslast.php?id=133602"> JSON Data</a><br>
+                        See the last few recent events for a team using the Team ID. *free key only shows home event
+                        <pre><code class=" language-html">https://www.thesportsdb.com/api/v1/json/123/eventslast.php?id=133602</code></pre>
+                        <br>
+
+                        <!-- Schedule League Next: -->
+                        <b style="color:#daa900;">Schedule League Next:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">Integer</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">1</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">20</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/eventsnextleague.php?id=4328">JSON Data</a><br>
+                        See the next upcoming events for a team using the league ID.
+                        <pre><code class=" language-html">https://www.thesportsdb.com/api/v1/json/123/eventsnextleague.php?id=4328</code></pre>
+                        <br>
+
+                        <!-- Schedule League Previous: -->
+                        <b style="color:#daa900;">Schedule League Previous:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">Integer</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">1</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">20</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/eventspastleague.php?id=4328">JSON Data</a><br>
+                        See the next upcoming events for a team using the league ID. {idLeague}
+                        <pre><code class=" language-html">https://www.thesportsdb.com/api/v1/json/123/eventspastleague.php?id=4328</code></pre>
+                        <br>
+
+                        <!-- Schedule Day: -->
+                        <b style="color:#daa900;">Schedule Day:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">date</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">d</button><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">String</button>
+                        Parameter (Optional): <button type="button" class="btn btn-secondary btn-sm">s</button><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">String</button>
+                        Parameter (Optional): <button type="button" class="btn btn-secondary btn-sm">l</button><br>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">3</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">1500</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/eventsday.php?d=2014-10-10">JSON Data</a><br>
+                        Example2: <a href="https://www.thesportsdb.com/api/v1/json/123/eventsday.php?d=2014-10-10&s=Baseball">JSON Data</a><br>
+                        Example3: <a href="https://www.thesportsdb.com/api/v1/json/123/eventsday.php?d=2014-10-10&l=MLB">JSON Data</a><br>
+                        Example4: <a href="https://www.thesportsdb.com/api/v1/json/123/eventsday.php?d=2014-10-10&l=4424">JSON Data</a><br>
+                        See the events on a specific day in the future, past or present. <br>
+                        You can also add an optional filter for league ID or name. {dateEvent} {strSport} {idLeague}
+                        <pre><code class=" language-html">https://www.thesportsdb.com/api/v1/json/123/eventsday.php?d=2014-10-10
+https://www.thesportsdb.com/api/v1/json/123/eventsday.php?d=2014-10-10&s=Baseball
+https://www.thesportsdb.com/api/v1/json/123/eventsday.php?d=2014-10-10&l=4424</code></pre>
+                        <br>
+
+                        <!-- Schedule Season: -->
+                        <b style="color:#daa900;">Schedule Season:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">Integer</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">id</button>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">String</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">s</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">15</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">3000</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/eventsseason.php?id=4328&s=2014-2015">JSON Data</a><br>
+                        See all the events for a particular season and filter by league ID. {idSeason} {strSeason} <br>
+                        <pre><code class=" language-html">https://www.thesportsdb.com/api/v1/json/123/eventsseason.php?id=4328&s=2014-2015</code></pre>
+                        <br>
+
+                        <!-- Schedule TV: -->
+                        <b style="color:#daa900;">Schedule TV:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">Integer</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">d</button>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">Date</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">s</button>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">String</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">a</button>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">String</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">c</button>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">String</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">ID</button>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">Integer</button>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">1</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">500</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/eventstv.php?d=2024-07-07">JSON Data</a><br>
+                        Example2: <a href="https://www.thesportsdb.com/api/v1/json/123/eventstv.php?d=2018-07-07&s=Fighting">JSON Data</a><br>
+                        Example3: <a href="https://www.thesportsdb.com/api/v1/json/123/eventstv.php?d=2019-09-28&a=United_Kingdom&s=Cycling">JSON Data</a><br>
+                        Example4: <a href="https://www.thesportsdb.com/api/v1/json/123/eventstv.php?c=Peacock_Premium">JSON Data</a><br>
+                        Example5: <a href="https://www.thesportsdb.com/api/v1/json/123/eventstv.php?id=3834">JSON Data</a><br>
+                        See the TV schedual for a particular date. {dateEvent} {strSport} {strCountry} {strChannel} {idChannel}<br>
+                        <pre><code class=" language-html">https://www.thesportsdb.com/api/v1/json/123/eventstv.php?d=2024-07-07
+https://www.thesportsdb.com/api/v1/json/123/eventstv.php?d=2018-07-07&s=Fighting
+https://www.thesportsdb.com/api/v1/json/123/eventstv.php?d=2019-09-28&a=United_Kingdom&s=Cycling
+https://www.thesportsdb.com/api/v1/json/123/eventstv.php?c=Peacock_Premium
+https://www.thesportsdb.com/api/v1/json/123/eventstv.php?id=3834</code></pre>
+                        <br>
+                    </div>
+
+                    <!-- v1 Video-->
+                    <br><img src="/images/divider.png" alt="seperator bar" style="width:100%" /><br><br><br>
+                    <div id="video_v1" class="alert alert-success center" role="alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-youtube" viewBox="0 0 16 16">
+                            <path d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.108-.082 2.06l-.008.105-.009.104c-.05.572-.124 1.14-.235 1.558a2.01 2.01 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.01 2.01 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31 31 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.01 2.01 0 0 1 1.415-1.42c.487-.13 1.544-.21 2.654-.26l.17-.007.172-.006.086-.003.171-.007A100 100 0 0 1 7.858 2zM6.4 5.209v4.818l4.157-2.408z"></path>
+                        </svg>
+                        <b>v1 API Video</b>
+                    </div>
+                    <div>
+                        The video API allows you to list any YouTube highlights associated with an event.<br>
+                        Please be aware that we have no control of YouTube and some videos may be geolocked to specific countries.<br>
+                        You can use various filters including date on its own or with a League ID or Sport.<br><br>
+
+                        <!-- Video Highlights -->
+                        <b style="color:#daa900;">Video Youtube Highlights:</b><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">Date</button>
+                        Parameter: <button type="button" class="btn btn-secondary btn-sm">d</button><br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">Integer</button>
+                        Parameter (optional): <button type="button" class="btn btn-secondary btn-sm">l</button> {League ID}<br>
+                        Type: <button type="button" class="btn btn-secondary btn-sm">String</button>
+                        Parameter (optional): <button type="button" class="btn btn-secondary btn-sm">s</button> {Sport_Name}<br>
+                        Free Limit: <button type="button" class="btn btn-secondary btn-sm">2</button>
+                        Premium Limit: <button type="button" class="btn btn-secondary btn-sm">50</button><br>
+                        Example: <a href="https://www.thesportsdb.com/api/v1/json/123/eventshighlights.php?d=2024-07-07">JSON Data</a><br>
+                        Example 2: <a href="https://www.thesportsdb.com/api/v1/json/123/eventshighlights.php?d=2024-07-07&l=4684">JSON Data</a><br>
+                        Example 3: <a href="https://www.thesportsdb.com/api/v1/json/123/eventshighlights.php?d=2024-07-07&s=motorsport">JSON Data</a><br>
+                        See the TV schedual for a particular date <br>
+                        <pre><code class="language-html">https://www.thesportsdb.com/api/v1/json/123/eventshighlights.php?d=2024-07-07
+https://www.thesportsdb.com/api/v1/json/123/eventshighlights.php?d=2024-07-07&l=4684<br>
+https://www.thesportsdb.com/api/v1/json/123/eventshighlights.php?d=2024-07-07&s=motorsport</code></pre>
+                        <br>
+
+                    </div>
+
+                    <!-- v2 Search-->
+                    <br><img src="/images/divider.png" alt="seperator bar" style="width:100%" /><br><br>
+
+                    <div id="v2" class="center">
+                        <h1>V2 API Documentation</h1>
+                    </div><br>
+
+                    <div id="search_v2" class="alert alert-primary center" role="alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"></path>
+                        </svg>
+                        <b>v2 API Search</b>
+                    </div>
+
+                    <!-- v2 Search League -->
+                    <b style="color:#daa900;">Search League</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">10</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/search_league.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/search/league/english_premier_league">Live</a><br>
+                    Search for any sports league using a text string.
+                    <pre><code class="language-html">/api/v2/json/search/league/english_premier_league<br></code></pre>
+                    <br>
+
+                    <!-- v2 Search Team -->
+                    <b style="color:#daa900;">Search Team</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">10</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/search_team.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/search/league/english_premier_league">Live</a><br>
+                    Search for any sports team using a text string.
+                    <pre><code class="language-html">/api/v2/json/search/team/manchester_united</code></pre>
+                    <br>
+
+                    <!-- v2 Search Player -->
+                    <b style="color:#daa900;">Search Player</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">10</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/search_player.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/search/player/harry_kane">Live</a><br>
+                    Search for any sports person using a text string.
+                    <pre><code class="language-html">/api/v2/json/search/player/harry_kane</code></pre>
+                    <br>
+
+                    <!-- v2 Search Event -->
+                    <b style="color:#daa900;">Search Event</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">10</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/search_event.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/search/event/fifa_world_cup_2022-12-18_argentina_vs_france">Live</a><br>
+                    Search for any sports event using a text string.
+                    <pre><code class="language-html">/api/v2/json/search/event/fifa_world_cup_2022-12-18_argentina_vs_france</code></pre>
+                    <br>
+
+                    <!-- v2 Search Venue -->
+                    <b style="color:#daa900;">Search Venue</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">10</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/search_venue.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/search/venue/wembley">Live</a><br>
+                    Search for any sports venue using a text string.
+                    <pre><code class="language-html">/api/v2/json/search/venue/wembley</code></pre>
+                    <br>
+
+                    <!-- v2 Lookup-->
+                    <br><img src="/images/divider.png" alt="seperator bar" style="width:100%" /><br><br><br>
+                    <div id="lookup_v2" class="alert alert-primary center" role="alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tag-fill" viewBox="0 0 16 16">
+                            <path d="M2 1a1 1 0 0 0-1 1v4.586a1 1 0 0 0 .293.707l7 7a1 1 0 0 0 1.414 0l4.586-4.586a1 1 0 0 0 0-1.414l-7-7A1 1 0 0 0 6.586 1zm4 3.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"></path>
+                        </svg>
+                        <b>v2 API Lookup</b>
+                    </div>
+
+                    <!-- v2 Lookup League -->
+                    <b style="color:#daa900;">Lookup League</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/lookup_league.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/lookup/league/4328">Live</a><br>
+                    Lookup for any league using its unique ID {idLeague}.
+                    <pre><code class="language-html">/api/v2/json/lookup/league/4328</code></pre>
+                    <br>
+
+                    <!-- v2 Lookup Team -->
+                    <b style="color:#daa900;">Lookup Team</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/lookup_team.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/lookup/team/133597">Live</a><br>
+                    Lookup for any team using its unique ID {idTeam}.
+                    <pre><code class="language-html">/api/v2/json/lookup/team/133597</code></pre>
+                    <br>
+
+                    <!-- v2 Lookup Team Equipment -->
+                    <b style="color:#daa900;">Lookup Team Equipment</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/lookup_team_equipment.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/lookup/team_equipment/133597">Live</a><br>
+                    Lookup for any team equipment artwork using its unique ID {idTeam}.
+                    <pre><code class="language-html">/api/v2/json/lookup/team_equipment/133597</code></pre>
+                    <br>
+
+                    <!-- v2 Lookup Player -->
+                    <b style="color:#daa900;">Lookup Player</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/lookup_player.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/lookup/player/34172575">Live</a><br>
+                    Lookup for any player using their unique ID {idPlayer}.
+                    <pre><code class="language-html">/api/v2/json/lookup/player/34172575</code></pre>
+                    <br>
+
+                    <!-- v2 Lookup Player Contracts -->
+                    <b style="color:#daa900;">Lookup Player Contracts</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/lookup_player_contracts.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/lookup/player_contracts/34146304">Live</a><br>
+                    Lookup for any player contracts using their unique ID {idPlayer}.
+                    <pre><code class="language-html">/api/v2/json/lookup/player_contracts/34146304</code></pre>
+                    <br>
+
+                    <!-- v2 Lookup Player Results -->
+                    <b style="color:#daa900;">Lookup Player Results</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/lookup_player_results.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/lookup/player_results/34160573">Live</a><br>
+                    Lookup for any player results using their unique ID {idPlayer}.
+                    <pre><code class="language-html">/api/v2/json/lookup/player_results/34160573</code></pre>
+                    <br>
+
+                    <!-- v2 Lookup Player Honours -->
+                    <b style="color:#daa900;">Lookup Player Honours</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/lookup_player_honours.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/lookup/player_honours/34146304">Live</a><br>
+                    Lookup for any player honours using their unique ID {idPlayer}.
+                    <pre><code class="language-html">/api/v2/json/lookup/player_honours/34146304</code></pre>
+                    <br>
+
+                    <!-- v2 Lookup Player Milestones -->
+                    <b style="color:#daa900;">Lookup Player Milestones</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/lookup_player_milestones.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/lookup/player_milestones/34146304">Live</a><br>
+                    Lookup for any player milestone using their unique ID {idPlayer}.
+                    <pre><code class="language-html">/api/v2/json/lookup/player_milestones/34146304</code></pre>
+                    <br>
+
+                    <!-- v2 Lookup Player Former Teams -->
+                    <b style="color:#daa900;">Lookup Player Former Teams</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/lookup_player_former_teams.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/lookup/player_teams/34146304">Live</a><br>
+                    Lookup for any player former teams using their unique ID {idPlayer}.
+                    <pre><code class="language-html">/api/v2/json/lookup/player_teams/34146304</code></pre>
+                    <br>
+
+                    <!-- v2 Lookup Event -->
+                    <b style="color:#daa900;">Lookup Event</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/lookup_event.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/lookup/event/441613">Live</a><br>
+                    Lookup for any sports event using its unique ID {idLeague}.
+                    <pre><code class="language-html">/api/v2/json/lookup/event/441613</code></pre>
+                    <br>
+
+                    <!-- v2 Lookup Event Lineup-->
+                    <b style="color:#daa900;">Lookup Event Lineup</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/lookup_event_lineup.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/lookup/event_lineup/1937584">Live</a><br>
+                    Lookup for any sports event player lineup using its unique ID {idEvent}.
+                    <pre><code class="language-html">/api/v2/json/lookup/event_lineup/1937584</code></pre>
+                    <br>
+
+                    <!-- v2 Lookup Event Results-->
+                    <b style="color:#daa900;">Lookup Event Results</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/lookup_event_results.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/lookup/event_results/652890">Live</a><br>
+                    Lookup for any sports event player results using the unique ID {idEvent}.
+                    <pre><code class="language-html">/api/v2/json/lookup/event_results/652890</code></pre>
+                    <br>
+
+                    <!-- v2 Lookup Event Statistics-->
+                    <b style="color:#daa900;">Lookup Event Statistics</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/lookup_event_statistics.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/lookup/event_stats/1937584">Live</a><br>
+                    Lookup for any sports event statistics using the unique ID {idEvent}.
+                    <pre><code class="language-html">/api/v2/json/lookup/event_stats/1937584</code></pre>
+                    <br>
+
+                    <!-- v2 Lookup Event timeline-->
+                    <b style="color:#daa900;">Lookup Event Timeline</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/lookup_event_timeline.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/lookup/event_timeline/1937584">Live</a><br>
+                    Lookup for any sports event timeline using the unique ID {idEvent}.
+                    <pre><code class="language-html">/api/v2/json/lookup/event_timeline/1937584</code></pre>
+                    <br>
+
+                    <!-- v2 Lookup Event TV-->
+                    <b style="color:#daa900;">Lookup Event TV Schedule</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/lookup_event_tv_schedule.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/lookup/event_tv/584911">Live</a><br>
+                    Lookup for any sports event TV schedule using the unique ID {idEvent}.
+                    <pre><code class="language-html">/api/v2/json/lookup/event_tv/584911</code></pre>
+                    <br>
+
+                    <!-- v2 Lookup Event Highlights-->
+                    <b style="color:#daa900;">Lookup Event Youtube Highlights</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/lookup_event_youtube_highlights.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/lookup/event_highlights/2044892">Live</a><br>
+                    Lookup for any sports event YouTube highlights using the unique ID {idEvent}.
+                    <pre><code class="language-html">/api/v2/json/lookup/event_highlights/2044892</code></pre>
+                    <br>
+
+                    <!-- v2 Lookup Venue-->
+                    <b style="color:#daa900;">Lookup Venue</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">1</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/lookup_venue.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/lookup/venue/15910">Live</a><br>
+                    Lookup for any sports Venue using the unique ID {idVenue}.
+                    <pre><code class="language-html">/api/v2/json/lookup/venue/15910</code></pre>
+                    <br>
+
+
+                    <!-- v2 List-->
+                    <br><img src="/images/divider.png" alt="seperator bar" style="width:100%" /><br><br><br>
+                    <div id="list_v2" class="alert alert-primary center" role="alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-card-list" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2z"></path>
+                            <path d="M5 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 5 8m0-2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m0 5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m-1-5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0M4 8a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m0 2.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0"></path>
+                        </svg>
+                        <b>v2 API List</b>
+                    </div>
+
+                    <!-- v2 List League Teams -->
+                    <b style="color:#daa900;">List League Teams </b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/list_league_teams.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/list/teams/4328">Live</a><br>
+                    List all teams in a paritcular league by its unique ID {idLeague}.
+                    <pre><code class="language-html">/api/v2/json/list/teams/4328</code></pre>
+                    <br>
+
+                    <!-- v2 List League Seasons -->
+                    <b style="color:#daa900;">List League Seasons</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/list_league_seasons.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/list/seasons/4328">Live</a><br>
+                    List all seasons available for a league using its unique ID {idLeague}.
+                    <pre><code class="language-html"><pre><code class=" language-html">/api/v2/json/list/seasons/4328</code></pre></code></pre>
+                    <br>
+
+                    <!-- v2 List Team Players -->
+                    <b style="color:#daa900;">List Team Players</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/list_team_players.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/list/players/133604">Live</a><br>
+                    Lookup for all the players for a team using its unique ID {idTeam}.
+                    <pre><code class="language-html">/api/v2/json/list/players/133604</code></pre>
+                    <br>
+
+                    <!-- v2 Filter-->
+                    <br><img src="/images/divider.png" alt="seperator bar" style="width:100%" /><br><br><br>
+                    <div id="filter_v2" class="alert alert-primary center" role="alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-square" viewBox="0 0 16 16">
+                            <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z" />
+                            <path d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z" />
+                        </svg>
+                        <b>v2 API Filter</b>
+                    </div>
+
+                    <!-- v2 Filter TV Events by Date -->
+                    <b style="color:#daa900;">Filter TV Events by Date</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Date}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/filter_tv_events_by_date.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/filter/tv/day/2024-06-22">Live</a><br>
+                    Filter All TV Events on a specific date {dateEvent}.
+                    <pre><code class=" language-html">/api/v2/json/filter/tv/day/2024-06-22</code></pre>
+                    <br>
+
+                    <!-- v2 Filter TV Events by Country -->
+                    <b style="color:#daa900;">Filter TV Events by Country</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/filter_tv_events_by_country.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/filter/tv/day/2024-06-22">Live</a><br>
+                    Filter TV Events by the channels country {strCountry}.
+                    <pre><code class="language-html">/api/v2/json/filter/tv/country/united_kingdom</code></pre>
+                    <br>
+
+                    <!-- v2 Filter TV Events by Sport -->
+                    <b style="color:#daa900;">Filter TV Events by Sport</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/filter_tv_events_by_sport.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/filter/tv/sport/motorsport">Live</a><br>
+                    Filter upcoming TV Events by sport {strSport}.
+                    <pre><code class="language-html">/api/v2/json/filter/tv/sport/motorsport</code></pre>
+                    <br>
+
+                    <!-- v2 Filter TV Events by Channel -->
+                    <b style="color:#daa900;">Filter TV Events by Channel</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/filter_tv_events_by_channel.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/filter/tv/channel/sky_sports_main_event">Live</a><br>
+                    Filter upcoming TV Events by Channel Name {strChannel}.
+                    <pre><code class="language-html">/api/v2/json/filter/tv/channel/sky_sports_main_event</code></pre>
+                    <br>
+
+                    <!-- v2 Filter TV Events by Channel ID -->
+                    <b style="color:#daa900;">Filter TV Events by Channel ID</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/filter_tv_events_by_channel.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/filter/tv/channel/sky_sports_main_event">Live</a><br>
+                    Filter upcoming TV Events by Channel ID {idChannel}.
+                    <pre><code class="language-html">/api/v2/json/filter/tv/channelid/3834</code></pre>
+                    <br>
+
+
+                    <!-- v2 All-->
+                    <br><img src="/images/divider.png" alt="seperator bar" style="width:100%" /><br><br><br>
+                    <div id="all_v2" class="alert alert-primary center" role="alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cart-fill" viewBox="0 0 16 16">
+                            <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5M5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4m7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4m-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2m7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2" />
+                        </svg>
+                        <b>v2 API All</b>
+                    </div>
+
+                    <!-- v2 All Countries -->
+                    <b style="color:#daa900;">All Countries</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{NULL}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">500</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/all_countries.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/all/countries">Live</a><br>
+                    Show all the countries supported.
+                    <pre><code class=" language-html">/api/v2/json/all/countries</code></pre>
+                    <br>
+
+                    <!-- v2 All Sports -->
+                    <b style="color:#daa900;">All Sports</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{NULL}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">500</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/all_sports.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/all/sports">Live</a><br>
+                    Show all the sports supported.
+                    <pre><code class=" language-html">/api/v2/json/all/sports</code></pre>
+                    <br>
+
+                    <!-- v2 All Leagues -->
+                    <b style="color:#daa900;">All Leagues</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{NULL}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">3000</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/all_leagues.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/all/leagues">Live</a><br>
+                    Show all the leagues supported.
+                    <pre><code class=" language-html">/api/v2/json/all/leagues</code></pre>
+                    <br>
+
+
+                    <!-- v2 Schedule-->
+                    <br><img src="/images/divider.png" alt="seperator bar" style="width:100%" /><br><br><br>
+                    <div id="schedule_v2" class="alert alert-primary center" role="alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-calendar-date-fill" viewBox="0 0 16 16">
+                            <path d="M4 .5a.5.5 0 0 0-1 0V1H2a2 2 0 0 0-2 2v1h16V3a2 2 0 0 0-2-2h-1V.5a.5.5 0 0 0-1 0V1H4zm5.402 9.746c.625 0 1.184-.484 1.184-1.18 0-.832-.527-1.23-1.16-1.23-.586 0-1.168.387-1.168 1.21 0 .817.543 1.2 1.144 1.2" />
+                            <path d="M16 14V5H0v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2m-6.664-1.21c-1.11 0-1.656-.767-1.703-1.407h.683c.043.37.387.82 1.051.82.844 0 1.301-.848 1.305-2.164h-.027c-.153.414-.637.79-1.383.79-.852 0-1.676-.61-1.676-1.77 0-1.137.871-1.809 1.797-1.809 1.172 0 1.953.734 1.953 2.668 0 1.805-.742 2.871-2 2.871zm-2.89-5.435v5.332H5.77V8.079h-.012c-.29.156-.883.52-1.258.777V8.16a13 13 0 0 1 1.313-.805h.632z" />
+                        </svg>
+                        <b>v2 API Schedule</b>
+                    </div>
+
+                    <!-- v2 Next League Schedule -->
+                    <b style="color:#daa900;">Next 10 Events in League</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">10</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/next_10_events_in_league.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/schedule/next/league/4328">Live</a><br>
+                    List the next 5 events in a league using its unique ID {idLeague}
+                    <pre><code class="language-html">/api/v2/json/schedule/next/league/4328</code></pre>
+                    <br>
+
+                    <!-- v2 Previous League Schedule -->
+                    <b style="color:#daa900;">Previous 10 Events in League</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">10</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/previous_10_events_in_league.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/schedule/previous/league/4328">Live</a><br>
+                    List the previous 5 events in a league using its unique ID {idLeague}
+                    <pre><code class="language-html">/api/v2/json/schedule/previous/league/4328</code></pre>
+                    <br>
+
+                    <!-- v2 Next Team Schedule -->
+                    <b style="color:#daa900;">Next 10 Events in Team</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">10</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/next_10_events_in_team.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/schedule/next/team/133612">Live</a><br>
+                    List the next 5 events for a team using its unique ID {idTeam}
+                    <pre><code class="language-html">/api/v2/json/schedule/next/team/133612</code></pre>
+                    <br>
+
+                    <!-- v2 Previous Team Schedule -->
+                    <b style="color:#daa900;">Previous 10 Events in Team</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">10</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/previous_10_events_in_team.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/schedule/previous/team/133612">Live</a><br>
+                    List the previous 5 events for a team using its unique ID {idTeam}
+                    <pre><code class="language-html">/api/v2/json/schedule/previous/team/133612</code></pre>
+                    <br>
+
+                    <!-- v2 Next Venue Schedule -->
+                    <b style="color:#daa900;">Next 10 Events in Venue</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">10</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/next_10_events_in_venue.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/schedule/next/venue/24413">Live</a><br>
+                    List the next 5 events for a venue using its unique ID {idVenue}
+                    <pre><code class=" language-html">/api/v2/json/schedule/next/venue/24413</code></pre>
+                    <br>
+
+                    <!-- v2 Previous Venue Schedule -->
+                    <b style="color:#daa900;">Previous 10 Events in Venue</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">10</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/previous_10_events_in_venue.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/schedule/previous/venue/24413">Live</a><br>
+                    List the previous 5 events for a venue using its unique ID {idVenue}
+                    <pre><code class=" language-html">/api/v2/json/schedule/previous/venue/24413</code></pre>
+                    <br>
+
+                    <!-- v2 Full Team Season Schedule -->
+                    <b style="color:#daa900;">Full Team Season Schedule</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">250</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/full_team_season_schedule.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/schedule/full/team/133612">Live</a><br>
+                    List the full seasons schedule for a team using its unique ID {idTeam}
+                    <pre><code class=" language-html">/api/v2/json/schedule/full/team/133612</code></pre>
+                    <br>
+
+                    <!-- v2 Full League Season Schedule -->
+                    <b style="color:#daa900;">Full League Season Schedule</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">3000</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/full_league_season_schedule.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/schedule/league/4328/2023-2024">Live</a><br>
+                    List the full seasons schedule for a league using its unique ID {idLeague}
+                    <pre><code class=" language-html">/api/v2/json/schedule/league/4328/2023-2024</code></pre>
+                    <br>
+
+
+
+                    <!-- v2 Livescores-->
+                    <br><img src="/images/divider.png" alt="seperator bar" style="width:100%" /><br><br><br>
+                    <div id="livescores_v2" class="alert alert-primary center" role="alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bar-chart-steps" viewBox="0 0 16 16">
+                            <path d="M.5 0a.5.5 0 0 1 .5.5v15a.5.5 0 0 1-1 0V.5A.5.5 0 0 1 .5 0M2 1.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-4a.5.5 0 0 1-.5-.5zm2 4a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5zm2 4a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1-.5-.5zm2 4a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5z" />
+                        </svg>
+                        <b>v2 API Livescores</b><br>
+
+                    </div>
+
+                    <!-- v2 Livescore Sport -->
+                    <b style="color:#daa900;">Livescore Sport</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{String}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/livescore_sport.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/livescore/soccer">Live</a><br>
+                    Show the current Livescores for a particular sport {strSport}
+                    <pre><code class=" language-html">/api/v2/json/livescore/soccer</code></pre>
+                    <br>
+
+                    <!-- v2 Livescore League -->
+                    <b style="color:#daa900;">Livescore League</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{Integer}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">100</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/livescore_league.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/livescore/4399">Live</a><br>
+                    Show the current Livescores for a particular league by its unique ID {idLeague}
+                    <pre><code class=" language-html">/api/v2/json/livescore/4399</code></pre>
+                    <br>
+
+                    <!-- v2 Livescore All -->
+                    <b style="color:#daa900;">Livescore All</b><br>
+                    Type: <button type="button" class="btn btn-secondary btn-sm">{NULL}</button>
+                    Limit: <button type="button" class="btn btn-secondary btn-sm">500</button><br>
+                    Example: <a href="https://www.thesportsdb.com/api/v2/examples/livescore_all.json">Static</a>
+                    / <a href="https://www.thesportsdb.com/api/v2/json/livescore/all">Live</a><br>
+                    Show the current Livescores for all sports.
+                    <pre><code class=" language-html">/api/v2/json/livescore/all</code></pre>
+                    <br>
+
+
+                    <!-- Readme.io Documentation -->
+                    <br><img src="/images/divider.png" alt="seperator bar" style="width:100%" /><br><br><br>
+
+                    <h1 id="readme">Readme.io Documentation</h1><br>
+
+                    <b>Introduction</b><br>
+
+                    <img src="/images/icons/svg/readme_io.svg" width='50%' alt="openapi logo"><br><br>
+                    Readme.io is a great resource to check the documentation (a mirror of here) but also to test the API and see sample code in many different languages.
+                    The sandbox feature with realtime logs and data is particularly useful for new developers.<br><br>
+
+
+                    <a href='https://thedatadb.readme.io/reference/getteambyname#/' target='_blank'><button type="button" class="btn btn-info">v1 Readme.io Documentation</button></a>
+                    <a href='https://thedatadb.readme.io/reference/searchleaguebyname#/' target='_blank'><button type="button" class="btn btn-info">v2 Readme.io Documentation</button></a><br><br>
+
+
+                    <!-- OpenAPI Specification -->
+                    <br><img src="/images/divider.png" alt="seperator bar" style="width:100%" /><br><br><br>
+
+                    <h1 id="openapi">OpenAPI / Swagger</h1><br>
+
+                    <b>Introduction</b><br>
+
+                    <img src="/images/icons/svg/openapi.svg" width='50%' alt="openapi logo"><br><br>
+                    The OpenAPI Specification (OAS) defines a standard,
+                    language-agnostic interface to HTTP APIs which allows both humans and computers to discover and understand the capabilities of the service without access to source code,
+                    documentation, or through network traffic inspection. When properly defined, a consumer can understand and interact with the remote service with a
+                    minimal amount of implementation logic.<br><br>
+
+                    An OpenAPI Description can then be used by documentation generation tools to display the API,
+                    code generation tools to generate servers and clients in various programming languages, testing tools, and many other use cases.<br><br>
+
+
+                    <a href='/api/spec/v1/openapi.yaml' target='_blank'><button type="button" class="btn btn-success">v1 OpenAPI Specification</button></a>
+                    <a href='/api/spec/v2/openapi.yaml' target='_blank'><button type="button" class="btn btn-success">v2 OpenAPI Specification</button></a><br>
+                    <br>
+
+
+                    <!-- Postman Collection -->
+                    <br><img src="/images/divider.png" alt="seperator bar" style="width:100%" /><br><br><br>
+
+                    <h1 id="postman">Postman Collection</h1><br>
+
+                    <b>Introduction</b><br>
+
+                    <img src="/images/icons/svg/postman.svg" width='50%' alt="postman logo"><br><br>
+                    Postman is the single platform for designing, building, and scaling APIs—together.
+                    Join over 40 million users who have consolidated their workflows and leveled up their API game—all in one powerful platform.<br><br>
+
+                    <br>
+                    <a href='https://www.postman.com/thedatadb/thesportsdb/collection/0t5rbv8/thesportsdb-v1-api' target='_blank'><button type="button" class="btn btn-warning">v1 Postman Collection</button></a>
+                    <a href='https://www.postman.com/thedatadb/thesportsdb/collection/d7hdb1o/thesportsdb-v2-api' target='_blank'><button type="button" class="btn btn-warning">v2 Postman Collection</button></a>
+                    <br><br>
+
+
+                    <!-- Artificial Inteligence MCP -->
+                    <br><img src="/images/divider.png" alt="seperator bar" style="width:100%" /><br><br><br>
+
+                    <h1 id="mcp">Artificial Inteligence MCP</h1><br>
+
+                    <b>Introduction</b><br>
+
+                    <img src="/images/icons/svg/mcp.svg" width='50%' alt="MCP logo"><br><br>
+                    MCP (Model Context Protocol) is an open protocol that standardizes how applications provide context to LLMs.
+                    Think of MCP like a USB-C port for AI applications.
+                    Just as USB-C provides a standardized way to connect your devices to various peripherals and accessories,
+                    MCP provides a standardized way to connect AI models to different data sources and tools.<br><br>
+
+                    <br>
+                    <a href="https://www.thesportsdb.com/api/spec/v1/MCP/index.js"> <button type="button" class="btn btn-secondary">v1 MCP Specification</button></a>
+                    <a href="https://www.thesportsdb.com/api/spec/v2/MCP/index.js"> <button type="button" class="btn btn-secondary">v2 MCP Specification</button></a><br><br>
+
+                </div><br><br>
+                <a href="#">Back to Top</a>
+            </div> <!--Right Side End -->
+        </div>
+        </div>
+
+    </section><!--/#bottom-->
+
+    <!--######## Footer ########-->
+<footer id="footer" class="midnight-blue">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-3">
+                2016 - 2026 TheSportsDB.com</a>
+                <br>
+                <a href='/free_sports_api' />Free Sports API</a>
+            </div>
+            <div class="col-sm-6">
+                <center>
+                    Socials:
+                    <a href="https://www.facebook.com/profile/61588263891636"><img src="/images/icons/svg/socials/social-f.svg" width='32' height="32" alt='facebook icon'></a>
+                    <a href="https://x.com/TheAudioDB"><img src="/images/icons/svg/socials/social-x.svg" width='32' height="32" alt='twitter icon'></a>
+                    <a href="https://discord.gg/pFvgaXV"><img src="/images/icons/svg/socials/social-d.svg" width='32' height="32" alt='discord icon'></a><br>
+                    <div style="margin: 4px 0 10px 0; line-height: 1;">
+                        <i class="fa fa-clock-o" style="font-size:0.85em; margin-right:2px;" aria-hidden="true"></i>
+                        <span style="font-size:0.9em; margin-right:4px;">Timezone:</span>
+                        <span style="font-size:0.95em; text-transform:uppercase;">est</span>
+                    </div>
+                    <a href="https://www.thecocktaildb.com" rel="noopener" target="_blank"><img src="/images/logo-tcdb.png" height="30" width="190" alt="thecocktaildb logo"></a>
+                    <a href="https://www.theaudiodb.com" rel="noopener" target="_blank"><img src="/images/logo-tadb.png" height="40" alt="theaudiodb logo"></a>
+                    <a href="https://www.themealdb.com" rel="noopener" target="_blank"><img src="/images/logo-tmdb.png" height="30" width="159" alt="themealdb logo"></a>
+                </center>
+            </div>
+            <div class="col-sm-3">
+                <ul class="pull-right">
+                    <li><a href="/docs_about.php">About</a></li>
+                    <li><a href="/docs_terms_of_use.php">Terms</a></li>
+                    <li><a href="/docs_privacy_policy.php">Privacy</a></li>
+                    <li><a href="/docs_refunds.php">Refunds</a></li>
+                    <li><a href="/docs_contact.php">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+<!--######## Footer ########-->    <!--######## Scripts ########-->
+<script src="/js/bootstrap.bundle.min.js"></script>
+<script src="/js/webmcp.js"></script>
+<!--######## Scripts ########-->
+
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"5ee219eb9c3c41be8edbc2a23a9f845c","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+
+</html>
+
+

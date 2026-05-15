@@ -270,13 +270,11 @@ export function SportsBingoSelectBoard() {
 
   const hasCardForGame = useMemo(() => activeCards.some((card) => card.gameId === gameId), [activeCards, gameId]);
 
-  const canGenerate = Boolean(game && gameId) && !hasCardForGame && !generating && !playing;
+  const canGenerate = Boolean(game && gameId) && !generating && !playing;
   const canPlay =
     Boolean(preview) &&
     Boolean(userId) &&
     Boolean(venueId) &&
-    !hasCardForGame &&
-    activeCards.length < 4 &&
     !playing;
 
   const generateBoard = useCallback(async () => {

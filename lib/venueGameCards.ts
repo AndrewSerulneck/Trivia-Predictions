@@ -42,9 +42,9 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
     cardClassName: "bg-slate-800 text-white",
     visibleOnVenueHome: true,
     rules: [
-      "-Draft a team",
-      "-Earn points based on player stats",
-      "-Rosters are locked once games begin",
+      "-Build one NBA lineup with players from today's games and win points based on how well they perform!",
+      "-Only players in games that have not started yet are eligible to be drafted.",
+      "-Fantasy scores are updated in real time once games begin.",
     ],
   },
   {

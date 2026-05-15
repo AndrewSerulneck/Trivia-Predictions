@@ -962,7 +962,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           <div className="relative flex flex-col items-center justify-center gap-3">
             <div className="w-full text-center">
               <h2 className="text-center text-[clamp(1.55rem,7.1vw,3.3rem)] font-black uppercase leading-[0.95] tracking-[0.04em] text-white [font-family:'Bree_Serif','Nunito',serif]">
-                {venueDisplayName}
+                <span aria-hidden="true" className="mr-2">🏠</span>{venueDisplayName}
               </h2>
             </div>
             <button
@@ -1033,7 +1033,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
             </div>
             {triviaUnlockCountdown > 0 ? <div className="mx-auto mt-2 max-w-[22rem] rounded-full border border-amber-200/80 bg-amber-100/95 px-3 py-1.5 text-center text-[11px] font-black tracking-[0.08em] text-amber-900">Trivia unlocks in {formatCountdown(triviaUnlockCountdown)}</div> : null}
             {triviaGateNotice ? <div className="mx-auto mt-2 max-w-[22rem] rounded-xl border border-rose-200/80 bg-rose-100/95 px-3 py-2 text-center text-xs font-semibold text-rose-900">{triviaGateNotice}</div> : null}
-            {isBadgeLoading ? <div className="mx-auto mt-2 max-w-[22rem] rounded-full border border-slate-200/80 bg-slate-50/90 px-3 py-1.5 text-center text-[11px] font-semibold text-slate-700">Loading activity badges...</div> : null}
             {badgeError ? (
               <button
                 type="button"

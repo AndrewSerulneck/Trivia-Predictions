@@ -11,7 +11,13 @@
       "Bash(node scripts/test-webhook.cjs player-stat http://localhost:3000)",
       "Bash(curl -s \"http://localhost:3000/api/fantasy/games\")",
       "Bash(curl -s \"http://localhost:3000/api/fantasy/entries?userId=test-user&includeSettled=true&refreshProgress=true&limit=200\")",
-      "Bash(curl -v \"http://localhost:3000/api/fantasy/games?tzOffsetMinutes=240&limit=30&venueId=venue-001\")"
+      "Bash(curl -v \"http://localhost:3000/api/fantasy/games?tzOffsetMinutes=240&limit=30&venueId=venue-001\")",
+      "Bash(node --check ./scripts/sync-nba-headshots.cjs)",
+      "Bash(node -r dotenv/config scripts/sync-nba-headshots.cjs)",
+      "Bash(grep -v \".cjs\\\\|.js$\")",
+      "Bash(python3 -c ' *)",
+      "Bash(curl -s --max-time 10 -w '\\\\nHTTP:%{http_code}' -H 'User-Agent: Mozilla/5.0' https://www.nba.com/player/2544)",
+      "Bash(curl -s --max-time 10 -w '\\\\nHTTP:%{http_code}' -H 'User-Agent: Mozilla/5.0' https://search.nba.com/players?q=LeBron)"
     ]
   }
 }

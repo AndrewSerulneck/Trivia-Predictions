@@ -7,8 +7,6 @@ import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { supabase } from "@/lib/supabase";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
-import { PointsLedger } from "@/components/fantasy/PointsLedger";
-import type { LedgerEntry } from "@/components/fantasy/PointsLedger";
 import type { FantasyEntry, FantasyGame, FantasyLeaderboardEntry, FantasyPlayerPoolItem } from "@/lib/fantasy";
 import type { FantasyLineupPlayer } from "@/lib/fantasy";
 
@@ -492,7 +490,7 @@ export function FantasyHome() {
   const [playerPopToneById, setPlayerPopToneById] = useState<Record<string, "gain" | "loss">>({});
   const [lastRealtimeMessageAt, setLastRealtimeMessageAt] = useState<number | null>(null);
   const [isRealtimeFresh, setIsRealtimeFresh] = useState(false);
-  const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>([]);
+  const [isEditingRoster, setIsEditingRoster] = useState(false);
   const [statFlashes, setStatFlashes] = useState<Array<{ id: string; label: string; pointsDelta: number }>>([]);
   const gameDetailsRequestNonceRef = useRef(0);
   const prevStatsSnapshotRef = useRef<Map<number, StatsSnapshot>>(new Map());
@@ -901,6 +899,10 @@ export function FantasyHome() {
   }, [existingEntryForSelectedGame, selectedGameId]);
 
   useEffect(() => {
+    setIsEditingRoster(false);
+  }, [selectedGameId]);
+
+  useEffect(() => {
     if (!existingEntryForSelectedGame || !canEditExistingEntryLineup) {
       return;
     }
@@ -1065,7 +1067,6 @@ export function FantasyHome() {
     if (!supabase) return;
     const client = supabase;
     let active = true;
-    let ledgerIdCounter = 0;
 
     const channel = client
       .channel("live-player-stats-feed")
@@ -1116,17 +1117,6 @@ export function FantasyHome() {
             pushStatFlash(change.flashLabel, change.pointsDelta);
           }
 
-          ledgerIdCounter += 1;
-          const entry: LedgerEntry = {
-            id: `${playerId}-${Date.now()}-${ledgerIdCounter}`,
-            playerName: String(row.player_name ?? "").trim() || "Unknown Player",
-            teamName: String(row.team_name ?? "").trim() || "",
-            actionLabel: change.actionLabel,
-            pointsDelta: change.pointsDelta,
-            timestamp: Date.now(),
-          };
-
-          setLedgerEntries((prev) => [entry, ...prev].slice(0, 5));
           setLastRealtimeMessageAt(Date.now());
         }
       )
@@ -1199,6 +1189,11 @@ export function FantasyHome() {
       }
       return [...current, playerName];
     });
+  }, []);
+
+  const removeSelectedPlayer = useCallback((playerName: string) => {
+    setHasLocalLineupDraft(true);
+    setSelectedPlayers((current) => current.filter((name) => name !== playerName));
   }, []);
 
   const persistLineup = useCallback(async (lineup: string[]) => {
@@ -1359,6 +1354,14 @@ export function FantasyHome() {
     () => finalUnclaimedEntries.reduce((sum, e) => sum + computeFantasyClaimablePoints(e), 0),
     [finalUnclaimedEntries]
   );
+  const selectedPlayerKeySet = useMemo(
+    () => new Set(selectedPlayers.map((name) => normalizePlayerKey(name))),
+    [selectedPlayers]
+  );
+  const availablePlayerPool = useMemo(
+    () => playerPool.filter((item) => !selectedPlayerKeySet.has(normalizePlayerKey(item.playerName))),
+    [playerPool, selectedPlayerKeySet]
+  );
 
   const collectAllFantasyEntries = useCallback(async () => {
     if (!userId || isCollectingAllFantasy || finalUnclaimedEntries.length === 0) return;
@@ -1454,14 +1457,14 @@ export function FantasyHome() {
       <VenueEntryRulesPanel gameKey="fantasy" shouldDisplay={entries.length === 0} />
 
       {finalUnclaimedEntries.length > 0 ? (
-        <div className="rounded-xl border-2 border-violet-500 bg-gradient-to-r from-violet-600 to-indigo-600 px-3 py-3 shadow-[0_6px_18px_rgba(124,58,237,0.35)]">
-          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-violet-100">Fantasy Points Ready</p>
+        <div className="rounded-xl border-2 border-cyan-400 bg-gradient-to-r from-cyan-600 to-sky-600 px-3 py-3 shadow-[0_6px_18px_rgba(8,145,178,0.35)]">
+          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-cyan-50">Fantasy Points Ready</p>
           <div className="mt-1 flex items-center justify-between gap-3">
             <div>
               <p className="text-lg font-black leading-none text-white">
                 {finalUnclaimedEntries.length} completed game{finalUnclaimedEntries.length !== 1 ? "s" : ""}
               </p>
-              <p className="mt-0.5 text-[11px] font-semibold text-violet-100">
+              <p className="mt-0.5 text-[11px] font-semibold text-cyan-50">
                 {totalUnclaimedFantasyPoints} pts waiting to collect
               </p>
             </div>
@@ -1470,7 +1473,7 @@ export function FantasyHome() {
               data-fantasy-collect-all
               onClick={() => void collectAllFantasyEntries()}
               disabled={isCollectingAllFantasy}
-              className="tp-clean-button inline-flex min-h-[44px] items-center rounded-full border-2 border-white bg-white px-4 py-2 text-sm font-black text-violet-800 shadow-[0_3px_0_rgba(0,0,0,0.18)] transition-all active:scale-95 disabled:opacity-60"
+              className="tp-clean-button inline-flex min-h-[44px] items-center rounded-full border-2 border-white bg-white px-4 py-2 text-sm font-black text-cyan-800 shadow-[0_3px_0_rgba(0,0,0,0.18)] transition-all active:scale-95 disabled:opacity-60"
             >
               {isCollectingAllFantasy ? "Collecting..." : "Collect Points"}
             </button>
@@ -1478,17 +1481,10 @@ export function FantasyHome() {
         </div>
       ) : null}
 
-      <section className="rounded-2xl border border-violet-200/70 bg-violet-50/85 p-4 shadow-sm">
+      <section className="rounded-2xl border border-cyan-200 bg-cyan-50/85 p-4 shadow-sm">
         <div className="flex items-center justify-between gap-2">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Hightop Fantasy™</h2>
-            <p className="text-sm leading-relaxed text-slate-700">
-              Build one NBA lineup for today&apos;s slate. Only players in games that have not started yet are eligible.
-            </p>
-          </div>
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-white/80 px-2 py-1">
-            <span className={`inline-flex h-2 w-2 rounded-full bg-emerald-500 ${isRealtimeFresh ? "animate-pulse" : "opacity-40"}`} />
-            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-700">Live</span>
           </div>
         </div>
 
@@ -1512,16 +1508,35 @@ export function FantasyHome() {
       </section>
 
       {trackedEntry ? (
-        <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm">
+        <section className="rounded-2xl border border-cyan-200 bg-cyan-50/85 p-4 shadow-sm">
           <div className="flex items-center justify-between gap-2">
             <h3 className="text-base font-semibold text-slate-900">Your Team Tracker</h3>
-            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusBadge(trackedEntry.status)}`}>
-              {toStatusLabel(trackedEntry.status)}
-            </span>
+            {existingEntryForSelectedGame ? (
+              canEditExistingEntryLineup ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isEditingRoster) {
+                      setHasLocalLineupDraft(true);
+                    } else {
+                      setIsEditingRoster(true);
+                    }
+                  }}
+                  className="tp-clean-button rounded-lg border border-indigo-500 bg-indigo-100 px-3 py-1.5 text-xs font-semibold text-indigo-900"
+                >
+                  {isEditingRoster ? "Submit Roster" : "Edit Roster"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  className="tp-clean-button cursor-not-allowed rounded-lg border border-slate-400 bg-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 opacity-90"
+                >
+                  Roster Locked
+                </button>
+              )
+            ) : null}
           </div>
-          <p className="mt-1 text-xs leading-relaxed text-slate-700">
-            {trackedEntry.gameLabel} · {formatLocalDateTime(trackedEntry.startsAt)}
-          </p>
           <div className="mt-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
             <div className="flex items-center justify-between gap-2">
               <p className="text-sm font-semibold text-slate-900">{showTrackedEntryClaimButton ? "Final Score" : "Live Points"}</p>
@@ -1544,7 +1559,13 @@ export function FantasyHome() {
               </SpringPop>
             </div>
             <ul className="mt-2 space-y-1">
-              {(trackedEntry.lineupPlayers.length > 0
+              {((isEditingRoster && canEditExistingEntryLineup && existingEntryForSelectedGame)
+                ? selectedPlayers.map((playerName, index) => ({
+                    playerId: -(index + 1),
+                    playerName,
+                    headshotUrl: playerPoolHeadshotByName.get(normalizePlayerKey(playerName)) ?? null,
+                  }))
+                : trackedEntry.lineupPlayers.length > 0
                 ? trackedEntry.lineupPlayers
                 : trackedEntry.lineup
                     .map((playerName, index) => ({
@@ -1577,14 +1598,24 @@ export function FantasyHome() {
                     }`}
                   >
                     <div className="flex min-w-0 items-center gap-2">
-                      <PlayerHeadshot src={player.headshotUrl ?? null} name={playerName} />
-                      <span className="truncate font-medium text-slate-800">{playerName}</span>
+                      {isEditingRoster && canEditExistingEntryLineup && existingEntryForSelectedGame ? (
+                        <button
+                          type="button"
+                          onClick={() => removeSelectedPlayer(playerName)}
+                          className="tp-clean-button inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-rose-600 bg-rose-600 text-[10px] font-black leading-none text-white"
+                          aria-label={`Remove ${playerName}`}
+                        >
+                          -
+                        </button>
+                      ) : null}
+                      <PlayerHeadshot src={player.headshotUrl ?? null} name={playerName} sizeClass="h-9 w-9" />
+                      <span className="truncate text-sm font-semibold text-slate-800">{playerName}</span>
                     </div>
                     <SpringPop
                       popKey={playerPopTickById[String(player.playerId)] ?? 0}
                       glowSize={10}
                       glowColor={popTone === "loss" ? "red" : "green"}
-                      className={`font-semibold ${isHot ? (popTone === "loss" ? "text-rose-200" : "text-emerald-200") : ""}`}
+                      className={`text-sm font-bold ${isHot ? (popTone === "loss" ? "text-rose-200" : "text-emerald-200") : ""}`}
                     >
                       {playerPoints.toFixed(2)} pts
                     </SpringPop>
@@ -1613,25 +1644,15 @@ export function FantasyHome() {
         </section>
       ) : null}
 
-      <PointsLedger
-        entries={ledgerEntries}
-        gameLabel={
-          liveDebugTargetGame
-            ? `${liveDebugTargetGame.awayTeam} vs ${liveDebugTargetGame.homeTeam}`
-            : undefined
-        }
-        isLive={Boolean(liveDebugTargetGame)}
-      />
-
       {finalUnclaimedEntries.length > 1 ? (
-        <section className="rounded-2xl border border-emerald-200/70 bg-emerald-50/70 p-4 shadow-sm">
+        <section className="rounded-2xl border border-cyan-200 bg-cyan-50/85 p-4 shadow-sm">
           <h3 className="text-base font-semibold text-slate-900">Completed Games Ready To Collect</h3>
             <p className="mt-1 text-xs leading-relaxed text-slate-700">
               Finalized rosters stay here until you collect points.
             </p>
           <div className="mt-3 space-y-2">
             {finalUnclaimedEntries.map((entry) => (
-              <div key={entry.id} className="rounded-lg border border-emerald-200 bg-white px-3 py-2">
+              <div key={entry.id} className="rounded-lg border border-cyan-200 bg-white px-3 py-2">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-slate-900">{entry.gameLabel}</p>
@@ -1644,7 +1665,7 @@ export function FantasyHome() {
                       void claimReward(entry, rect);
                     }}
                     disabled={claimingEntryId === entry.id}
-                    className="tp-clean-button rounded-lg border border-emerald-500 bg-emerald-100 px-2.5 py-1.5 text-xs font-semibold text-emerald-900 disabled:opacity-60"
+                    className="tp-clean-button rounded-lg border border-cyan-500 bg-cyan-100 px-2.5 py-1.5 text-xs font-semibold text-cyan-900 disabled:opacity-60"
                   >
                     {claimingEntryId === entry.id ? "Collecting..." : `Collect ${computeFantasyClaimablePoints(entry)} Points`}
                   </button>
@@ -1663,13 +1684,13 @@ export function FantasyHome() {
             onClick={() => setHasStartedGame(true)}
             className="tp-clean-button mt-3 rounded-lg border border-indigo-500 bg-indigo-100 px-3 py-2 text-sm font-semibold text-indigo-900"
           >
-            Start Fantasy Game
+            Draft Your Roster
           </button>
         </section>
       ) : null}
 
-      {selectedGameId && hasResolvedEntries && ((hasStartedGame && !existingEntryForSelectedGame) || canEditExistingEntryLineup) ? (
-        <section className="rounded-2xl border border-violet-200/70 bg-violet-50/85 p-4 shadow-sm">
+      {selectedGameId && hasResolvedEntries && ((hasStartedGame && !existingEntryForSelectedGame) || (canEditExistingEntryLineup && isEditingRoster)) ? (
+        <section className="rounded-2xl border border-cyan-200 bg-cyan-50/85 p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold text-slate-900">
               {existingEntryForSelectedGame ? "Update Lineup" : "Lineup Builder"}
@@ -1678,7 +1699,7 @@ export function FantasyHome() {
           </div>
 
           <div className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-3">
-            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Scoring System</p>
+            <p className="text-center text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Scoring System</p>
             <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
               <span className="text-slate-600">Points</span><span className="text-right font-semibold text-slate-900">+1.0</span>
               <span className="text-slate-600">Rebounds</span><span className="text-right font-semibold text-slate-900">+1.2</span>
@@ -1692,7 +1713,7 @@ export function FantasyHome() {
             Tap any player once to add them instantly. Tap again to remove.
           </p>
 
-          {playerPool.length === 0 ? (
+          {availablePlayerPool.length === 0 ? (
             <div className="mt-3">
               {nextUnlockedGame ? (
                 <BasketballLoader label="Loading today's eligible players..." />
@@ -1702,7 +1723,7 @@ export function FantasyHome() {
             </div>
           ) : (
             <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {playerPool.map((item) => {
+              {availablePlayerPool.map((item) => {
                 const selected = selectedPlayers.includes(item.playerName);
                 return (
                   <button
@@ -1713,13 +1734,13 @@ export function FantasyHome() {
                     className={`tp-clean-button rounded-lg border px-3 py-2 text-left disabled:opacity-60 ${
                       selected
                         ? "border-emerald-500 bg-emerald-50"
-                        : "border-violet-200 bg-white/90 hover:border-violet-300"
+                        : "border-cyan-200 bg-white/90 hover:border-cyan-300"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex min-w-0 items-center gap-2">
-                        <PlayerHeadshot src={item.headshotUrl} name={item.playerName} />
-                        <div className="truncate text-sm font-semibold text-slate-900">{item.playerName}</div>
+                        <PlayerHeadshot src={item.headshotUrl || FALLBACK_HEADSHOT_SRC} name={item.playerName} sizeClass="h-9 w-9" />
+                        <div className="truncate text-base font-semibold text-slate-900">{item.playerName}</div>
                       </div>
                       {selected ? (
                         <span className="rounded-full border border-emerald-300 bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-emerald-900">
@@ -1747,15 +1768,6 @@ export function FantasyHome() {
               : selectedPlayers.length === 5
                 ? "Lineup auto-saves when complete."
                 : `Select ${5 - selectedPlayers.length} more player${5 - selectedPlayers.length === 1 ? "" : "s"} to auto-save.`}
-          </p>
-        </section>
-      ) : null}
-
-      {selectedGameId && hasResolvedEntries && existingEntryForSelectedGame && !canEditExistingEntryLineup ? (
-        <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
-          <h3 className="text-base font-semibold text-slate-900">Lineup Locked</h3>
-          <p className="mt-1 text-sm text-slate-700">
-            Your roster is locked because at least one selected player is in an active or started game.
           </p>
         </section>
       ) : null}

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import {
   verifyBdlSignature,
   parseNbaPlayerEvent,
+  parseMlbBatterEvent,
   calcNbaFantasyPoints,
   normalizePlayerName,
   getStatForBingoMetric,
@@ -10,7 +11,7 @@ import {
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { settlePendingPickEmPicks } from "@/lib/pickem";
 import { refreshFantasyProgress } from "@/lib/fantasy";
-import { refreshSportsBingoProgress } from "@/lib/sportsBingo";
+import { applyMlbWebhookPropEvent, refreshSportsBingoProgress } from "@/lib/sportsBingo";
 
 const WEBHOOK_SECRET = process.env.BALLDONTLIE_WEBHOOK_SECRET?.trim() ?? "";
 
@@ -75,14 +76,25 @@ export async function POST(request: Request) {
     normalizedEventType.startsWith("mlb.player");
   if (isMlbLiveStatEvent) {
     try {
-      const gameId = extractGameIdFromWebhook(root);
+      const mlbBatterEvent = parseMlbBatterEvent(body);
+      const gameId = mlbBatterEvent?.gameId || extractGameIdFromWebhook(root);
+      let propUpdates: { updatedSquares: number; completedSquares: number } | null = null;
+      if (mlbBatterEvent) {
+        propUpdates = await applyMlbWebhookPropEvent({
+          gameId: mlbBatterEvent.gameId,
+          eventType: mlbBatterEvent.eventType,
+          playerName: mlbBatterEvent.playerName,
+          teamName: mlbBatterEvent.teamName,
+          pitchCount: mlbBatterEvent.pitchCount,
+        });
+      }
       const bingoResult = await refreshSportsBingoProgress({
         sportKey: "baseball_mlb",
         gameId: gameId || undefined,
         limit: 500,
         bypassCache: true,
       });
-      result.mlbPlayerEvent = { gameId, bingo: bingoResult };
+      result.mlbPlayerEvent = { gameId, propUpdates, bingo: bingoResult };
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
       console.error("[bdl-webhook] mlb player event refresh failed:", msg);

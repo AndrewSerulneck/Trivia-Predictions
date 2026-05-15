@@ -349,9 +349,15 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         const looksLikeNflOutOfSeason =
           selectedSportSlug === "nfl" && (message.includes("422") || message.toLowerCase().includes("odds api"));
         if (looksLikeNflOutOfSeason) {
-          setErrorMessage("NFL Pick 'Em is currently out of season. Please select another sport.");
+          setErrorMessage("");
           setGames([]);
-          setSport((current) => (current ? { ...current, isClickable: false } : current));
+          setSport((current) => {
+            if (current && current.slug === "nfl") {
+              return { ...current, isClickable: true };
+            }
+            const nfl = sports.find((item) => item.slug === "nfl");
+            return nfl ? { ...nfl, isClickable: true } : current;
+          });
           return;
         }
         if (!background || gamesRef.current.length === 0) {
@@ -363,7 +369,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         }
       }
     },
-    [nflWeekStartDate, selectedDate, selectedSportSlug, userId, venueId]
+    [nflWeekStartDate, selectedDate, selectedSportSlug, sports, userId, venueId]
   );
 
   useEffect(() => {
@@ -911,7 +917,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
             ) : (
               sports.map((item) => {
                 const isSelected = selectedSportSlug === item.slug;
-                const isDisabled = !item.isClickable;
+                const isDisabled = !item.isClickable && item.slug !== "nfl";
                 return (
                   <button
                     key={item.slug}
@@ -1038,13 +1044,13 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800 sm:p-3 sm:text-sm">
           Choose a sport to load today&apos;s games.
         </div>
-      ) : !sport.isClickable ? (
+      ) : !sport.isClickable && sport.slug !== "nfl" ? (
         <div className="rounded-xl border border-slate-300 bg-slate-50 p-2.5 text-xs text-slate-700 sm:p-3 sm:text-sm">
           {sport.label} Pick &apos;Em is coming soon.
         </div>
       ) : grouped.length === 0 ? (
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-600 sm:p-3 sm:text-sm">
-          Sorry, no games availalbe. Check back later!
+          Sorry, no games available. Check back later!
         </div>
       ) : (
         <div className="space-y-5">

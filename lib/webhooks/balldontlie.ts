@@ -64,6 +64,14 @@ export type BdlNbaPlayerEvent = {
   stats: BdlPlayerStats;
 };
 
+export type BdlMlbBatterEvent = {
+  eventType: "groundout" | "flyout" | "strikeout" | "hit" | "home_run" | "walk" | "hit_by_pitch";
+  gameId: string;
+  playerName: string;
+  teamName: string;
+  pitchCount: number | null;
+};
+
 // ---- Defensive payload parsing ----
 
 type Obj = Record<string, unknown>;
@@ -103,6 +111,17 @@ function parseMinutesDecimal(raw: unknown): number {
     if (Number.isFinite(n)) return n;
   }
   return 0;
+}
+
+function pickNumAllowZero(obj: unknown, paths: string[][]): number | null {
+  for (const path of paths) {
+    const raw = dig(obj, path);
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  return null;
 }
 
 export function parseNbaPlayerEvent(rawBody: unknown): BdlNbaPlayerEvent | null {
@@ -159,6 +178,59 @@ export function parseNbaPlayerEvent(rawBody: unknown): BdlNbaPlayerEvent | null 
     teamName,
     gameStatus,
     stats,
+  };
+}
+
+function toMlbEventType(rawType: string): BdlMlbBatterEvent["eventType"] | null {
+  const normalized = rawType.trim().toLowerCase();
+  if (normalized === "batter.groundout" || normalized.endsWith(".batter.groundout")) return "groundout";
+  if (normalized === "batter.flyout" || normalized.endsWith(".batter.flyout")) return "flyout";
+  if (normalized === "batter.strikeout" || normalized.endsWith(".batter.strikeout")) return "strikeout";
+  if (normalized === "batter.hit" || normalized.endsWith(".batter.hit")) return "hit";
+  if (normalized === "batter.home_run" || normalized.endsWith(".batter.home_run")) return "home_run";
+  if (normalized === "batter.walk" || normalized.endsWith(".batter.walk")) return "walk";
+  if (normalized === "batter.hit_by_pitch" || normalized.endsWith(".batter.hit_by_pitch")) return "hit_by_pitch";
+  return null;
+}
+
+export function parseMlbBatterEvent(rawBody: unknown): BdlMlbBatterEvent | null {
+  if (!rawBody || typeof rawBody !== "object") return null;
+  const root = rawBody as Obj;
+  const data: Obj =
+    root.data != null && typeof root.data === "object" ? (root.data as Obj) : root;
+
+  const rawType = pickStr(root, [["type"], ["event"], ["event_type"]]);
+  const eventType = toMlbEventType(rawType);
+  if (!eventType) {
+    return null;
+  }
+
+  const gameId = pickStr(data, [["game", "id"], ["game_id"], ["event", "game_id"], ["play", "game_id"]]);
+  if (!gameId) {
+    return null;
+  }
+
+  const playerName =
+    pickStr(data, [["player", "full_name"], ["player", "name"]]) ||
+    `${pickStr(data, [["player", "first_name"]])} ${pickStr(data, [["player", "last_name"]])}`.trim();
+  if (!playerName) {
+    return null;
+  }
+
+  const teamName = pickStr(data, [["team", "full_name"], ["team", "name"], ["team_name"]]);
+  if (!teamName) {
+    return null;
+  }
+
+  const pitchCountRaw = pickNumAllowZero(data, [["pitch_count"], ["pitches"], ["play", "pitch_count"], ["event", "pitch_count"]]);
+  const pitchCount = pitchCountRaw !== null && Number.isFinite(pitchCountRaw) ? Math.max(0, Math.floor(pitchCountRaw)) : null;
+
+  return {
+    eventType,
+    gameId: String(gameId),
+    playerName,
+    teamName,
+    pitchCount,
   };
 }
 
