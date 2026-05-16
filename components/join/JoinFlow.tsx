@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { PageShell } from "@/components/ui/PageShell";
@@ -221,10 +222,10 @@ const JoinHeaderLights = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, [hydrated]);
 
-  if (!hydrated) return null;
+  if (!hydrated || typeof document === "undefined") return null;
 
-  return (
-    <div className="pointer-events-none fixed inset-0 z-[1200]">
+  return createPortal(
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-[1200]">
       <div
         role="presentation"
         className="absolute left-1/2 top-0 select-none"
@@ -243,7 +244,8 @@ const JoinHeaderLights = () => {
           className="h-full w-full object-contain opacity-80 [mix-blend-mode:screen] [mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.95)_0%,rgba(0,0,0,0.82)_30%,rgba(0,0,0,0.5)_62%,rgba(0,0,0,0.18)_82%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.95)_0%,rgba(0,0,0,0.82)_30%,rgba(0,0,0,0.5)_62%,rgba(0,0,0,0.18)_82%,transparent_100%)]"
         />
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
@@ -1231,7 +1233,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         showBranding
         showAlerts={false}
       >
-        <div className="h-full space-y-4 overflow-y-auto pr-1 text-sm">
+        <div className="h-full space-y-4 overflow-y-auto text-sm">
           {errorMessage && (
             <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-rose-700">
               {errorMessage}
@@ -1243,7 +1245,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             </div>
           )}
 
-          <div className="relative overflow-x-hidden">
+          <div className="relative [overflow-x:clip]">
             <AnimatePresence initial={false} custom={panelDirection} mode="wait">
               {activePanel === "venue-login" && venue ? (
                 <motion.div

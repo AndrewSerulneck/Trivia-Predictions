@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * sync-nba-headshots.cjs
+ * sync-wnba-headshots.cjs
  *
- * Throttled backfill for missing NBA player headshots.
+ * Throttled backfill for missing WNBA player headshots.
  *
  * Source priority per player:
- *   1. NBA CDN  (HEAD-checked before saving)
+ *   1. WNBA CDN  (HEAD-checked before saving)
  *   2. TheSportsDB cutout  (name-matched fallback)
  *   3. NULL  (leaves the row untouched; frontend silhouette handles it)
  *
@@ -15,7 +15,7 @@
  *   - Any HTTP 429 triggers a RATE_429_BACKOFF_MS (default 60 000 ms) sleep + one retry.
  *
  * Run:
- *   node -r dotenv/config scripts/sync-nba-headshots.cjs
+ *   node -r dotenv/config scripts/sync-wnba-headshots.cjs
  *
  * Tunable env vars (all optional — defaults shown):
  *   HEADSHOT_MAX_BACKFILL=400      max players to process per run
@@ -45,8 +45,8 @@ const BETWEEN_BATCH_DELAY_MS = Number.parseInt(process.env.HEADSHOT_BATCH_DELAY_
 const RATE_429_BACKOFF_MS = Number.parseInt(process.env.HEADSHOT_429_BACKOFF_MS || '60000', 10) || 60000;
 const MAX_BACKFILL = Number.parseInt(process.env.HEADSHOT_MAX_BACKFILL || '400', 10) || 400;
 
-const NBA_CDN_BASE = 'https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190';
-const NBA_PLAYER_IDS_PATH = path.join(__dirname, 'nba-player-ids.json');
+const WNBA_CDN_BASE = 'https://ak-static.cms.nba.com/wp-content/uploads/headshots/wnba/latest/260x190';
+const WNBA_PLAYER_IDS_PATH = path.join(__dirname, 'wnba-player-ids.json');
 
 // ─── Guards ───────────────────────────────────────────────────────────────────
 
@@ -66,29 +66,28 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-// ─── NBA player-ID lookup (from nba-player-ids.json) ─────────────────────────
+// ─── WNBA player-ID lookup (from wnba-player-ids.json) ───────────────────────
 
-function buildNbaIdMap() {
-  if (!fs.existsSync(NBA_PLAYER_IDS_PATH)) {
-    console.warn('[nba-id-map] nba-player-ids.json not found — NBA CDN lookup via mapping disabled');
+function buildWnbaIdMap() {
+  if (!fs.existsSync(WNBA_PLAYER_IDS_PATH)) {
+    console.warn('[wnba-id-map] wnba-player-ids.json not found — WNBA CDN lookup via mapping disabled');
     return new Map();
   }
-  const entries = JSON.parse(fs.readFileSync(NBA_PLAYER_IDS_PATH, 'utf8'));
+  const entries = JSON.parse(fs.readFileSync(WNBA_PLAYER_IDS_PATH, 'utf8'));
   const map = new Map();
-  for (const { player_name, nba_person_id } of entries) {
-    if (player_name && nba_person_id) {
-      // Normalise key: lowercase, collapse whitespace, strip apostrophes/dots
-      map.set(normaliseKey(player_name), Number(nba_person_id));
+  for (const { player_name, wnba_person_id } of entries) {
+    if (player_name && wnba_person_id) {
+      map.set(normaliseKey(player_name), Number(wnba_person_id));
     }
   }
-  console.log(`[nba-id-map] loaded ${map.size} entries from nba-player-ids.json`);
+  console.log(`[wnba-id-map] loaded ${map.size} entries from wnba-player-ids.json`);
   return map;
 }
 
 function normaliseKey(name) {
   return String(name)
     .toLowerCase()
-    .replace(/['.]/g, '')   // De'Aaron → deaaron, Jr. → Jr
+    .replace(/['.]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -103,14 +102,10 @@ function normalizeName(input) {
   return String(input || '').replace(/\s+/g, ' ').trim();
 }
 
-function buildNbaCdnUrl(externalId) {
-  return `${NBA_CDN_BASE}/${externalId}.png`;
+function buildWnbaCdnUrl(personId) {
+  return `${WNBA_CDN_BASE}/${personId}.png`;
 }
 
-/**
- * Wraps a source image URL in a Cloudinary fetch transformation.
- * gravity:face + format:auto ensures face-centred cropping and modern format delivery.
- */
 function toCloudinaryUrl(sourceUrl) {
   if (!sourceUrl) return null;
   if (!CLOUDINARY_CLOUD_NAME) return sourceUrl;
@@ -120,17 +115,11 @@ function toCloudinaryUrl(sourceUrl) {
 
 // ─── Rate-limit-aware fetch helpers ──────────────────────────────────────────
 
-/**
- * Performs a HEAD request to check whether an image URL resolves.
- * Returns true (exists), false (404), or throws on other errors.
- * Backs off and retries once on HTTP 429.
- */
 async function urlExists(url) {
   for (let attempt = 0; attempt < 2; attempt++) {
     const res = await fetch(url, { method: 'HEAD' });
 
     if (res.ok) return true;
-    // NBA CDN returns 403 for missing headshots, not 404 — treat both as "not found".
     if (res.status === 404 || res.status === 403) return false;
 
     if (res.status === 429) {
@@ -142,13 +131,9 @@ async function urlExists(url) {
     throw new Error(`HEAD ${url} → HTTP ${res.status}`);
   }
 
-  // Both attempts hit 429 — propagate so the player is counted as failed, not missing.
   throw new Error(`HEAD ${url} → persistent 429, skipping player`);
 }
 
-/**
- * GET with JSON parsing. Backs off and retries once on HTTP 429.
- */
 async function fetchJson(url, options = {}) {
   for (let attempt = 0; attempt < 2; attempt++) {
     const res = await fetch(url, { ...options, cache: 'no-store' });
@@ -189,37 +174,32 @@ async function fetchSportsDbCutout(playerName) {
 
 // ─── Per-player headshot resolution ──────────────────────────────────────────
 
-/**
- * Attempts to resolve a Cloudinary-wrapped headshot URL for one player.
- * Priority: nba-player-ids.json → NBA CDN (BDL id) → TheSportsDB → null
- * Returns null (not a failure) when no source has an image.
- */
-async function resolveHeadshotUrl(row, nbaIdMap) {
-  // 1. Authoritative NBA CDN via the curated nba-player-ids.json mapping.
-  const mappedId = nbaIdMap.get(normaliseKey(row.player_name));
+async function resolveHeadshotUrl(row, wnbaIdMap) {
+  // 1. Authoritative WNBA CDN via wnba-player-ids.json mapping.
+  const mappedId = wnbaIdMap.get(normaliseKey(row.player_name));
   if (mappedId) {
-    const cdnUrl = buildNbaCdnUrl(mappedId);
+    const cdnUrl = buildWnbaCdnUrl(mappedId);
     try {
       if (await urlExists(cdnUrl)) {
-        console.log(`  [cdn-map]   ${row.player_name} (nba_id=${mappedId})`);
+        console.log(`  [cdn-map]   ${row.player_name} (wnba_id=${mappedId})`);
         return toCloudinaryUrl(cdnUrl);
       }
-      console.log(`  [cdn-map-miss] ${row.player_name} (nba_id=${mappedId}) — 403/404 on CDN`);
+      console.log(`  [cdn-map-miss] ${row.player_name} (wnba_id=${mappedId}) — 403/404 on CDN`);
     } catch (err) {
       console.warn(`  [cdn-map-err]  ${row.player_name}: ${err.message}`);
     }
   }
 
-  // 2. NBA CDN via BDL external_id (coincides with NBA id for some older players).
+  // 2. WNBA CDN via BDL external_id (may differ from WNBA person ID).
   if (row.external_id && String(row.external_id) !== String(mappedId)) {
-    const cdnUrl = buildNbaCdnUrl(row.external_id);
+    const cdnUrl = buildWnbaCdnUrl(row.external_id);
     try {
       if (await urlExists(cdnUrl)) {
         console.log(`  [cdn-bdl]   ${row.player_name} (bdl_id=${row.external_id})`);
         return toCloudinaryUrl(cdnUrl);
       }
     } catch (err) {
-      // silent — just fall through to TheSportsDB
+      // silent — fall through to TheSportsDB
     }
   }
 
@@ -234,20 +214,19 @@ async function resolveHeadshotUrl(row, nbaIdMap) {
     console.warn(`  [tsd-err]   ${row.player_name}: ${err.message}`);
   }
 
-  // 4. Nothing found — return null so frontend silhouette fallback applies.
   return null;
 }
 
 // ─── Player seeding (BallDontLie → players table) ────────────────────────────
 
 async function fetchBdlPage(cursor) {
-  const url = new URL(`${BDL_BASE}/nba/v1/players`);
+  const url = new URL(`${BDL_BASE}/wnba/v1/players`);
   url.searchParams.set('per_page', '100');
   if (cursor) url.searchParams.set('cursor', String(cursor));
   return fetchJson(url.toString(), { headers: { Authorization: BDL_KEY } });
 }
 
-async function syncNbaPlayersToTable() {
+async function syncWnbaPlayersToTable() {
   let cursor = null;
   let pages = 0;
   let upserts = 0;
@@ -262,7 +241,7 @@ async function syncNbaPlayersToTable() {
         const name = normalizeName(`${normalizeName(row?.first_name)} ${normalizeName(row?.last_name)}`);
         const externalId = String(row?.id ?? '').trim();
         if (!name || !externalId) return null;
-        return { external_id: externalId, player_name: name, league: 'NBA' };
+        return { external_id: externalId, player_name: name, league: 'WNBA' };
       })
       .filter(Boolean);
 
@@ -286,13 +265,12 @@ async function syncNbaPlayersToTable() {
 // ─── Main backfill ────────────────────────────────────────────────────────────
 
 async function backfillHeadshots() {
-  const nbaIdMap = buildNbaIdMap();
+  const wnbaIdMap = buildWnbaIdMap();
 
-  // Fetch players where headshot_url is absent or a known placeholder.
   const { data, error } = await supabase
     .from('players')
     .select('id,external_id,player_name,league,headshot_url')
-    .eq('league', 'NBA')
+    .eq('league', 'WNBA')
     .or('headshot_url.is.null,headshot_url.eq.,headshot_url.ilike.%placeholder%')
     .order('id', { ascending: false })
     .limit(MAX_BACKFILL);
@@ -317,7 +295,7 @@ async function backfillHeadshots() {
       if (!name) continue;
 
       try {
-        const url = await resolveHeadshotUrl(row, nbaIdMap);
+        const url = await resolveHeadshotUrl(row, wnbaIdMap);
 
         if (!url) {
           missing += 1;
@@ -342,7 +320,6 @@ async function backfillHeadshots() {
       }
     }
 
-    // Mandatory cooldown after each batch (skip after the very last one).
     if (i + BATCH_SIZE < rows.length) {
       console.log(`  ↺ batch cooldown ${BETWEEN_BATCH_DELAY_MS / 1000}s…\n`);
       await sleep(BETWEEN_BATCH_DELAY_MS);
@@ -355,7 +332,7 @@ async function backfillHeadshots() {
 // ─── Entry point ──────────────────────────────────────────────────────────────
 
 (async () => {
-  console.log('=== sync-nba-headshots start ===');
+  console.log('=== sync-wnba-headshots start ===');
   console.log(`  CLOUDINARY_CLOUD_NAME  : ${CLOUDINARY_CLOUD_NAME || '(none — raw source URLs will be saved)'}`);
   console.log(`  MAX_BACKFILL           : ${MAX_BACKFILL}`);
   console.log(`  BATCH_SIZE             : ${BATCH_SIZE}`);
@@ -364,14 +341,14 @@ async function backfillHeadshots() {
   console.log('');
 
   try {
-    console.log('[step 1/2] seeding players from BallDontLie…');
-    const seed = await syncNbaPlayersToTable();
+    console.log('[step 1/2] seeding WNBA players from BallDontLie…');
+    const seed = await syncWnbaPlayersToTable();
     console.log(`[step 1/2] done — upserted ${seed.upserts} player rows\n`);
 
     console.log('[step 2/2] backfilling missing headshots…');
     const result = await backfillHeadshots();
 
-    console.log('\n=== sync-nba-headshots done ===');
+    console.log('\n=== sync-wnba-headshots done ===');
     console.log(`  scanned : ${result.scanned}`);
     console.log(`  updated : ${result.updated}  ← successfully written to Supabase`);
     console.log(`  missing : ${result.missing}  ← no image found on any source (NULL kept)`);

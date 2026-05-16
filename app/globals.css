@@ -178,6 +178,16 @@ body.tp-pickem-force-scroll {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Neutralise the right-offset box-shadow on all sub-sm viewports so the
+   comic card doesn't visually press against the right screen edge while
+   leaving green space on the left. Applied before the 430px block so the
+   narrower overrides can further tune as needed. */
+@media (max-width: 639px) {
+  .tp-page-main.tp-comic-card {
+    box-shadow: 0 6px 0 var(--tp-ink) !important;
+  }
+}
+
 /* Mobile-first shell hardening for narrow devices like iPhone SE. */
 @media (max-width: 430px) {
   html {

@@ -3,6 +3,7 @@ import { getFantasyPlayerPoolForDate, getFantasyPlayerPoolForGame, listFantasyGa
 import type { FantasyLeaderboardEntry, FantasyPlayerPoolItem } from "@/lib/fantasy";
 
 const FANTASY_DAILY_GAME_ID_PREFIX = "nba-daily-";
+const FANTASY_WNBA_DAILY_GAME_ID_PREFIX = "wnba-daily-";
 const FANTASY_ALLOW_STARTED_DRAFTING_FOR_TESTING =
   String(process.env.FANTASY_ALLOW_STARTED_DRAFTING_FOR_TESTING ?? "")
     .trim()
@@ -10,11 +11,15 @@ const FANTASY_ALLOW_STARTED_DRAFTING_FOR_TESTING =
 
 function parseDailyGameDateFromId(gameId: string): string | null {
   const trimmed = String(gameId ?? "").trim();
-  if (!trimmed.startsWith(FANTASY_DAILY_GAME_ID_PREFIX)) {
-    return null;
+  if (trimmed.startsWith(FANTASY_DAILY_GAME_ID_PREFIX)) {
+    const rawDate = trimmed.slice(FANTASY_DAILY_GAME_ID_PREFIX.length).trim();
+    return /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null;
   }
-  const rawDate = trimmed.slice(FANTASY_DAILY_GAME_ID_PREFIX.length).trim();
-  return /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null;
+  if (trimmed.startsWith(FANTASY_WNBA_DAILY_GAME_ID_PREFIX)) {
+    const rawDate = trimmed.slice(FANTASY_WNBA_DAILY_GAME_ID_PREFIX.length).trim();
+    return /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null;
+  }
+  return null;
 }
 
 function normalizePositiveInt(value: string | null, fallback: number): number {
@@ -86,6 +91,7 @@ export async function GET(request: Request) {
     });
 
     const dailyGameId = `${FANTASY_DAILY_GAME_ID_PREFIX}${todayDate}`;
+    const wnbaDailyGameId = `${FANTASY_WNBA_DAILY_GAME_ID_PREFIX}${todayDate}`;
 
     let playerPool: FantasyPlayerPoolItem[] = [];
     if (gameId) {
@@ -107,7 +113,7 @@ export async function GET(request: Request) {
       leaderboard = await listFantasyLeaderboard({ venueId, gameId: leaderboardGameId, limit: 30 });
     }
 
-    return NextResponse.json({ ok: true, games, playerPool, leaderboard, dailyGameId });
+    return NextResponse.json({ ok: true, games, playerPool, leaderboard, dailyGameId, wnbaDailyGameId });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load fantasy games.";
     return NextResponse.json({ ok: false, error: message }, { status: toClientErrorStatus(message) });

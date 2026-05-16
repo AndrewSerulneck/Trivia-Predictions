@@ -73,6 +73,7 @@ type VenueArrivalStage = "identity" | "core" | "warmup" | "ready";
 
 const GAME_ICON_BG_BY_KEY: Record<VenueGameKey, string> = {
   trivia: "bg-[linear-gradient(138deg,#0ea5e9_0%,#2563eb_45%,#7c3aed_100%)]",
+  live_trivia: "bg-[linear-gradient(138deg,#0ea5e9_0%,#2563eb_45%,#7c3aed_100%)]",
   bingo: "bg-[linear-gradient(136deg,#f97316_0%,#ef4444_50%,#ec4899_100%)]",
   pickem: "bg-[linear-gradient(138deg,#2563eb_0%,#7c3aed_58%,#ec4899_100%)]",
   fantasy: "bg-[linear-gradient(136deg,#7c3aed_0%,#2563eb_50%,#06b6d4_100%)]",
@@ -81,6 +82,7 @@ const GAME_ICON_BG_BY_KEY: Record<VenueGameKey, string> = {
 
 const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
   trivia: ["Hightop", "Trivia™"],
+  live_trivia: ["Hightop", "Live Trivia"],
   bingo: ["Hightop", "Bingo™"],
   pickem: ["Hightop", "Pick 'Em™"],
   fantasy: ["Hightop", "Fantasy™"],
@@ -172,20 +174,21 @@ function venueDebugLog(message: string, details?: Record<string, unknown>) {
 }
 
 const GAME_LOCKUP_SRC: Record<VenueGameKey, string> = {
-  trivia: "/brand/trivia_icon.png",
+  trivia: "/brand/speed_trivia_icon.png",
+  live_trivia: "/brand/live_trivia_icon.png",
   bingo: "/brand/bingo_icon.png",
   pickem: "/brand/pickem_icon.png",
   fantasy: "/brand/fantasy_icon.png",
   predictions: "/brand/trivia_icon.png",
 };
 
-function GameLockup({ gameKey }: { gameKey: VenueGameKey }) {
+function GameLockup({ gameKey, className = "" }: { gameKey: VenueGameKey; className?: string }) {
   return (
     <img
       src={GAME_LOCKUP_SRC[gameKey]}
       alt=""
       aria-hidden="true"
-      className="w-full h-full object-contain"
+      className={`w-full h-full object-contain ${className}`}
     />
   );
 }
@@ -248,6 +251,7 @@ function TrophyGlyph({ className = "h-10 w-10" }: { className?: string }) {
 
 function GameGlyph({ gameKey }: { gameKey: VenueGameKey }) {
   if (gameKey === "trivia") return <TriviaGlyph />;
+  if (gameKey === "live_trivia") return <TriviaGlyph />;
   if (gameKey === "bingo") return <BingoGlyph />;
   if (gameKey === "pickem") return <PickEmGlyph />;
   if (gameKey === "fantasy") return <FantasyGlyph />;
@@ -277,6 +281,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
   const [isBadgeLoading, setIsBadgeLoading] = useState(true);
   const [badgeError, setBadgeError] = useState("");
+  const [liveTriviaStatus, setLiveTriviaStatus] = useState<{ live: boolean; label: string }>({ live: false, label: "" });
   const [leaderboardBootstrapEntries, setLeaderboardBootstrapEntries] = useState<LeaderboardEntry[]>([]);
   const [activeScreen, setActiveScreen] = useState<HomeScreenIndex>(0);
   const [homeRevealComplete, setHomeRevealComplete] = useState(true);
@@ -663,6 +668,46 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     []
   );
 
+  const loadLiveTriviaStatus = useCallback(async () => {
+    try {
+      const payload = await fetchJsonWithTimeout<{
+        ok?: boolean;
+        state?: {
+          isGameActive?: boolean;
+          nextSchedule?: { startTime?: string } | null;
+        };
+      }>("/api/trivia/live/state", 3600);
+
+      if (!payload?.ok || !payload.state) {
+        setLiveTriviaStatus({ live: false, label: "" });
+        return;
+      }
+
+      if (payload.state.isGameActive) {
+        setLiveTriviaStatus({ live: true, label: "ROUND IN PROGRESS" });
+        return;
+      }
+
+      const nextStartRaw = String(payload.state.nextSchedule?.startTime ?? "").trim();
+      if (!nextStartRaw) {
+        setLiveTriviaStatus({ live: false, label: "Next Game: TBD" });
+        return;
+      }
+      const nextStart = new Date(nextStartRaw);
+      if (!Number.isFinite(nextStart.getTime())) {
+        setLiveTriviaStatus({ live: false, label: "Next Game: TBD" });
+        return;
+      }
+      const nextLabel = nextStart.toLocaleString(undefined, {
+        weekday: "short",
+        hour: "numeric",
+      });
+      setLiveTriviaStatus({ live: false, label: `Next Game: ${nextLabel}` });
+    } catch {
+      setLiveTriviaStatus({ live: false, label: "" });
+    }
+  }, []);
+
   const runWarmup = useCallback(async () => {
     if (warmupPromiseRef.current) return warmupPromiseRef.current;
     const userId = getUserId() ?? "";
@@ -854,10 +899,18 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     return () => window.clearInterval(interval);
   }, [homeRevealComplete, loadChallengeCampaigns]);
 
+  useEffect(() => {
+    if (!homeRevealComplete) return;
+    void loadLiveTriviaStatus();
+    const interval = window.setInterval(() => void loadLiveTriviaStatus(), 15000);
+    return () => window.clearInterval(interval);
+  }, [homeRevealComplete, loadLiveTriviaStatus]);
+
 
   useEffect(() => {
     if (!homeRevealComplete) return;
     router.prefetch("/trivia");
+    router.prefetch("/trivia/live");
     router.prefetch("/predictions");
     router.prefetch("/pickem");
     router.prefetch("/bingo");
@@ -1018,13 +1071,42 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 {homeCards.map((card) => {
                   const isOpening = pendingDestination === card.key;
                   const badge = visibleBadgeByGame.get(card.key);
+                  const isLiveTriviaCard = card.key === "live_trivia";
+                  const isSpeedTriviaCard = card.key === "trivia";
+                  const hasBottomSubtitle = isLiveTriviaCard || isSpeedTriviaCard;
                   return (
                     <button key={card.key} type="button" onMouseDown={triggerPulse} onClick={(event) => { void goTo(card.key, event.currentTarget); }} disabled={pendingDestination !== null} data-venue-game-card={card.key} className={`tp-clean-button tp-game-card-btn group relative aspect-square w-full max-w-[clamp(8.2rem,40vw,11.5rem)] justify-self-center overflow-hidden !rounded-[22%] !border-[2px] !border-white/90 !shadow-[0_10px_20px_rgba(15,23,42,0.35)] p-0 text-left${isOpening ? " is-opening" : ""}`}>
                       <div className={`absolute inset-0 ${GAME_ICON_BG_BY_KEY[card.key]}`} />
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_26%_18%,rgba(255,255,255,0.38)_0%,rgba(255,255,255,0.1)_40%,rgba(255,255,255,0)_72%)]" />
-                      <div className="relative flex h-full items-center justify-center p-2 text-white">
-                        <GameLockup gameKey={card.key} />
+                      <div
+                        className={`relative flex h-full justify-center p-2 text-white ${
+                          hasBottomSubtitle ? "items-start pt-0.5" : "items-center"
+                        }`}
+                      >
+                        <GameLockup
+                          gameKey={card.key}
+                          className={hasBottomSubtitle ? "h-[86%] w-full -translate-y-1.5" : ""}
+                        />
                       </div>
+                      {isLiveTriviaCard ? (
+                        <div className="pointer-events-none absolute bottom-1.5 left-1.5 right-1.5 rounded-md bg-slate-950/72 px-1.5 py-1 text-center">
+                          <div className="text-[10px] font-black uppercase tracking-[0.08em] text-white [font-family:'Bree_Serif','Nunito',serif]">
+                            Synchronized Live Venue Play
+                          </div>
+                          <div
+                            className={`mt-0.5 text-[10px] font-black uppercase tracking-[0.08em] ${
+                              liveTriviaStatus.live ? "animate-pulse text-emerald-300" : "text-amber-200"
+                            }`}
+                          >
+                            {liveTriviaStatus.live ? "LIVE NOW" : liveTriviaStatus.label}
+                          </div>
+                        </div>
+                      ) : null}
+                      {isSpeedTriviaCard ? (
+                        <div className="pointer-events-none absolute bottom-1.5 left-1.5 right-1.5 rounded-md bg-slate-950/72 px-1.5 py-1 text-center text-[10px] font-black uppercase tracking-[0.08em] text-white [font-family:'Bree_Serif','Nunito',serif]">
+                          Rapid Fire Multiple Choice
+                        </div>
+                      ) : null}
                       {badge ? <span className="absolute right-1.5 top-1.5 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black leading-none text-white shadow-[0_2px_8px_rgba(15,23,42,0.45)]">{badge}</span> : null}
                     </button>
                   );

@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 import { getUserId } from "@/lib/storage";
 import { getVenueId } from "@/lib/storage";
 import { supabase } from "@/lib/supabase";
+import { navigateBackToVenue } from "@/lib/venueGameTransition";
 import { consumeBingoPrefetchCache } from "@/lib/bingoPrefetchCache";
 import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
@@ -110,6 +111,28 @@ const LINE_PATTERNS: number[][] = [
 ];
 const BINGO_GAME_BUFFER_MS = 6 * 60 * 60 * 1000;
 const FINAL_SCORES_RETENTION_MS = 14 * 24 * 60 * 60 * 1000;
+
+function toLocalDateInput(date: Date): string {
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+}
+
+function getDateLabel(value: string, today: string): string {
+  if (!value) return "";
+  if (value === today) return "Today";
+  const d = new Date(`${value}T00:00:00`);
+  const t = new Date(`${today}T00:00:00`);
+  const diff = Math.round((d.getTime() - t.getTime()) / (1000 * 60 * 60 * 24));
+  if (diff === -1) return "Yesterday";
+  if (diff === 1) return "Tomorrow";
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function toLocalDateKey(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return toLocalDateInput(date);
+}
 
 function formatLocalDateTime(iso: string): string {
   const date = new Date(iso);
@@ -360,6 +383,14 @@ function classifyLiveDeltaEvent(previous: LivePlayerStatRealtimeRow, next: LiveP
   return events;
 }
 
+const BINGO_HEADER_LETTERS = [
+  { letter: "B", color: "text-rose-300" },
+  { letter: "I", color: "text-amber-300" },
+  { letter: "N", color: "text-emerald-300" },
+  { letter: "G", color: "text-cyan-300" },
+  { letter: "O", color: "text-violet-300" },
+] as const;
+
 function renderCompactGrid(
   cardId: string,
   squares: BingoCardSquare[],
@@ -374,6 +405,16 @@ function renderCompactGrid(
 
   return (
     <div className="rounded-xl border-2 border-cyan-300/80 bg-[linear-gradient(180deg,#0f172a_0%,#1e293b_100%)] p-2 shadow-[0_8px_20px_rgba(15,23,42,0.28)]">
+      <div className="mb-1.5 grid grid-cols-5 gap-1.5">
+        {BINGO_HEADER_LETTERS.map((item) => (
+          <div
+            key={item.letter}
+            className={`text-center text-base font-black tracking-[0.18em] [text-shadow:0_0_8px_rgba(255,255,255,0.35)] ${item.color}`}
+          >
+            {item.letter}
+          </div>
+        ))}
+      </div>
       <div className="grid grid-cols-5 gap-1.5">
       {Array.from({ length: 25 }).map((_, index) => {
         const square = byIndex.get(index);
@@ -441,6 +482,16 @@ function renderExpandedGrid(
 
   return (
     <div className="rounded-xl border-2 border-cyan-300/80 bg-[linear-gradient(180deg,#0f172a_0%,#1e293b_100%)] p-2 pb-1 shadow-[0_8px_20px_rgba(15,23,42,0.3)]">
+      <div className="mb-2 grid grid-cols-5 gap-1.5 sm:gap-2">
+        {BINGO_HEADER_LETTERS.map((item) => (
+          <div
+            key={item.letter}
+            className={`text-center text-lg font-black tracking-[0.2em] [text-shadow:0_0_8px_rgba(255,255,255,0.35)] sm:text-xl ${item.color}`}
+          >
+            {item.letter}
+          </div>
+        ))}
+      </div>
       <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
         {Array.from({ length: 25 }).map((_, index) => {
           const square = byIndex.get(index);
@@ -531,6 +582,7 @@ export function SportsBingoHome() {
   const [glowCardIds, setGlowCardIds] = useState<Set<string>>(new Set());
   const [glowSquareKeys, setGlowSquareKeys] = useState<Set<string>>(new Set());
   const [isScreenShaking, setIsScreenShaking] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>(() => toLocalDateInput(new Date()));
   const prefetchUsedRef = useRef(false);
   const clearSquarePopTimerRef = useRef<number | null>(null);
   const kickoffRefreshTimerRef = useRef<number | null>(null);
@@ -545,6 +597,7 @@ export function SportsBingoHome() {
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
   const [activeScreen, setActiveScreen] = useState<BingoScreenIndex>(0);
+  const todayDate = useMemo(() => toLocalDateInput(new Date()), []);
 
   useEffect(() => {
     setUserId(getUserId() ?? "");
@@ -1143,6 +1196,70 @@ export function SportsBingoHome() {
       finalizedCards: finalized,
     };
   }, [cards]);
+  const selectedDayCards = useMemo(
+    () => cards.filter((card) => toLocalDateKey(card.startsAt) === selectedDate),
+    [cards, selectedDate]
+  );
+  const selectedActiveCards = useMemo(
+    () =>
+      selectedDayCards
+        .filter((card) => activeCards.some((activeCard) => activeCard.id === card.id))
+        .sort(compareCardsEarliestToLatest),
+    [activeCards, selectedDayCards]
+  );
+  const selectedSettledCards = useMemo(
+    () =>
+      selectedDayCards
+        .filter((card) => finalizedCards.some((finalizedCard) => finalizedCard.id === card.id))
+        .sort(compareCardsLatestToEarliest),
+    [finalizedCards, selectedDayCards]
+  );
+  const selectedDayHasUnclaimed = useMemo(
+    () =>
+      selectedSettledCards.some((card) => card.status === "won" && !card.rewardClaimedAt && card.rewardPoints > 0),
+    [selectedSettledCards]
+  );
+  const hasPreviousUnclaimed = useMemo(
+    () =>
+      !selectedDayHasUnclaimed &&
+      finalizedCards.some((card) => {
+        if (card.status !== "won" || card.rewardClaimedAt || card.rewardPoints <= 0) return false;
+        const day = toLocalDateKey(card.startsAt);
+        return Boolean(day) && day < selectedDate;
+      }),
+    [finalizedCards, selectedDate, selectedDayHasUnclaimed]
+  );
+  const hasFutureUnclaimed = useMemo(
+    () =>
+      !selectedDayHasUnclaimed &&
+      finalizedCards.some((card) => {
+        if (card.status !== "won" || card.rewardClaimedAt || card.rewardPoints <= 0) return false;
+        const day = toLocalDateKey(card.startsAt);
+        return Boolean(day) && day > selectedDate;
+      }),
+    [finalizedCards, selectedDate, selectedDayHasUnclaimed]
+  );
+  const isSelectedDateToday = selectedDate === todayDate;
+  const navigateToPrevDay = useCallback(() => {
+    setSelectedDate((prev) => {
+      const d = new Date(`${prev}T00:00:00`);
+      d.setDate(d.getDate() - 1);
+      return toLocalDateInput(d);
+    });
+  }, []);
+  const navigateToNextDay = useCallback(() => {
+    setSelectedDate((prev) => {
+      if (prev >= todayDate) return prev;
+      const d = new Date(`${prev}T00:00:00`);
+      d.setDate(d.getDate() + 1);
+      return toLocalDateInput(d);
+    });
+  }, [todayDate]);
+  useEffect(() => {
+    if (!isSelectedDateToday) {
+      setActiveScreen(1);
+    }
+  }, [isSelectedDateToday]);
   const hasStartedActiveCard = useMemo(() => {
     const now = Date.now();
     return activeCards.some((card) => {
@@ -1313,24 +1430,25 @@ export function SportsBingoHome() {
   };
 
   return (
-    <div ref={rootRef} className={`space-y-4 ${isScreenShaking ? "tp-bingo-screen-shake" : ""}`}>
+    <div ref={rootRef} className={`space-y-3 ${isScreenShaking ? "tp-bingo-screen-shake" : ""}`}>
       <VenueEntryRulesPanel
         gameKey="bingo"
         shouldDisplay={Boolean(userId) && !loadingCards && activeCards.length === 0}
       />
+
       {errorMessage ? (
-        <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">{errorMessage}</div>
+        <div className="rounded-xl border border-rose-500/50 bg-rose-950/80 p-3 text-sm text-rose-300">{errorMessage}</div>
       ) : null}
 
       {unclaimedWonBingoCards.length > 0 ? (
-        <div className="rounded-xl border-2 border-orange-500 bg-gradient-to-r from-orange-600 to-red-600 px-3 py-3 shadow-[0_6px_18px_rgba(234,88,12,0.35)]">
-          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-orange-100">Bingo Points Ready</p>
+        <div className="rounded-xl border border-emerald-500/40 bg-[linear-gradient(135deg,#052e16_0%,#064e3b_60%,#065f46_100%)] px-3 py-3 shadow-[0_6px_18px_rgba(5,46,22,0.5)]">
+          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-emerald-300">🎉 Bingo Points Ready</p>
           <div className="mt-1 flex items-center justify-between gap-3">
             <div>
               <p className="text-lg font-black leading-none text-white">
                 {unclaimedWonBingoCards.length} winning board{unclaimedWonBingoCards.length !== 1 ? "s" : ""}
               </p>
-              <p className="mt-0.5 text-[11px] font-semibold text-orange-100">
+              <p className="mt-0.5 text-[11px] font-semibold text-emerald-300">
                 +{totalUnclaimedBingoPoints} pts waiting to collect
               </p>
             </div>
@@ -1339,7 +1457,7 @@ export function SportsBingoHome() {
               data-bingo-collect-all
               onClick={() => void collectAllBingoPoints()}
               disabled={isCollectingAllBingo}
-              className="tp-clean-button inline-flex min-h-[44px] items-center rounded-full border-2 border-white bg-white px-4 py-2 text-sm font-black text-orange-700 shadow-[0_3px_0_rgba(0,0,0,0.18)] transition-all active:scale-95 disabled:opacity-60"
+              className="tp-clean-button inline-flex min-h-[44px] items-center rounded-full border-2 border-emerald-300 bg-white px-4 py-2 text-sm font-black text-emerald-900 shadow-[0_3px_0_rgba(0,0,0,0.25)] transition-all active:scale-95 disabled:opacity-60"
             >
               {isCollectingAllBingo ? "Collecting..." : "Collect Points"}
             </button>
@@ -1347,75 +1465,132 @@ export function SportsBingoHome() {
         </div>
       ) : null}
 
-      <div className="rounded-2xl border border-amber-200/70 bg-amber-50/85 p-4 shadow-sm">
-        <p className="text-center text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Hightop Sports Bingo™</p>
-        <p className="mt-1 text-center text-sm text-slate-700">Track active bingo boards here.</p>
-        <div className="mt-2 flex justify-center">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-white/80 px-2 py-1">
-            <span className={`inline-flex h-2 w-2 rounded-full bg-emerald-500 ${isRealtimeFresh ? "animate-pulse" : "opacity-40"}`} />
-            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-700">Live</span>
-          </div>
+      {/* Header — BINGO rainbow title + controls */}
+      <div className="rounded-2xl border border-orange-200/80 bg-gradient-to-b from-orange-50 to-amber-50 p-4 shadow-sm">
+        <p className="text-center text-[11px] font-bold uppercase tracking-[0.16em] text-orange-500">Hightop Sports</p>
+        <div className="mb-1 grid grid-cols-5 gap-1">
+          {[
+            { letter: "B", cls: "text-rose-600" },
+            { letter: "I", cls: "text-amber-600" },
+            { letter: "N", cls: "text-emerald-600" },
+            { letter: "G", cls: "text-cyan-600" },
+            { letter: "O", cls: "text-violet-600" },
+          ].map((item) => (
+            <div
+              key={item.letter}
+              className={`text-center text-3xl font-black tracking-[0.1em] drop-shadow-sm ${item.cls}`}
+            >
+              {item.letter}
+            </div>
+          ))}
         </div>
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
           {hasReachedBoardLimit ? (
             <button
               type="button"
               aria-disabled="true"
-              onMouseDown={() => {
-                setShowBoardLimitMessage(true);
-              }}
-              onMouseUp={() => {
-                setShowBoardLimitMessage(false);
-              }}
-              onMouseLeave={() => {
-                setShowBoardLimitMessage(false);
-              }}
-              onTouchStart={() => {
-                setShowBoardLimitMessage(true);
-              }}
-              onTouchEnd={() => {
-                setShowBoardLimitMessage(false);
-              }}
-              onTouchCancel={() => {
-                setShowBoardLimitMessage(false);
-              }}
-              className="inline-flex min-h-[42px] items-center rounded-full bg-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
+              onMouseDown={() => setShowBoardLimitMessage(true)}
+              onMouseUp={() => setShowBoardLimitMessage(false)}
+              onMouseLeave={() => setShowBoardLimitMessage(false)}
+              onTouchStart={() => setShowBoardLimitMessage(true)}
+              onTouchEnd={() => setShowBoardLimitMessage(false)}
+              onTouchCancel={() => setShowBoardLimitMessage(false)}
+              className="inline-flex min-h-[44px] items-center rounded-full bg-orange-100 px-5 py-2 text-sm font-bold text-orange-400"
             >
-              {showBoardLimitMessage ? "Cannot exceed 4 active bingo boards!" : "Choose New Bingo Board"}
+              {showBoardLimitMessage ? "Max 4 active boards reached!" : "Generate New Bingo Board"}
             </button>
           ) : (
             <Link
               href="/bingo/select-sport"
-              className="inline-flex min-h-[42px] items-center rounded-full bg-gradient-to-r from-blue-700 to-cyan-600 px-4 py-2 text-sm font-semibold text-white transition-all active:scale-95"
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-gradient-to-r from-rose-500 via-violet-500 to-cyan-500 px-5 py-2 text-sm font-bold text-white shadow-[0_4px_16px_rgba(139,92,246,0.3)] transition-all active:scale-95"
             >
-              Choose New Bingo Board
+              🎲 Generate New Bingo Board
             </Link>
           )}
-          <span className="inline-flex min-h-[42px] items-center rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-[12px] font-semibold text-blue-700">
-            Active Boards: {activeCards.length}/4
-          </span>
+        </div>
+
+        <div className="mt-3 flex w-full items-center justify-between rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-2 py-1.5">
+          <button
+            type="button"
+            onClick={navigateToPrevDay}
+            className="tp-clean-button relative flex h-7 w-7 items-center justify-center rounded-full text-white/80 transition-all hover:bg-white/15 active:scale-90"
+            aria-label="Previous day"
+          >
+            ◀
+            {hasPreviousUnclaimed ? (
+              <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white">!</span>
+            ) : null}
+          </button>
+          <span className="text-sm font-bold text-white">{getDateLabel(selectedDate, todayDate)}</span>
+          <button
+            type="button"
+            onClick={navigateToNextDay}
+            disabled={selectedDate >= todayDate}
+            className="tp-clean-button relative flex h-7 w-7 items-center justify-center rounded-full text-white/80 transition-all hover:bg-white/15 active:scale-90 disabled:opacity-30"
+            aria-label="Next day"
+          >
+            ▶
+            {hasFutureUnclaimed ? (
+              <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white">!</span>
+            ) : null}
+          </button>
+        </div>
+
+        <div className="mt-3 flex w-full items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (venueId) {
+                void navigateBackToVenue({
+                  venuePath: `/venue/${encodeURIComponent(venueId)}`,
+                  fallbackNavigate: () => {
+                    window.location.href = `/venue/${encodeURIComponent(venueId)}`;
+                  },
+                });
+              }
+            }}
+            className="tp-clean-button flex flex-1 items-center justify-center gap-1 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] py-2 text-sm font-bold text-white shadow-sm active:scale-95"
+          >
+            ← Back to Venue
+          </button>
+          <button
+            type="button"
+            data-bingo-collect-all
+            onClick={() => void collectAllBingoPoints()}
+            disabled={unclaimedWonBingoCards.length === 0 || isCollectingAllBingo}
+            className="tp-clean-button flex flex-1 items-center justify-center gap-1 rounded-full border border-[#3a1c72] bg-gradient-to-r from-[#5b2ca5] via-[#7b3fd6] to-[#8f4de8] py-2 text-sm font-bold text-white shadow-sm active:scale-95 disabled:opacity-40"
+          >
+            {isCollectingAllBingo ? "Collecting..." : "Collect Points"}
+          </button>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-amber-200/70 bg-amber-50/85 p-4 shadow-sm">
-        <div className="mb-2 flex items-center justify-center gap-2">
-          <button
+      {/* Boards section */}
+      <div className="rounded-2xl border border-orange-200/80 bg-gradient-to-b from-orange-50 to-amber-50 p-3 shadow-sm">
+        <div className="mb-3 flex items-center justify-center gap-2">
+          {isSelectedDateToday ? (
+            <button
             type="button"
             onClick={() => goToScreen(0)}
-            className={`tp-clean-button rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${
-              activeScreen === 0 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"
+            className={`tp-clean-button rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.1em] transition-all ${
+              activeScreen === 0
+                ? "bg-cyan-500 text-white shadow-[0_2px_10px_rgba(6,182,212,0.4)]"
+                : "bg-orange-100 text-orange-600 hover:bg-orange-200"
             }`}
           >
             Active Boards
           </button>
+          ) : null}
           <button
             type="button"
-            onClick={() => goToScreen(1)}
-            className={`tp-clean-button rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${
-              activeScreen === 1 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"
+            onClick={() => goToScreen(isSelectedDateToday ? 1 : 0)}
+            className={`tp-clean-button rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.1em] transition-all ${
+              (isSelectedDateToday ? activeScreen === 1 : true)
+                ? "bg-amber-500 text-white shadow-[0_2px_10px_rgba(245,158,11,0.4)]"
+                : "bg-orange-100 text-orange-600 hover:bg-orange-200"
             }`}
           >
-            Final Scores
+            Scored Boards
           </button>
         </div>
 
@@ -1425,63 +1600,46 @@ export function SportsBingoHome() {
           onTouchEnd={onSwipeTouchEnd}
           className="flex w-full touch-pan-y snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
+          {/* Active boards panel */}
           <section className="w-full shrink-0 snap-start">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-base font-semibold text-slate-900">Active Boards</h2>
-            </div>
-            <p className="mt-2 text-base font-bold text-slate-700">Tap a board to expand it.</p>
+            <h2 className="text-base font-bold text-orange-900">Active Boards</h2>
+            <p className="mt-1 text-sm text-orange-700/70">Active: {activeCards.length}/4 · Tap a board to expand it.</p>
             {loadingCards ? (
               <LoadingState label="Loading your cards..." />
-            ) : activeCards.length === 0 ? (
-              <p className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
-                No active cards yet. Tap Play Sports Bingo to begin.
+            ) : selectedActiveCards.length === 0 ? (
+              <p className="mt-3 rounded-xl border border-orange-200 bg-white/60 p-3 text-sm text-orange-700">
+                No active cards yet. Tap Generate New Bingo Board to begin.
               </p>
             ) : (
               <ul className="mt-3 space-y-3">
-                {activeCards.map((card) => {
-                  return (
-                    <li
-                      key={card.id}
-                      data-bingo-card-id={card.id}
-                      onClick={() => {
-                        setExpandedActiveCardId(card.id);
-                      }}
-                      className="relative cursor-pointer rounded-xl border border-slate-200 bg-slate-50 p-3 transition-all hover:shadow-md hover:shadow-slate-300/60"
-                      style={{
-                        touchAction: "pan-y",
-                        WebkitTouchCallout: "none",
-                        WebkitUserSelect: "none",
-                        userSelect: "none",
-                      }}
-                    >
-                      <span
-                        className={`pointer-events-none absolute inset-0 rounded-xl bg-cyan-300/30 transition duration-200 ${
-                          glowCardIds.has(card.id) ? "scale-105 opacity-100" : "scale-95 opacity-0"
-                        }`}
-                        style={{ willChange: "transform, opacity" }}
-                      />
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-slate-900">{card.gameLabel}</p>
-                        <span className="rounded-full bg-blue-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-blue-700">
-                          Active
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs text-slate-600">Starts {formatLocalDateTime(card.startsAt)}</p>
-                      <div className="mt-2">
-                        {renderCompactGrid(
-                          card.id,
-                          card.squares,
-                          recentlyUpdatedSquareKeys,
-                          recentlySucceededSquareKeys,
-                          glowSquareKeys
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
+                {selectedActiveCards.map((card) => (
+                  <li
+                    key={card.id}
+                    data-bingo-card-id={card.id}
+                    onClick={() => setExpandedActiveCardId(card.id)}
+                    className="relative cursor-pointer rounded-xl border border-orange-200 bg-white/70 p-3 shadow-sm transition-all hover:border-cyan-400 hover:shadow-[0_4px_14px_rgba(6,182,212,0.15)]"
+                    style={{ touchAction: "pan-y", WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none" }}
+                  >
+                    <span
+                      className={`pointer-events-none absolute inset-0 rounded-xl bg-cyan-300/20 transition duration-200 ${
+                        glowCardIds.has(card.id) ? "scale-105 opacity-100" : "scale-95 opacity-0"
+                      }`}
+                      style={{ willChange: "transform, opacity" }}
+                    />
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-slate-900">{card.gameLabel}</p>
+                      <span className="rounded-full border border-cyan-300 bg-cyan-50 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-cyan-700">
+                        Active
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">Starts {formatLocalDateTime(card.startsAt)}</p>
+                    <div className="mt-2">
+                      {renderCompactGrid(card.id, card.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys, glowSquareKeys)}
+                    </div>
+                  </li>
+                ))}
               </ul>
             )}
-
             <div className="mt-3">
               <InlineSlotAdClient
                 slot="leaderboard-sidebar"
@@ -1494,99 +1652,91 @@ export function SportsBingoHome() {
             </div>
           </section>
 
+          {/* Final scores panel */}
           <section className="w-full shrink-0 snap-start pl-3">
-            <h2 className="text-base font-semibold text-slate-900">Final Scores</h2>
+            <h2 className="text-base font-bold text-orange-900">Scored Boards</h2>
             {loadingCards ? (
-              <LoadingState label="Loading final scores..." />
-            ) : settledCards.length === 0 ? (
-              <p className="mt-3 text-sm text-slate-600">No final scores yet.</p>
+              <LoadingState label="Loading scored boards..." />
+            ) : selectedSettledCards.length === 0 ? (
+              <p className="mt-3 text-sm text-orange-700/70">No scored boards yet.</p>
             ) : (
               <ul className="mt-3 space-y-3">
-            {settledCards.slice(0, 8).map((card) => {
-              const summary = summarizeCardState(card);
-              const showClaimOverlay = card.status === "won" && !card.rewardClaimedAt;
-              return (
-                <li
-                  key={card.id}
-                  data-bingo-card-id={card.id}
-                  className={`rounded-xl border p-3 ${
-                    showClaimOverlay
-                      ? "cursor-pointer border-emerald-300 bg-emerald-50 ring-2 ring-emerald-400 animate-pulse"
-                      : "border-slate-200 bg-slate-50"
-                  }`}
-                  onClick={showClaimOverlay ? (event) => void claimPoints(card, event.currentTarget) : undefined}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-slate-900">{card.gameLabel}</p>
-                    <span
-                      className={`rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${
-                        card.status === "won"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : card.status === "lost"
-                            ? "bg-rose-100 text-rose-700"
-                            : "bg-slate-200 text-slate-700"
+                {selectedSettledCards.slice(0, 8).map((card) => {
+                  const summary = summarizeCardState(card);
+                  const showClaimOverlay = card.status === "won" && !card.rewardClaimedAt;
+                  return (
+                    <li
+                      key={card.id}
+                      data-bingo-card-id={card.id}
+                      className={`rounded-xl border p-3 shadow-sm transition-all ${
+                        showClaimOverlay
+                          ? "cursor-pointer border-emerald-300 bg-emerald-50 ring-2 ring-emerald-300 animate-pulse"
+                          : "border-orange-200 bg-white/70"
                       }`}
+                      onClick={showClaimOverlay ? (event) => void claimPoints(card, event.currentTarget) : undefined}
                     >
-                      {card.status}
-                    </span>
-                    {showClaimOverlay ? (
-                      <span className="rounded-full border border-emerald-400 bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-emerald-800">
-                        Tap to Claim
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-1 text-xs text-slate-600">
-                    {formatLocalDateTime(card.startsAt)} · Hits {summary.hitCount}/25
-                    {card.status === "won" ? ` · +${card.rewardPoints} points` : ""}
-                    {card.status === "won" && card.rewardClaimedAt ? " · Claimed" : ""}
-                  </p>
-                  {card.status === "won" ? (
-                    <div className="relative mt-2">
-                      {renderCompactGrid(
-                        card.id,
-                        card.squares,
-                        recentlyUpdatedSquareKeys,
-                        recentlySucceededSquareKeys,
-                        glowSquareKeys
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-slate-900">{card.gameLabel}</p>
+                        <span
+                          className={`rounded-full px-2 py-1 text-[11px] font-bold uppercase tracking-[0.08em] ${
+                            card.status === "won"
+                              ? "border border-emerald-300 bg-emerald-50 text-emerald-700"
+                              : card.status === "lost"
+                              ? "border border-rose-300 bg-rose-50 text-rose-700"
+                              : "border border-orange-200 bg-orange-50 text-orange-600"
+                          }`}
+                        >
+                          {card.status}
+                        </span>
+                        {showClaimOverlay ? (
+                          <span className="rounded-full border border-emerald-400 bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-emerald-800">
+                            Tap to Claim
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {formatLocalDateTime(card.startsAt)} · Hits {summary.hitCount}/25
+                        {card.status === "won" ? ` · +${card.rewardPoints} pts` : ""}
+                        {card.status === "won" && card.rewardClaimedAt ? " · Claimed" : ""}
+                      </p>
+                      {card.status === "won" ? (
+                        <div className="relative mt-2">
+                          {renderCompactGrid(card.id, card.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys, glowSquareKeys)}
+                          {showClaimOverlay ? (
+                            <>
+                              <div className="pointer-events-none absolute inset-0 rounded-lg bg-slate-900/10" />
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <button
+                                  type="button"
+                                  disabled={claimingCardId === card.id}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    void claimPoints(card, event.currentTarget);
+                                  }}
+                                  className="pointer-events-auto inline-flex min-h-[44px] items-center rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-bold text-white shadow-[0_4px_14px_rgba(16,185,129,0.4)] transition-all active:scale-95 disabled:opacity-60"
+                                >
+                                  {claimingCardId === card.id ? "Collecting..." : "Collect Points"}
+                                </button>
+                              </div>
+                            </>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <div className="mt-2">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedFinalCardId(card.id)}
+                            className="tp-clean-button inline-flex min-h-[36px] items-center rounded-full border border-orange-300 bg-white/80 px-3 py-1.5 text-xs font-semibold text-orange-700 transition-all active:scale-95 hover:border-orange-400"
+                          >
+                            View Final Board
+                          </button>
+                        </div>
                       )}
-                      {showClaimOverlay ? (
-                        <>
-                          <div className="pointer-events-none absolute inset-0 rounded-lg bg-slate-900/10" />
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <button
-                              type="button"
-                              disabled={claimingCardId === card.id}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void claimPoints(card, event.currentTarget);
-                              }}
-                              className="pointer-events-auto inline-flex min-h-[44px] items-center rounded-full bg-gradient-to-r from-emerald-700 to-teal-600 px-4 py-2 text-sm font-semibold text-white transition-all active:scale-95 disabled:opacity-60"
-                            >
-                              {claimingCardId === card.id ? "Collecting..." : "Collect Points"}
-                            </button>
-                          </div>
-                        </>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <div className="mt-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setExpandedFinalCardId(card.id);
-                        }}
-                        className="tp-clean-button inline-flex min-h-[36px] items-center rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-all active:scale-95"
-                      >
-                        View Final Board
-                      </button>
-                    </div>
-                  )}
-                </li>
-              );
-            })}
+                    </li>
+                  );
+                })}
               </ul>
             )}
-
             <div className="mt-3">
               <InlineSlotAdClient
                 slot="leaderboard-sidebar"
@@ -1601,77 +1751,58 @@ export function SportsBingoHome() {
         </div>
       </div>
 
+      {/* Expanded active board modal */}
       {expandedActiveCard ? (
         <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
           <button
             type="button"
             aria-label="Close active board view"
-            className="absolute inset-0 bg-slate-950/35"
-            onClick={() => {
-              setExpandedActiveCardId("");
-            }}
+            className="absolute inset-0 bg-orange-950/50"
+            onClick={() => setExpandedActiveCardId("")}
           />
-          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-2xl border border-cyan-300 bg-white p-3 shadow-2xl shadow-slate-900/40">
+          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-2xl border border-cyan-300 bg-white p-3 shadow-2xl shadow-orange-900/30">
             <div className="mb-2 flex items-center justify-between gap-2">
               <p className="text-sm font-semibold text-slate-900">{expandedActiveCard.gameLabel}</p>
               <button
                 type="button"
-                onClick={() => {
-                  setExpandedActiveCardId("");
-                }}
+                onClick={() => setExpandedActiveCardId("")}
                 className="tp-clean-button inline-flex min-h-[32px] items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700"
               >
                 Close
               </button>
             </div>
-            <p className="mb-2 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-cyan-700">Active Board</p>
-            {renderExpandedGrid(
-              expandedActiveCard.id,
-              expandedActiveCard.squares,
-              recentlyUpdatedSquareKeys,
-              recentlySucceededSquareKeys,
-              glowSquareKeys
-            )}
+            <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.1em] text-cyan-600">Active Board</p>
+            {renderExpandedGrid(expandedActiveCard.id, expandedActiveCard.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys, glowSquareKeys)}
           </div>
         </div>
       ) : null}
 
+      {/* Expanded final board modal */}
       {expandedFinalCard ? (
         <div className="fixed inset-0 z-[95] flex items-center justify-center p-4">
           <button
             type="button"
             aria-label="Close final board view"
-            className="absolute inset-0 bg-slate-950/35"
-            onClick={() => {
-              setExpandedFinalCardId("");
-            }}
+            className="absolute inset-0 bg-orange-950/50"
+            onClick={() => setExpandedFinalCardId("")}
           />
-          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-2xl border border-cyan-300 bg-white p-3 shadow-2xl shadow-slate-900/40">
+          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-2xl border border-amber-300 bg-white p-3 shadow-2xl shadow-orange-900/30">
             <div className="mb-2 flex items-center justify-between gap-2">
               <p className="text-sm font-semibold text-slate-900">{expandedFinalCard.gameLabel}</p>
               <button
                 type="button"
-                onClick={() => {
-                  setExpandedFinalCardId("");
-                }}
+                onClick={() => setExpandedFinalCardId("")}
                 className="tp-clean-button inline-flex min-h-[32px] items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700"
               >
                 Close
               </button>
             </div>
-            <p className="mb-2 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-cyan-700">
-              Final Score Board
-            </p>
-            {renderExpandedGrid(
-              expandedFinalCard.id,
-              expandedFinalCard.squares,
-              recentlyUpdatedSquareKeys,
-              recentlySucceededSquareKeys,
-              glowSquareKeys
-            )}
+            <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.1em] text-amber-600">Final Score Board</p>
+            {renderExpandedGrid(expandedFinalCard.id, expandedFinalCard.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys, glowSquareKeys)}
           </div>
         </div>
       ) : null}
+
       {typeof document !== "undefined"
         ? createPortal(
             <div className="pointer-events-none fixed inset-0 z-[2400]" aria-hidden="true">
@@ -1682,9 +1813,7 @@ export function SportsBingoHome() {
                   x={pop.x}
                   y={pop.y}
                   tone={pop.tone}
-                  onDone={() => {
-                    setActionPops((current) => current.filter((item) => item.id !== pop.id));
-                  }}
+                  onDone={() => setActionPops((current) => current.filter((item) => item.id !== pop.id))}
                 />
               ))}
             </div>,
@@ -1693,24 +1822,12 @@ export function SportsBingoHome() {
         : null}
       <style jsx global>{`
         @keyframes tp-bingo-screen-shake {
-          0% {
-            transform: translate3d(0, 0, 0);
-          }
-          20% {
-            transform: translate3d(-1px, 0, 0);
-          }
-          40% {
-            transform: translate3d(1px, 0, 0);
-          }
-          60% {
-            transform: translate3d(-1px, 0, 0);
-          }
-          80% {
-            transform: translate3d(1px, 0, 0);
-          }
-          100% {
-            transform: translate3d(0, 0, 0);
-          }
+          0% { transform: translate3d(0, 0, 0); }
+          20% { transform: translate3d(-1px, 0, 0); }
+          40% { transform: translate3d(1px, 0, 0); }
+          60% { transform: translate3d(-1px, 0, 0); }
+          80% { transform: translate3d(1px, 0, 0); }
+          100% { transform: translate3d(0, 0, 0); }
         }
         .tp-bingo-screen-shake {
           animation: tp-bingo-screen-shake 200ms linear;

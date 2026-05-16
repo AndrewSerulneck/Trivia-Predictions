@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
 import { getUserId, getVenueId } from "@/lib/storage";
+import { navigateBackToVenue } from "@/lib/venueGameTransition";
+import { calculateDistanceMeters, getCurrentLocation } from "@/lib/geolocation";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { supabase } from "@/lib/supabase";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
@@ -16,6 +18,7 @@ type GamesPayload = {
   playerPool?: FantasyPlayerPoolItem[];
   leaderboard?: FantasyLeaderboardEntry[];
   dailyGameId?: string;
+  wnbaDailyGameId?: string;
   error?: string;
 };
 
@@ -65,6 +68,40 @@ type FantasyEntryRealtimeRow = {
 };
 
 const FALLBACK_HEADSHOT_SRC = "/images/player-silhouette.svg";
+const DISABLE_GEOFENCE_FOR_TESTING =
+  String(process.env.NEXT_PUBLIC_DISABLE_GEOFENCE ?? "")
+    .trim()
+    .toLowerCase() === "true";
+const ACCESS_DISTANCE_METERS = 200;
+
+function getGeofenceThresholdMeters(venueRadius: number, accuracy?: number): number {
+  const normalizedVenueRadius = Number.isFinite(venueRadius) ? Math.max(0, Math.round(venueRadius)) : 0;
+  const baseRadius = Math.max(ACCESS_DISTANCE_METERS, normalizedVenueRadius);
+  const accuracyBuffer = Number.isFinite(accuracy) ? Math.min(5000, Math.max(120, Math.round(Number(accuracy) * 1.5))) : 320;
+  return baseRadius + accuracyBuffer;
+}
+
+type FantasySport = "basketball" | "baseball" | "football";
+const FANTASY_SPORTS: Array<{ key: FantasySport; icon: string; available: boolean }> = [
+  { key: "basketball", icon: "🏀", available: true },
+  { key: "baseball", icon: "⚾", available: false },
+  { key: "football", icon: "🏈", available: false },
+];
+const FANTASY_LINEUP_SIZE_BY_SPORT: Record<FantasySport, number> = {
+  basketball: 5,
+  baseball: 5,
+  football: 5,
+};
+
+function formatDateLabel(dateStr: string, todayStr: string): string {
+  if (dateStr === todayStr) return "Today";
+  const d = new Date(`${dateStr}T00:00:00`);
+  const t = new Date(`${todayStr}T00:00:00`);
+  const diffDays = Math.round((d.getTime() - t.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays === -1) return "Yesterday";
+  if (diffDays === 1) return "Tomorrow";
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
 
 function parseRealtimeLineup(raw: unknown): string[] {
   if (!Array.isArray(raw)) {
@@ -84,7 +121,7 @@ function parseRealtimeLineup(raw: unknown): string[] {
     seen.add(key);
     lineup.push(name);
   }
-  return lineup.slice(0, 5);
+  return lineup;
 }
 
 function parseRealtimeLineupPlayers(raw: unknown): FantasyLineupPlayer[] {
@@ -180,17 +217,17 @@ function toLocalDateInput(value: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-function buildFantasyDailyGameId(date: string): string {
-  return `nba-daily-${date}`;
-}
-
 function parseDailyGameDateFromId(gameId: string): string | null {
   const trimmed = String(gameId ?? "").trim();
-  if (!trimmed.startsWith("nba-daily-")) {
-    return null;
+  if (trimmed.startsWith("nba-daily-")) {
+    const rawDate = trimmed.slice("nba-daily-".length).trim();
+    return /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null;
   }
-  const rawDate = trimmed.slice("nba-daily-".length).trim();
-  return /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null;
+  if (trimmed.startsWith("wnba-daily-")) {
+    const rawDate = trimmed.slice("wnba-daily-".length).trim();
+    return /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null;
+  }
+  return null;
 }
 
 function getEntryLocalDateKey(entry: Pick<FantasyEntry, "gameId" | "startsAt">): string | null {
@@ -470,6 +507,8 @@ export function FantasyHome() {
   const [venueId, setVenueId] = useState("");
   const [games, setGames] = useState<FantasyGame[]>([]);
   const [entries, setEntries] = useState<FantasyEntry[]>([]);
+  const [selectedSport, setSelectedSport] = useState<FantasySport>("basketball");
+  const [selectedDate, setSelectedDate] = useState(() => getTodayDateInput());
   const [selectedGameId, setSelectedGameId] = useState("");
   const [playerPool, setPlayerPool] = useState<FantasyPlayerPoolItem[]>([]);
   const [leaderboard, setLeaderboard] = useState<FantasyLeaderboardEntry[]>([]);
@@ -491,6 +530,8 @@ export function FantasyHome() {
   const [lastRealtimeMessageAt, setLastRealtimeMessageAt] = useState<number | null>(null);
   const [isRealtimeFresh, setIsRealtimeFresh] = useState(false);
   const [isEditingRoster, setIsEditingRoster] = useState(false);
+  const [isGeofencePaused, setIsGeofencePaused] = useState(false);
+  const [geofencePauseReason, setGeofencePauseReason] = useState("");
   const [statFlashes, setStatFlashes] = useState<Array<{ id: string; label: string; pointsDelta: number }>>([]);
   const gameDetailsRequestNonceRef = useRef(0);
   const prevStatsSnapshotRef = useRef<Map<number, StatsSnapshot>>(new Map());
@@ -500,17 +541,71 @@ export function FantasyHome() {
   const fantasyLineupAutosaveTimerRef = useRef<number | null>(null);
   const fantasyRealtimeFallbackTimerRef = useRef<number | null>(null);
   const fantasyHighlightResetTimerRef = useRef<number | null>(null);
+  const geofencePauseRef = useRef(false);
   const todayDate = useMemo(() => getTodayDateInput(), []);
+  const requiredLineupSize = FANTASY_LINEUP_SIZE_BY_SPORT[selectedSport] ?? 5;
 
   useEffect(() => {
     setUserId(getUserId() ?? "");
     setVenueId(getVenueId() ?? "");
   }, []);
 
-  const loadGames = useCallback(async () => {
+  useEffect(() => {
+    geofencePauseRef.current = isGeofencePaused;
+  }, [isGeofencePaused]);
+
+  useEffect(() => {
+    if (!venueId || DISABLE_GEOFENCE_FOR_TESTING) {
+      setIsGeofencePaused(false);
+      setGeofencePauseReason("");
+      return;
+    }
+
+    let active = true;
+    const verify = async () => {
+      try {
+        const venueResponse = await fetch("/api/venues", { cache: "no-store" });
+        const venuePayload = (await venueResponse.json()) as {
+          ok?: boolean;
+          venues?: Array<{ id: string; latitude: number; longitude: number; radius: number }>;
+        };
+        const venue = (venuePayload.venues ?? []).find((item) => String(item.id) === venueId);
+        if (!venue) {
+          return;
+        }
+        const location = await getCurrentLocation();
+        const distance = calculateDistanceMeters(location, {
+          latitude: Number(venue.latitude),
+          longitude: Number(venue.longitude),
+        });
+        const allowed = getGeofenceThresholdMeters(Number(venue.radius), location.accuracy);
+        if (!active) return;
+        const paused = distance > allowed;
+        setIsGeofencePaused(paused);
+        setGeofencePauseReason(
+          paused
+            ? `Fantasy scoring paused: you're ${Math.round(distance)}m away (allowed ${Math.round(allowed)}m). Return to venue to resume live scoring.`
+            : ""
+        );
+      } catch {
+        // Ignore transient geolocation/network failures.
+      }
+    };
+
+    void verify();
+    const interval = window.setInterval(() => {
+      void verify();
+    }, 20000);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [venueId]);
+
+  const loadGames = useCallback(async (date: string) => {
     setLoadingGames(true);
     try {
-      const date = todayDate;
       const params = new URLSearchParams({
         date,
         tzOffsetMinutes: String(new Date().getTimezoneOffset()),
@@ -521,25 +616,14 @@ export function FantasyHome() {
       if (!payload.ok) {
         throw new Error(payload.error ?? "Failed to load fantasy games.");
       }
-
-      const nextGames = payload.games ?? [];
-      setGames(nextGames);
-      const fallbackDailyGameId = buildFantasyDailyGameId(date);
-      const nextSelectedDailyId = String(payload.dailyGameId ?? "").trim() || fallbackDailyGameId;
-      setSelectedGameId((current) => {
-        if (current && (current === nextSelectedDailyId || nextGames.some((game) => game.id === current))) {
-          return current;
-        }
-        return nextSelectedDailyId;
-      });
+      setGames(payload.games ?? []);
     } catch (error) {
       setGames([]);
-      setSelectedGameId("");
       setErrorMessage(error instanceof Error ? error.message : "Failed to load fantasy games.");
     } finally {
       setLoadingGames(false);
     }
-  }, [todayDate]);
+  }, []);
 
   const loadEntries = useCallback(async (refreshSettlement = true, showLoading = refreshSettlement) => {
     if (!userId) {
@@ -563,7 +647,25 @@ export function FantasyHome() {
       if (!payload.ok) {
         throw new Error(payload.error ?? "Failed to load fantasy entries.");
       }
-      setEntries(payload.entries ?? []);
+      setEntries((previous) => {
+        const incoming = payload.entries ?? [];
+        if (!geofencePauseRef.current) {
+          return incoming;
+        }
+        const previousById = new Map(previous.map((entry) => [entry.id, entry]));
+        return incoming.map((entry) => {
+          const prior = previousById.get(entry.id);
+          if (!prior) return entry;
+          if (entry.status === "pending" || entry.status === "live") {
+            return {
+              ...entry,
+              points: prior.points,
+              scoreBreakdown: prior.scoreBreakdown,
+            };
+          }
+          return entry;
+        });
+      });
     } catch (error) {
       setEntries([]);
       setErrorMessage(error instanceof Error ? error.message : "Failed to load fantasy entries.");
@@ -640,34 +742,54 @@ export function FantasyHome() {
       return;
     }
 
+    if (selectedSport !== "basketball") {
+      setPlayerPool([]);
+      setLeaderboard([]);
+      return;
+    }
+
     try {
       const requestNonce = ++gameDetailsRequestNonceRef.current;
-      const gameDate = parseDailyGameDateFromId(selectedGameId) ?? todayDate;
-      const params = new URLSearchParams({
-        gameId: selectedGameId,
-        date: gameDate,
-        tzOffsetMinutes: String(new Date().getTimezoneOffset()),
-        _t: String(Date.now()),
-      });
-      params.set("includeStartedGames", "false");
-      if (venueId) {
-        params.set("venueId", venueId);
+      const gameDate = parseDailyGameDateFromId(selectedGameId) ?? selectedDate;
+
+      const makeParams = (gameId: string) => {
+        const p = new URLSearchParams({
+          gameId,
+          date: gameDate,
+          tzOffsetMinutes: String(new Date().getTimezoneOffset()),
+          _t: String(Date.now()),
+          includeStartedGames: "false",
+        });
+        if (venueId) p.set("venueId", venueId);
+        return p.toString();
+      };
+
+      const nbaId = `nba-daily-${gameDate}`;
+      const wnbaId = `wnba-daily-${gameDate}`;
+
+      const [nbaRes, wnbaRes] = await Promise.all([
+        fetch(`/api/fantasy/games?${makeParams(nbaId)}`, { cache: "no-store" }),
+        fetch(`/api/fantasy/games?${makeParams(wnbaId)}`, { cache: "no-store" }),
+      ]);
+      const [nbaPayload, wnbaPayload] = (await Promise.all([nbaRes.json(), wnbaRes.json()])) as [GamesPayload, GamesPayload];
+
+      if (requestNonce !== gameDetailsRequestNonceRef.current) return;
+
+      const seen = new Set<string>();
+      const combined: FantasyPlayerPoolItem[] = [];
+      for (const item of [...(nbaPayload.playerPool ?? []), ...(wnbaPayload.playerPool ?? [])]) {
+        const key = normalizePlayerKey(item.playerName);
+        if (key && !seen.has(key)) {
+          seen.add(key);
+          combined.push(item);
+        }
       }
 
-      const response = await fetch(`/api/fantasy/games?${params.toString()}`, { cache: "no-store" });
-      const payload = (await response.json()) as GamesPayload;
-      if (!payload.ok) {
-        throw new Error(payload.error ?? "Failed to load player pool.");
-      }
-      if (requestNonce !== gameDetailsRequestNonceRef.current) {
-        return;
-      }
-
-      setPlayerPool(payload.playerPool ?? []);
-      setLeaderboard(payload.leaderboard ?? []);
+      setPlayerPool(combined);
+      setLeaderboard(nbaPayload.leaderboard ?? []);
 
       setSelectedPlayers((current) => {
-        const poolKeys = new Set((payload.playerPool ?? []).map((item) => item.playerName));
+        const poolKeys = new Set(combined.map((item) => item.playerName));
         return current.filter((name) => poolKeys.has(name));
       });
     } catch (error) {
@@ -675,7 +797,7 @@ export function FantasyHome() {
       setLeaderboard([]);
       setErrorMessage(error instanceof Error ? error.message : "Failed to load fantasy player pool.");
     }
-  }, [selectedGameId, todayDate, venueId]);
+  }, [selectedGameId, selectedDate, selectedSport, venueId]);
 
   useEffect(() => {
     setSelectedPlayers([]);
@@ -684,8 +806,18 @@ export function FantasyHome() {
   }, [selectedGameId]);
 
   useEffect(() => {
-    void loadGames();
-  }, [loadGames]);
+    void loadGames(selectedDate);
+  }, [loadGames, selectedDate]);
+
+  // Derive selectedGameId from sport + date + available games
+  useEffect(() => {
+    if (selectedSport === "basketball") {
+      const hasNba = games.some((g) => g.league === "NBA");
+      const hasWnba = games.some((g) => g.league === "WNBA");
+      const id = !hasNba && hasWnba ? `wnba-daily-${selectedDate}` : `nba-daily-${selectedDate}`;
+      setSelectedGameId(id);
+    }
+  }, [selectedSport, selectedDate, games]);
 
   useEffect(() => {
     if (!userId) {
@@ -700,8 +832,14 @@ export function FantasyHome() {
   }, [loadSelectedGameDetails]);
 
   const existingEntryForSelectedGame = useMemo(
-    () => entries.find((entry) => entry.gameId === selectedGameId),
-    [entries, selectedGameId]
+    () =>
+      entries.find((entry) => {
+        if (selectedSport === "basketball") {
+          return parseDailyGameDateFromId(entry.gameId) === selectedDate;
+        }
+        return entry.gameId === selectedGameId;
+      }),
+    [entries, selectedGameId, selectedSport, selectedDate]
   );
   const playerPoolKeys = useMemo(
     () => new Set(playerPool.map((item) => normalizePlayerKey(item.playerName)).filter(Boolean)),
@@ -728,9 +866,16 @@ export function FantasyHome() {
     }
     return !existingEntryForSelectedGame.lineup.some((playerName) => !playerPoolKeys.has(normalizePlayerKey(playerName)));
   }, [existingEntryForSelectedGame, playerPoolKeys]);
-  const nextUnlockedGame = useMemo(() => games.find((game) => !game.isLocked) ?? null, [games]);
+  const sportGames = useMemo(
+    () =>
+      selectedSport === "basketball"
+        ? games.filter((g) => g.league === "NBA" || g.league === "WNBA")
+        : [],
+    [games, selectedSport]
+  );
+  const nextUnlockedGame = useMemo(() => sportGames.find((game) => !game.isLocked) ?? null, [sportGames]);
   const liveDebugTargetGame = useMemo(() => {
-    const liveGames = games.filter((game) => game.status === "live");
+    const liveGames = sportGames.filter((game) => game.status === "live");
     if (liveGames.length === 0) {
       return null;
     }
@@ -743,7 +888,7 @@ export function FantasyHome() {
     });
     return lakersThunder ?? liveGames[0] ?? null;
   }, [games]);
-  const selectedSlateDate = useMemo(() => parseDailyGameDateFromId(selectedGameId) ?? todayDate, [selectedGameId, todayDate]);
+  const selectedSlateDate = selectedDate;
   const liveEntries = useMemo(
     () =>
       entries.filter((entry) => {
@@ -757,12 +902,16 @@ export function FantasyHome() {
   );
   const hasActiveDraftedEntry = useMemo(
     () =>
-      entries.some(
-        (entry) =>
-          entry.gameId === selectedGameId &&
-          (entry.status === "pending" || entry.status === "live")
-      ),
-    [entries, selectedGameId]
+      entries.some((entry) => {
+        if (selectedSport === "basketball") {
+          return (
+            parseDailyGameDateFromId(entry.gameId) === selectedDate &&
+            (entry.status === "pending" || entry.status === "live")
+          );
+        }
+        return entry.gameId === selectedGameId && (entry.status === "pending" || entry.status === "live");
+      }),
+    [entries, selectedGameId, selectedSport, selectedDate]
   );
   const hasLiveEntry = liveEntries.length > 0;
   const hasSyncableEntry = useMemo(
@@ -809,6 +958,48 @@ export function FantasyHome() {
             isIsoInCurrentLocalWeek(entry.startsAt)
         )
         .sort((left, right) => Date.parse(right.startsAt) - Date.parse(left.startsAt)),
+    [entries, selectedSlateDate]
+  );
+  const hasPreviousUnclaimedFantasyEntries = useMemo(
+    () =>
+      entries.some((entry) => {
+        if (entry.status !== "final" || entry.rewardClaimedAt || computeFantasyClaimablePoints(entry) <= 0) {
+          return false;
+        }
+        const entryDateKey = getEntryLocalDateKey(entry);
+        if (!entryDateKey) {
+          return false;
+        }
+        return entryDateKey < selectedSlateDate;
+      }),
+    [entries, selectedSlateDate]
+  );
+  const hasCurrentUnclaimedFantasyEntries = useMemo(
+    () =>
+      entries.some((entry) => {
+        if (entry.status !== "final" || entry.rewardClaimedAt || computeFantasyClaimablePoints(entry) <= 0) {
+          return false;
+        }
+        const entryDateKey = getEntryLocalDateKey(entry);
+        if (!entryDateKey) {
+          return false;
+        }
+        return entryDateKey === selectedSlateDate;
+      }),
+    [entries, selectedSlateDate]
+  );
+  const hasFutureUnclaimedFantasyEntries = useMemo(
+    () =>
+      entries.some((entry) => {
+        if (entry.status !== "final" || entry.rewardClaimedAt || computeFantasyClaimablePoints(entry) <= 0) {
+          return false;
+        }
+        const entryDateKey = getEntryLocalDateKey(entry);
+        if (!entryDateKey) {
+          return false;
+        }
+        return entryDateKey > selectedSlateDate;
+      }),
     [entries, selectedSlateDate]
   );
   const trackedEntry = useMemo(() => {
@@ -990,6 +1181,9 @@ export function FantasyHome() {
             if (existingIndex >= 0) {
               const previousEntry = next[existingIndex];
               if (previousEntry) {
+                if (geofencePauseRef.current && (nextEntry.status === "pending" || nextEntry.status === "live")) {
+                  return previous;
+                }
                 const nextLineupPlayers =
                   nextEntry.lineupPlayers.length > 0
                     ? nextEntry.lineupPlayers
@@ -1075,6 +1269,7 @@ export function FantasyHome() {
         { event: "*", schema: "public", table: "live_player_stats" },
         (payload) => {
           if (!active) return;
+          if (geofencePauseRef.current) return;
           const row = (payload.new ?? null) as LiveStatsRealtimeRow | null;
           if (!row) return;
 
@@ -1135,12 +1330,12 @@ export function FantasyHome() {
     const interval = window.setInterval(() => {
       void loadEntries(true, false);
       void loadSelectedGameDetails();
-      void loadGames();
+      void loadGames(selectedDate);
     }, 5000);
     return () => {
       window.clearInterval(interval);
     };
-  }, [loadEntries, loadGames, loadSelectedGameDetails, userId, supabase]);
+  }, [loadEntries, loadGames, loadSelectedGameDetails, selectedDate, userId, supabase]);
 
   useEffect(() => {
     if (!selectedGameId) {
@@ -1168,7 +1363,7 @@ export function FantasyHome() {
       fantasyKickoffRefreshTimerRef.current = null;
       void loadEntries(true, false);
       void loadSelectedGameDetails();
-      void loadGames();
+      void loadGames(selectedDate);
     }, delayMs);
     return () => {
       if (fantasyKickoffRefreshTimerRef.current) {
@@ -1184,20 +1379,41 @@ export function FantasyHome() {
       if (current.includes(playerName)) {
         return current.filter((name) => name !== playerName);
       }
-      if (current.length >= 5) {
+      if (current.length >= requiredLineupSize) {
         return current;
       }
       return [...current, playerName];
     });
-  }, []);
+  }, [requiredLineupSize]);
 
   const removeSelectedPlayer = useCallback((playerName: string) => {
     setHasLocalLineupDraft(true);
     setSelectedPlayers((current) => current.filter((name) => name !== playerName));
   }, []);
 
+  const navigateToPrevDay = useCallback(() => {
+    setSelectedDate((prev) => {
+      const d = new Date(`${prev}T00:00:00`);
+      d.setDate(d.getDate() - 1);
+      return toLocalDateInput(d);
+    });
+    setHasStartedGame(false);
+    setSelectedPlayers([]);
+  }, []);
+
+  const navigateToNextDay = useCallback(() => {
+    setSelectedDate((prev) => {
+      if (prev >= todayDate) return prev;
+      const d = new Date(`${prev}T00:00:00`);
+      d.setDate(d.getDate() + 1);
+      return toLocalDateInput(d);
+    });
+    setHasStartedGame(false);
+    setSelectedPlayers([]);
+  }, [todayDate]);
+
   const persistLineup = useCallback(async (lineup: string[]) => {
-    if (!userId || !venueId || !selectedGameId || lineup.length !== 5) {
+    if (!userId || !venueId || !selectedGameId || lineup.length !== requiredLineupSize) {
       return;
     }
 
@@ -1235,7 +1451,7 @@ export function FantasyHome() {
     } finally {
       setSubmitting(false);
     }
-  }, [existingEntryForSelectedGame, loadEntries, loadSelectedGameDetails, selectedGameId, userId, venueId]);
+  }, [existingEntryForSelectedGame, loadEntries, loadSelectedGameDetails, requiredLineupSize, selectedGameId, userId, venueId]);
 
   useEffect(() => {
     if (!(selectedGameId && hasResolvedEntries && ((hasStartedGame && !existingEntryForSelectedGame) || canEditExistingEntryLineup))) {
@@ -1246,11 +1462,11 @@ export function FantasyHome() {
       return;
     }
 
-    if (selectedPlayers.length !== 5) {
+    if (selectedPlayers.length !== requiredLineupSize) {
       setStatusMessage(
         selectedPlayers.length === 0
-          ? "Tap players to build your roster. Saves happen automatically at 5 selections."
-          : `Select ${5 - selectedPlayers.length} more player${5 - selectedPlayers.length === 1 ? "" : "s"} to auto-save.`
+          ? `Tap players to build your roster. Saves happen automatically at ${requiredLineupSize} selections.`
+          : `Select ${requiredLineupSize - selectedPlayers.length} more player${requiredLineupSize - selectedPlayers.length === 1 ? "" : "s"} to auto-save.`
       );
       return;
     }
@@ -1276,6 +1492,7 @@ export function FantasyHome() {
     hasResolvedEntries,
     hasStartedGame,
     persistLineup,
+    requiredLineupSize,
     selectedGameId,
     selectedPlayers,
   ]);
@@ -1431,8 +1648,23 @@ export function FantasyHome() {
     );
   }
 
+  const isToday = selectedDate === todayDate;
+  const showGameStart =
+    selectedSport === "basketball" &&
+    selectedGameId &&
+    hasResolvedEntries &&
+    !hasActiveDraftedEntry &&
+    !existingEntryForSelectedGame &&
+    !hasStartedGame;
+  const showLineupBuilder =
+    selectedSport === "basketball" &&
+    selectedGameId &&
+    hasResolvedEntries &&
+    ((hasStartedGame && !existingEntryForSelectedGame) || (canEditExistingEntryLineup && isEditingRoster));
+
   return (
-    <div className="space-y-4">
+    <div className="tp-fantasy-compact min-h-[100dvh] touch-pan-y space-y-3">
+      {/* Stat flash toasts */}
       <div className="pointer-events-none fixed left-1/2 top-[5.25rem] z-[2200] -translate-x-1/2 space-y-2">
         <AnimatePresence initial={false}>
           {statFlashes.map((flash) => (
@@ -1454,61 +1686,152 @@ export function FantasyHome() {
           ))}
         </AnimatePresence>
       </div>
-      <VenueEntryRulesPanel gameKey="fantasy" shouldDisplay={entries.length === 0} />
 
-      {finalUnclaimedEntries.length > 0 ? (
-        <div className="rounded-xl border-2 border-cyan-400 bg-gradient-to-r from-cyan-600 to-sky-600 px-3 py-3 shadow-[0_6px_18px_rgba(8,145,178,0.35)]">
-          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-cyan-50">Fantasy Points Ready</p>
-          <div className="mt-1 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-lg font-black leading-none text-white">
-                {finalUnclaimedEntries.length} completed game{finalUnclaimedEntries.length !== 1 ? "s" : ""}
-              </p>
-              <p className="mt-0.5 text-[11px] font-semibold text-cyan-50">
-                {totalUnclaimedFantasyPoints} pts waiting to collect
-              </p>
-            </div>
-            <button
-              type="button"
-              data-fantasy-collect-all
-              onClick={() => void collectAllFantasyEntries()}
-              disabled={isCollectingAllFantasy}
-              className="tp-clean-button inline-flex min-h-[44px] items-center rounded-full border-2 border-white bg-white px-4 py-2 text-sm font-black text-cyan-800 shadow-[0_3px_0_rgba(0,0,0,0.18)] transition-all active:scale-95 disabled:opacity-60"
-            >
-              {isCollectingAllFantasy ? "Collecting..." : "Collect Points"}
-            </button>
+      {/* Page title */}
+      <h1 className="px-1 text-xl font-black tracking-tight text-slate-900">Hightop Fantasy Sports</h1>
+
+      {/* Top section — date nav, sport scroll, roster tracker */}
+      <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-3 shadow-sm">
+
+        {/* Date nav pill */}
+        <div className="flex w-full items-center justify-between rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-2 py-1.5">
+          <button
+            type="button"
+            onClick={navigateToPrevDay}
+            className="tp-clean-button relative flex h-7 w-7 items-center justify-center rounded-full text-white/80 transition-all hover:bg-white/15 active:scale-90"
+            aria-label="Previous day"
+          >
+            ◀
+            {hasPreviousUnclaimedFantasyEntries && !hasCurrentUnclaimedFantasyEntries ? (
+              <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white">
+                !
+              </span>
+            ) : null}
+          </button>
+          <span className="text-sm font-bold text-white">{formatDateLabel(selectedDate, todayDate)}</span>
+          <button
+            type="button"
+            onClick={navigateToNextDay}
+            disabled={isToday}
+            className="tp-clean-button relative flex h-7 w-7 items-center justify-center rounded-full text-white/80 transition-all hover:bg-white/15 active:scale-90 disabled:opacity-30"
+            aria-label="Next day"
+          >
+            ▶
+            {hasFutureUnclaimedFantasyEntries && !hasCurrentUnclaimedFantasyEntries ? (
+              <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white">
+                !
+              </span>
+            ) : null}
+          </button>
+        </div>
+
+        {/* Sport scroll */}
+        <div className="mt-4 w-full touch-pan-x overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:thin]">
+          <div className="inline-flex w-max min-w-full justify-center gap-3 pr-1">
+            {FANTASY_SPORTS.map((sport) => (
+              <button
+                key={sport.key}
+                type="button"
+                disabled={!sport.available}
+                onClick={() => sport.available && setSelectedSport(sport.key)}
+                className={`tp-clean-button flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-full border-2 text-[3.25rem] leading-none transition-all ${
+                  selectedSport === sport.key
+                    ? "border-indigo-700 bg-indigo-600 shadow-sm"
+                    : sport.available
+                    ? "border-slate-300 bg-white hover:border-indigo-300"
+                    : "border-slate-200 bg-slate-100 opacity-40"
+                }`}
+                title={sport.available ? sport.key : `${sport.key} — coming soon`}
+              >
+                {sport.icon}
+              </button>
+            ))}
           </div>
         </div>
-      ) : null}
 
-      <section className="rounded-2xl border border-cyan-200 bg-cyan-50/85 p-4 shadow-sm">
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">Hightop Fantasy™</h2>
+        {/* Roster tracker pips */}
+        <div className="mt-3 flex items-center gap-2">
+          <p className="text-[11px] font-semibold text-slate-500">Roster</p>
+          <div className="flex flex-1 gap-1">
+            {Array.from({ length: requiredLineupSize }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-2 flex-1 rounded-full transition-colors ${
+                  i < selectedPlayers.length ? "bg-indigo-600" : "bg-indigo-200"
+                }`}
+              />
+            ))}
           </div>
+          <p className="text-[11px] font-semibold text-slate-500">
+            {selectedPlayers.length}/{requiredLineupSize}
+          </p>
         </div>
 
-        {statusMessage ? (
-          <p className="mt-3 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
-            {statusMessage}
-          </p>
-        ) : null}
-
-        {errorMessage ? (
-          <p className="mt-3 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800">
-            {errorMessage}
-          </p>
-        ) : null}
-
-        {games.length === 0 ? (
-          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-            No NBA games available for this date.
-          </div>
-        ) : null}
       </section>
 
-      {trackedEntry ? (
-        <section className="rounded-2xl border border-cyan-200 bg-cyan-50/85 p-4 shadow-sm">
+      {/* Sticky action row */}
+      <div className="sticky top-0 z-30 mb-1 flex w-full items-center gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            if (venueId) {
+              void navigateBackToVenue({
+                venuePath: `/venue/${encodeURIComponent(venueId)}`,
+                fallbackNavigate: () => { window.location.href = `/venue/${encodeURIComponent(venueId)}`; },
+              });
+            }
+          }}
+          className="tp-clean-button flex flex-1 items-center justify-center gap-1 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] py-2 text-sm font-bold text-white shadow-sm active:scale-95"
+        >
+          ← Back to Venue
+        </button>
+        <button
+          type="button"
+          data-fantasy-collect-all
+          onClick={() => void collectAllFantasyEntries()}
+          disabled={finalUnclaimedEntries.length === 0 || isCollectingAllFantasy}
+          className="tp-clean-button flex flex-1 items-center justify-center gap-1 rounded-full border border-[#3a1c72] bg-gradient-to-r from-[#5b2ca5] via-[#7b3fd6] to-[#8f4de8] py-2 text-sm font-bold text-white shadow-sm active:scale-95 disabled:opacity-40"
+        >
+          {isCollectingAllFantasy
+            ? "Collecting..."
+            : finalUnclaimedEntries.length > 0
+            ? `Collect ${totalUnclaimedFantasyPoints} pts`
+            : "Collect Points"}
+        </button>
+      </div>
+
+      <VenueEntryRulesPanel gameKey="fantasy" shouldDisplay={entries.length === 0} />
+
+      {isGeofencePaused ? (
+        <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
+          {geofencePauseReason || "Fantasy scoring is paused while outside the venue geofence."}
+        </p>
+      ) : null}
+
+      {statusMessage ? (
+        <p className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
+          {statusMessage}
+        </p>
+      ) : null}
+
+      {errorMessage ? (
+        <p className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800">
+          {errorMessage}
+        </p>
+      ) : null}
+
+      {/* "Coming soon" for non-basketball sports */}
+      {selectedSport !== "basketball" ? (
+        <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm">
+          <p className="text-center text-sm font-semibold text-slate-600">
+            {selectedSport === "baseball" ? "⚾" : "🏈"} {selectedSport.charAt(0).toUpperCase() + selectedSport.slice(1)} fantasy is coming soon!
+          </p>
+        </section>
+      ) : null}
+
+      {/* Team tracker for live/pending entry */}
+      {selectedSport === "basketball" && trackedEntry ? (
+        <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm">
           <div className="flex items-center justify-between gap-2">
             <h3 className="text-base font-semibold text-slate-900">Your Team Tracker</h3>
             {existingEntryForSelectedGame ? (
@@ -1559,21 +1882,20 @@ export function FantasyHome() {
               </SpringPop>
             </div>
             <ul className="mt-2 space-y-1">
-              {((isEditingRoster && canEditExistingEntryLineup && existingEntryForSelectedGame)
-                ? selectedPlayers.map((playerName, index) => ({
-                    playerId: -(index + 1),
-                    playerName,
-                    headshotUrl: playerPoolHeadshotByName.get(normalizePlayerKey(playerName)) ?? null,
-                  }))
-                : trackedEntry.lineupPlayers.length > 0
-                ? trackedEntry.lineupPlayers
-                : trackedEntry.lineup
-                    .map((playerName, index) => ({
+              {(
+                isEditingRoster && canEditExistingEntryLineup && existingEntryForSelectedGame
+                  ? selectedPlayers.map((playerName, index) => ({
                       playerId: -(index + 1),
                       playerName,
                       headshotUrl: playerPoolHeadshotByName.get(normalizePlayerKey(playerName)) ?? null,
                     }))
-                    .map((player) => player)
+                  : trackedEntry.lineupPlayers.length > 0
+                  ? trackedEntry.lineupPlayers
+                  : trackedEntry.lineup.map((playerName, index) => ({
+                      playerId: -(index + 1),
+                      playerName,
+                      headshotUrl: playerPoolHeadshotByName.get(normalizePlayerKey(playerName)) ?? null,
+                    }))
               ).map((player) => {
                 const playerName = player.playerName;
                 const livePoints = livePointsByPlayer.get(String(player.playerId));
@@ -1644,15 +1966,16 @@ export function FantasyHome() {
         </section>
       ) : null}
 
-      {finalUnclaimedEntries.length > 1 ? (
-        <section className="rounded-2xl border border-cyan-200 bg-cyan-50/85 p-4 shadow-sm">
+      {/* Completed games with unclaimed points */}
+      {selectedSport === "basketball" && finalUnclaimedEntries.length > 1 ? (
+        <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm">
           <h3 className="text-base font-semibold text-slate-900">Completed Games Ready To Collect</h3>
-            <p className="mt-1 text-xs leading-relaxed text-slate-700">
-              Finalized rosters stay here until you collect points.
-            </p>
+          <p className="mt-1 text-xs leading-relaxed text-slate-700">
+            Finalized rosters stay here until you collect points.
+          </p>
           <div className="mt-3 space-y-2">
             {finalUnclaimedEntries.map((entry) => (
-              <div key={entry.id} className="rounded-lg border border-cyan-200 bg-white px-3 py-2">
+              <div key={entry.id} className="rounded-lg border border-indigo-200 bg-white px-3 py-2">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-slate-900">{entry.gameLabel}</p>
@@ -1665,7 +1988,7 @@ export function FantasyHome() {
                       void claimReward(entry, rect);
                     }}
                     disabled={claimingEntryId === entry.id}
-                    className="tp-clean-button rounded-lg border border-cyan-500 bg-cyan-100 px-2.5 py-1.5 text-xs font-semibold text-cyan-900 disabled:opacity-60"
+                    className="tp-clean-button rounded-lg border border-indigo-500 bg-indigo-100 px-2.5 py-1.5 text-xs font-semibold text-indigo-900 disabled:opacity-60"
                   >
                     {claimingEntryId === entry.id ? "Collecting..." : `Collect ${computeFantasyClaimablePoints(entry)} Points`}
                   </button>
@@ -1676,26 +1999,38 @@ export function FantasyHome() {
         </section>
       ) : null}
 
-      {selectedGameId && hasResolvedEntries && !hasActiveDraftedEntry && !existingEntryForSelectedGame && !hasStartedGame ? (
-        <section className="rounded-2xl border border-cyan-200 bg-cyan-50/80 p-4 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-[0.12em] text-cyan-800">Game Start</p>
-          <button
-            type="button"
-            onClick={() => setHasStartedGame(true)}
-            className="tp-clean-button mt-3 rounded-lg border border-indigo-500 bg-indigo-100 px-3 py-2 text-sm font-semibold text-indigo-900"
-          >
-            Draft Your Roster
-          </button>
+      {/* Game Start card */}
+      {showGameStart ? (
+        <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm">
+          <p className="text-xs font-black uppercase tracking-[0.12em] text-indigo-700">Game Start</p>
+          {sportGames.length > 0 ? (
+            <p className="mt-1 text-sm text-slate-700">
+              {sportGames[0] ? formatLocalDateTime(sportGames[0].startsAt) : null}
+            </p>
+          ) : null}
+          {sportGames.length === 0 ? (
+            <p className="mt-1 text-sm text-slate-600">No basketball games scheduled for this day.</p>
+          ) : null}
+          {sportGames.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setHasStartedGame(true)}
+              className="tp-clean-button mt-3 w-full rounded-xl border border-indigo-500 bg-gradient-to-r from-[#5b2ca5] via-[#7b3fd6] to-[#8f4de8] px-3 py-3 text-sm font-bold text-white shadow-sm active:scale-95"
+            >
+              Draft your roster
+            </button>
+          ) : null}
         </section>
       ) : null}
 
-      {selectedGameId && hasResolvedEntries && ((hasStartedGame && !existingEntryForSelectedGame) || (canEditExistingEntryLineup && isEditingRoster)) ? (
-        <section className="rounded-2xl border border-cyan-200 bg-cyan-50/85 p-4 shadow-sm">
+      {/* Lineup Builder */}
+      {showLineupBuilder ? (
+        <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold text-slate-900">
               {existingEntryForSelectedGame ? "Update Lineup" : "Lineup Builder"}
             </h3>
-            <div className="text-xs font-semibold text-slate-700">Selected {selectedPlayers.length}/5</div>
+            <div className="text-xs font-semibold text-slate-700">Selected {selectedPlayers.length}/{requiredLineupSize}</div>
           </div>
 
           <div className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-3">
@@ -1709,16 +2044,15 @@ export function FantasyHome() {
               <span className="text-slate-600">Turnovers</span><span className="text-right font-semibold text-rose-700">-1.0</span>
             </div>
           </div>
-          <p className="mt-2 text-xs leading-relaxed text-slate-700">
-            Tap any player once to add them instantly. Tap again to remove.
-          </p>
+
+          {availablePlayerPool.length > 0 ? (
+            <p className="mt-2 text-xs leading-relaxed text-slate-700">Select {requiredLineupSize} players from today's games.</p>
+          ) : null}
 
           {availablePlayerPool.length === 0 ? (
             <div className="mt-3">
-              {nextUnlockedGame ? (
-                <BasketballLoader label="Loading today's eligible players..." />
-              ) : (
-                <div className="text-sm text-slate-600">All games have started. No eligible players remain for today.</div>
+              {sportGames.length > 0 ? <BasketballLoader label="Loading today's eligible players..." /> : (
+                <p className="text-sm text-slate-600">No players available for this date.</p>
               )}
             </div>
           ) : (
@@ -1729,12 +2063,12 @@ export function FantasyHome() {
                   <button
                     key={item.playerName}
                     type="button"
-                    disabled={selectedPlayers.length >= 5 && !selected}
+                    disabled={selectedPlayers.length >= requiredLineupSize && !selected}
                     onClick={() => togglePlayer(item.playerName)}
                     className={`tp-clean-button rounded-lg border px-3 py-2 text-left disabled:opacity-60 ${
                       selected
                         ? "border-emerald-500 bg-emerald-50"
-                        : "border-cyan-200 bg-white/90 hover:border-cyan-300"
+                        : "border-indigo-200 bg-white/90 hover:border-indigo-300"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -1762,13 +2096,9 @@ export function FantasyHome() {
             ))}
           </div>
 
-          <p className="mt-3 text-xs font-semibold leading-relaxed text-slate-700">
-            {submitting
-              ? "Saving lineup..."
-              : selectedPlayers.length === 5
-                ? "Lineup auto-saves when complete."
-                : `Select ${5 - selectedPlayers.length} more player${5 - selectedPlayers.length === 1 ? "" : "s"} to auto-save.`}
-          </p>
+          {submitting ? (
+            <p className="mt-3 text-xs font-semibold leading-relaxed text-slate-700">Saving lineup...</p>
+          ) : null}
         </section>
       ) : null}
 
@@ -1780,7 +2110,6 @@ export function FantasyHome() {
         displayTrigger="on-load"
         placementKey="fantasy-inline"
       />
-
     </div>
   );
 }

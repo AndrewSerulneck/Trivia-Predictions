@@ -7,8 +7,8 @@ const BALLDONTLIE_API_BASE_URL = process.env.BALLDONTLIE_API_BASE_URL ?? "https:
 const BALLDONTLIE_API_KEY = process.env.BALLDONTLIE_API_KEY?.trim() ?? "";
 const DEFAULT_SPORT_KEY = "basketball_nba";
 const BINGO_REWARD_POINTS = Number.parseInt(process.env.BINGO_REWARD_POINTS ?? "50", 10);
-const BOARD_TARGET_WIN_RATE = Number.parseFloat(process.env.BINGO_BOARD_TARGET_WIN_RATE ?? "0.27");
-const BOARD_TARGET_TOLERANCE = Number.parseFloat(process.env.BINGO_BOARD_TARGET_TOLERANCE ?? "0.03");
+const BOARD_TARGET_WIN_RATE = Number.parseFloat(process.env.BINGO_BOARD_TARGET_WIN_RATE ?? "0.42");
+const BOARD_TARGET_TOLERANCE = Number.parseFloat(process.env.BINGO_BOARD_TARGET_TOLERANCE ?? "0.05");
 const BOARD_SIMULATION_TRIALS = Number.parseInt(process.env.BINGO_BOARD_SIM_TRIALS ?? "2500", 10);
 const MAX_ACTIVE_CARDS_PER_USER = 4;
 const ACTIVE_CARD_SLOT_BUFFER_HOURS = 6;
@@ -2773,9 +2773,9 @@ async function buildNBAAchievementCandidates(game: SportsBingoGame, _candidates:
     return aggregateCandidates(templates).sort((a, b) => a.key.localeCompare(b.key));
   };
 
-  let appliedThreshold = 0.2;
+  let appliedThreshold = 0.3;
   let candidates = addTemplatesForThreshold(appliedThreshold);
-  for (const threshold of [0.16, 0.12, 0.08, 0.05]) {
+  for (const threshold of [0.26, 0.22, 0.18, 0.14]) {
     const playerSpecificCount = candidates.filter((item) => isPlayerSpecificAchievementResolver(item.resolver)).length;
     if (playerSpecificCount >= BINGO_PLAYER_SPECIFIC_HARD_FLOOR) {
       break;

@@ -1,4 +1,4 @@
-export type VenueGameKey = "trivia" | "predictions" | "pickem" | "bingo" | "fantasy";
+export type VenueGameKey = "trivia" | "live_trivia" | "predictions" | "pickem" | "bingo" | "fantasy";
 
 export type VenueGameCardConfig = {
   key: VenueGameKey;
@@ -20,6 +20,19 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
       "-15 questions per round",
       "-15 seconds per question",
       "-3 rounds per hour",
+      "-2 points per correct answer",
+    ],
+  },
+  {
+    key: "live_trivia",
+    title: "Hightop Live Trivia",
+    path: "/trivia/live",
+    cardClassName: "bg-blue-700 text-white",
+    visibleOnVenueHome: true,
+    rules: [
+      "-Synchronized Live Venue Play",
+      "-30-second write-in answer windows",
+      "-Server-timed rounds and anti-cheat enforcement",
       "-2 points per correct answer",
     ],
   },
@@ -85,9 +98,10 @@ export const VENUE_GAME_CARD_BY_KEY: Record<VenueGameKey, VenueGameCardConfig> =
   {} as Record<VenueGameKey, VenueGameCardConfig>
 );
 
-export const VENUE_HOME_GAME_KEYS: VenueGameKey[] = ["trivia", "bingo", "pickem", "fantasy"];
+export const VENUE_HOME_GAME_KEYS: VenueGameKey[] = ["trivia", "live_trivia", "bingo", "pickem", "fantasy"];
 
 export function inferVenueGameKeyFromPath(pathname: string): VenueGameKey | null {
+  if (pathname.startsWith("/trivia/live")) return "live_trivia";
   if (pathname.startsWith("/trivia")) return "trivia";
   if (pathname.startsWith("/predictions")) return "predictions";
   if (pathname.startsWith("/pickem")) return "pickem";

@@ -744,6 +744,42 @@ function splitMatchName(raw: string): { away: string; home: string } | null {
   return null;
 }
 
+function isInvalidMmaDisplayName(value: unknown): boolean {
+  const name = String(value ?? "").trim();
+  if (!name) return true;
+  const normalized = name.toLowerCase();
+  return /^fighter\s+\d+$/.test(normalized) || /^player\s+\d+$/.test(normalized);
+}
+
+function extractCanonicalMmaFighterName(row: Record<string, unknown> | null | undefined): string {
+  if (!row || typeof row !== "object") {
+    return "";
+  }
+  const first = String(row.first_name ?? "").trim();
+  const last = String(row.last_name ?? "").trim();
+  const combined = `${first} ${last}`.trim();
+  const direct = String(row.name ?? "").trim();
+  const candidate = combined || direct;
+  return isInvalidMmaDisplayName(candidate) ? "" : candidate;
+}
+
+async function fetchMmaFighterProfileById(fighterId: string): Promise<Record<string, unknown> | null> {
+  const id = Number.parseInt(String(fighterId ?? "").trim(), 10);
+  if (!Number.isFinite(id) || id <= 0 || !BALLDONTLIE_API_KEY) {
+    return null;
+  }
+  const response = await fetch(`${BALLDONTLIE_API_BASE_URL}/mma/v1/fighters/${id}`, {
+    method: "GET",
+    headers: { Authorization: BALLDONTLIE_API_KEY },
+    cache: "no-store",
+  }).catch(() => null);
+  if (!response?.ok) {
+    return null;
+  }
+  const payload = (await response.json().catch(() => null)) as { data?: Record<string, unknown> } | null;
+  return payload?.data && typeof payload.data === "object" ? payload.data : null;
+}
+
 async function fetchBallDontLieEventsForSportKey(
   sportKey: string,
   fromIso: string,
@@ -797,6 +833,24 @@ async function fetchBallDontLieEventsForSportKey(
       query.append("event_ids[]", String(eventId));
     }
     const fights = await fetchBallDontLieList<Record<string, unknown>>("/mma/v1/fights", query, 2).catch(() => []);
+    const fighterIds = Array.from(
+      new Set(
+        fights.flatMap((fight) => {
+          const fighter1 = (fight.fighter1 ?? {}) as Record<string, unknown>;
+          const fighter2 = (fight.fighter2 ?? {}) as Record<string, unknown>;
+          return [String(fighter1.id ?? "").trim(), String(fighter2.id ?? "").trim()].filter(Boolean);
+        })
+      )
+    );
+    const fighterProfileRows = await Promise.all(
+      fighterIds.map(async (id) => ({ id, row: await fetchMmaFighterProfileById(id) }))
+    );
+    const fighterProfileById = new Map<string, Record<string, unknown>>();
+    for (const item of fighterProfileRows) {
+      if (item.row) {
+        fighterProfileById.set(item.id, item.row);
+      }
+    }
     const mmaEvents: NormalizedBallDontLieEvent[] = [];
 
     for (const fight of fights) {
@@ -806,11 +860,49 @@ async function fetchBallDontLieEventsForSportKey(
       const fighter2 = (fight.fighter2 ?? {}) as Record<string, unknown>;
       const winner = (fight.winner ?? {}) as Record<string, unknown>;
 
-      const homeTeam = String(fighter1.name ?? "").trim();
-      const awayTeam = String(fighter2.name ?? "").trim();
       const homeTeamId = String(fighter1.id ?? "").trim() || null;
       const awayTeamId = String(fighter2.id ?? "").trim() || null;
+      const rawHomeName = String(fighter1.name ?? "").trim();
+      const rawAwayName = String(fighter2.name ?? "").trim();
+      const enrichedHomeName = homeTeamId ? extractCanonicalMmaFighterName(fighterProfileById.get(homeTeamId)) : "";
+      const enrichedAwayName = awayTeamId ? extractCanonicalMmaFighterName(fighterProfileById.get(awayTeamId)) : "";
+      const homeTeam = enrichedHomeName || (isInvalidMmaDisplayName(rawHomeName) ? "" : rawHomeName);
+      const awayTeam = enrichedAwayName || (isInvalidMmaDisplayName(rawAwayName) ? "" : rawAwayName);
       const startsAt = normalizeBallDontLieGameStartIso(String(event.date ?? ""));
+      if (homeTeamId && isInvalidMmaDisplayName(rawHomeName)) {
+        console.warn("[pickem][mma] upstream fight payload missing/invalid fighter1.name", {
+          fightId,
+          fighterId: homeTeamId,
+          rawName: rawHomeName,
+        });
+      }
+      if (awayTeamId && isInvalidMmaDisplayName(rawAwayName)) {
+        console.warn("[pickem][mma] upstream fight payload missing/invalid fighter2.name", {
+          fightId,
+          fighterId: awayTeamId,
+          rawName: rawAwayName,
+        });
+      }
+
+      if (homeTeamId && !homeTeam) {
+        console.warn("[pickem][mma] skipping fight: unresolved fighter1 name after enrichment", {
+          fightId,
+          fighterId: homeTeamId,
+          rawName: rawHomeName,
+          enrichedName: enrichedHomeName,
+        });
+        continue;
+      }
+      if (awayTeamId && !awayTeam) {
+        console.warn("[pickem][mma] skipping fight: unresolved fighter2 name after enrichment", {
+          fightId,
+          fighterId: awayTeamId,
+          rawName: rawAwayName,
+          enrichedName: enrichedAwayName,
+        });
+        continue;
+      }
+
       if (!fightId || !homeTeam || !awayTeam || !startsAt) continue;
 
       const winnerId = String(winner.id ?? "").trim();

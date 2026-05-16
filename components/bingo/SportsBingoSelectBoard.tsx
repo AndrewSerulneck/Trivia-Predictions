@@ -135,6 +135,14 @@ function compactSquareLabel(label: string): string {
   return `${supportPrefix}${body.replace(/\.$/, "")}`;
 }
 
+const BINGO_HEADER_LETTERS = [
+  { letter: "B", color: "text-rose-300" },
+  { letter: "I", color: "text-amber-300" },
+  { letter: "N", color: "text-emerald-300" },
+  { letter: "G", color: "text-cyan-300" },
+  { letter: "O", color: "text-violet-300" },
+] as const;
+
 function getPreviewSquareStyle(isFree: boolean): string {
   if (isFree) {
     return "border-emerald-300 bg-[linear-gradient(165deg,#bbf7d0_0%,#86efac_50%,#4ade80_100%)] text-emerald-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]";
@@ -359,6 +367,16 @@ export function SportsBingoSelectBoard() {
 
     return (
       <div className="rounded-xl border-2 border-cyan-300/80 bg-[linear-gradient(180deg,#0f172a_0%,#1e293b_100%)] p-2 shadow-[0_8px_20px_rgba(15,23,42,0.28)]">
+        <div className="mb-1.5 grid grid-cols-5 gap-1.5">
+          {BINGO_HEADER_LETTERS.map((item) => (
+            <div
+              key={item.letter}
+              className={`text-center text-base font-black tracking-[0.18em] [text-shadow:0_0_8px_rgba(255,255,255,0.35)] ${item.color}`}
+            >
+              {item.letter}
+            </div>
+          ))}
+        </div>
         <div className="grid grid-cols-5 gap-1.5">
           {Array.from({ length: 25 }).map((_, index) => {
             const square = byIndex.get(index);
@@ -394,6 +412,16 @@ export function SportsBingoSelectBoard() {
 
     return (
       <div className="rounded-xl border-2 border-cyan-300/80 bg-[linear-gradient(180deg,#0f172a_0%,#1e293b_100%)] p-2 pb-1 shadow-[0_8px_20px_rgba(15,23,42,0.3)]">
+        <div className="mb-2 grid grid-cols-5 gap-1.5 sm:gap-2">
+          {BINGO_HEADER_LETTERS.map((item) => (
+            <div
+              key={item.letter}
+              className={`text-center text-lg font-black tracking-[0.2em] [text-shadow:0_0_8px_rgba(255,255,255,0.35)] sm:text-xl ${item.color}`}
+            >
+              {item.letter}
+            </div>
+          ))}
+        </div>
         <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
           {Array.from({ length: 25 }).map((_, index) => {
             const square = byIndex.get(index);
@@ -465,12 +493,12 @@ export function SportsBingoSelectBoard() {
             That game is no longer available. Please pick another game.
           </div>
         ) : (
-          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
-            <p className="font-semibold text-slate-900">
+          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 sm:text-base">
+            <p className="font-bold text-slate-900">
               {toMascotDisplayName(game.awayTeam)} vs {toMascotDisplayName(game.homeTeam)}
             </p>
-            <p className="mt-1">Starts {formatLocalDateTime(game.startsAt)} · Cards lock at game start.</p>
-            <p className="mt-1">One card per game. Up to four active cards total.</p>
+            <p className="mt-1 font-medium">Starts {formatLocalDateTime(game.startsAt)} · Cards lock at game start.</p>
+            <p className="mt-1 font-medium">One card per game. Up to four active cards total.</p>
           </div>
         )}
 
@@ -507,10 +535,6 @@ export function SportsBingoSelectBoard() {
             </p>
             <p className="text-xs text-slate-600">
               Keep generating new bingo cards until you find one you like, then press play!
-            </p>
-            <p className="text-[11px] text-slate-500">
-              Legend: <span className="font-semibold text-emerald-700">S:</span> feed-verified square,{" "}
-              <span className="font-semibold text-amber-700">P:</span> implemented but needs deeper live validation.
             </p>
             <div
               className="mx-auto w-full max-w-[560px] cursor-pointer transition-all duration-200"

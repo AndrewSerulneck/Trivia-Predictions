@@ -34,6 +34,8 @@ const FANTASY_TABLES_MISSING_ERROR =
   "Fantasy tables are not installed in this Supabase project yet. Run migration supabase/migrations/20260428184500_add_fantasy_entries.sql.";
 
 const FANTASY_DAILY_GAME_ID_PREFIX = "nba-daily-";
+const FANTASY_WNBA_SPORT_KEY = "basketball_wnba";
+const FANTASY_WNBA_DAILY_GAME_ID_PREFIX = "wnba-daily-";
 const FANTASY_DAILY_TEAM_LABEL = "All Teams";
 
 type FantasyEntryStatus = "pending" | "live" | "final" | "canceled";
@@ -56,6 +58,8 @@ const apiSportsGamesCache = new Map<string, CacheEntry<ApiSportsNbaGame[]>>();
 const apiSportsPlayerStatsCache = new Map<string, CacheEntry<ApiSportsNbaPlayerStat[]>>();
 const apiSportsPlayerIdCache = new Map<string, CacheEntry<number>>();
 const apiSportsTeamPlayersCache = new Map<string, CacheEntry<Record<string, unknown>[]>>();
+const wnbaGamesCache = new Map<string, CacheEntry<ApiSportsNbaGame[]>>();
+const wnbaTeamPlayersCache = new Map<string, CacheEntry<Record<string, unknown>[]>>();
 const APISPORTS_GAMES_TTL_MS = 15_000;
 const APISPORTS_PLAYER_STATS_TTL_MS = 10_000;
 const APISPORTS_PLAYER_ID_TTL_MS = 12 * 60 * 60 * 1000;
@@ -229,6 +233,130 @@ function normalizeNameKey(value: string): string {
     .trim();
 }
 
+function isPlaceholderFighterName(value: string): boolean {
+  const trimmed = String(value ?? "").trim();
+  if (!trimmed) return true;
+  const normalized = trimmed.toLowerCase();
+  return /^fighter\s+\d+$/.test(normalized) || /^player\s+\d+$/.test(normalized);
+}
+
+function extractMmaFighterName(row: Record<string, unknown>): string {
+  const first = String(getPath(row, ["first_name"]) ?? getPath(row, ["fighter", "first_name"]) ?? "").trim();
+  const last = String(getPath(row, ["last_name"]) ?? getPath(row, ["fighter", "last_name"]) ?? "").trim();
+  const combined = `${first} ${last}`.trim();
+  const candidates = [
+    combined,
+    String(getPath(row, ["name"]) ?? "").trim(),
+    String(getPath(row, ["fighter", "name"]) ?? "").trim(),
+  ];
+  for (const candidate of candidates) {
+    if (candidate && !isPlaceholderFighterName(candidate)) {
+      return formatFantasyPlayerDisplayName(candidate);
+    }
+  }
+  return "";
+}
+
+async function loadCanonicalMmaFighterNamesById(fighterIds: number[]): Promise<Map<number, string>> {
+  const byId = new Map<number, string>();
+  const ids = Array.from(
+    new Set(
+      fighterIds
+        .filter((value) => Number.isFinite(value) && value > 0)
+        .map((value) => Math.trunc(value))
+    )
+  );
+  if (ids.length === 0) {
+    return byId;
+  }
+
+  try {
+    const query = new URLSearchParams({ per_page: "100" });
+    for (const id of ids) {
+      query.append("fighter_ids[]", String(id));
+      // Spec and docs both name the param fighter_ids; include both for compatibility.
+      query.append("fighter_ids", String(id));
+    }
+    const rows = await fetchBallDontLieList<Record<string, unknown>>("/mma/v1/fighters", query, 4);
+    for (const raw of rows) {
+      const fighterId = Number.parseInt(String(raw.id ?? getPath(raw, ["fighter", "id"]) ?? ""), 10);
+      const fighterName = extractMmaFighterName(raw);
+      if (!Number.isFinite(fighterId) || fighterId <= 0 || !fighterName || byId.has(fighterId)) {
+        continue;
+      }
+      byId.set(fighterId, fighterName);
+    }
+  } catch {
+    // Ignore MMA lookup failures; caller will keep existing fallback names.
+  }
+
+  return byId;
+}
+
+async function loadCanonicalPlayerNamesById(playerIds: number[]): Promise<Map<number, string>> {
+  const byId = new Map<number, string>();
+  if (playerIds.length === 0) {
+    return byId;
+  }
+
+  const ids = Array.from(new Set(playerIds.filter((value) => Number.isFinite(value) && value > 0).map((value) => Math.trunc(value))));
+  if (ids.length === 0) {
+    return byId;
+  }
+
+  // Prefer BDL MMA canonical fighter names first when IDs are present.
+  const mmaResolved = await loadCanonicalMmaFighterNamesById(ids);
+  for (const [id, name] of mmaResolved.entries()) {
+    if (!byId.has(id) && name && !isPlaceholderFighterName(name)) {
+      byId.set(id, name);
+    }
+  }
+
+  if (!supabaseAdmin) {
+    return byId;
+  }
+
+  const unresolvedIds = ids.filter((id) => !byId.has(id));
+  if (unresolvedIds.length === 0) {
+    return byId;
+  }
+
+  const { data: liveRows } = await supabaseAdmin
+    .from("live_player_stats")
+    .select("player_id, player_name, source_updated_at")
+    .in("player_id", unresolvedIds)
+    .order("source_updated_at", { ascending: false })
+    .limit(5000);
+
+  for (const raw of (liveRows as Array<Record<string, unknown>> | null) ?? []) {
+    const playerId = Number.parseInt(String(raw.player_id ?? ""), 10);
+    const playerName = formatFantasyPlayerDisplayName(String(raw.player_name ?? "").trim());
+    if (!Number.isFinite(playerId) || playerId <= 0 || !playerName || isPlaceholderFighterName(playerName) || byId.has(playerId)) {
+      continue;
+    }
+    byId.set(playerId, playerName);
+  }
+
+  const unresolvedAfterLive = ids.filter((id) => !byId.has(id));
+  if (unresolvedAfterLive.length > 0) {
+    const { data: headshotRows } = await supabaseAdmin
+      .from("fantasy_player_headshots")
+      .select("player_id, player_name")
+      .in("player_id", unresolvedAfterLive)
+      .limit(5000);
+    for (const raw of (headshotRows as Array<Record<string, unknown>> | null) ?? []) {
+      const playerId = Number.parseInt(String(raw.player_id ?? ""), 10);
+      const playerName = formatFantasyPlayerDisplayName(String(raw.player_name ?? "").trim());
+      if (!Number.isFinite(playerId) || playerId <= 0 || !playerName || isPlaceholderFighterName(playerName) || byId.has(playerId)) {
+        continue;
+      }
+      byId.set(playerId, playerName);
+    }
+  }
+
+  return byId;
+}
+
 function tokenizeName(value: string): string[] {
   const normalized = normalizeNameKey(value);
   return normalized ? normalized.split(" ").filter(Boolean) : [];
@@ -347,6 +475,27 @@ function parseFantasyDailyGameId(gameId: string): string | null {
 
   const date = raw.slice(FANTASY_DAILY_GAME_ID_PREFIX.length).trim();
   return parseDateString(date) ? date : null;
+}
+
+function buildWnbaFantasyDailyGameId(date: string): string {
+  return `${FANTASY_WNBA_DAILY_GAME_ID_PREFIX}${date}`;
+}
+
+function parseWnbaFantasyDailyGameId(gameId: string): string | null {
+  const raw = String(gameId ?? "").trim();
+  if (!raw.startsWith(FANTASY_WNBA_DAILY_GAME_ID_PREFIX)) {
+    return null;
+  }
+  const date = raw.slice(FANTASY_WNBA_DAILY_GAME_ID_PREFIX.length).trim();
+  return parseDateString(date) ? date : null;
+}
+
+function parseAnyDailyGameId(gameId: string): { date: string; league: "NBA" | "WNBA" } | null {
+  const nbaDate = parseFantasyDailyGameId(gameId);
+  if (nbaDate) return { date: nbaDate, league: "NBA" };
+  const wnbaDate = parseWnbaFantasyDailyGameId(gameId);
+  if (wnbaDate) return { date: wnbaDate, league: "WNBA" };
+  return null;
 }
 
 function toApiIsoNoMs(ms: number): string {
@@ -527,6 +676,40 @@ function mapFantasyEntryRow(row: FantasyEntryRow): FantasyEntry {
   };
 }
 
+async function sanitizeFantasyEntriesForOutbound(entries: FantasyEntry[]): Promise<FantasyEntry[]> {
+  if (entries.length === 0) {
+    return entries;
+  }
+
+  const names = entries.flatMap((entry) => entry.lineupPlayers.map((player) => player.playerName));
+  const headshotByName = await loadNbaHeadshotsByName(names, ["NBA", "WNBA"]);
+  const placeholderIds = entries
+    .flatMap((entry) => entry.lineupPlayers)
+    .filter((player) => player.playerId > 0 && isPlaceholderFighterName(player.playerName))
+    .map((player) => player.playerId);
+  const canonicalNameById = await loadCanonicalPlayerNamesById(placeholderIds);
+
+  return entries.map((entry) => ({
+    ...entry,
+    lineupPlayers: entry.lineupPlayers.map((player) => {
+      const resolvedName =
+        isPlaceholderFighterName(player.playerName) && canonicalNameById.has(player.playerId)
+          ? canonicalNameById.get(player.playerId) ?? player.playerName
+          : player.playerName;
+      return {
+        ...player,
+        playerName: resolvedName,
+        headshotUrl: player.headshotUrl ?? headshotByName.get(normalizeNameKey(resolvedName)) ?? null,
+      };
+    }),
+  }));
+}
+
+async function sanitizeFantasyEntryForOutbound(entry: FantasyEntry): Promise<FantasyEntry> {
+  const [sanitized] = await sanitizeFantasyEntriesForOutbound([entry]);
+  return sanitized ?? entry;
+}
+
 async function listApiSportsGamesForLocalDay(date: string | undefined, tzOffsetMinutes: number): Promise<ApiSportsNbaGame[]> {
   const range = buildUtcRangeForLocalDay(date, tzOffsetMinutes);
   const candidateDates = Array.from(
@@ -560,15 +743,36 @@ async function listApiSportsGamesForLocalDay(date: string | undefined, tzOffsetM
   return Array.from(uniqueByGameId.values());
 }
 
-export async function listFantasyGames(params?: {
-  date?: string;
-  tzOffsetMinutes?: number | string;
-  limit?: number;
-}): Promise<FantasyGame[]> {
-  const limit = Math.max(1, Math.min(40, Number(params?.limit ?? 20)));
-  const tzOffsetMinutes = parseTimezoneOffset(params?.tzOffsetMinutes);
-  const rows = await listApiSportsGamesForLocalDay(params?.date, tzOffsetMinutes);
+async function listWnbaGamesForLocalDay(date: string | undefined, tzOffsetMinutes: number): Promise<ApiSportsNbaGame[]> {
+  const range = buildUtcRangeForLocalDay(date, tzOffsetMinutes);
+  const candidateDates = Array.from(
+    new Set([
+      new Date(range.fromMs - 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      new Date(range.fromMs).toISOString().slice(0, 10),
+      new Date(range.toMs).toISOString().slice(0, 10),
+      new Date(range.toMs + 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    ])
+  );
+  const rowsByDate = await Promise.all(candidateDates.map((candidate) => fetchBdlWnbaGamesByDate(candidate)));
+  const uniqueByGameId = new Map<string, ApiSportsNbaGame>();
+  for (const row of rowsByDate.flat()) {
+    const id = getApiSportsGameId(row);
+    if (!id || uniqueByGameId.has(id)) {
+      continue;
+    }
+    const startsAtMs = parseApiSportsGameStartMs(row);
+    if (!Number.isFinite(startsAtMs) || startsAtMs < range.fromMs || startsAtMs > range.toMs) {
+      continue;
+    }
+    if (toLocalDateKeyByOffset(startsAtMs, tzOffsetMinutes) !== range.date) {
+      continue;
+    }
+    uniqueByGameId.set(id, row);
+  }
+  return Array.from(uniqueByGameId.values());
+}
 
+function rowsToFantasyGames(rows: ApiSportsNbaGame[], sportKey: string, league: string): FantasyGame[] {
   const games: FantasyGame[] = [];
   for (const row of rows) {
     const startsAtMs = parseApiSportsGameStartMs(row);
@@ -595,8 +799,8 @@ export async function listFantasyGames(params?: {
 
     games.push({
       id: getApiSportsGameId(row),
-      sportKey: FANTASY_SPORT_KEY,
-      league: "NBA",
+      sportKey,
+      league,
       startsAt: new Date(startsAtMs).toISOString(),
       gameLabel: toGameLabel(homeTeam, awayTeam),
       homeTeam,
@@ -607,6 +811,26 @@ export async function listFantasyGames(params?: {
       isLocked: status !== "scheduled",
     });
   }
+  return games;
+}
+
+export async function listFantasyGames(params?: {
+  date?: string;
+  tzOffsetMinutes?: number | string;
+  limit?: number;
+}): Promise<FantasyGame[]> {
+  const limit = Math.max(1, Math.min(40, Number(params?.limit ?? 20)));
+  const tzOffsetMinutes = parseTimezoneOffset(params?.tzOffsetMinutes);
+
+  const [nbaRows, wnbaRows] = await Promise.all([
+    listApiSportsGamesForLocalDay(params?.date, tzOffsetMinutes),
+    listWnbaGamesForLocalDay(params?.date, tzOffsetMinutes),
+  ]);
+
+  const games: FantasyGame[] = [
+    ...rowsToFantasyGames(nbaRows, FANTASY_SPORT_KEY, "NBA"),
+    ...rowsToFantasyGames(wnbaRows, FANTASY_WNBA_SPORT_KEY, "WNBA"),
+  ];
 
   games.sort((left, right) => new Date(left.startsAt).getTime() - new Date(right.startsAt).getTime());
   return games.slice(0, limit);
@@ -628,18 +852,48 @@ function extractApiSportsPlayerId(row: Record<string, unknown>): number | null {
 }
 
 function extractApiSportsDirectoryPlayerName(row: Record<string, unknown>): string {
+  const candidates = [
+    String(getPath(row, ["player", "full_name"]) ?? "").trim(),
+    String(getPath(row, ["player", "display_name"]) ?? "").trim(),
+    String(getPath(row, ["player", "name"]) ?? "").trim(),
+    String(getPath(row, ["name"]) ?? "").trim(),
+    String(getPath(row, ["athlete", "displayName"]) ?? "").trim(),
+    String(getPath(row, ["athlete", "fullName"]) ?? "").trim(),
+    String(getPath(row, ["fighter", "name"]) ?? "").trim(),
+    String(getPath(row, ["fighter_name"]) ?? "").trim(),
+    String(getPath(row, ["contestant", "name"]) ?? "").trim(),
+  ];
+
   const first = String(
-    getPath(row, ["firstname"]) ?? getPath(row, ["player", "firstname"]) ?? getPath(row, ["player", "first_name"]) ?? ""
+    getPath(row, ["firstname"]) ??
+      getPath(row, ["first_name"]) ??
+      getPath(row, ["player", "firstname"]) ??
+      getPath(row, ["player", "first_name"]) ??
+      getPath(row, ["fighter", "firstname"]) ??
+      getPath(row, ["fighter", "first_name"]) ??
+      ""
   ).trim();
   const last = String(
-    getPath(row, ["lastname"]) ?? getPath(row, ["player", "lastname"]) ?? getPath(row, ["player", "last_name"]) ?? ""
+    getPath(row, ["lastname"]) ??
+      getPath(row, ["last_name"]) ??
+      getPath(row, ["player", "lastname"]) ??
+      getPath(row, ["player", "last_name"]) ??
+      getPath(row, ["fighter", "lastname"]) ??
+      getPath(row, ["fighter", "last_name"]) ??
+      ""
   ).trim();
   const combined = `${first} ${last}`.trim();
   if (combined) {
-    return combined;
+    candidates.unshift(combined);
   }
-  const direct = String(row.name ?? getPath(row, ["player", "name"]) ?? "").trim();
-  return direct;
+
+  for (const candidate of candidates) {
+    if (candidate && !isPlaceholderFighterName(candidate)) {
+      return candidate;
+    }
+  }
+
+  return candidates.find(Boolean) ?? "";
 }
 
 function extractApiSportsDirectoryTeamId(row: Record<string, unknown>): number | null {
@@ -797,6 +1051,68 @@ async function fetchApiSportsNbaTeamPlayers(teamId: number, season: number | nul
   return [];
 }
 
+async function fetchWnbaTeamPlayers(teamId: number, season: number | null): Promise<Record<string, unknown>[]> {
+  const normalizedTeamId = Math.trunc(teamId);
+  const normalizedSeason = Number.isFinite(Number(season)) && (season ?? 0) > 0 ? Math.trunc(season as number) : null;
+  const cacheKey = `wnba-team:${normalizedTeamId}:season:${normalizedSeason ?? "na"}`;
+  const cached = wnbaTeamPlayersCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
+  const baseActiveQuery = new URLSearchParams({ per_page: "100", "team_ids[]": String(normalizedTeamId) });
+  const activeRowsRaw = await fetchBallDontLieList<Record<string, unknown>>("/wnba/v1/players/active", baseActiveQuery, 5);
+  let rows = activeRowsRaw
+    .map((row) => asRecord(row))
+    .map((row) => {
+      const team = asRecord(row.team);
+      return {
+        player: {
+          id: row.id,
+          first_name: row.first_name,
+          last_name: row.last_name,
+          name: `${String(row.first_name ?? "").trim()} ${String(row.last_name ?? "").trim()}`.trim(),
+        },
+        team: {
+          id: team.id,
+          name: team.full_name ?? team.name,
+        },
+        active: true,
+      } as Record<string, unknown>;
+    });
+
+  if (rows.length === 0) {
+    const fallbackQuery = new URLSearchParams({ per_page: "100", "team_ids[]": String(normalizedTeamId) });
+    if (normalizedSeason) {
+      fallbackQuery.set("seasons[]", String(normalizedSeason));
+    }
+    const fallbackRowsRaw = await fetchBallDontLieList<Record<string, unknown>>("/wnba/v1/players", fallbackQuery, 5);
+    rows = fallbackRowsRaw
+      .map((row) => asRecord(row))
+      .map((row) => {
+        const team = asRecord(row.team);
+        return {
+          player: {
+            id: row.id,
+            first_name: row.first_name,
+            last_name: row.last_name,
+            name: `${String(row.first_name ?? "").trim()} ${String(row.last_name ?? "").trim()}`.trim(),
+          },
+          team: {
+            id: team.id,
+            name: team.full_name ?? team.name,
+          },
+          active: true,
+        } as Record<string, unknown>;
+      });
+  }
+
+  const matchedByTeamId = rows.filter((row) => extractApiSportsDirectoryTeamId(row) === normalizedTeamId);
+  const result = matchedByTeamId.length > 0 ? matchedByTeamId : [];
+  wnbaTeamPlayersCache.set(cacheKey, { value: result, expiresAt: Date.now() + APISPORTS_TEAM_PLAYERS_TTL_MS });
+  return result;
+}
+
 type RecentFantasySample = {
   avg: number;
   samples: number;
@@ -888,7 +1204,7 @@ async function loadRecentTeamScopedPlayerSeeds(teamNames: string[]): Promise<Api
     }
     const playerName = formatFantasyPlayerDisplayName(String(raw.player_name ?? "").trim());
     const playerId = Number.parseInt(String(raw.player_id ?? ""), 10);
-    if (!playerName || !Number.isFinite(playerId) || playerId <= 0) {
+    if (!playerName || isPlaceholderFighterName(playerName) || !Number.isFinite(playerId) || playerId <= 0) {
       continue;
     }
     const key = `${playerId}::${normalizeNameKey(playerName)}`;
@@ -959,6 +1275,10 @@ async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]
     return [];
   }
 
+  const isWnba = games.some((game) => String(getPath(game, ["league", "name"]) ?? "").trim().toUpperCase() === "WNBA");
+  const teamPlayersFetcher = isWnba ? fetchWnbaTeamPlayers : fetchApiSportsNbaTeamPlayers;
+  const poolLeague = isWnba ? "WNBA" : "NBA";
+
   const allowedTeamIds = new Set<number>();
   const allowedTeamNames = new Set<string>();
   for (const game of games) {
@@ -996,7 +1316,7 @@ async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]
   }
 
   for (const { teamId, season } of teamSeasonPairs.values()) {
-    const rows = await fetchApiSportsNbaTeamPlayers(teamId, season);
+    const rows = await teamPlayersFetcher(teamId, season);
     const expectedTeamName = teamNameByTeamId.get(teamId) ?? "";
     for (const row of rows) {
       if (!isApiSportsDirectoryPlayerActive(row)) {
@@ -1099,7 +1419,7 @@ async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]
   });
 
   const poolWithIds = await attachPlayerIdsToPool(pool.slice(0, FANTASY_PLAYER_POOL_LIMIT));
-  const headshotByName = await loadNbaHeadshotsByName(poolWithIds.map((item) => item.playerName));
+  const headshotByName = await loadNbaHeadshotsByName(poolWithIds.map((item) => item.playerName), poolLeague);
   return poolWithIds.map((item) => ({
     ...item,
     headshotUrl: headshotByName.get(normalizeNameKey(item.playerName)) ?? null,
@@ -1127,13 +1447,16 @@ async function isFantasyEntryRosterLocked(entry: FantasyEntryRow, tzOffsetMinute
     return false;
   }
 
-  const dailyDate = parseFantasyDailyGameId(entry.game_id);
-  if (!dailyDate) {
+  const anyDailyId = parseAnyDailyGameId(entry.game_id);
+  if (!anyDailyId) {
     const startsAtMs = Date.parse(entry.starts_at);
     return Number.isFinite(startsAtMs) ? Date.now() >= startsAtMs : false;
   }
 
-  const slateGames = await listApiSportsGamesForLocalDay(dailyDate, tzOffsetMinutes);
+  const { date: dailyDate, league } = anyDailyId;
+  const slateGamesFetcher = league === "WNBA" ? listWnbaGamesForLocalDay : listApiSportsGamesForLocalDay;
+  const teamPlayersFetcher = league === "WNBA" ? fetchWnbaTeamPlayers : fetchApiSportsNbaTeamPlayers;
+  const slateGames = await slateGamesFetcher(dailyDate, tzOffsetMinutes);
   if (slateGames.length === 0) {
     const startsAtMs = Date.parse(entry.starts_at);
     return Number.isFinite(startsAtMs) ? Date.now() >= startsAtMs : false;
@@ -1166,7 +1489,7 @@ async function isFantasyEntryRosterLocked(entry: FantasyEntryRow, tzOffsetMinute
 
   const rosteredPlayerIds = new Set(lineupPlayers.map((player) => player.playerId));
   for (const { teamId, season, started } of teamSeasonPairs.values()) {
-    const rosterRows = await fetchApiSportsNbaTeamPlayers(teamId, season);
+    const rosterRows = await teamPlayersFetcher(teamId, season);
     const playerIdsOnTeam = new Set(
       rosterRows
         .map((row) => extractApiSportsPlayerId(row))
@@ -1180,7 +1503,7 @@ async function isFantasyEntryRosterLocked(entry: FantasyEntryRow, tzOffsetMinute
   }
 
   // Fallback: if roster membership couldn't be resolved, lock only if a tracked live row already shows game started.
-  if (supabaseAdmin) {
+  if (supabaseAdmin && league === "NBA") {
     const ids = Array.from(rosteredPlayerIds).filter((id) => Number.isFinite(id) && id > 0);
     if (ids.length > 0) {
       const { data } = await supabaseAdmin
@@ -1306,16 +1629,17 @@ export async function getFantasyPlayerPoolForDate(params?: {
   date?: string;
   tzOffsetMinutes?: number | string;
   includeStartedGames?: boolean;
+  league?: "NBA" | "WNBA";
 }): Promise<FantasyPlayerPoolItem[]> {
   const tzOffsetMinutes = parseTimezoneOffset(params?.tzOffsetMinutes);
   const date = parseDateString(params?.date) ? String(params?.date) : getTodayDateInOffset(tzOffsetMinutes);
   const includeStartedGames = params?.includeStartedGames === true;
+  const league = params?.league ?? "NBA";
 
-  const games = await listApiSportsGamesForLocalDay(date, tzOffsetMinutes);
+  const gameFetcher = league === "WNBA" ? listWnbaGamesForLocalDay : listApiSportsGamesForLocalDay;
+  const games = await gameFetcher(date, tzOffsetMinutes);
   const eligibleGames = includeStartedGames ? games : games.filter((game) => !isApiSportsGameStarted(game));
 
-  // Prefer active/live games when includeStartedGames is enabled so the builder
-  // reflects the current matchup during realtime testing windows.
   const liveGames = eligibleGames.filter((game) => isApiSportsGameStarted(game) && !isApiSportsGameFinal(game));
   const prioritizedGames = includeStartedGames && liveGames.length > 0 ? liveGames : eligibleGames;
 
@@ -1340,6 +1664,17 @@ export async function getFantasyPlayerPoolForGame(params: {
       date: params.date ?? dailyDate,
       tzOffsetMinutes: params.tzOffsetMinutes,
       includeStartedGames: params.includeStartedGames === true,
+      league: "NBA",
+    });
+  }
+
+  const wnbaDailyDate = parseWnbaFantasyDailyGameId(gameId);
+  if (wnbaDailyDate) {
+    return getFantasyPlayerPoolForDate({
+      date: params.date ?? wnbaDailyDate,
+      tzOffsetMinutes: params.tzOffsetMinutes,
+      includeStartedGames: params.includeStartedGames === true,
+      league: "WNBA",
     });
   }
 
@@ -1390,7 +1725,7 @@ async function assertFantasyEntryCadenceAvailable(params: {
 
   let range: { fromIso: string; toIso: string } | null = null;
   let cadenceLabel = "";
-  if (sportKey === FANTASY_SPORT_KEY) {
+  if (sportKey === FANTASY_SPORT_KEY || sportKey === FANTASY_WNBA_SPORT_KEY) {
     range = buildUtcRangeForLocalDayContaining(startsAt, tzOffsetMinutes);
     cadenceLabel = "day";
   } else if (sportKey === FANTASY_NFL_SPORT_KEY) {
@@ -1421,6 +1756,9 @@ async function assertFantasyEntryCadenceAvailable(params: {
   if (data?.id) {
     if (sportKey === FANTASY_SPORT_KEY) {
       throw new Error("You can only create 1 NBA fantasy team per day.");
+    }
+    if (sportKey === FANTASY_WNBA_SPORT_KEY) {
+      throw new Error("You can only create 1 WNBA fantasy team per day.");
     }
     if (sportKey === FANTASY_NFL_SPORT_KEY) {
       throw new Error("You can only create 1 NFL fantasy team per week.");
@@ -1463,9 +1801,11 @@ function buildStoredLineupWithIds(
         `Could not resolve a stable player_id for \"${playerName}\". Please refresh player pool and try again.`
       );
     }
+    const safePlayerName =
+      isPlaceholderFighterName(playerName) && item?.playerName ? String(item.playerName).trim() || playerName : playerName;
     return {
       player_id: Math.trunc(playerId),
-      player_name: playerName,
+      player_name: safePlayerName,
       headshot_url: String(item?.headshotUrl ?? "").trim() || null,
     };
   });
@@ -1492,7 +1832,7 @@ export async function submitFantasyEntry(params: {
 
   await ensureFantasyTables();
 
-  const dailyDate = parseFantasyDailyGameId(gameId);
+  const anyDailyId = parseAnyDailyGameId(gameId);
   let entryGameId = gameId;
   let entryGameLabel = "";
   let entryHomeTeam = "";
@@ -1501,28 +1841,32 @@ export async function submitFantasyEntry(params: {
   let entrySportKey = FANTASY_SPORT_KEY;
   let playerPool: FantasyPlayerPoolItem[] = [];
 
-  if (dailyDate) {
+  if (anyDailyId) {
+    const { date: dailyDate, league: dailyLeague } = anyDailyId;
+
     if (dailyDate !== todayDate) {
-      throw new Error("You can only draft players from today's NBA games.");
+      throw new Error(`You can only draft players from today's ${dailyLeague} games.`);
     }
 
-    const dayGames = await listFantasyGames({ date: dailyDate, tzOffsetMinutes, limit: 40 });
+    const allDayGames = await listFantasyGames({ date: dailyDate, tzOffsetMinutes, limit: 40 });
+    const dayGames = allDayGames.filter((game) => game.league === dailyLeague);
     if (dayGames.length === 0) {
-      throw new Error("No NBA games available for this date.");
+      throw new Error(`No ${dailyLeague} games available for this date.`);
     }
 
     const eligibleGames = allowStartedDrafting ? dayGames : dayGames.filter((game) => !game.isLocked);
     if (eligibleGames.length === 0) {
-      throw new Error("All NBA games for today have already started.");
+      throw new Error(`All ${dailyLeague} games for today have already started.`);
     }
 
     playerPool = await getFantasyPlayerPoolForDate({
       date: dailyDate,
       tzOffsetMinutes,
       includeStartedGames: allowStartedDrafting,
+      league: dailyLeague,
     });
     if (playerPool.length === 0 && !allowStartedDrafting) {
-      throw new Error("No eligible players are available from unstarted NBA games.");
+      throw new Error(`No eligible players are available from unstarted ${dailyLeague} games.`);
     }
 
     const firstStart = eligibleGames
@@ -1530,16 +1874,23 @@ export async function submitFantasyEntry(params: {
       .filter(Number.isFinite)
       .sort((left, right) => left - right)[0];
     if (!Number.isFinite(firstStart)) {
-      throw new Error("Could not determine the next NBA start time for this slate.");
+      throw new Error(`Could not determine the next ${dailyLeague} start time for this slate.`);
     }
 
-    entryGameId = buildFantasyDailyGameId(dailyDate);
-    entryGameLabel = `NBA Daily Challenge (${dailyDate})`;
+    if (dailyLeague === "WNBA") {
+      entrySportKey = FANTASY_WNBA_SPORT_KEY;
+      entryGameId = buildWnbaFantasyDailyGameId(dailyDate);
+      entryGameLabel = `WNBA Daily Challenge (${dailyDate})`;
+    } else {
+      entrySportKey = FANTASY_SPORT_KEY;
+      entryGameId = buildFantasyDailyGameId(dailyDate);
+      entryGameLabel = `NBA Daily Challenge (${dailyDate})`;
+    }
     entryHomeTeam = FANTASY_DAILY_TEAM_LABEL;
     entryAwayTeam = FANTASY_DAILY_TEAM_LABEL;
     entryStartsAt = new Date(firstStart).toISOString();
   } else {
-    throw new Error("Fantasy drafting is only available for today's NBA daily slate.");
+    throw new Error("Fantasy drafting is only available for today's daily slate.");
   }
 
   const playerPoolKeys = new Set(playerPool.map((item) => normalizeNameKey(item.playerName)).filter(Boolean));
@@ -1584,7 +1935,7 @@ export async function submitFantasyEntry(params: {
 
   if (error || !data) {
     if ((error as SupabaseLikeError | null)?.code === "23505") {
-      throw new Error("You already have an entry for this NBA daily slate.");
+      throw new Error("You already have an entry for this daily slate.");
     }
     if (isMissingFantasyTablesError(error)) {
       throw new Error(FANTASY_TABLES_MISSING_ERROR);
@@ -1592,7 +1943,7 @@ export async function submitFantasyEntry(params: {
     throw new Error(error?.message ?? "Failed to create fantasy entry.");
   }
 
-  return mapFantasyEntryRow(data);
+  return sanitizeFantasyEntryForOutbound(mapFantasyEntryRow(data));
 }
 
 export async function updateFantasyEntryLineup(params: {
@@ -1635,9 +1986,9 @@ export async function updateFantasyEntryLineup(params: {
     throw new Error("This lineup is locked because at least one player on your roster has already started playing.");
   }
 
-  const dailyDate = parseFantasyDailyGameId(gameId);
-  const playerPool = dailyDate
-    ? await getFantasyPlayerPoolForDate({ date: dailyDate, tzOffsetMinutes, includeStartedGames: true })
+  const anyDailyId = parseAnyDailyGameId(gameId);
+  const playerPool = anyDailyId
+    ? await getFantasyPlayerPoolForDate({ date: anyDailyId.date, tzOffsetMinutes, includeStartedGames: true, league: anyDailyId.league })
     : await getFantasyPlayerPoolForGame({ gameId, sportKey: existingRow.sport_key, tzOffsetMinutes, includeStartedGames: true });
   const poolKeys = new Set(playerPool.map((item) => normalizeNameKey(item.playerName)).filter(Boolean));
 
@@ -1664,7 +2015,7 @@ export async function updateFantasyEntryLineup(params: {
   // Force immediate recompute after live lineup swaps.
   await refreshFantasyProgress({ userId, limit: 200 });
 
-  return mapFantasyEntryRow(data);
+  return sanitizeFantasyEntryForOutbound(mapFantasyEntryRow(data));
 }
 
 export async function listUserFantasyEntries(params: {
@@ -1715,15 +2066,7 @@ export async function listUserFantasyEntries(params: {
   }
 
   const mapped = (data as FantasyEntryRow[]).map((row) => mapFantasyEntryRow(row));
-  const names = mapped.flatMap((entry) => entry.lineupPlayers.map((player) => player.playerName));
-  const headshotByName = await loadNbaHeadshotsByName(names);
-  return mapped.map((entry) => ({
-    ...entry,
-    lineupPlayers: entry.lineupPlayers.map((player) => ({
-      ...player,
-      headshotUrl: player.headshotUrl ?? headshotByName.get(normalizeNameKey(player.playerName)) ?? null,
-    })),
-  }));
+  return sanitizeFantasyEntriesForOutbound(mapped);
 }
 
 function computeFantasyPoints(stat: {
@@ -1804,7 +2147,7 @@ async function loadRecentLivePlayerStatsRows(): Promise<LivePlayerStatRow[]> {
   return data as LivePlayerStatRow[];
 }
 
-async function loadNbaHeadshotsByName(playerNames: string[]): Promise<Map<string, string>> {
+async function loadNbaHeadshotsByName(playerNames: string[], league: string | string[] = "NBA"): Promise<Map<string, string>> {
   if (!supabaseAdmin) {
     return new Map();
   }
@@ -1819,10 +2162,11 @@ async function loadNbaHeadshotsByName(playerNames: string[]): Promise<Map<string
     return new Map();
   }
   const normalizedSet = new Set(normalizedKeys);
+  const leagues = Array.isArray(league) ? league : [league];
   const { data, error } = await supabaseAdmin
     .from("players")
     .select("player_name, headshot_url")
-    .eq("league", "NBA")
+    .in("league", leagues)
     .not("headshot_url", "is", null)
     .neq("headshot_url", "")
     .limit(2000);
@@ -1897,7 +2241,7 @@ function computeFantasyFromLiveStats(
     };
   }
 
-  const hasDailyGameId = Boolean(parseFantasyDailyGameId(entry.game_id));
+  const hasDailyGameId = Boolean(parseAnyDailyGameId(entry.game_id));
   const breakdown: Record<string, number> = {};
   let totalPoints = 0;
   let playersWithRows = 0;
@@ -2225,6 +2569,62 @@ async function fetchApiSportsNbaGamesByDate(dateIso: string): Promise<ApiSportsN
   return rows;
 }
 
+async function fetchBdlWnbaGamesByDate(dateIso: string): Promise<ApiSportsNbaGame[]> {
+  const cacheKey = `wnba-games:${dateIso}`;
+  const cached = wnbaGamesCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
+  const query = new URLSearchParams({ "dates[]": dateIso, per_page: "100" });
+  const rowsRaw = await fetchBallDontLieList<Record<string, unknown>>("/wnba/v1/games", query, 5);
+  const rows = rowsRaw.map((game) => {
+    const homeTeam = asRecord(game.home_team);
+    const awayTeam = asRecord(game.visitor_team);
+    const statusRaw = String(game.status ?? "").trim().toLowerCase();
+    const shortStatus = statusRaw.includes("final")
+      ? "FT"
+      : statusRaw.includes("qtr") || statusRaw.includes("half") || statusRaw.includes("ot")
+      ? "Q1"
+      : "NS";
+    return {
+      id: game.id,
+      date: {
+        start: game.datetime ?? game.date,
+      },
+      league: {
+        name: "WNBA",
+        season: game.season,
+      },
+      teams: {
+        home: {
+          id: homeTeam.id,
+          name: homeTeam.full_name ?? homeTeam.name,
+        },
+        visitors: {
+          id: awayTeam.id,
+          name: awayTeam.full_name ?? awayTeam.name,
+        },
+      },
+      scores: {
+        home: {
+          points: game.home_team_score,
+        },
+        visitors: {
+          points: game.visitor_team_score,
+        },
+      },
+      status: {
+        long: game.status,
+        short: shortStatus,
+      },
+    } as ApiSportsNbaGame;
+  });
+
+  wnbaGamesCache.set(cacheKey, { value: rows, expiresAt: Date.now() + APISPORTS_GAMES_TTL_MS });
+  return rows;
+}
+
 async function fetchApiSportsNbaPlayerStats(gameId: string): Promise<ApiSportsNbaPlayerStat[]> {
   const cacheKey = `stats:${gameId}`;
   const cached = apiSportsPlayerStatsCache.get(cacheKey);
@@ -2263,11 +2663,37 @@ async function fetchApiSportsNbaPlayerStats(gameId: string): Promise<ApiSportsNb
 }
 
 function extractApiSportsPlayerName(row: ApiSportsNbaPlayerStat): string {
-  const first = String(getPath(row, ["player", "firstname"]) ?? getPath(row, ["player", "first_name"]) ?? "").trim();
-  const last = String(getPath(row, ["player", "lastname"]) ?? getPath(row, ["player", "last_name"]) ?? "").trim();
-  const full = String(getPath(row, ["player", "name"]) ?? "").trim();
+  const first = String(
+    getPath(row, ["player", "firstname"]) ??
+      getPath(row, ["player", "first_name"]) ??
+      getPath(row, ["fighter", "firstname"]) ??
+      getPath(row, ["fighter", "first_name"]) ??
+      ""
+  ).trim();
+  const last = String(
+    getPath(row, ["player", "lastname"]) ??
+      getPath(row, ["player", "last_name"]) ??
+      getPath(row, ["fighter", "lastname"]) ??
+      getPath(row, ["fighter", "last_name"]) ??
+      ""
+  ).trim();
   const combined = `${first} ${last}`.trim();
-  return combined || full;
+  const candidates = [
+    combined,
+    String(getPath(row, ["player", "full_name"]) ?? "").trim(),
+    String(getPath(row, ["player", "display_name"]) ?? "").trim(),
+    String(getPath(row, ["player", "name"]) ?? "").trim(),
+    String(getPath(row, ["fighter", "name"]) ?? "").trim(),
+    String(getPath(row, ["fighter_name"]) ?? "").trim(),
+    String(getPath(row, ["athlete", "displayName"]) ?? "").trim(),
+    String(getPath(row, ["name"]) ?? "").trim(),
+  ];
+  for (const candidate of candidates) {
+    if (candidate && !isPlaceholderFighterName(candidate)) {
+      return candidate;
+    }
+  }
+  return candidates.find(Boolean) ?? "";
 }
 
 
@@ -2298,7 +2724,13 @@ async function fetchApiSportsStatsForEntry(entry: FantasyEntryRow): Promise<{
   totalPoints: number;
   breakdown: Record<string, number>;
 }> {
-  const dailyDate = parseFantasyDailyGameId(entry.game_id);
+  const anyDailyId = parseAnyDailyGameId(entry.game_id);
+  // WNBA daily entries don't have scoring support yet; skip direct reconciliation.
+  if (anyDailyId?.league === "WNBA") {
+    const lineup = parseLineup(entry.lineup);
+    return { status: entry.status, totalPoints: Number(entry.points ?? 0), breakdown: parseScoreBreakdown(entry.score_breakdown) || zeroBreakdownForLineup(lineup) };
+  }
+  const dailyDate = anyDailyId?.date ?? null;
   if (dailyDate) {
     return fetchApiSportsStatsForDailyEntry(entry, dailyDate);
   }
@@ -2622,7 +3054,7 @@ export async function refreshFantasyProgress(params?: {
     // Safety net: stale entries should never remain pending/live forever.
     // Daily slates span many game start times so use a longer threshold (16 h covers
     // even the latest West-Coast tip-offs finishing after midnight).
-    const isDailySlate = Boolean(parseFantasyDailyGameId(entry.game_id));
+    const isDailySlate = Boolean(parseAnyDailyGameId(entry.game_id));
     const DAILY_SLATE_STALE_MS = 16 * 60 * 60 * 1000;
     const isDailySlateStale = isDailySlate && isStarted && nowMs - startsAtMs >= DAILY_SLATE_STALE_MS;
     if ((!isDailySlate && isStale || isDailySlateStale) && next.status !== "final") {

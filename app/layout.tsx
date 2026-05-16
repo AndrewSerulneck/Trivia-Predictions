@@ -39,11 +39,13 @@ export default async function RootLayout({
             className="tp-app-shell relative mx-auto grid min-h-[100svh] w-full max-w-[720px] box-border grid-rows-[1fr_auto] gap-4 overflow-x-hidden overflow-y-visible px-2 pb-24 sm:px-3"
             style={{ minHeight: "var(--tp-vh, 100svh)" }}
           >
-            <div className="pointer-events-none absolute -top-20 -right-12 h-52 w-52 rounded-full bg-orange-300/40 blur-3xl" />
-            <div className="pointer-events-none absolute top-24 -left-16 h-44 w-44 rounded-full bg-red-300/30 blur-3xl" />
+            <div className="pointer-events-none absolute -top-20 right-0 h-52 w-52 rounded-full bg-orange-300/40 blur-3xl" />
+            <div className="pointer-events-none absolute top-24 left-0 h-44 w-44 rounded-full bg-red-300/30 blur-3xl" />
             <div className="pointer-events-none absolute bottom-16 right-4 h-36 w-36 rounded-full bg-amber-200/35 blur-3xl" />
 
-            <main className="min-h-0">{children}</main>
+            <Suspense fallback={null}>
+              <main className="min-h-0">{children}</main>
+            </Suspense>
             <footer className="tp-comic-card tp-legal-card relative z-10 px-3 py-2 text-center text-xs leading-relaxed text-slate-700 break-words">
               {GLOBAL_LEGAL_NOTICE}
             </footer>
