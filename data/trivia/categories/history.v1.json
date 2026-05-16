@@ -5679,5 +5679,174 @@
     "correctAnswer": 2,
     "category": "History",
     "difficulty": "medium"
+  },
+  {
+    "slug": "who-was-the-first-emperor-of-rome",
+    "question": "Who was the first emperor of Rome?",
+    "options": [
+      "Julius Caesar",
+      "Augustus",
+      "Nero",
+      "Trajan"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-hundred-years-war-was-fought-between-which-two-countries",
+    "question": "The Hundred Years' War was fought between which two countries?",
+    "options": [
+      "England and France",
+      "France and Spain",
+      "England and Spain",
+      "Germany and France"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-was-the-primary-purpose-of-the-ancient-roman-colosseum",
+    "question": "What was the primary purpose of the ancient Roman Colosseum?",
+    "options": [
+      "Imperial residence",
+      "Public debates",
+      "Gladiatorial contests",
+      "Religious ceremonies"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-protestant-reformation-was-initiated-by-which-figure",
+    "question": "The Protestant Reformation was initiated by which figure?",
+    "options": [
+      "John Calvin",
+      "Martin Luther",
+      "Henry VIII",
+      "Huldrych Zwingli"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-ancient-civilization-built-the-pyramids-at-giza",
+    "question": "Which ancient civilization built the pyramids at Giza?",
+    "options": [
+      "Mesopotamian",
+      "Roman",
+      "Egyptian",
+      "Greek"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-fall-of-which-city-in-1453-is-often-considered-the-end-of-the-byzantine-empire",
+    "question": "The fall of which city in 1453 is often considered the end of the Byzantine Empire?",
+    "options": [
+      "Antioch",
+      "Alexandria",
+      "Constantinople",
+      "Rome"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-was-the-name-of-the-ancient-trade-route-connecting-the-east-and-west",
+    "question": "What was the name of the ancient trade route connecting the East and West?",
+    "options": [
+      "The Spice Road",
+      "The Silk Road",
+      "The Royal Road",
+      "The Incense Route"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-term-pax-romana-refers-to-a-period-of-relative-peace-and-stability-in-the-roman-empire-approximately-how-long-did-this-period-last",
+    "question": "The term \"Pax Romana\" refers to a period of relative peace and stability in the Roman Empire. Approximately how long did this period last?",
+    "options": [
+      "50 years",
+      "100 years",
+      "200 years",
+      "500 years"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-opium-wars-in-the-19th-century-were-primarily-fought-between-great-britain-and-which-country",
+    "question": "The Opium Wars in the 19th century were primarily fought between Great Britain and which country?",
+    "options": [
+      "India",
+      "China",
+      "Japan",
+      "Russia"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-ancient-greek-city-state-was-known-for-its-military-power-and-warrior-culture",
+    "question": "Which ancient Greek city-state was known for its military power and warrior culture?",
+    "options": [
+      "Athens",
+      "Sparta",
+      "Corinth",
+      "Thebes"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-event-is-widely-considered-the-immediate-cause-of-the-outbreak-of-world-war-i",
+    "question": "What event is widely considered the immediate cause of the outbreak of World War I?",
+    "options": [
+      "Sinking of the Lusitania",
+      "Assassination of Archduke Franz Ferdinand",
+      "German invasion of Poland",
+      "Battle of the Somme"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-explorer-is-credited-with-being-the-first-european-to-circumnavigate-the-earth-though-he-died-during-the-voyage",
+    "question": "Which explorer is credited with being the first European to circumnavigate the Earth, though he died during the voyage?",
+    "options": [
+      "Christopher Columbus",
+      "Vasco da Gama",
+      "Ferdinand Magellan",
+      "James Cook"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-document-ratified-in-1788-established-the-framework-for-the-united-states-federal-government",
+    "question": "Which document, ratified in 1788, established the framework for the United States federal government?",
+    "options": [
+      "Declaration of Independence",
+      "Articles of Confederation",
+      "Bill of Rights",
+      "U.S. Constitution"
+    ],
+    "correctAnswer": 3,
+    "category": "History",
+    "difficulty": "medium"
   }
 ]

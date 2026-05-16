@@ -5679,5 +5679,161 @@
     "correctAnswer": 2,
     "category": "Music",
     "difficulty": "easy"
+  },
+  {
+    "slug": "which-italian-composer-is-famous-for-operas-such-as-la-traviata-and-aida",
+    "question": "Which Italian composer is famous for operas such as \"La Traviata\" and \"Aida\"?",
+    "options": [
+      "Giacomo Puccini",
+      "Giuseppe Verdi",
+      "Wolfgang Amadeus Mozart",
+      "Ludwig van Beethoven"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-rock-band-acdc-originated-in-which-country",
+    "question": "The rock band AC/DC originated in which country?",
+    "options": [
+      "United States",
+      "United Kingdom",
+      "Australia",
+      "Canada"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-highest-female-vocal-range-called",
+    "question": "What is the highest female vocal range called?",
+    "options": [
+      "Alto",
+      "Mezzo-soprano",
+      "Soprano",
+      "Contralto"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-rapper-is-known-for-the-album-the-marshall-mathers-lp",
+    "question": "Which rapper is known for the album \"The Marshall Mathers LP\"?",
+    "options": [
+      "Jay-Z",
+      "Eminem",
+      "Dr. Dre",
+      "50 Cent"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-is-famously-known-as-the-man-in-black-in-country-music",
+    "question": "Who is famously known as the \"Man in Black\" in country music?",
+    "options": [
+      "Willie Nelson",
+      "George Jones",
+      "Johnny Cash",
+      "Merle Haggard"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-artist-had-a-massive-hit-with-like-a-virgin-in-the-1980s",
+    "question": "Which artist had a massive hit with \"Like a Virgin\" in the 1980s?",
+    "options": [
+      "Whitney Houston",
+      "Janet Jackson",
+      "Madonna",
+      "Mariah Carey"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-distinct-notes-are-in-a-full-chromatic-scale",
+    "question": "How many distinct notes are in a full chromatic scale?",
+    "options": [
+      "7",
+      "8",
+      "10",
+      "12"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-band-nirvana-rose-to-fame-from-which-citys-grunge-music-scene",
+    "question": "The band Nirvana rose to fame from which city's grunge music scene?",
+    "options": [
+      "Los Angeles",
+      "New York City",
+      "Seattle",
+      "London"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-legendary-funk-band-is-known-for-songs-like-september-and-boogie-wonderland",
+    "question": "Which legendary funk band is known for songs like \"September\" and \"Boogie Wonderland\"?",
+    "options": [
+      "Kool & The Gang",
+      "The Commodores",
+      "Chic",
+      "Earth, Wind & Fire"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-composed-the-iconic-score-for-the-film-star-wars",
+    "question": "Who composed the iconic score for the film \"Star Wars\"?",
+    "options": [
+      "Hans Zimmer",
+      "Ennio Morricone",
+      "John Williams",
+      "Danny Elfman"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-pop-superstar-released-the-album-thriller-in-1982-becoming-the-best-selling-album-of-all-time",
+    "question": "Which pop superstar released the album 'Thriller' in 1982, becoming the best-selling album of all time?",
+    "options": [
+      "Prince",
+      "Michael Jackson",
+      "Stevie Wonder",
+      "Lionel Richie"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-musical-term-for-gradually-increasing-the-volume-of-a-sound",
+    "question": "What is the musical term for gradually increasing the volume of a sound?",
+    "options": [
+      "Diminuendo",
+      "Accelerando",
+      "Crescendo",
+      "Rubato"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
   }
 ]

@@ -5666,5 +5666,161 @@
     "correctAnswer": 2,
     "category": "General Knowledge",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-ocean-that-borders-the-west-coast-of-the-united-states",
+    "question": "What is the name of the ocean that borders the west coast of the United States?",
+    "options": [
+      "Atlantic Ocean",
+      "Indian Ocean",
+      "Arctic Ocean",
+      "Pacific Ocean"
+    ],
+    "correctAnswer": 3,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-is-credited-with-writing-the-play-romeo-and-juliet",
+    "question": "Who is credited with writing the play \"Romeo and Juliet\"?",
+    "options": [
+      "William Shakespeare",
+      "Charles Dickens",
+      "Jane Austen",
+      "Mark Twain"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-strongest-muscle-in-the-human-body-relative-to-its-size",
+    "question": "What is the strongest muscle in the human body relative to its size?",
+    "options": [
+      "Masseter (jaw muscle)",
+      "Gluteus Maximus",
+      "Quadriceps",
+      "Biceps"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-was-the-first-female-prime-minister-of-the-united-kingdom",
+    "question": "Who was the first female Prime Minister of the United Kingdom?",
+    "options": [
+      "Margaret Thatcher",
+      "Theresa May",
+      "Elizabeth I",
+      "Victoria"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-large-landmass-is-also-a-country",
+    "question": "Which large landmass is also a country?",
+    "options": [
+      "Greenland",
+      "Madagascar",
+      "Australia",
+      "Borneo"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-which-city-would-you-find-the-colosseum",
+    "question": "In which city would you find the Colosseum?",
+    "options": [
+      "Athens",
+      "Rome",
+      "Cairo",
+      "Istanbul"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-famous-scientist-formulated-the-laws-of-motion-and-universal-gravitation",
+    "question": "Which famous scientist formulated the laws of motion and universal gravitation?",
+    "options": [
+      "Albert Einstein",
+      "Isaac Newton",
+      "Charles Darwin",
+      "Nikola Tesla"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-is-credited-with-painting-the-mona-lisa",
+    "question": "Who is credited with painting the Mona Lisa?",
+    "options": [
+      "Vincent van Gogh",
+      "Pablo Picasso",
+      "Leonardo da Vinci",
+      "Claude Monet"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-what-year-did-humans-first-land-on-the-moon",
+    "question": "In what year did humans first land on the Moon?",
+    "options": [
+      "1965",
+      "1969",
+      "1972",
+      "1959"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-famous-author-wrote-1984-and-animal-farm",
+    "question": "Which famous author wrote \"1984\" and \"Animal Farm\"?",
+    "options": [
+      "Aldous Huxley",
+      "George Orwell",
+      "Ray Bradbury",
+      "J.R.R. Tolkien"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-largest-non-polar-desert-in-the-world",
+    "question": "What is the largest non-polar desert in the world?",
+    "options": [
+      "Sahara Desert",
+      "Arabian Desert",
+      "Gobi Desert",
+      "Kalahari Desert"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-computing-what-does-url-stand-for",
+    "question": "In computing, what does \"URL\" stand for?",
+    "options": [
+      "Universal Resource Locator",
+      "Uniform Resource Link",
+      "United Resource Locator",
+      "Universal Reference Link"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "hard"
   }
 ]

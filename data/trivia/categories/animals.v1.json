@@ -5679,5 +5679,174 @@
     "correctAnswer": 1,
     "category": "Animals",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-tallest-land-animal",
+    "question": "What is the tallest land animal?",
+    "options": [
+      "African Elephant",
+      "Giraffe",
+      "Ostrich",
+      "Polar Bear"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-is-the-smallest-bird-in-the-world",
+    "question": "Which is the smallest bird in the world?",
+    "options": [
+      "Wren",
+      "Bee Hummingbird",
+      "Goldfinch",
+      "Sparrow"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-being-the-fastest-land-animal",
+    "question": "Which animal is known for being the fastest land animal?",
+    "options": [
+      "Lion",
+      "Gazelle",
+      "Cheetah",
+      "Wildbeest"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-has-the-longest-gestation-period",
+    "question": "Which animal has the longest gestation period?",
+    "options": [
+      "Hippopotamus",
+      "Rhinoceros",
+      "Elephant",
+      "Giraffe"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-reptile-is-famous-for-its-projectile-tongue-often-longer-than-its-body",
+    "question": "Which reptile is famous for its projectile tongue, often longer than its body?",
+    "options": [
+      "Gecko",
+      "Iguana",
+      "Chameleon",
+      "Monitor Lizard"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-animals-is-a-ruminant-meaning-it-has-a-multi-chambered-stomach-to-digest-plant-matter",
+    "question": "Which of these animals is a ruminant, meaning it has a multi-chambered stomach to digest plant matter?",
+    "options": [
+      "Pig",
+      "Bear",
+      "Cow",
+      "Dog"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-amphibian-undergoes-a-significant-metamorphosis-from-a-tadpole-to-its-adult-form",
+    "question": "Which amphibian undergoes a significant metamorphosis from a tadpole to its adult form?",
+    "options": [
+      "Salamander",
+      "Newt",
+      "Frog",
+      "Caecilian"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-well-known-for-entering-a-deep-sleep-like-state-during-winter-to-conserve-energy",
+    "question": "Which animal is well-known for entering a deep sleep-like state during winter to conserve energy?",
+    "options": [
+      "Wolf",
+      "Bear",
+      "Deer",
+      "Fox"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-bird-is-famous-for-having-the-longest-migratory-journey-of-any-animal",
+    "question": "Which bird is famous for having the longest migratory journey of any animal?",
+    "options": [
+      "Arctic Tern",
+      "Albatross",
+      "Swallow",
+      "Osprey"
+    ],
+    "correctAnswer": 0,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-these-is-a-highly-venomous-snake-found-primarily-in-australia",
+    "question": "Which of these is a highly venomous snake found primarily in Australia?",
+    "options": [
+      "Boa Constrictor",
+      "King Cobra",
+      "Inland Taipan",
+      "Python"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-microscopic-animal-is-known-for-its-extraordinary-ability-to-survive-extreme-conditions-often-called-a-water-bear",
+    "question": "Which microscopic animal is known for its extraordinary ability to survive extreme conditions, often called a 'water bear'?",
+    "options": [
+      "Jellyfish",
+      "Tardigrade",
+      "Sea Anemone",
+      "Sponge"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animal-is-known-for-burying-and-remembering-the-locations-of-thousands-of-nuts-for-later-consumption",
+    "question": "Which animal is known for burying and remembering the locations of thousands of nuts for later consumption?",
+    "options": [
+      "Beaver",
+      "Raccoon",
+      "Squirrel",
+      "Chipmunk"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-marine-mammal-is-known-for-its-complex-songs-that-can-travel-for-miles-underwater",
+    "question": "Which marine mammal is known for its complex songs that can travel for miles underwater?",
+    "options": [
+      "Dolphin",
+      "Humpback Whale",
+      "Seal",
+      "Manatee"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
   }
 ]

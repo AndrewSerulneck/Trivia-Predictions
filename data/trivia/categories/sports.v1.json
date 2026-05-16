@@ -5679,5 +5679,161 @@
     "correctAnswer": 1,
     "category": "Sports",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-sport-involves-using-a-rink-as-its-playing-surface-and-sticks-to-hit-a-puck",
+    "question": "Which sport involves using a 'rink' as its playing surface and sticks to hit a puck?",
+    "options": [
+      "Field Hockey",
+      "Ice Hockey",
+      "Curling",
+      "Lacrosse"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-golfer-holds-the-record-for-the-most-major-championship-wins",
+    "question": "Which golfer holds the record for the most major championship wins?",
+    "options": [
+      "Tiger Woods",
+      "Arnold Palmer",
+      "Jack Nicklaus",
+      "Bobby Jones"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-highest-class-of-international-auto-racing-for-single-seater-formula-racing-cars",
+    "question": "What is the highest class of international auto racing for single-seater formula racing cars?",
+    "options": [
+      "NASCAR",
+      "IndyCar",
+      "Formula 1",
+      "Le Mans"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-professional-mens-boxing-how-many-rounds-are-in-a-standard-championship-fight",
+    "question": "In professional men's boxing, how many rounds are in a standard championship fight?",
+    "options": [
+      "10",
+      "12",
+      "15",
+      "8"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-winter-sport-involves-sliding-down-an-ice-track-on-a-sled-face-first",
+    "question": "Which winter sport involves sliding down an ice track on a sled, face-first?",
+    "options": [
+      "Luge",
+      "Bobsleigh",
+      "Skeleton",
+      "Ski Jumping"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-position-typically-calls-the-plays-for-the-offense-in-american-football",
+    "question": "Which position typically calls the plays for the offense in American football?",
+    "options": [
+      "Running Back",
+      "Wide Receiver",
+      "Quarterback",
+      "Center"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-standard-length-of-a-marathon-race-in-kilometers",
+    "question": "What is the standard length of a marathon race in kilometers?",
+    "options": [
+      "35.0 km",
+      "42.195 km",
+      "48.2 km",
+      "21.0975 km"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-is-the-all-time-leading-scorer-in-nba-history",
+    "question": "Who is the all-time leading scorer in NBA history?",
+    "options": [
+      "Michael Jordan",
+      "LeBron James",
+      "Kareem Abdul-Jabbar",
+      "Kobe Bryant"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-bases-are-there-on-a-baseball-field-including-home-plate",
+    "question": "How many bases are there on a baseball field, including home plate?",
+    "options": [
+      "3",
+      "4",
+      "5",
+      "6"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-which-sport-would-an-athlete-perform-a-triple-jump",
+    "question": "In which sport would an athlete perform a 'triple jump'?",
+    "options": [
+      "Gymnastics",
+      "Track and Field",
+      "Swimming",
+      "Weightlifting"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-maximum-number-of-players-a-cricket-team-can-have-on-the-field-at-one-time-during-a-match",
+    "question": "What is the maximum number of players a cricket team can have on the field at one time during a match?",
+    "options": [
+      "9",
+      "10",
+      "11",
+      "12"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-specific-type-of-ball-is-used-in-the-sport-of-ten-pin-bowling",
+    "question": "Which specific type of ball is used in the sport of ten-pin bowling?",
+    "options": [
+      "Soccer ball",
+      "Basketball",
+      "Bowling ball",
+      "Golf ball"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
   }
 ]

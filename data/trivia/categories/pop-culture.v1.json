@@ -5679,5 +5679,161 @@
     "correctAnswer": 1,
     "category": "Pop Culture",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-actor-portrays-tony-stark-iron-man-in-the-marvel-cinematic-universe",
+    "question": "Which actor portrays Tony Stark / Iron Man in the Marvel Cinematic Universe?",
+    "options": [
+      "Robert Downey Jr.",
+      "Chris Evans",
+      "Mark Ruffalo",
+      "Jeremy Renner"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-coffee-shop-where-the-characters-often-hang-out-in-the-tv-series-friends",
+    "question": "What is the name of the coffee shop where the characters often hang out in the TV series 'Friends'?",
+    "options": [
+      "Central Perk",
+      "The Grind",
+      "Daily Dose",
+      "Coffee Bean"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-pop-superstar-is-known-for-hits-like-baby-one-more-time-and-gimme-more",
+    "question": "Which pop superstar is known for hits like '...Baby One More Time' and 'Gimme More'?",
+    "options": [
+      "Britney Spears",
+      "Christina Aguilera",
+      "Mariah Carey",
+      "Jennifer Lopez"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-main-protagonist-in-nintendos-the-legend-of-zelda-series",
+    "question": "What is the name of the main protagonist in Nintendo's 'The Legend of Zelda' series?",
+    "options": [
+      "Link",
+      "Zelda",
+      "Ganon",
+      "Navi"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-the-film-forrest-gump-what-brand-of-running-shoes-does-forrest-receive-as-a-gift",
+    "question": "In the film 'Forrest Gump', what brand of running shoes does Forrest receive as a gift?",
+    "options": [
+      "Nike Cortez",
+      "Adidas Gazelle",
+      "Reebok Classic",
+      "Puma Suede"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-animated-sitcom-is-set-in-the-fictional-town-of-springfield",
+    "question": "Which animated sitcom is set in the fictional town of Springfield?",
+    "options": [
+      "The Simpsons",
+      "Family Guy",
+      "South Park",
+      "American Dad!"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-artist-is-famously-known-by-the-nickname-the-weeknd",
+    "question": "Which artist is famously known by the nickname 'The Weeknd'?",
+    "options": [
+      "Abel Tesfaye",
+      "Frank Ocean",
+      "SZA",
+      "Bryson Tiller"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-dystopian-novel-later-adapted-into-a-film-series-features-katniss-everdeen-as-its-protagonist",
+    "question": "Which dystopian novel, later adapted into a film series, features Katniss Everdeen as its protagonist?",
+    "options": [
+      "The Hunger Games",
+      "Divergent",
+      "The Maze Runner",
+      "Twilight"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-directed-the-critically-acclaimed-film-pulp-fiction",
+    "question": "Who directed the critically acclaimed film 'Pulp Fiction'?",
+    "options": [
+      "Quentin Tarantino",
+      "Martin Scorsese",
+      "Steven Spielberg",
+      "Christopher Nolan"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-science-fiction-series-features-a-time-traveling-alien-known-as-the-doctor",
+    "question": "Which science fiction series features a time-traveling alien known as 'The Doctor'?",
+    "options": [
+      "Doctor Who",
+      "Star Trek",
+      "The X-Files",
+      "Battlestar Galactica"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-british-rock-band-released-the-album-the-dark-side-of-the-moon",
+    "question": "Which British rock band released the album 'The Dark Side of the Moon'?",
+    "options": [
+      "Pink Floyd",
+      "Led Zeppelin",
+      "The Rolling Stones",
+      "Queen"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-internet-meme-distracted-boyfriend-features-a-man-looking-at-another-woman-while-walking-with-his-partner-who-plays-the-distracted-boyfriend-in-the-original-stock-photo",
+    "question": "The internet meme 'Distracted Boyfriend' features a man looking at another woman while walking with his partner. Who plays the 'distracted boyfriend' in the original stock photo?",
+    "options": [
+      "It's a stock photo model",
+      "A famous actor",
+      "An unknown celebrity",
+      "A politician"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "hard"
   }
 ]

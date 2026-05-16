@@ -5666,5 +5666,174 @@
     "correctAnswer": 1,
     "category": "Science",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-newtons-laws-of-motion-states-that-for-every-action-there-is-an-equal-and-opposite-reaction",
+    "question": "Which of Newton's laws of motion states that for every action, there is an equal and opposite reaction?",
+    "options": [
+      "First Law",
+      "Second Law",
+      "Third Law",
+      "Law of Universal Gravitation"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-vitamin-is-primarily-synthesized-in-the-skin-upon-exposure-to-sunlight",
+    "question": "Which vitamin is primarily synthesized in the skin upon exposure to sunlight?",
+    "options": [
+      "Vitamin A",
+      "Vitamin C",
+      "Vitamin D",
+      "Vitamin K"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-phenomenon-occurs-when-light-waves-change-direction-as-they-pass-from-one-medium-to-another-like-from-air-to-water",
+    "question": "What phenomenon occurs when light waves change direction as they pass from one medium to another, like from air to water?",
+    "options": [
+      "Diffraction",
+      "Reflection",
+      "Refraction",
+      "Absorption"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-planet-is-commonly-known-as-the-red-planet",
+    "question": "Which planet is commonly known as the 'Red Planet'?",
+    "options": [
+      "Venus",
+      "Mars",
+      "Jupiter",
+      "Saturn"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-instrument-is-used-to-measure-the-intensity-of-earthquakes",
+    "question": "What instrument is used to measure the intensity of earthquakes?",
+    "options": [
+      "Barometer",
+      "Anemometer",
+      "Seismograph",
+      "Thermometer"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-protein-is-primarily-responsible-for-oxygen-transport-in-red-blood-cells",
+    "question": "What protein is primarily responsible for oxygen transport in red blood cells?",
+    "options": [
+      "Collagen",
+      "Keratin",
+      "Hemoglobin",
+      "Insulin"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "according-to-einsteins-theory-of-special-relativity-what-is-the-constant-speed-of-light-in-a-vacuum",
+    "question": "According to Einstein's theory of special relativity, what is the constant speed of light in a vacuum?",
+    "options": [
+      "Approximately 186,000 miles/sec",
+      "Approximately 300,000 km/hr",
+      "Approximately 3 million meters/sec",
+      "Approximately 299,792,458 meters/sec"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-geological-process-describes-the-large-scale-motion-of-earths-lithosphere",
+    "question": "What geological process describes the large-scale motion of Earth's lithosphere?",
+    "options": [
+      "Erosion",
+      "Weathering",
+      "Volcanism",
+      "Plate Tectonics"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-these-is-the-weakest-of-the-four-fundamental-forces",
+    "question": "Which of these is the weakest of the four fundamental forces?",
+    "options": [
+      "Strong nuclear force",
+      "Weak nuclear force",
+      "Electromagnetic force",
+      "Gravitational force"
+    ],
+    "correctAnswer": 3,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-process-describes-a-solid-turning-directly-into-a-gas-without-becoming-a-liquid",
+    "question": "What process describes a solid turning directly into a gas without becoming a liquid?",
+    "options": [
+      "Evaporation",
+      "Condensation",
+      "Sublimation",
+      "Melting"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-type-of-scientist-studies-the-earths-physical-structure-and-substances",
+    "question": "What type of scientist studies the Earth's physical structure and substances?",
+    "options": [
+      "Astronomer",
+      "Biologist",
+      "Geologist",
+      "Meteorologist"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-human-organ-is-responsible-for-filtering-waste-products-from-the-blood-and-producing-urine",
+    "question": "Which human organ is responsible for filtering waste products from the blood and producing urine?",
+    "options": [
+      "Liver",
+      "Pancreas",
+      "Kidneys",
+      "Spleen"
+    ],
+    "correctAnswer": 2,
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-organelle-is-known-as-the-powerhouse-of-the-cell",
+    "question": "What organelle is known as the 'powerhouse of the cell'?",
+    "options": [
+      "Nucleus",
+      "Mitochondria",
+      "Ribosome",
+      "Endoplasmic Reticulum"
+    ],
+    "correctAnswer": 1,
+    "category": "Science",
+    "difficulty": "easy"
   }
 ]

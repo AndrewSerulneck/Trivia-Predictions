@@ -5692,5 +5692,161 @@
     "correctAnswer": 0,
     "category": "Geography",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-largest-hot-desert-in-the-world",
+    "question": "What is the name of the largest hot desert in the world?",
+    "options": [
+      "Gobi Desert",
+      "Arabian Desert",
+      "Sahara Desert",
+      "Kalahari Desert"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-strait-separates-spain-from-morocco",
+    "question": "Which strait separates Spain from Morocco?",
+    "options": [
+      "Strait of Messina",
+      "Strait of Gibraltar",
+      "Bosporus Strait",
+      "Strait of Dover"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-city-is-famous-for-its-extensive-canal-system-and-gondolas",
+    "question": "Which city is famous for its extensive canal system and gondolas?",
+    "options": [
+      "Amsterdam",
+      "Venice",
+      "Bruges",
+      "Stockholm"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-deepest-lake-in-the-world-lake-baikal-is-located-in-which-country",
+    "question": "The deepest lake in the world, Lake Baikal, is located in which country?",
+    "options": [
+      "China",
+      "Russia",
+      "Canada",
+      "USA"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-these-is-an-artificial-waterway-connecting-the-atlantic-and-pacific-oceans",
+    "question": "Which of these is an artificial waterway connecting the Atlantic and Pacific Oceans?",
+    "options": [
+      "Suez Canal",
+      "Kiel Canal",
+      "Panama Canal",
+      "Grand Canal"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-is-the-capital-city-of-canada",
+    "question": "Which is the capital city of Canada?",
+    "options": [
+      "Toronto",
+      "Montreal",
+      "Vancouver",
+      "Ottawa"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-european-river-is-the-second-longest-after-the-volga",
+    "question": "Which European river is the second-longest after the Volga?",
+    "options": [
+      "Rhine",
+      "Danube",
+      "Elbe",
+      "Seine"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-largest-island-in-the-mediterranean-sea",
+    "question": "What is the largest island in the Mediterranean Sea?",
+    "options": [
+      "Sardinia",
+      "Cyprus",
+      "Sicily",
+      "Crete"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-oceans-are-traditionally-recognized-on-earth",
+    "question": "How many oceans are traditionally recognized on Earth?",
+    "options": [
+      "3",
+      "4",
+      "5",
+      "6"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-atlas-mountains-are-primarily-located-in-which-continent",
+    "question": "The Atlas Mountains are primarily located in which continent?",
+    "options": [
+      "Asia",
+      "Europe",
+      "Africa",
+      "South America"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-strait-of-malacca-separates-the-malay-peninsula-from-which-indonesian-island",
+    "question": "The Strait of Malacca separates the Malay Peninsula from which Indonesian island?",
+    "options": [
+      "Borneo",
+      "Java",
+      "Sumatra",
+      "Sulawesi"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-artificial-waterway-connects-the-mediterranean-sea-to-the-red-sea",
+    "question": "Which artificial waterway connects the Mediterranean Sea to the Red Sea?",
+    "options": [
+      "Panama Canal",
+      "Kiel Canal",
+      "Suez Canal",
+      "Grand Canal"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
   }
 ]
