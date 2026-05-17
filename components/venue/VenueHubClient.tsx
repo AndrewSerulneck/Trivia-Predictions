@@ -131,6 +131,35 @@ function wait(ms: number): Promise<void> {
   });
 }
 
+function formatLiveTriviaNextGameLabel(startAt: Date): string {
+  const now = new Date();
+  const startDay = new Date(startAt.getFullYear(), startAt.getMonth(), startAt.getDate());
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const timeLabel = startAt.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+
+  if (startDay.getTime() === today.getTime()) {
+    return `Next Game: Tonight at ${timeLabel}`;
+  }
+
+  if (startDay.getTime() === tomorrow.getTime()) {
+    return `Next Game: Tomorrow at ${timeLabel}`;
+  }
+
+  const dayLabel = startAt.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+  return `Next Game: ${dayLabel} at ${timeLabel}`;
+}
+
 async function fetchJsonWithTimeout<T>(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<T | null> {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => {
@@ -698,11 +727,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         setLiveTriviaStatus({ live: false, label: "Next Game: TBD" });
         return;
       }
-      const nextLabel = nextStart.toLocaleString(undefined, {
-        weekday: "short",
-        hour: "numeric",
-      });
-      setLiveTriviaStatus({ live: false, label: `Next Game: ${nextLabel}` });
+      setLiveTriviaStatus({ live: false, label: formatLiveTriviaNextGameLabel(nextStart) });
     } catch {
       setLiveTriviaStatus({ live: false, label: "" });
     }

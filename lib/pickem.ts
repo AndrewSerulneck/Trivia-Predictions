@@ -1752,6 +1752,7 @@ export async function submitPickEmPick(params: {
   if (!supabaseAdmin) {
     throw new Error("Supabase admin client is not configured.");
   }
+  const admin = supabaseAdmin;
 
   const userId = String(params.userId ?? "").trim();
   const venueId = String(params.venueId ?? "").trim();
@@ -1911,6 +1912,7 @@ export async function clearPickEmPick(params: {
   if (!supabaseAdmin) {
     throw new Error("Supabase admin client is not configured.");
   }
+  const admin = supabaseAdmin;
 
   const userId = String(params.userId ?? "").trim();
   const gameId = String(params.gameId ?? "").trim();
@@ -2189,6 +2191,7 @@ export async function claimPickEmPoints(params: {
   if (!supabaseAdmin) {
     throw new Error("Supabase admin client is not configured.");
   }
+  const admin = supabaseAdmin;
 
   const userId = String(params.userId ?? "").trim();
   const venueId = String(params.venueId ?? "").trim();
@@ -2198,21 +2201,26 @@ export async function claimPickEmPoints(params: {
   const tzOffsetMinutes = parseTimezoneOffset(params.tzOffsetMinutes);
   const range = buildUtcRangeForLocalDay(params.localDate, tzOffsetMinutes);
 
-  const { data, error } = await supabaseAdmin.rpc("claim_pickem_points", {
-    p_user_id: userId,
-    p_venue_id: venueId,
-    p_local_date: range.date,
-    p_day_start: range.fromIso,
-    p_day_end: range.toIso,
-  });
+  const runClaimForRange = async (claimRange: ReturnType<typeof buildUtcRangeForLocalDay>) => {
+    const { data, error } = await admin.rpc("claim_pickem_points", {
+      p_user_id: userId,
+      p_venue_id: venueId,
+      p_local_date: claimRange.date,
+      p_day_start: claimRange.fromIso,
+      p_day_end: claimRange.toIso,
+    });
+    if (error) {
+      throw new Error(error.message ?? "Failed to claim Pick 'Em points.");
+    }
+    const row = Array.isArray(data) ? data[0] : null;
+    if (!row) {
+      throw new Error("No claim result returned.");
+    }
+    return row;
+  };
 
-  if (error) {
-    throw new Error(error.message ?? "Failed to claim Pick 'Em points.");
-  }
-  const row = Array.isArray(data) ? data[0] : null;
-  if (!row) {
-    throw new Error("No claim result returned.");
-  }
+  let effectiveClaimDate = range.date;
+  let row = await runClaimForRange(range);
 
   const pointsAwarded = Math.max(0, Number(row.points_awarded ?? 0));
   const claimedPickCount = Math.max(0, Number(row.claimed_pick_count ?? 0));
@@ -2224,38 +2232,68 @@ export async function claimPickEmPoints(params: {
   const correctPicks = Math.max(0, Number(row.correct_picks ?? 0));
   const pendingPicks = Math.max(0, Number(row.pending_picks ?? 0));
   const multiplierEligible = Boolean(row.multiplier_eligible);
+
+  if (pointsAwarded <= 0 && claimedPickCount <= 0) {
+    const latestUnclaimed = await admin
+      .from("pickem_picks")
+      .select("starts_at")
+      .eq("user_id", userId)
+      .eq("venue_id", venueId)
+      .eq("status", "won")
+      .is("reward_claimed_at", null)
+      .order("starts_at", { ascending: false })
+      .limit(1)
+      .maybeSingle<{ starts_at: string }>();
+
+    const latestStartsAt = latestUnclaimed.data?.starts_at ?? "";
+    const fallbackLocalDate = latestStartsAt ? toLocalDateKey(latestStartsAt, tzOffsetMinutes) : "";
+
+    if (fallbackLocalDate && fallbackLocalDate !== range.date) {
+      const fallbackRange = buildUtcRangeForLocalDay(fallbackLocalDate, tzOffsetMinutes);
+      row = await runClaimForRange(fallbackRange);
+      effectiveClaimDate = fallbackRange.date;
+    }
+  }
+
+  const finalPointsAwarded = Math.max(0, Number(row.points_awarded ?? 0));
+  const finalClaimedPickCount = Math.max(0, Number(row.claimed_pick_count ?? 0));
+  const finalTotalPicks = Math.max(0, Number(row.total_picks ?? 0));
+  const finalSettledPicks = Math.max(0, Number(row.settled_picks ?? 0));
+  const finalCorrectPicks = Math.max(0, Number(row.correct_picks ?? 0));
+  const finalPendingPicks = Math.max(0, Number(row.pending_picks ?? 0));
+
   const qualifyingMultiplier: 1 | 2 | 3 =
-    pendingPicks === 0 && totalPicks === PICKEM_DAILY_PICK_LIMIT
-      ? correctPicks >= PICKEM_DAILY_PICK_LIMIT
+    finalPendingPicks === 0 && finalTotalPicks === PICKEM_DAILY_PICK_LIMIT
+      ? finalCorrectPicks >= PICKEM_DAILY_PICK_LIMIT
         ? 3
-        : correctPicks >= 7
+        : finalCorrectPicks >= 7
         ? 2
         : 1
       : 1;
 
   let bonusPoints = 0;
   if (qualifyingMultiplier > 1) {
-    const { data: snapshot } = await supabaseAdmin
+    const { data: snapshot } = await admin
       .from("pickem_daily_snapshots")
       .select("collected_points")
       .eq("user_id", userId)
       .eq("venue_id", venueId)
-      .eq("local_date", range.date)
+      .eq("local_date", effectiveClaimDate)
       .maybeSingle<{ collected_points: number | null }>();
 
     const collectedPoints = Math.max(0, Number(snapshot?.collected_points ?? 0));
-    const targetCollected = correctPicks * PICKEM_REWARD_POINTS * qualifyingMultiplier;
+    const targetCollected = finalCorrectPicks * PICKEM_REWARD_POINTS * qualifyingMultiplier;
     bonusPoints = Math.max(0, targetCollected - collectedPoints);
 
     if (bonusPoints > 0) {
-      const { data: userRow } = await supabaseAdmin
+      const { data: userRow } = await admin
         .from("users")
         .select("points")
         .eq("id", userId)
         .maybeSingle<{ points: number | null }>();
       const currentPoints = Math.max(0, Number(userRow?.points ?? 0));
-      await supabaseAdmin.from("users").update({ points: currentPoints + bonusPoints }).eq("id", userId);
-      await supabaseAdmin
+      await admin.from("users").update({ points: currentPoints + bonusPoints }).eq("id", userId);
+      await admin
         .from("pickem_daily_snapshots")
         .update({
           collected_points: collectedPoints + bonusPoints,
@@ -2264,21 +2302,21 @@ export async function claimPickEmPoints(params: {
         })
         .eq("user_id", userId)
         .eq("venue_id", venueId)
-        .eq("local_date", range.date);
+        .eq("local_date", effectiveClaimDate);
     }
   }
 
-  const totalAwarded = pointsAwarded + bonusPoints;
+  const totalAwarded = finalPointsAwarded + bonusPoints;
   const result = {
-    claimed: claimedPickCount > 0 || totalAwarded > 0,
+    claimed: finalClaimedPickCount > 0 || totalAwarded > 0,
     pointsAwarded: totalAwarded,
-    claimedPickCount,
+    claimedPickCount: finalClaimedPickCount,
     multiplierApplied: qualifyingMultiplier > 1 ? qualifyingMultiplier : multiplierApplied,
     multiplierEligible,
-    totalPicks,
-    settledPicks,
-    correctPicks,
-    pendingPicks,
+    totalPicks: finalTotalPicks,
+    settledPicks: finalSettledPicks,
+    correctPicks: finalCorrectPicks,
+    pendingPicks: finalPendingPicks,
   };
 
   if (result.claimed && totalAwarded > 0) {

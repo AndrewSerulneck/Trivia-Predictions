@@ -349,6 +349,16 @@ type AdminAddressSuggestion = {
   latitude: number;
   longitude: number;
 };
+type AdminLiveShowdownSchedule = {
+  id: string;
+  title: string;
+  startTime: string;
+  timezone: string;
+  numRounds: number;
+  venueId: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
 type AdminConsoleProps = {
   venues: Venue[];
   mode?: "dashboard" | "section";
@@ -510,6 +520,16 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [challengeRecurringType, setChallengeRecurringType] = useState<CampaignRecurringType>("none");
   const [challengeIsActive, setChallengeIsActive] = useState(true);
   const [challengeFormMessage, setChallengeFormMessage] = useState("");
+  const [liveShowdownSchedules, setLiveShowdownSchedules] = useState<AdminLiveShowdownSchedule[]>([]);
+  const [liveTriviaTitle, setLiveTriviaTitle] = useState("");
+  const [liveTriviaTargetDate, setLiveTriviaTargetDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [liveTriviaStartTime, setLiveTriviaStartTime] = useState("19:00");
+  const [liveTriviaTimezone, setLiveTriviaTimezone] = useState("America/New_York");
+  const [liveTriviaNumRounds, setLiveTriviaNumRounds] = useState("3");
+  const [liveTriviaVenueId, setLiveTriviaVenueId] = useState(() => venues[0]?.id ?? "");
+  const [liveTriviaMessage, setLiveTriviaMessage] = useState("");
+  const [creatingLiveTrivia, setCreatingLiveTrivia] = useState(false);
+  const [devControlBusyScheduleId, setDevControlBusyScheduleId] = useState<string | null>(null);
   const addressSuggestionsCacheRef = useRef<Map<string, AdminAddressSuggestion[]>>(new Map());
   const challengePreviewResizeRef = useRef<{ active: boolean; startX: number; startY: number; startScale: number }>({
     active: false,
@@ -594,6 +614,10 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       };
     });
   }, [ads, selectedManagedVenueId]);
+  const venueNameById = useMemo(() => {
+    return new Map(availableVenues.map((venue) => [venue.id, getVenueDisplayName(venue)]));
+  }, [availableVenues]);
+  const isDevTestingControlsEnabled = process.env.NODE_ENV !== "production";
 
   useEffect(() => {
     if (!availableAdTypes.includes(adType)) {
@@ -1233,6 +1257,25 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     }
   }, [adminFetch, selectedChallengeCampaignId]);
 
+  const loadLiveShowdownSchedules = useCallback(async () => {
+    try {
+      const response = await adminFetch("/api/admin?resource=live-showdown-schedules&limit=50", {
+        cache: "no-store",
+      });
+      const payload = (await response.json()) as {
+        ok: boolean;
+        items?: AdminLiveShowdownSchedule[];
+        error?: string;
+      };
+      if (!payload.ok) {
+        throw new Error(payload.error ?? "Failed to load Live Trivia schedules.");
+      }
+      setLiveShowdownSchedules(payload.items ?? []);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Failed to load Live Trivia schedules.");
+    }
+  }, [adminFetch]);
+
   useEffect(() => {
     const init = async () => {
       try {
@@ -1280,6 +1323,13 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   }, [activeSection, authInitialized, loadChallengeProgress]);
 
   useEffect(() => {
+    if (!authInitialized) {
+      return;
+    }
+    void loadLiveShowdownSchedules();
+  }, [authInitialized, loadLiveShowdownSchedules]);
+
+  useEffect(() => {
     if (initialSection) {
       setActiveSection(initialSection);
     }
@@ -1318,6 +1368,80 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       await loadAll();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Failed to create trivia question.");
+    }
+  };
+
+  const createLiveShowdownSchedule = async () => {
+    const title = liveTriviaTitle.trim();
+    const targetDate = liveTriviaTargetDate.trim();
+    const startTimeValue = liveTriviaStartTime.trim();
+    const timezoneValue = liveTriviaTimezone.trim() || "America/New_York";
+    const venueIdValue = liveTriviaVenueId.trim();
+    const numRoundsValue = Math.max(1, Math.min(24, Math.floor(Number(liveTriviaNumRounds) || 1)));
+
+    if (!title || !targetDate || !startTimeValue || !venueIdValue) {
+      setLiveTriviaMessage("Title, date, start time, and venue are required.");
+      return;
+    }
+
+    setCreatingLiveTrivia(true);
+    setLiveTriviaMessage("");
+    setErrorMessage("");
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resource: "live-showdown-schedules",
+          title,
+          targetDate,
+          startTime: startTimeValue,
+          timezone: timezoneValue,
+          numRounds: numRoundsValue,
+          venueId: venueIdValue,
+        }),
+      });
+      const payload = (await response.json()) as { ok: boolean; error?: string };
+      if (!payload.ok) {
+        throw new Error(payload.error ?? "Failed to create Live Trivia schedule.");
+      }
+      setLiveTriviaMessage("Live Trivia schedule created and question slots seeded.");
+      setLiveTriviaTitle("");
+      await loadLiveShowdownSchedules();
+    } catch (error) {
+      setLiveTriviaMessage(error instanceof Error ? error.message : "Failed to create Live Trivia schedule.");
+    } finally {
+      setCreatingLiveTrivia(false);
+    }
+  };
+
+  const runLiveTriviaDevControl = async (
+    scheduleId: string,
+    resource: "live-showdown-force-next-phase" | "live-showdown-reset-answers",
+    successMessage: string
+  ) => {
+    setDevControlBusyScheduleId(scheduleId);
+    setLiveTriviaMessage("");
+    setErrorMessage("");
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resource,
+          scheduleId,
+        }),
+      });
+      const payload = (await response.json()) as { ok: boolean; error?: string };
+      if (!payload.ok) {
+        throw new Error(payload.error ?? "Live Trivia developer control failed.");
+      }
+      setLiveTriviaMessage(successMessage);
+      await loadLiveShowdownSchedules();
+    } catch (error) {
+      setLiveTriviaMessage(error instanceof Error ? error.message : "Live Trivia developer control failed.");
+    } finally {
+      setDevControlBusyScheduleId(null);
     }
   };
 
@@ -2141,6 +2265,16 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
         <section className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
           <h2 className="text-lg font-semibold">Admin Tools</h2>
           <p className="text-sm text-slate-600">Tap a tool to open its page.</p>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveSection("live-trivia");
+              router.push("/admin/live-trivia");
+            }}
+            className="w-full rounded-md border border-emerald-700 bg-emerald-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 sm:w-auto"
+          >
+            Create/Manage Live Trivia
+          </button>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:hidden">
             {ADMIN_SECTION_OPTIONS.map((section) => (
               <button
@@ -2171,6 +2305,178 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           </button>
           <h2 className="text-lg font-semibold">{selectedSection?.label ?? "Admin Tool"}</h2>
         </section>
+      ) : null}
+
+      {shouldRenderSectionContent && activeSection === "live-trivia" ? (
+      <section className="space-y-4 rounded-lg border border-slate-200 p-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-base font-semibold">Create/Manage Live Trivia</h2>
+          <button
+            type="button"
+            onClick={() => {
+              void loadLiveShowdownSchedules();
+            }}
+            className="rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white"
+          >
+            Refresh Sessions
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <label className="space-y-1 text-sm">
+            <span className={FORM_LABEL_CLASS}>Title</span>
+            <input
+              type="text"
+              value={liveTriviaTitle}
+              onChange={(event) => setLiveTriviaTitle(event.target.value)}
+              placeholder="Tuesday Night Showdown"
+              className={FORM_SELECT_CLASS}
+            />
+          </label>
+          <label className="space-y-1 text-sm">
+            <span className={FORM_LABEL_CLASS}>Target Date</span>
+            <input
+              type="date"
+              value={liveTriviaTargetDate}
+              onChange={(event) => setLiveTriviaTargetDate(event.target.value)}
+              className={FORM_SELECT_CLASS}
+            />
+          </label>
+          <label className="space-y-1 text-sm">
+            <span className={FORM_LABEL_CLASS}>Start Time</span>
+            <input
+              type="time"
+              value={liveTriviaStartTime}
+              onChange={(event) => setLiveTriviaStartTime(event.target.value)}
+              className={FORM_SELECT_CLASS}
+            />
+          </label>
+          <label className="space-y-1 text-sm">
+            <span className={FORM_LABEL_CLASS}>Timezone</span>
+            <select
+              value={liveTriviaTimezone}
+              onChange={(event) => setLiveTriviaTimezone(event.target.value)}
+              className={FORM_SELECT_CLASS}
+            >
+              <option value="America/New_York">America/New_York</option>
+              <option value="America/Chicago">America/Chicago</option>
+              <option value="America/Denver">America/Denver</option>
+              <option value="America/Los_Angeles">America/Los_Angeles</option>
+              <option value="UTC">UTC</option>
+            </select>
+          </label>
+          <label className="space-y-1 text-sm">
+            <span className={FORM_LABEL_CLASS}>Number of Rounds</span>
+            <input
+              type="number"
+              min={1}
+              max={24}
+              value={liveTriviaNumRounds}
+              onChange={(event) => setLiveTriviaNumRounds(event.target.value)}
+              className={FORM_SELECT_CLASS}
+            />
+          </label>
+          <label className="space-y-1 text-sm">
+            <span className={FORM_LABEL_CLASS}>Venue Allocation</span>
+            <select
+              value={liveTriviaVenueId}
+              onChange={(event) => setLiveTriviaVenueId(event.target.value)}
+              className={FORM_SELECT_CLASS}
+            >
+              <option value="">Select venue</option>
+              {availableVenues.map((venue) => (
+                <option key={venue.id} value={venue.id}>
+                  {getVenueDisplayName(venue)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            void createLiveShowdownSchedule();
+          }}
+          disabled={creatingLiveTrivia}
+          className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-60"
+        >
+          {creatingLiveTrivia ? "Creating..." : "Save / Create Competition"}
+        </button>
+
+        {liveTriviaMessage ? (
+          <p className="rounded-md border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700">{liveTriviaMessage}</p>
+        ) : null}
+
+        {isDevTestingControlsEnabled ? (
+          <section className="space-y-2 rounded-md border border-amber-300 bg-amber-50 p-3">
+            <h3 className="text-sm font-semibold text-amber-900">Developer Testing Controls</h3>
+            <p className="text-xs text-amber-800">
+              Local admin helpers for playtesting: force phase progression and clear submissions for replay.
+            </p>
+            <div className="space-y-2">
+              {liveShowdownSchedules.map((schedule) => (
+                <div key={schedule.id} className="rounded-md border border-amber-200 bg-white p-2">
+                  <p className="text-xs font-semibold text-slate-900">{schedule.title}</p>
+                  <p className="text-[11px] text-slate-600">
+                    {schedule.venueId ? venueNameById.get(schedule.venueId) ?? schedule.venueId : "No venue"} ·{" "}
+                    {new Date(schedule.startTime).toLocaleString()} · {schedule.numRounds} rounds
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void runLiveTriviaDevControl(
+                          schedule.id,
+                          "live-showdown-force-next-phase",
+                          "Forced next Live Trivia question phase."
+                        );
+                      }}
+                      disabled={devControlBusyScheduleId === schedule.id}
+                      className="rounded-md border border-indigo-300 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-800 hover:bg-indigo-100 disabled:opacity-60"
+                    >
+                      Force Trigger Next Question Phase
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void runLiveTriviaDevControl(
+                          schedule.id,
+                          "live-showdown-reset-answers",
+                          "Reset Live Session Answers complete."
+                        );
+                      }}
+                      disabled={devControlBusyScheduleId === schedule.id}
+                      className="rounded-md border border-rose-300 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-800 hover:bg-rose-100 disabled:opacity-60"
+                    >
+                      Reset Live Session Answers
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        <section className="space-y-2 rounded-md border border-slate-200 p-3">
+          <h3 className="text-sm font-semibold">Scheduled Sessions</h3>
+          {liveShowdownSchedules.length === 0 ? (
+            <p className="text-xs text-slate-600">No Live Trivia sessions yet.</p>
+          ) : (
+            <ul className="space-y-2">
+              {liveShowdownSchedules.map((schedule) => (
+                <li key={schedule.id} className="rounded-md border border-slate-200 bg-slate-50 p-2 text-xs">
+                  <p className="font-semibold text-slate-900">{schedule.title}</p>
+                  <p className="text-slate-600">
+                    Venue: {schedule.venueId ? venueNameById.get(schedule.venueId) ?? schedule.venueId : "No venue"} ·
+                    Start: {new Date(schedule.startTime).toLocaleString()} ({schedule.timezone}) · Rounds: {schedule.numRounds}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </section>
       ) : null}
 
       {shouldRenderSectionContent && activeSection === "ad-debug" ? (

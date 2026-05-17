@@ -32,7 +32,7 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
     rules: [
       "-Synchronized Live Venue Play",
       "-30-second write-in answer windows",
-      "-Server-timed rounds and anti-cheat enforcement",
+      "-Server-timed rounds with screen-lock forfeits on tab/browser switches",
       "-2 points per correct answer",
     ],
   },

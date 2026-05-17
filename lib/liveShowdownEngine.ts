@@ -68,6 +68,9 @@ type LiveShowdownActiveState = {
   activeQuestion: LiveShowdownQuestionPublic | null;
   revealedAnswer: string | null;
   isFinalResultsWindow: boolean;
+  currentRoundCategory: string | null;
+  upcomingRoundNumber: number | null;
+  upcomingRoundCategory: string | null;
 };
 
 type LiveShowdownInactiveState = {
@@ -85,6 +88,7 @@ type LiveShowdownInactiveState = {
     timezone: string;
     startTime: string;
     numRounds: number;
+    firstRoundCategory: string | null;
   } | null;
 };
 
@@ -234,7 +238,6 @@ async function loadSessionQuestion(
     .from("trivia_questions")
     .select("id, slug, question, options, correct_answer, category, difficulty, question_pool")
     .eq("slug", questionId)
-    .eq("question_pool", "live_showdown")
     .limit(1)
     .maybeSingle();
 
@@ -249,7 +252,6 @@ async function loadSessionQuestion(
       .from("trivia_questions")
       .select("id, slug, question, options, correct_answer, category, difficulty, question_pool")
       .eq("id", questionId)
-      .eq("question_pool", "live_showdown")
       .limit(1)
       .maybeSingle();
 
@@ -266,6 +268,12 @@ async function loadSessionQuestion(
   return mapQuestionInternal(questionRow, sessionRow);
 }
 
+async function loadRoundCategory(scheduleId: string, roundNumber: number): Promise<string | null> {
+  const firstQuestion = await loadSessionQuestion(scheduleId, roundNumber, 1);
+  const category = String(firstQuestion?.category ?? "").trim();
+  return category || null;
+}
+
 export async function getLiveShowdownState(serverTimestamp: number): Promise<LiveShowdownState> {
   const nowMs = toSafeServerTimestamp(serverTimestamp);
   const nowIso = new Date(nowMs).toISOString();
@@ -277,6 +285,10 @@ export async function getLiveShowdownState(serverTimestamp: number): Promise<Liv
     const secondsRemaining = Number.isFinite(nextStartMs)
       ? Math.max(0, Math.ceil((nextStartMs - nowMs) / 1000))
       : 0;
+
+    const firstRoundCategory = upcoming
+      ? await loadRoundCategory(upcoming.id, 1).catch(() => null)
+      : null;
 
     return {
       isGameActive: false,
@@ -294,6 +306,7 @@ export async function getLiveShowdownState(serverTimestamp: number): Promise<Liv
             timezone: upcoming.timezone,
             startTime: upcoming.start_time,
             numRounds: clampRounds(Number(upcoming.num_rounds)),
+            firstRoundCategory,
           }
         : null,
     };
@@ -338,7 +351,6 @@ export async function getLiveShowdownState(serverTimestamp: number): Promise<Liv
     activePhase = "mid_game_break";
     secondsRemaining = Math.max(1, Math.ceil((ROUND_MS - roundElapsedMs) / 1000));
 
-    // During break, expose the last question's answer for continuity.
     const previousQuestion = await loadSessionQuestion(active.id, currentRound, QUESTIONS_PER_ROUND);
     revealedAnswer = previousQuestion?.correctAnswer ?? null;
   }
@@ -347,6 +359,14 @@ export async function getLiveShowdownState(serverTimestamp: number): Promise<Liv
     activePhase === "mid_game_break" &&
     currentRound === totalRounds &&
     secondsRemaining <= 60;
+  const currentRoundCategory =
+    activeQuestion?.category ??
+    (await loadRoundCategory(active.id, currentRound).catch(() => null));
+  const upcomingRoundNumber = activePhase === "mid_game_break" && currentRound < totalRounds ? currentRound + 1 : null;
+  const upcomingRoundCategory =
+    upcomingRoundNumber !== null
+      ? await loadRoundCategory(active.id, upcomingRoundNumber).catch(() => null)
+      : null;
 
   return {
     isGameActive: true,
@@ -362,10 +382,12 @@ export async function getLiveShowdownState(serverTimestamp: number): Promise<Liv
     activeQuestion: toPublicQuestion(activeQuestion),
     revealedAnswer,
     isFinalResultsWindow,
+    currentRoundCategory,
+    upcomingRoundNumber,
+    upcomingRoundCategory,
   };
 }
 
-// Re-export constants for testability and downstream UI assumptions.
 export const LIVE_SHOWDOWN_TIMING = {
   QUESTIONS_PER_ROUND,
   QUESTION_BLOCK_MS,

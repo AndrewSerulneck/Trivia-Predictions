@@ -13,7 +13,8 @@
     "trivia:generate:nightly": "node --env-file=.env.local scripts/generate-trivia-nightly.cjs --total 100",
     "trivia:check": "node scripts/import-trivia-questions.cjs --dir data/trivia/categories --check",
     "trivia:import": "node --env-file=.env.local scripts/import-trivia-questions.cjs --dir data/trivia/categories",
-    "apisports:probe:nba": "node --env-file=.env.local scripts/probe-apisports-nba.cjs"
+    "apisports:probe:nba": "node --env-file=.env.local scripts/probe-apisports-nba.cjs",
+    "live-showdown:seed": "node --env-file=.env.local --import tsx scripts/seedLiveShowdownPool.ts"
   },
   "repository": {
     "type": "git",

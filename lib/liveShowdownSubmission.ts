@@ -85,7 +85,6 @@ async function getCorrectAnswerForScheduleSlot(
     .from("trivia_questions")
     .select("id, slug, options, correct_answer, question_pool")
     .eq("slug", questionSlugOrId)
-    .eq("question_pool", "live_showdown")
     .limit(1)
     .maybeSingle();
 
@@ -99,7 +98,6 @@ async function getCorrectAnswerForScheduleSlot(
       .from("trivia_questions")
       .select("id, slug, options, correct_answer, question_pool")
       .eq("id", questionSlugOrId)
-      .eq("question_pool", "live_showdown")
       .limit(1)
       .maybeSingle();
 

@@ -530,6 +530,11 @@ export function FantasyHome() {
   const [lastRealtimeMessageAt, setLastRealtimeMessageAt] = useState<number | null>(null);
   const [isRealtimeFresh, setIsRealtimeFresh] = useState(false);
   const [isEditingRoster, setIsEditingRoster] = useState(false);
+  const [sortBy, setSortBy] = useState<"projected" | "alpha" | "position" | "team">("projected");
+  const [filterPosition, setFilterPosition] = useState<string>("all");
+  const [filterTeam, setFilterTeam] = useState<string>("all");
+  const [visibleCount, setVisibleCount] = useState(25);
+  const hasRestoredDraftRef = useRef(false);
   const [isGeofencePaused, setIsGeofencePaused] = useState(false);
   const [geofencePauseReason, setGeofencePauseReason] = useState("");
   const [statFlashes, setStatFlashes] = useState<Array<{ id: string; label: string; pointsDelta: number }>>([]);
@@ -803,7 +808,16 @@ export function FantasyHome() {
     setSelectedPlayers([]);
     setPlayerPool([]);
     setLeaderboard([]);
+    setSortBy("projected");
+    setFilterPosition("all");
+    setFilterTeam("all");
+    setVisibleCount(25);
+    hasRestoredDraftRef.current = false;
   }, [selectedGameId]);
+
+  useEffect(() => {
+    setVisibleCount(25);
+  }, [sortBy, filterPosition, filterTeam]);
 
   useEffect(() => {
     void loadGames(selectedDate);
@@ -866,6 +880,46 @@ export function FantasyHome() {
     }
     return !existingEntryForSelectedGame.lineup.some((playerName) => !playerPoolKeys.has(normalizePlayerKey(playerName)));
   }, [existingEntryForSelectedGame, playerPoolKeys]);
+
+  // Persist in-progress draft to localStorage on every selection change
+  useEffect(() => {
+    if (!userId || !selectedGameId || !hasStartedGame || existingEntryForSelectedGame) return;
+    const key = `fantasy_draft_${userId}_${selectedGameId}`;
+    try {
+      if (selectedPlayers.length > 0) {
+        localStorage.setItem(key, JSON.stringify(selectedPlayers));
+      } else {
+        localStorage.removeItem(key);
+      }
+    } catch {
+      // ignore storage quota or permission errors
+    }
+  }, [selectedPlayers, userId, selectedGameId, hasStartedGame, existingEntryForSelectedGame]);
+
+  // Restore draft from localStorage once the player pool loads
+  useEffect(() => {
+    if (hasRestoredDraftRef.current) return;
+    if (!hasStartedGame || !userId || !selectedGameId || existingEntryForSelectedGame) return;
+    if (playerPool.length === 0) return;
+    const key = `fantasy_draft_${userId}_${selectedGameId}`;
+    try {
+      const saved = localStorage.getItem(key);
+      if (!saved) return;
+      const parsed: unknown = JSON.parse(saved);
+      if (!Array.isArray(parsed) || parsed.length === 0) return;
+      const valid = (parsed as string[]).filter(
+        (name) => typeof name === "string" && playerPoolKeys.has(normalizePlayerKey(name))
+      );
+      if (valid.length > 0) {
+        setSelectedPlayers(valid.slice(0, requiredLineupSize));
+        setHasLocalLineupDraft(true);
+      }
+    } catch {
+      // ignore parse or storage errors
+    }
+    hasRestoredDraftRef.current = true;
+  }, [hasStartedGame, userId, selectedGameId, existingEntryForSelectedGame, playerPool, playerPoolKeys, requiredLineupSize]);
+
   const sportGames = useMemo(
     () =>
       selectedSport === "basketball"
@@ -1580,6 +1634,49 @@ export function FantasyHome() {
     [playerPool, selectedPlayerKeySet]
   );
 
+  const CANONICAL_POSITIONS = ["PG", "SG", "SF", "PF", "C"] as const;
+
+  const uniqueTeams = useMemo(
+    () =>
+      Array.from(new Set(availablePlayerPool.map((item) => item.team).filter((t): t is string => Boolean(t)))).sort(),
+    [availablePlayerPool]
+  );
+
+  const sortedFilteredPool = useMemo(() => {
+    let pool = availablePlayerPool;
+    if (filterPosition !== "all") {
+      pool = pool.filter((item) => item.position === filterPosition);
+    }
+    if (filterTeam !== "all") {
+      pool = pool.filter((item) => item.team === filterTeam);
+    }
+    return [...pool].sort((a, b) => {
+      if (sortBy === "alpha") {
+        return a.playerName.localeCompare(b.playerName);
+      }
+      if (sortBy === "position") {
+        const order: string[] = ["PG", "SG", "SF", "PF", "C"];
+        const posA = a.position ?? "ZZZ";
+        const posB = b.position ?? "ZZZ";
+        const ai = order.indexOf(posA);
+        const bi = order.indexOf(posB);
+        const posCompare = ai !== -1 && bi !== -1 ? ai - bi : posA.localeCompare(posB);
+        if (posCompare !== 0) return posCompare;
+        return (b.projectedLine ?? -1) - (a.projectedLine ?? -1);
+      }
+      if (sortBy === "team") {
+        const teamA = a.team ?? "ZZZ";
+        const teamB = b.team ?? "ZZZ";
+        if (teamA !== teamB) return teamA.localeCompare(teamB);
+        return (b.projectedLine ?? -1) - (a.projectedLine ?? -1);
+      }
+      // "projected" — null/0 sink to bottom
+      const projA = a.projectedLine ?? -1;
+      const projB = b.projectedLine ?? -1;
+      return projB - projA;
+    });
+  }, [availablePlayerPool, sortBy, filterPosition, filterTeam]);
+
   const collectAllFantasyEntries = useCallback(async () => {
     if (!userId || isCollectingAllFantasy || finalUnclaimedEntries.length === 0) return;
     setIsCollectingAllFantasy(true);
@@ -2030,9 +2127,12 @@ export function FantasyHome() {
             <h3 className="text-base font-semibold text-slate-900">
               {existingEntryForSelectedGame ? "Update Lineup" : "Lineup Builder"}
             </h3>
-            <div className="text-xs font-semibold text-slate-700">Selected {selectedPlayers.length}/{requiredLineupSize}</div>
+            <div className="text-xs font-semibold text-slate-700">
+              {selectedPlayers.length}/{requiredLineupSize} selected
+            </div>
           </div>
 
+          {/* Scoring reference */}
           <div className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-3">
             <p className="text-center text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Scoring System</p>
             <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
@@ -2045,59 +2145,213 @@ export function FantasyHome() {
             </div>
           </div>
 
-          {availablePlayerPool.length > 0 ? (
-            <p className="mt-2 text-xs leading-relaxed text-slate-700">Select {requiredLineupSize} players from today's games.</p>
-          ) : null}
+          {/* ── Live Roster Preview ── */}
+          <div className="mt-3 rounded-xl border border-indigo-300 bg-white px-3 py-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] font-black uppercase tracking-[0.1em] text-indigo-700">
+                My Roster
+              </p>
+              {submitting ? (
+                <span className="text-[10px] font-semibold text-slate-500">Saving…</span>
+              ) : selectedPlayers.length === requiredLineupSize ? (
+                <span className="text-[10px] font-bold text-emerald-700">Auto-saved ✓</span>
+              ) : (
+                <span className="text-[10px] text-slate-400">
+                  {requiredLineupSize - selectedPlayers.length} more to auto-save
+                </span>
+              )}
+            </div>
+            <ul className="mt-2 space-y-2">
+              {selectedPlayers.map((name) => {
+                const poolItem = playerPool.find((item) => normalizePlayerKey(item.playerName) === normalizePlayerKey(name));
+                return (
+                  <li key={name} className="flex items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => removeSelectedPlayer(name)}
+                        className="tp-clean-button inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-rose-500 bg-rose-500 text-[12px] font-black leading-none text-white active:scale-90"
+                        aria-label={`Remove ${name}`}
+                      >
+                        −
+                      </button>
+                      <PlayerHeadshot
+                        src={playerPoolHeadshotByName.get(normalizePlayerKey(name)) ?? null}
+                        name={name}
+                        sizeClass="h-7 w-7"
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-800">{name}</p>
+                        {(poolItem?.position || poolItem?.team) ? (
+                          <p className="text-[10px] text-slate-500">
+                            {[poolItem.position, poolItem.team].filter(Boolean).join(" · ")}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                    {(() => {
+                      const rosterProj =
+                        poolItem?.projectedLine !== null && poolItem?.projectedLine !== undefined
+                          ? Math.round(Number(poolItem.projectedLine))
+                          : 0;
+                      return (
+                        <span
+                          className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-black ${
+                            rosterProj > 0
+                              ? "border-indigo-200 bg-indigo-50 text-indigo-700"
+                              : "border-slate-200 bg-slate-50 text-slate-400"
+                          }`}
+                        >
+                          {rosterProj} proj
+                        </span>
+                      );
+                    })()}
+                  </li>
+                );
+              })}
+              {Array.from({ length: requiredLineupSize - selectedPlayers.length }).map((_, i) => (
+                <li key={`empty-${i}`} className="flex items-center gap-2 opacity-40">
+                  <div className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-dashed border-slate-400" />
+                  <span className="text-xs text-slate-500">Pick a player below…</span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
+          {/* ── Sort + Filter controls ── */}
+          <div className="mt-3 space-y-2">
+            {/* Sort toggles */}
+            <div className="flex flex-wrap gap-1.5">
+              {(["projected", "alpha", "position", "team"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setSortBy(mode)}
+                  className={`tp-clean-button rounded-full border px-3 py-1 text-[11px] font-bold transition-colors ${
+                    sortBy === mode
+                      ? "border-indigo-600 bg-indigo-600 text-white"
+                      : "border-slate-300 bg-white text-slate-600 hover:border-indigo-300"
+                  }`}
+                >
+                  {mode === "projected" ? "Best Proj" : mode === "alpha" ? "A–Z" : mode === "position" ? "Position" : "Team"}
+                </button>
+              ))}
+            </div>
+            {/* Dropdowns row */}
+            <div className="flex gap-2">
+              <select
+                value={filterPosition}
+                onChange={(e) => setFilterPosition(e.target.value)}
+                className="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+              >
+                <option value="all">All Positions</option>
+                {CANONICAL_POSITIONS.map((pos) => (
+                  <option key={pos} value={pos}>{pos}</option>
+                ))}
+              </select>
+              <select
+                value={filterTeam}
+                onChange={(e) => setFilterTeam(e.target.value)}
+                className="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+              >
+                <option value="all">All Teams</option>
+                {uniqueTeams.map((team) => (
+                  <option key={team} value={team}>{team}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* ── Player pool ── */}
           {availablePlayerPool.length === 0 ? (
             <div className="mt-3">
-              {sportGames.length > 0 ? <BasketballLoader label="Loading today's eligible players..." /> : (
+              {sportGames.length > 0 ? (
+                <BasketballLoader label="Loading today's eligible players…" />
+              ) : (
                 <p className="text-sm text-slate-600">No players available for this date.</p>
               )}
             </div>
+          ) : sortedFilteredPool.length === 0 ? (
+            <p className="mt-3 text-sm text-slate-600">No players match the current filter.</p>
           ) : (
-            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {availablePlayerPool.map((item) => {
-                const selected = selectedPlayers.includes(item.playerName);
-                return (
-                  <button
-                    key={item.playerName}
-                    type="button"
-                    disabled={selectedPlayers.length >= requiredLineupSize && !selected}
-                    onClick={() => togglePlayer(item.playerName)}
-                    className={`tp-clean-button rounded-lg border px-3 py-2 text-left disabled:opacity-60 ${
-                      selected
-                        ? "border-emerald-500 bg-emerald-50"
-                        : "border-indigo-200 bg-white/90 hover:border-indigo-300"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <PlayerHeadshot src={item.headshotUrl || FALLBACK_HEADSHOT_SRC} name={item.playerName} sizeClass="h-9 w-9" />
-                        <div className="truncate text-base font-semibold text-slate-900">{item.playerName}</div>
+            <>
+              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {sortedFilteredPool.slice(0, visibleCount).map((item) => {
+                  const isSelected = selectedPlayerKeySet.has(normalizePlayerKey(item.playerName));
+                  const isFull = selectedPlayers.length >= requiredLineupSize;
+                  return (
+                    <button
+                      key={item.playerName}
+                      type="button"
+                      disabled={isFull && !isSelected}
+                      onClick={() => togglePlayer(item.playerName)}
+                      className={`tp-clean-button rounded-lg border px-3 py-2 text-left transition-colors disabled:opacity-50 ${
+                        isSelected
+                          ? "border-emerald-500 bg-emerald-50"
+                          : "border-indigo-200 bg-white/90 hover:border-indigo-400 active:bg-indigo-50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <PlayerHeadshot
+                          src={item.headshotUrl || FALLBACK_HEADSHOT_SRC}
+                          name={item.playerName}
+                          sizeClass="h-9 w-9 shrink-0"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-slate-900">{item.playerName}</p>
+                          {(item.position || item.team) ? (
+                            <p className="text-[10px] font-semibold text-slate-500">
+                              {[item.position, item.team].filter(Boolean).join(" · ")}
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="flex shrink-0 flex-col items-end gap-0.5">
+                          {(() => {
+                            const displayProjection =
+                              item.projectedLine !== null && item.projectedLine !== undefined
+                                ? Math.round(Number(item.projectedLine))
+                                : 0;
+                            return (
+                              <span
+                                className={`text-sm font-black tabular-nums ${
+                                  isSelected
+                                    ? "text-emerald-700"
+                                    : displayProjection > 0
+                                    ? "text-indigo-700"
+                                    : "text-slate-400"
+                                }`}
+                              >
+                                {displayProjection}
+                              </span>
+                            );
+                          })()}
+                          {isSelected ? (
+                            <span className="rounded-full border border-emerald-300 bg-emerald-100 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-emerald-800">
+                              Added
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
-                      {selected ? (
-                        <span className="rounded-full border border-emerald-300 bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-emerald-900">
-                          Added
-                        </span>
-                      ) : null}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Load More */}
+              {visibleCount < sortedFilteredPool.length ? (
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((n) => n + 25)}
+                  className="tp-clean-button mt-3 w-full rounded-lg border border-indigo-200 bg-white py-2 text-xs font-semibold text-indigo-700 hover:border-indigo-400 active:bg-indigo-50"
+                >
+                  Load more · {sortedFilteredPool.length - visibleCount} remaining
+                </button>
+              ) : null}
+            </>
           )}
 
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {selectedPlayers.map((name) => (
-              <span key={name} className="rounded-full border border-emerald-300 bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-900">
-                {name}
-              </span>
-            ))}
-          </div>
-
           {submitting ? (
-            <p className="mt-3 text-xs font-semibold leading-relaxed text-slate-700">Saving lineup...</p>
+            <p className="mt-3 text-xs font-semibold leading-relaxed text-slate-700">Saving lineup…</p>
           ) : null}
         </section>
       ) : null}

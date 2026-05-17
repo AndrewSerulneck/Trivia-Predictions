@@ -89,6 +89,7 @@ type PickEmPickHistoryItem = {
   selectedTeam: string;
   status: "pending" | "won" | "lost" | "push" | "canceled";
   rewardPoints: number;
+  rewardClaimedAt?: string | null;
 };
 
 async function readJsonResponse<T>(response: Response, label: string): Promise<T> {
@@ -240,8 +241,8 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
   const [hasPreviousUnclaimedPicks, setHasPreviousUnclaimedPicks] = useState(false);
   const [hasFutureUnclaimedPicks, setHasFutureUnclaimedPicks] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [historicalPicks, setHistoricalPicks] = useState<PickEmPickHistoryItem[]>([]);
-  const [loadingHistoricalPicks, setLoadingHistoricalPicks] = useState(false);
+  const [pickHistory, setPickHistory] = useState<PickEmPickHistoryItem[]>([]);
+  const [loadingPickHistory, setLoadingPickHistory] = useState(false);
   const popIdRef = useRef(0);
 
   useEffect(() => {
@@ -439,6 +440,27 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
     const d = new Date(localMs);
     return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
   }, []);
+
+  const historicalPicks = useMemo(
+    () =>
+      pickHistory
+        .filter((pick) => toLocalDateKey(pick.startsAt) === selectedDate)
+        .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt)),
+    [pickHistory, selectedDate, toLocalDateKey]
+  );
+
+  const fallbackCollectPoints = useMemo(
+    () =>
+      historicalPicks.reduce((sum, pick) => {
+        if (pick.status !== "won" || pick.rewardClaimedAt) {
+          return sum;
+        }
+        return sum + Math.max(0, Number(pick.rewardPoints || 10));
+      }, 0),
+    [historicalPicks]
+  );
+
+  const collectablePoints = Math.max(0, Math.max(pointsBank?.pendingPoints ?? 0, fallbackCollectPoints));
 
   const scheduleBackgroundRefresh = useCallback(() => {
     if (refreshTimerRef.current !== null) {
@@ -714,7 +736,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
   );
 
   const collectBankPoints = useCallback(async () => {
-    if (!userId || !venueId || !pointsBank || isCollectingBank) {
+    if (!userId || !venueId || isCollectingBank) {
       return;
     }
     setIsCollectingBank(true);
@@ -727,7 +749,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           action: "claim_points",
           userId,
           venueId,
-          localDate: pointsBank.localDate,
+          localDate: selectedDate,
           tzOffsetMinutes: new Date().getTimezoneOffset(),
         }),
       });
@@ -773,13 +795,21 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         );
       }
       await loadGames({ background: true });
+      const historyResponse = await fetch(
+        `/api/pickem/picks?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venueId)}&includeSettled=true&refreshSettlement=true&limit=500`,
+        { cache: "no-store" }
+      );
+      const historyPayload = (await historyResponse.json()) as { ok: boolean; picks?: PickEmPickHistoryItem[] };
+      if (historyPayload.ok) {
+        setPickHistory(historyPayload.picks ?? []);
+      }
       await loadDailyPickCount();
     } catch (error) {
       setSubmitMessage(error instanceof Error ? error.message : "Failed to collect Pick 'Em points.");
     } finally {
       setIsCollectingBank(false);
     }
-  }, [isCollectingBank, loadDailyPickCount, loadGames, pointsBank, userId, venueId]);
+  }, [isCollectingBank, loadDailyPickCount, loadGames, selectedDate, userId, venueId]);
 
   useEffect(() => {
     void loadDailyPickCount();
@@ -787,12 +817,12 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
 
   useEffect(() => {
     const run = async () => {
-      if (isViewingToday || !userId || !venueId) {
-        setHistoricalPicks([]);
-        setLoadingHistoricalPicks(false);
+      if (!userId || !venueId) {
+        setPickHistory([]);
+        setLoadingPickHistory(false);
         return;
       }
-      setLoadingHistoricalPicks(true);
+      setLoadingPickHistory(true);
       try {
         const response = await fetch(
           `/api/pickem/picks?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venueId)}&includeSettled=true&refreshSettlement=true&limit=500`,
@@ -806,19 +836,16 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         if (!payload.ok) {
           throw new Error(payload.error ?? "Failed to load pick history.");
         }
-        const filtered = (payload.picks ?? [])
-          .filter((pick) => toLocalDateKey(pick.startsAt) === selectedDate)
-          .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
-        setHistoricalPicks(filtered);
+        setPickHistory(payload.picks ?? []);
       } catch (error) {
-        setHistoricalPicks([]);
+        setPickHistory([]);
         setSubmitMessage(error instanceof Error ? error.message : "Failed to load pick history.");
       } finally {
-        setLoadingHistoricalPicks(false);
+        setLoadingPickHistory(false);
       }
     };
     void run();
-  }, [isViewingToday, selectedDate, toLocalDateKey, userId, venueId]);
+  }, [userId, venueId]);
 
   useEffect(() => {
     if (!pointsBank || !userId || !venueId) return;
@@ -1004,45 +1031,47 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           ) : null}
         </div>
 
-        <div className="mt-4 w-full overflow-x-auto pb-1 [scrollbar-width:thin] touch-pan-x overscroll-x-contain">
-          <div className="inline-flex w-max min-w-full gap-2 pr-1">
-            {loadingSports ? (
-              <BouncingBallLoader size="sm" label="Loading sports..." />
-            ) : sports.length === 0 ? (
-              <p className="text-sm text-slate-600">No sports available.</p>
-            ) : (
-              sports.map((item) => {
-                const isSelected = selectedSportSlug === item.slug;
-                const isDisabled = !item.isClickable && item.slug !== "nfl";
-                return (
-                  <button
-                    key={item.slug}
-                    type="button"
-                    disabled={isDisabled}
-                    onClick={() => {
-                      if (!isDisabled) {
-                        setSelectedSportSlug(item.slug);
-                        setSubmitMessage("");
-                        setErrorMessage("");
-                        setFlashingSportSlug(item.slug);
-                        setTimeout(() => setFlashingSportSlug(""), 500);
-                      }
-                    }}
-                    className={`tp-clean-button inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-bold sm:gap-2 sm:px-4 sm:py-2 sm:text-sm ${
-                      isSelected
-                        ? "border-indigo-700 bg-indigo-600 text-white shadow-md shadow-indigo-300"
-                        : isDisabled
-                        ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
-                        : "border-slate-300 bg-white text-slate-700 hover:border-indigo-300 hover:bg-indigo-50"
-                    } ${flashingSportSlug === item.slug ? "sport-pop" : ""}`}
-                  >
-                    <span aria-label={item.label} className="text-3xl sm:text-4xl">{getSportIcon(item.slug)}</span>
-                  </button>
-                );
-              })
-            )}
+        {isViewingToday ? (
+          <div className="mt-4 w-full overflow-x-auto pb-1 [scrollbar-width:thin] touch-pan-x overscroll-x-contain">
+            <div className="inline-flex w-max min-w-full gap-2 pr-1">
+              {loadingSports ? (
+                <BouncingBallLoader size="sm" label="Loading sports..." />
+              ) : sports.length === 0 ? (
+                <p className="text-sm text-slate-600">No sports available.</p>
+              ) : (
+                sports.map((item) => {
+                  const isSelected = selectedSportSlug === item.slug;
+                  const isDisabled = !item.isClickable && item.slug !== "nfl";
+                  return (
+                    <button
+                      key={item.slug}
+                      type="button"
+                      disabled={isDisabled}
+                      onClick={() => {
+                        if (!isDisabled) {
+                          setSelectedSportSlug(item.slug);
+                          setSubmitMessage("");
+                          setErrorMessage("");
+                          setFlashingSportSlug(item.slug);
+                          setTimeout(() => setFlashingSportSlug(""), 500);
+                        }
+                      }}
+                      className={`tp-clean-button inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-bold sm:gap-2 sm:px-4 sm:py-2 sm:text-sm ${
+                        isSelected
+                          ? "border-indigo-700 bg-indigo-600 text-white shadow-md shadow-indigo-300"
+                          : isDisabled
+                          ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+                          : "border-slate-300 bg-white text-slate-700 hover:border-indigo-300 hover:bg-indigo-50"
+                      } ${flashingSportSlug === item.slug ? "sport-pop" : ""}`}
+                    >
+                      <span aria-label={item.label} className="text-3xl sm:text-4xl">{getSportIcon(item.slug)}</span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
           </div>
-        </div>
+        ) : null}
 
       </section>
 
@@ -1066,13 +1095,13 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           type="button"
           data-pickem-bank-collect
           onClick={() => void collectBankPoints()}
-          disabled={isCollectingBank || !userId || !venueId || Math.max(0, pointsBank?.pendingPoints ?? 0) === 0}
+          disabled={isCollectingBank || !userId || !venueId || collectablePoints === 0}
           className={`tp-clean-button inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-full border border-[#2b1c57] bg-gradient-to-r from-[#5b2ca5] via-[#7b3fd6] to-[#8f4de8] px-4 py-2.5 text-sm font-semibold text-[#f7f1ff] shadow-sm shadow-[#2b1c57]/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8f4de8]/60 active:scale-95 active:brightness-90 disabled:cursor-not-allowed disabled:opacity-55 ${goldFlash ? "pickem-gold-flash" : ""}`}
         >
           <GoldCoinIcon className="h-5 w-5" />
           {isCollectingBank
             ? "Collecting..."
-            : `Collect Points (${Math.max(0, pointsBank?.pendingPoints ?? 0).toLocaleString()})`}
+            : `Collect Points (${collectablePoints.toLocaleString()})`}
         </button>
       </div>
 
@@ -1085,7 +1114,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
       ) : null}
 
       {!isViewingToday ? (
-        loadingHistoricalPicks ? (
+        loadingPickHistory ? (
           <BouncingBallLoader size="sm" label="Loading your picks..." />
         ) : historicalPicks.length === 0 ? (
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-600 sm:p-3 sm:text-sm">

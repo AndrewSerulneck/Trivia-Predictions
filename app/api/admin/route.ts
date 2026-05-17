@@ -25,6 +25,12 @@ import {
 } from "@/lib/challengeCampaigns";
 import { recordAdClick, recordAdImpression } from "@/lib/ads";
 import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, CampaignRecurringType, ChallengeImageFitMode } from "@/types";
+import {
+  createAdminLiveShowdownSchedule,
+  forceAdvanceLiveShowdownToNextQuestion,
+  listAdminLiveShowdownSchedules,
+  resetLiveShowdownAnswersForSchedule,
+} from "@/lib/liveShowdownAdmin";
 
 export async function GET(request: Request) {
   try {
@@ -78,11 +84,18 @@ export async function GET(request: Request) {
       return NextResponse.json({ ok: true, isAdmin: true, scope: "join" });
     }
 
+    if (resource === "live-showdown-schedules") {
+      const limitRaw = Number.parseInt(searchParams.get("limit") ?? "30", 10);
+      const limit = Number.isFinite(limitRaw) ? limitRaw : 30;
+      const items = await listAdminLiveShowdownSchedules(limit);
+      return NextResponse.json({ ok: true, items });
+    }
+
     return NextResponse.json(
       {
         ok: false,
         error:
-          "Unknown resource. Use resource=trivia, resource=ads, resource=ads-debug, or resource=predictions-pending.",
+          "Unknown resource. Use resource=trivia, resource=ads, resource=ads-debug, resource=predictions-pending, or resource=live-showdown-schedules.",
       },
       { status: 400 }
     );
@@ -185,6 +198,23 @@ export async function POST(request: Request) {
           pointsRequiredToWin?: number;
           recurringType?: CampaignRecurringType;
           isActive?: boolean;
+        }
+      | {
+          resource: "live-showdown-schedules";
+          title: string;
+          targetDate: string;
+          startTime: string;
+          timezone: string;
+          numRounds: number;
+          venueId: string;
+        }
+      | {
+          resource: "live-showdown-force-next-phase";
+          scheduleId: string;
+        }
+      | {
+          resource: "live-showdown-reset-answers";
+          scheduleId: string;
         };
 
     if (body.resource === "trivia") {
@@ -298,11 +328,43 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, item });
     }
 
+    if (body.resource === "live-showdown-schedules") {
+      const item = await createAdminLiveShowdownSchedule({
+        title: body.title,
+        targetDate: body.targetDate,
+        startTime: body.startTime,
+        timezone: body.timezone,
+        numRounds: body.numRounds,
+        venueId: body.venueId,
+      });
+      return NextResponse.json({ ok: true, item });
+    }
+
+    if (body.resource === "live-showdown-force-next-phase") {
+      const allowDevControls =
+        process.env.NODE_ENV !== "production" || String(process.env.ENABLE_LIVE_SHOWDOWN_DEV_CONTROLS ?? "").trim() === "true";
+      if (!allowDevControls) {
+        return NextResponse.json({ ok: false, error: "Live Trivia developer controls are disabled in production." }, { status: 403 });
+      }
+      const result = await forceAdvanceLiveShowdownToNextQuestion(body.scheduleId);
+      return NextResponse.json({ ok: true, result });
+    }
+
+    if (body.resource === "live-showdown-reset-answers") {
+      const allowDevControls =
+        process.env.NODE_ENV !== "production" || String(process.env.ENABLE_LIVE_SHOWDOWN_DEV_CONTROLS ?? "").trim() === "true";
+      if (!allowDevControls) {
+        return NextResponse.json({ ok: false, error: "Live Trivia developer controls are disabled in production." }, { status: 403 });
+      }
+      const result = await resetLiveShowdownAnswersForSchedule(body.scheduleId);
+      return NextResponse.json({ ok: true, result });
+    }
+
     return NextResponse.json(
       {
         ok: false,
         error:
-          "Unknown resource. Use trivia, ads, venues, ads-track, predictions-settle, predictions-auto-settle, or challenge-campaigns.",
+          "Unknown resource. Use trivia, ads, venues, ads-track, predictions-settle, predictions-auto-settle, challenge-campaigns, or live-showdown-schedules.",
       },
       { status: 400 }
     );

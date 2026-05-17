@@ -18,10 +18,6 @@ const FANTASY_ENABLE_POOL_LIVE_ENRICH =
   String(process.env.FANTASY_ENABLE_POOL_LIVE_ENRICH ?? "")
     .trim()
     .toLowerCase() === "true";
-const FANTASY_ENABLE_POOL_SAMPLE_ENRICH =
-  String(process.env.FANTASY_ENABLE_POOL_SAMPLE_ENRICH ?? "")
-    .trim()
-    .toLowerCase() === "true";
 const FANTASY_USE_DIRECT_APISPORTS_SCORING =
   String(process.env.FANTASY_USE_DIRECT_APISPORTS_SCORING ?? "")
     .trim()
@@ -117,6 +113,8 @@ export type FantasyPlayerPoolItem = {
   headshotUrl: string | null;
   coverage: number;
   projectedLine: number | null;
+  position: string | null;
+  team: string | null;
 };
 
 export type FantasyLineupPlayer = {
@@ -923,6 +921,22 @@ function extractApiSportsDirectoryTeamName(row: Record<string, unknown>): string
   return raw;
 }
 
+function extractApiSportsDirectoryTeamAbbreviation(row: Record<string, unknown>): string {
+  return String(
+    getPath(row, ["team", "abbreviation"]) ??
+      getPath(row, ["teams", "abbreviation"]) ??
+      ""
+  ).trim();
+}
+
+function extractApiSportsDirectoryPosition(row: Record<string, unknown>): string {
+  return String(
+    getPath(row, ["position"]) ??
+      getPath(row, ["player", "position"]) ??
+      ""
+  ).trim();
+}
+
 function formatFantasyPlayerDisplayName(raw: string): string {
   const trimmed = String(raw ?? "").trim();
   if (!trimmed) {
@@ -1010,7 +1024,9 @@ async function fetchApiSportsNbaTeamPlayers(teamId: number, season: number | nul
         team: {
           id: team.id,
           name: team.full_name ?? team.name,
+          abbreviation: team.abbreviation,
         },
+        position: row.position,
         active: true,
       } as Record<string, unknown>;
     });
@@ -1035,7 +1051,9 @@ async function fetchApiSportsNbaTeamPlayers(teamId: number, season: number | nul
           team: {
             id: team.id,
             name: team.full_name ?? team.name,
+            abbreviation: team.abbreviation,
           },
+          position: row.position,
           active: true,
         } as Record<string, unknown>;
       });
@@ -1076,7 +1094,9 @@ async function fetchWnbaTeamPlayers(teamId: number, season: number | null): Prom
         team: {
           id: team.id,
           name: team.full_name ?? team.name,
+          abbreviation: team.abbreviation,
         },
+        position: row.position,
         active: true,
       } as Record<string, unknown>;
     });
@@ -1101,7 +1121,9 @@ async function fetchWnbaTeamPlayers(teamId: number, season: number | null): Prom
           team: {
             id: team.id,
             name: team.full_name ?? team.name,
+            abbreviation: team.abbreviation,
           },
+          position: row.position,
           active: true,
         } as Record<string, unknown>;
       });
@@ -1118,24 +1140,38 @@ type RecentFantasySample = {
   samples: number;
 };
 
-async function loadRecentFantasySamplesByPlayerId(playerIds: number[]): Promise<Map<number, RecentFantasySample>> {
-  const byPlayerId = new Map<number, RecentFantasySample>();
+function chunkIds<T>(arr: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+}
+
+function computeProjectionFromBoxScore(pts: number, reb: number, ast: number, stl: number, blk: number, tov: number): number {
+  return pts * 1.0 + reb * 1.2 + ast * 1.5 + stl * 3.0 + blk * 3.0 + tov * -1.0;
+}
+
+async function loadRecentFantasySamplesByPlayerId(
+  playerIds: number[],
+  leagueName = "NBA",
+): Promise<{ samples: Map<number, RecentFantasySample>; foundIds: Set<number> }> {
+  const samples = new Map<number, RecentFantasySample>();
+  const foundIds = new Set<number>();
   if (!supabaseAdmin || playerIds.length === 0) {
-    return byPlayerId;
+    return { samples, foundIds };
   }
 
   const ids = Array.from(new Set(playerIds.filter((value) => Number.isFinite(value) && value > 0).map((value) => Math.trunc(value))));
   if (ids.length === 0) {
-    return byPlayerId;
+    return { samples, foundIds };
   }
 
-  const sinceIso = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
   const { data } = await supabaseAdmin
     .from("live_player_stats")
-    .select("player_id, game_id, total_fantasy_points, source_updated_at")
+    .select("player_id, game_id, total_fantasy_points, pts, ast, reb, stl, blk, turnovers, source_updated_at")
     .in("player_id", ids)
-    .eq("league_name", "NBA")
-    .gte("source_updated_at", sinceIso)
+    .eq("league_name", leagueName)
     .order("source_updated_at", { ascending: false })
     .limit(20000);
 
@@ -1146,11 +1182,24 @@ async function loadRecentFantasySamplesByPlayerId(playerIds: number[]): Promise<
     if (!Number.isFinite(playerId) || playerId <= 0 || !gameId) {
       continue;
     }
+    foundIds.add(playerId);
     const key = `${playerId}::${gameId}`;
     if (latestByPlayerGame.has(key)) {
       continue;
     }
-    latestByPlayerGame.set(key, Number(raw.total_fantasy_points ?? 0));
+    const tfp = Number(raw.total_fantasy_points ?? 0);
+    const points =
+      tfp > 0
+        ? tfp
+        : computeProjectionFromBoxScore(
+            Number(raw.pts ?? 0),
+            Number(raw.reb ?? 0),
+            Number(raw.ast ?? 0),
+            Number(raw.stl ?? 0),
+            Number(raw.blk ?? 0),
+            Number(raw.turnovers ?? 0),
+          );
+    latestByPlayerGame.set(key, points);
   }
 
   const totals = new Map<number, { sum: number; count: number }>();
@@ -1167,13 +1216,94 @@ async function loadRecentFantasySamplesByPlayerId(playerIds: number[]): Promise<
 
   for (const [playerId, agg] of totals) {
     if (agg.count <= 0) continue;
-    byPlayerId.set(playerId, {
+    samples.set(playerId, {
       avg: Number((agg.sum / agg.count).toFixed(1)),
       samples: agg.count,
     });
   }
 
-  return byPlayerId;
+  return { samples, foundIds };
+}
+
+async function loadBdlSeasonAverageProjections(playerIds: number[], leagueName: string): Promise<Map<number, number>> {
+  const projections = new Map<number, number>();
+  if (playerIds.length === 0) {
+    return projections;
+  }
+
+  const isWnba = leagueName.toUpperCase() === "WNBA";
+  const leaguePrefix = isWnba ? "/wnba" : "/nba";
+
+  // BDL uses the season start year (e.g. 2025 for the 2025-26 NBA season).
+  // May 2026 → NBA season 2025; WNBA season 2026.
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1; // 1-based
+  // NBA regular season starts in October, so Jan-Sep of year Y belong to season Y-1.
+  const nbaSeason = month >= 10 ? year : year - 1;
+  const season = isWnba ? year : nbaSeason;
+
+  // Endpoint candidates: try without /general first (per BDL v1 standard docs),
+  // fall through to /general if empty.
+  const endpointCandidates = [`${leaguePrefix}/v1/season_averages`, `${leaguePrefix}/v1/season_averages/general`];
+  // Season-type candidates (regular season first, then no qualifier).
+  const seasonTypeCandidates: Array<string | null> = ["regular", null];
+
+  const chunks = chunkIds(playerIds, 100);
+  for (const chunk of chunks) {
+    let resolved = false;
+    for (const endpoint of endpointCandidates) {
+      if (resolved) break;
+      for (const seasonType of seasonTypeCandidates) {
+        if (resolved) break;
+        try {
+          const seasonQuery = new URLSearchParams({ season: String(season), per_page: "100" });
+          if (seasonType) seasonQuery.set("season_type", seasonType);
+          for (const id of chunk) {
+            seasonQuery.append("player_ids[]", String(id));
+          }
+
+          console.log("[BDL SEASON AVG] FETCH URL:", `${endpoint}?${seasonQuery.toString().slice(0, 300)}`);
+
+          const rows = await fetchBallDontLieList<Record<string, unknown>>(endpoint, seasonQuery, 1);
+
+          console.log("[BDL SEASON AVG] RAW RESPONSE SAMPLE:", JSON.stringify(rows[0] ?? null).slice(0, 500));
+          console.log("[BDL SEASON AVG] ROW COUNT:", rows.length, "| endpoint:", endpoint, "| season_type:", seasonType ?? "none");
+
+          if (rows.length === 0) continue;
+
+          for (const row of rows) {
+            // Response shape A (with /general): { player: { id }, stats: { pts, reb, ast, stl, blk, turnover } }
+            // Response shape B (without /general): { player_id, pts, reb, ast, stl, blk, turnover, ... }
+            const playerRecord = asRecord(row.player ?? {});
+            const playerId = Number.parseInt(
+              String(playerRecord.id ?? row.player_id ?? ""),
+              10,
+            );
+            if (!Number.isFinite(playerId) || playerId <= 0) continue;
+
+            // Prefer nested stats object; fall back to top-level keys.
+            const stats = Object.keys(asRecord(row.stats)).length > 0 ? asRecord(row.stats) : row;
+            const proj = computeProjectionFromBoxScore(
+              Number((stats as Record<string, unknown>).pts ?? 0),
+              Number((stats as Record<string, unknown>).reb ?? 0),
+              Number((stats as Record<string, unknown>).ast ?? 0),
+              Number((stats as Record<string, unknown>).stl ?? 0),
+              Number((stats as Record<string, unknown>).blk ?? 0),
+              Number((stats as Record<string, unknown>).turnover ?? (stats as Record<string, unknown>).to ?? 0),
+            );
+            projections.set(playerId, Number(proj.toFixed(1)));
+          }
+
+          resolved = true;
+        } catch (err) {
+          console.warn("[BDL SEASON AVG] fetch error:", endpoint, seasonType, String(err));
+        }
+      }
+    }
+  }
+
+  return projections;
 }
 
 async function loadRecentTeamScopedPlayerSeeds(teamNames: string[]): Promise<ApiSportsPoolSeed[]> {
@@ -1221,6 +1351,8 @@ type ApiSportsPoolSeed = {
   playerId: number | null;
   playerName: string;
   source: "roster" | "stats" | "live";
+  position?: string | null;
+  team?: string | null;
 };
 
 function addApiSportsPoolSeed(map: Map<string, ApiSportsPoolSeed>, seed: ApiSportsPoolSeed): void {
@@ -1341,6 +1473,8 @@ async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]
         playerId: extractApiSportsPlayerId(row),
         playerName,
         source: "roster",
+        position: extractApiSportsDirectoryPosition(row) || null,
+        team: extractApiSportsDirectoryTeamAbbreviation(row) || extractApiSportsDirectoryTeamName(row) || null,
       });
     }
   }
@@ -1367,6 +1501,7 @@ async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]
           playerId: extractApiSportsPlayerId(row),
           playerName,
           source: "stats",
+          team: statTeamName || null,
         });
       }
     }
@@ -1388,23 +1523,27 @@ async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]
   }
 
   const seeds = Array.from(poolSeedByName.values()).slice(0, 500);
-  const sampleByPlayerId = FANTASY_ENABLE_POOL_SAMPLE_ENRICH
-    ? await loadRecentFantasySamplesByPlayerId(
-        seeds
-          .map((seed) => seed.playerId ?? 0)
-          .filter((value) => Number.isFinite(value) && value > 0)
-          .map((value) => Math.trunc(value))
-      )
-    : new Map<number, RecentFantasySample>();
+  const playerIdsForSamples = seeds
+    .map((seed) => seed.playerId ?? 0)
+    .filter((value) => Number.isFinite(value) && value > 0)
+    .map((value) => Math.trunc(value));
+  const { samples: sampleByPlayerId, foundIds: supabaseFoundIds } = await loadRecentFantasySamplesByPlayerId(playerIdsForSamples, poolLeague);
+
+  const bdlFallbackIds = playerIdsForSamples.filter((id) => !supabaseFoundIds.has(id));
+  const bdlProjections =
+    bdlFallbackIds.length > 0 ? await loadBdlSeasonAverageProjections(bdlFallbackIds, poolLeague) : new Map<number, number>();
 
   const pool: FantasyPlayerPoolItem[] = seeds.map((seed) => {
     const sample = seed.playerId ? sampleByPlayerId.get(seed.playerId) : undefined;
+    const bdlProj = seed.playerId ? bdlProjections.get(seed.playerId) : undefined;
     return {
       playerId: seed.playerId,
       playerName: seed.playerName,
       headshotUrl: null,
       coverage: sample?.samples ?? 1,
-      projectedLine: sample?.avg ?? null,
+      projectedLine: sample?.avg ?? (bdlProj !== undefined ? bdlProj : null),
+      position: seed.position ?? null,
+      team: seed.team ?? null,
     };
   });
 
