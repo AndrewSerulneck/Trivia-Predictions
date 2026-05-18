@@ -5822,5 +5822,161 @@
     "correctAnswer": 0,
     "category": "General Knowledge",
     "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-days-are-in-a-standard-non-leap-year",
+    "question": "How many days are in a standard non-leap year?",
+    "options": [
+      "364",
+      "365",
+      "366",
+      "367"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-famous-scientist-developed-the-theory-of-general-relativity",
+    "question": "Which famous scientist developed the theory of general relativity?",
+    "options": [
+      "Isaac Newton",
+      "Albert Einstein",
+      "Stephen Hawking",
+      "Marie Curie"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-study-of-ancient-cultures-through-the-examination-of-material-remains-called",
+    "question": "What is the study of ancient cultures through the examination of material remains called?",
+    "options": [
+      "Anthropology",
+      "Sociology",
+      "Archaeology",
+      "Paleontology"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-what-year-did-world-war-ii-officially-end",
+    "question": "In what year did World War II officially end?",
+    "options": [
+      "1945",
+      "1939",
+      "1941",
+      "1944"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-pop-artist-released-the-best-selling-album-thriller",
+    "question": "Which pop artist released the best-selling album \"Thriller\"?",
+    "options": [
+      "Michael Jackson",
+      "Prince",
+      "Madonna",
+      "Stevie Wonder"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-first-artificial-satellite-launched-into-space",
+    "question": "What is the name of the first artificial satellite launched into space?",
+    "options": [
+      "Sputnik 1",
+      "Explorer 1",
+      "Vostok 1",
+      "Luna 1"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-players-are-on-the-field-for-one-team-in-a-standard-soccer-match",
+    "question": "How many players are on the field for one team in a standard soccer match?",
+    "options": [
+      "11",
+      "9",
+      "10",
+      "12"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-art-movement-is-salvador-dal-most-famously-associated-with",
+    "question": "Which art movement is Salvador Dalí most famously associated with?",
+    "options": [
+      "Surrealism",
+      "Cubism",
+      "Impressionism",
+      "Abstract Expressionism"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-boasts-the-most-natural-lakes-within-its-borders",
+    "question": "Which country boasts the most natural lakes within its borders?",
+    "options": [
+      "Canada",
+      "Russia",
+      "United States",
+      "China"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-letter-of-the-alphabet-does-not-appear-in-the-name-of-any-us-state",
+    "question": "Which letter of the alphabet does not appear in the name of any U.S. state?",
+    "options": [
+      "Q",
+      "Z",
+      "X",
+      "J"
+    ],
+    "correctAnswer": 0,
+    "category": "General Knowledge",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-is-traditionally-credited-with-writing-the-epic-poems-the-iliad-and-the-odyssey",
+    "question": "Who is traditionally credited with writing the epic poems 'The Iliad' and 'The Odyssey'?",
+    "options": [
+      "Virgil",
+      "Homer",
+      "Sophocles",
+      "Plato"
+    ],
+    "correctAnswer": 1,
+    "category": "General Knowledge",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-gas-makes-up-the-largest-percentage-of-earths-atmosphere",
+    "question": "Which gas makes up the largest percentage of Earth's atmosphere?",
+    "options": [
+      "Oxygen",
+      "Carbon Dioxide",
+      "Nitrogen",
+      "Argon"
+    ],
+    "correctAnswer": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium"
   }
 ]

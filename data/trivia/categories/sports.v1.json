@@ -5835,5 +5835,161 @@
     "correctAnswer": 2,
     "category": "Sports",
     "difficulty": "easy"
+  },
+  {
+    "slug": "what-color-jersey-is-worn-by-the-leader-in-the-tour-de-france-cycling-race",
+    "question": "What color jersey is worn by the leader in the Tour de France cycling race?",
+    "options": [
+      "Green",
+      "Red",
+      "Yellow",
+      "White"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "how-many-players-from-one-team-are-on-the-ice-at-a-time-in-a-standard-ice-hockey-game-including-the-goalie",
+    "question": "How many players from one team are on the ice at a time in a standard ice hockey game, including the goalie?",
+    "options": [
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-has-won-the-most-olympic-gold-medals-in-mens-basketball",
+    "question": "Which country has won the most Olympic gold medals in men's basketball?",
+    "options": [
+      "Serbia",
+      "Spain",
+      "USA",
+      "Russia"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-maximum-break-possible-in-a-single-frame-of-snooker-assuming-no-fouls",
+    "question": "What is the maximum break possible in a single frame of snooker, assuming no fouls?",
+    "options": [
+      "147",
+      "155",
+      "163",
+      "171"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-sport-uses-terms-such-as-birdie-eagle-and-bogey",
+    "question": "Which sport uses terms such as \"birdie\", \"eagle\", and \"bogey\"?",
+    "options": [
+      "Badminton",
+      "Golf",
+      "Archery",
+      "Bowling"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-international-governing-body-for-association-football-soccer",
+    "question": "What is the name of the international governing body for association football (soccer)?",
+    "options": [
+      "UEFA",
+      "FIFA",
+      "CONMEBOL",
+      "CAF"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-legendary-nba-player-was-famous-for-his-signature-skyhook-shot",
+    "question": "Which legendary NBA player was famous for his signature \"skyhook\" shot?",
+    "options": [
+      "Wilt Chamberlain",
+      "Bill Russell",
+      "Kareem Abdul-Jabbar",
+      "Shaquille O'Neal"
+    ],
+    "correctAnswer": 2,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "how-many-sets-must-a-male-player-win-to-be-declared-the-winner-of-a-grand-slam-tennis-match",
+    "question": "How many sets must a male player win to be declared the winner of a Grand Slam tennis match?",
+    "options": [
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-heavyweight-boxer-was-famously-known-by-the-nickname-the-greatest",
+    "question": "Which heavyweight boxer was famously known by the nickname \"The Greatest\"?",
+    "options": [
+      "Mike Tyson",
+      "George Foreman",
+      "Joe Frazier",
+      "Muhammad Ali"
+    ],
+    "correctAnswer": 3,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-nfl-team-tied-with-one-other-team-holds-the-record-for-the-most-super-bowl-victories",
+    "question": "Which NFL team, tied with one other team, holds the record for the most Super Bowl victories?",
+    "options": [
+      "Green Bay Packers",
+      "New England Patriots",
+      "Dallas Cowboys",
+      "San Francisco 49ers"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-holds-the-record-for-the-most-major-championship-wins-in-mens-professional-golf",
+    "question": "Who holds the record for the most major championship wins in men's professional golf?",
+    "options": [
+      "Tiger Woods",
+      "Jack Nicklaus",
+      "Ben Hogan",
+      "Arnold Palmer"
+    ],
+    "correctAnswer": 1,
+    "category": "Sports",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-is-the-only-sport-to-have-been-played-on-the-moon",
+    "question": "What is the only sport to have been played on the Moon?",
+    "options": [
+      "Golf",
+      "Basketball",
+      "Soccer",
+      "Tennis"
+    ],
+    "correctAnswer": 0,
+    "category": "Sports",
+    "difficulty": "medium"
   }
 ]

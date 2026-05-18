@@ -5835,5 +5835,174 @@
     "correctAnswer": 2,
     "category": "Music",
     "difficulty": "medium"
+  },
+  {
+    "slug": "what-instrument-is-often-called-the-king-of-instruments",
+    "question": "What instrument is often called the 'King of Instruments'?",
+    "options": [
+      "Piano",
+      "Guitar",
+      "Violin",
+      "Pipe Organ"
+    ],
+    "correctAnswer": 3,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-singer-is-widely-recognized-as-the-lead-vocalist-of-the-band-queen",
+    "question": "Which singer is widely recognized as the lead vocalist of the band Queen?",
+    "options": [
+      "Elton John",
+      "Freddie Mercury",
+      "David Bowie",
+      "Mick Jagger"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-common-term-for-a-group-of-musicians-playing-popular-music-together",
+    "question": "What is the common term for a group of musicians playing popular music together?",
+    "options": [
+      "Choir",
+      "Orchestra",
+      "Band",
+      "Ensemble"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-artist-had-a-major-hit-with-crazy-in-love-featuring-jay-z",
+    "question": "Which artist had a major hit with 'Crazy in Love' featuring Jay-Z?",
+    "options": [
+      "Rihanna",
+      "Mariah Carey",
+      "Beyoncé",
+      "Alicia Keys"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-a-rapid-succession-of-notes-played-in-a-smooth-connected-manner-called",
+    "question": "What is a rapid succession of notes played in a smooth, connected manner called?",
+    "options": [
+      "Staccato",
+      "Legato",
+      "Pizzicato",
+      "Vibrato"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-american-jazz-trumpeter-was-a-key-figure-in-the-development-of-bebop-and-cool-jazz-known-for-albums-like-kind-of-blue",
+    "question": "Which American jazz trumpeter was a key figure in the development of bebop and cool jazz, known for albums like 'Kind of Blue'?",
+    "options": [
+      "Louis Armstrong",
+      "Dizzy Gillespie",
+      "Miles Davis",
+      "John Coltrane"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-rock-band-u2-originated-in-which-city",
+    "question": "The rock band U2 originated in which city?",
+    "options": [
+      "London",
+      "Dublin",
+      "New York",
+      "Manchester"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-lowest-male-vocal-range-called",
+    "question": "What is the lowest male vocal range called?",
+    "options": [
+      "Tenor",
+      "Baritone",
+      "Bass",
+      "Alto"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-avant-garde-composer-is-known-for-his-1952-composition-433-consisting-of-performers-not-playing-their-instruments-for-the-duration",
+    "question": "Which avant-garde composer is known for his 1952 composition '4'33\"', consisting of performers not playing their instruments for the duration?",
+    "options": [
+      "Philip Glass",
+      "Steve Reich",
+      "John Cage",
+      "Karlheinz Stockhausen"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-type-of-musical-ensemble-primarily-features-four-string-instruments-typically-two-violins-a-viola-and-a-cello",
+    "question": "What type of musical ensemble primarily features four string instruments, typically two violins, a viola, and a cello?",
+    "options": [
+      "Brass Band",
+      "Wind Ensemble",
+      "String Quartet",
+      "Marching Band"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-pop-icon-is-known-for-the-hit-song-billie-jean",
+    "question": "Which pop icon is known for the hit song 'Billie Jean'?",
+    "options": [
+      "Prince",
+      "Stevie Wonder",
+      "Michael Jackson",
+      "Lionel Richie"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-band-released-the-critically-acclaimed-album-rumours-in-1977",
+    "question": "Which band released the critically acclaimed album 'Rumours' in 1977?",
+    "options": [
+      "The Eagles",
+      "Fleetwood Mac",
+      "Led Zeppelin",
+      "Pink Floyd"
+    ],
+    "correctAnswer": 1,
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-italian-composer-is-famous-for-operas-like-la-traviata-and-aida",
+    "question": "Which Italian composer is famous for operas like 'La Traviata' and 'Aida'?",
+    "options": [
+      "Wolfgang Amadeus Mozart",
+      "Ludwig van Beethoven",
+      "Giuseppe Verdi",
+      "Richard Wagner"
+    ],
+    "correctAnswer": 2,
+    "category": "Music",
+    "difficulty": "easy"
   }
 ]

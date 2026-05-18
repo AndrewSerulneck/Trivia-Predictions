@@ -5848,5 +5848,161 @@
     "correctAnswer": 2,
     "category": "Geography",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-desert-is-the-largest-hot-desert-in-asia",
+    "question": "Which desert is the largest hot desert in Asia?",
+    "options": [
+      "Gobi Desert",
+      "Arabian Desert",
+      "Taklamakan Desert",
+      "Thar Desert"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-mountain-range-runs-along-the-western-coast-of-south-america",
+    "question": "Which mountain range runs along the western coast of South America?",
+    "options": [
+      "Rocky Mountains",
+      "Andes Mountains",
+      "Alps",
+      "Himalayas"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-country-contains-the-most-time-zones-including-its-overseas-territories",
+    "question": "Which country contains the most time zones, including its overseas territories?",
+    "options": [
+      "Russia",
+      "USA",
+      "Canada",
+      "France"
+    ],
+    "correctAnswer": 3,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "lake-titicaca-the-highest-navigable-lake-in-the-world-is-located-on-the-border-of-which-two-south-american-countries",
+    "question": "Lake Titicaca, the highest navigable lake in the world, is located on the border of which two South American countries?",
+    "options": [
+      "Brazil and Argentina",
+      "Peru and Bolivia",
+      "Colombia and Ecuador",
+      "Chile and Peru"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-gobi-desert-spans-parts-of-which-two-major-asian-countries",
+    "question": "The Gobi Desert spans parts of which two major Asian countries?",
+    "options": [
+      "India and Pakistan",
+      "China and Mongolia",
+      "Kazakhstan and Uzbekistan",
+      "Russia and Kazakhstan"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-continent-is-the-driest",
+    "question": "Which continent is the driest?",
+    "options": [
+      "Asia",
+      "Africa",
+      "Antarctica",
+      "Australia"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-kimberley-region-known-for-its-rugged-landscapes-and-diamond-mines-is-located-in-which-country",
+    "question": "The Kimberley region, known for its rugged landscapes and diamond mines, is located in which country?",
+    "options": [
+      "South Africa",
+      "Australia",
+      "Canada",
+      "Brazil"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "mount-everest-is-part-of-which-major-mountain-range",
+    "question": "Mount Everest is part of which major mountain range?",
+    "options": [
+      "Andes",
+      "Rockies",
+      "Himalayas",
+      "Alps"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-european-capital-city-is-famously-built-on-14-islands",
+    "question": "Which European capital city is famously built on 14 islands?",
+    "options": [
+      "Copenhagen",
+      "Stockholm",
+      "Helsinki",
+      "Oslo"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-the-following-southeast-asian-countries-is-landlocked",
+    "question": "Which of the following Southeast Asian countries is landlocked?",
+    "options": [
+      "Vietnam",
+      "Thailand",
+      "Laos",
+      "Cambodia"
+    ],
+    "correctAnswer": 2,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-european-capital-city-is-famous-for-being-divided-by-the-river-spree",
+    "question": "Which European capital city is famous for being divided by the River Spree?",
+    "options": [
+      "Vienna",
+      "Berlin",
+      "Prague",
+      "Budapest"
+    ],
+    "correctAnswer": 1,
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-the-following-bodies-of-water-is-the-largest-by-surface-area",
+    "question": "Which of the following bodies of water is the largest by surface area?",
+    "options": [
+      "Caspian Sea",
+      "Lake Superior",
+      "Aral Sea",
+      "Lake Victoria"
+    ],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "difficulty": "medium"
   }
 ]

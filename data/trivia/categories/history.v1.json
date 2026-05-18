@@ -5848,5 +5848,161 @@
     "correctAnswer": 3,
     "category": "History",
     "difficulty": "medium"
+  },
+  {
+    "slug": "what-year-did-christopher-columbus-first-arrive-in-the-americas",
+    "question": "What year did Christopher Columbus first arrive in the Americas?",
+    "options": [
+      "1492",
+      "1607",
+      "1776",
+      "1812"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-industrial-revolution-originated-in-which-country",
+    "question": "The Industrial Revolution originated in which country?",
+    "options": [
+      "United States",
+      "Germany",
+      "Great Britain",
+      "France"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "in-which-city-was-the-declaration-of-independence-signed",
+    "question": "In which city was the Declaration of Independence signed?",
+    "options": [
+      "New York City",
+      "Boston",
+      "Philadelphia",
+      "Washington D.C."
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-empire-was-ruled-by-genghis-khan",
+    "question": "Which empire was ruled by Genghis Khan?",
+    "options": [
+      "Persian Empire",
+      "Roman Empire",
+      "Mongol Empire",
+      "Ottoman Empire"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-edict-of-nantes-granting-substantial-rights-to-calvinist-protestants-in-france-was-issued-by-which-king",
+    "question": "The Edict of Nantes, granting substantial rights to Calvinist Protestants in France, was issued by which king?",
+    "options": [
+      "Louis XIV",
+      "Henry IV",
+      "Francis I",
+      "Charles IX"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "what-event-marked-the-end-of-world-war-ii-in-europe",
+    "question": "What event marked the end of World War II in Europe?",
+    "options": [
+      "Pearl Harbor attack",
+      "D-Day invasion",
+      "V-E Day",
+      "Hiroshima bombing"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-ancient-wonder-was-a-massive-lighthouse-located-in-egypt",
+    "question": "Which ancient wonder was a massive lighthouse located in Egypt?",
+    "options": [
+      "Colossus of Rhodes",
+      "Hanging Gardens of Babylon",
+      "Lighthouse of Alexandria",
+      "Temple of Artemis"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-glorious-revolution-of-1688-primarily-took-place-in-which-country",
+    "question": "The \"Glorious Revolution\" of 1688 primarily took place in which country?",
+    "options": [
+      "France",
+      "England",
+      "Spain",
+      "Russia"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "in-what-year-did-the-berlin-wall-fall-symbolizing-the-end-of-the-cold-war",
+    "question": "In what year did the Berlin Wall fall, symbolizing the end of the Cold War?",
+    "options": [
+      "1985",
+      "1989",
+      "1991",
+      "1993"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "who-was-the-first-french-emperor-famous-for-his-military-campaigns-across-europe",
+    "question": "Who was the first French emperor, famous for his military campaigns across Europe?",
+    "options": [
+      "Louis XIV",
+      "Napoleon Bonaparte",
+      "Charlemagne",
+      "Charles de Gaulle"
+    ],
+    "correctAnswer": 1,
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-treaty-of-versailles-which-formally-ended-world-war-i-was-signed-in-which-year",
+    "question": "The Treaty of Versailles, which formally ended World War I, was signed in which year?",
+    "options": [
+      "1917",
+      "1918",
+      "1919",
+      "1920"
+    ],
+    "correctAnswer": 2,
+    "category": "History",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "who-was-the-last-active-pharaoh-of-the-ptolemaic-kingdom-of-egypt",
+    "question": "Who was the last active pharaoh of the Ptolemaic Kingdom of Egypt?",
+    "options": [
+      "Cleopatra VII",
+      "Hatshepsut",
+      "Nefertiti",
+      "Twosret"
+    ],
+    "correctAnswer": 0,
+    "category": "History",
+    "difficulty": "medium"
   }
 ]

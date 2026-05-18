@@ -5848,5 +5848,161 @@
     "correctAnswer": 1,
     "category": "Animals",
     "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-ability-to-change-color-to-blend-with-its-environment",
+    "question": "Which animal is known for its ability to change color to blend with its environment?",
+    "options": [
+      "Octopus",
+      "Chameleon",
+      "Squid",
+      "Lionfish"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-largest-living-primate-species",
+    "question": "What is the largest living primate species?",
+    "options": [
+      "Chimpanzee",
+      "Orangutan",
+      "Gorilla",
+      "Human"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-continent-is-the-native-home-of-kangaroos",
+    "question": "Which continent is the native home of kangaroos?",
+    "options": [
+      "Africa",
+      "South America",
+      "Asia",
+      "Australia"
+    ],
+    "correctAnswer": 3,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-do-adult-butterflies-emerge-from",
+    "question": "What do adult butterflies emerge from?",
+    "options": [
+      "Egg",
+      "Larva",
+      "Pupa",
+      "Nymph"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-building-complex-dams-on-rivers-and-streams",
+    "question": "Which animal is known for building complex dams on rivers and streams?",
+    "options": [
+      "Otter",
+      "Beaver",
+      "Muskrat",
+      "Capybara"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-animal-is-famous-for-its-distinctive-black-and-white-striped-pattern",
+    "question": "Which animal is famous for its distinctive black and white striped pattern?",
+    "options": [
+      "Tiger",
+      "Panda",
+      "Zebra",
+      "Skunk"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-of-these-animals-is-capable-of-regenerating-lost-body-parts-including-entire-limbs",
+    "question": "Which of these animals is capable of regenerating lost body parts, including entire limbs?",
+    "options": [
+      "Snake",
+      "Lizard",
+      "Starfish",
+      "Spider"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-known-for-its-ability-to-play-dead-thanatosis-when-threatened",
+    "question": "Which animal is known for its ability to 'play dead' (thanatosis) when threatened?",
+    "options": [
+      "Raccoon",
+      "Opossum",
+      "Badger",
+      "Fox"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-of-these-unique-mammals-lays-eggs-and-is-also-venomous",
+    "question": "Which of these unique mammals lays eggs and is also venomous?",
+    "options": [
+      "Echidna",
+      "Platypus",
+      "Pangolin",
+      "Duck"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "which-of-these-animals-is-a-marine-mammal-known-for-its-intelligence-and-use-of-echolocation",
+    "question": "Which of these animals is a marine mammal known for its intelligence and use of echolocation?",
+    "options": [
+      "Shark",
+      "Tuna",
+      "Dolphin",
+      "Penguin"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-animal-is-recognized-as-the-fastest-land-animal",
+    "question": "Which animal is recognized as the fastest land animal?",
+    "options": [
+      "Lion",
+      "Cheetah",
+      "Gazelle",
+      "Leopard"
+    ],
+    "correctAnswer": 1,
+    "category": "Animals",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-of-these-animals-is-a-marsupial-known-for-its-prehensile-tail-and-arboreal-lifestyle",
+    "question": "Which of these animals is a marsupial known for its prehensile tail and arboreal lifestyle?",
+    "options": [
+      "Koala",
+      "Wombat",
+      "Possum",
+      "Tasmanian Devil"
+    ],
+    "correctAnswer": 2,
+    "category": "Animals",
+    "difficulty": "medium"
   }
 ]

@@ -5835,5 +5835,174 @@
     "correctAnswer": 0,
     "category": "Pop Culture",
     "difficulty": "hard"
+  },
+  {
+    "slug": "who-sang-the-2019-hit-song-old-town-road-with-billy-ray-cyrus",
+    "question": "Who sang the 2019 hit song 'Old Town Road' with Billy Ray Cyrus?",
+    "options": [
+      "Lil Nas X",
+      "Post Malone",
+      "Travis Scott",
+      "DaBaby"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-the-us-version-of-the-office-what-is-michael-scotts-favorite-catchphrase",
+    "question": "In the US version of 'The Office', what is Michael Scott's favorite catchphrase?",
+    "options": [
+      "That's what she said",
+      "Bears, beets, Battlestar Galactica",
+      "No, god! Please, no!",
+      "I declare bankruptcy!"
+    ],
+    "correctAnswer": 0,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-fantasy-film-series-is-based-on-books-about-a-boy-wizard-attending-hogwarts",
+    "question": "Which fantasy film series is based on books about a boy wizard attending Hogwarts?",
+    "options": [
+      "The Lord of the Rings",
+      "The Chronicles of Narnia",
+      "Harry Potter",
+      "Percy Jackson"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-company-developed-the-original-playstation-console",
+    "question": "Which company developed the original PlayStation console?",
+    "options": [
+      "Nintendo",
+      "Microsoft",
+      "Sega",
+      "Sony"
+    ],
+    "correctAnswer": 3,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-artist-released-the-critically-acclaimed-visual-album-lemonade-in-2016",
+    "question": "Which artist released the critically acclaimed visual album 'Lemonade' in 2016?",
+    "options": [
+      "Rihanna",
+      "Adele",
+      "Beyoncé",
+      "Taylor Swift"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "what-is-the-primary-fictional-continent-where-most-of-the-events-in-game-of-thrones-take-place",
+    "question": "What is the primary fictional continent where most of the events in 'Game of Thrones' take place?",
+    "options": [
+      "Essos",
+      "Sothoryos",
+      "Westeros",
+      "Ulthos"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "who-portrayed-the-superhero-black-panther-in-the-marvel-cinematic-universe",
+    "question": "Who portrayed the superhero Black Panther in the Marvel Cinematic Universe?",
+    "options": [
+      "Michael B. Jordan",
+      "Anthony Mackie",
+      "Chadwick Boseman",
+      "Sebastian Stan"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-social-media-platform-is-primarily-known-for-its-short-form-user-generated-video-content",
+    "question": "Which social media platform is primarily known for its short-form, user-generated video content?",
+    "options": [
+      "Facebook",
+      "Instagram",
+      "TikTok",
+      "X (Twitter)"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-iconic-pop-artist-is-often-referred-to-as-the-queen-of-pop",
+    "question": "Which iconic pop artist is often referred to as the 'Queen of Pop'?",
+    "options": [
+      "Whitney Houston",
+      "Janet Jackson",
+      "Mariah Carey",
+      "Madonna"
+    ],
+    "correctAnswer": 3,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "which-90s-sitcom-features-characters-like-jerry-elaine-george-and-kramer-living-in-new-york-city",
+    "question": "Which 90s sitcom features characters like Jerry, Elaine, George, and Kramer living in New York City?",
+    "options": [
+      "Friends",
+      "Seinfeld",
+      "Frasier",
+      "Mad About You"
+    ],
+    "correctAnswer": 1,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-director-is-known-for-visually-distinctive-films-such-as-inception-and-interstellar",
+    "question": "Which director is known for visually distinctive films such as 'Inception' and 'Interstellar'?",
+    "options": [
+      "Steven Spielberg",
+      "Quentin Tarantino",
+      "Christopher Nolan",
+      "Martin Scorsese"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "which-iconic-italian-plumber-serves-as-the-long-standing-mascot-for-nintendo",
+    "question": "Which iconic Italian plumber serves as the long-standing mascot for Nintendo?",
+    "options": [
+      "Luigi",
+      "Wario",
+      "Mario",
+      "Yoshi"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "what-is-the-name-of-the-annual-music-and-arts-festival-held-in-indio-california-known-for-its-diverse-lineup",
+    "question": "What is the name of the annual music and arts festival held in Indio, California, known for its diverse lineup?",
+    "options": [
+      "Lollapalooza",
+      "Glastonbury Festival",
+      "Coachella",
+      "SXSW"
+    ],
+    "correctAnswer": 2,
+    "category": "Pop Culture",
+    "difficulty": "medium"
   }
 ]
