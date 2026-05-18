@@ -6,6 +6,8 @@ import { gradeWriteInAnswer, normalizeWriteInForStorage } from "@/lib/liveShowdo
 import { trackLiveShowdownQuestionExposure } from "@/lib/liveShowdown";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+const LIVE_SHOWDOWN_POINTS_PER_CORRECT = 10;
+
 type TriviaSessionQuestionRow = {
   question_id: string;
 };
@@ -24,8 +26,17 @@ type ExistingAnswerRow = {
   points_awarded: number;
 };
 
+type UserVenueRow = {
+  venue_id: string | null;
+};
+
+type ScheduleVenueRow = {
+  venue_id: string | null;
+};
+
 export type SubmitLiveShowdownAnswerParams = {
   userId: string;
+  venueId: string;
   scheduleId: string;
   roundNumber: number;
   questionIndex: number;
@@ -180,19 +191,50 @@ export async function submitLiveShowdownAnswer(
   }
 
   const userId = String(params.userId ?? "").trim();
+  const venueId = String(params.venueId ?? "").trim();
   const scheduleId = String(params.scheduleId ?? "").trim();
   const submittedAnswer = String(params.submittedAnswer ?? "").trim();
   const roundNumber = Math.floor(Number(params.roundNumber));
   const questionIndex = Math.floor(Number(params.questionIndex));
 
-  if (!userId || !scheduleId || !submittedAnswer) {
-    throw new Error("userId, scheduleId, roundNumber, questionIndex, and submittedAnswer are required.");
+  if (!userId || !venueId || !scheduleId || !submittedAnswer) {
+    throw new Error("userId, venueId, scheduleId, roundNumber, questionIndex, and submittedAnswer are required.");
   }
   if (!Number.isFinite(roundNumber) || roundNumber < 1 || !Number.isFinite(questionIndex) || questionIndex < 1 || questionIndex > 15) {
     throw new Error("roundNumber and questionIndex are invalid.");
   }
 
-  const state = await getLiveShowdownState(Date.now());
+  const { data: userVenueData, error: userVenueError } = await supabaseAdmin
+    .from("users")
+    .select("venue_id")
+    .eq("id", userId)
+    .limit(1)
+    .maybeSingle<UserVenueRow>();
+
+  if (userVenueError) {
+    throw new Error(userVenueError.message || "Failed to resolve user's active venue.");
+  }
+  const userVenueId = String(userVenueData?.venue_id ?? "").trim();
+  if (!userVenueId || userVenueId !== venueId) {
+    throw new Error("User venue does not match this Live Showdown venue.");
+  }
+
+  const { data: scheduleVenueData, error: scheduleVenueError } = await supabaseAdmin
+    .from("trivia_schedules")
+    .select("venue_id")
+    .eq("id", scheduleId)
+    .limit(1)
+    .maybeSingle<ScheduleVenueRow>();
+
+  if (scheduleVenueError) {
+    throw new Error(scheduleVenueError.message || "Failed to resolve Live Showdown schedule venue.");
+  }
+  const scheduleVenueId = String(scheduleVenueData?.venue_id ?? "").trim();
+  if (!scheduleVenueId || scheduleVenueId !== venueId) {
+    throw new Error("Schedule venue does not match this Live Showdown venue.");
+  }
+
+  const state = await getLiveShowdownState(Date.now(), venueId);
   if (!state.isGameActive) {
     throw new Error("No Live Showdown game is currently active.");
   }
@@ -278,7 +320,7 @@ export async function submitLiveShowdownAnswer(
 
   let pointsAwarded = 0;
   if (isCorrect) {
-    pointsAwarded = await awardTriviaPointsForLiveShowdown(userId, 2);
+    pointsAwarded = await awardTriviaPointsForLiveShowdown(userId, LIVE_SHOWDOWN_POINTS_PER_CORRECT);
     if (pointsAwarded > 0) {
       const { error: awardedUpdateError } = await supabaseAdmin
         .from("live_showdown_answers")

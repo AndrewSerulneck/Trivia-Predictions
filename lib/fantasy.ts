@@ -77,6 +77,7 @@ type FantasyEntryRow = {
   score_breakdown: unknown;
   reward_points: number;
   reward_claimed_at: string | null;
+  live_collected_points: number;
   stats_last_source_updated_at: string | null;
   settled_at: string | null;
   created_at: string;
@@ -140,6 +141,7 @@ export type FantasyEntry = {
   scoreBreakdown: Record<string, number>;
   rewardPoints: number;
   rewardClaimedAt: string | null;
+  liveCollectedPoints: number;
   statsLastSourceUpdatedAt: string | null;
   settledAt: string | null;
   createdAt: string;
@@ -667,6 +669,7 @@ function mapFantasyEntryRow(row: FantasyEntryRow): FantasyEntry {
     scoreBreakdown: parseScoreBreakdown(row.score_breakdown),
     rewardPoints: Math.max(0, Number(row.reward_points ?? 0)),
     rewardClaimedAt: row.reward_claimed_at,
+    liveCollectedPoints: Math.max(0, Number(row.live_collected_points ?? 0)),
     statsLastSourceUpdatedAt: row.stats_last_source_updated_at,
     settledAt: row.settled_at,
     createdAt: row.created_at,
@@ -937,6 +940,38 @@ function extractApiSportsDirectoryPosition(row: Record<string, unknown>): string
   ).trim();
 }
 
+function extractApiSportsDirectoryHeadshotUrl(row: Record<string, unknown>): string | null {
+  const raw = String(
+    getPath(row, ["headshot_url"]) ??
+      getPath(row, ["player", "headshot_url"]) ??
+      getPath(row, ["draft_kings_picture_url"]) ??
+      getPath(row, ["picture_url"]) ??
+      ""
+  ).trim();
+  return raw.startsWith("http") ? raw : null;
+}
+
+async function upsertActivePlayersToDb(seeds: ApiSportsPoolSeed[], league: string): Promise<void> {
+  if (!supabaseAdmin || seeds.length === 0) return;
+  const records = seeds
+    .filter((s) => s.playerId && s.playerName)
+    .map((s) => ({
+      external_id: String(s.playerId),
+      player_name: s.playerName,
+      league: league.toUpperCase() === "WNBA" ? "WNBA" : "NBA",
+      ...(s.headshotUrl ? { headshot_url: s.headshotUrl } : {}),
+    }));
+  if (!records.length) return;
+  try {
+    await supabaseAdmin.from("players").upsert(records, {
+      onConflict: "external_id,league",
+      ignoreDuplicates: false,
+    });
+  } catch {
+    // Non-fatal: best-effort player record sync
+  }
+}
+
 function formatFantasyPlayerDisplayName(raw: string): string {
   const trimmed = String(raw ?? "").trim();
   if (!trimmed) {
@@ -1010,26 +1045,28 @@ async function fetchApiSportsNbaTeamPlayers(teamId: number, season: number | nul
   // for teams in today's slate, not historical team-season memberships.
   const baseActiveQuery = new URLSearchParams({ per_page: "100", "team_ids[]": String(normalizedTeamId) });
   const activeRowsRaw = await fetchBallDontLieList<Record<string, unknown>>("/nba/v1/players/active", baseActiveQuery, 5);
-  let rows = activeRowsRaw
-    .map((row) => asRecord(row))
-    .map((row) => {
-      const team = asRecord(row.team);
-      return {
-        player: {
-          id: row.id,
-          first_name: row.first_name,
-          last_name: row.last_name,
-          name: `${String(row.first_name ?? "").trim()} ${String(row.last_name ?? "").trim()}`.trim(),
-        },
-        team: {
-          id: team.id,
-          name: team.full_name ?? team.name,
-          abbreviation: team.abbreviation,
-        },
-        position: row.position,
-        active: true,
-      } as Record<string, unknown>;
-    });
+  const mapBdlNbaRow = (row: Record<string, unknown>): Record<string, unknown> => {
+    const team = asRecord(row.team);
+    return {
+      player: {
+        id: row.id,
+        first_name: row.first_name,
+        last_name: row.last_name,
+        name: `${String(row.first_name ?? "").trim()} ${String(row.last_name ?? "").trim()}`.trim(),
+      },
+      team: {
+        id: team.id,
+        name: team.full_name ?? team.name,
+        abbreviation: team.abbreviation,
+      },
+      position: row.position,
+      // Capture any headshot URL BDL exposes (field name varies by plan tier).
+      headshot_url: row.draft_kings_picture_url ?? row.headshot_url ?? row.picture_url ?? null,
+      active: true,
+    } as Record<string, unknown>;
+  };
+
+  let rows = activeRowsRaw.map((row) => asRecord(row)).map(mapBdlNbaRow);
 
   if (rows.length === 0) {
     const fallbackQuery = new URLSearchParams({ per_page: "100", "team_ids[]": String(normalizedTeamId) });
@@ -1037,26 +1074,12 @@ async function fetchApiSportsNbaTeamPlayers(teamId: number, season: number | nul
       fallbackQuery.set("seasons[]", String(normalizedSeason));
     }
     const fallbackRowsRaw = await fetchBallDontLieList<Record<string, unknown>>("/nba/v1/players", fallbackQuery, 5);
+    // Only include players marked active — prevents historical/retired players from
+    // the non-active endpoint from entering the draft pool.
     rows = fallbackRowsRaw
       .map((row) => asRecord(row))
-      .map((row) => {
-        const team = asRecord(row.team);
-        return {
-          player: {
-            id: row.id,
-            first_name: row.first_name,
-            last_name: row.last_name,
-            name: `${String(row.first_name ?? "").trim()} ${String(row.last_name ?? "").trim()}`.trim(),
-          },
-          team: {
-            id: team.id,
-            name: team.full_name ?? team.name,
-            abbreviation: team.abbreviation,
-          },
-          position: row.position,
-          active: true,
-        } as Record<string, unknown>;
-      });
+      .filter((row) => isApiSportsDirectoryPlayerActive(row))
+      .map(mapBdlNbaRow);
   }
 
   const matchedByTeamId = rows.filter((row) => extractApiSportsDirectoryTeamId(row) === normalizedTeamId);
@@ -1080,26 +1103,27 @@ async function fetchWnbaTeamPlayers(teamId: number, season: number | null): Prom
 
   const baseActiveQuery = new URLSearchParams({ per_page: "100", "team_ids[]": String(normalizedTeamId) });
   const activeRowsRaw = await fetchBallDontLieList<Record<string, unknown>>("/wnba/v1/players/active", baseActiveQuery, 5);
-  let rows = activeRowsRaw
-    .map((row) => asRecord(row))
-    .map((row) => {
-      const team = asRecord(row.team);
-      return {
-        player: {
-          id: row.id,
-          first_name: row.first_name,
-          last_name: row.last_name,
-          name: `${String(row.first_name ?? "").trim()} ${String(row.last_name ?? "").trim()}`.trim(),
-        },
-        team: {
-          id: team.id,
-          name: team.full_name ?? team.name,
-          abbreviation: team.abbreviation,
-        },
-        position: row.position,
-        active: true,
-      } as Record<string, unknown>;
-    });
+  const mapBdlWnbaRow = (row: Record<string, unknown>): Record<string, unknown> => {
+    const team = asRecord(row.team);
+    return {
+      player: {
+        id: row.id,
+        first_name: row.first_name,
+        last_name: row.last_name,
+        name: `${String(row.first_name ?? "").trim()} ${String(row.last_name ?? "").trim()}`.trim(),
+      },
+      team: {
+        id: team.id,
+        name: team.full_name ?? team.name,
+        abbreviation: team.abbreviation,
+      },
+      position: row.position,
+      headshot_url: row.draft_kings_picture_url ?? row.headshot_url ?? row.picture_url ?? null,
+      active: true,
+    } as Record<string, unknown>;
+  };
+
+  let rows = activeRowsRaw.map((row) => asRecord(row)).map(mapBdlWnbaRow);
 
   if (rows.length === 0) {
     const fallbackQuery = new URLSearchParams({ per_page: "100", "team_ids[]": String(normalizedTeamId) });
@@ -1109,24 +1133,8 @@ async function fetchWnbaTeamPlayers(teamId: number, season: number | null): Prom
     const fallbackRowsRaw = await fetchBallDontLieList<Record<string, unknown>>("/wnba/v1/players", fallbackQuery, 5);
     rows = fallbackRowsRaw
       .map((row) => asRecord(row))
-      .map((row) => {
-        const team = asRecord(row.team);
-        return {
-          player: {
-            id: row.id,
-            first_name: row.first_name,
-            last_name: row.last_name,
-            name: `${String(row.first_name ?? "").trim()} ${String(row.last_name ?? "").trim()}`.trim(),
-          },
-          team: {
-            id: team.id,
-            name: team.full_name ?? team.name,
-            abbreviation: team.abbreviation,
-          },
-          position: row.position,
-          active: true,
-        } as Record<string, unknown>;
-      });
+      .filter((row) => isApiSportsDirectoryPlayerActive(row))
+      .map(mapBdlWnbaRow);
   }
 
   const matchedByTeamId = rows.filter((row) => extractApiSportsDirectoryTeamId(row) === normalizedTeamId);
@@ -1225,28 +1233,81 @@ async function loadRecentFantasySamplesByPlayerId(
   return { samples, foundIds };
 }
 
+async function loadWnbaGameStatProjections(playerIds: number[]): Promise<Map<number, number>> {
+  const projections = new Map<number, number>();
+  if (playerIds.length === 0) return projections;
+
+  // Look back 400 days to capture the previous full WNBA season (May–Sep) plus any
+  // early-season games from the current year. WNBA season year == calendar year.
+  const endDate = new Date().toISOString().slice(0, 10);
+  const startDate = new Date(Date.now() - 400 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  type StatAgg = { pts: number; reb: number; ast: number; stl: number; blk: number; tov: number; count: number };
+  const totals = new Map<number, StatAgg>();
+
+  for (const chunk of chunkIds(playerIds, 25)) {
+    try {
+      const query = new URLSearchParams({ start_date: startDate, end_date: endDate, per_page: "100" });
+      for (const id of chunk) {
+        query.append("player_ids[]", String(id));
+      }
+      const rows = await fetchBallDontLieList<Record<string, unknown>>("/wnba/v1/stats", query, 5);
+      for (const raw of rows) {
+        const player = asRecord(asRecord(raw).player ?? {});
+        const playerId = Number.parseInt(String(player.id ?? raw.player_id ?? ""), 10);
+        if (!Number.isFinite(playerId) || playerId <= 0) continue;
+        const agg = totals.get(playerId) ?? { pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, tov: 0, count: 0 };
+        agg.pts += Number(raw.pts ?? 0);
+        agg.reb += Number(raw.reb ?? 0);
+        agg.ast += Number(raw.ast ?? 0);
+        agg.stl += Number(raw.stl ?? 0);
+        agg.blk += Number(raw.blk ?? 0);
+        agg.tov += Number(raw.turnover ?? raw.to ?? 0);
+        agg.count += 1;
+        totals.set(playerId, agg);
+      }
+    } catch {
+      // /wnba/v1/stats unavailable or not on this BDL plan tier; leave projections null
+    }
+  }
+
+  for (const [playerId, agg] of totals) {
+    if (agg.count === 0) continue;
+    const proj = computeProjectionFromBoxScore(
+      agg.pts / agg.count,
+      agg.reb / agg.count,
+      agg.ast / agg.count,
+      agg.stl / agg.count,
+      agg.blk / agg.count,
+      agg.tov / agg.count,
+    );
+    projections.set(playerId, Number(proj.toFixed(1)));
+  }
+
+  return projections;
+}
+
 async function loadBdlSeasonAverageProjections(playerIds: number[], leagueName: string): Promise<Map<number, number>> {
   const projections = new Map<number, number>();
   if (playerIds.length === 0) {
     return projections;
   }
 
-  const isWnba = leagueName.toUpperCase() === "WNBA";
-  const leaguePrefix = isWnba ? "/wnba" : "/nba";
+  // BDL has no season-averages endpoint for WNBA — compute from individual game stats instead.
+  if (leagueName.toUpperCase() === "WNBA") {
+    return loadWnbaGameStatProjections(playerIds);
+  }
 
-  // BDL uses the season start year (e.g. 2025 for the 2025-26 NBA season).
-  // May 2026 → NBA season 2025; WNBA season 2026.
+  // BDL uses the season start year: 2025 for the 2025-26 NBA season.
+  // Jan–Sep belong to the season that started the previous October.
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth() + 1; // 1-based
-  // NBA regular season starts in October, so Jan-Sep of year Y belong to season Y-1.
-  const nbaSeason = month >= 10 ? year : year - 1;
-  const season = isWnba ? year : nbaSeason;
+  const season = month >= 10 ? year : year - 1;
 
-  // Endpoint candidates: try without /general first (per BDL v1 standard docs),
-  // fall through to /general if empty.
-  const endpointCandidates = [`${leaguePrefix}/v1/season_averages`, `${leaguePrefix}/v1/season_averages/general`];
-  // Season-type candidates (regular season first, then no qualifier).
+  // /general is proven to work in sportsBingo.ts; try it first, then base path.
+  const endpointCandidates = ["/nba/v1/season_averages/general", "/nba/v1/season_averages"];
+  // Regular season first; retry without season_type qualifier if empty.
   const seasonTypeCandidates: Array<string | null> = ["regular", null];
 
   const chunks = chunkIds(playerIds, 100);
@@ -1257,7 +1318,8 @@ async function loadBdlSeasonAverageProjections(playerIds: number[], leagueName: 
       for (const seasonType of seasonTypeCandidates) {
         if (resolved) break;
         try {
-          const seasonQuery = new URLSearchParams({ season: String(season), per_page: "100" });
+          // type: "base" is required by BDL — omitting it causes 400.
+          const seasonQuery = new URLSearchParams({ season: String(season), type: "base", per_page: "100" });
           if (seasonType) seasonQuery.set("season_type", seasonType);
           for (const id of chunk) {
             seasonQuery.append("player_ids[]", String(id));
@@ -1353,6 +1415,7 @@ type ApiSportsPoolSeed = {
   source: "roster" | "stats" | "live";
   position?: string | null;
   team?: string | null;
+  headshotUrl?: string | null;
 };
 
 function addApiSportsPoolSeed(map: Map<string, ApiSportsPoolSeed>, seed: ApiSportsPoolSeed): void {
@@ -1475,6 +1538,7 @@ async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]
         source: "roster",
         position: extractApiSportsDirectoryPosition(row) || null,
         team: extractApiSportsDirectoryTeamAbbreviation(row) || extractApiSportsDirectoryTeamName(row) || null,
+        headshotUrl: extractApiSportsDirectoryHeadshotUrl(row),
       });
     }
   }
@@ -1507,6 +1571,22 @@ async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]
     }
   }
 
+  // Snapshot of confirmed-active player name keys (from BDL /active roster).
+  // Used below to prevent historical players in live_player_stats from entering the pool.
+  const rosterPlayerKeys = new Set<string>();
+  for (const [key, seed] of poolSeedByName) {
+    if (seed.source === "roster") {
+      rosterPlayerKeys.add(key);
+    }
+  }
+
+  // Upsert active players (and any headshots BDL provides) into the players table
+  // so future headshot lookups via loadNbaHeadshotsByName resolve correctly.
+  void upsertActivePlayersToDb(
+    Array.from(poolSeedByName.values()).filter((s) => s.source === "roster"),
+    poolLeague,
+  );
+
   if (FANTASY_ENABLE_POOL_LIVE_ENRICH) {
     const scheduledTeamNames = Array.from(
       new Set(
@@ -1518,7 +1598,13 @@ async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]
     );
     const recentTeamSeeds = await loadRecentTeamScopedPlayerSeeds(scheduledTeamNames);
     for (const seed of recentTeamSeeds) {
-      addApiSportsPoolSeed(poolSeedByName, seed);
+      // Only merge live seeds for players that appear on today's active rosters.
+      // This prevents historical/retired players in live_player_stats from
+      // surfacing in the draft pool (the "80s & 90s player" problem).
+      const key = normalizeNameKey(seed.playerName);
+      if (key && rosterPlayerKeys.has(key)) {
+        addApiSportsPoolSeed(poolSeedByName, seed);
+      }
     }
   }
 
@@ -1539,7 +1625,7 @@ async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]
     return {
       playerId: seed.playerId,
       playerName: seed.playerName,
-      headshotUrl: null,
+      headshotUrl: seed.headshotUrl ?? null,
       coverage: sample?.samples ?? 1,
       projectedLine: sample?.avg ?? (bdlProj !== undefined ? bdlProj : null),
       position: seed.position ?? null,
@@ -2068,7 +2154,7 @@ export async function submitFantasyEntry(params: {
     .from("fantasy_entries")
     .insert(row)
     .select(
-      "id, user_id, venue_id, sport_key, game_id, game_label, home_team, away_team, starts_at, lineup, status, points, score_breakdown, reward_points, reward_claimed_at, stats_last_source_updated_at, settled_at, created_at, updated_at"
+      "id, user_id, venue_id, sport_key, game_id, game_label, home_team, away_team, starts_at, lineup, status, points, score_breakdown, reward_points, reward_claimed_at, live_collected_points, stats_last_source_updated_at, settled_at, created_at, updated_at"
     )
     .maybeSingle<FantasyEntryRow>();
 
@@ -2108,7 +2194,7 @@ export async function updateFantasyEntryLineup(params: {
   const { data: existingRow, error: existingError } = await supabaseAdmin!
     .from("fantasy_entries")
     .select(
-      "id, user_id, venue_id, sport_key, game_id, game_label, home_team, away_team, starts_at, lineup, status, points, score_breakdown, reward_points, reward_claimed_at, stats_last_source_updated_at, settled_at, created_at, updated_at"
+      "id, user_id, venue_id, sport_key, game_id, game_label, home_team, away_team, starts_at, lineup, status, points, score_breakdown, reward_points, reward_claimed_at, live_collected_points, stats_last_source_updated_at, settled_at, created_at, updated_at"
     )
     .eq("user_id", userId)
     .eq("venue_id", venueId)
@@ -2143,7 +2229,7 @@ export async function updateFantasyEntryLineup(params: {
     .update({ lineup: storedLineup, score_breakdown: {}, points: 0, stats_last_source_updated_at: null })
     .eq("id", existingRow.id)
     .select(
-      "id, user_id, venue_id, sport_key, game_id, game_label, home_team, away_team, starts_at, lineup, status, points, score_breakdown, reward_points, reward_claimed_at, stats_last_source_updated_at, settled_at, created_at, updated_at"
+      "id, user_id, venue_id, sport_key, game_id, game_label, home_team, away_team, starts_at, lineup, status, points, score_breakdown, reward_points, reward_claimed_at, live_collected_points, stats_last_source_updated_at, settled_at, created_at, updated_at"
     )
     .maybeSingle<FantasyEntryRow>();
 
@@ -2181,7 +2267,7 @@ export async function listUserFantasyEntries(params: {
   let query = supabaseAdmin!
     .from("fantasy_entries")
     .select(
-      "id, user_id, venue_id, sport_key, game_id, game_label, home_team, away_team, starts_at, lineup, status, points, score_breakdown, reward_points, reward_claimed_at, stats_last_source_updated_at, settled_at, created_at, updated_at"
+      "id, user_id, venue_id, sport_key, game_id, game_label, home_team, away_team, starts_at, lineup, status, points, score_breakdown, reward_points, reward_claimed_at, live_collected_points, stats_last_source_updated_at, settled_at, created_at, updated_at"
     )
     .eq("user_id", userId)
     .order("starts_at", { ascending: false })
@@ -3087,7 +3173,7 @@ export async function refreshFantasyProgress(params?: {
   let query = supabaseAdmin
     .from("fantasy_entries")
     .select(
-      "id, user_id, venue_id, sport_key, game_id, game_label, home_team, away_team, starts_at, lineup, status, points, score_breakdown, reward_points, reward_claimed_at, stats_last_source_updated_at, settled_at, created_at, updated_at"
+      "id, user_id, venue_id, sport_key, game_id, game_label, home_team, away_team, starts_at, lineup, status, points, score_breakdown, reward_points, reward_claimed_at, live_collected_points, stats_last_source_updated_at, settled_at, created_at, updated_at"
     )
     .in("status", ["pending", "live"])
     .order("starts_at", { ascending: true })
@@ -3438,7 +3524,7 @@ export async function claimFantasyReward(params: {
 
   const { data: entry, error } = await supabaseAdmin
     .from("fantasy_entries")
-    .select("id, user_id, venue_id, status, points, reward_points, reward_claimed_at")
+    .select("id, user_id, venue_id, status, points, reward_points, reward_claimed_at, live_collected_points")
     .eq("id", entryId)
     .eq("user_id", userId)
     .maybeSingle<{
@@ -3449,6 +3535,7 @@ export async function claimFantasyReward(params: {
       points: number;
       reward_points: number;
       reward_claimed_at: string | null;
+      live_collected_points: number;
     }>();
 
   if (error || !entry) {
@@ -3465,7 +3552,9 @@ export async function claimFantasyReward(params: {
   if (basePointsAwarded <= 0) {
     throw new Error("This entry does not have a reward to claim.");
   }
-  let pointsAwarded = basePointsAwarded;
+  // Subtract any platform points already awarded via mid-game live collection.
+  const alreadyCollected = Math.max(0, Number(entry.live_collected_points ?? 0));
+  let pointsAwarded = Math.max(0, basePointsAwarded - alreadyCollected);
 
   const nowIso = new Date().toISOString();
   const { data: claimed, error: claimError } = await supabaseAdmin
@@ -3523,4 +3612,88 @@ export async function claimFantasyReward(params: {
   });
 
   return { claimed: true, pointsAwarded };
+}
+
+export async function collectFantasyLivePoints(params: {
+  userId: string;
+  entryId: string;
+}): Promise<{ collected: boolean; platformPointsAwarded: number }> {
+  const userId = String(params.userId ?? "").trim();
+  const entryId = String(params.entryId ?? "").trim();
+  if (!userId || !entryId) {
+    throw new Error("userId and entryId are required.");
+  }
+  if (!supabaseAdmin) {
+    return { collected: false, platformPointsAwarded: 0 };
+  }
+
+  await ensureFantasyTables();
+
+  const { data: entry, error } = await supabaseAdmin
+    .from("fantasy_entries")
+    .select("id, user_id, venue_id, status, points, live_collected_points")
+    .eq("id", entryId)
+    .eq("user_id", userId)
+    .maybeSingle<{
+      id: string;
+      user_id: string;
+      venue_id: string;
+      status: FantasyEntryStatus;
+      points: number;
+      live_collected_points: number;
+    }>();
+
+  if (error || !entry) {
+    throw new Error(error?.message ?? "Fantasy entry not found.");
+  }
+  if (entry.status !== "pending" && entry.status !== "live") {
+    throw new Error("Live points can only be collected while the game is in progress.");
+  }
+
+  const currentPlatformPoints = computeFantasyRewardPoints(Math.max(0, Number(entry.points ?? 0)));
+  const alreadyCollected = Math.max(0, Number(entry.live_collected_points ?? 0));
+  const toAward = Math.max(0, currentPlatformPoints - alreadyCollected);
+
+  if (toAward <= 0) {
+    return { collected: false, platformPointsAwarded: 0 };
+  }
+
+  // Update live_collected_points atomically — only if it hasn't changed since we read it.
+  const { data: updated, error: updateEntryError } = await supabaseAdmin
+    .from("fantasy_entries")
+    .update({ live_collected_points: alreadyCollected + toAward })
+    .eq("id", entryId)
+    .eq("live_collected_points", alreadyCollected)
+    .select("id")
+    .maybeSingle<{ id: string }>();
+
+  if (updateEntryError) {
+    throw new Error(updateEntryError.message ?? "Failed to record live collection.");
+  }
+  if (!updated) {
+    // Concurrent collection; return 0 so client knows nothing was awarded this attempt.
+    return { collected: false, platformPointsAwarded: 0 };
+  }
+
+  const { data: user, error: userError } = await supabaseAdmin
+    .from("users")
+    .select("points")
+    .eq("id", userId)
+    .maybeSingle<{ points: number }>();
+
+  if (userError) {
+    throw new Error(userError.message ?? "Failed to load user profile.");
+  }
+
+  const currentBalance = Math.max(0, Number(user?.points ?? 0));
+  const { error: updateUserError } = await supabaseAdmin
+    .from("users")
+    .update({ points: currentBalance + toAward })
+    .eq("id", userId);
+
+  if (updateUserError) {
+    throw new Error(updateUserError.message ?? "Failed to award live fantasy points.");
+  }
+
+  return { collected: true, platformPointsAwarded: toAward };
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { claimFantasyReward, debugFantasyScoring, listUserFantasyEntries, refreshFantasyProgress, submitFantasyEntry, updateFantasyEntryLineup } from "@/lib/fantasy";
+import { claimFantasyReward, collectFantasyLivePoints, debugFantasyScoring, listUserFantasyEntries, refreshFantasyProgress, submitFantasyEntry, updateFantasyEntryLineup } from "@/lib/fantasy";
 
 function normalizeBoolean(value: string | null, fallback: boolean): boolean {
   const normalized = String(value ?? "").trim().toLowerCase();
@@ -87,6 +87,14 @@ export async function POST(request: Request) {
 
     if (action === "claim") {
       const result = await claimFantasyReward({
+        userId: String(body.userId ?? "").trim(),
+        entryId: String(body.entryId ?? "").trim(),
+      });
+      return NextResponse.json({ ok: true, result });
+    }
+
+    if (action === "collect-live") {
+      const result = await collectFantasyLivePoints({
         userId: String(body.userId ?? "").trim(),
         entryId: String(body.entryId ?? "").trim(),
       });

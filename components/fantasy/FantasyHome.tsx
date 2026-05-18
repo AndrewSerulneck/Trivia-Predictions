@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { navigateBackToVenue } from "@/lib/venueGameTransition";
@@ -61,6 +62,7 @@ type FantasyEntryRealtimeRow = {
   score_breakdown?: unknown;
   reward_points?: number | string;
   reward_claimed_at?: string | null;
+  live_collected_points?: number | string;
   stats_last_source_updated_at?: string | null;
   settled_at?: string | null;
   created_at?: string;
@@ -195,6 +197,7 @@ function mapRealtimeEntry(row: FantasyEntryRealtimeRow): FantasyEntry | null {
     scoreBreakdown: parseRealtimeScoreBreakdown(row.score_breakdown),
     rewardPoints: Number.isFinite(rewardRaw) ? Math.max(0, rewardRaw) : 0,
     rewardClaimedAt: row.reward_claimed_at ? String(row.reward_claimed_at) : null,
+    liveCollectedPoints: Math.max(0, Number(row.live_collected_points ?? 0)),
     statsLastSourceUpdatedAt: row.stats_last_source_updated_at ? String(row.stats_last_source_updated_at) : null,
     settledAt: row.settled_at ? String(row.settled_at) : null,
     createdAt: String(row.created_at ?? ""),
@@ -538,9 +541,15 @@ export function FantasyHome() {
   const [isGeofencePaused, setIsGeofencePaused] = useState(false);
   const [geofencePauseReason, setGeofencePauseReason] = useState("");
   const [statFlashes, setStatFlashes] = useState<Array<{ id: string; label: string; pointsDelta: number }>>([]);
+  const [statAnimPop, setStatAnimPop] = useState<{ id: number; label: string; delta: number } | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  const [lastCollectedPoints, setLastCollectedPoints] = useState(0);
+  const [isCollectingLive, setIsCollectingLive] = useState(false);
+  const syncedLastCollectedRef = useRef<string | false>(false);
   const gameDetailsRequestNonceRef = useRef(0);
   const prevStatsSnapshotRef = useRef<Map<number, StatsSnapshot>>(new Map());
   const statFlashCounterRef = useRef(0);
+  const statAnimCounterRef = useRef(0);
   const statFlashTimersRef = useRef<Map<string, number>>(new Map());
   const fantasyKickoffRefreshTimerRef = useRef<number | null>(null);
   const fantasyLineupAutosaveTimerRef = useRef<number | null>(null);
@@ -558,6 +567,8 @@ export function FantasyHome() {
   useEffect(() => {
     geofencePauseRef.current = isGeofencePaused;
   }, [isGeofencePaused]);
+
+  useEffect(() => { setIsMounted(true); }, []);
 
   useEffect(() => {
     if (!venueId || DISABLE_GEOFENCE_FOR_TESTING) {
@@ -703,6 +714,8 @@ export function FantasyHome() {
       setStatFlashes((prev) => prev.filter((item) => item.id !== id));
     }, 1300);
     statFlashTimersRef.current.set(id, timer);
+    statAnimCounterRef.current += 1;
+    setStatAnimPop({ id: statAnimCounterRef.current, label, delta: pointsDelta });
   }, []);
 
   useEffect(() => {
@@ -1128,6 +1141,48 @@ export function FantasyHome() {
     }
     return total;
   }, [livePointsByPlayer, trackedEntry, trackedEntryPreTipoff]);
+
+  // Sync lastCollectedPoints from entry once on first load or entry change (server-authoritative baseline)
+  useEffect(() => {
+    if (!trackedEntry) return;
+    if (!syncedLastCollectedRef.current || trackedEntry.id !== syncedLastCollectedRef.current) {
+      syncedLastCollectedRef.current = trackedEntry.id;
+      setLastCollectedPoints(Math.max(0, trackedEntry.liveCollectedPoints ?? 0));
+    }
+  }, [trackedEntry]);
+
+  const uncollectedPoints = useMemo(
+    () => (trackedEntry && !showTrackedEntryClaimButton ? Math.max(0, liveTrackedEntryPoints - lastCollectedPoints) : 0),
+    [lastCollectedPoints, liveTrackedEntryPoints, showTrackedEntryClaimButton, trackedEntry]
+  );
+
+  const collectLivePoints = useCallback(async () => {
+    if (!trackedEntry || isCollectingLive || uncollectedPoints <= 0 || isGeofencePaused) return;
+    setIsCollectingLive(true);
+    try {
+      const res = await fetch("/api/fantasy/entries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "collect-live", userId, entryId: trackedEntry.id }),
+      });
+      const data = (await res.json()) as { ok: boolean; result?: { platformPointsAwarded: number }; error?: string };
+      if (!data.ok) throw new Error(data.error ?? "Collection failed");
+      const awarded = data.result?.platformPointsAwarded ?? 0;
+      setLastCollectedPoints((prev) => prev + awarded);
+      if (awarded > 0) {
+        window.dispatchEvent(new CustomEvent("tp:coin-flight", { detail: { delta: awarded } }));
+        window.dispatchEvent(new CustomEvent("tp:points-updated", { detail: { source: "fantasy-live-collect", delta: awarded } }));
+        window.dispatchEvent(new CustomEvent("tp:success-particles"));
+        setStatusMessage(`+${awarded} pts collected!`);
+        window.setTimeout(() => setStatusMessage(""), 2500);
+      }
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "Failed to collect points.");
+      window.setTimeout(() => setErrorMessage(""), 3000);
+    } finally {
+      setIsCollectingLive(false);
+    }
+  }, [isCollectingLive, isGeofencePaused, trackedEntry, uncollectedPoints, userId]);
 
   useEffect(() => {
     if (!selectedGameId) {
@@ -1784,6 +1839,68 @@ export function FantasyHome() {
         </AnimatePresence>
       </div>
 
+      {/* Full-screen stat pop animation portal */}
+      {isMounted && statAnimPop
+        ? createPortal(
+            <div className="pointer-events-none fixed inset-0 z-[7000] flex flex-col items-center justify-center gap-3">
+              <motion.span
+                key={statAnimPop.id}
+                className="select-none whitespace-nowrap font-black leading-none transform-gpu will-change-transform"
+                style={{
+                  color: statAnimPop.delta >= 0 ? "#22c55e" : "#ef4444",
+                  fontSize: "clamp(2.6rem, 12vw, 5.5rem)",
+                  textShadow:
+                    statAnimPop.delta >= 0
+                      ? "0 0 60px rgba(34,197,94,0.55), 0 0 120px rgba(34,197,94,0.3)"
+                      : "0 0 60px rgba(239,68,68,0.55), 0 0 120px rgba(239,68,68,0.3)",
+                }}
+                initial={{ scale: 0, y: 0, opacity: 0 }}
+                animate={{
+                  scale: [0, 1.55, 1.2, 1.2, 0.85],
+                  y: [0, -30, -30, -30, 320],
+                  rotate: [0, 0, 0, 0, 12],
+                  opacity: [0, 1, 1, 1, 0],
+                }}
+                transition={{
+                  duration: 0.85,
+                  times: [0, 0.13, 0.22, 0.62, 1],
+                  ease: ["easeOut", "easeOut", "linear", "easeIn"],
+                }}
+                onAnimationComplete={() => setStatAnimPop(null)}
+              >
+                {statAnimPop.label}
+              </motion.span>
+              <motion.span
+                key={`delta-${statAnimPop.id}`}
+                className="select-none font-black leading-none transform-gpu will-change-transform"
+                style={{
+                  color: statAnimPop.delta >= 0 ? "#86efac" : "#fca5a5",
+                  fontSize: "clamp(1.6rem, 7vw, 3rem)",
+                  textShadow:
+                    statAnimPop.delta >= 0
+                      ? "0 0 24px rgba(34,197,94,0.6)"
+                      : "0 0 24px rgba(239,68,68,0.6)",
+                }}
+                initial={{ scale: 0, opacity: 0, y: 10 }}
+                animate={{
+                  scale: [0, 1.2, 1.0, 1.0, 0.8],
+                  y: [10, -20, -20, -20, 330],
+                  opacity: [0, 1, 1, 1, 0],
+                }}
+                transition={{
+                  duration: 0.85,
+                  times: [0, 0.15, 0.25, 0.62, 1],
+                  ease: ["easeOut", "easeOut", "linear", "easeIn"],
+                  delay: 0.05,
+                }}
+              >
+                {statAnimPop.delta >= 0 ? "+" : ""}{statAnimPop.delta.toFixed(1)} pts
+              </motion.span>
+            </div>,
+            document.body
+          )
+        : null}
+
       {/* Page title */}
       <h1 className="px-1 text-xl font-black tracking-tight text-slate-900">Hightop Fantasy Sports</h1>
 
@@ -2056,7 +2173,23 @@ export function FantasyHome() {
               {claimingEntryId === trackedEntry.id ? "Collecting..." : `Collect ${trackedEntryClaimablePoints} Points`}
             </button>
           ) : hasLiveEntry ? (
-            <p className="mt-2 text-[11px] font-semibold text-emerald-800">Live game detected. Streaming realtime updates.</p>
+            <>
+              <p className="mt-2 text-[11px] font-semibold text-emerald-800">Live game detected. Streaming realtime updates.</p>
+              {uncollectedPoints > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => void collectLivePoints()}
+                  disabled={isCollectingLive || isGeofencePaused}
+                  className="tp-clean-button mt-2 w-full rounded-lg border border-amber-500 bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-900 disabled:opacity-60"
+                >
+                  {isCollectingLive
+                    ? "Collecting..."
+                    : isGeofencePaused
+                    ? "Must be at venue to collect"
+                    : `Collect ${uncollectedPoints.toFixed(1)} Live Pts`}
+                </button>
+              ) : null}
+            </>
           ) : (
             <p className="mt-2 text-[11px] text-slate-600">No live game right now. Automatic updates will resume when your next game starts.</p>
           )}

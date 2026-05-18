@@ -3,12 +3,12 @@ import "server-only";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const QUESTIONS_PER_ROUND = 15;
-const QUESTION_BLOCK_MS = 60_000;
+const QUESTION_BLOCK_MS = 45_000;
 const ANSWERING_MS = 30_000;
-const REST_WARNING_MS = 30_000;
-const QUESTION_WINDOW_MS = QUESTIONS_PER_ROUND * QUESTION_BLOCK_MS; // 15 min
+const REST_WARNING_MS = 15_000;
+const QUESTION_WINDOW_MS = QUESTIONS_PER_ROUND * QUESTION_BLOCK_MS; // 11 min 15 sec
 const ROUND_MS = 20 * 60_000; // 20 min
-const MID_GAME_BREAK_MS = ROUND_MS - QUESTION_WINDOW_MS; // 5 min
+const MID_GAME_BREAK_MS = ROUND_MS - QUESTION_WINDOW_MS; // 8 min 45 sec
 
 export type LiveShowdownPhase = "answering" | "rest_warning" | "mid_game_break";
 
@@ -18,6 +18,7 @@ type TriviaScheduleRow = {
   start_time: string;
   timezone: string;
   num_rounds: number;
+  venue_id: string | null;
 };
 
 type TriviaSessionQuestionRow = {
@@ -106,6 +107,10 @@ function toSafeServerTimestamp(value: number): number {
   return Math.floor(value);
 }
 
+function toSafeVenueId(value: string): string {
+  return String(value ?? "").trim();
+}
+
 function isUuidLike(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
@@ -153,10 +158,15 @@ function toPublicQuestion(question: LiveShowdownQuestionInternal | null): LiveSh
   };
 }
 
-async function findRelevantSchedules(nowIso: string): Promise<{
+async function findRelevantSchedules(nowIso: string, venueIdRaw: string): Promise<{
   active: TriviaScheduleRow | null;
   upcoming: TriviaScheduleRow | null;
 }> {
+  const venueId = toSafeVenueId(venueIdRaw);
+  if (!venueId) {
+    return { active: null, upcoming: null };
+  }
+
   if (!supabaseAdmin) {
     return { active: null, upcoming: null };
   }
@@ -164,13 +174,15 @@ async function findRelevantSchedules(nowIso: string): Promise<{
   const [recentResult, upcomingResult] = await Promise.all([
     supabaseAdmin
       .from("trivia_schedules")
-      .select("id, title, start_time, timezone, num_rounds")
+      .select("id, title, start_time, timezone, num_rounds, venue_id")
+      .eq("venue_id", venueId)
       .lte("start_time", nowIso)
       .order("start_time", { ascending: false })
       .limit(40),
     supabaseAdmin
       .from("trivia_schedules")
-      .select("id, title, start_time, timezone, num_rounds")
+      .select("id, title, start_time, timezone, num_rounds, venue_id")
+      .eq("venue_id", venueId)
       .gt("start_time", nowIso)
       .order("start_time", { ascending: true })
       .limit(1),
@@ -274,11 +286,11 @@ async function loadRoundCategory(scheduleId: string, roundNumber: number): Promi
   return category || null;
 }
 
-export async function getLiveShowdownState(serverTimestamp: number): Promise<LiveShowdownState> {
+export async function getLiveShowdownState(serverTimestamp: number, venueId: string): Promise<LiveShowdownState> {
   const nowMs = toSafeServerTimestamp(serverTimestamp);
   const nowIso = new Date(nowMs).toISOString();
 
-  const { active, upcoming } = await findRelevantSchedules(nowIso);
+  const { active, upcoming } = await findRelevantSchedules(nowIso, venueId);
 
   if (!active) {
     const nextStartMs = upcoming ? Date.parse(String(upcoming.start_time ?? "")) : Number.NaN;

@@ -530,6 +530,7 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   const [liveTriviaMessage, setLiveTriviaMessage] = useState("");
   const [creatingLiveTrivia, setCreatingLiveTrivia] = useState(false);
   const [devControlBusyScheduleId, setDevControlBusyScheduleId] = useState<string | null>(null);
+  const [deletingLiveTriviaScheduleId, setDeletingLiveTriviaScheduleId] = useState<string | null>(null);
   const addressSuggestionsCacheRef = useRef<Map<string, AdminAddressSuggestion[]>>(new Map());
   const challengePreviewResizeRef = useRef<{ active: boolean; startX: number; startY: number; startScale: number }>({
     active: false,
@@ -1442,6 +1443,34 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
       setLiveTriviaMessage(error instanceof Error ? error.message : "Live Trivia developer control failed.");
     } finally {
       setDevControlBusyScheduleId(null);
+    }
+  };
+
+  const deleteLiveShowdownSchedule = async (scheduleId: string) => {
+    if (!window.confirm("Delete this Live Trivia schedule? This will also remove its session question mapping.")) {
+      return;
+    }
+
+    setDeletingLiveTriviaScheduleId(scheduleId);
+    setLiveTriviaMessage("");
+    setErrorMessage("");
+    try {
+      const response = await adminFetch(
+        `/api/admin?resource=live-showdown-schedules&id=${encodeURIComponent(scheduleId)}`,
+        {
+          method: "DELETE",
+        }
+      );
+      const payload = (await response.json()) as { ok: boolean; error?: string };
+      if (!payload.ok) {
+        throw new Error(payload.error ?? "Failed to delete Live Trivia schedule.");
+      }
+      setLiveTriviaMessage("Live Trivia schedule deleted.");
+      await loadLiveShowdownSchedules();
+    } catch (error) {
+      setLiveTriviaMessage(error instanceof Error ? error.message : "Failed to delete Live Trivia schedule.");
+    } finally {
+      setDeletingLiveTriviaScheduleId(null);
     }
   };
 
@@ -2451,6 +2480,16 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                     >
                       Reset Live Session Answers
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void deleteLiveShowdownSchedule(schedule.id);
+                      }}
+                      disabled={deletingLiveTriviaScheduleId === schedule.id}
+                      className="rounded-md border border-red-400 bg-red-50 px-3 py-1 text-xs font-semibold text-red-800 hover:bg-red-100 disabled:opacity-60"
+                    >
+                      Delete Schedule
+                    </button>
                   </div>
                 </div>
               ))}
@@ -2471,6 +2510,18 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
                     Venue: {schedule.venueId ? venueNameById.get(schedule.venueId) ?? schedule.venueId : "No venue"} ·
                     Start: {new Date(schedule.startTime).toLocaleString()} ({schedule.timezone}) · Rounds: {schedule.numRounds}
                   </p>
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void deleteLiveShowdownSchedule(schedule.id);
+                      }}
+                      disabled={deletingLiveTriviaScheduleId === schedule.id}
+                      className="rounded-md border border-red-400 bg-red-50 px-3 py-1 text-xs font-semibold text-red-800 hover:bg-red-100 disabled:opacity-60"
+                    >
+                      Delete Schedule
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>

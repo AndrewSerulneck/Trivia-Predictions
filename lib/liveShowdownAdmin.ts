@@ -385,6 +385,44 @@ export async function resetLiveShowdownAnswersForSchedule(scheduleIdRaw: string)
   return { deleted: Array.isArray(data) ? data.length : 0 };
 }
 
+export async function deleteAdminLiveShowdownSchedule(scheduleIdRaw: string): Promise<{ deleted: boolean }> {
+  const admin = getAdminClient();
+  const scheduleId = String(scheduleIdRaw ?? "").trim();
+  if (!scheduleId) {
+    throw new Error("scheduleId is required.");
+  }
+
+  const { error: deleteSessionQuestionsError } = await admin
+    .from("trivia_session_questions")
+    .delete()
+    .eq("schedule_id", scheduleId);
+
+  if (deleteSessionQuestionsError) {
+    throw new Error(deleteSessionQuestionsError.message || "Failed to delete Live Showdown session questions.");
+  }
+
+  const { error: deleteAnswersError } = await admin
+    .from("live_showdown_answers")
+    .delete()
+    .eq("schedule_id", scheduleId);
+
+  if (deleteAnswersError) {
+    throw new Error(deleteAnswersError.message || "Failed to delete Live Showdown answers.");
+  }
+
+  const { data, error: deleteScheduleError } = await admin
+    .from("trivia_schedules")
+    .delete()
+    .eq("id", scheduleId)
+    .select("id");
+
+  if (deleteScheduleError) {
+    throw new Error(deleteScheduleError.message || "Failed to delete Live Showdown schedule.");
+  }
+
+  return { deleted: Array.isArray(data) && data.length > 0 };
+}
+
 export async function forceAdvanceLiveShowdownToNextQuestion(scheduleIdRaw: string): Promise<{
   updatedStartTime: string;
 }> {
@@ -394,7 +432,23 @@ export async function forceAdvanceLiveShowdownToNextQuestion(scheduleIdRaw: stri
     throw new Error("scheduleId is required.");
   }
 
-  const state = await getLiveShowdownState(Date.now());
+  const { data: scheduleRow, error: scheduleError } = await admin
+    .from("trivia_schedules")
+    .select("venue_id")
+    .eq("id", scheduleId)
+    .limit(1)
+    .maybeSingle<{ venue_id: string | null }>();
+
+  if (scheduleError) {
+    throw new Error(scheduleError.message || "Failed to resolve schedule venue.");
+  }
+
+  const venueId = String(scheduleRow?.venue_id ?? "").trim();
+  if (!venueId) {
+    throw new Error("Selected schedule does not have a venue.");
+  }
+
+  const state = await getLiveShowdownState(Date.now(), venueId);
   if (!state.isGameActive) {
     throw new Error("No active Live Showdown game is running.");
   }

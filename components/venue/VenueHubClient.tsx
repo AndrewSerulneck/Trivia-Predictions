@@ -699,13 +699,15 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
 
   const loadLiveTriviaStatus = useCallback(async () => {
     try {
+      const venueId = String(getVenueId() ?? "").trim();
+      const query = venueId ? `?venueId=${encodeURIComponent(venueId)}` : "";
       const payload = await fetchJsonWithTimeout<{
         ok?: boolean;
         state?: {
           isGameActive?: boolean;
           nextSchedule?: { startTime?: string } | null;
         };
-      }>("/api/trivia/live/state", 3600);
+      }>(`/api/trivia/live/state${query}`, 3600);
 
       if (!payload?.ok || !payload.state) {
         setLiveTriviaStatus({ live: false, label: "" });

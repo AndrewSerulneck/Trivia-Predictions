@@ -17,7 +17,9 @@
       "Bash(grep -v \".cjs\\\\|.js$\")",
       "Bash(python3 -c ' *)",
       "Bash(curl -s --max-time 10 -w '\\\\nHTTP:%{http_code}' -H 'User-Agent: Mozilla/5.0' https://www.nba.com/player/2544)",
-      "Bash(curl -s --max-time 10 -w '\\\\nHTTP:%{http_code}' -H 'User-Agent: Mozilla/5.0' https://search.nba.com/players?q=LeBron)"
+      "Bash(curl -s --max-time 10 -w '\\\\nHTTP:%{http_code}' -H 'User-Agent: Mozilla/5.0' https://search.nba.com/players?q=LeBron)",
+      "Bash(supabase status *)",
+      "Bash(supabase projects *)"
     ]
   }
 }

@@ -27,6 +27,7 @@ import { recordAdClick, recordAdImpression } from "@/lib/ads";
 import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, CampaignRecurringType, ChallengeImageFitMode } from "@/types";
 import {
   createAdminLiveShowdownSchedule,
+  deleteAdminLiveShowdownSchedule,
   forceAdvanceLiveShowdownToNextQuestion,
   listAdminLiveShowdownSchedules,
   resetLiveShowdownAnswersForSchedule,
@@ -406,8 +407,16 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
+    if (resource === "live-showdown-schedules") {
+      const result = await deleteAdminLiveShowdownSchedule(id);
+      return NextResponse.json({ ok: true, result });
+    }
+
     return NextResponse.json(
-      { ok: false, error: "Unknown resource. Use resource=trivia, resource=ads, or resource=challenge-campaigns." },
+      {
+        ok: false,
+        error: "Unknown resource. Use resource=trivia, resource=ads, resource=challenge-campaigns, or resource=live-showdown-schedules.",
+      },
       { status: 400 }
     );
   } catch (error) {

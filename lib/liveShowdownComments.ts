@@ -1,7 +1,8 @@
 export type LiveShowdownCommentTrigger =
   | "answer_correct"
   | "answer_incorrect"
-  | "answer_unsubmitted"
+  | "answer_unsubmitted_late_joiner"
+  | "answer_unsubmitted_inactive"
   | "pregame_intro"
   | "round_start"
   | "round_break";
@@ -126,6 +127,19 @@ const UNSUBMITTED_WELCOME_COMMENTS = [
   "Quick reset. Next question is your on-ramp.",
 ] as const;
 
+const UNSUBMITTED_INACTIVE_COMMENTS = [
+  "No answer logged. Did your fingers fall asleep?",
+  "Hello? Anyone home? The timer was ticking!",
+  "Staring at the screen won't get you points. Type faster next time!",
+  "No answer logged, stay ready for the next one.",
+  "Clock hit zero and we got silence. Wake that trivia brain up.",
+  "You had 30 seconds and used all of them to think about snacks.",
+  "No submission this round. Shake it off and fire on the next one.",
+  "Frozen hands? Unfreeze for the next prompt.",
+  "That timer moved faster than your thumbs that round.",
+  "No answer in the books. Come back swinging next question.",
+] as const;
+
 function assertCommentBankIntegrity() {
   if (CORRECT_SUBMISSION_COMMENTS.length !== 35) {
     throw new Error("Live Showdown comments: correct submission bank must contain exactly 35 phrases.");
@@ -176,8 +190,11 @@ export function selectLiveShowdownComment(params: {
   if (trigger === "answer_incorrect") {
     return pickFromBank(INCORRECT_SUBMISSION_COMMENTS, eventKey);
   }
-  if (trigger === "answer_unsubmitted") {
+  if (trigger === "answer_unsubmitted_late_joiner") {
     return pickFromBank(UNSUBMITTED_WELCOME_COMMENTS, eventKey);
+  }
+  if (trigger === "answer_unsubmitted_inactive") {
+    return pickFromBank(UNSUBMITTED_INACTIVE_COMMENTS, eventKey);
   }
   return pickFromBank(TRANSITION_AND_PREGAME_COMMENTS, eventKey);
 }
