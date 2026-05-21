@@ -5,7 +5,8 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const venueId = String(url.searchParams.get("venueId") ?? "").trim();
-    const state = await getLiveShowdownState(Date.now(), venueId);
+    const userId = String(url.searchParams.get("userId") ?? "").trim();
+    const state = await getLiveShowdownState(Date.now(), venueId, userId);
     return NextResponse.json({ ok: true, state, serverTimestamp: Date.now() });
   } catch (error) {
     return NextResponse.json(

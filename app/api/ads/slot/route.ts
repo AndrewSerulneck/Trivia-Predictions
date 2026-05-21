@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getActiveAdForSlot } from "@/lib/ads";
+import { getActiveAdForSlot, getAdForSlotKey } from "@/lib/ads";
 import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType } from "@/types";
 
 function isAdSlot(value: string): value is AdSlot {
@@ -31,26 +31,40 @@ function isAdDisplayTrigger(value: string): value is AdDisplayTrigger {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    const slotKeyParam = (searchParams.get("slotKey") ?? "").trim();
     const slotParam = (searchParams.get("slot") ?? "").trim();
     const venueId = (searchParams.get("venueId") ?? "").trim() || undefined;
+    const excludeAdIds = (searchParams.get("excludeAdIds") ?? "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const allowAnyVenue =
+      (searchParams.get("allowAnyVenue") ?? "").trim() === "1" ||
+      (searchParams.get("allowAnyVenue") ?? "").trim().toLowerCase() === "true";
+    const clientCounterRaw = Number.parseInt(searchParams.get("clientCounter") ?? "", 10);
+    const clientCounter = Number.isFinite(clientCounterRaw) ? clientCounterRaw : 0;
+
+    // New canonical path: ?slotKey=venue-popup-on-entry
+    if (slotKeyParam) {
+      const ad = await getAdForSlotKey(slotKeyParam, venueId, {
+        excludeAdIds,
+        allowAnyVenue,
+        clientCounter,
+      });
+      return NextResponse.json({ ok: true, ad });
+    }
+
+    // Legacy path: ?slot=popup-on-entry&pageKey=venue&adType=popup&...
+    if (!isAdSlot(slotParam)) {
+      return NextResponse.json({ ok: false, error: "Provide slotKey or a valid slot." }, { status: 400 });
+    }
+
     const pageKeyParam = (searchParams.get("pageKey") ?? "").trim();
     const adTypeParam = (searchParams.get("adType") ?? "").trim();
     const displayTriggerParam = (searchParams.get("displayTrigger") ?? "").trim();
     const placementKey = (searchParams.get("placementKey") ?? "").trim() || undefined;
     const roundNumberRaw = Number.parseInt(searchParams.get("roundNumber") ?? "", 10);
     const sequenceIndexRaw = Number.parseInt(searchParams.get("sequenceIndex") ?? "", 10);
-    const clientCounterRaw = Number.parseInt(searchParams.get("clientCounter") ?? "", 10);
-    const allowAnyVenue =
-      (searchParams.get("allowAnyVenue") ?? "").trim() === "1" ||
-      (searchParams.get("allowAnyVenue") ?? "").trim().toLowerCase() === "true";
-    const excludeAdIds = (searchParams.get("excludeAdIds") ?? "")
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-
-    if (!isAdSlot(slotParam)) {
-      return NextResponse.json({ ok: false, error: "Invalid ad slot." }, { status: 400 });
-    }
 
     if (pageKeyParam && !isAdPageKey(pageKeyParam)) {
       return NextResponse.json({ ok: false, error: "Invalid page key." }, { status: 400 });
@@ -69,7 +83,7 @@ export async function GET(request: Request) {
       placementKey,
       roundNumber: Number.isFinite(roundNumberRaw) ? roundNumberRaw : undefined,
       sequenceIndex: Number.isFinite(sequenceIndexRaw) ? sequenceIndexRaw : undefined,
-      clientCounter: Number.isFinite(clientCounterRaw) ? clientCounterRaw : 0,
+      clientCounter,
       excludeAdIds,
       allowAnyVenue,
     });

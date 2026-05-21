@@ -10,11 +10,16 @@ type TriviaQuestionRow = {
   correct_answer: number;
   category: string | null;
   difficulty: string | null;
+  question_pool: "anytime_blitz" | "live_showdown" | null;
+  answer_format: "multiple_choice" | "write_in" | "numeric" | "true_false" | null;
+  created_at: string;
 };
 
 type AdvertisementRow = {
   id: string;
   slot: AdSlot;
+  slot_key: string;
+  priority: number;
   is_placeholder: boolean | null;
   page_key: AdPageKey | null;
   ad_type: AdType | null;
@@ -105,30 +110,30 @@ function mapTriviaRow(row: TriviaQuestionRow): TriviaQuestion {
     correctAnswer: row.correct_answer,
     category: row.category ?? undefined,
     difficulty: row.difficulty ?? undefined,
+    questionPool: row.question_pool === "live_showdown" ? "live_showdown" : "anytime_blitz",
+    answerFormat:
+      row.answer_format === "write_in" ||
+      row.answer_format === "numeric" ||
+      row.answer_format === "true_false"
+        ? row.answer_format
+        : "multiple_choice",
+    createdAt: row.created_at,
   };
 }
 
 function mapAdRow(row: AdvertisementRow): Advertisement {
-  const placementMeta = normalizeAdPlacementMeta({
-    slot: row.slot,
-    pageKey: row.page_key ?? undefined,
-    adType: row.ad_type ?? undefined,
-    displayTrigger: row.display_trigger ?? undefined,
-    placementKey: row.placement_key ?? undefined,
-    roundNumber: row.round_number ?? undefined,
-    sequenceIndex: row.sequence_index ?? undefined,
-  });
-
   return {
     id: row.id,
     slot: row.slot,
+    slotKey: row.slot_key,
+    priority: row.priority ?? 0,
     isPlaceholder: Boolean(row.is_placeholder ?? false),
-    pageKey: placementMeta.pageKey,
-    adType: placementMeta.adType,
-    displayTrigger: placementMeta.displayTrigger,
-    placementKey: placementMeta.placementKey,
-    roundNumber: placementMeta.roundNumber,
-    sequenceIndex: placementMeta.sequenceIndex,
+    pageKey: (row.page_key ?? "global") as AdPageKey,
+    adType: (row.ad_type ?? "inline") as AdType,
+    displayTrigger: (row.display_trigger ?? "on-load") as AdDisplayTrigger,
+    placementKey: row.placement_key ?? undefined,
+    roundNumber: row.round_number ?? undefined,
+    sequenceIndex: row.sequence_index ?? undefined,
     venueId: row.venue_id ?? undefined,
     venueIds: Array.isArray(row.venue_ids) ? row.venue_ids : row.venue_id ? [row.venue_id] : undefined,
     targetAllVenues: Boolean(row.target_all_venues ?? false),
@@ -170,6 +175,26 @@ function mapVenueRow(row: VenueRow): Venue {
     longitude: Number(row.longitude),
     radius: Number(row.radius),
   };
+}
+
+const AD_SELECT =
+  "id, slot, slot_key, priority, is_placeholder, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks";
+
+function computeSlotKey(
+  slot: AdSlot,
+  pageKey: AdPageKey,
+  displayTrigger: AdDisplayTrigger,
+  roundNumber?: number,
+  placementKey?: string
+): string {
+  if (displayTrigger === "round-end") {
+    return `${pageKey}-round-end${roundNumber ? `-r${roundNumber}` : ""}`;
+  }
+  if (slot === "popup-on-entry") return `${pageKey}-popup-on-entry`;
+  if (slot === "popup-on-scroll") return `${pageKey}-popup-on-scroll`;
+  if (slot === "mobile-adhesion") return `${pageKey}-banner`;
+  if (placementKey) return `${pageKey}-${slot}-${placementKey}`;
+  return `${pageKey}-${slot}`;
 }
 
 function normalizeVenueId(value: string): string {
@@ -254,8 +279,26 @@ function assertAdminConfigured() {
   }
 }
 
+function normalizeQuestionPool(value: string | undefined): "anytime_blitz" | "live_showdown" {
+  return String(value ?? "").trim().toLowerCase() === "live_showdown" ? "live_showdown" : "anytime_blitz";
+}
+
+function normalizeAnswerFormat(
+  value: string | undefined
+): "multiple_choice" | "write_in" | "numeric" | "true_false" {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (normalized === "write_in" || normalized === "numeric" || normalized === "true_false") {
+    return normalized;
+  }
+  return "multiple_choice";
+}
+
 export type AdminAdsDebugSnapshot = {
   generatedAt: string;
+  startDate: string;
+  endDate: string;
+  rangeHours: number;
+  rangeLabel: string;
   windowHours: number;
   windowStart: string;
   totalAds: number;
@@ -274,6 +317,29 @@ export type AdminAdsDebugSnapshot = {
   topByWindowClicks: Advertisement[];
   topByWindowCtr: Advertisement[];
   windowMetricsByAd: Record<string, { impressions: number; clicks: number; ctr: number }>;
+  campaignMetrics: Array<{
+    adId: string;
+    advertiserName: string;
+    slotKey: string;
+    pageKey: string;
+    active: boolean;
+    impressions: number;
+    clicks: number;
+    ctr: number;
+  }>;
+  placementMetrics: Array<{
+    slotKey: string;
+    adCount: number;
+    impressions: number;
+    clicks: number;
+    ctr: number;
+  }>;
+  interactionTrend: Array<{
+    bucketStart: string;
+    bucketLabel: string;
+    impressions: number;
+    clicks: number;
+  }>;
 };
 
 export type AdminPendingPredictionSummary = {
@@ -292,41 +358,103 @@ export type AdminVenueUser = {
   createdAt: string;
 };
 
-export async function listAdminTriviaQuestions(): Promise<TriviaQuestion[]> {
+export type PaginatedResult<T> = {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
+export async function listAdminTriviaQuestions(opts?: {
+  page?: number;
+  pageSize?: number;
+  questionPool?: string;
+  answerFormat?: string;
+}): Promise<PaginatedResult<TriviaQuestion>> {
   assertAdminConfigured();
 
-  const { data, error } = await supabaseAdmin!
+  const page = Math.max(1, Math.floor(opts?.page ?? 1));
+  const pageSize = Math.min(200, Math.max(1, Math.floor(opts?.pageSize ?? 25)));
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabaseAdmin!
     .from("trivia_questions")
-    .select("id, question, options, correct_answer, category, difficulty")
+    .select("id, question, options, correct_answer, category, difficulty, question_pool, answer_format, created_at", { count: "exact" });
+
+  const normalizedPool = String(opts?.questionPool ?? "").trim();
+  if (normalizedPool === "anytime_blitz" || normalizedPool === "live_showdown") {
+    query = query.eq("question_pool", normalizedPool);
+  }
+
+  const normalizedAnswerFormat = String(opts?.answerFormat ?? "").trim();
+  if (
+    normalizedAnswerFormat === "multiple_choice" ||
+    normalizedAnswerFormat === "write_in" ||
+    normalizedAnswerFormat === "numeric" ||
+    normalizedAnswerFormat === "true_false"
+  ) {
+    query = query.eq("answer_format", normalizedAnswerFormat);
+  }
+
+  const { data, error, count } = await query
     .order("created_at", { ascending: false })
-    .limit(100);
+    .range(from, to);
 
   if (error || !data) {
     throw new Error(error?.message ?? "Failed to load trivia questions.");
   }
 
-  return data.map((row) => mapTriviaRow(row as TriviaQuestionRow));
+  const total = count ?? 0;
+  return {
+    items: data.map((row) => mapTriviaRow(row as TriviaQuestionRow)),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  };
 }
 
 export async function createAdminTriviaQuestion(input: {
   question: string;
-  options: string[];
-  correctAnswer: number;
+  options?: string[];
+  correctAnswer?: number;
   category?: string;
   difficulty?: string;
+  questionPool?: string;
+  answerFormat?: string;
 }): Promise<TriviaQuestion> {
   assertAdminConfigured();
 
   const question = input.question.trim();
-  const options = input.options.map((option) => option.trim()).filter(Boolean);
+  const answerFormat = normalizeAnswerFormat(input.answerFormat);
+  const questionPool = normalizeQuestionPool(input.questionPool);
+  const providedOptions = Array.isArray(input.options)
+    ? input.options.map((option) => option.trim()).filter(Boolean)
+    : [];
+  let options = providedOptions;
+  let correctAnswer = Number.isFinite(Number(input.correctAnswer)) ? Math.floor(Number(input.correctAnswer)) : 0;
   if (!question) {
     throw new Error("Question is required.");
   }
-  if (options.length < 2) {
-    throw new Error("At least two options are required.");
-  }
-  if (input.correctAnswer < 0 || input.correctAnswer >= options.length) {
-    throw new Error("Correct answer index is out of range.");
+  if (answerFormat === "multiple_choice") {
+    if (options.length < 2) {
+      throw new Error("At least two options are required for multiple choice.");
+    }
+    if (correctAnswer < 0 || correctAnswer >= options.length) {
+      throw new Error("Correct answer index is out of range.");
+    }
+  } else {
+    const canonicalAnswer =
+      options[correctAnswer] ??
+      options[0] ??
+      "";
+    if (!canonicalAnswer) {
+      throw new Error("A canonical answer value is required for write-in, numeric, or true/false questions.");
+    }
+    options = [canonicalAnswer];
+    correctAnswer = 0;
   }
 
   const { data, error } = await supabaseAdmin!
@@ -334,11 +462,13 @@ export async function createAdminTriviaQuestion(input: {
     .insert({
       question,
       options,
-      correct_answer: input.correctAnswer,
+      correct_answer: correctAnswer,
       category: input.category?.trim() || null,
       difficulty: input.difficulty?.trim() || null,
+      question_pool: questionPool,
+      answer_format: answerFormat,
     })
-    .select("id, question, options, correct_answer, category, difficulty")
+    .select("id, question, options, correct_answer, category, difficulty, question_pool, answer_format, created_at")
     .single<TriviaQuestionRow>();
 
   if (error || !data) {
@@ -351,27 +481,47 @@ export async function createAdminTriviaQuestion(input: {
 export async function updateAdminTriviaQuestion(input: {
   id: string;
   question: string;
-  options: string[];
-  correctAnswer: number;
+  options?: string[];
+  correctAnswer?: number;
   category?: string;
   difficulty?: string;
+  questionPool?: string;
+  answerFormat?: string;
 }): Promise<TriviaQuestion> {
   assertAdminConfigured();
 
   const id = input.id.trim();
   const question = input.question.trim();
-  const options = input.options.map((option) => option.trim()).filter(Boolean);
+  const answerFormat = normalizeAnswerFormat(input.answerFormat);
+  const questionPool = normalizeQuestionPool(input.questionPool);
+  const providedOptions = Array.isArray(input.options)
+    ? input.options.map((option) => option.trim()).filter(Boolean)
+    : [];
+  let options = providedOptions;
+  let correctAnswer = Number.isFinite(Number(input.correctAnswer)) ? Math.floor(Number(input.correctAnswer)) : 0;
   if (!id) {
     throw new Error("Question id is required.");
   }
   if (!question) {
     throw new Error("Question is required.");
   }
-  if (options.length < 2) {
-    throw new Error("At least two options are required.");
-  }
-  if (input.correctAnswer < 0 || input.correctAnswer >= options.length) {
-    throw new Error("Correct answer index is out of range.");
+  if (answerFormat === "multiple_choice") {
+    if (options.length < 2) {
+      throw new Error("At least two options are required for multiple choice.");
+    }
+    if (correctAnswer < 0 || correctAnswer >= options.length) {
+      throw new Error("Correct answer index is out of range.");
+    }
+  } else {
+    const canonicalAnswer =
+      options[correctAnswer] ??
+      options[0] ??
+      "";
+    if (!canonicalAnswer) {
+      throw new Error("A canonical answer value is required for write-in, numeric, or true/false questions.");
+    }
+    options = [canonicalAnswer];
+    correctAnswer = 0;
   }
 
   const { data, error } = await supabaseAdmin!
@@ -379,12 +529,14 @@ export async function updateAdminTriviaQuestion(input: {
     .update({
       question,
       options,
-      correct_answer: input.correctAnswer,
+      correct_answer: correctAnswer,
       category: input.category?.trim() || null,
       difficulty: input.difficulty?.trim() || null,
+      question_pool: questionPool,
+      answer_format: answerFormat,
     })
     .eq("id", id)
-    .select("id, question, options, correct_answer, category, difficulty")
+    .select("id, question, options, correct_answer, category, difficulty, question_pool, answer_format, created_at")
     .single<TriviaQuestionRow>();
 
   if (error || !data) {
@@ -402,26 +554,79 @@ export async function deleteAdminTriviaQuestion(id: string): Promise<void> {
   }
 }
 
-export async function listAdminAdvertisements(): Promise<Advertisement[]> {
+export async function bulkUpdateAdminTriviaQuestions(input: {
+  ids: string[];
+  questionPool?: "anytime_blitz" | "live_showdown";
+  answerFormat?: "multiple_choice" | "write_in" | "numeric" | "true_false";
+}): Promise<void> {
+  assertAdminConfigured();
+  const ids = Array.from(new Set((input.ids ?? []).map((id) => String(id).trim()).filter(Boolean)));
+  if (ids.length === 0) {
+    throw new Error("At least one trivia id is required.");
+  }
+
+  const patch: Record<string, string> = {};
+  if (input.questionPool === "anytime_blitz" || input.questionPool === "live_showdown") {
+    patch.question_pool = input.questionPool;
+  }
+  if (
+    input.answerFormat === "multiple_choice" ||
+    input.answerFormat === "write_in" ||
+    input.answerFormat === "numeric" ||
+    input.answerFormat === "true_false"
+  ) {
+    patch.answer_format = input.answerFormat;
+  }
+
+  if (Object.keys(patch).length === 0) {
+    throw new Error("No bulk trivia fields were provided.");
+  }
+
+  const { error } = await supabaseAdmin!
+    .from("trivia_questions")
+    .update(patch)
+    .in("id", ids);
+
+  if (error) {
+    throw new Error(error.message || "Failed to bulk update trivia questions.");
+  }
+}
+
+export async function listAdminAdvertisements(opts?: {
+  page?: number;
+  pageSize?: number;
+}): Promise<PaginatedResult<Advertisement>> {
   assertAdminConfigured();
 
-  const { data, error } = await supabaseAdmin!
+  const page = Math.max(1, Math.floor(opts?.page ?? 1));
+  const pageSize = Math.min(10000, Math.max(1, Math.floor(opts?.pageSize ?? 100)));
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, error, count } = await supabaseAdmin!
     .from("advertisements")
-    .select(
-      "id, slot, is_placeholder, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
-    )
+    .select(AD_SELECT, { count: "exact" })
     .order("created_at", { ascending: false })
-    .limit(100);
+    .range(from, to);
 
   if (error || !data) {
     throw new Error(error?.message ?? "Failed to load advertisements.");
   }
 
-  return data.map((row) => mapAdRow(row as AdvertisementRow));
+  const total = count ?? 0;
+  return {
+    items: data.map((row) => mapAdRow(row as AdvertisementRow)),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  };
 }
 
 export async function createAdminAdvertisement(input: {
   slot: AdSlot;
+  slotKey?: string;
+  priority?: number;
   isPlaceholder?: boolean;
   pageKey?: AdPageKey;
   adType?: AdType;
@@ -529,10 +734,16 @@ export async function createAdminAdvertisement(input: {
     throw new Error("Choose Round 1, Round 2, or Round 3 for Trivia round-end ads.");
   }
 
+  const derivedSlotKey =
+    input.slotKey?.trim() ||
+    computeSlotKey(input.slot, placementMeta.pageKey, placementMeta.displayTrigger, placementMeta.roundNumber, placementMeta.placementKey);
+
   const { data, error } = await supabaseAdmin!
     .from("advertisements")
     .insert({
       slot: input.slot,
+      slot_key: derivedSlotKey,
+      priority: Number.isFinite(input.priority) ? Math.max(0, Math.round(Number(input.priority))) : 0,
       is_placeholder: Boolean(input.isPlaceholder),
       page_key: placementMeta.pageKey,
       ad_type: placementMeta.adType,
@@ -561,9 +772,7 @@ export async function createAdminAdvertisement(input: {
       start_date: input.startDate,
       end_date: input.endDate?.trim() || null,
     })
-    .select(
-      "id, slot, is_placeholder, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
-    )
+    .select(AD_SELECT)
     .single<AdvertisementRow>();
 
   if (error || !data) {
@@ -576,6 +785,8 @@ export async function createAdminAdvertisement(input: {
 export async function updateAdminAdvertisement(input: {
   id: string;
   slot: AdSlot;
+  slotKey?: string;
+  priority?: number;
   isPlaceholder?: boolean;
   pageKey?: AdPageKey;
   adType?: AdType;
@@ -687,10 +898,16 @@ export async function updateAdminAdvertisement(input: {
     throw new Error("Choose Round 1, Round 2, or Round 3 for Trivia round-end ads.");
   }
 
+  const derivedSlotKey =
+    input.slotKey?.trim() ||
+    computeSlotKey(input.slot, placementMeta.pageKey, placementMeta.displayTrigger, placementMeta.roundNumber, placementMeta.placementKey);
+
   const { data, error } = await supabaseAdmin!
     .from("advertisements")
     .update({
       slot: input.slot,
+      slot_key: derivedSlotKey,
+      priority: Number.isFinite(input.priority) ? Math.max(0, Math.round(Number(input.priority))) : 0,
       is_placeholder: Boolean(input.isPlaceholder),
       page_key: placementMeta.pageKey,
       ad_type: placementMeta.adType,
@@ -720,9 +937,7 @@ export async function updateAdminAdvertisement(input: {
       end_date: input.endDate?.trim() || null,
     })
     .eq("id", id)
-    .select(
-      "id, slot, is_placeholder, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
-    )
+    .select(AD_SELECT)
     .single<AdvertisementRow>();
 
   if (error || !data) {
@@ -740,14 +955,108 @@ export async function deleteAdminAdvertisement(id: string): Promise<void> {
   }
 }
 
-export async function getAdminAdsDebugSnapshot(windowHours = 24): Promise<AdminAdsDebugSnapshot> {
-  const ads = await listAdminAdvertisements();
-  const safeWindowHours = Number.isFinite(windowHours)
-    ? Math.min(24 * 30, Math.max(1, Math.round(windowHours)))
-    : 24;
+export async function updateAdPlacements(
+  updates: Array<{ id: string; slotKey: string; priority: number }>
+): Promise<void> {
+  assertAdminConfigured();
+  if (updates.length === 0) return;
+  await Promise.all(
+    updates.map(({ id, slotKey, priority }) =>
+      supabaseAdmin!
+        .from("advertisements")
+        .update({
+          slot_key: slotKey.trim(),
+          priority: Math.max(0, Math.round(Number(priority))),
+        })
+        .eq("id", id)
+    )
+  );
+}
+
+function parseAdminDateParam(value: string | undefined, fallback: Date): Date {
+  const raw = String(value ?? "").trim();
+  if (!raw) {
+    return fallback;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const parsed = new Date(`${raw}T00:00:00.000Z`);
+    if (Number.isFinite(parsed.getTime())) {
+      return parsed;
+    }
+    return fallback;
+  }
+  const parsed = new Date(raw);
+  if (Number.isFinite(parsed.getTime())) {
+    return parsed;
+  }
+  return fallback;
+}
+
+function toUtcDayEnd(date: Date): Date {
+  return new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      23,
+      59,
+      59,
+      999
+    )
+  );
+}
+
+function toDateBucketKey(date: Date, useHourlyBuckets: boolean): string {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  if (!useHourlyBuckets) {
+    return `${year}-${month}-${day}`;
+  }
+  const hour = String(date.getUTCHours()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hour}:00:00Z`;
+}
+
+function formatDateBucketLabel(bucketKey: string, useHourlyBuckets: boolean): string {
+  const parsed = new Date(bucketKey);
+  if (!Number.isFinite(parsed.getTime())) {
+    return bucketKey;
+  }
+  if (useHourlyBuckets) {
+    return parsed.toLocaleString(undefined, {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+    });
+  }
+  return parsed.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+export async function getAdminAdsDebugSnapshot(params?: {
+  startDate?: string;
+  endDate?: string;
+  windowHours?: number;
+}): Promise<AdminAdsDebugSnapshot> {
+  assertAdminConfigured();
+  const { items: ads } = await listAdminAdvertisements({ page: 1, pageSize: 5000 });
+  const windowHours = Number(params?.windowHours ?? 24);
+  const safeWindowHours = Number.isFinite(windowHours) ? Math.min(24 * 365, Math.max(1, Math.round(windowHours))) : 24;
   const now = Date.now();
-  const windowStartDate = new Date(now - safeWindowHours * 60 * 60 * 1000);
-  const windowStartIso = windowStartDate.toISOString();
+  const defaultStartDate = new Date(now - safeWindowHours * 60 * 60 * 1000);
+  const parsedStart = parseAdminDateParam(params?.startDate, defaultStartDate);
+  const parsedEndRaw = parseAdminDateParam(params?.endDate, new Date(now));
+  const parsedEnd = /^\d{4}-\d{2}-\d{2}$/.test(String(params?.endDate ?? "").trim())
+    ? toUtcDayEnd(parsedEndRaw)
+    : parsedEndRaw;
+  const safeStartMs = Math.min(parsedStart.getTime(), parsedEnd.getTime());
+  const safeEndMs = Math.max(parsedStart.getTime(), parsedEnd.getTime());
+  const windowStartIso = new Date(safeStartMs).toISOString();
+  const windowEndIso = new Date(safeEndMs).toISOString();
+  const rangeHours = Math.max(1, Math.round((safeEndMs - safeStartMs) / (1000 * 60 * 60)));
+  const useHourlyBuckets = rangeHours <= 48;
   const slots: AdSlot[] = [
     "header",
     "inline-content",
@@ -773,28 +1082,58 @@ export async function getAdminAdsDebugSnapshot(windowHours = 24): Promise<AdminA
   const overallCtr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
   const windowImpressionCount = new Map<string, number>();
   const windowClickCount = new Map<string, number>();
+  const trendByBucket = new Map<string, { impressions: number; clicks: number }>();
+
+  let windowImpressions = 0;
+  let windowClicks = 0;
 
   try {
+    const [{ count: impressionTotal }, { count: clickTotal }] = await Promise.all([
+      supabaseAdmin!
+        .from("ad_events")
+        .select("id", { count: "exact", head: true })
+        .eq("event_type", "impression")
+        .gte("created_at", windowStartIso)
+        .lte("created_at", windowEndIso),
+      supabaseAdmin!
+        .from("ad_events")
+        .select("id", { count: "exact", head: true })
+        .eq("event_type", "click")
+        .gte("created_at", windowStartIso)
+        .lte("created_at", windowEndIso),
+    ]);
+    windowImpressions = Math.max(0, Number(impressionTotal ?? 0));
+    windowClicks = Math.max(0, Number(clickTotal ?? 0));
+
     const { data: eventRows } = await supabaseAdmin!
       .from("ad_events")
       .select("ad_id, event_type, created_at")
       .gte("created_at", windowStartIso)
-      .order("created_at", { ascending: false })
-      .limit(10000);
+      .lte("created_at", windowEndIso)
+      .in("event_type", ["impression", "click"])
+      .order("created_at", { ascending: true })
+      .limit(200000);
 
     for (const event of (eventRows ?? []) as AdEventRow[]) {
+      const createdAtMs = +new Date(event.created_at);
+      if (!Number.isFinite(createdAtMs)) {
+        continue;
+      }
+      const bucketKey = toDateBucketKey(new Date(createdAtMs), useHourlyBuckets);
+      const bucket = trendByBucket.get(bucketKey) ?? { impressions: 0, clicks: 0 };
       if (event.event_type === "impression") {
         windowImpressionCount.set(event.ad_id, (windowImpressionCount.get(event.ad_id) ?? 0) + 1);
+        bucket.impressions += 1;
       } else if (event.event_type === "click") {
         windowClickCount.set(event.ad_id, (windowClickCount.get(event.ad_id) ?? 0) + 1);
+        bucket.clicks += 1;
       }
+      trendByBucket.set(bucketKey, bucket);
     }
   } catch {
     // If ad_events table is not available yet, keep window stats at zero.
   }
 
-  const windowImpressions = Array.from(windowImpressionCount.values()).reduce((sum, value) => sum + value, 0);
-  const windowClicks = Array.from(windowClickCount.values()).reduce((sum, value) => sum + value, 0);
   const windowCtr = windowImpressions > 0 ? (windowClicks / windowImpressions) * 100 : 0;
 
   const byImpressions = [...ads].sort((a, b) => (b.impressions ?? 0) - (a.impressions ?? 0));
@@ -827,9 +1166,60 @@ export async function getAdminAdsDebugSnapshot(windowHours = 24): Promise<AdminA
       return [ad.id, { impressions, clicks, ctr }];
     })
   );
+  const campaignMetrics = ads
+    .map((ad) => {
+      const impressions = windowImpressionCount.get(ad.id) ?? 0;
+      const clicks = windowClickCount.get(ad.id) ?? 0;
+      const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+      return {
+        adId: ad.id,
+        advertiserName: ad.advertiserName,
+        slotKey: ad.slotKey,
+        pageKey: ad.pageKey,
+        active: isActiveNow(ad),
+        impressions,
+        clicks,
+        ctr,
+      };
+    })
+    .filter((item) => item.active || item.impressions > 0 || item.clicks > 0)
+    .sort((a, b) => b.impressions - a.impressions || b.clicks - a.clicks || b.ctr - a.ctr);
+
+  const placementMetricsMap = new Map<string, { slotKey: string; adCount: number; impressions: number; clicks: number }>();
+  for (const campaign of campaignMetrics) {
+    const current = placementMetricsMap.get(campaign.slotKey) ?? {
+      slotKey: campaign.slotKey,
+      adCount: 0,
+      impressions: 0,
+      clicks: 0,
+    };
+    current.adCount += 1;
+    current.impressions += campaign.impressions;
+    current.clicks += campaign.clicks;
+    placementMetricsMap.set(campaign.slotKey, current);
+  }
+  const placementMetrics = [...placementMetricsMap.values()]
+    .map((item) => ({
+      ...item,
+      ctr: item.impressions > 0 ? (item.clicks / item.impressions) * 100 : 0,
+    }))
+    .sort((a, b) => b.impressions - a.impressions || b.clicks - a.clicks);
+
+  const interactionTrend = [...trendByBucket.entries()]
+    .sort((a, b) => +new Date(a[0]) - +new Date(b[0]))
+    .map(([bucketStart, counts]) => ({
+      bucketStart,
+      bucketLabel: formatDateBucketLabel(bucketStart, useHourlyBuckets),
+      impressions: counts.impressions,
+      clicks: counts.clicks,
+    }));
 
   return {
     generatedAt: new Date().toISOString(),
+    startDate: windowStartIso,
+    endDate: windowEndIso,
+    rangeHours,
+    rangeLabel: `${new Date(windowStartIso).toLocaleString()} → ${new Date(windowEndIso).toLocaleString()}`,
     windowHours: safeWindowHours,
     windowStart: windowStartIso,
     totalAds: ads.length,
@@ -851,37 +1241,55 @@ export async function getAdminAdsDebugSnapshot(windowHours = 24): Promise<AdminA
     topByWindowClicks: byWindowClicks.slice(0, 5),
     topByWindowCtr: byWindowCtr.slice(0, 5),
     windowMetricsByAd,
+    campaignMetrics,
+    placementMetrics,
+    interactionTrend,
   };
 }
 
-export async function listAdminUsersByVenue(venueId: string, limit = 200): Promise<AdminVenueUser[]> {
+export async function listAdminUsersByVenue(
+  venueId: string,
+  opts?: { page?: number; pageSize?: number }
+): Promise<PaginatedResult<AdminVenueUser>> {
   assertAdminConfigured();
 
   const normalizedVenueId = venueId.trim();
   if (!normalizedVenueId) {
-    return [];
+    return { items: [], total: 0, page: 1, pageSize: 25, totalPages: 1 };
   }
 
-  const { data, error } = await supabaseAdmin!
+  const page = Math.max(1, Math.floor(opts?.page ?? 1));
+  const pageSize = Math.min(200, Math.max(1, Math.floor(opts?.pageSize ?? 25)));
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, error, count } = await supabaseAdmin!
     .from("users")
-    .select("id, username, venue_id, points, is_admin, created_at")
+    .select("id, username, venue_id, points, is_admin, created_at", { count: "exact" })
     .eq("venue_id", normalizedVenueId)
     .order("points", { ascending: false })
     .order("created_at", { ascending: true })
-    .limit(Math.max(1, Math.min(limit, 1000)));
+    .range(from, to);
 
   if (error || !data) {
     throw new Error(error?.message ?? "Failed to load venue users.");
   }
 
-  return (data as AdminUserRow[]).map((row) => ({
-    id: row.id,
-    username: row.username,
-    venueId: row.venue_id,
-    points: row.points,
-    isAdmin: row.is_admin,
-    createdAt: row.created_at,
-  }));
+  const total = count ?? 0;
+  return {
+    items: (data as AdminUserRow[]).map((row) => ({
+      id: row.id,
+      username: row.username,
+      venueId: row.venue_id,
+      points: row.points,
+      isAdmin: row.is_admin,
+      createdAt: row.created_at,
+    })),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  };
 }
 
 export async function createAdminVenue(input: {

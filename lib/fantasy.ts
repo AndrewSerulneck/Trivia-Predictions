@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { apiSportsGet } from "@/lib/apisports";
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 import { fetchBallDontLieList } from "@/lib/balldontlie";
+import { fetchNBAHeadshot as fetchTheSportsDbHeadshot } from "@/lib/thesportsdb";
 
 const APISPORTS_NBA_BASE_URL = process.env.APISPORTS_NBA_BASE_URL?.trim() ?? "https://v2.nba.api-sports.io";
 const APISPORTS_API_KEY = process.env.APISPORTS_API_KEY?.trim() ?? "";
@@ -32,6 +33,8 @@ const FANTASY_TABLES_MISSING_ERROR =
 const FANTASY_DAILY_GAME_ID_PREFIX = "nba-daily-";
 const FANTASY_WNBA_SPORT_KEY = "basketball_wnba";
 const FANTASY_WNBA_DAILY_GAME_ID_PREFIX = "wnba-daily-";
+const FANTASY_MLB_SPORT_KEY = "baseball_mlb";
+const FANTASY_MLB_DAILY_GAME_ID_PREFIX = "mlb-daily-";
 const FANTASY_DAILY_TEAM_LABEL = "All Teams";
 
 type FantasyEntryStatus = "pending" | "live" | "final" | "canceled";
@@ -56,6 +59,8 @@ const apiSportsPlayerIdCache = new Map<string, CacheEntry<number>>();
 const apiSportsTeamPlayersCache = new Map<string, CacheEntry<Record<string, unknown>[]>>();
 const wnbaGamesCache = new Map<string, CacheEntry<ApiSportsNbaGame[]>>();
 const wnbaTeamPlayersCache = new Map<string, CacheEntry<Record<string, unknown>[]>>();
+const mlbGamesCache = new Map<string, CacheEntry<ApiSportsNbaGame[]>>();
+const mlbTeamPlayersCache = new Map<string, CacheEntry<Record<string, unknown>[]>>();
 const APISPORTS_GAMES_TTL_MS = 15_000;
 const APISPORTS_PLAYER_STATS_TTL_MS = 10_000;
 const APISPORTS_PLAYER_ID_TTL_MS = 12 * 60 * 60 * 1000;
@@ -490,11 +495,26 @@ function parseWnbaFantasyDailyGameId(gameId: string): string | null {
   return parseDateString(date) ? date : null;
 }
 
-function parseAnyDailyGameId(gameId: string): { date: string; league: "NBA" | "WNBA" } | null {
+function buildMlbFantasyDailyGameId(date: string): string {
+  return `${FANTASY_MLB_DAILY_GAME_ID_PREFIX}${date}`;
+}
+
+function parseMlbFantasyDailyGameId(gameId: string): string | null {
+  const raw = String(gameId ?? "").trim();
+  if (!raw.startsWith(FANTASY_MLB_DAILY_GAME_ID_PREFIX)) {
+    return null;
+  }
+  const date = raw.slice(FANTASY_MLB_DAILY_GAME_ID_PREFIX.length).trim();
+  return parseDateString(date) ? date : null;
+}
+
+function parseAnyDailyGameId(gameId: string): { date: string; league: "NBA" | "WNBA" | "MLB" } | null {
   const nbaDate = parseFantasyDailyGameId(gameId);
   if (nbaDate) return { date: nbaDate, league: "NBA" };
   const wnbaDate = parseWnbaFantasyDailyGameId(gameId);
   if (wnbaDate) return { date: wnbaDate, league: "WNBA" };
+  const mlbDate = parseMlbFantasyDailyGameId(gameId);
+  if (mlbDate) return { date: mlbDate, league: "MLB" };
   return null;
 }
 
@@ -823,14 +843,16 @@ export async function listFantasyGames(params?: {
   const limit = Math.max(1, Math.min(40, Number(params?.limit ?? 20)));
   const tzOffsetMinutes = parseTimezoneOffset(params?.tzOffsetMinutes);
 
-  const [nbaRows, wnbaRows] = await Promise.all([
+  const [nbaRows, wnbaRows, mlbRows] = await Promise.all([
     listApiSportsGamesForLocalDay(params?.date, tzOffsetMinutes),
     listWnbaGamesForLocalDay(params?.date, tzOffsetMinutes),
+    listMlbGamesForLocalDay(params?.date, tzOffsetMinutes),
   ]);
 
   const games: FantasyGame[] = [
     ...rowsToFantasyGames(nbaRows, FANTASY_SPORT_KEY, "NBA"),
     ...rowsToFantasyGames(wnbaRows, FANTASY_WNBA_SPORT_KEY, "WNBA"),
+    ...rowsToFantasyGames(mlbRows, FANTASY_MLB_SPORT_KEY, "MLB"),
   ];
 
   games.sort((left, right) => new Date(left.startsAt).getTime() - new Date(right.startsAt).getTime());
@@ -953,12 +975,14 @@ function extractApiSportsDirectoryHeadshotUrl(row: Record<string, unknown>): str
 
 async function upsertActivePlayersToDb(seeds: ApiSportsPoolSeed[], league: string): Promise<void> {
   if (!supabaseAdmin || seeds.length === 0) return;
+  const leagueNorm = league.toUpperCase();
+  const dbLeague = leagueNorm === "WNBA" ? "WNBA" : leagueNorm === "MLB" ? "MLB" : "NBA";
   const records = seeds
     .filter((s) => s.playerId && s.playerName)
     .map((s) => ({
       external_id: String(s.playerId),
       player_name: s.playerName,
-      league: league.toUpperCase() === "WNBA" ? "WNBA" : "NBA",
+      league: dbLeague,
       ...(s.headshotUrl ? { headshot_url: s.headshotUrl } : {}),
     }));
   if (!records.length) return;
@@ -967,8 +991,43 @@ async function upsertActivePlayersToDb(seeds: ApiSportsPoolSeed[], league: strin
       onConflict: "external_id,league",
       ignoreDuplicates: false,
     });
+    // Fire-and-forget TheSportsDB fallback for players BDL didn't provide a headshot for.
+    void backfillMissingHeadshotsFromTheSportsDb(
+      seeds.filter((s) => !s.headshotUrl && s.playerId && s.playerName),
+      dbLeague
+    );
   } catch {
     // Non-fatal: best-effort player record sync
+  }
+}
+
+async function backfillMissingHeadshotsFromTheSportsDb(
+  seeds: Array<{ playerId: number | null; playerName: string }>,
+  dbLeague: string
+): Promise<void> {
+  if (!supabaseAdmin || seeds.length === 0) return;
+  // Cap per pool-load to avoid hammering TheSportsDB rate limits.
+  const toProcess = seeds.filter((s) => s.playerId && s.playerName).slice(0, 10);
+  for (const seed of toProcess) {
+    if (!seed.playerId || !seed.playerName) continue;
+    try {
+      const { data } = await supabaseAdmin
+        .from("players")
+        .select("headshot_url")
+        .eq("external_id", String(seed.playerId))
+        .eq("league", dbLeague)
+        .maybeSingle<{ headshot_url: string | null }>();
+      if (data?.headshot_url) continue;
+      const headshotUrl = await fetchTheSportsDbHeadshot(seed.playerName);
+      if (!headshotUrl) continue;
+      await supabaseAdmin
+        .from("players")
+        .update({ headshot_url: headshotUrl })
+        .eq("external_id", String(seed.playerId))
+        .eq("league", dbLeague);
+    } catch {
+      // Per-player failure is non-fatal.
+    }
   }
 }
 
@@ -1470,9 +1529,17 @@ async function loadFantasyPlayerPoolFromApiSportsGames(games: ApiSportsNbaGame[]
     return [];
   }
 
-  const isWnba = games.some((game) => String(getPath(game, ["league", "name"]) ?? "").trim().toUpperCase() === "WNBA");
-  const teamPlayersFetcher = isWnba ? fetchWnbaTeamPlayers : fetchApiSportsNbaTeamPlayers;
-  const poolLeague = isWnba ? "WNBA" : "NBA";
+  const leagueNamesInPool = new Set(
+    games.map((game) => String(getPath(game, ["league", "name"]) ?? "").trim().toUpperCase())
+  );
+  const isWnba = leagueNamesInPool.has("WNBA");
+  const isMlb = leagueNamesInPool.has("MLB");
+  const teamPlayersFetcher = isWnba
+    ? fetchWnbaTeamPlayers
+    : isMlb
+    ? fetchMlbTeamPlayers
+    : fetchApiSportsNbaTeamPlayers;
+  const poolLeague = isWnba ? "WNBA" : isMlb ? "MLB" : "NBA";
 
   const allowedTeamIds = new Set<number>();
   const allowedTeamNames = new Set<string>();
@@ -1854,14 +1921,19 @@ export async function getFantasyPlayerPoolForDate(params?: {
   date?: string;
   tzOffsetMinutes?: number | string;
   includeStartedGames?: boolean;
-  league?: "NBA" | "WNBA";
+  league?: "NBA" | "WNBA" | "MLB";
 }): Promise<FantasyPlayerPoolItem[]> {
   const tzOffsetMinutes = parseTimezoneOffset(params?.tzOffsetMinutes);
   const date = parseDateString(params?.date) ? String(params?.date) : getTodayDateInOffset(tzOffsetMinutes);
   const includeStartedGames = params?.includeStartedGames === true;
   const league = params?.league ?? "NBA";
 
-  const gameFetcher = league === "WNBA" ? listWnbaGamesForLocalDay : listApiSportsGamesForLocalDay;
+  const gameFetcher =
+    league === "WNBA"
+      ? listWnbaGamesForLocalDay
+      : league === "MLB"
+      ? listMlbGamesForLocalDay
+      : listApiSportsGamesForLocalDay;
   const games = await gameFetcher(date, tzOffsetMinutes);
   const eligibleGames = includeStartedGames ? games : games.filter((game) => !isApiSportsGameStarted(game));
 
@@ -1900,6 +1972,16 @@ export async function getFantasyPlayerPoolForGame(params: {
       tzOffsetMinutes: params.tzOffsetMinutes,
       includeStartedGames: params.includeStartedGames === true,
       league: "WNBA",
+    });
+  }
+
+  const mlbDailyDate = parseMlbFantasyDailyGameId(gameId);
+  if (mlbDailyDate) {
+    return getFantasyPlayerPoolForDate({
+      date: params.date ?? mlbDailyDate,
+      tzOffsetMinutes: params.tzOffsetMinutes,
+      includeStartedGames: params.includeStartedGames === true,
+      league: "MLB",
     });
   }
 
@@ -1950,7 +2032,7 @@ async function assertFantasyEntryCadenceAvailable(params: {
 
   let range: { fromIso: string; toIso: string } | null = null;
   let cadenceLabel = "";
-  if (sportKey === FANTASY_SPORT_KEY || sportKey === FANTASY_WNBA_SPORT_KEY) {
+  if (sportKey === FANTASY_SPORT_KEY || sportKey === FANTASY_WNBA_SPORT_KEY || sportKey === FANTASY_MLB_SPORT_KEY) {
     range = buildUtcRangeForLocalDayContaining(startsAt, tzOffsetMinutes);
     cadenceLabel = "day";
   } else if (sportKey === FANTASY_NFL_SPORT_KEY) {
@@ -1987,6 +2069,9 @@ async function assertFantasyEntryCadenceAvailable(params: {
     }
     if (sportKey === FANTASY_NFL_SPORT_KEY) {
       throw new Error("You can only create 1 NFL fantasy team per week.");
+    }
+    if (sportKey === FANTASY_MLB_SPORT_KEY) {
+      throw new Error("You can only create 1 MLB fantasy team per day.");
     }
     throw new Error(`You can only create 1 fantasy team per ${cadenceLabel}.`);
   }
@@ -2106,6 +2191,10 @@ export async function submitFantasyEntry(params: {
       entrySportKey = FANTASY_WNBA_SPORT_KEY;
       entryGameId = buildWnbaFantasyDailyGameId(dailyDate);
       entryGameLabel = `WNBA Daily Challenge (${dailyDate})`;
+    } else if (dailyLeague === "MLB") {
+      entrySportKey = FANTASY_MLB_SPORT_KEY;
+      entryGameId = buildMlbFantasyDailyGameId(dailyDate);
+      entryGameLabel = `MLB Daily Challenge (${dailyDate})`;
     } else {
       entrySportKey = FANTASY_SPORT_KEY;
       entryGameId = buildFantasyDailyGameId(dailyDate);
@@ -2792,6 +2881,129 @@ async function fetchApiSportsNbaGamesByDate(dateIso: string): Promise<ApiSportsN
 
   apiSportsGamesCache.set(cacheKey, { value: rows, expiresAt: Date.now() + APISPORTS_GAMES_TTL_MS });
   return rows;
+}
+
+async function fetchBdlMlbGamesByDate(dateIso: string): Promise<ApiSportsNbaGame[]> {
+  const cacheKey = `mlb-games:${dateIso}`;
+  const cached = mlbGamesCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
+  const query = new URLSearchParams({ "dates[]": dateIso, per_page: "100" });
+  const rowsRaw = await fetchBallDontLieList<Record<string, unknown>>("/mlb/v1/games", query, 5);
+  const rows = rowsRaw.map((game) => {
+    const homeTeam = asRecord(game.home_team);
+    const awayTeam = asRecord(game.away_team ?? game.visitor_team);
+    const statusRaw = String(game.status ?? "").trim().toLowerCase();
+    const shortStatus = statusRaw.includes("final")
+      ? "FT"
+      : statusRaw.includes("inning") || statusRaw.includes("live") || statusRaw.includes("progress")
+      ? "LIVE"
+      : "NS";
+    return {
+      id: game.id,
+      date: {
+        start: game.datetime ?? game.date,
+      },
+      league: {
+        name: "MLB",
+        season: game.season,
+      },
+      teams: {
+        home: {
+          id: homeTeam.id,
+          name: homeTeam.full_name ?? homeTeam.name,
+        },
+        visitors: {
+          id: awayTeam.id,
+          name: awayTeam.full_name ?? awayTeam.name,
+        },
+      },
+      scores: {
+        home: { points: game.home_team_score },
+        visitors: { points: game.away_team_score ?? game.visitor_team_score },
+      },
+      status: {
+        long: game.status,
+        short: shortStatus,
+      },
+    } as ApiSportsNbaGame;
+  });
+
+  mlbGamesCache.set(cacheKey, { value: rows, expiresAt: Date.now() + APISPORTS_GAMES_TTL_MS });
+  return rows;
+}
+
+async function listMlbGamesForLocalDay(date: string | undefined, tzOffsetMinutes: number): Promise<ApiSportsNbaGame[]> {
+  const range = buildUtcRangeForLocalDay(date, tzOffsetMinutes);
+  const candidateDates = Array.from(
+    new Set([
+      new Date(range.fromMs - 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      new Date(range.fromMs).toISOString().slice(0, 10),
+      new Date(range.toMs).toISOString().slice(0, 10),
+      new Date(range.toMs + 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    ])
+  );
+  const rowsByDate = await Promise.all(candidateDates.map((candidate) => fetchBdlMlbGamesByDate(candidate)));
+  const uniqueByGameId = new Map<string, ApiSportsNbaGame>();
+  for (const row of rowsByDate.flat()) {
+    const id = getApiSportsGameId(row);
+    if (!id || uniqueByGameId.has(id)) continue;
+    const startsAtMs = parseApiSportsGameStartMs(row);
+    if (!Number.isFinite(startsAtMs) || startsAtMs < range.fromMs || startsAtMs > range.toMs) continue;
+    if (toLocalDateKeyByOffset(startsAtMs, tzOffsetMinutes) !== range.date) continue;
+    uniqueByGameId.set(id, row);
+  }
+  return Array.from(uniqueByGameId.values());
+}
+
+async function fetchMlbTeamPlayers(teamId: number, season: number | null): Promise<Record<string, unknown>[]> {
+  const normalizedTeamId = Math.trunc(teamId);
+  const cacheKey = `mlb-team:${normalizedTeamId}:season:${season ?? "na"}`;
+  const cached = mlbTeamPlayersCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
+  const baseActiveQuery = new URLSearchParams({ per_page: "100", "team_ids[]": String(normalizedTeamId) });
+  const activeRowsRaw = await fetchBallDontLieList<Record<string, unknown>>("/mlb/v1/players/active", baseActiveQuery, 5);
+  const mapBdlMlbRow = (row: Record<string, unknown>): Record<string, unknown> => {
+    const team = asRecord(row.team);
+    return {
+      player: {
+        id: row.id,
+        first_name: row.first_name,
+        last_name: row.last_name,
+        name: `${String(row.first_name ?? "").trim()} ${String(row.last_name ?? "").trim()}`.trim(),
+      },
+      team: {
+        id: team.id,
+        name: team.full_name ?? team.name,
+        abbreviation: team.abbreviation,
+      },
+      position: row.position,
+      headshot_url: row.draft_kings_picture_url ?? row.headshot_url ?? row.picture_url ?? null,
+      active: true,
+    } as Record<string, unknown>;
+  };
+
+  let rows = activeRowsRaw.map((row) => asRecord(row)).map(mapBdlMlbRow);
+
+  if (rows.length === 0) {
+    const fallbackQuery = new URLSearchParams({ per_page: "100", "team_ids[]": String(normalizedTeamId) });
+    if (season) fallbackQuery.set("seasons[]", String(season));
+    const fallbackRowsRaw = await fetchBallDontLieList<Record<string, unknown>>("/mlb/v1/players", fallbackQuery, 5);
+    rows = fallbackRowsRaw
+      .map((row) => asRecord(row))
+      .filter((row) => isApiSportsDirectoryPlayerActive(row))
+      .map(mapBdlMlbRow);
+  }
+
+  const matchedByTeamId = rows.filter((row) => extractApiSportsDirectoryTeamId(row) === normalizedTeamId);
+  const result = matchedByTeamId.length > 0 ? matchedByTeamId : [];
+  mlbTeamPlayersCache.set(cacheKey, { value: result, expiresAt: Date.now() + APISPORTS_TEAM_PLAYERS_TTL_MS });
+  return result;
 }
 
 async function fetchBdlWnbaGamesByDate(dateIso: string): Promise<ApiSportsNbaGame[]> {

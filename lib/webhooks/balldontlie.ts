@@ -67,6 +67,7 @@ export type BdlNbaPlayerEvent = {
 export type BdlMlbBatterEvent = {
   eventType: "groundout" | "flyout" | "strikeout" | "hit" | "home_run" | "walk" | "hit_by_pitch";
   gameId: string;
+  playerId: number | null;
   playerName: string;
   teamName: string;
   pitchCount: number | null;
@@ -216,6 +217,7 @@ export function parseMlbBatterEvent(rawBody: unknown): BdlMlbBatterEvent | null 
   if (!playerName) {
     return null;
   }
+  const playerId = pickNum(data, [["player", "id"], ["player_id"], ["batter", "id"]]) || null;
 
   const teamName = pickStr(data, [["team", "full_name"], ["team", "name"], ["team_name"]]);
   if (!teamName) {
@@ -228,6 +230,7 @@ export function parseMlbBatterEvent(rawBody: unknown): BdlMlbBatterEvent | null 
   return {
     eventType,
     gameId: String(gameId),
+    playerId,
     playerName,
     teamName,
     pitchCount,
@@ -240,6 +243,151 @@ export function calcNbaFantasyPoints(stats: BdlPlayerStats): number {
   return Number(
     (stats.pts + stats.reb * 1.2 + stats.ast * 1.5 + stats.stl * 3 + stats.blk * 3 - stats.tov).toFixed(2)
   );
+}
+
+// ---- MLB cumulative box-score types ----
+
+export type BdlMlbBatterStats = {
+  h: number;
+  doubles: number;
+  triples: number;
+  homeRuns: number;
+  runs: number;
+  rbi: number;
+  stolenBases: number;
+  strikeoutsAsBatter: number;
+};
+
+export type BdlMlbPitcherStats = {
+  strikeouts: number;
+  outs: number;
+  earnedRuns: number;
+  walksAllowed: number;
+  hitsAllowed: number;
+};
+
+export type BdlMlbPlayerEvent = {
+  eventType: string;
+  gameId: string;
+  playerId: number;
+  playerName: string;
+  normalizedPlayerName: string;
+  teamId: number | null;
+  teamName: string;
+  gameStatus: string;
+  isPitcher: boolean;
+  batterStats: BdlMlbBatterStats;
+  pitcherStats: BdlMlbPitcherStats;
+};
+
+export function parseMlbPlayerEvent(rawBody: unknown): BdlMlbPlayerEvent | null {
+  if (!rawBody || typeof rawBody !== "object") return null;
+  const root = rawBody as Obj;
+  const data: Obj = root.data != null && typeof root.data === "object" ? (root.data as Obj) : root;
+
+  const eventType = pickStr(root, [["type"], ["event"], ["event_type"]]);
+  const gameId = pickStr(data, [["game", "id"], ["game_id"]]);
+  if (!gameId) return null;
+
+  const playerId =
+    pickNum(data, [["player", "id"], ["player_id"], ["batter", "id"]]) ||
+    pickNum(data, [["pitcher", "id"]]);
+  if (!playerId) return null;
+
+  const firstName = pickStr(data, [
+    ["player", "first_name"],
+    ["batter", "first_name"],
+    ["pitcher", "first_name"],
+  ]);
+  const lastName = pickStr(data, [
+    ["player", "last_name"],
+    ["batter", "last_name"],
+    ["pitcher", "last_name"],
+  ]);
+  const playerName =
+    pickStr(data, [
+      ["player", "full_name"],
+      ["player", "name"],
+      ["batter", "full_name"],
+      ["pitcher", "full_name"],
+    ]) ||
+    `${firstName} ${lastName}`.trim() ||
+    `Player ${playerId}`;
+
+  const teamId = pickNum(data, [["team", "id"], ["team_id"]]) || null;
+  const teamName = pickStr(data, [["team", "full_name"], ["team", "name"], ["team_name"]]);
+  const gameStatus = pickStr(data, [["game", "status"], ["game_status"]]);
+
+  const position = pickStr(data, [["player", "position"], ["position"]]);
+  const isPitcher =
+    position.toLowerCase().startsWith("p") ||
+    eventType.toLowerCase().startsWith("pitcher.") ||
+    Boolean(dig(data, ["pitcher", "id"]));
+
+  const stats =
+    data.stats != null && typeof data.stats === "object" ? (data.stats as Obj) : data;
+
+  const batterStats: BdlMlbBatterStats = {
+    h: pickNum(stats, [["h"], ["hits"]]),
+    doubles: pickNum(stats, [["doubles"], ["d"]]),
+    triples: pickNum(stats, [["triples"], ["t"]]),
+    homeRuns: pickNum(stats, [["home_runs"], ["hr"]]),
+    runs: pickNum(stats, [["runs"], ["r"]]),
+    rbi: pickNum(stats, [["rbi"]]),
+    stolenBases: pickNum(stats, [["stolen_bases"], ["sb"]]),
+    strikeoutsAsBatter: pickNum(stats, [["strikeouts"], ["so"]]),
+  };
+
+  const pitcherStats: BdlMlbPitcherStats = {
+    strikeouts: pickNum(stats, [["strikeouts"], ["so"]]),
+    outs: pickNum(stats, [["outs_pitched"], ["outs"]]),
+    earnedRuns: pickNum(stats, [["earned_runs"], ["er"]]),
+    walksAllowed: pickNum(stats, [["base_on_balls"], ["bb"]]),
+    hitsAllowed: pickNum(stats, [["hits_allowed"], ["ha"]]),
+  };
+
+  return {
+    eventType,
+    gameId: String(gameId),
+    playerId,
+    playerName,
+    normalizedPlayerName: normalizePlayerName(playerName),
+    teamId,
+    teamName,
+    gameStatus,
+    isPitcher,
+    batterStats,
+    pitcherStats,
+  };
+}
+
+export function calcMlbBatterFantasyPoints(stats: BdlMlbBatterStats): number {
+  const singles = Math.max(0, stats.h - stats.doubles - stats.triples - stats.homeRuns);
+  const total =
+    singles * 10 +
+    stats.doubles * 20 +
+    stats.triples * 30 +
+    stats.homeRuns * 50 +
+    stats.runs * 10 +
+    stats.rbi * 10 +
+    stats.stolenBases * 15 -
+    stats.strikeoutsAsBatter * 5;
+  return Number(Math.max(0, total).toFixed(2));
+}
+
+export function calcMlbPitcherFantasyPoints(stats: BdlMlbPitcherStats): number {
+  const total =
+    stats.strikeouts * 10 +
+    stats.outs * 5 -
+    stats.earnedRuns * 15 -
+    (stats.walksAllowed + stats.hitsAllowed) * 5;
+  return Number(Math.max(0, total).toFixed(2));
+}
+
+export function calcMlbFantasyPoints(event: BdlMlbPlayerEvent): number {
+  return event.isPitcher
+    ? calcMlbPitcherFantasyPoints(event.pitcherStats)
+    : calcMlbBatterFantasyPoints(event.batterStats);
 }
 
 // ---- Bingo metric → stat value ----

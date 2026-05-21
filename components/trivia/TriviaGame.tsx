@@ -1140,11 +1140,15 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
       } catch {
         roundNumber = 1;
       }
+      const safeRoundNumber = Number.parseInt(String(roundNumber), 10);
+      const canonicalRoundNumber = Number.isFinite(safeRoundNumber)
+        ? Math.min(3, Math.max(1, safeRoundNumber))
+        : 1;
 
       window.dispatchEvent(
         new CustomEvent("tp:trivia-round-complete", {
           detail: {
-            roundNumber: Math.min(3, Math.max(1, roundNumber)),
+            roundNumber: canonicalRoundNumber,
           },
         })
       );

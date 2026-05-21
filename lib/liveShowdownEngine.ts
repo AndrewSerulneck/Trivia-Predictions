@@ -1,5 +1,11 @@
 import "server-only";
 
+import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
+import {
+  buildClosestGuessAnnouncement,
+  computeClosestGuessWinners,
+  parseLargePureNumberAnswer,
+} from "@/lib/liveShowdownClosestGuess";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const QUESTIONS_PER_ROUND = 15;
@@ -19,6 +25,8 @@ type TriviaScheduleRow = {
   timezone: string;
   num_rounds: number;
   venue_id: string | null;
+  intermission_ad_delay_seconds: number | null;
+  lobby_ad_enabled: boolean | null;
 };
 
 type TriviaSessionQuestionRow = {
@@ -53,6 +61,18 @@ export type LiveShowdownQuestionPublic = {
 
 type LiveShowdownQuestionInternal = LiveShowdownQuestionPublic & {
   correctAnswer: string | null;
+  correctNumericAnswer: number | null;
+};
+
+type LiveShowdownViewerResult = {
+  userId: string;
+  scheduleId: string;
+  roundNumber: number;
+  questionIndex: number;
+  submittedAnswer: string;
+  isCorrect: boolean;
+  pointsAwarded: number;
+  pendingClosestGuess: boolean;
 };
 
 type LiveShowdownActiveState = {
@@ -61,6 +81,8 @@ type LiveShowdownActiveState = {
   scheduleTitle: string;
   scheduleTimezone: string;
   scheduleStartTime: string;
+  intermissionAdDelaySeconds: number;
+  lobbyAdEnabled: boolean;
   totalRounds: number;
   currentRound: number;
   currentQuestionIndex: number | null;
@@ -68,6 +90,8 @@ type LiveShowdownActiveState = {
   secondsRemaining: number;
   activeQuestion: LiveShowdownQuestionPublic | null;
   revealedAnswer: string | null;
+  emceeAnnouncement: string | null;
+  viewerResult: LiveShowdownViewerResult | null;
   isFinalResultsWindow: boolean;
   currentRoundCategory: string | null;
   upcomingRoundNumber: number | null;
@@ -83,14 +107,27 @@ type LiveShowdownInactiveState = {
   currentQuestionIndex: null;
   activeQuestion: null;
   revealedAnswer: null;
+  emceeAnnouncement: null;
+  viewerResult: null;
   nextSchedule: {
     id: string;
     title: string;
     timezone: string;
     startTime: string;
     numRounds: number;
+    intermissionAdDelaySeconds: number;
+    lobbyAdEnabled: boolean;
     firstRoundCategory: string | null;
   } | null;
+};
+
+type LiveShowdownAnswerRow = {
+  id: string;
+  user_id: string;
+  submitted_answer: string;
+  normalized_answer: string;
+  is_correct: boolean;
+  points_awarded: number;
 };
 
 export type LiveShowdownState = LiveShowdownActiveState | LiveShowdownInactiveState;
@@ -98,6 +135,11 @@ export type LiveShowdownState = LiveShowdownActiveState | LiveShowdownInactiveSt
 function clampRounds(value: number): number {
   if (!Number.isFinite(value)) return 1;
   return Math.max(1, Math.min(24, Math.floor(value)));
+}
+
+function clampIntermissionDelaySeconds(value: number | null | undefined): number {
+  if (!Number.isFinite(Number(value))) return 10;
+  return Math.max(0, Math.min(300, Math.floor(Number(value))));
 }
 
 function toSafeServerTimestamp(value: number): number {
@@ -130,6 +172,7 @@ function mapQuestionInternal(
     answerIndex >= 0 && answerIndex < options.length
       ? String(options[answerIndex] ?? "").trim() || null
       : null;
+  const correctNumericAnswer = correctAnswer ? parseLargePureNumberAnswer(correctAnswer) : null;
 
   return {
     id: row.id,
@@ -141,6 +184,7 @@ function mapQuestionInternal(
     roundNumber: sessionRow.round_number,
     questionIndex: sessionRow.question_index,
     correctAnswer,
+    correctNumericAnswer,
   };
 }
 
@@ -174,14 +218,14 @@ async function findRelevantSchedules(nowIso: string, venueIdRaw: string): Promis
   const [recentResult, upcomingResult] = await Promise.all([
     supabaseAdmin
       .from("trivia_schedules")
-      .select("id, title, start_time, timezone, num_rounds, venue_id")
+      .select("id, title, start_time, timezone, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled")
       .eq("venue_id", venueId)
       .lte("start_time", nowIso)
       .order("start_time", { ascending: false })
       .limit(40),
     supabaseAdmin
       .from("trivia_schedules")
-      .select("id, title, start_time, timezone, num_rounds, venue_id")
+      .select("id, title, start_time, timezone, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled")
       .eq("venue_id", venueId)
       .gt("start_time", nowIso)
       .order("start_time", { ascending: true })
@@ -286,7 +330,240 @@ async function loadRoundCategory(scheduleId: string, roundNumber: number): Promi
   return category || null;
 }
 
-export async function getLiveShowdownState(serverTimestamp: number, venueId: string): Promise<LiveShowdownState> {
+async function awardTriviaPointsForLiveShowdown(userId: string, basePoints: number): Promise<number> {
+  if (!supabaseAdmin || basePoints <= 0) {
+    return 0;
+  }
+
+  const { data: userRow, error: userError } = await supabaseAdmin
+    .from("users")
+    .select("points, venue_id")
+    .eq("id", userId)
+    .limit(1)
+    .maybeSingle<{ points: number; venue_id: string | null }>();
+
+  if (userError) {
+    throw new Error(userError.message || "Failed to load user points.");
+  }
+
+  let pointsAwarded = basePoints;
+  const venueId = String(userRow?.venue_id ?? "").trim();
+  if (venueId) {
+    const campaignResult = await applyChallengeCampaignPoints({
+      userId,
+      venueId,
+      gameType: "trivia",
+      basePoints,
+    }).catch(() => null);
+
+    if (campaignResult) {
+      pointsAwarded = Math.max(0, Number(campaignResult.finalPoints ?? basePoints));
+    }
+  }
+
+  const nextPoints = Math.max(0, Number(userRow?.points ?? 0) + pointsAwarded);
+  const { error: updateError } = await supabaseAdmin
+    .from("users")
+    .update({ points: nextPoints })
+    .eq("id", userId);
+
+  if (updateError) {
+    throw new Error(updateError.message || "Failed to update user points.");
+  }
+
+  return pointsAwarded;
+}
+
+async function loadViewerResult(
+  userIdRaw: string,
+  scheduleId: string,
+  roundNumber: number,
+  questionIndex: number,
+  pendingClosestGuessEligible: boolean
+): Promise<LiveShowdownViewerResult | null> {
+  if (!supabaseAdmin) return null;
+
+  const userId = String(userIdRaw ?? "").trim();
+  if (!userId) return null;
+
+  const { data, error } = await supabaseAdmin
+    .from("live_showdown_answers")
+    .select("submitted_answer, is_correct, points_awarded")
+    .eq("user_id", userId)
+    .eq("schedule_id", scheduleId)
+    .eq("round_number", roundNumber)
+    .eq("question_index", questionIndex)
+    .limit(1)
+    .maybeSingle<{ submitted_answer: string; is_correct: boolean; points_awarded: number }>();
+
+  if (error) {
+    throw new Error(error.message || "Failed to load viewer showdown result.");
+  }
+
+  if (!data) return null;
+
+  const pointsAwarded = Math.max(0, Number(data.points_awarded ?? 0));
+  return {
+    userId,
+    scheduleId,
+    roundNumber,
+    questionIndex,
+    submittedAnswer: String(data.submitted_answer ?? "").trim(),
+    isCorrect: Boolean(data.is_correct),
+    pointsAwarded,
+    pendingClosestGuess: pendingClosestGuessEligible && pointsAwarded === 0 && !Boolean(data.is_correct),
+  };
+}
+
+async function settleClosestGuessQuestion(
+  scheduleId: string,
+  roundNumber: number,
+  questionIndex: number,
+  correctAnswerRaw: string | null
+): Promise<string | null> {
+  if (!supabaseAdmin) return null;
+
+  const correctAnswer = String(correctAnswerRaw ?? "").trim();
+  const correctNumericAnswer = parseLargePureNumberAnswer(correctAnswer);
+  if (correctNumericAnswer === null) {
+    return null;
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("live_showdown_answers")
+    .select("id, user_id, submitted_answer, normalized_answer, is_correct, points_awarded")
+    .eq("schedule_id", scheduleId)
+    .eq("round_number", roundNumber)
+    .eq("question_index", questionIndex);
+
+  if (error) {
+    throw new Error(error.message || "Failed to load live showdown submissions.");
+  }
+
+  const answers = ((data ?? []) as LiveShowdownAnswerRow[]).map((row) => ({
+    id: String(row.id),
+    user_id: String(row.user_id),
+    submitted_answer: String(row.submitted_answer ?? ""),
+    normalized_answer: String(row.normalized_answer ?? ""),
+    is_correct: Boolean(row.is_correct),
+    points_awarded: Math.max(0, Number(row.points_awarded ?? 0)),
+  }));
+
+  if (answers.length === 0) {
+    return null;
+  }
+
+  const userIds = Array.from(new Set(answers.map((row) => row.user_id).filter(Boolean)));
+  const { data: usersData } = await supabaseAdmin
+    .from("users")
+    .select("id, username")
+    .in("id", userIds)
+    .limit(userIds.length);
+
+  const usernameById = new Map(
+    ((usersData ?? []) as Array<{ id: string; username: string | null }>).map((row) => [
+      String(row.id ?? "").trim(),
+      String(row.username ?? "").trim() || null,
+    ])
+  );
+
+  const winners = computeClosestGuessWinners(
+    answers.map((row) => ({
+      answerId: row.id,
+      userId: row.user_id,
+      username: usernameById.get(row.user_id) ?? null,
+      submittedAnswer: row.submitted_answer,
+      normalizedAnswer: row.normalized_answer,
+      isCorrect: row.is_correct,
+      pointsAwarded: row.points_awarded,
+    })),
+    correctNumericAnswer
+  );
+
+  const winnerIds = new Set(winners.map((winner) => winner.answerId));
+  const winnerRows = answers.filter((row) => winnerIds.has(row.id));
+
+  const scoredWinnerIds = new Set(
+    winnerRows.filter((row) => row.points_awarded > 0).map((row) => row.id)
+  );
+  const unscoredWinnerRows = winnerRows.filter((row) => row.points_awarded <= 0);
+
+  for (const winnerRow of unscoredWinnerRows) {
+    const { data: claimedRows, error: claimError } = await supabaseAdmin
+      .from("live_showdown_answers")
+      .update({ points_awarded: 10, is_correct: true })
+      .eq("id", winnerRow.id)
+      .eq("points_awarded", 0)
+      .select("user_id")
+      .limit(1);
+
+    if (claimError) {
+      throw new Error(claimError.message || "Failed to claim winner points for showdown answer.");
+    }
+
+    if (!claimedRows || claimedRows.length === 0) {
+      continue;
+    }
+
+    const claimedUserId = String(claimedRows[0]?.user_id ?? "").trim();
+    if (!claimedUserId) {
+      continue;
+    }
+
+    const finalPointsAwarded = await awardTriviaPointsForLiveShowdown(claimedUserId, 10);
+    if (finalPointsAwarded !== 10) {
+      const { error: finalPointsError } = await supabaseAdmin
+        .from("live_showdown_answers")
+        .update({ points_awarded: finalPointsAwarded })
+        .eq("id", winnerRow.id);
+
+      if (finalPointsError) {
+        throw new Error(finalPointsError.message || "Failed to finalize showdown winner points.");
+      }
+    }
+    scoredWinnerIds.add(winnerRow.id);
+  }
+
+  const flagsAlreadyCorrect = answers.every((row) => {
+    const shouldBeCorrect = winnerIds.has(row.id);
+    return shouldBeCorrect ? row.is_correct : !row.is_correct;
+  });
+  if (!flagsAlreadyCorrect) {
+    const { error: clearError } = await supabaseAdmin
+      .from("live_showdown_answers")
+      .update({ is_correct: false })
+      .eq("schedule_id", scheduleId)
+      .eq("round_number", roundNumber)
+      .eq("question_index", questionIndex);
+
+    if (clearError) {
+      throw new Error(clearError.message || "Failed to clear showdown correctness flags.");
+    }
+
+    if (winnerIds.size > 0) {
+      const { error: markError } = await supabaseAdmin
+        .from("live_showdown_answers")
+        .update({ is_correct: true })
+        .in("id", Array.from(winnerIds));
+
+      if (markError) {
+        throw new Error(markError.message || "Failed to mark showdown winners as correct.");
+      }
+    }
+  }
+
+  if (winnerIds.size > 0 && scoredWinnerIds.size === 0) {
+    return null;
+  }
+
+  return buildClosestGuessAnnouncement(winners, correctAnswer);
+}
+
+export async function getLiveShowdownState(
+  serverTimestamp: number,
+  venueId: string,
+  viewerUserId = ""
+): Promise<LiveShowdownState> {
   const nowMs = toSafeServerTimestamp(serverTimestamp);
   const nowIso = new Date(nowMs).toISOString();
 
@@ -311,6 +588,8 @@ export async function getLiveShowdownState(serverTimestamp: number, venueId: str
       currentQuestionIndex: null,
       activeQuestion: null,
       revealedAnswer: null,
+      emceeAnnouncement: null,
+      viewerResult: null,
       nextSchedule: upcoming
         ? {
             id: upcoming.id,
@@ -318,6 +597,8 @@ export async function getLiveShowdownState(serverTimestamp: number, venueId: str
             timezone: upcoming.timezone,
             startTime: upcoming.start_time,
             numRounds: clampRounds(Number(upcoming.num_rounds)),
+            intermissionAdDelaySeconds: clampIntermissionDelaySeconds(upcoming.intermission_ad_delay_seconds),
+            lobbyAdEnabled: Boolean(upcoming.lobby_ad_enabled ?? true),
             firstRoundCategory,
           }
         : null,
@@ -341,6 +622,8 @@ export async function getLiveShowdownState(serverTimestamp: number, venueId: str
   let secondsRemaining = 1;
   let activeQuestion: LiveShowdownQuestionInternal | null = null;
   let revealedAnswer: string | null = null;
+  let emceeAnnouncement: string | null = null;
+  let viewerResult: LiveShowdownViewerResult | null = null;
 
   if (roundElapsedMs < QUESTION_WINDOW_MS) {
     const questionIndex = Math.min(QUESTIONS_PER_ROUND, Math.floor(roundElapsedMs / QUESTION_BLOCK_MS) + 1);
@@ -358,6 +641,19 @@ export async function getLiveShowdownState(serverTimestamp: number, venueId: str
     activeQuestion = await loadSessionQuestion(active.id, currentRound, questionIndex);
     if (activePhase !== "answering") {
       revealedAnswer = activeQuestion?.correctAnswer ?? null;
+      emceeAnnouncement = await settleClosestGuessQuestion(
+        active.id,
+        currentRound,
+        questionIndex,
+        activeQuestion?.correctAnswer ?? null
+      );
+      viewerResult = await loadViewerResult(
+        viewerUserId,
+        active.id,
+        currentRound,
+        questionIndex,
+        activeQuestion?.correctNumericAnswer !== null
+      );
     }
   } else {
     activePhase = "mid_game_break";
@@ -365,6 +661,19 @@ export async function getLiveShowdownState(serverTimestamp: number, venueId: str
 
     const previousQuestion = await loadSessionQuestion(active.id, currentRound, QUESTIONS_PER_ROUND);
     revealedAnswer = previousQuestion?.correctAnswer ?? null;
+    emceeAnnouncement = await settleClosestGuessQuestion(
+      active.id,
+      currentRound,
+      QUESTIONS_PER_ROUND,
+      previousQuestion?.correctAnswer ?? null
+    );
+    viewerResult = await loadViewerResult(
+      viewerUserId,
+      active.id,
+      currentRound,
+      QUESTIONS_PER_ROUND,
+      previousQuestion?.correctNumericAnswer !== null
+    );
   }
 
   const isFinalResultsWindow =
@@ -386,6 +695,8 @@ export async function getLiveShowdownState(serverTimestamp: number, venueId: str
     scheduleTitle: active.title,
     scheduleTimezone: active.timezone,
     scheduleStartTime: active.start_time,
+    intermissionAdDelaySeconds: clampIntermissionDelaySeconds(active.intermission_ad_delay_seconds),
+    lobbyAdEnabled: Boolean(active.lobby_ad_enabled ?? true),
     totalRounds,
     currentRound,
     currentQuestionIndex,
@@ -393,6 +704,8 @@ export async function getLiveShowdownState(serverTimestamp: number, venueId: str
     secondsRemaining,
     activeQuestion: toPublicQuestion(activeQuestion),
     revealedAnswer,
+    emceeAnnouncement,
+    viewerResult,
     isFinalResultsWindow,
     currentRoundCategory,
     upcomingRoundNumber,

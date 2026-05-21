@@ -1,0 +1,464 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import type { Venue } from "@/types";
+import {
+  ADMIN_NAV_GROUPS,
+  MIGRATED_SECTIONS,
+  type AdminSection,
+  type AdminSectionOption,
+} from "@/components/admin/adminSections";
+import { UsersSection } from "@/components/admin/sections/UsersSection";
+import { VenuesSection } from "@/components/admin/sections/VenuesSection";
+import { ChallengesSection } from "@/components/admin/sections/ChallengesSection";
+import { SchedulesSection } from "@/components/admin/sections/SchedulesSection";
+import { TriviaListSection } from "@/components/admin/sections/TriviaListSection";
+import { TriviaCreateSection } from "@/components/admin/sections/TriviaCreateSection";
+import { AdPlacementBuilder } from "@/components/admin/AdPlacementBuilder";
+import { AdAnalyticsDashboard } from "@/components/admin/AdAnalyticsDashboard";
+
+// ─── Shared Admin UI Primitives ───────────────────────────────────────────────
+
+export type PaginationProps = {
+  page: number;
+  totalPages: number;
+  total: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+};
+
+export function PaginationBar({ page, totalPages, total, pageSize, onPageChange }: PaginationProps) {
+  const start = Math.min(total, (page - 1) * pageSize + 1);
+  const end = Math.min(total, page * pageSize);
+
+  const pages: number[] = [];
+  const maxVisible = 7;
+  if (totalPages <= maxVisible) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    if (page > 3) pages.push(-1);
+    for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) pages.push(i);
+    if (page < totalPages - 2) pages.push(-2);
+    pages.push(totalPages);
+  }
+
+  const btnBase =
+    "inline-flex h-8 min-w-[2rem] items-center justify-center rounded px-2 text-sm font-medium transition-colors";
+  const btnActive = `${btnBase} bg-indigo-600 text-white`;
+  const btnDefault = `${btnBase} text-slate-600 hover:bg-slate-100`;
+  const btnDisabled = `${btnBase} text-slate-300 cursor-not-allowed`;
+
+  return (
+    <div className="flex items-center justify-between border-t border-slate-200 px-6 py-3">
+      <span className="text-sm text-slate-500">
+        Showing {start}–{end} of {total}
+      </span>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onPageChange(1)}
+          disabled={page === 1}
+          className={page === 1 ? btnDisabled : btnDefault}
+          title="First page"
+        >
+          «
+        </button>
+        <button
+          onClick={() => onPageChange(page - 1)}
+          disabled={page === 1}
+          className={page === 1 ? btnDisabled : btnDefault}
+          title="Previous page"
+        >
+          ‹
+        </button>
+        {pages.map((p, i) =>
+          p < 0 ? (
+            <span key={`ellipsis-${i}`} className="px-1 text-slate-400">
+              …
+            </span>
+          ) : (
+            <button
+              key={p}
+              onClick={() => onPageChange(p)}
+              className={p === page ? btnActive : btnDefault}
+            >
+              {p}
+            </button>
+          )
+        )}
+        <button
+          onClick={() => onPageChange(page + 1)}
+          disabled={page === totalPages}
+          className={page === totalPages ? btnDisabled : btnDefault}
+          title="Next page"
+        >
+          ›
+        </button>
+        <button
+          onClick={() => onPageChange(totalPages)}
+          disabled={page === totalPages}
+          className={page === totalPages ? btnDisabled : btnDefault}
+          title="Last page"
+        >
+          »
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export type BulkActionBarProps = {
+  count: number;
+  onEnableSelected?: () => void;
+  onDisableSelected?: () => void;
+  onDeleteSelected: () => void;
+  onClear: () => void;
+  busy?: boolean;
+};
+
+export function BulkActionBar({
+  count,
+  onEnableSelected,
+  onDisableSelected,
+  onDeleteSelected,
+  onClear,
+  busy = false,
+}: BulkActionBarProps) {
+  if (count === 0) return null;
+  return (
+    <div className="mb-4 flex items-center gap-3 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2.5">
+      <span className="text-sm font-medium text-indigo-800">
+        {count} selected
+      </span>
+      <div className="h-4 w-px bg-indigo-200" />
+      {onEnableSelected && (
+        <button
+          onClick={onEnableSelected}
+          disabled={busy}
+          className="text-sm font-medium text-indigo-700 hover:text-indigo-900 disabled:opacity-50"
+        >
+          Enable
+        </button>
+      )}
+      {onDisableSelected && (
+        <button
+          onClick={onDisableSelected}
+          disabled={busy}
+          className="text-sm font-medium text-indigo-700 hover:text-indigo-900 disabled:opacity-50"
+        >
+          Disable
+        </button>
+      )}
+      <button
+        onClick={onDeleteSelected}
+        disabled={busy}
+        className="text-sm font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+      >
+        Delete
+      </button>
+      <button
+        onClick={onClear}
+        disabled={busy}
+        className="ml-auto text-sm text-slate-500 hover:text-slate-700 disabled:opacity-50"
+      >
+        Clear
+      </button>
+    </div>
+  );
+}
+
+// ─── Admin Table Primitives ───────────────────────────────────────────────────
+
+export const TH = "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500";
+export const TD = "px-4 py-3 text-sm text-slate-700";
+export const TR = "border-b border-slate-100 hover:bg-slate-50 transition-colors";
+
+// ─── Login Screen ─────────────────────────────────────────────────────────────
+
+function LoginScreen({ onSuccess }: { onSuccess: () => void }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/bootstrap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const payload = (await res.json()) as { ok: boolean; error?: string };
+      if (!payload.ok) {
+        setError(payload.error ?? "Invalid credentials.");
+      } else {
+        onSuccess();
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-slate-900">
+      <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-2xl">
+        <div className="mb-8 text-center">
+          <div className="mb-2 text-2xl font-bold text-slate-900">Hightop Admin</div>
+          <div className="text-sm text-slate-500">Sign in to continue</div>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+              Username
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="username"
+              required
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              required
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            />
+          </div>
+          {error && (
+            <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
+          )}
+          <button
+            type="submit"
+            disabled={busy}
+            className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60"
+          >
+            {busy ? "Signing in…" : "Sign in"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Legacy Section Panel ─────────────────────────────────────────────────────
+
+function LegacyPanel({ section }: { section: AdminSectionOption }) {
+  const statusLabel = section.status?.label ?? "Planned";
+
+  return (
+    <div className="flex flex-col items-center justify-center py-24 text-center">
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100">
+        <svg className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+      </div>
+      <h2 className="mb-2 text-xl font-semibold text-slate-800">{section.label}</h2>
+      <p className="mb-6 max-w-sm text-sm text-slate-500">
+        This section is being upgraded to the new desktop admin and will be available soon. Current status:{" "}
+        <span className="font-medium text-slate-700">{statusLabel}</span>.
+      </p>
+      <a
+        href={`/admin/${section.slug}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+      >
+        Open in Legacy Admin
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+      </a>
+    </div>
+  );
+}
+
+// ─── Sidebar Nav ──────────────────────────────────────────────────────────────
+
+type SidebarProps = {
+  activeSection: AdminSection;
+  onSelect: (section: AdminSection) => void;
+  onLogout: () => void;
+};
+
+function Sidebar({ activeSection, onSelect, onLogout }: SidebarProps) {
+  return (
+    <nav
+      className="flex flex-col bg-slate-900"
+      style={{ width: 240, minWidth: 240, maxWidth: 240, minHeight: "100vh" }}
+    >
+      {/* Logo */}
+      <div className="flex h-14 items-center border-b border-slate-800 px-5">
+        <span className="text-sm font-bold tracking-widest text-white">HIGHTOP ADMIN</span>
+      </div>
+
+      {/* Nav groups */}
+      <div className="flex-1 overflow-y-auto py-2">
+        {ADMIN_NAV_GROUPS.map((group) => (
+          <div key={group.label} className="mb-1">
+            <div className="px-5 pb-1 pt-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              {group.label}
+            </div>
+            {group.items.map((item) => {
+              const isActive = activeSection === item.id;
+              const isMigrated = MIGRATED_SECTIONS.has(item.id);
+              const showLiveBadge = item.status?.label === "Live";
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => onSelect(item.id)}
+                  className={[
+                    "flex w-full items-center justify-between px-5 py-2 text-left text-sm transition-colors",
+                    isActive
+                      ? "bg-indigo-700 font-semibold text-white"
+                      : "text-slate-400 hover:bg-slate-800 hover:text-white",
+                  ].join(" ")}
+                >
+                  <span>{item.label}</span>
+                  {item.status?.label ? (
+                    <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${item.status.tone === 'live' ? 'bg-emerald-700 text-emerald-100' : 'bg-slate-700 text-slate-400'}`}>
+                      {item.status.label}
+                    </span>
+                  ) : !isMigrated ? (
+                    <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
+                      Planned
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      {/* Logout */}
+      <div className="border-t border-slate-800 p-4">
+        <button
+          onClick={onLogout}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
+          </svg>
+          Sign out
+        </button>
+      </div>
+    </nav>
+  );
+}
+
+// ─── Admin Shell ──────────────────────────────────────────────────────────────
+
+type AdminShellProps = {
+  venues: Venue[];
+  initialSection?: AdminSection;
+};
+
+type AuthState = "checking" | "unauthenticated" | "authenticated";
+
+export function AdminShell({ venues, initialSection = "venue-users" }: AdminShellProps) {
+  const [authState, setAuthState] = useState<AuthState>("checking");
+  const [activeSection, setActiveSection] = useState<AdminSection>(initialSection);
+  const [venueList, setVenueList] = useState<Venue[]>(venues);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin?resource=session", { cache: "no-store" })
+      .then((res) => {
+        if (cancelled) return;
+        setAuthState(res.ok ? "authenticated" : "unauthenticated");
+      })
+      .catch(() => {
+        if (!cancelled) setAuthState("unauthenticated");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleLoginSuccess = useCallback(() => {
+    setAuthState("authenticated");
+  }, []);
+
+  const handleLogout = useCallback(async () => {
+    await fetch("/api/admin/logout", { method: "POST" });
+    setAuthState("unauthenticated");
+  }, []);
+
+  const handleVenueCreated = useCallback((venue: Venue) => {
+    setVenueList((prev) => [venue, ...prev]);
+  }, []);
+
+  if (authState === "checking") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-900">
+        <div className="text-sm text-slate-400">Verifying session…</div>
+      </div>
+    );
+  }
+
+  if (authState === "unauthenticated") {
+    return <LoginScreen onSuccess={handleLoginSuccess} />;
+  }
+
+  const allSections = ADMIN_NAV_GROUPS.flatMap((g) => g.items);
+  const currentSectionOption = allSections.find((s) => s.id === activeSection);
+
+  function renderContent() {
+    switch (activeSection) {
+      case "venue-users":
+        return <UsersSection venues={venueList} />;
+      case "venue-manage":
+        return <VenuesSection venues={venueList} onVenueCreated={handleVenueCreated} />;
+      case "challenge-campaigns":
+        return <ChallengesSection venues={venueList} />;
+      case "live-trivia":
+        return <SchedulesSection venues={venueList} />;
+      case "trivia-list":
+        return <TriviaListSection />;
+      case "trivia-create":
+        return <TriviaCreateSection />;
+      case "ad-placement":
+        return <AdPlacementBuilder />;
+      case "ad-debug":
+        return <AdAnalyticsDashboard />;
+      default:
+        return currentSectionOption ? <LegacyPanel section={currentSectionOption} /> : null;
+    }
+  }
+
+  return (
+    <div className="w-full h-screen max-h-screen m-0 p-0 flex bg-[#030712] overflow-hidden select-none">
+      <Sidebar
+        activeSection={activeSection}
+        onSelect={setActiveSection}
+        onLogout={handleLogout}
+      />
+
+      <main className="h-full min-w-0 flex flex-1 flex-col overflow-hidden">
+        {/* Top header bar */}
+        <div className="flex h-14 items-center border-b border-slate-200 bg-white px-8">
+          <h1 className="text-sm font-semibold text-slate-800">
+            {currentSectionOption?.label ?? "Dashboard"}
+          </h1>
+        </div>
+
+        {/* Content area */}
+        <div className="h-full flex-1 overflow-y-auto p-6 box-border">{renderContent()}</div>
+      </main>
+    </div>
+  );
+}

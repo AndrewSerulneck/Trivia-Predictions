@@ -51,7 +51,7 @@ jobs:
 
       - name: Commit Updated Trivia Files
         run: |
-          if git diff --quiet -- data/trivia/categories; then
+          if [ -z "$(git status --porcelain -- data/trivia/categories)" ]; then
             echo "No trivia JSON changes to commit."
             exit 0
           fi

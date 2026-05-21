@@ -24,6 +24,8 @@ type TriviaScheduleRow = {
   timezone: string;
   num_rounds: number;
   venue_id: string | null;
+  intermission_ad_delay_seconds: number | null;
+  lobby_ad_enabled: boolean | null;
   created_at: string;
   updated_at: string;
 };
@@ -35,6 +37,8 @@ export type AdminLiveShowdownSchedule = {
   timezone: string;
   numRounds: number;
   venueId: string | null;
+  intermissionAdDelaySeconds: number;
+  lobbyAdEnabled: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -59,6 +63,11 @@ function mapScheduleRow(row: TriviaScheduleRow): AdminLiveShowdownSchedule {
     timezone: row.timezone,
     numRounds: row.num_rounds,
     venueId: row.venue_id ?? null,
+    intermissionAdDelaySeconds: Math.max(
+      0,
+      Math.min(300, Math.floor(Number(row.intermission_ad_delay_seconds ?? 10)))
+    ),
+    lobbyAdEnabled: Boolean(row.lobby_ad_enabled ?? true),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -284,7 +293,7 @@ export async function listAdminLiveShowdownSchedules(limit = 30): Promise<AdminL
   const safeLimit = Math.max(1, Math.min(200, Math.floor(limit)));
   const { data, error } = await admin
     .from("trivia_schedules")
-    .select("id, title, start_time, timezone, num_rounds, venue_id, created_at, updated_at")
+    .select("id, title, start_time, timezone, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled, created_at, updated_at")
     .order("start_time", { ascending: false })
     .limit(safeLimit);
 
@@ -302,6 +311,8 @@ export async function createAdminLiveShowdownSchedule(params: {
   timezone: string;
   numRounds: number;
   venueId: string;
+  intermissionAdDelaySeconds?: number;
+  lobbyAdEnabled?: boolean;
 }): Promise<AdminLiveShowdownSchedule> {
   const admin = getAdminClient();
 
@@ -311,6 +322,11 @@ export async function createAdminLiveShowdownSchedule(params: {
   const timezone = String(params.timezone ?? "America/New_York").trim() || "America/New_York";
   const venueId = String(params.venueId ?? "").trim();
   const numRounds = clampRounds(Number(params.numRounds));
+  const intermissionAdDelaySeconds = Math.max(
+    0,
+    Math.min(300, Math.floor(Number(params.intermissionAdDelaySeconds ?? 10)))
+  );
+  const lobbyAdEnabled = params.lobbyAdEnabled !== false;
 
   if (!title || !targetDate || !startTime || !venueId) {
     throw new Error("title, targetDate, startTime, timezone, numRounds, and venueId are required.");
@@ -327,8 +343,10 @@ export async function createAdminLiveShowdownSchedule(params: {
       timezone,
       num_rounds: numRounds,
       venue_id: venueId,
+      intermission_ad_delay_seconds: intermissionAdDelaySeconds,
+      lobby_ad_enabled: lobbyAdEnabled,
     })
-    .select("id, title, start_time, timezone, num_rounds, venue_id, created_at, updated_at")
+    .select("id, title, start_time, timezone, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled, created_at, updated_at")
     .single();
 
   if (scheduleInsert.error || !scheduleInsert.data) {

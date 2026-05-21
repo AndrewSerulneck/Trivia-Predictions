@@ -11,6 +11,9 @@ const MAX_ATTEMPTS = 10;
 const MAX_API_RETRIES = 5;
 const BASE_RETRY_DELAY_MS = 4000;
 const VALID_DIFFICULTIES = new Set(["easy", "medium", "hard"]);
+const LIVE_BUCKET = "live_open_ended";
+const NORMAL_BUCKET = "normal_multiple_choice";
+const VALID_BUCKETS = new Set([LIVE_BUCKET, NORMAL_BUCKET]);
 
 function parseArgs(argv) {
   const args = {
@@ -19,6 +22,7 @@ function parseArgs(argv) {
     count: DEFAULT_COUNT,
     batchSize: DEFAULT_BATCH_SIZE,
     model: DEFAULT_MODEL,
+    bucket: NORMAL_BUCKET,
     allowPartial: false,
     dryRun: false,
   };
@@ -50,6 +54,12 @@ function parseArgs(argv) {
       i += 1;
       continue;
     }
+    if (token === "--bucket") {
+      const raw = String(argv[i + 1] || "").trim();
+      args.bucket = normalizeBucket(raw);
+      i += 1;
+      continue;
+    }
     if (token === "--dry-run") {
       args.dryRun = true;
       continue;
@@ -60,6 +70,17 @@ function parseArgs(argv) {
   }
 
   return args;
+}
+
+function normalizeBucket(value) {
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+
+  if (normalized === LIVE_BUCKET || normalized === "live") return LIVE_BUCKET;
+  if (normalized === NORMAL_BUCKET || normalized === "normal") return NORMAL_BUCKET;
+  return normalized;
 }
 
 function assert(condition, message) {
@@ -141,14 +162,44 @@ function resolveCategoryFile(dir, requestedCategory) {
   );
 }
 
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function parseCategoryDocument(parsed, fallbackCategoryName, filePath) {
+  if (Array.isArray(parsed)) {
+    return {
+      categoryName: fallbackCategoryName,
+      [LIVE_BUCKET]: [],
+      [NORMAL_BUCKET]: parsed,
+    };
+  }
+
+  assert(isPlainObject(parsed), `Category file must contain an object or array: ${filePath}`);
+
+  const categoryName = String(parsed.categoryName || fallbackCategoryName).trim() || fallbackCategoryName;
+  const live = parsed[LIVE_BUCKET] || [];
+  const normal = parsed[NORMAL_BUCKET] || [];
+
+  assert(Array.isArray(live), `${filePath}: "${LIVE_BUCKET}" must be an array.`);
+  assert(Array.isArray(normal), `${filePath}: "${NORMAL_BUCKET}" must be an array.`);
+
+  return {
+    categoryName,
+    [LIVE_BUCKET]: live,
+    [NORMAL_BUCKET]: normal,
+  };
+}
+
 function loadAllQuestions(absoluteDir, files) {
   const all = [];
   for (const file of files) {
     const filePath = path.join(absoluteDir, file);
     const raw = fs.readFileSync(filePath, "utf8");
     const parsed = JSON.parse(raw);
-    assert(Array.isArray(parsed), `File must contain a JSON array: ${filePath}`);
-    all.push(...parsed);
+    const displayCategory = toDisplayCategory(file.replace(/\.json$/i, ""));
+    const doc = parseCategoryDocument(parsed, displayCategory, filePath);
+    all.push(...doc[LIVE_BUCKET], ...doc[NORMAL_BUCKET]);
   }
   return all;
 }
@@ -206,8 +257,8 @@ function validateQuestion(item, displayCategory) {
   };
 }
 
-function buildPrompt({ category, count, existingSample }) {
-  return [
+function buildPrompt({ category, count, existingSample, bucket }) {
+  const base = [
     `Generate ${count} multiple-choice trivia questions for the category "${category}".`,
     "Return ONLY a valid JSON array.",
     "Do not include markdown, backticks, commentary, or trailing commas.",
@@ -220,9 +271,32 @@ function buildPrompt({ category, count, existingSample }) {
     "- Avoid repeated questions or near-duplicates",
     "- Mix difficulties naturally across easy/medium/hard",
     "- Keep wording concise and production-ready",
+  ];
+
+  if (bucket === LIVE_BUCKET) {
+    base.push(
+      "- This batch is for LIVE OPEN-ENDED gameplay: every correct answer must be easy to type exactly without seeing options.",
+      "- Correct answers must be a definitive proper noun, person/place name, team, specific year, exact date, or clear standalone number.",
+      "- Avoid conceptual answers, abstract terms, relative adjectives, directional words, percentages without explicit context, or subjective phrasing.",
+      "- Prefer answers that are 1-3 words max, unless the canonical name is longer.",
+      "- Roughly 10% to 20% of this batch should be NUMERICAL SHOWDOWNS: use concrete, non-relative answers with 3 or more digits (for example 206, 1912, 1200).",
+      "- For Numerical Showdowns, avoid ranges and approximations; the answer must be a single specific number.",
+      "- Make distractor options plausible but keep one indisputably correct answer."
+    );
+  } else {
+    base.push(
+      "- This batch is for NORMAL MULTIPLE-CHOICE gameplay.",
+      "- Conceptual, comparative, quantitative, and nuanced questions are allowed when options make them fair.",
+      "- Answers may include terms, descriptions, or percentages that work best with visible options."
+    );
+  }
+
+  base.push(
     "- Do not reuse these existing questions (sample):",
-    existingSample.length > 0 ? existingSample.map((q) => `  - ${q}`).join("\n") : "  - (none)",
-  ].join("\n");
+    existingSample.length > 0 ? existingSample.map((q) => `  - ${q}`).join("\n") : "  - (none)"
+  );
+
+  return base.join("\n");
 }
 
 async function callGemini({ apiKey, model, prompt }) {
@@ -336,8 +410,8 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function writeQuestions(filePath, rows) {
-  const json = JSON.stringify(rows, null, 2);
+function writeCategoryDocument(filePath, doc) {
+  const json = JSON.stringify(doc, null, 2);
   fs.writeFileSync(filePath, `${json}\n`, "utf8");
 }
 
@@ -348,6 +422,7 @@ async function main() {
     Number.isInteger(args.batchSize) && args.batchSize > 0,
     "--batch-size must be a positive integer."
   );
+  assert(VALID_BUCKETS.has(args.bucket), `--bucket must be one of: ${Array.from(VALID_BUCKETS).join(", ")}`);
 
   const apiKey = process.env.GEMINI_API_KEY;
   assert(apiKey, "Missing GEMINI_API_KEY in environment.");
@@ -355,13 +430,14 @@ async function main() {
   const { absoluteDir, files, record } = resolveCategoryFile(args.dir, args.category);
   const allExisting = loadAllQuestions(absoluteDir, files);
   const targetRaw = fs.readFileSync(record.filePath, "utf8");
-  const targetQuestions = JSON.parse(targetRaw);
-  assert(Array.isArray(targetQuestions), `Target category file must be a JSON array: ${record.filePath}`);
+  const targetParsed = JSON.parse(targetRaw);
+  const targetDoc = parseCategoryDocument(targetParsed, record.displayCategory, record.filePath);
 
   const seenSlugs = new Set(allExisting.map((item) => slugify(item?.slug || item?.question || "")).filter(Boolean));
   const seenQuestionKeys = new Set(allExisting.map((item) => normalizeQuestionKey(item?.question || "")).filter(Boolean));
 
-  const existingInCategory = targetQuestions
+  const targetBucketRows = targetDoc[args.bucket] || [];
+  const existingInBucket = targetBucketRows
     .map((item) => String(item?.question || "").trim())
     .filter(Boolean)
     .slice(-40);
@@ -374,9 +450,10 @@ async function main() {
     const remaining = args.count - created.length;
     const requestCount = Math.min(args.batchSize, remaining);
     const prompt = buildPrompt({
-      category: record.displayCategory,
+      category: targetDoc.categoryName || record.displayCategory,
       count: requestCount,
-      existingSample: existingInCategory.slice(-15),
+      existingSample: existingInBucket.slice(-15),
+      bucket: args.bucket,
     });
 
     const generated = await callGemini({
@@ -390,7 +467,7 @@ async function main() {
         break;
       }
 
-      const row = validateQuestion(item, record.displayCategory);
+      const row = validateQuestion(item, targetDoc.categoryName || record.displayCategory);
       const questionKey = normalizeQuestionKey(row.question);
 
       if (seenSlugs.has(row.slug) || seenQuestionKeys.has(questionKey)) {
@@ -399,12 +476,12 @@ async function main() {
 
       seenSlugs.add(row.slug);
       seenQuestionKeys.add(questionKey);
-      existingInCategory.push(row.question);
+      existingInBucket.push(row.question);
       created.push(row);
     }
 
     console.log(
-      `Attempt ${attempts}/${MAX_ATTEMPTS}: accepted ${created.length}/${args.count} questions for ${record.categoryKey}`
+      `Attempt ${attempts}/${MAX_ATTEMPTS}: accepted ${created.length}/${args.count} questions for ${record.categoryKey} (${args.bucket})`
     );
   }
 
@@ -416,9 +493,15 @@ async function main() {
     console.warn(`${message} Continuing because --allow-partial is enabled.`);
   }
 
-  const merged = [...targetQuestions, ...created];
+  const mergedBucket = [...targetBucketRows, ...created];
+  const mergedDoc = {
+    categoryName: targetDoc.categoryName || record.displayCategory,
+    [LIVE_BUCKET]: args.bucket === LIVE_BUCKET ? mergedBucket : targetDoc[LIVE_BUCKET],
+    [NORMAL_BUCKET]: args.bucket === NORMAL_BUCKET ? mergedBucket : targetDoc[NORMAL_BUCKET],
+  };
+
   if (!args.dryRun && created.length > 0) {
-    writeQuestions(record.filePath, merged);
+    writeCategoryDocument(record.filePath, mergedDoc);
   }
 
   if (args.dryRun) {
@@ -428,10 +511,12 @@ async function main() {
   } else {
     console.log("No new questions written.");
   }
-  console.log(`Category: ${record.displayCategory}`);
+
+  console.log(`Category: ${mergedDoc.categoryName}`);
+  console.log(`Bucket: ${args.bucket}`);
   console.log(`File: ${record.filePath}`);
   console.log(`Added: ${created.length}`);
-  console.log(`New total in category file: ${merged.length}`);
+  console.log(`Bucket total after write: ${mergedBucket.length}`);
 }
 
 main().catch((error) => {

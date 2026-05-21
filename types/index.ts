@@ -52,6 +52,9 @@ export interface TriviaQuestion {
   correctAnswer: number;
   category?: string;
   difficulty?: string;
+  questionPool?: "anytime_blitz" | "live_showdown";
+  answerFormat?: "multiple_choice" | "write_in" | "numeric" | "true_false";
+  createdAt?: string;
 }
 
 export interface TriviaAnswer {
@@ -222,6 +225,8 @@ export interface PrizeWin {
 export interface Advertisement {
   id: string;
   slot: AdSlot;
+  slotKey: string;
+  priority: number;
   isPlaceholder?: boolean;
   pageKey: AdPageKey;
   adType: AdType;
@@ -260,4 +265,23 @@ export interface AdSlotConfig {
   height: number;
   mobileWidth?: number;
   mobileHeight?: number;
+}
+
+export interface AdCampaign {
+  id: string;
+  slot_key: string;
+  priority: number;
+  size: string;
+  content: string;
+  enabled: boolean;
+  createdAt?: string;
+}
+
+export interface PickEmGame {
+  id: string;
+  home_team: string;
+  away_team: string;
+  home_team_id: string;
+  away_team_id: string;
+  start_time: string;
 }

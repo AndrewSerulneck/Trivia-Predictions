@@ -82,6 +82,40 @@ html {
   background-attachment: fixed;
 }
 
+html.tp-bingo-theme,
+body.tp-bingo-theme {
+  background-image:
+    radial-gradient(circle at 14% 14%, rgba(254, 215, 170, 0.55) 0%, rgba(254, 215, 170, 0) 40%),
+    radial-gradient(circle at 84% 86%, rgba(254, 202, 202, 0.4) 0%, rgba(254, 202, 202, 0) 45%),
+    linear-gradient(180deg, #fb923c 0%, #f97316 50%, #ea580c 100%);
+  background-size: cover, cover, cover;
+  background-attachment: fixed;
+}
+
+html.tp-admin-theme,
+body.tp-admin-theme {
+  background-image: none !important;
+  background-color: #030712 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  overflow: hidden !important;
+  scrollbar-gutter: auto !important;
+}
+
+html.tp-admin-theme .tp-app-shell,
+body.tp-admin-theme .tp-app-shell {
+  margin: 0 !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
 /* Reserve scrollbar space on both sides only on desktop — prevents layout shift
    when a scrollbar appears without off-centering content on mobile. */
 @media (hover: hover) and (pointer: fine) {

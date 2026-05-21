@@ -1,18 +1,7 @@
-import { PageShell } from "@/components/ui/PageShell";
-import { AdminConsole } from "@/components/admin/AdminConsole";
+import { AdminShell } from "@/components/admin/AdminShell";
 import { listVenues } from "@/lib/venues";
 
 export default async function AdminPage() {
   const venues = await listVenues();
-
-  return (
-    <PageShell
-      title="Admin"
-      showPageTitle={false}
-      showBranding={false}
-      showUserStatus={false}
-    >
-      <AdminConsole venues={venues} mode="dashboard" />
-    </PageShell>
-  );
+  return <AdminShell venues={venues} />;
 }

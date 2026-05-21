@@ -170,7 +170,7 @@ type SportsBingoResolver =
   | {
       kind: "mlb_webhook_player_event_at_least";
       player: string;
-      event: "hit" | "home_run" | "walk" | "hit_by_pitch";
+      event: "hit" | "home_run" | "strikeout" | "walk" | "hit_by_pitch";
       threshold: number;
       currentCount?: number;
     }
@@ -284,6 +284,9 @@ type SportsBingoSquareRow = {
   resolver: unknown;
   probability: number;
   is_free: boolean;
+  square_type?: string | null;
+  player_id?: number | null;
+  event_type?: string | null;
   status: SquareStatus;
   created_at: string;
   resolved_at: string | null;
@@ -465,6 +468,7 @@ export type MlbWebhookBingoEvent = {
     | "home_run"
     | "walk"
     | "hit_by_pitch";
+  playerId: number | null;
   playerName: string;
   teamName: string;
   pitchCount: number | null;
@@ -545,6 +549,7 @@ const LINE_PATTERNS: number[][] = [
 ];
 
 let gameCatalogCache = new Map<string, CatalogCacheEntry>();
+let gameEntryWithCandidatesCache = new Map<string, { expiresAt: number; entry: { game: SportsBingoGame; candidates: SportsBingoSquareTemplate[] } }>();
 let scoreCache = new Map<string, { expiresAt: number; byGameId: Map<string, ScoreSnapshot> }>();
 let nbaPlayerStatsCache = new Map<string, { expiresAt: number; snapshot: NBAGamePlayerStatsSnapshot | null }>();
 let mlbPlayerStatsCache = new Map<string, { expiresAt: number; snapshot: MLBGamePlayerStatsSnapshot | null }>();
@@ -861,6 +866,40 @@ function mlbWebhookEventDisplayLabel(event: string): string {
     default:
       return event.replaceAll("_", " ");
   }
+}
+
+function toMlbSquareEventType(event: string): string | null {
+  switch (event) {
+    case "home_run":
+      return "mlb.batter.home_run";
+    case "strikeout":
+      return "mlb.batter.strikeout";
+    case "hit":
+      return "mlb.batter.hit";
+    default:
+      return null;
+  }
+}
+
+function getSquareMetadataForResolver(
+  resolver: SportsBingoResolver
+): { squareType: "generic" | "player_stat"; playerId: number | null; eventType: string | null } {
+  if (resolver.kind !== "mlb_webhook_player_event_at_least") {
+    return { squareType: "generic", playerId: null, eventType: null };
+  }
+  const parsedPlayer = parseResolverPlayerRef(resolver.player);
+  if (!parsedPlayer.playerId) {
+    return { squareType: "generic", playerId: null, eventType: null };
+  }
+  const eventType = toMlbSquareEventType(resolver.event);
+  if (!eventType) {
+    return { squareType: "generic", playerId: null, eventType: null };
+  }
+  return {
+    squareType: "player_stat",
+    playerId: parsedPlayer.playerId,
+    eventType,
+  };
 }
 
 function resolverProgressPayload(resolver: SportsBingoResolver): { current: number; target: number; unit: string } | null {
@@ -2038,6 +2077,17 @@ async function getGameEntryWithCandidates(params: {
   gameId: string;
   includePlayerProps?: boolean;
 }): Promise<{ game: SportsBingoGame; candidates: SportsBingoSquareTemplate[] } | null> {
+  const includePlayerProps = params.includePlayerProps !== false;
+  const cacheKey = `${params.sportKey}:${params.gameId}:${includePlayerProps ? "with_props" : "without_props"}`;
+  const cached = gameEntryWithCandidatesCache.get(cacheKey);
+  const now = Date.now();
+  if (cached && now < cached.expiresAt) {
+    return {
+      game: { ...cached.entry.game },
+      candidates: cached.entry.candidates.map((candidate) => ({ ...candidate })),
+    };
+  }
+
   const catalog = await getGameCatalog(params.sportKey);
   const entry = catalog.find((item) => item.game.id === params.gameId);
   if (!entry) {
@@ -2046,7 +2096,6 @@ async function getGameEntryWithCandidates(params: {
 
   let candidates = [...entry.candidates];
   let merged = [...candidates];
-  const includePlayerProps = params.includePlayerProps !== false;
 
   if (entry.game.sportKey === "basketball_nba") {
     const achievementCandidates = await buildNBAAchievementCandidates(entry.game, merged);
@@ -2078,10 +2127,19 @@ async function getGameEntryWithCandidates(params: {
     .map((item) => ({ ...item, probability: clamp(item.probability, 0.05, 0.95) }))
     .sort((a, b) => a.key.localeCompare(b.key));
 
-  return {
+  const output = {
     game: entry.game,
     candidates,
   };
+  gameEntryWithCandidatesCache.set(cacheKey, {
+    entry: {
+      game: { ...output.game },
+      candidates: output.candidates.map((candidate) => ({ ...candidate })),
+    },
+    expiresAt: Date.now() + 60_000,
+  });
+
+  return output;
 }
 
 function buildGameAndCandidatesFromBallDontLie(sportKey: string, gameData: BallDontLieGame): GameCatalogEntry | null {
@@ -3059,23 +3117,22 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
           bucket: "achievement",
           supportLevel: "supported",
         });
-      } else {
-        const avoidKResolver: SportsBingoResolver = {
-          kind: "mlb_webhook_player_event_at_most",
-          player: playerRef,
-          event: "strikeout",
-          threshold: 0,
-        };
-        const avoidKProbability = clamp(1 - probabilityAtLeast(hitter.avgStrikeouts, 1, 0.62), 0.08, 0.88);
-        templates.push({
-          key: resolverKey(avoidKResolver),
-          label: buildSquareLabel(game, avoidKResolver),
-          resolver: avoidKResolver,
-          probability: avoidKProbability,
-          bucket: "achievement",
-          supportLevel: "supported",
-        });
       }
+
+      const strikeoutResolver: SportsBingoResolver = {
+        kind: "mlb_webhook_player_event_at_least",
+        player: playerRef,
+        event: "strikeout",
+        threshold: 1,
+      };
+      templates.push({
+        key: resolverKey(strikeoutResolver),
+        label: buildSquareLabel(game, strikeoutResolver),
+        resolver: strikeoutResolver,
+        probability: clamp(probabilityAtLeast(hitter.avgStrikeouts, 1, 0.62), 0.1, 0.9),
+        bucket: "achievement",
+        supportLevel: "supported",
+      });
 
       const walkResolver: SportsBingoResolver = {
         kind: "mlb_webhook_player_event_at_least",
@@ -4349,7 +4406,11 @@ function parseResolver(value: unknown): SportsBingoResolver | null {
         typeof resolver.player === "string" &&
         typeof resolver.threshold === "number" &&
         Number.isFinite(resolver.threshold) &&
-        (resolver.event === "hit" || resolver.event === "home_run" || resolver.event === "walk" || resolver.event === "hit_by_pitch")
+        (resolver.event === "hit" ||
+          resolver.event === "home_run" ||
+          resolver.event === "strikeout" ||
+          resolver.event === "walk" ||
+          resolver.event === "hit_by_pitch")
       ) {
         return {
           kind: "mlb_webhook_player_event_at_least",
@@ -5190,6 +5251,19 @@ function resolverPlayerMatchesEventName(playerRef: string, eventPlayerName: stri
   return eventFirst === targetFirst || eventFirst.startsWith(targetFirst[0] ?? "");
 }
 
+function resolverPlayerMatchesEvent(
+  playerRef: string,
+  eventPlayerId: number | null | undefined,
+  eventPlayerName: string
+): boolean {
+  const parsed = parseResolverPlayerRef(playerRef);
+  const normalizedEventPlayerId = Number(eventPlayerId ?? 0);
+  if (parsed.playerId && Number.isFinite(normalizedEventPlayerId) && normalizedEventPlayerId > 0) {
+    return parsed.playerId === normalizedEventPlayerId;
+  }
+  return resolverPlayerMatchesEventName(playerRef, eventPlayerName);
+}
+
 function getMlbWebhookEventAliases(eventType: MlbWebhookBingoEvent["eventType"]): Set<string> {
   const set = new Set<string>();
   set.add(eventType);
@@ -5226,7 +5300,7 @@ function applyWebhookCountToResolver(
     if (!aliases.has(resolver.event)) {
       return null;
     }
-    if (!resolverPlayerMatchesEventName(resolver.player, event.playerName)) {
+    if (!resolverPlayerMatchesEvent(resolver.player, event.playerId, event.playerName)) {
       return null;
     }
     return { ...resolver, currentCount: Math.max(0, Number(resolver.currentCount ?? 0)) + 1 };
@@ -5235,7 +5309,7 @@ function applyWebhookCountToResolver(
     if (!aliases.has(resolver.event)) {
       return null;
     }
-    if (!resolverPlayerMatchesEventName(resolver.player, event.playerName)) {
+    if (!resolverPlayerMatchesEvent(resolver.player, event.playerId, event.playerName)) {
       return null;
     }
     return { ...resolver, currentCount: Math.max(0, Number(resolver.currentCount ?? 0)) + 1 };
@@ -5267,7 +5341,7 @@ export async function applyMlbWebhookPropEvent(event: MlbWebhookBingoEvent): Pro
   const gameId = String(event.gameId ?? "").trim();
   const playerName = String(event.playerName ?? "").trim();
   const teamName = String(event.teamName ?? "").trim();
-  if (!gameId || !playerName || !teamName) {
+  if (!gameId || !playerName) {
     return { updatedSquares: 0, completedSquares: 0 };
   }
 
@@ -5284,10 +5358,72 @@ export async function applyMlbWebhookPropEvent(event: MlbWebhookBingoEvent): Pro
   let updatedSquares = 0;
   let completedSquares = 0;
   const nowIso = new Date().toISOString();
+  const touchedSquareIds = new Set<string>();
+  const activeCardIds = rows.map(({ card }) => card.id);
+
+  const playerId = Number(event.playerId ?? 0);
+  const mappedEventType = toMlbSquareEventType(event.eventType);
+  if (Number.isFinite(playerId) && playerId > 0 && mappedEventType && activeCardIds.length > 0) {
+    const { data: directSquares, error: directSquaresError } = await supabaseAdmin!
+      .from("sports_bingo_squares")
+      .select("id, resolver, status, resolved_at")
+      .in("card_id", activeCardIds)
+      .eq("status", "pending")
+      .eq("player_id", Math.trunc(playerId))
+      .eq("event_type", mappedEventType);
+    if (!directSquaresError && directSquares?.length) {
+      for (const square of directSquares as Array<{ id: string; resolver: unknown; status: SquareStatus; resolved_at: string | null }>) {
+        const resolver = parseResolver(square.resolver);
+        if (!resolver) {
+          continue;
+        }
+        const updatedResolver = applyWebhookCountToResolver(resolver, event, null);
+        if (!updatedResolver) {
+          continue;
+        }
+
+        let nextStatus: SquareStatus = square.status;
+        let resolvedAt = square.resolved_at;
+        if (updatedResolver.kind === "mlb_webhook_player_event_at_least" || updatedResolver.kind === "mlb_webhook_team_event_at_least") {
+          const current = Math.max(0, Number(updatedResolver.currentCount ?? 0));
+          const target = Math.max(1, Number(updatedResolver.threshold ?? 1));
+          if (current >= target) {
+            nextStatus = "hit";
+            resolvedAt = nowIso;
+            completedSquares += 1;
+          }
+        } else if (updatedResolver.kind === "mlb_webhook_player_event_at_most") {
+          const current = Math.max(0, Number(updatedResolver.currentCount ?? 0));
+          const maxAllowed = Math.max(0, Number(updatedResolver.threshold ?? 0));
+          if (current > maxAllowed) {
+            nextStatus = "miss";
+            resolvedAt = nowIso;
+            completedSquares += 1;
+          }
+        }
+
+        const { error } = await supabaseAdmin!
+          .from("sports_bingo_squares")
+          .update({
+            resolver: updatedResolver,
+            status: nextStatus,
+            resolved_at: nextStatus === "pending" ? null : resolvedAt,
+          })
+          .eq("id", square.id);
+        if (!error) {
+          updatedSquares += 1;
+          touchedSquareIds.add(square.id);
+        }
+      }
+    }
+  }
 
   for (const { card, squares } of rows) {
     const teamSide = resolveTeamSideFromEvent(card, teamName);
     for (const square of squares) {
+      if (touchedSquareIds.has(square.id)) {
+        continue;
+      }
       if (square.status !== "pending" || square.is_free) {
         continue;
       }
@@ -5935,11 +6071,15 @@ export async function createSportsBingoCard(params: {
           resolver,
           probability: 1,
           is_free: true,
+          square_type: "generic",
+          player_id: null,
+          event_type: null,
           status: "hit" as SquareStatus,
           resolved_at: nowIso,
         };
       }
 
+      const squareMetadata = getSquareMetadataForResolver(square.template!.resolver);
       return {
         card_id: insertedCard.id,
         square_index: square.index,
@@ -5947,6 +6087,9 @@ export async function createSportsBingoCard(params: {
         resolver: square.template!.resolver,
         probability: square.template!.probability,
         is_free: false,
+        square_type: squareMetadata.squareType,
+        player_id: squareMetadata.playerId,
+        event_type: squareMetadata.eventType,
         status: "pending" as SquareStatus,
         resolved_at: null,
       };

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
+import { parseLargePureNumberAnswer } from "@/lib/liveShowdownClosestGuess";
 import { getLiveShowdownState } from "@/lib/liveShowdownEngine";
 import { gradeWriteInAnswer, normalizeWriteInForStorage } from "@/lib/liveShowdownGrading";
 import { trackLiveShowdownQuestionExposure } from "@/lib/liveShowdown";
@@ -50,6 +51,7 @@ export type SubmitLiveShowdownAnswerResult = {
   alreadySubmitted: boolean;
   activePhase: "answering";
   normalizedAnswer: string;
+  pendingClosestGuess: boolean;
 };
 
 function isUuidLike(value: string): boolean {
@@ -65,7 +67,7 @@ async function getCorrectAnswerForScheduleSlot(
   scheduleId: string,
   roundNumber: number,
   questionIndex: number
-): Promise<{ questionId: string; correctTarget: string }> {
+): Promise<{ questionId: string; correctTarget: string; closestGuessEligible: boolean }> {
   if (!supabaseAdmin) {
     throw new Error("Supabase admin client is not configured.");
   }
@@ -136,6 +138,7 @@ async function getCorrectAnswerForScheduleSlot(
   return {
     questionId: String(question.slug ?? question.id),
     correctTarget,
+    closestGuessEligible: parseLargePureNumberAnswer(correctTarget) !== null,
   };
 }
 
@@ -245,6 +248,12 @@ export async function submitLiveShowdownAnswer(
     throw new Error("Submissions are only accepted during the answering phase.");
   }
 
+  const { questionId, correctTarget, closestGuessEligible } = await getCorrectAnswerForScheduleSlot(
+    scheduleId,
+    roundNumber,
+    questionIndex
+  );
+
   const { data: existingRow, error: existingError } = await supabaseAdmin
     .from("live_showdown_answers")
     .select("id, is_correct, points_awarded")
@@ -267,12 +276,11 @@ export async function submitLiveShowdownAnswer(
       alreadySubmitted: true,
       activePhase: "answering",
       normalizedAnswer: normalizeWriteInForStorage(submittedAnswer),
+      pendingClosestGuess: closestGuessEligible && Math.max(0, Number(existing.points_awarded ?? 0)) === 0,
     };
   }
-
-  const { questionId, correctTarget } = await getCorrectAnswerForScheduleSlot(scheduleId, roundNumber, questionIndex);
-  const isCorrect = gradeWriteInAnswer(submittedAnswer, correctTarget);
   const normalizedAnswer = normalizeWriteInForStorage(submittedAnswer);
+  const isCorrect = closestGuessEligible ? false : gradeWriteInAnswer(submittedAnswer, correctTarget);
 
   await trackLiveShowdownQuestionExposure([userId], questionId);
 
@@ -311,6 +319,7 @@ export async function submitLiveShowdownAnswer(
       alreadySubmitted: true,
       activePhase: "answering",
       normalizedAnswer,
+      pendingClosestGuess: closestGuessEligible && Math.max(0, Number(conflict?.points_awarded ?? 0)) === 0,
     };
   }
 
@@ -343,5 +352,6 @@ export async function submitLiveShowdownAnswer(
     alreadySubmitted: false,
     activePhase: "answering",
     normalizedAnswer,
+    pendingClosestGuess: closestGuessEligible,
   };
 }

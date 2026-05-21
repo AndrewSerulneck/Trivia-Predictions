@@ -10,6 +10,11 @@ const DEFAULT_DIR = "data/trivia/categories";
 const CHUNK_SIZE = 200;
 const MAX_RETRIES = 5;
 const BASE_RETRY_DELAY_MS = 3000;
+const LIVE_BUCKET = "live_open_ended";
+const NORMAL_BUCKET = "normal_multiple_choice";
+const ANYTIME_POOL = "anytime_blitz";
+const LIVE_POOL = "live_showdown";
+const QUESTIONS_PER_ROUND = 15;
 
 // GitHub-hosted runners can prefer IPv6 first; forcing IPv4 first avoids intermittent
 // fetch failures when a provider endpoint has partial IPv6 reachability.
@@ -61,14 +66,42 @@ function assert(condition, message) {
   }
 }
 
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function readCategoryPayload(parsed, sourceLabel) {
+  if (Array.isArray(parsed)) {
+    return parsed.map((item) => ({
+      ...item,
+      __questionPool: ANYTIME_POOL,
+      __answerFormat: "multiple_choice",
+    }));
+  }
+
+  assert(isPlainObject(parsed), `${sourceLabel} must contain either an array or object.`);
+
+  const live = parsed[LIVE_BUCKET] || [];
+  const normal = parsed[NORMAL_BUCKET] || [];
+
+  assert(Array.isArray(live), `${sourceLabel}: "${LIVE_BUCKET}" must be an array.`);
+  assert(Array.isArray(normal), `${sourceLabel}: "${NORMAL_BUCKET}" must be an array.`);
+
+  return [
+    ...live.map((item) => ({ ...item, __questionPool: LIVE_POOL, __answerFormat: "write_in" })),
+    ...normal.map((item) => ({ ...item, __questionPool: ANYTIME_POOL, __answerFormat: "multiple_choice" })),
+  ];
+}
+
 function readQuestionFile(filePath) {
   const absolutePath = path.resolve(process.cwd(), filePath);
   assert(fs.existsSync(absolutePath), `Question file not found: ${absolutePath}`);
 
   const raw = fs.readFileSync(absolutePath, "utf8");
   const parsed = JSON.parse(raw);
-  assert(Array.isArray(parsed), "Question file must contain a JSON array.");
-  return { absolutePath, questions: parsed };
+  const questions = readCategoryPayload(parsed, absolutePath);
+
+  return { absolutePath, questions };
 }
 
 function readQuestionDir(dirPath) {
@@ -87,8 +120,8 @@ function readQuestionDir(dirPath) {
     const filePath = path.join(absoluteDirPath, file);
     const raw = fs.readFileSync(filePath, "utf8");
     const parsed = JSON.parse(raw);
-    assert(Array.isArray(parsed), `File ${filePath} must contain a JSON array.`);
-    merged.push(...parsed.map((item) => ({ ...item, __sourceFile: file })));
+    const rows = readCategoryPayload(parsed, filePath);
+    merged.push(...rows.map((item) => ({ ...item, __sourceFile: file })));
   }
 
   return { absoluteDirPath, files, questions: merged };
@@ -124,6 +157,14 @@ function normalizeAndValidate(questions) {
     assert(!seenSlugs.has(slug), `Row ${rowNumber}${source}: duplicate slug "${slug}".`);
     seenSlugs.add(slug);
 
+    const questionPoolRaw = String(item.__questionPool ?? ANYTIME_POOL).trim();
+    const question_pool = questionPoolRaw === LIVE_POOL ? LIVE_POOL : ANYTIME_POOL;
+    const answerFormatRaw = String(item.__answerFormat ?? "multiple_choice").trim();
+    const answer_format =
+      answerFormatRaw === "write_in" || answerFormatRaw === "numeric" || answerFormatRaw === "true_false"
+        ? answerFormatRaw
+        : "multiple_choice";
+
     return {
       slug,
       question,
@@ -131,6 +172,8 @@ function normalizeAndValidate(questions) {
       correct_answer: correctAnswer,
       category: category || null,
       difficulty: difficulty || null,
+      question_pool,
+      answer_format,
     };
   });
 
@@ -205,7 +248,152 @@ async function upsertRows(rows) {
     throw new Error(`Count query failed: ${describeError(error)}`);
   }
 
+  await autoFillUpcomingLiveShowdownSchedules(supabase);
+
   console.log(`Done. trivia_questions total rows: ${count ?? "unknown"}`);
+}
+
+function shuffleInPlace(list) {
+  for (let i = list.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [list[i], list[j]] = [list[j], list[i]];
+  }
+  return list;
+}
+
+async function autoFillUpcomingLiveShowdownSchedules(supabase) {
+  const nowIso = new Date().toISOString();
+  const { data: schedules, error: schedulesError } = await supabase
+    .from("trivia_schedules")
+    .select("id, num_rounds, start_time")
+    .gt("start_time", nowIso)
+    .order("start_time", { ascending: true })
+    .limit(200);
+
+  if (schedulesError) {
+    throw new Error(`Failed to load upcoming trivia schedules: ${describeError(schedulesError)}`);
+  }
+  if (!Array.isArray(schedules) || schedules.length === 0) {
+    console.log("No upcoming schedules found to auto-fill.");
+    return;
+  }
+
+  const scheduleIds = schedules.map((row) => String(row.id ?? "").trim()).filter(Boolean);
+  const { data: existingRows, error: existingError } = await supabase
+    .from("trivia_session_questions")
+    .select("schedule_id, round_number, question_index, question_id")
+    .in("schedule_id", scheduleIds);
+
+  if (existingError) {
+    throw new Error(`Failed to load existing schedule mappings: ${describeError(existingError)}`);
+  }
+
+  const { data: livePoolRows, error: livePoolError } = await supabase
+    .from("trivia_questions")
+    .select("slug")
+    .eq("question_pool", LIVE_POOL)
+    .not("slug", "is", null)
+    .limit(20000);
+
+  if (livePoolError) {
+    throw new Error(`Failed to load live_showdown question pool: ${describeError(livePoolError)}`);
+  }
+
+  const liveSlugs = Array.from(
+    new Set(
+      (livePoolRows ?? [])
+        .map((row) => String(row.slug ?? "").trim())
+        .filter(Boolean)
+    )
+  );
+  if (liveSlugs.length === 0) {
+    console.log("No live_showdown questions available for schedule auto-fill.");
+    return;
+  }
+
+  const existingBySchedule = new Map();
+  for (const row of existingRows ?? []) {
+    const scheduleId = String(row.schedule_id ?? "").trim();
+    if (!scheduleId) continue;
+    const list = existingBySchedule.get(scheduleId) ?? [];
+    list.push({
+      roundNumber: Number(row.round_number),
+      questionIndex: Number(row.question_index),
+      questionId: String(row.question_id ?? "").trim(),
+    });
+    existingBySchedule.set(scheduleId, list);
+  }
+
+  const insertRows = [];
+
+  for (const schedule of schedules) {
+    const scheduleId = String(schedule.id ?? "").trim();
+    if (!scheduleId) continue;
+    const numRounds = Math.max(1, Math.min(24, Math.floor(Number(schedule.num_rounds) || 1)));
+    const existingForSchedule = existingBySchedule.get(scheduleId) ?? [];
+    const occupiedSlots = new Set(
+      existingForSchedule
+        .map((row) => `${row.roundNumber}:${row.questionIndex}`)
+    );
+    const usedQuestionIds = new Set(
+      existingForSchedule
+        .map((row) => String(row.questionId ?? "").trim())
+        .filter(Boolean)
+    );
+
+    const shuffledCandidates = shuffleInPlace([...liveSlugs]);
+    let candidateCursor = 0;
+
+    for (let roundNumber = 1; roundNumber <= numRounds; roundNumber += 1) {
+      for (let questionIndex = 1; questionIndex <= QUESTIONS_PER_ROUND; questionIndex += 1) {
+        const slotKey = `${roundNumber}:${questionIndex}`;
+        if (occupiedSlots.has(slotKey)) {
+          continue;
+        }
+
+        let nextQuestionId = "";
+        while (candidateCursor < shuffledCandidates.length) {
+          const candidate = shuffledCandidates[candidateCursor] ?? "";
+          candidateCursor += 1;
+          if (candidate && !usedQuestionIds.has(candidate)) {
+            nextQuestionId = candidate;
+            break;
+          }
+        }
+
+        if (!nextQuestionId) {
+          nextQuestionId = shuffledCandidates[Math.floor(Math.random() * shuffledCandidates.length)] ?? "";
+        }
+        if (!nextQuestionId) {
+          continue;
+        }
+
+        usedQuestionIds.add(nextQuestionId);
+        occupiedSlots.add(slotKey);
+        insertRows.push({
+          schedule_id: scheduleId,
+          question_id: nextQuestionId,
+          round_number: roundNumber,
+          question_index: questionIndex,
+        });
+      }
+    }
+  }
+
+  if (insertRows.length === 0) {
+    console.log("Upcoming schedules already have full question mappings.");
+    return;
+  }
+
+  const { error: insertError } = await supabase
+    .from("trivia_session_questions")
+    .insert(insertRows);
+
+  if (insertError) {
+    throw new Error(`Failed to auto-fill schedule question mappings: ${describeError(insertError)}`);
+  }
+
+  console.log(`Auto-filled ${insertRows.length} missing upcoming trivia_session_questions slots.`);
 }
 
 async function retryAsync(fn, options) {

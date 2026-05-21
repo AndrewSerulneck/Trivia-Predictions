@@ -42,6 +42,7 @@ type LiveStatsRealtimeRow = {
   turnovers: number;
   total_fantasy_points: number;
   game_status: string;
+  sport_key?: string;
 };
 
 type StatsSnapshot = Pick<LiveStatsRealtimeRow, "pts" | "ast" | "reb" | "stl" | "blk" | "turnovers" | "total_fantasy_points">;
@@ -86,7 +87,7 @@ function getGeofenceThresholdMeters(venueRadius: number, accuracy?: number): num
 type FantasySport = "basketball" | "baseball" | "football";
 const FANTASY_SPORTS: Array<{ key: FantasySport; icon: string; available: boolean }> = [
   { key: "basketball", icon: "🏀", available: true },
-  { key: "baseball", icon: "⚾", available: false },
+  { key: "baseball", icon: "⚾", available: true },
   { key: "football", icon: "🏈", available: false },
 ];
 const FANTASY_LINEUP_SIZE_BY_SPORT: Record<FantasySport, number> = {
@@ -228,6 +229,10 @@ function parseDailyGameDateFromId(gameId: string): string | null {
   }
   if (trimmed.startsWith("wnba-daily-")) {
     const rawDate = trimmed.slice("wnba-daily-".length).trim();
+    return /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null;
+  }
+  if (trimmed.startsWith("mlb-daily-")) {
+    const rawDate = trimmed.slice("mlb-daily-".length).trim();
     return /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null;
   }
   return null;
@@ -422,6 +427,41 @@ function describeStatChange(
   return { actionLabel, flashLabel, pointsDelta: fpDelta };
 }
 
+function describeMlbStatChange(
+  prev: StatsSnapshot,
+  next: StatsSnapshot
+): { actionLabel: string; flashLabel: string; pointsDelta: number } | null {
+  const fpDelta = next.total_fantasy_points - prev.total_fantasy_points;
+  if (Math.abs(fpDelta) < 0.01) return null;
+
+  let flashLabel: string;
+  let actionLabel: string;
+  if (fpDelta >= 45) {
+    flashLabel = "HOME RUN!";
+    actionLabel = "hit a Home Run";
+  } else if (fpDelta >= 25) {
+    flashLabel = "TRIPLE!";
+    actionLabel = "hit a Triple";
+  } else if (fpDelta >= 15) {
+    flashLabel = "DOUBLE!";
+    actionLabel = "hit a Double";
+  } else if (fpDelta >= 9) {
+    flashLabel = "STRIKEOUT!";
+    actionLabel = "recorded a Strikeout";
+  } else if (fpDelta >= 5) {
+    flashLabel = fpDelta >= 10 ? "HIT!" : "OUT!";
+    actionLabel = fpDelta >= 10 ? "recorded a Hit" : "recorded an Out";
+  } else if (fpDelta > 0) {
+    flashLabel = "STAT UPDATE!";
+    actionLabel = "had a fantasy stat update";
+  } else {
+    flashLabel = "STAT CORRECTION!";
+    actionLabel = "had a fantasy stat correction";
+  }
+
+  return { actionLabel, flashLabel, pointsDelta: fpDelta };
+}
+
 function SpringPop({
   popKey,
   className,
@@ -517,6 +557,7 @@ export function FantasyHome() {
   const [leaderboard, setLeaderboard] = useState<FantasyLeaderboardEntry[]>([]);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [hasStartedGame, setHasStartedGame] = useState(false);
+  const [isLoadingPool, setIsLoadingPool] = useState(false);
   const [loadingGames, setLoadingGames] = useState(true);
   const [loadingEntries, setLoadingEntries] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -757,15 +798,18 @@ export function FantasyHome() {
     if (!selectedGameId) {
       setPlayerPool([]);
       setLeaderboard([]);
+      setIsLoadingPool(false);
       return;
     }
 
-    if (selectedSport !== "basketball") {
+    if (selectedSport !== "basketball" && selectedSport !== "baseball") {
       setPlayerPool([]);
       setLeaderboard([]);
+      setIsLoadingPool(false);
       return;
     }
 
+    setIsLoadingPool(true);
     try {
       const requestNonce = ++gameDetailsRequestNonceRef.current;
       const gameDate = parseDailyGameDateFromId(selectedGameId) ?? selectedDate;
@@ -781,6 +825,20 @@ export function FantasyHome() {
         if (venueId) p.set("venueId", venueId);
         return p.toString();
       };
+
+      if (selectedSport === "baseball") {
+        const mlbId = `mlb-daily-${gameDate}`;
+        const mlbRes = await fetch(`/api/fantasy/games?${makeParams(mlbId)}`, { cache: "no-store" });
+        const mlbPayload = (await mlbRes.json()) as GamesPayload;
+        if (requestNonce !== gameDetailsRequestNonceRef.current) return;
+        setPlayerPool(mlbPayload.playerPool ?? []);
+        setLeaderboard(mlbPayload.leaderboard ?? []);
+        setSelectedPlayers((current) => {
+          const poolKeys = new Set((mlbPayload.playerPool ?? []).map((item) => item.playerName));
+          return current.filter((name) => poolKeys.has(name));
+        });
+        return;
+      }
 
       const nbaId = `nba-daily-${gameDate}`;
       const wnbaId = `wnba-daily-${gameDate}`;
@@ -814,6 +872,8 @@ export function FantasyHome() {
       setPlayerPool([]);
       setLeaderboard([]);
       setErrorMessage(error instanceof Error ? error.message : "Failed to load fantasy player pool.");
+    } finally {
+      setIsLoadingPool(false);
     }
   }, [selectedGameId, selectedDate, selectedSport, venueId]);
 
@@ -825,6 +885,8 @@ export function FantasyHome() {
     setFilterPosition("all");
     setFilterTeam("all");
     setVisibleCount(25);
+    setHasStartedGame(false);
+    setIsLoadingPool(true);
     hasRestoredDraftRef.current = false;
   }, [selectedGameId]);
 
@@ -843,6 +905,8 @@ export function FantasyHome() {
       const hasWnba = games.some((g) => g.league === "WNBA");
       const id = !hasNba && hasWnba ? `wnba-daily-${selectedDate}` : `nba-daily-${selectedDate}`;
       setSelectedGameId(id);
+    } else if (selectedSport === "baseball") {
+      setSelectedGameId(`mlb-daily-${selectedDate}`);
     }
   }, [selectedSport, selectedDate, games]);
 
@@ -862,8 +926,11 @@ export function FantasyHome() {
     () =>
       entries.find((entry) => {
         if (selectedSport === "basketball") {
-          return parseDailyGameDateFromId(entry.gameId) === selectedDate;
+          const isBasketballEntry =
+            entry.sportKey === "basketball_nba" || entry.sportKey === "basketball_wnba";
+          return isBasketballEntry && parseDailyGameDateFromId(entry.gameId) === selectedDate;
         }
+        // baseball and any other sport: match by exact game ID (sport-specific prefix)
         return entry.gameId === selectedGameId;
       }),
     [entries, selectedGameId, selectedSport, selectedDate]
@@ -937,6 +1004,8 @@ export function FantasyHome() {
     () =>
       selectedSport === "basketball"
         ? games.filter((g) => g.league === "NBA" || g.league === "WNBA")
+        : selectedSport === "baseball"
+        ? games.filter((g) => g.league === "MLB")
         : [],
     [games, selectedSport]
   );
@@ -971,7 +1040,10 @@ export function FantasyHome() {
     () =>
       entries.some((entry) => {
         if (selectedSport === "basketball") {
+          const isBasketballEntry =
+            entry.sportKey === "basketball_nba" || entry.sportKey === "basketball_wnba";
           return (
+            isBasketballEntry &&
             parseDailyGameDateFromId(entry.gameId) === selectedDate &&
             (entry.status === "pending" || entry.status === "live")
           );
@@ -1407,7 +1479,10 @@ export function FantasyHome() {
           // No baseline yet — store snapshot but don't generate a ledger entry.
           if (!prevSnapshot) return;
 
-          const change = describeStatChange(prevSnapshot, nextSnapshot);
+          const sportKey = String(row.sport_key ?? "").trim();
+          const change = sportKey === "baseball_mlb"
+            ? describeMlbStatChange(prevSnapshot, nextSnapshot)
+            : describeStatChange(prevSnapshot, nextSnapshot);
           if (!change) return;
 
           // Trigger pop on roster players only.
@@ -1689,7 +1764,10 @@ export function FantasyHome() {
     [playerPool, selectedPlayerKeySet]
   );
 
-  const CANONICAL_POSITIONS = ["PG", "SG", "SF", "PF", "C"] as const;
+  const CANONICAL_POSITIONS: readonly string[] =
+    selectedSport === "baseball"
+      ? ["P", "C", "1B", "2B", "3B", "SS", "OF", "DH"]
+      : ["PG", "SG", "SF", "PF", "C"];
 
   const uniqueTeams = useMemo(
     () =>
@@ -1698,24 +1776,40 @@ export function FantasyHome() {
   );
 
   const sortedFilteredPool = useMemo(() => {
+    const isBaseball = selectedSport === "baseball";
+    const matchPos = (itemPos: string | null | undefined, filter: string): boolean => {
+      const pos = (itemPos ?? "").trim().toUpperCase();
+      const f = filter.toUpperCase();
+      if (isBaseball) {
+        if (f === "P") return pos === "P" || pos === "SP" || pos === "RP";
+        if (f === "OF") return pos === "OF" || pos === "LF" || pos === "RF" || pos === "CF";
+      }
+      return pos === f;
+    };
     let pool = availablePlayerPool;
     if (filterPosition !== "all") {
-      pool = pool.filter((item) => item.position === filterPosition);
+      pool = pool.filter((item) => matchPos(item.position, filterPosition));
     }
     if (filterTeam !== "all") {
       pool = pool.filter((item) => item.team === filterTeam);
     }
+    const positionOrder: string[] = isBaseball
+      ? ["P", "SP", "RP", "C", "1B", "2B", "3B", "SS", "OF", "LF", "CF", "RF", "DH"]
+      : ["PG", "SG", "SF", "PF", "C"];
     return [...pool].sort((a, b) => {
       if (sortBy === "alpha") {
         return a.playerName.localeCompare(b.playerName);
       }
       if (sortBy === "position") {
-        const order: string[] = ["PG", "SG", "SF", "PF", "C"];
-        const posA = a.position ?? "ZZZ";
-        const posB = b.position ?? "ZZZ";
-        const ai = order.indexOf(posA);
-        const bi = order.indexOf(posB);
-        const posCompare = ai !== -1 && bi !== -1 ? ai - bi : posA.localeCompare(posB);
+        const posA = (a.position ?? "ZZZ").toUpperCase();
+        const posB = (b.position ?? "ZZZ").toUpperCase();
+        const ai = positionOrder.indexOf(posA);
+        const bi = positionOrder.indexOf(posB);
+        const posCompare =
+          ai !== -1 && bi !== -1 ? ai - bi :
+          ai !== -1 ? -1 :
+          bi !== -1 ? 1 :
+          posA.localeCompare(posB);
         if (posCompare !== 0) return posCompare;
         return (b.projectedLine ?? -1) - (a.projectedLine ?? -1);
       }
@@ -1730,7 +1824,7 @@ export function FantasyHome() {
       const projB = b.projectedLine ?? -1;
       return projB - projA;
     });
-  }, [availablePlayerPool, sortBy, filterPosition, filterTeam]);
+  }, [availablePlayerPool, sortBy, filterPosition, filterTeam, selectedSport]);
 
   const collectAllFantasyEntries = useCallback(async () => {
     if (!userId || isCollectingAllFantasy || finalUnclaimedEntries.length === 0) return;
@@ -1802,14 +1896,14 @@ export function FantasyHome() {
 
   const isToday = selectedDate === todayDate;
   const showGameStart =
-    selectedSport === "basketball" &&
+    (selectedSport === "basketball" || selectedSport === "baseball") &&
     selectedGameId &&
     hasResolvedEntries &&
     !hasActiveDraftedEntry &&
     !existingEntryForSelectedGame &&
     !hasStartedGame;
   const showLineupBuilder =
-    selectedSport === "basketball" &&
+    (selectedSport === "basketball" || selectedSport === "baseball") &&
     selectedGameId &&
     hasResolvedEntries &&
     ((hasStartedGame && !existingEntryForSelectedGame) || (canEditExistingEntryLineup && isEditingRoster));
@@ -2034,17 +2128,17 @@ export function FantasyHome() {
         </p>
       ) : null}
 
-      {/* "Coming soon" for non-basketball sports */}
-      {selectedSport !== "basketball" ? (
+      {/* "Coming soon" for football */}
+      {selectedSport === "football" ? (
         <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm">
           <p className="text-center text-sm font-semibold text-slate-600">
-            {selectedSport === "baseball" ? "⚾" : "🏈"} {selectedSport.charAt(0).toUpperCase() + selectedSport.slice(1)} fantasy is coming soon!
+            🏈 Football fantasy is coming soon!
           </p>
         </section>
       ) : null}
 
       {/* Team tracker for live/pending entry */}
-      {selectedSport === "basketball" && trackedEntry ? (
+      {(selectedSport === "basketball" || selectedSport === "baseball") && trackedEntry ? (
         <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm">
           <div className="flex items-center justify-between gap-2">
             <h3 className="text-base font-semibold text-slate-900">Your Team Tracker</h3>
@@ -2197,7 +2291,7 @@ export function FantasyHome() {
       ) : null}
 
       {/* Completed games with unclaimed points */}
-      {selectedSport === "basketball" && finalUnclaimedEntries.length > 1 ? (
+      {(selectedSport === "basketball" || selectedSport === "baseball") && finalUnclaimedEntries.length > 1 ? (
         <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm">
           <h3 className="text-base font-semibold text-slate-900">Completed Games Ready To Collect</h3>
           <p className="mt-1 text-xs leading-relaxed text-slate-700">
@@ -2239,16 +2333,28 @@ export function FantasyHome() {
             </p>
           ) : null}
           {sportGames.length === 0 ? (
-            <p className="mt-1 text-sm text-slate-600">No basketball games scheduled for this day.</p>
+            <p className="mt-1 text-sm text-slate-600">
+              No {selectedSport === "baseball" ? "baseball" : "basketball"} games scheduled for this day.
+            </p>
           ) : null}
           {sportGames.length > 0 ? (
-            <button
-              type="button"
-              onClick={() => setHasStartedGame(true)}
-              className="tp-clean-button mt-3 w-full rounded-xl border border-indigo-500 bg-gradient-to-r from-[#5b2ca5] via-[#7b3fd6] to-[#8f4de8] px-3 py-3 text-sm font-bold text-white shadow-sm active:scale-95"
-            >
-              Draft your roster
-            </button>
+            isLoadingPool ? (
+              <div
+                className="mt-3 flex h-[46px] w-full animate-pulse items-center justify-center gap-2 rounded-xl bg-indigo-300/50"
+                aria-label="Loading player pool…"
+              >
+                <span className="h-2 w-2 rounded-full bg-indigo-400/70" />
+                <span className="h-2 w-24 rounded-full bg-indigo-400/70" />
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setHasStartedGame(true)}
+                className="tp-clean-button mt-3 w-full rounded-xl border border-indigo-500 bg-gradient-to-r from-[#5b2ca5] via-[#7b3fd6] to-[#8f4de8] px-3 py-3 text-sm font-bold text-white shadow-sm active:scale-95"
+              >
+                Draft your roster
+              </button>
+            )
           ) : null}
         </section>
       ) : null}
@@ -2268,14 +2374,36 @@ export function FantasyHome() {
           {/* Scoring reference */}
           <div className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-3">
             <p className="text-center text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Scoring System</p>
-            <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-              <span className="text-slate-600">Points</span><span className="text-right font-semibold text-slate-900">+1.0</span>
-              <span className="text-slate-600">Rebounds</span><span className="text-right font-semibold text-slate-900">+1.2</span>
-              <span className="text-slate-600">Assists</span><span className="text-right font-semibold text-slate-900">+1.5</span>
-              <span className="text-slate-600">Steals</span><span className="text-right font-semibold text-slate-900">+3.0</span>
-              <span className="text-slate-600">Blocks</span><span className="text-right font-semibold text-slate-900">+3.0</span>
-              <span className="text-slate-600">Turnovers</span><span className="text-right font-semibold text-rose-700">-1.0</span>
-            </div>
+            {selectedSport === "baseball" ? (
+              <div className="mt-2 space-y-2">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Batting</p>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                  <span className="text-slate-600">Single / Walk</span><span className="text-right font-semibold text-slate-900">+10</span>
+                  <span className="text-slate-600">Double</span><span className="text-right font-semibold text-slate-900">+20</span>
+                  <span className="text-slate-600">Triple</span><span className="text-right font-semibold text-slate-900">+30</span>
+                  <span className="text-slate-600">Home Run</span><span className="text-right font-semibold text-slate-900">+50</span>
+                  <span className="text-slate-600">Run / RBI</span><span className="text-right font-semibold text-slate-900">+10</span>
+                  <span className="text-slate-600">Stolen Base</span><span className="text-right font-semibold text-slate-900">+15</span>
+                  <span className="text-slate-600">Strikeout (bat)</span><span className="text-right font-semibold text-rose-700">-5</span>
+                </div>
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-slate-400">Pitching</p>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                  <span className="text-slate-600">Strikeout</span><span className="text-right font-semibold text-slate-900">+10</span>
+                  <span className="text-slate-600">Out Recorded</span><span className="text-right font-semibold text-slate-900">+5</span>
+                  <span className="text-slate-600">Earned Run</span><span className="text-right font-semibold text-rose-700">-15</span>
+                  <span className="text-slate-600">Walk / Hit Allowed</span><span className="text-right font-semibold text-rose-700">-5</span>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                <span className="text-slate-600">Points</span><span className="text-right font-semibold text-slate-900">+1.0</span>
+                <span className="text-slate-600">Rebounds</span><span className="text-right font-semibold text-slate-900">+1.2</span>
+                <span className="text-slate-600">Assists</span><span className="text-right font-semibold text-slate-900">+1.5</span>
+                <span className="text-slate-600">Steals</span><span className="text-right font-semibold text-slate-900">+3.0</span>
+                <span className="text-slate-600">Blocks</span><span className="text-right font-semibold text-slate-900">+3.0</span>
+                <span className="text-slate-600">Turnovers</span><span className="text-right font-semibold text-rose-700">-1.0</span>
+              </div>
+            )}
           </div>
 
           {/* ── Live Roster Preview ── */}
@@ -2335,7 +2463,7 @@ export function FantasyHome() {
                               : "border-slate-200 bg-slate-50 text-slate-400"
                           }`}
                         >
-                          {rosterProj} proj
+                          Projected: {rosterProj} pts
                         </span>
                       );
                     })()}
@@ -2446,7 +2574,7 @@ export function FantasyHome() {
                                 : 0;
                             return (
                               <span
-                                className={`text-sm font-black tabular-nums ${
+                                className={`text-xs font-black tabular-nums ${
                                   isSelected
                                     ? "text-emerald-700"
                                     : displayProjection > 0
@@ -2454,7 +2582,7 @@ export function FantasyHome() {
                                     : "text-slate-400"
                                 }`}
                               >
-                                {displayProjection}
+                                Projected: {displayProjection} pts
                               </span>
                             );
                           })()}

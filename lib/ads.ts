@@ -1,7 +1,6 @@
 import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { normalizeAdPlacementMeta, type AdPlacementMeta } from "@/lib/adPlacements";
 import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, Advertisement } from "@/types";
 
 type AdEventType = "impression" | "click";
@@ -13,6 +12,8 @@ type AdEventContext = {
 type AdvertisementRow = {
   id: string;
   slot: AdSlot;
+  slot_key: string;
+  priority: number;
   is_placeholder: boolean | null;
   page_key: AdPageKey | null;
   ad_type: AdType | null;
@@ -44,27 +45,22 @@ type AdvertisementRow = {
   clicks: number;
 };
 
-function mapAdRow(row: AdvertisementRow): Advertisement {
-  const placementMeta = normalizeAdPlacementMeta({
-    slot: row.slot,
-    pageKey: row.page_key ?? undefined,
-    adType: row.ad_type ?? undefined,
-    displayTrigger: row.display_trigger ?? undefined,
-    placementKey: row.placement_key ?? undefined,
-    roundNumber: row.round_number ?? undefined,
-    sequenceIndex: row.sequence_index ?? undefined,
-  });
+const AD_SELECT =
+  "id, slot, slot_key, priority, is_placeholder, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks";
 
+function mapAdRow(row: AdvertisementRow): Advertisement {
   return {
     id: row.id,
     slot: row.slot,
+    slotKey: row.slot_key,
+    priority: row.priority ?? 0,
     isPlaceholder: Boolean(row.is_placeholder ?? false),
-    pageKey: placementMeta.pageKey,
-    adType: placementMeta.adType,
-    displayTrigger: placementMeta.displayTrigger,
-    placementKey: placementMeta.placementKey,
-    roundNumber: placementMeta.roundNumber,
-    sequenceIndex: placementMeta.sequenceIndex,
+    pageKey: (row.page_key ?? "global") as AdPageKey,
+    adType: (row.ad_type ?? "inline") as AdType,
+    displayTrigger: (row.display_trigger ?? "on-load") as AdDisplayTrigger,
+    placementKey: row.placement_key ?? undefined,
+    roundNumber: row.round_number ?? undefined,
+    sequenceIndex: row.sequence_index ?? undefined,
     venueId: row.venue_id ?? undefined,
     venueIds: Array.isArray(row.venue_ids) ? row.venue_ids : row.venue_id ? [row.venue_id] : undefined,
     targetAllVenues: Boolean(row.target_all_venues ?? false),
@@ -96,21 +92,14 @@ function mapAdRow(row: AdvertisementRow): Advertisement {
 
 /**
  * Pick the ad to serve using a deterministic round-robin rotation based on the
- * client's page-load counter.  When multiple ads compete for the same slot the
- * counter cycles through them in insertion order.
+ * client's page-load counter.
  */
 function chooseAdByCounter(rows: AdvertisementRow[], counter: number): AdvertisementRow | null {
-  if (rows.length === 0) {
-    return null;
-  }
+  if (rows.length === 0) return null;
   const safeCounter = Math.max(0, Math.round(counter));
   return rows[safeCounter % rows.length] ?? rows[0] ?? null;
 }
 
-/**
- * Returns true if this ad must always be served regardless of frequency gating.
- * Popup ads with cooldown=0 and frequencyInterval=1 are guaranteed-serve.
- */
 function isMustServePopup(row: AdvertisementRow): boolean {
   const interval = Number.isFinite(Number(row.frequency_interval)) ? Math.max(1, Number(row.frequency_interval)) : 1;
   const cooldown = Number.isFinite(Number(row.popup_cooldown_seconds))
@@ -119,10 +108,15 @@ function isMustServePopup(row: AdvertisementRow): boolean {
   return interval === 1 && cooldown === 0;
 }
 
-type AdLookupOptions = Partial<AdPlacementMeta> & {
+type AdLookupOptions = {
+  pageKey?: AdPageKey;
+  adType?: AdType;
+  displayTrigger?: AdDisplayTrigger;
+  placementKey?: string;
+  roundNumber?: number;
+  sequenceIndex?: number;
   excludeAdIds?: string[];
   allowAnyVenue?: boolean;
-  /** Client-side page-load counter (from lib/adFrequency). Used for rotation + frequency gating. */
   clientCounter?: number;
 };
 
@@ -193,55 +187,16 @@ function matchesGeoTarget(row: AdvertisementRow, venueGeo: VenueGeoContext | nul
   return cityOk && zipOk && countyOk && stateOk && regionOk;
 }
 
-async function getActiveAdQuery(slot: AdSlot, venueId?: string, options?: AdLookupOptions): Promise<Advertisement | null> {
-  if (!supabaseAdmin) {
-    return null;
-  }
-
-  const nowIso = new Date().toISOString();
-
-  let query = supabaseAdmin
-    .from("advertisements")
-    .select(
-      "id, slot, is_placeholder, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
-    )
-    .eq("slot", slot)
-    .eq("active", true)
-    .lte("start_date", nowIso)
-    .or(`end_date.is.null,end_date.gte.${nowIso}`)
-    .order("start_date", { ascending: false })
-    .limit(100);
-
-  if (options?.pageKey) {
-    query = query.eq("page_key", options.pageKey);
-  }
-  if (options?.adType) {
-    query = query.eq("ad_type", options.adType);
-  }
-  if (options?.displayTrigger) {
-    query = query.eq("display_trigger", options.displayTrigger);
-  }
-  if (options?.placementKey) {
-    query = query.eq("placement_key", options.placementKey);
-  }
-
-  // Venue and geography targeting are applied after fetch to support combined filters.
-
-  const { data, error } = await query.returns<AdvertisementRow[]>();
-
-  if (error || !data || data.length === 0) {
-    return null;
-  }
-
-  const excluded = new Set((options?.excludeAdIds ?? []).map((id) => id.trim()).filter(Boolean));
-  const venueGeo = await getVenueGeoContext(venueId);
-  const rows = data.filter((row) => {
-    if (excluded.has(row.id)) {
-      return false;
-    }
-    if (options?.allowAnyVenue) {
-      return true;
-    }
+function applyVenueFilter(
+  rows: AdvertisementRow[],
+  venueId: string | undefined,
+  allowAnyVenue: boolean,
+  excluded: Set<string>,
+  venueGeo: VenueGeoContext | null
+): AdvertisementRow[] {
+  return rows.filter((row) => {
+    if (excluded.has(row.id)) return false;
+    if (allowAnyVenue) return true;
     const targetedVenueIds = Array.isArray(row.venue_ids)
       ? row.venue_ids.filter(Boolean)
       : row.venue_id
@@ -250,43 +205,60 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string, options?: AdLook
     const venueMatch = targetedVenueIds.length === 0 || (venueId ? targetedVenueIds.includes(venueId) : false);
     return venueMatch && matchesGeoTarget(row, venueGeo);
   });
-  if (rows.length === 0) {
-    return null;
-  }
+}
 
-  const nonPlaceholderRows = rows.filter((row) => !row.is_placeholder);
-  const placementRows = nonPlaceholderRows.length > 0 ? nonPlaceholderRows : rows.filter((row) => Boolean(row.is_placeholder));
-  if (placementRows.length === 0) {
-    return null;
-  }
+// ─── Legacy slot-based query (backward compatible) ────────────────────────────
+
+async function getActiveAdQuery(slot: AdSlot, venueId?: string, options?: AdLookupOptions): Promise<Advertisement | null> {
+  if (!supabaseAdmin) return null;
+
+  const nowIso = new Date().toISOString();
+
+  let query = supabaseAdmin
+    .from("advertisements")
+    .select(AD_SELECT)
+    .eq("slot", slot)
+    .eq("active", true)
+    .lte("start_date", nowIso)
+    .or(`end_date.is.null,end_date.gte.${nowIso}`)
+    .order("start_date", { ascending: false })
+    .limit(100);
+
+  if (options?.pageKey) query = query.eq("page_key", options.pageKey);
+  if (options?.adType) query = query.eq("ad_type", options.adType);
+  if (options?.displayTrigger) query = query.eq("display_trigger", options.displayTrigger);
+  if (options?.placementKey) query = query.eq("placement_key", options.placementKey);
+
+  const { data, error } = await query.returns<AdvertisementRow[]>();
+  if (error || !data || data.length === 0) return null;
+
+  const excluded = new Set((options?.excludeAdIds ?? []).map((id) => id.trim()).filter(Boolean));
+  const venueGeo = await getVenueGeoContext(venueId);
+  const rows = applyVenueFilter(data, venueId, options?.allowAnyVenue ?? false, excluded, venueGeo);
+  if (rows.length === 0) return null;
+
+  const nonPlaceholders = rows.filter((r) => !r.is_placeholder);
+  const pool = nonPlaceholders.length > 0 ? nonPlaceholders : rows.filter((r) => Boolean(r.is_placeholder));
+  if (pool.length === 0) return null;
 
   const requestedRound = Number.isFinite(options?.roundNumber) ? Math.round(Number(options?.roundNumber)) : undefined;
-  const requestedSequence = Number.isFinite(options?.sequenceIndex)
-    ? Math.round(Number(options?.sequenceIndex))
-    : undefined;
+  const requestedSequence = Number.isFinite(options?.sequenceIndex) ? Math.round(Number(options?.sequenceIndex)) : undefined;
 
-  const filteredByRound = requestedRound
-    ? placementRows.filter((row) => Number(row.round_number) === requestedRound)
-    : placementRows;
-  const roundPool = filteredByRound.length > 0 ? filteredByRound : placementRows;
+  const filteredByRound = requestedRound ? pool.filter((r) => Number(r.round_number) === requestedRound) : pool;
+  const roundPool = filteredByRound.length > 0 ? filteredByRound : pool;
+
+  const isStrictLeaderboardVariantRequest =
+    options?.placementKey === "venue-leaderboard-inline" && Number.isFinite(requestedSequence) && Number(requestedSequence) >= 1;
 
   let sequencePool = roundPool;
-  const isStrictLeaderboardVariantRequest =
-    options?.placementKey === "venue-leaderboard-inline" &&
-    Number.isFinite(requestedSequence) &&
-    Number(requestedSequence) >= 1;
-
   if (requestedSequence && options?.placementKey === "venue-leaderboard-inline") {
-    const filteredBySequence = roundPool.filter((row) => Number(row.sequence_index) === requestedSequence);
-    if (filteredBySequence.length === 0) {
-      return null;
-    }
+    const filteredBySequence = roundPool.filter((r) => Number(r.sequence_index) === requestedSequence);
+    if (filteredBySequence.length === 0) return null;
     sequencePool = filteredBySequence;
   }
 
   const counter = Number.isFinite(options?.clientCounter) ? Math.max(0, Math.round(Number(options?.clientCounter))) : 0;
 
-  // Hard guarantee path: popup ads configured with interval=1 and cooldown=0 always serve.
   if (options?.adType === "popup") {
     const mustServePool = sequencePool.filter(isMustServePopup);
     if (mustServePool.length > 0) {
@@ -295,20 +267,11 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string, options?: AdLook
     }
   }
 
-  // Pick the ad deterministically by rotating through the pool using the client counter.
   const pickedRow = chooseAdByCounter(sequencePool, counter);
-  if (!pickedRow) {
-    return null;
-  }
+  if (!pickedRow) return null;
 
-  // Frequency gate: only serve if counter % frequencyInterval === 0.
-  // When counter is 0 (first ever load) always show — this avoids a blank first impression.
-  const interval = Number.isFinite(Number(pickedRow.frequency_interval))
-    ? Math.max(1, Number(pickedRow.frequency_interval))
-    : 1;
-  if (!isStrictLeaderboardVariantRequest && interval > 1 && counter > 0 && counter % interval !== 0) {
-    return null;
-  }
+  const interval = Number.isFinite(Number(pickedRow.frequency_interval)) ? Math.max(1, Number(pickedRow.frequency_interval)) : 1;
+  if (!isStrictLeaderboardVariantRequest && interval > 1 && counter > 0 && counter % interval !== 0) return null;
 
   return mapAdRow(pickedRow);
 }
@@ -321,41 +284,89 @@ export async function getActiveAdForSlot(slot: AdSlot, venueId?: string, options
 
   if (venueId) {
     const venueAd = await getActiveAdQuery(slot, venueId, options);
-    if (venueAd) {
-      return venueAd;
-    }
-    if (isStrictLeaderboardVariantRequest) {
-      return null;
-    }
+    if (venueAd) return venueAd;
+    if (isStrictLeaderboardVariantRequest) return null;
   }
 
   return getActiveAdQuery(slot, undefined, options);
 }
 
-export async function getAdById(id: string): Promise<Advertisement | null> {
-  if (!supabaseAdmin || !id) {
-    return null;
-  }
+// ─── New slot_key-based query (priority-ordered, no normalization) ─────────────
+
+type SlotKeyOptions = {
+  excludeAdIds?: string[];
+  allowAnyVenue?: boolean;
+  clientCounter?: number;
+};
+
+async function getAdForSlotKeyQuery(slotKey: string, venueId?: string, options?: SlotKeyOptions): Promise<Advertisement | null> {
+  if (!supabaseAdmin) return null;
+
+  const nowIso = new Date().toISOString();
 
   const { data, error } = await supabaseAdmin
     .from("advertisements")
-    .select(
-      "id, slot, is_placeholder, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks"
-    )
+    .select(AD_SELECT)
+    .eq("slot_key", slotKey)
+    .eq("active", true)
+    .lte("start_date", nowIso)
+    .or(`end_date.is.null,end_date.gte.${nowIso}`)
+    .order("priority", { ascending: true })
+    .limit(50)
+    .returns<AdvertisementRow[]>();
+
+  if (error || !data || data.length === 0) return null;
+
+  const excluded = new Set((options?.excludeAdIds ?? []).map((id) => id.trim()).filter(Boolean));
+  const venueGeo = await getVenueGeoContext(venueId);
+  const rows = applyVenueFilter(data, venueId, options?.allowAnyVenue ?? false, excluded, venueGeo);
+  if (rows.length === 0) return null;
+
+  const nonPlaceholders = rows.filter((r) => !r.is_placeholder);
+  const pool = nonPlaceholders.length > 0 ? nonPlaceholders : rows.filter((r) => Boolean(r.is_placeholder));
+  if (pool.length === 0) return null;
+
+  // Priority ordering: serve the highest-priority (lowest number) ad.
+  // Apply frequency gate so the ad isn't shown every single page load.
+  const counter = Number.isFinite(options?.clientCounter) ? Math.max(0, Math.round(Number(options?.clientCounter))) : 0;
+
+  for (const row of pool) {
+    const interval = Number.isFinite(Number(row.frequency_interval)) ? Math.max(1, Number(row.frequency_interval)) : 1;
+    if (interval > 1 && counter > 0 && counter % interval !== 0) continue;
+    if (row.ad_type === "popup" && !isMustServePopup(row) && interval > 1 && counter > 0 && counter % interval !== 0) continue;
+    return mapAdRow(row);
+  }
+
+  return null;
+}
+
+export async function getAdForSlotKey(slotKey: string, venueId?: string, options?: SlotKeyOptions): Promise<Advertisement | null> {
+  if (venueId) {
+    const venueAd = await getAdForSlotKeyQuery(slotKey, venueId, options);
+    if (venueAd) return venueAd;
+  }
+  return getAdForSlotKeyQuery(slotKey, undefined, options);
+}
+
+// ─── Single ad by ID ──────────────────────────────────────────────────────────
+
+export async function getAdById(id: string): Promise<Advertisement | null> {
+  if (!supabaseAdmin || !id) return null;
+
+  const { data, error } = await supabaseAdmin
+    .from("advertisements")
+    .select(AD_SELECT)
     .eq("id", id)
     .maybeSingle<AdvertisementRow>();
 
-  if (error || !data) {
-    return null;
-  }
-
+  if (error || !data) return null;
   return mapAdRow(data);
 }
 
+// ─── Event tracking ───────────────────────────────────────────────────────────
+
 async function incrementCounter(id: string, field: "impressions" | "clicks"): Promise<void> {
-  if (!supabaseAdmin || !id) {
-    return;
-  }
+  if (!supabaseAdmin || !id) return;
 
   const { data, error } = await supabaseAdmin
     .from("advertisements")
@@ -363,9 +374,7 @@ async function incrementCounter(id: string, field: "impressions" | "clicks"): Pr
     .eq("id", id)
     .maybeSingle<{ impressions?: number; clicks?: number }>();
 
-  if (error || !data) {
-    return;
-  }
+  if (error || !data) return;
 
   const currentValue = Number(data[field] ?? 0);
   await supabaseAdmin
@@ -375,9 +384,7 @@ async function incrementCounter(id: string, field: "impressions" | "clicks"): Pr
 }
 
 async function insertAdEvent(id: string, eventType: AdEventType, context?: AdEventContext): Promise<void> {
-  if (!supabaseAdmin || !id) {
-    return;
-  }
+  if (!supabaseAdmin || !id) return;
 
   const safeVenueId = context?.venueId?.trim() ?? "";
   const { error } = await supabaseAdmin.from("ad_events").insert({
@@ -387,9 +394,7 @@ async function insertAdEvent(id: string, eventType: AdEventType, context?: AdEve
     venue_id: safeVenueId || null,
   });
 
-  if (error) {
-    return;
-  }
+  if (error) return;
 }
 
 export async function recordAdImpression(id: string, context?: AdEventContext): Promise<void> {

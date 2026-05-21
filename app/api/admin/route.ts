@@ -7,6 +7,7 @@ import {
   deleteAdminAdvertisement,
   deleteAdminTriviaQuestion,
   getAdminAdsDebugSnapshot,
+  bulkUpdateAdminTriviaQuestions,
   listPendingPredictionSummaries,
   listAdminAdvertisements,
   listAdminTriviaQuestions,
@@ -14,6 +15,7 @@ import {
   updateAdminVenue,
   updateAdminAdvertisement,
   updateAdminTriviaQuestion,
+  updateAdPlacements,
 } from "@/lib/admin";
 import { requireAdminAuth } from "@/lib/adminAuth";
 import {
@@ -44,19 +46,27 @@ export async function GET(request: Request) {
     const resource = searchParams.get("resource");
 
     if (resource === "trivia") {
-      const items = await listAdminTriviaQuestions();
-      return NextResponse.json({ ok: true, items });
+      const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+      const pageSize = Math.min(200, Math.max(1, parseInt(searchParams.get("pageSize") ?? "25", 10)));
+      const questionPool = String(searchParams.get("questionPool") ?? "").trim() || undefined;
+      const answerFormat = String(searchParams.get("answerFormat") ?? "").trim() || undefined;
+      const result = await listAdminTriviaQuestions({ page, pageSize, questionPool, answerFormat });
+      return NextResponse.json({ ok: true, ...result });
     }
 
     if (resource === "ads") {
-      const items = await listAdminAdvertisements();
-      return NextResponse.json({ ok: true, items });
+      const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+      const pageSize = Math.min(200, Math.max(1, parseInt(searchParams.get("pageSize") ?? "100", 10)));
+      const result = await listAdminAdvertisements({ page, pageSize });
+      return NextResponse.json({ ok: true, ...result });
     }
 
     if (resource === "ads-debug") {
       const rawWindow = Number.parseInt(searchParams.get("windowHours") ?? "24", 10);
       const windowHours = Number.isFinite(rawWindow) ? rawWindow : 24;
-      const snapshot = await getAdminAdsDebugSnapshot(windowHours);
+      const startDate = String(searchParams.get("startDate") ?? "").trim() || undefined;
+      const endDate = String(searchParams.get("endDate") ?? "").trim() || undefined;
+      const snapshot = await getAdminAdsDebugSnapshot({ startDate, endDate, windowHours });
       return NextResponse.json({ ok: true, snapshot });
     }
 
@@ -69,8 +79,13 @@ export async function GET(request: Request) {
       const venueId = String(searchParams.get("venueId") ?? "").trim() || undefined;
       const includeInactive = String(searchParams.get("includeInactive") ?? "true").trim().toLowerCase() !== "false";
       const includeResolved = String(searchParams.get("includeResolved") ?? "true").trim().toLowerCase() !== "false";
-      const items = await listChallengeCampaigns({ venueId, includeInactive, includeResolved });
-      return NextResponse.json({ ok: true, items });
+      const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+      const pageSize = Math.min(200, Math.max(1, parseInt(searchParams.get("pageSize") ?? "100", 10)));
+      const allItems = await listChallengeCampaigns({ venueId, includeInactive, includeResolved });
+      const total = allItems.length;
+      const from = (page - 1) * pageSize;
+      const items = allItems.slice(from, from + pageSize);
+      return NextResponse.json({ ok: true, items, total, page, pageSize, totalPages: Math.max(1, Math.ceil(total / pageSize)) });
     }
 
     if (resource === "challenge-campaign-progress") {
@@ -86,17 +101,20 @@ export async function GET(request: Request) {
     }
 
     if (resource === "live-showdown-schedules") {
-      const limitRaw = Number.parseInt(searchParams.get("limit") ?? "30", 10);
-      const limit = Number.isFinite(limitRaw) ? limitRaw : 30;
-      const items = await listAdminLiveShowdownSchedules(limit);
-      return NextResponse.json({ ok: true, items });
+      const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+      const pageSize = Math.min(200, Math.max(1, parseInt(searchParams.get("pageSize") ?? "25", 10)));
+      const allItems = await listAdminLiveShowdownSchedules(500);
+      const total = allItems.length;
+      const from = (page - 1) * pageSize;
+      const items = allItems.slice(from, from + pageSize);
+      return NextResponse.json({ ok: true, items, total, page, pageSize, totalPages: Math.max(1, Math.ceil(total / pageSize)) });
     }
 
     return NextResponse.json(
       {
         ok: false,
         error:
-          "Unknown resource. Use resource=trivia, resource=ads, resource=ads-debug, resource=predictions-pending, or resource=live-showdown-schedules.",
+          "Unknown resource. Use resource=trivia, resource=ads, resource=ads-debug, resource=predictions-pending, resource=challenge-campaigns, or resource=live-showdown-schedules.",
       },
       { status: 400 }
     );
@@ -119,10 +137,12 @@ export async function POST(request: Request) {
       | {
           resource: "trivia";
           question: string;
-          options: string[];
-          correctAnswer: number;
+          options?: string[];
+          correctAnswer?: number;
           category?: string;
           difficulty?: string;
+          questionPool?: "anytime_blitz" | "live_showdown";
+          answerFormat?: "multiple_choice" | "write_in" | "numeric" | "true_false";
         }
       | {
           resource: "ads";
@@ -208,6 +228,8 @@ export async function POST(request: Request) {
           timezone: string;
           numRounds: number;
           venueId: string;
+          intermissionAdDelaySeconds?: number;
+          lobbyAdEnabled?: boolean;
         }
       | {
           resource: "live-showdown-force-next-phase";
@@ -225,6 +247,8 @@ export async function POST(request: Request) {
         correctAnswer: body.correctAnswer,
         category: body.category,
         difficulty: body.difficulty,
+        questionPool: body.questionPool,
+        answerFormat: body.answerFormat,
       });
       return NextResponse.json({ ok: true, item });
     }
@@ -334,10 +358,12 @@ export async function POST(request: Request) {
         title: body.title,
         targetDate: body.targetDate,
         startTime: body.startTime,
-        timezone: body.timezone,
-        numRounds: body.numRounds,
-        venueId: body.venueId,
-      });
+          timezone: body.timezone,
+          numRounds: body.numRounds,
+          venueId: body.venueId,
+          intermissionAdDelaySeconds: body.intermissionAdDelaySeconds,
+          lobbyAdEnabled: body.lobbyAdEnabled,
+        });
       return NextResponse.json({ ok: true, item });
     }
 
@@ -439,10 +465,12 @@ export async function PATCH(request: Request) {
           resource: "trivia";
           id: string;
           question: string;
-          options: string[];
-          correctAnswer: number;
+          options?: string[];
+          correctAnswer?: number;
           category?: string;
           difficulty?: string;
+          questionPool?: "anytime_blitz" | "live_showdown";
+          answerFormat?: "multiple_choice" | "write_in" | "numeric" | "true_false";
         }
       | {
           resource: "ads";
@@ -509,6 +537,16 @@ export async function PATCH(request: Request) {
           recurringType?: CampaignRecurringType;
           winnerUserId?: string | null;
           isActive?: boolean;
+        }
+      | {
+          resource: "ads-placement";
+          updates: Array<{ id: string; slotKey: string; priority: number }>;
+        }
+      | {
+          resource: "trivia-bulk";
+          ids: string[];
+          questionPool?: "anytime_blitz" | "live_showdown";
+          answerFormat?: "multiple_choice" | "write_in" | "numeric" | "true_false";
         };
 
     if (body.resource === "trivia") {
@@ -519,6 +557,8 @@ export async function PATCH(request: Request) {
         correctAnswer: body.correctAnswer,
         category: body.category,
         difficulty: body.difficulty,
+        questionPool: body.questionPool,
+        answerFormat: body.answerFormat,
       });
       return NextResponse.json({ ok: true, item });
     }
@@ -596,6 +636,24 @@ export async function PATCH(request: Request) {
         isActive: body.isActive,
       });
       return NextResponse.json({ ok: true, item });
+    }
+
+    if (body.resource === "ads-placement") {
+      const updates = (body.updates ?? []) as Array<{ id: string; slotKey: string; priority: number }>;
+      if (!Array.isArray(updates) || updates.some((u) => !u.id || typeof u.slotKey !== "string" || !Number.isFinite(u.priority))) {
+        return NextResponse.json({ ok: false, error: "Invalid updates array." }, { status: 400 });
+      }
+      await updateAdPlacements(updates);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (body.resource === "trivia-bulk") {
+      await bulkUpdateAdminTriviaQuestions({
+        ids: Array.isArray(body.ids) ? body.ids : [],
+        questionPool: body.questionPool,
+        answerFormat: body.answerFormat,
+      });
+      return NextResponse.json({ ok: true });
     }
 
     return NextResponse.json({ ok: false, error: "Unknown resource." }, { status: 400 });

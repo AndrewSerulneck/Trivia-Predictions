@@ -19,9 +19,22 @@ type LiveState = {
   currentRound: number | null;
   currentQuestionIndex: number | null;
   revealedAnswer: string | null;
+  emceeAnnouncement: string | null;
+  viewerResult?: {
+    userId: string;
+    scheduleId: string;
+    roundNumber: number;
+    questionIndex: number;
+    submittedAnswer: string;
+    isCorrect: boolean;
+    pointsAwarded: number;
+    pendingClosestGuess: boolean;
+  } | null;
   scheduleId?: string;
   scheduleTitle?: string;
   scheduleTimezone?: string;
+  intermissionAdDelaySeconds?: number;
+  lobbyAdEnabled?: boolean;
   currentRoundCategory?: string | null;
   upcomingRoundNumber?: number | null;
   upcomingRoundCategory?: string | null;
@@ -31,6 +44,8 @@ type LiveState = {
     startTime: string;
     timezone: string;
     numRounds: number;
+    intermissionAdDelaySeconds?: number;
+    lobbyAdEnabled?: boolean;
     firstRoundCategory?: string | null;
   } | null;
   activeQuestion: {
@@ -41,13 +56,27 @@ type LiveState = {
   } | null;
 };
 
+type PopupAd = {
+  id: string;
+  imageUrl: string;
+  clickUrl: string;
+  altText: string;
+  advertiserName: string;
+};
+
 type SubmissionResult = {
   isCorrect: boolean;
   forfeited?: boolean;
   submittedAnswer?: string;
+  pendingClosestGuess?: boolean;
 };
 
-type FeedbackState = "right" | "wrong" | "unsubmitted_late_joiner" | "unsubmitted_inactive";
+type FeedbackState =
+  | "right"
+  | "wrong"
+  | "pending_closest_guess"
+  | "unsubmitted_late_joiner"
+  | "unsubmitted_inactive";
 
 const RULE_LINES = [
   "Players get 30 seconds to type their answers.",
@@ -88,6 +117,7 @@ export default function LiveShowdownPage() {
   const [isLeaving, setIsLeaving] = useState(false);
   const [commentEventKey, setCommentEventKey] = useState("");
   const [commentText, setCommentText] = useState("");
+  const [popupAd, setPopupAd] = useState<PopupAd | null>(null);
   const [isEngineReady, setIsEngineReady] = useState(false);
   const [hasOnboarded, setHasOnboarded] = useState(false);
   const [hasJoinedSession, setHasJoinedSession] = useState(false);
@@ -98,6 +128,9 @@ export default function LiveShowdownPage() {
   const [participatingQuestionKeys, setParticipatingQuestionKeys] = useState<Record<string, true>>({});
   const forfeitInFlight = useRef(false);
   const joinedScheduleRef = useRef("");
+  const intermissionAdKeyRef = useRef("");
+  const intermissionAdTimerRef = useRef<number | null>(null);
+  const lobbyAdKeyRef = useRef("");
 
   const activeKey = useMemo(() => {
     if (!state?.isGameActive || !state.scheduleId || !state.currentRound || !state.currentQuestionIndex) return "";
@@ -125,11 +158,32 @@ export default function LiveShowdownPage() {
   const fetchState = useCallback(async () => {
     try {
       const venueId = String(getVenueId() ?? "").trim();
-      const query = venueId ? `?venueId=${encodeURIComponent(venueId)}` : "";
+      const userId = String(getUserId() ?? "").trim();
+      const params = new URLSearchParams();
+      if (venueId) params.set("venueId", venueId);
+      if (userId) params.set("userId", userId);
+      const query = params.size > 0 ? `?${params.toString()}` : "";
       const response = await fetch(`/api/trivia/live/state${query}`, { cache: "no-store" });
       const payload = (await response.json()) as { ok: boolean; state?: LiveState; error?: string };
       if (!payload.ok || !payload.state) throw new Error(payload.error || "Failed to sync live state.");
       setState(payload.state);
+      const viewerResult = payload.state.viewerResult;
+      if (
+        viewerResult &&
+        viewerResult.scheduleId &&
+        Number.isFinite(viewerResult.roundNumber) &&
+        Number.isFinite(viewerResult.questionIndex)
+      ) {
+        const viewerKey = `${viewerResult.scheduleId}:${viewerResult.roundNumber}:${viewerResult.questionIndex}`;
+        setResultByKey((current) => ({
+          ...current,
+          [viewerKey]: {
+            isCorrect: Boolean(viewerResult.isCorrect),
+            submittedAnswer: viewerResult.submittedAnswer,
+            pendingClosestGuess: Boolean(viewerResult.pendingClosestGuess),
+          },
+        }));
+      }
       setIsEngineReady(true);
       setError("");
     } catch (e) {
@@ -137,6 +191,24 @@ export default function LiveShowdownPage() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const loadPopupAdBySlotKey = useCallback(async (slotKey: string) => {
+    const venueId = String(getVenueId() ?? "").trim();
+    const params = new URLSearchParams({ slotKey });
+    if (venueId) {
+      params.set("venueId", venueId);
+    }
+    const response = await fetch(`/api/ads/slot?${params.toString()}`, { cache: "no-store" });
+    const payload = (await response.json()) as {
+      ok: boolean;
+      ad?: PopupAd | null;
+      error?: string;
+    };
+    if (!payload.ok) {
+      throw new Error(payload.error ?? "Failed to load ad slot.");
+    }
+    return payload.ad ?? null;
   }, []);
 
   useEffect(() => {
@@ -177,6 +249,12 @@ export default function LiveShowdownPage() {
       joinedScheduleRef.current = "";
       setHasJoinedSession(false);
       setForfeitKey("");
+      intermissionAdKeyRef.current = "";
+      lobbyAdKeyRef.current = "";
+      if (intermissionAdTimerRef.current !== null) {
+        window.clearTimeout(intermissionAdTimerRef.current);
+        intermissionAdTimerRef.current = null;
+      }
       return;
     }
 
@@ -200,6 +278,78 @@ export default function LiveShowdownPage() {
       setJoinState("active_participant");
     }
   }, [activeKey, hasOnboarded, isEngineReady, isSpectatingActiveBlock, state]);
+
+  useEffect(() => {
+    if (!state?.isGameActive || state.activePhase !== "mid_game_break" || !state.scheduleId || !state.currentRound) {
+      if (intermissionAdTimerRef.current !== null) {
+        window.clearTimeout(intermissionAdTimerRef.current);
+        intermissionAdTimerRef.current = null;
+      }
+      return;
+    }
+    if (state.currentRound >= state.totalRounds) {
+      return;
+    }
+
+    const adEventKey = `${state.scheduleId}:${state.currentRound}`;
+    if (intermissionAdKeyRef.current === adEventKey) {
+      return;
+    }
+
+    const delaySeconds = Math.max(
+      0,
+      Math.min(300, Math.floor(Number(state.intermissionAdDelaySeconds ?? 10)))
+    );
+
+    intermissionAdKeyRef.current = adEventKey;
+    intermissionAdTimerRef.current = window.setTimeout(() => {
+      void loadPopupAdBySlotKey("live-popup-intermission")
+        .then((ad) => {
+          if (ad) {
+            setPopupAd(ad);
+          }
+        })
+        .catch(() => undefined);
+    }, delaySeconds * 1000);
+
+    return () => {
+      if (intermissionAdTimerRef.current !== null) {
+        window.clearTimeout(intermissionAdTimerRef.current);
+        intermissionAdTimerRef.current = null;
+      }
+    };
+  }, [
+    loadPopupAdBySlotKey,
+    state?.activePhase,
+    state?.currentRound,
+    state?.intermissionAdDelaySeconds,
+    state?.isGameActive,
+    state?.scheduleId,
+    state?.totalRounds,
+  ]);
+
+  useEffect(() => {
+    if (!hasOnboarded || state?.isGameActive || !state?.nextSchedule?.id) {
+      return;
+    }
+    if (state.nextSchedule.lobbyAdEnabled === false) {
+      return;
+    }
+
+    const nextScheduleKey = state.nextSchedule.id;
+    if (lobbyAdKeyRef.current === nextScheduleKey) {
+      return;
+    }
+
+    lobbyAdKeyRef.current = nextScheduleKey;
+    void loadPopupAdBySlotKey("live-popup-lobby")
+      .then((ad) => {
+        if (ad) {
+          setPopupAd(ad);
+        }
+      })
+      .catch(() => undefined);
+  }, [hasOnboarded, loadPopupAdBySlotKey, state?.isGameActive, state?.nextSchedule]);
 
   useEffect(() => {
     if (!hasOnboarded) {
@@ -248,7 +398,7 @@ export default function LiveShowdownPage() {
         const payload = (await response.json()) as {
           ok: boolean;
           error?: string;
-          result?: { isCorrect: boolean; alreadySubmitted?: boolean };
+          result?: { isCorrect: boolean; alreadySubmitted?: boolean; pendingClosestGuess?: boolean };
         };
         if (!payload.ok || !payload.result) throw new Error(payload.error || "Submission failed.");
 
@@ -256,6 +406,7 @@ export default function LiveShowdownPage() {
           isCorrect: isForfeit ? false : Boolean(payload.result.isCorrect),
           forfeited: isForfeit,
           submittedAnswer,
+          pendingClosestGuess: Boolean(payload.result.pendingClosestGuess),
         };
         setResultByKey((current) => ({ ...current, [activeKey]: nextResult }));
 
@@ -345,6 +496,12 @@ export default function LiveShowdownPage() {
           trigger: wasParticipatingForThisQuestion ? "answer_unsubmitted_inactive" : "answer_unsubmitted_late_joiner",
         };
       }
+      if (result.pendingClosestGuess) {
+        return {
+          key: `answer_eval:${activeKey}:closest_guess_pending`,
+          trigger: "round_break",
+        };
+      }
       const isCorrect = Boolean(result.isCorrect);
       return {
         key: `answer_eval:${activeKey}:${isCorrect ? "correct" : "incorrect"}`,
@@ -396,6 +553,8 @@ export default function LiveShowdownPage() {
     ? unsubmittedIsInactive
       ? "unsubmitted_inactive"
       : "unsubmitted_late_joiner"
+    : currentResult.pendingClosestGuess
+    ? "pending_closest_guess"
     : currentResult.isCorrect
     ? "right"
     : "wrong";
@@ -405,6 +564,8 @@ export default function LiveShowdownPage() {
       ? "RIGHT"
       : feedbackState === "wrong"
       ? "WRONG"
+      : feedbackState === "pending_closest_guess"
+      ? "CLOSEST GUESS SCORING"
       : feedbackState === "unsubmitted_inactive"
       ? "NO ANSWER LOGGED"
       : "SKIPPED";
@@ -413,6 +574,8 @@ export default function LiveShowdownPage() {
       ? "+10 points"
       : feedbackState === "wrong"
       ? "0 points"
+      : feedbackState === "pending_closest_guess"
+      ? "Evaluating closest numeric guess..."
       : feedbackState === "unsubmitted_inactive"
       ? "No answer logged, stay ready for the next one."
       : "Joining mid-round? Next question is coming right up!";
@@ -611,6 +774,11 @@ export default function LiveShowdownPage() {
                 Correct Answer: {state.revealedAnswer}
               </p>
             ) : null}
+            {state.emceeAnnouncement ? (
+              <p className="mt-3 rounded-xl border border-amber-300/70 bg-amber-950/50 p-3 text-base font-bold text-amber-100">
+                Emcee: {state.emceeAnnouncement}
+              </p>
+            ) : null}
           </section>
         ) : (
           <section className="rounded-2xl border border-fuchsia-400/60 bg-slate-900 p-4 text-center">
@@ -628,6 +796,11 @@ export default function LiveShowdownPage() {
             {state.revealedAnswer ? (
               <p className="mt-3 rounded-xl border border-fuchsia-300/50 bg-fuchsia-950/40 p-3 text-sm font-semibold">
                 Last answer: {state.revealedAnswer}
+              </p>
+            ) : null}
+            {state.emceeAnnouncement ? (
+              <p className="mt-3 rounded-xl border border-amber-300/70 bg-amber-950/50 p-3 text-sm font-bold text-amber-100">
+                Emcee: {state.emceeAnnouncement}
               </p>
             ) : null}
           </section>
@@ -652,6 +825,29 @@ export default function LiveShowdownPage() {
             <p className="mt-2 text-sm font-semibold text-rose-100">
               Forfeited Question. No closing your browser or changing tabs during Live Trivia!
             </p>
+          </div>
+        </div>
+      ) : null}
+
+      {popupAd ? (
+        <div className="fixed inset-0 z-[1250] flex items-center justify-center bg-black/80 p-4">
+          <div className="relative w-full max-w-md rounded-2xl border border-cyan-300/60 bg-slate-950 p-4 shadow-2xl">
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-cyan-200">Sponsor Spotlight</p>
+            <button
+              type="button"
+              onClick={() => setPopupAd(null)}
+              className="absolute right-8 top-6 rounded border border-slate-500 px-2 py-0.5 text-xs font-semibold text-slate-200 hover:bg-slate-800"
+            >
+              Close
+            </button>
+            <a href={popupAd.clickUrl} target="_blank" rel="noreferrer noopener" className="mt-3 block">
+              <img
+                src={popupAd.imageUrl}
+                alt={popupAd.altText || popupAd.advertiserName}
+                className="h-auto w-full rounded-xl border border-slate-700 object-contain"
+              />
+            </a>
+            <p className="mt-2 text-center text-xs text-slate-300">{popupAd.advertiserName}</p>
           </div>
         </div>
       ) : null}
