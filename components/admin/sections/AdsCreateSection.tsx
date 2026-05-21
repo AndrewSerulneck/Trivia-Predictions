@@ -1,147 +1,144 @@
 "use client";
 
-import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useMemo, useState } from "react";
+import type { Venue } from "@/types";
 import { getErrorMessage } from "@/lib/errors";
+import { AdFormFields, defaultAdDraft, draftToPayload, type AdDraft } from "./adFormShared";
 
-const AD_SLOT_KEYS = [
-  "venue-inline-v2",
-  "trivia-popup-round-1",
-  "leaderboard-sidebar",
-  "game-recap-banner",
-];
+type AdsCreateSectionProps = {
+  venues: Venue[];
+};
 
-export function AdsCreateSection() {
-  const [slotKey, setSlotKey] = useState(AD_SLOT_KEYS[0]);
-  const [priority, setPriority] = useState(10);
-  const [adContent, setAdContent] = useState("");
-  const [size, setSize] = useState("300x250");
-  const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
-  const [error, setError] = useState<string | null>(null);
+const MAX_UPLOAD_BYTES = 300 * 1024;
+const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!supabase) return;
+export function AdsCreateSection({ venues }: AdsCreateSectionProps) {
+  const [draft, setDraft] = useState<AdDraft>(defaultAdDraft());
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-    setStatus("saving");
-    setError(null);
+  const imagePreview = useMemo(() => draft.imageUrl.trim(), [draft.imageUrl]);
+
+  async function uploadImage(file: File) {
+    if (!ALLOWED_MIME_TYPES.has(file.type)) {
+      setError("Only JPEG, PNG, or WebP images are allowed.");
+      return;
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setError("Image must be 300KB or smaller.");
+      return;
+    }
+
+    setUploading(true);
+    setError("");
+    setSuccess("");
 
     try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/api/admin/ads/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const payload = (await response.json()) as { ok: boolean; imageUrl?: string; error?: string };
+      if (!response.ok || !payload.ok || !payload.imageUrl) {
+        throw new Error(payload.error ?? "Failed to upload ad image.");
+      }
+      setDraft((prev) => ({ ...prev, imageUrl: payload.imageUrl ?? prev.imageUrl }));
+      setSuccess("Image uploaded.");
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to upload image."));
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleSubmit() {
+    setSaving(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const payload = draftToPayload(draft);
       const response = await fetch("/api/admin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          resource: "ads",
-          slot_key: slotKey,
-          priority,
-          content: adContent,
-          size,
-          enabled: true,
-        }),
+        body: JSON.stringify({ resource: "ads", ...payload }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || "Failed to create ad");
+      const body = (await response.json()) as { ok: boolean; error?: string };
+      if (!response.ok || !body.ok) {
+        throw new Error(body.error ?? "Failed to create advertisement.");
       }
 
-      setStatus("success");
-      // Reset form
-      setSlotKey(AD_SLOT_KEYS[0]);
-      setPriority(10);
-      setAdContent("");
-      setSize("300x250");
+      setDraft(defaultAdDraft());
+      setSuccess("Advertisement created successfully.");
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to create ad."));
-      setStatus("error");
+      setError(getErrorMessage(err, "Failed to create advertisement."));
+    } finally {
+      setSaving(false);
     }
-  };
+  }
 
   return (
-    <div className="h-full w-full overflow-y-auto bg-slate-900 text-white p-4">
-      <h1 className="text-2xl font-bold mb-4">Create New Ad</h1>
-      <form onSubmit={handleSubmit} className="space-y-6 max-w-lg">
-        <div>
-          <label htmlFor="slot_key" className="block text-sm font-medium text-slate-300">
-            Ad Slot Key
-          </label>
-          <select
-            id="slot_key"
-            name="slot_key"
-            value={slotKey}
-            onChange={(e) => setSlotKey(e.target.value)}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-700 bg-slate-800 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-          >
-            {AD_SLOT_KEYS.map((key) => (
-              <option key={key} value={key}>
-                {key}
-              </option>
-            ))}
-          </select>
-        </div>
+    <div className="space-y-4">
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-base font-semibold text-slate-900">Create Advertisement</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Configure ad targeting, delivery rules, and placement for Join, Venue, Trivia, Bingo, Pick 'Em, and Fantasy pages.
+        </p>
+      </div>
 
-        <div>
-          <label htmlFor="priority" className="block text-sm font-medium text-slate-300">
-            Priority
+      {error ? <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
+      {success ? <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div> : null}
+
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-5">
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+            Upload Image (JPEG/PNG/WebP, max 300KB)
           </label>
           <input
-            type="number"
-            id="priority"
-            name="priority"
-            value={priority}
-            onChange={(e) => setPriority(parseInt(e.target.value, 10))}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-700 bg-slate-800 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-            required
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            disabled={uploading || saving}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (!file) return;
+              void uploadImage(file);
+            }}
+            className="block w-full text-sm text-slate-600"
           />
+          {uploading ? <p className="mt-1 text-xs text-slate-500">Uploading image...</p> : null}
+          {imagePreview ? (
+            <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-2">
+              <img src={imagePreview} alt="Ad preview" className="max-h-48 w-auto rounded" />
+            </div>
+          ) : null}
         </div>
 
-        <div>
-          <label htmlFor="size" className="block text-sm font-medium text-slate-300">
-            Ad Size
-          </label>
-          <input
-            type="text"
-            id="size"
-            name="size"
-            value={size}
-            onChange={(e) => setSize(e.target.value)}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-700 bg-slate-800 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-            placeholder="e.g., 300x250"
-            required
-          />
-        </div>
+        <AdFormFields
+          draft={draft}
+          onChange={(next) => {
+            setDraft(next);
+            setError("");
+          }}
+          venues={venues}
+          disabled={saving || uploading}
+        />
 
-        <div>
-          <label htmlFor="adContent" className="block text-sm font-medium text-slate-300">
-            Ad Content (HTML/Script)
-          </label>
-          <textarea
-            id="adContent"
-            name="adContent"
-            rows={6}
-            value={adContent}
-            onChange={(e) => setAdContent(e.target.value)}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-700 bg-slate-800 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-            placeholder="<div...></div> or <script...></script>"
-            required
-          />
-        </div>
-
-        <div>
+        <div className="mt-6">
           <button
-            type="submit"
-            disabled={status === "saving"}
-            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            onClick={() => {
+              void handleSubmit();
+            }}
+            disabled={saving || uploading}
+            className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
           >
-            {status === "saving" ? "Saving..." : "Create Ad"}
+            {saving ? "Creating..." : "Create Advertisement"}
           </button>
         </div>
-
-        {status === "success" && (
-          <p className="text-green-400">Ad created successfully!</p>
-        )}
-        {status === "error" && <p className="text-red-500">{error}</p>}
-      </form>
+      </div>
     </div>
   );
 }

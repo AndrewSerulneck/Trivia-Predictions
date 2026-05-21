@@ -16,6 +16,10 @@ import { TriviaListSection } from "@/components/admin/sections/TriviaListSection
 import { TriviaCreateSection } from "@/components/admin/sections/TriviaCreateSection";
 import { AdPlacementBuilder } from "@/components/admin/AdPlacementBuilder";
 import { AdAnalyticsDashboard } from "@/components/admin/AdAnalyticsDashboard";
+import { AdsListSection } from "@/components/admin/sections/AdsListSection";
+import { AdsCreateSection } from "@/components/admin/sections/AdsCreateSection";
+import { PickEmSettlementSection } from "@/components/admin/sections/PickEmSettlementSection";
+import { SectionErrorBoundary } from "@/components/admin/SectionErrorBoundary";
 
 // ─── Shared Admin UI Primitives ───────────────────────────────────────────────
 
@@ -315,7 +319,6 @@ function Sidebar({ activeSection, onSelect, onLogout }: SidebarProps) {
             {group.items.map((item) => {
               const isActive = activeSection === item.id;
               const isMigrated = MIGRATED_SECTIONS.has(item.id);
-              const showLiveBadge = item.status?.label === "Live";
               return (
                 <button
                   key={item.id}
@@ -432,9 +435,15 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
       case "trivia-create":
         return <TriviaCreateSection />;
       case "ad-placement":
-        return <AdPlacementBuilder />;
+        return <AdPlacementBuilder venues={venueList} />;
       case "ad-debug":
         return <AdAnalyticsDashboard />;
+      case "ads-list":
+        return <AdsListSection venues={venueList} />;
+      case "ads-create":
+        return <AdsCreateSection venues={venueList} />;
+      case "pickem-settlement":
+        return <PickEmSettlementSection />;
       default:
         return currentSectionOption ? <LegacyPanel section={currentSectionOption} /> : null;
     }
@@ -457,7 +466,9 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
         </div>
 
         {/* Content area */}
-        <div className="h-full flex-1 overflow-y-auto p-6 box-border">{renderContent()}</div>
+        <div className="h-full flex-1 overflow-y-auto p-6 box-border">
+          <SectionErrorBoundary>{renderContent()}</SectionErrorBoundary>
+        </div>
       </main>
     </div>
   );

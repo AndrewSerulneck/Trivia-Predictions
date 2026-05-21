@@ -12,6 +12,11 @@ type VenueRow = {
   logo_text: string | null;
   icon_emoji: string | null;
   address: string | null;
+  city: string | null;
+  state: string | null;
+  zip_code: string | null;
+  county: string | null;
+  region: string | null;
   latitude: number;
   longitude: number;
   radius: number;
@@ -25,6 +30,11 @@ function mapVenueRow(row: VenueRow): Venue {
     logoText: row.logo_text ?? undefined,
     iconEmoji: row.icon_emoji ?? undefined,
     address: row.address ?? undefined,
+    city: row.city ?? undefined,
+    state: row.state ?? undefined,
+    zipCode: row.zip_code ?? undefined,
+    county: row.county ?? undefined,
+    region: row.region ?? undefined,
     latitude: Number(row.latitude),
     longitude: Number(row.longitude),
     radius: Number(row.radius),
@@ -54,7 +64,7 @@ export async function listVenues(): Promise<Venue[]> {
     const { data, error } = await withTimedVenueQuery(async (signal) => {
       return await supabaseClient
         .from("venues")
-        .select("id, name, display_name, logo_text, icon_emoji, address, latitude, longitude, radius")
+        .select("id, name, display_name, logo_text, icon_emoji, address, city, state, zip_code, county, region, latitude, longitude, radius")
         .abortSignal(signal)
         .order("name", { ascending: true });
     });
@@ -81,7 +91,7 @@ export async function getVenueById(venueId: string): Promise<Venue | null> {
     const { data, error } = await withTimedVenueQuery(async (signal) => {
       return await supabaseClient
         .from("venues")
-        .select("id, name, display_name, logo_text, icon_emoji, address, latitude, longitude, radius")
+        .select("id, name, display_name, logo_text, icon_emoji, address, city, state, zip_code, county, region, latitude, longitude, radius")
         .abortSignal(signal)
         .eq("id", venueId)
         .maybeSingle<VenueRow>();

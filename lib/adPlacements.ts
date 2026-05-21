@@ -55,7 +55,7 @@ export function normalizeAdPlacementMeta(input: {
     adType,
     displayTrigger,
     placementKey,
-    roundNumber: parsedRound && parsedRound >= 1 && parsedRound <= 3 ? parsedRound : undefined,
-    sequenceIndex: parsedSequence && parsedSequence >= 1 && parsedSequence <= 5 ? parsedSequence : undefined,
+    roundNumber: parsedRound && parsedRound >= 1 && parsedRound <= 24 ? parsedRound : undefined,
+    sequenceIndex: parsedSequence && parsedSequence >= 1 && parsedSequence <= 50 ? parsedSequence : undefined,
   };
 }

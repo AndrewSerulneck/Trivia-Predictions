@@ -36,15 +36,15 @@ export type AdminNavGroup = {
 export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
   { id: "venue-users",           label: "Venue Users",           slug: "venue-users",           component: () => <LegacySectionPlaceholder sectionName="Venue Users" /> },
   { id: "venue-manage",          label: "Venue Profiles",        slug: "venue-manage",          component: () => <LegacySectionPlaceholder sectionName="Venue Profiles" /> },
-  { id: "trivia-list",           label: "Trivia Questions",      slug: "trivia-list",           status: { label: "Live", tone: "live" }, component: () => <LegacySectionPlaceholder sectionName="Trivia Questions" /> },
-  { id: "trivia-create",         label: "Create Question",       slug: "trivia-create",         status: { label: "Live", tone: "live" }, component: () => <LegacySectionPlaceholder sectionName="Create Question" /> },
-  { id: "ads-list",              label: "Manage Ads",            slug: "ads-list",              status: { label: "Live", tone: "live" }, component: AdsListSection },
-  { id: "ads-create",            label: "Create Ad",             slug: "ads-create",            status: { label: "Live", tone: "live" }, component: AdsCreateSection },
+  { id: "trivia-list",           label: "Trivia Questions",      slug: "trivia-list",           status: { label: "Ready", tone: "live" }, component: () => <LegacySectionPlaceholder sectionName="Trivia Questions" /> },
+  { id: "trivia-create",         label: "Create Question",       slug: "trivia-create",         status: { label: "Ready", tone: "live" }, component: () => <LegacySectionPlaceholder sectionName="Create Question" /> },
+  { id: "ads-list",              label: "Manage Ads",            slug: "ads-list",              status: { label: "Ready", tone: "live" }, component: AdsListSection },
+  { id: "ads-create",            label: "Create Ad",             slug: "ads-create",            status: { label: "Ready", tone: "live" }, component: AdsCreateSection },
   { id: "ad-placement",          label: "Placement Builder",     slug: "ad-placement",          component: () => <LegacySectionPlaceholder sectionName="Placement Builder" /> },
   { id: "ad-debug",              label: "Ad Analytics",          slug: "ad-debug",              component: () => <LegacySectionPlaceholder sectionName="Ad Analytics" /> },
   { id: "challenge-campaigns",   label: "Challenge Manager",     slug: "challenge-campaigns",   component: () => <LegacySectionPlaceholder sectionName="Challenge Manager" /> },
-  { id: "live-trivia",           label: "Live Trivia Schedules", slug: "live-trivia",           component: () => <LegacySectionPlaceholder sectionName="Live Trivia Schedules" /> },
-  { id: "pickem-settlement",     label: "Pick 'Em Settlement",   slug: "pickem-settlement",     status: { label: "Live", tone: "live" }, component: PickEmSettlementSection },
+  { id: "live-trivia",           label: "Trivia",                slug: "live-trivia",           component: () => <LegacySectionPlaceholder sectionName="Trivia" /> },
+  { id: "pickem-settlement",     label: "Pick 'Em Settlement",   slug: "pickem-settlement",     status: { label: "Ready", tone: "live" }, component: PickEmSettlementSection },
 ];
 
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [

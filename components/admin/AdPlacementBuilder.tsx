@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { Advertisement } from "@/types";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type Dispatch, type SetStateAction } from "react";
+import type { Advertisement, Venue } from "@/types";
 
 // ─── Canonical slot registry ──────────────────────────────────────────────────
 
@@ -56,6 +56,22 @@ const PAGES: PageDef[] = [
       { key: "pickem-popup-on-entry", label: "Entry Popup", description: "Appears on game load" },
       { key: "pickem-inline", label: "Inline Content", description: "Between prediction cards" },
       { key: "pickem-banner", label: "Banner", description: "Mobile adhesion" },
+    ],
+  },
+  {
+    id: "fantasy",
+    label: "Fantasy Page",
+    slots: [
+      { key: "fantasy-popup-on-entry", label: "Pop-Up Ad", description: "Appears when users enter Fantasy" },
+      { key: "fantasy-inline", label: "Inline Banner", description: "In-feed fantasy placement" },
+    ],
+  },
+  {
+    id: "sports-bingo",
+    label: "Bingo Page",
+    slots: [
+      { key: "sports-bingo-popup-on-entry", label: "Pop-Up Ad", description: "Appears when users enter Bingo" },
+      { key: "sports-bingo-inline", label: "Inline Banner", description: "Inline slot on Bingo screens" },
     ],
   },
   {
@@ -252,7 +268,11 @@ function SlotPanel({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function AdPlacementBuilder() {
+type AdPlacementBuilderProps = {
+  venues: Venue[];
+};
+
+export function AdPlacementBuilder({ venues }: AdPlacementBuilderProps) {
   const [ads, setAds] = useState<Advertisement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -260,6 +280,11 @@ export function AdPlacementBuilder() {
   const [saveError, setSaveError] = useState("");
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [selectedPage, setSelectedPage] = useState<string>(PAGES[0].id);
+  const [selectedVenueIds, setSelectedVenueIds] = useState<string[]>([]);
+  const [selectedCities, setSelectedCities] = useState<string[]>([]);
+  const [selectedStates, setSelectedStates] = useState<string[]>([]);
+  const [selectedZipCodes, setSelectedZipCodes] = useState<string[]>([]);
+  const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
 
   // Tracks per-slot ordered ad lists (local mutation before save)
   const [slotMap, setSlotMap] = useState<Map<string, Advertisement[]>>(new Map());
@@ -270,11 +295,51 @@ export function AdPlacementBuilder() {
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
 
+  const cityOptions = Array.from(
+    new Set(
+      venues
+        .map((venue) => venue.city ?? "")
+        .map((value) => value.trim())
+        .filter(Boolean)
+    )
+  ).sort((a, b) => a.localeCompare(b));
+  const stateOptions = Array.from(
+    new Set(
+      venues
+        .map((venue) => venue.state ?? "")
+        .map((value) => value.trim().toUpperCase())
+        .filter(Boolean)
+    )
+  ).sort((a, b) => a.localeCompare(b));
+  const zipCodeOptions = Array.from(
+    new Set(
+      venues
+        .map((venue) => venue.zipCode ?? "")
+        .map((value) => value.trim())
+        .filter(Boolean)
+    )
+  ).sort((a, b) => a.localeCompare(b));
+  const regionOptions = Array.from(
+    new Set(
+      venues
+        .map((venue) => venue.region ?? "")
+        .map((value) => value.trim().toUpperCase())
+        .filter(Boolean)
+    )
+  ).sort((a, b) => a.localeCompare(b));
+
   const fetchAds = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/admin?resource=ads&pageSize=5000", { cache: "no-store" });
+      const params = new URLSearchParams({ resource: "ads", pageSize: "5000" });
+      if (selectedVenueIds.length > 0) params.set("venueIds", selectedVenueIds.join(","));
+      if (selectedCities.length > 0) params.set("cities", selectedCities.join(","));
+      if (selectedStates.length > 0) params.set("states", selectedStates.join(","));
+      if (selectedZipCodes.length > 0) params.set("zipCodes", selectedZipCodes.join(","));
+      if (selectedRegions.length > 0) params.set("regions", selectedRegions.join(","));
+
+      const res = await fetch(`/api/admin?${params.toString()}`, { cache: "no-store" });
       const payload = (await res.json()) as { ok: boolean; items?: Advertisement[]; error?: string };
       if (!payload.ok) throw new Error(payload.error ?? "Failed to load ads.");
       const allAds = payload.items ?? [];
@@ -293,9 +358,16 @@ export function AdPlacementBuilder() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedCities, selectedRegions, selectedStates, selectedVenueIds, selectedZipCodes]);
 
   useEffect(() => { void fetchAds(); }, [fetchAds]);
+
+  function handleMultiSelect(
+    event: ChangeEvent<HTMLSelectElement>,
+    setter: Dispatch<SetStateAction<string[]>>
+  ) {
+    setter(Array.from(event.target.selectedOptions).map((option) => option.value));
+  }
 
   // ── Save ───────────────────────────────────────────────────────────────────
 
@@ -429,26 +501,119 @@ export function AdPlacementBuilder() {
   return (
     <div className="flex h-full flex-col gap-4">
       {/* Toolbar */}
-      <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-6 py-4 shadow-sm">
-        <div>
-          <h2 className="text-sm font-semibold text-slate-900">Ad Placement Builder</h2>
-          <p className="text-xs text-slate-500">
-            {ads.length} total ads · {totalEmpty} empty slot{totalEmpty !== 1 ? "s" : ""} · drag to reorder priority
-          </p>
+      <div className="rounded-xl border border-slate-200 bg-white px-6 py-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900">Ad Placement Builder</h2>
+            <p className="text-xs text-slate-500">
+              {ads.length} total ads · {totalEmpty} empty slot{totalEmpty !== 1 ? "s" : ""} · drag to reorder priority
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {savedAt && (
+              <span className="text-xs text-green-600">Saved {savedAt.toLocaleTimeString()}</span>
+            )}
+            {saveError && (
+              <span className="text-xs text-red-600">{saveError}</span>
+            )}
+            <button
+              onClick={save}
+              disabled={saving}
+              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {saving ? "Saving…" : "Save Layout"}
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          {savedAt && (
-            <span className="text-xs text-green-600">Saved {savedAt.toLocaleTimeString()}</span>
-          )}
-          {saveError && (
-            <span className="text-xs text-red-600">{saveError}</span>
-          )}
+        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-5">
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Venues</label>
+            <select
+              multiple
+              value={selectedVenueIds}
+              onChange={(event) => handleMultiSelect(event, setSelectedVenueIds)}
+              className="h-24 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"
+            >
+              {venues.map((venue) => (
+                <option key={venue.id} value={venue.id}>
+                  {venue.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Cities</label>
+            <select
+              multiple
+              value={selectedCities}
+              onChange={(event) => handleMultiSelect(event, setSelectedCities)}
+              className="h-24 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"
+            >
+              {cityOptions.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">States</label>
+            <select
+              multiple
+              value={selectedStates}
+              onChange={(event) => handleMultiSelect(event, setSelectedStates)}
+              className="h-24 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"
+            >
+              {stateOptions.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Zip Codes</label>
+            <select
+              multiple
+              value={selectedZipCodes}
+              onChange={(event) => handleMultiSelect(event, setSelectedZipCodes)}
+              className="h-24 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"
+            >
+              {zipCodeOptions.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Regions</label>
+            <select
+              multiple
+              value={selectedRegions}
+              onChange={(event) => handleMultiSelect(event, setSelectedRegions)}
+              className="h-24 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"
+            >
+              {regionOptions.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="mt-2 flex justify-end">
           <button
-            onClick={save}
-            disabled={saving}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+            onClick={() => {
+              setSelectedVenueIds([]);
+              setSelectedCities([]);
+              setSelectedStates([]);
+              setSelectedZipCodes([]);
+              setSelectedRegions([]);
+            }}
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
           >
-            {saving ? "Saving…" : "Save Layout"}
+            Clear Scope
           </button>
         </div>
       </div>

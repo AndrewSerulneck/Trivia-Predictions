@@ -19,7 +19,9 @@
       "Bash(curl -s --max-time 10 -w '\\\\nHTTP:%{http_code}' -H 'User-Agent: Mozilla/5.0' https://www.nba.com/player/2544)",
       "Bash(curl -s --max-time 10 -w '\\\\nHTTP:%{http_code}' -H 'User-Agent: Mozilla/5.0' https://search.nba.com/players?q=LeBron)",
       "Bash(supabase status *)",
-      "Bash(supabase projects *)"
+      "Bash(supabase projects *)",
+      "Bash(find /Users/anthropic/Documents/Trivia-Predictions/scripts -type f 2>/dev/null || echo \"No scripts directory found\")",
+      "Read(//Users/anthropic/Documents/Trivia-Predictions/**)"
     ]
   }
 }

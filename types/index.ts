@@ -31,6 +31,11 @@ export interface Venue {
   logoText?: string;
   iconEmoji?: string;
   address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  county?: string;
+  region?: string;
   latitude: number;
   longitude: number;
   radius: number;
@@ -234,9 +239,14 @@ export interface Advertisement {
   placementKey?: string;
   roundNumber?: number;
   sequenceIndex?: number;
-  venueId?: string;
-  venueIds?: string[];
+  venueIds: string[] | null;
   targetAllVenues?: boolean;
+  cities: string[] | null;
+  zipCodes: string[] | null;
+  counties: string[] | null;
+  states: string[] | null;
+  regions: string[] | null;
+  /** Backward-compat aliases while older callers migrate. */
   targetCities?: string[];
   targetZipCodes?: string[];
   targetCounties?: string[];

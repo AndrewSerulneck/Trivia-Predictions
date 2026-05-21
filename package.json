@@ -11,8 +11,11 @@
     "test": "vitest run",
     "trivia:generate": "node --env-file=.env.local scripts/generate-trivia-questions.cjs",
     "trivia:generate:nightly": "node --env-file=.env.local scripts/generate-trivia-nightly.cjs --total 100",
-    "trivia:check": "node scripts/import-trivia-questions.cjs --dir data/trivia/categories --check",
-    "trivia:import": "node --env-file=.env.local scripts/import-trivia-questions.cjs --dir data/trivia/categories",
+    "trivia:check": "node scripts/import-trivia-questions.cjs --dir data/trivia/categories --live-dir data/live-trivia/categories --check",
+    "trivia:import": "node --env-file=.env.local scripts/import-trivia-questions.cjs --dir data/trivia/categories --live-dir data/live-trivia/categories",
+    "live-trivia:generate": "node --env-file=.env.local scripts/generate-live-trivia-questions.cjs",
+    "live-trivia:generate:nightly": "node --env-file=.env.local scripts/generate-live-trivia-nightly.cjs --total 50",
+    "live-trivia:check": "node scripts/import-trivia-questions.cjs --live-dir data/live-trivia/categories --check",
     "apisports:probe:nba": "node --env-file=.env.local scripts/probe-apisports-nba.cjs",
     "live-showdown:seed": "node --env-file=.env.local --import tsx scripts/seedLiveShowdownPool.ts"
   },

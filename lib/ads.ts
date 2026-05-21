@@ -49,6 +49,13 @@ const AD_SELECT =
   "id, slot, slot_key, priority, is_placeholder, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks";
 
 function mapAdRow(row: AdvertisementRow): Advertisement {
+  const venueIds = Array.isArray(row.venue_ids) ? row.venue_ids : row.venue_id ? [row.venue_id] : [];
+  const cities = Array.isArray(row.target_cities) ? row.target_cities : [];
+  const zipCodes = Array.isArray(row.target_zip_codes) ? row.target_zip_codes : [];
+  const counties = Array.isArray(row.target_counties) ? row.target_counties : [];
+  const states = Array.isArray(row.target_states) ? row.target_states : [];
+  const regions = Array.isArray(row.target_regions) ? row.target_regions : [];
+
   return {
     id: row.id,
     slot: row.slot,
@@ -61,14 +68,18 @@ function mapAdRow(row: AdvertisementRow): Advertisement {
     placementKey: row.placement_key ?? undefined,
     roundNumber: row.round_number ?? undefined,
     sequenceIndex: row.sequence_index ?? undefined,
-    venueId: row.venue_id ?? undefined,
-    venueIds: Array.isArray(row.venue_ids) ? row.venue_ids : row.venue_id ? [row.venue_id] : undefined,
+    venueIds,
     targetAllVenues: Boolean(row.target_all_venues ?? false),
-    targetCities: Array.isArray(row.target_cities) ? row.target_cities : undefined,
-    targetZipCodes: Array.isArray(row.target_zip_codes) ? row.target_zip_codes : undefined,
-    targetCounties: Array.isArray(row.target_counties) ? row.target_counties : undefined,
-    targetStates: Array.isArray(row.target_states) ? row.target_states : undefined,
-    targetRegions: Array.isArray(row.target_regions) ? row.target_regions : undefined,
+    cities,
+    zipCodes,
+    counties,
+    states,
+    regions,
+    targetCities: cities,
+    targetZipCodes: zipCodes,
+    targetCounties: counties,
+    targetStates: states,
+    targetRegions: regions,
     advertiserName: row.advertiser_name,
     frequencyInterval: Number.isFinite(Number(row.frequency_interval)) ? Math.max(1, Number(row.frequency_interval)) : 1,
     imageUrl: row.image_url,

@@ -1,0 +1,705 @@
+{
+  "categoryName": "Animals",
+  "questions": [
+    {
+      "slug": "animals-largest-mammal-world",
+      "question": "Which creature is the largest mammal to have ever existed on Earth?",
+      "answer": "Blue Whale",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-honey-bee-wings",
+      "question": "How many wings does a honey bee have?",
+      "answer": "4",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-only-mammal-flight",
+      "question": "Which is the only mammal capable of true powered flight?",
+      "answer": "Bat",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-group-of-lions",
+      "question": "What is the collective noun used for a group of lions?",
+      "answer": "Pride",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-cheetah-top-speed",
+      "question": "A cheetah can reach its top speed of approximately 70 mph in how many seconds?",
+      "answer": "3 seconds",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-octopus-hearts",
+      "question": "How many hearts does an octopus have?",
+      "answer": "3",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-male-seahorse-birth",
+      "question": "In which animal species does the male carry the eggs and give birth to the young?",
+      "answer": "Seahorse",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-tallest-land-animal",
+      "question": "Which animal is the tallest living land animal in the world?",
+      "answer": "Giraffe",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-platypus-classification",
+      "question": "The platypus and the echidna are the only two mammals that do what?",
+      "answer": "Lay eggs",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-shark-skeleton-material",
+      "question": "What is a shark's skeleton made of?",
+      "answer": "Cartilage",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-slowest-mammal",
+      "question": "Which of the following is considered the slowest mammal in the world?",
+      "answer": "Three-toed Sloth",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-hummingbird-flight-backwards",
+      "question": "Which is the only bird that can fly backwards?",
+      "answer": "Hummingbird",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-polar-bear-skin-color",
+      "question": "What color is a polar bear's skin under its white fur?",
+      "answer": "Black",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-largest-land-carnivore",
+      "question": "Which of these is the largest land-dwelling carnivore?",
+      "answer": "Polar Bear",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-komodo-dragon-location",
+      "question": "In which country can you find Komodo dragons in the wild?",
+      "answer": "Indonesia",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-kangaroo-baby-name",
+      "question": "What is a baby kangaroo called?",
+      "answer": "Joey",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-butterfly-taste-organ",
+      "question": "What part of their body do butterflies use to taste?",
+      "answer": "Feet",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-elephant-ears-function",
+      "question": "What is the primary reason African elephants have such large ears?",
+      "answer": "To radiate heat",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-narwhal-tusk-type",
+      "question": "The 'tusk' of a narwhal is actually which type of body part?",
+      "answer": "Tooth",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-blue-whale-tongue-weight",
+      "question": "The tongue of a blue whale weighs about as much as which other animal?",
+      "answer": "An elephant",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-cat-vision-type",
+      "question": "What allows cats to see clearly in near-total darkness?",
+      "answer": "Tapetum lucidum",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-giant-panda-diet",
+      "question": "What percentage of a giant panda's diet consists of bamboo?",
+      "answer": "99%",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-largest-primate",
+      "question": "Which of these is the largest living primate in the world?",
+      "answer": "Gorilla",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-reindeer-eyes-seasonal-change",
+      "question": "Reindeer are the only mammals whose eyes change color with the seasons; what color do they turn in winter?",
+      "answer": "Blue",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-largest-bird-wingspan",
+      "question": "Which bird possesses the largest wingspan of any living bird, measuring up to 11 feet?",
+      "answer": "Wandering Albatross",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-starfish-regeneration",
+      "question": "How many arms can a sea star (starfish) lose and still fully regenerate?",
+      "answer": "All of them",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-sloth-digestion-speed",
+      "question": "How long can it take for a sloth to digest a single meal?",
+      "answer": "Up to 30 days",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-koala-fingerprints",
+      "question": "Which animal has fingerprints that are so similar to humans that they have been mistaken at crime scenes?",
+      "answer": "Koala",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-owl-neck-rotation",
+      "question": "How many degrees can an owl rotate its head?",
+      "answer": "270°",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-box-jellyfish-venom",
+      "question": "Which sea creature is considered the most venomous in the world?",
+      "answer": "Box Jellyfish",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-elephant-gestation-period",
+      "question": "What is the average gestation period for an African Elephant?",
+      "answer": "22 months",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-axolotl-habitat",
+      "question": "The axolotl, a salamander that retains its gills into adulthood, is native to only one country. Which one?",
+      "answer": "Mexico",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-woodpecker-tongue-wrap",
+      "question": "Where does a woodpecker's tongue wrap around to protect its brain from impact?",
+      "answer": "Its skull",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-cow-stomach-compartments",
+      "question": "How many compartments does a cow's stomach have?",
+      "answer": "4",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-sperm-whale-brain-size",
+      "question": "Which animal has the largest brain of any living species?",
+      "answer": "Sperm Whale",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-platypus-venom-location",
+      "question": "Where are the venomous spurs located on a male platypus?",
+      "answer": "On its hind ankles",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-peregrine-falcon-speed",
+      "question": "What is the top recorded diving speed of a Peregrine Falcon?",
+      "answer": "240 mph",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-moth-vs-butterfly-rest",
+      "question": "Generally, how do moths hold their wings when at rest compared to butterflies?",
+      "answer": "Flat/Horizontally",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-tarantula-defense-hairs",
+      "question": "What are the irritating hairs that some tarantulas flick at predators called?",
+      "answer": "Urticating hairs",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-arctic-tern-migration",
+      "question": "Which animal has the longest migration of any known species, traveling from the Arctic to the Antarctic?",
+      "answer": "Arctic Tern",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-honey-badger-skin",
+      "question": "Why is the honey badger's skin so effective against predator attacks?",
+      "answer": "It is very loose and thick",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-pigeon-milk",
+      "question": "Pigeons are one of the few birds that produce a nutrient-rich substance to feed their young. What is it called?",
+      "answer": "Crop milk",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-electric-eel-organ",
+      "question": "An electric eel can generate a discharge of up to how many volts?",
+      "answer": "600V",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-mountain-goat-classification",
+      "question": "Despite their name, mountain goats are actually more closely related to which animal?",
+      "answer": "Antelopes",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-rhino-horn-material",
+      "question": "What is a rhinoceros horn primarily made of?",
+      "answer": "Keratin",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-armadillo-birth-pattern",
+      "question": "The Nine-banded Armadillo almost always gives birth to how many identical young?",
+      "answer": "4",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-naked-mole-rat-longevity",
+      "question": "Which of these traits is unique to the naked mole rat among rodents?",
+      "answer": "All of the above",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-honey-guide-bird-behavior",
+      "question": "The Greater Honeyguide bird is famous for leading which mammal to beehives so they can share the spoils?",
+      "answer": "Humans",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-wombat-scat-shape",
+      "question": "Wombats are the only animals in the world known to produce droppings in what distinct shape?",
+      "answer": "Cubes",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-largest-invertebrate",
+      "question": "Which elusive deep-sea creature is the largest known invertebrate on Earth?",
+      "answer": "Colossal Squid",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-snow-leopard-leap",
+      "question": "Snow leopards are incredible jumpers; how far can they leap in a single bound?",
+      "answer": "50 feet",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-blue-tongued-skink-defense",
+      "question": "What is the primary purpose of the bright blue tongue of the Blue-tongued Skink?",
+      "answer": "To startle predators",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-chameleon-eye-movement",
+      "question": "Chameleons can move their eyes independently, giving them a field of vision of how many degrees?",
+      "answer": "360°",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-basilisk-lizard-nickname",
+      "question": "The Common Basilisk lizard is nicknamed the 'Jesus Christ Lizard' because it can do what?",
+      "answer": "Walk on water",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-male-mosquito-diet",
+      "question": "What do male mosquitoes primarily eat?",
+      "answer": "Nectar and plant juices",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-sea-otter-tool-use",
+      "question": "How do sea otters typically open the hard shells of their prey like clams and mussels?",
+      "answer": "Banging them against rocks",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-peregrine-falcon-nictitating-membrane",
+      "question": "What specialized 'third eyelid' do falcons use to clear debris and moisten eyes during high-speed dives?",
+      "answer": "Nictitating membrane",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-shrimp-heart-location",
+      "question": "In which part of its body is a shrimp's heart located?",
+      "answer": "Head",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-ostrich-kick-strength",
+      "question": "An ostrich kick is powerful enough to kill which major predator?",
+      "answer": "Lion",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-wood-frog-freezing",
+      "question": "The Alaskan Wood Frog can survive the winter by doing what to its body?",
+      "answer": "Freezing nearly solid",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-leafcutter-ant-farming",
+      "question": "Leafcutter ants do not eat the leaves they cut; instead, they use them to grow what food source?",
+      "answer": "Fungus",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-giraffe-tongue-color",
+      "question": "What color is a giraffe's tongue, likely to protect it from sunburn while eating?",
+      "answer": "Dark Blue/Purple",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-scorpions-uv-light",
+      "question": "What happens to a scorpion when it is exposed to ultraviolet (UV) light?",
+      "answer": "It glows vibrant blue-green",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-pufferfish-toxin-name",
+      "question": "What is the name of the deadly neurotoxin found in pufferfish (Fugu)?",
+      "answer": "Tetrodotoxin",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-manatee-closest-relative",
+      "question": "Which land animal is the closest living relative to the manatee?",
+      "answer": "Elephant",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-lyrebird-mimicry",
+      "question": "The Superb Lyrebird is famous for its ability to mimic which of the following sounds?",
+      "answer": "All of the above",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-gorilla-nose-prints",
+      "question": "Just as humans have unique fingerprints, gorillas have unique what?",
+      "answer": "Nose prints",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-turkey-vulture-defense",
+      "question": "What is the primary, albeit gross, defense mechanism of a Turkey Vulture when threatened?",
+      "answer": "Projectile vomiting",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-male-lion-sleeping-hours",
+      "question": "On average, how many hours a day does a male lion spend sleeping or resting?",
+      "answer": "16-20 hours",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-clownfish-mucus-layer",
+      "question": "How do clownfish survive living among the stinging tentacles of sea anemones?",
+      "answer": "They have a protective mucus layer",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-mantis-shrimp-punch-speed",
+      "question": "The Mantis Shrimp can strike its prey with the same acceleration as which of the following?",
+      "answer": "A .22 caliber bullet",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-blue-whale-heart-size",
+      "question": "The heart of a Blue Whale is roughly the size of which object?",
+      "answer": "A bumper car",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-platypus-sweat-milk",
+      "question": "Since they do not have nipples, how do female platypuses provide milk to their young?",
+      "answer": "Through their skin (sweating it)",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-honey-bee-dance-communication",
+      "question": "What is the name of the dance honey bees use to tell their hive mates where to find flowers?",
+      "answer": "The Waggle Dance",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-arctic-fox-fur-change",
+      "question": "What color does the Arctic Fox's coat change to during the summer months?",
+      "answer": "Brown or Gray",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-only-continent-no-ants",
+      "question": "Which continent is the only one on Earth with no native ant species?",
+      "answer": "Antarctica",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-cuttlefish-camouflage-speed",
+      "question": "How quickly can a cuttlefish change its skin color and texture to match its surroundings?",
+      "answer": "Less than a second",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-giraffe-neck-vertebrae",
+      "question": "How many neck vertebrae does a giraffe have (the same number as a human)?",
+      "answer": "7",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-starfish-eye-location",
+      "question": "Where are a starfish's eyes located?",
+      "answer": "At the tip of each arm",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-hummingbird-heart-rate",
+      "question": "What can a hummingbird's heart rate reach during flight?",
+      "answer": "1,200 bpm",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-elephant-trunk-muscles",
+      "question": "Approximately how many muscles are in an elephant's trunk?",
+      "answer": "40,000",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-pigeon-magnetic-navigation",
+      "question": "What do pigeons use to help them navigate back home over long distances?",
+      "answer": "The Earth's magnetic field",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-largest-lizard-world",
+      "question": "Which species is the largest living lizard in the world?",
+      "answer": "Komodo Dragon",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-woodpecker-tongue-length",
+      "question": "A woodpecker's tongue is typically how many times longer than its bill?",
+      "answer": "3 times",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-sea-cucumber-defense",
+      "question": "What extreme defense mechanism does a sea cucumber use to scare away predators?",
+      "answer": "Expelling its internal organs",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-ostrich-toes-count",
+      "question": "Unlike most birds which have three or four toes, how many toes does an ostrich have on each foot?",
+      "answer": "2",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-cat-ear-muscles",
+      "question": "How many muscles does a cat have in each ear to allow for precise rotation?",
+      "answer": "32",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-bat-guano-use",
+      "question": "Historically, what has 'guano' (bat droppings) been highly valued for?",
+      "answer": "Fertilizer and gunpowder",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-sperm-whale-dive-depth",
+      "question": "How deep can a sperm whale dive in search of giant squid?",
+      "answer": "7,000 feet",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-queen-ant-lifespan",
+      "question": "What is the record lifespan for a queen ant in a laboratory setting?",
+      "answer": "30 years",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-armadillo-shell-material",
+      "question": "What is the shell of an armadillo primarily made of?",
+      "answer": "Bony plates (osteoderms)",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-hippopotamus-sweat-color",
+      "question": "What color is the 'blood sweat' secreted by hippos that acts as a natural sunscreen?",
+      "answer": "Red",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-howler-monkey-sound-distance",
+      "question": "From how far away can the roar of a Howler Monkey be heard through the jungle?",
+      "answer": "3 miles",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-slow-loris-venom",
+      "question": "Where does the Slow Loris produce the toxin that makes it the world's only venomous primate?",
+      "answer": "Glands in its elbows",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-spider-silk-strength",
+      "question": "Weight for weight, spider silk is stronger than which material?",
+      "answer": "Both Steel and Kevlar",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-a-group-of-lions-commonly-known-as",
+      "question": "What is a group of lions commonly known as?",
+      "answer": "Pride",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "which-animal-is-renowned-for-its-ability-to-change-its-skin-color-to-match-its-environment",
+      "question": "Which animal is renowned for its ability to change its skin color to match its environment?",
+      "answer": "Chameleon",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "what-is-the-fastest-land-animal-on-earth",
+      "question": "What is the fastest land animal on Earth?",
+      "answer": "Cheetah",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "which-of-these-marine-animals-is-classified-as-a-mammal",
+      "question": "Which of these marine animals is classified as a mammal?",
+      "answer": "Whale",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "what-is-the-only-mammal-naturally-capable-of-sustained-flight",
+      "question": "What is the only mammal naturally capable of sustained flight?",
+      "answer": "Bat",
+      "category": "Animals",
+      "difficulty": "hard"
+    }
+  ]
+}

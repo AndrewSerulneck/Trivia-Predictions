@@ -494,11 +494,16 @@ async function main() {
   }
 
   const mergedBucket = [...targetBucketRows, ...created];
+  const liveQuestions = args.bucket === LIVE_BUCKET ? mergedBucket : targetDoc[LIVE_BUCKET];
   const mergedDoc = {
     categoryName: targetDoc.categoryName || record.displayCategory,
-    [LIVE_BUCKET]: args.bucket === LIVE_BUCKET ? mergedBucket : targetDoc[LIVE_BUCKET],
     [NORMAL_BUCKET]: args.bucket === NORMAL_BUCKET ? mergedBucket : targetDoc[NORMAL_BUCKET],
   };
+  // Only persist live_open_ended when it has content — the key was removed during the
+  // live-trivia migration and should not be re-added as an empty array.
+  if (liveQuestions.length > 0) {
+    mergedDoc[LIVE_BUCKET] = liveQuestions;
+  }
 
   if (!args.dryRun && created.length > 0) {
     writeCategoryDocument(record.filePath, mergedDoc);

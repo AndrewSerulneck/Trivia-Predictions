@@ -1,0 +1,881 @@
+{
+  "categoryName": "Cartoons",
+  "questions": [
+    {
+    "slug": "spongebob-krusty-krab-secret-formula-location",
+    "question": "In SpongeBob SquarePants, what specific object does Mr. Krabs use to physically store and protect the written secret formula for the Krabby Patty?",
+    "answer": "A glass bottle",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "avatar-airbender-aang-flying-bison",
+    "question": "What is the name of Aang's loyal, six-legged flying bison who serves as the primary mode of transportation for the group in Avatar: The Last Airbender?",
+    "answer": "Appa",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "rick-and-morty-multiverse-portal-fluid-color",
+    "question": "What specific color is the liquid fluid used by Rick Sanchez to fuel his portal gun for interdimensional travel?",
+    "answer": "Green",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "scooby-doo-mystery-machine-van-colors",
+    "question": "The Mystery Machine van features a distinctive floral paint job consisting of which three primary colors?",
+    "answer": "Green, blue, and orange",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "south-park-eric-cartman-favorite-stuffed-animal",
+    "question": "What is the name of Eric Cartman's absolute favorite stuffed animal, a green frog that he regularly holds tea parties with?",
+    "answer": "Clyde Frog",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "looney-tunes-wile-e-coyote-company-acronym",
+    "question": "Wile E. Coyote orders all of his explosive gadgets, traps, and complex machinery from which fictional mail-order corporation?",
+    "answer": "ACME Corporation",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "gravity-falls-dipper-journal-number",
+    "question": "What specific number is written on the front of the mysterious, six-fingered handprint journal that Dipper Pines discovers in the woods?",
+    "answer": "3",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "phineas-and-ferb-pet-platypus-agency-acronym",
+    "question": "Perry the Platypus works as a secret agent under the command of Major Monogram. What is the acronym of the global spy organization he belongs to?",
+    "answer": "O.W.C.A.",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "adventure-time-finn-the-human-hat-animal",
+    "question": "Finn the Human's signature white headgear is canonically designed to mimic the head and ears of what specific animal?",
+    "answer": "Bear",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "danny-phantom-ghost-zone-portal-inventors",
+    "question": "Danny Fenton gains his supernatural ghost powers after stepping inside a portal created by his eccentric parents. What is the name of this portal?",
+    "answer": "The Fenton Portal",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "bojack-horseman-underwater-episode-award-show",
+    "question": "In a famous, mostly silent underwater episode of BoJack Horseman, BoJack travels to the Pacific Ocean to promote his film Secretariat at which fictional film festival?",
+    "answer": "Pacific Ocean Film Festival",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "futurama-planet-express-ship-color",
+    "question": "What specific shade of color is the exterior hull of Professor Farnsworth's Planet Express delivery spaceship?",
+    "answer": "Electric mucus green",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "hey-arnold-helga-pataki-secret-shrine",
+    "question": "Helga Pataki keeps a massive, hidden love shrine dedicated to Arnold in the back of her bedroom closet. What perishable everyday item is the core structure of the shrine primarily constructed from?",
+    "answer": "Chewed bubblegum",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "rugrats-tommy-pickles-signature-tool",
+    "question": "Tommy Pickles frequently escapes his playpen and breaks into restricted areas by hiding what specific household tool inside his diaper?",
+    "answer": "Screwdriver",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "king-of-the-hill-hank-propane-employer",
+    "question": "Hank Hill takes immense professional pride in working as an assistant manager for which retail propane and propane accessories company?",
+    "answer": "Strickland Propane",
+    "category": "Classic TV sitcoms",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "teen-titans-starfire-home-planet",
+    "question": "What is the official cosmic name of the orange-skinned alien princess Starfire's tropical home planet?",
+    "answer": "Tamaran",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "fairly-oddparents-timmy-turner-hat-color-reason",
+    "question": "Timmy Turner famously wears a pink hat and shirt because the show's creator Butch Hartman ran out of what specific color ink while drawing the character?",
+    "answer": "Blue",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "dexters-laboratory-annoying-sister-name",
+    "question": "What is the first name of Dexter's tall, hyperactive, ballet-loving older sister who constantly breaks into his high-tech hidden facility?",
+    "answer": "Dee Dee",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "ed-edd-n-eddy-neighborhood-jawbreaker-cost",
+    "question": "The three Eds spend their entire summer creating complex scams to swindle the neighborhood kids out of money. How many cents does a single massive jawbreaker cost at the candy store?",
+    "answer": "25 cents",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "powerpuff-girls-accidental-fourth-ingredient",
+    "question": "Professor Utonium creates the Powerpuff Girls by mixing sugar, spice, and everything nice, but he accidentally knocks what catastrophic fourth element into the concoction?",
+    "answer": "Chemical X",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "samurai-jack-shapeshifting-demon-villain",
+    "question": "What is the name of the ancient, shapeshifting master of darkness who flings Samurai Jack into the distant future in the show's opening sequence?",
+    "answer": "Aku",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "bobs-burgers-tina-belcher-erotic-fiction-subject",
+    "question": "Tina Belcher spends much of her free time writing graphic, dramatic stories that she categorizes under what specific hybrid literary genre?",
+    "answer": "Erotic friend fiction",
+    "category": "Classic TV sitcoms",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-boondocks-huey-riley-granddad-first-name",
+    "question": "What is the first name of Huey and Riley's cantankerous, eccentric grandfather who moves the brothers from Chicago to the suburbs of Woodcrest?",
+    "answer": "Robert",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "regular-show-mordecai-rigby-park-boss",
+    "question": "Mordecai and Rigby work as lazy groundskeepers at a local public park. What is the name of their short-tempered, anthropomorphic gumball machine boss?",
+    "answer": "Benson",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "steven-universe-crystal-gems-shield-weapon",
+    "question": "Steven Universe inherits a magical, pink defensive gemstone weapon embedded in his bellybutton from his mother. What specific type of weapon is it?",
+    "answer": "Shield",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "kim-possible-naked-mole-rat-name",
+    "question": "Ron Stoppable carries a specialized, pink pocket pet inside his mission pants throughout Kim Possible. What is the name of this naked mole rat?",
+    "answer": "Rufus",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "codename-knd-treehouse-sector-letter",
+    "question": "The main cast of Codename: Kids Next Door operates out of a massive, high-tech treehouse complex. What specific letter designation represents their local neighborhood sector?",
+    "answer": "Sector V",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "invader-zim-robot-servant-disguise",
+    "question": "Zim's malfunctioning, hyperactive robot servant GIR frequently goes out in public wearing a poorly stitched green zipper suit designed to look like what animal?",
+    "answer": "Dog",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "foster-home-imaginary-friends-bloo-creator",
+    "question": "In Foster's Home for Imaginary Friends, the simple, blue, dome-shaped friend Mac Blooey (Bloo) was physically imagined into existence by which main human character?",
+    "answer": "Mac",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-critic-jay-sherman-catchphrase",
+    "question": "In the 1990s animated cult comedy The Critic, film reviewer Jay Sherman routinely summarizes his absolute disdain for terrible cinema with what iconic two-word catchphrase?",
+    "answer": "It stinks!",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "star-wars-clone-wars-ahsoka-tano-homeworld",
+    "question": "Ahsoka Tano is discovered by Plo Koon and recruited into the Jedi Order from her tropical native planet of Shili. What is the name of her sentient alien species?",
+    "answer": "Togruta",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "american-dad-stan-smith-cia-boss",
+    "question": "Stan Smith works as an elite field agent for the Central Intelligence Agency in Langley Falls. What is the first name of his eccentric, high-ranking boss, Deputy Director Smith?",
+    "answer": "Avery",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "total-drama-island-host-first-name",
+    "question": "The sadistic, narcissistic host of the animated reality show parody Total Drama Island subjects the teenage contestants to extreme physical tortures. What is his first name?",
+    "answer": "Chris",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "gargoyles-goliath-clan-new-york-roost",
+    "question": "After waking up from a thousand-year stone slumber in Manhattan, Goliath and his ancient clan establish their primary nighttime defensive roost atop what specific building?",
+    "answer": "Eyrie Building",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "reboot-mainframe-guardian-bob-number",
+    "question": "In the pioneering CGI animated series ReBoot, the heroic Guardian Bob arrives from the Supercomputer to protect Mainframe. What is Bob's official registry number?",
+    "answer": "Guardian 452",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "pinky-and-the-brain-laboratory-name",
+    "question": "The genetically altered laboratory mice Pinky and the Brain spend every single night planning global domination inside which specific scientific research facility?",
+    "answer": "ACME Labs",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-ventures-bros-brock-samson-car",
+    "question": "The formidable secret agent and bodyguard Brock Samson takes immense pride in his iconic, rumbling 1969 muscle car. What specific make and model vehicle is it?",
+    "answer": "Dodge Charger",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "aqua-teen-hunger-force-meatwad-shape-shift",
+    "question": "Meatwad possesses unique, highly flexible molecular structure allowing him to shape-shift into various physical forms, though he almost always limits himself to an igloo or what hotdog-stand food item?",
+    "answer": "Hot dog",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "static-shock-virgil-hawkins-bang-baby-gas",
+    "question": "Virgil Hawkins gains his signature electromagnetic abilities after being exposed to a highly toxic, experimental gas during a gang riot. What is this street event commonly called?",
+    "answer": "The Big Bang",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "captain-planet-ma-ti-heart-ring-pet",
+    "question": "The Planeteer Ma-Ti wields the power of Heart to communicate telepathically and soothe animals. What is the name of his mischievous pet spider monkey who travels with him?",
+    "answer": "Suchi",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "x-men-animated-series-morph-sinister-trap",
+    "question": "In the opening multi-part episode of X-Men: The Animated Series, which team member is tragically left behind and presumed dead after a Sentinel ambush at a Mutant Control facility?",
+    "answer": "Morph",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "wild-thornberrys-eliza-darwin-animal-species",
+    "question": "Eliza Thornberry travels the world in a comically outfitted RV with her family and her sophisticated, shirt-wearing companion Darwin. What kind of animal is Darwin?",
+    "answer": "Chimpanzee",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "johnny-bravo-hometown-city-name",
+    "question": "The muscle-bound, pompadour-wearing Johnny Bravo spends his days failing to pick up women in which fictional, ironically named city?",
+    "answer": "Aron City",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "as-told-by-ginger-foutley-middle-school",
+    "question": "Ginger Foutley and her tight-knit circle of friends navigate the intense social hierarchies and emotional minefields of which fictional junior high school?",
+    "answer": "Lucky Junior High School",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "catdog-winslow-mouse-hole-home-color",
+    "question": "The cynical blue mouse Winslow T. Oddfellow resides inside a small mousehole in CatDog's home, which features a tiny door painted what specific color?",
+    "answer": "Green",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "recess-tj-detweiler-signature-jacket-color",
+    "question": "T.J. Detweiler, the charismatic prankster leader of the Third Street Elementary School playground, is easily recognized by his signature backwards red cap and what color varsity jacket?",
+    "answer": "Green",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "bluey-heelers-australian-suburban-city",
+    "question": "The internationally acclaimed children's animated series Bluey showcases the daily imaginative play of the Heeler family living in which major Australian city?",
+    "answer": "Brisbane",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "ducktales-scrooge-mcduck-lucky-coin-number",
+    "question": "Scrooge McDuck keeps his very first earned coin mounted on a velvet pillow under glass inside his money bin. What is this iconic artifact called?",
+    "answer": "Number One Dime",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "over-the-garden-wall-wirt-greg-frog-name",
+    "question": "Throughout their journey through the Unknown, Greg changes his pet frog's name dozens of times before finally settling on what formal, historical human name in the finale?",
+    "answer": "Jason Funderberker",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "gravity-falls-mystery-shack-wax-figure-theft",
+    "question": "In a memorable Gravity Falls investigation, Mabel crafts a lifesize wax replica of Grunkle Stan, which is tragically decapitated by a mysterious thief looking for what hidden artifact?",
+    "answer": "The cursed wax figures",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "clones-high-gandhi-kid-fraction-catchphrase",
+    "question": "In the cult animated comedy Clone High, the teenage clone of Mahatma Gandhi serves as the ultimate party animal, frequently shouting what signature nonsense catchphrase?",
+    "answer": "Say what?",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "beetlejuice-animated-lydia-deetz-goth-friend",
+    "question": "In the animated Beetlejuice series, Lydia Deetz spends her time in the Neitherworld with her best friend, a skeleton who is obsessed with fitness and body-building. What is his name?",
+    "answer": "Jacques",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "fosters-home-wilt-basketball-jersey-number",
+    "question": "Wilt is a gentle, incredibly helpful red imaginary friend who wears a single blue sneaker and sports what specific number on his basketball jersey?",
+    "answer": "23",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "angry-beavers-daggett-norbert-hometown-dam",
+    "question": "The structural, wood-chewing brothers Daggett and Norbert Doofus build their bachelor pad dam in a forest located in which specific U.S. state?",
+    "answer": "Oregon",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "swat-kats-t-bone-razor-junkyard-cover-job",
+    "question": "The vigilante pilots of the Turbokat jet, T-Bone and Razor, maintain their secret identities by running what type of mundane public business?",
+    "answer": "A salvage yard",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "space-ghost-coast-to-coast-bandleader",
+    "question": "On the surreal adult swim talk show Space Ghost Coast to Coast, what is the name of the mantis-like alien villain who acts as the show's reluctant musical bandleader?",
+    "answer": "Zorak",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "gargoyles-hudson-favorite-human-television-device",
+    "question": "The elder gargoyle Hudson adapts to 1990s Manhattan life primarily by spending his nights relaxing in the armchair doing what human activity?",
+    "answer": "Watching television",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "harley-quinn-poison-ivy-kite-man-catchphrase",
+    "question": "In the animated Harley Quinn series, Ivy's early love interest Kite Man frequently announces his arrival and general enthusiasm with what repetitive four-word catchphrase?",
+    "answer": "Kite Man, hell yeah!",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "daria-morgendorffer-sister-quinn-fashion-club",
+    "question": "Daria's superficial, hyper-popular younger sister Quinn serves as the vice president of which high school extracurricular organization at Lawndale High?",
+    "answer": "The Fashion Club",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "grim-adventures-billy-mandy-end-of-bet",
+    "question": "The Grim Reaper is forced to become the eternal best friend of Billy and Mandy after losing a game over the soul of Billy's sick pet hamster. What was the hamster's name?",
+    "answer": "Mr. Snuggles",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "chowder-mung-daal-catering-apprentice",
+    "question": "The young, purple-clad apprentice Chowder learns the culinary arts in the magical Marzipan City under the strict guidance of which master chef?",
+    "answer": "Mung Daal",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "real-monsters-ickis-monster-academy-headmaster",
+    "question": "Aaahh!!! Real Monsters tracks young scares-in-training navigating the structural sewers of New York City under the strict tutelage of their multi-legged, high-heeled headmaster. What is his name?",
+    "answer": "The Gromble",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-tick-arthur-moth-suit-confusion",
+    "question": "The Tick's anxious, sidekick partner Arthur flies around the city fighting crime in a specialized white tactical outfit that people constantly mistake for what insect?",
+    "answer": "A bunny",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "adventure-time-marceline-vampire-queen-bass",
+    "question": "Marceline the Vampire Queen plays a distinct, dark red electric bass guitar that was physically modified from what ancient, family heirloom object?",
+    "answer": "A battle axe",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "invader-zim-dib-membrane-paranormal-show",
+    "question": "Zim's human classmate and mortal enemy Dib Membrane is completely obsessed with tracking aliens and frequently watches what fictional television program?",
+    "answer": "Mysterious Mysteries of Strange Unexplained Things",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "rocket-power-otto-reggie-favorite-shack",
+    "question": "The extreme sports kids of Ocean Shores routinely unwind after skating sessions by eating burgers at a beachside establishment run by Tito Makani. What is the shack's name?",
+    "answer": "The Shore Shack",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "courage-cowardly-dog-computer-personality",
+    "question": "Whenever Courage needs assistance diagnosing supernatural phenomena in Nowhere, Kansas, he seeks advice from an interactive machine in the attic. How does the machine talk to him?",
+    "answer": "Through text on a monitor",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "duckman-eric-private-investigator-partner",
+    "question": "In the 1990s adult animated series Duckman, the abrasive, yellow web-footed private eye relies entirely on his highly competent, silent pig partner to solve cases. What is the pig's name?",
+    "answer": "Cornfed",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "rockos-modern-life-heffer-wolf-family",
+    "question": "In Rocko's Modern Life, Rocko's gluttonous, cheerful best friend Heffer Wolfe is a steer who was ironically adopted and raised by what specific family of predatory animals?",
+    "answer": "Wolves",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "samurai-jack-scotsman-magical-sword-rune",
+    "question": "Samurai Jack forms a powerful, competitive alliance with an aggressive warrior known simply as The Scotsman, who wields an enormous broadsword enchanted with what specific symbols?",
+    "answer": "Celtic runes",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "gravity-falls-gideon-gleeful-tent-name",
+    "question": "The fraudulent, white-haired child psychic Lil' Gideon operates his telepathic business rivaling the Mystery Shack out of what temporary, indoor theater structure?",
+    "answer": "The Tent of Telepathy",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "regular-show-skips-yeti-immortality-dance",
+    "question": "Skips is a wise, immortal yeti working at the park who maintains his eternal life by performing a highly specific ceremonial dance on his birthday every year around what object?",
+    "answer": "The Guardians of Eternal Youth",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "super-friends-wonder-twins-monkey-name",
+    "question": "The shapeshifting alien siblings Zan and Jayna trigger their supernatural elemental transformations by touching hands, often accompanied by their blue space monkey companion. What is his name?",
+    "answer": "Gleek",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "ed-edd-n-eddy-plank-johnny-object",
+    "question": "Johnny 2x4 travels everywhere in the cul-de-sac with his completely silent, inanimate best friend named Plank. What physical item is Plank made of?",
+    "answer": "A wooden board",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "spongebob-bubble-buddy-wipe-man-clean",
+    "question": "When SpongeBob crafts a temporary friend out of soap bubbles named Bubble Buddy, the companion causes absolute chaos at the Goo Lagoon by leaving a man to drown for how many hours?",
+    "answer": "Two hours",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "bojack-horseman-character-actress-margo-martindale",
+    "question": "Which real-life, Emmy-winning actress plays a heavily weaponized, crime-committing, fictionalized version of herself as a recurring character in BoJack Horseman?",
+    "answer": "Margo Martindale",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "danny-phantom-vlad-plasmius-football-team",
+    "question": "Danny's billionaire arch-nemesis, Vlad Masters (Vlad Plasmius), uses his vast wealth to purchase which real-world NFL professional football team?",
+    "answer": "Green Bay Packers",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "scooby-doo-velma-dinkley-lost-item",
+    "question": "Whenever the Scooby-Doo gang gets ambushed or knocked down by a monster, Velma Dinkley routinely crawls along the floor blindly searching for what specific item?",
+    "answer": "Her glasses",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "avatar-airbender-toph-beifong-wrestling-alias",
+    "question": "Before joining Aang's team as his Earthbending teacher, Toph Beifong dominates an underground bending tournament circuit under what theatrical wrestling pseudonym?",
+    "answer": "The Blind Bandit",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "south-park-chef-musical-performance-food",
+    "question": "What is the name of the sweet, chocolate-flavored confectionary snack that Chef sings a famously suggestive, chart-topping song about to the children?",
+    "answer": "Chocolate Salty Balls",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "dexters-lab-justice-friends-captain-america-parody",
+    "question": "Dexter's favorite comic book superhero team \"The Justice Friends\" features a highly patriotic leader who wields a magical shield that is actually a garbage can lid. What is his name?",
+    "answer": "Major Glory",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "johnny-bravo-little-neighbor-girl-name",
+    "question": "Johnny Bravo's daily muscle-flexing routines are constantly disrupted by an incredibly talkative, highly intelligent 8-year-old neighbor girl. What is her first name?",
+    "answer": "Suzy",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "futurama-hermes-conrad-olympic-sport",
+    "question": "Planet Express bureaucrat Hermes Conrad proudly represented Jamaica in the 2980 Earth Olympics in which highly flexible, gravity-defying athletic sport?",
+    "answer": "Limbo",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "adventure-time-ice-king-crown-original-owner",
+    "question": "The magical, insanity-inducing ice crown worn by the Ice King was originally constructed in the ancient past by a powerful, element-controlling wizard named what?",
+    "answer": "Urgence Evergreen",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "phineas-and-ferb-dr-doofenshmirtz-childhood-lawn-mower",
+    "question": "Dr. Heinz Doofenshmirtz's tragic childhood backstories reveal that his parents forced him to dress up and stand motionless in the yard to act as what household object?",
+    "answer": "A lawn gnome",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "rugrats-reptar-cereal-promotional-gimmick",
+    "question": "The babies are completely obsessed with eating the fictional, movie-monster-themed grocery store cereal \"Reptar Crunch,\" which features what specific physical marketing gimmick?",
+    "answer": "It turns your milk green",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "american-dad-roger-alien-favorite-alter-ego",
+    "question": "Roger the Alien utilizes hundreds of elaborate disguises to live among humans, but his most infamous, ruthless, and recurring persona is a corrupt persona named what?",
+    "answer": "Ricky Spanish",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "fairly-oddparents-crimson-chin-city-protection",
+    "question": "Timmy Turner's absolute favorite comic book superhero, The Crimson Chin, spends his nights leaping across buildings to protect which fictional U.S. metropolis?",
+    "answer": "Chincinnati",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-critic-duke-phillips-corporate-airline-motto",
+    "question": "Jay Sherman's megalomaniacal, multi-billionaire media boss Duke Phillips runs a commercial airline company that boasts what terrifyingly honest safety slogan?",
+    "answer": "Our pilots are mostly sober",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "bobs-burgers-bob-belcher-thanksgiving-turkey-name",
+    "question": "Bob Belcher treats his holiday meat preparation with borderline religious reverence. In a classic episode, he spends days talking to a fresh bird he names what?",
+    "answer": "Lance",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "recess-king-bob-playground-throne-object",
+    "question": "The structural social hierarchy of the Third Street Elementary playground is ruled by the authoritarian sixth-grader King Bob, who sits atop a throne constructed from what?",
+    "answer": "A junkyard couch on a scaffold",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "codename-knd-numbuh-one-father-villain-relation",
+    "question": "The Kids Next Door organization fights a supreme, shadow-wielding adult supervillain named Father, who is eventually revealed to have what exact biological relation to Numbuh One?",
+    "answer": "Uncle",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "static-shock-gear-richie-foley-backpack-robot",
+    "question": "Virgil's tech-genius partner Richie Foley (Gear) fights crime alongside a highly intelligent, hovering sphere robot he engineered. What is the robot's name?",
+    "answer": "Backpack",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "samurai-jack-talking-dog-archaeologist-breed",
+    "question": "In the early episodes of Samurai Jack, Jack saves a sophisticated colony of talking canine archaeologists who are being forced to mine gems by Aku. What specific breed of dog are they?",
+    "answer": "British Hounds (Beagles)",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "clone-high-principal-scudworth-robot-butler-name",
+    "question": "The unhinged director of Clone High, Principal Scudworth, resides with a sarcastic, vintage-style robot butler who refers to everyone as \"Wesley.\" What is the robot's name?",
+    "answer": "Mr. Butlertron",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "space-ghost-coast-to-coast-moltar-show-job",
+    "question": "While Zorak conducts the studio band, which metallic, helmet-wearing lava villain monitors the recording screens and coordinates the satellite feeds from the control room?",
+    "answer": "Moltar",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "powerpuff-girls-mayor-townsville-favorite-food",
+    "question": "The incredibly incompetent, short-statured Mayor of Townsville routinely ignores catastrophic monster invasions because he is completely distracted by eating what specific jarred snack?",
+    "answer": "Pickles",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "rocket-power-sam-dullard-hometown-city",
+    "question": "Sam \"The Squid\" Dullard initially struggles to adapt to the fast-paced surfing and skating lifestyle of Ocean Shores, California, because he just moved from which tech-heavy Midwestern city?",
+    "answer": "Hutchinson, Kansas",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "over-the-garden-wall-beast-soul-lantern-trick",
+    "question": "The wood-chopping Woodsman is tricked into keeping the Beast's dark lantern burning because he erroneously believes it physically contains the soul of whom?",
+    "answer": "His daughter",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "spongebob-squidward-house-easter-island-statue",
+    "question": "Squidward Tentacles' highly recognizable, deep-blue residential building in Bikini Bottom is structurally designed to look like what real-world Pacific island architectural monument?",
+    "answer": "A Moai (Easter Island Head)",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "spongebob-best-friend-starfish",
+    "question": "What is the first name of SpongeBob SquarePants' pink starfish best friend who lives under a rock?",
+    "answer": "Patrick",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "simpsons-homer-favorite-snack",
+    "question": "What pink-frosted, sprinkled bakery item is Homer Simpson's absolute favorite food?",
+    "answer": "Donut",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "scooby-doo-shaggy-real-first-name",
+    "question": "Scooby-Doo's green-shirted, sandwich-loving human best friend is called Shaggy, but what is his actual first name?",
+    "answer": "Norville",
+    "category": "Cartoons",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "pokemon-ash-ketchum-first-partner",
+    "question": "What electric-type mouse creature is Ash Ketchum's primary partner and global mascot of the franchise?",
+    "answer": "Pikachu",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "south-park-muffled-voice-hoodie",
+    "question": "Which main South Park character wears a tightly buttoned orange parka that completely muffles his voice?",
+    "answer": "Kenny",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "avatar-airbender-fire-prince-scar",
+    "question": "What is the name of the exiled Fire Nation prince tracking Aang to restore his honor?",
+    "answer": "Zuko",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "family-guy-talking-baby",
+    "question": "What is the first name of the hyper-intelligent, football-headed baby who wants to take over the world?",
+    "answer": "Stewie",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "rick-and-morty-dimension-designation",
+    "question": "Rick Sanchez frequently brags that he originates from what alphanumeric baseline dimension?",
+    "answer": "C-137",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "phineas-and-ferb-sister",
+    "question": "What is the first name of Phineas and Ferb's older sister who spends every day trying to bust them?",
+    "answer": "Candace",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "king-of-the-hill-hank-son",
+    "question": "What is the first name of Hank and Peggy Hill's prop-comedy-loving, unique 13-year-old son?",
+    "answer": "Bobby",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "adventure-time-jake-species",
+    "question": "Finn's yellow, shapeshifting adoptive brother and best friend Jake belongs to what animal species?",
+    "answer": "Dog",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "gravity-falls-grunkle-stan-pet-pig",
+    "question": "What is the name of the prize-winning pet pig that Mabel Pines adopts at the Mystery Fair?",
+    "answer": "Waddles",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "bobs-burgers-louise-hat-animal",
+    "question": "Louise Belcher is never seen without her signature pink headgear, which features the ears of what animal?",
+    "answer": "Rabbit",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "looney-tunes-bugs-bunny-vegetable",
+    "question": "What crunchy orange vegetable does Bugs Bunny constantly chomp on while asking \"What's up, doc?\"",
+    "answer": "Carrot",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "fairly-oddparents-timmy-fairy-godparents",
+    "question": "Timmy Turner's two primary floating fairy godparents are named Wanda and what?",
+    "answer": "Cosmo",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "he-man-timid-tiger-alter-ego",
+    "question": "When Prince Adam transforms into He-Man, his cowardly green tiger Cringer turns into what armored beast?",
+    "answer": "Battle Cat",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "futurama-fry-first-name",
+    "question": "The bumbling Planet Express delivery boy Fry is known by his last name, but what is his first name?",
+    "answer": "Philip",
+    "category": "Cartoons",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tmnt-michelangelo-signature-weapon",
+    "question": "Which specific martial arts weapon consisting of two sticks connected by a short chain is wielded by Michelangelo?",
+    "answer": "Nunchucks",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "inspector-gadget-genius-niece",
+    "question": "What is the name of Inspector Gadget's highly intelligent niece who actually solves all of his cases?",
+    "answer": "Penny",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "ed-edd-n-eddy-double-d-real-name",
+    "question": "The neat-freak, sock-hat-wearing member of the trio is called Double D, but what is his actual name?",
+    "answer": "Edd",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "garfield-owner-first-name",
+    "question": "What is the first name of the socially awkward cartoonist who owns Garfield the cat and Odie the dog?",
+    "answer": "Jon",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "jetsons-robotic-maid",
+    "question": "What is the name of the robotic, apron-wearing live-in maid who takes care of the Jetson family?",
+    "answer": "Rosie",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "flintstones-fred-pet-dinosaur",
+    "question": "What is the name of Fred and Wilma Flintstone's energetic, barking purple pet prosauropod dinosaur?",
+    "answer": "Dino",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "arthur-read-animal-species",
+    "question": "Arthur Read is a popular PBS schoolchild wearing round glasses, but what specific animal species is he?",
+    "answer": "Aardvark",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "winnie-the-pooh-donkey-name",
+    "question": "What is the name of Christopher Robin's gloomy, thistle-eating stuffed donkey friend who constantly loses his tail?",
+    "answer": "Eeyore",
+    "category": "Cartoons",
+    "difficulty": "easy"
+  }
+]
+}
+

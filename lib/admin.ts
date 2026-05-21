@@ -85,9 +85,45 @@ type VenueRow = {
   logo_text: string | null;
   icon_emoji: string | null;
   address: string | null;
+  city: string | null;
+  state: string | null;
+  zip_code: string | null;
+  county: string | null;
+  region: string | null;
   latitude: number;
   longitude: number;
   radius: number;
+};
+
+type PickEmPendingGameRow = {
+  game_id: string;
+  home_team: string;
+  away_team: string;
+  home_team_id: string | null;
+  away_team_id: string | null;
+  starts_at: string;
+  league: string;
+  sport_slug: string;
+};
+
+type PickEmPendingPickRow = {
+  id: string;
+  user_id: string;
+  selected_team_id: string | null;
+  reward_points: number;
+};
+
+type PickEmMatchupRow = {
+  game_id: string;
+  home_team: string;
+  away_team: string;
+  home_team_id: string | null;
+  away_team_id: string | null;
+  starts_at: string;
+  league: string;
+  sport_slug: string;
+  status: "pending" | "won" | "lost" | "push" | "canceled";
+  winning_team_id: string | null;
 };
 
 type GoogleGeocodePayload = {
@@ -122,6 +158,13 @@ function mapTriviaRow(row: TriviaQuestionRow): TriviaQuestion {
 }
 
 function mapAdRow(row: AdvertisementRow): Advertisement {
+  const venueIds = Array.isArray(row.venue_ids) ? row.venue_ids : row.venue_id ? [row.venue_id] : [];
+  const cities = Array.isArray(row.target_cities) ? row.target_cities : [];
+  const zipCodes = Array.isArray(row.target_zip_codes) ? row.target_zip_codes : [];
+  const counties = Array.isArray(row.target_counties) ? row.target_counties : [];
+  const states = Array.isArray(row.target_states) ? row.target_states : [];
+  const regions = Array.isArray(row.target_regions) ? row.target_regions : [];
+
   return {
     id: row.id,
     slot: row.slot,
@@ -134,14 +177,18 @@ function mapAdRow(row: AdvertisementRow): Advertisement {
     placementKey: row.placement_key ?? undefined,
     roundNumber: row.round_number ?? undefined,
     sequenceIndex: row.sequence_index ?? undefined,
-    venueId: row.venue_id ?? undefined,
-    venueIds: Array.isArray(row.venue_ids) ? row.venue_ids : row.venue_id ? [row.venue_id] : undefined,
+    venueIds,
     targetAllVenues: Boolean(row.target_all_venues ?? false),
-    targetCities: Array.isArray(row.target_cities) ? row.target_cities : undefined,
-    targetZipCodes: Array.isArray(row.target_zip_codes) ? row.target_zip_codes : undefined,
-    targetCounties: Array.isArray(row.target_counties) ? row.target_counties : undefined,
-    targetStates: Array.isArray(row.target_states) ? row.target_states : undefined,
-    targetRegions: Array.isArray(row.target_regions) ? row.target_regions : undefined,
+    cities,
+    zipCodes,
+    counties,
+    states,
+    regions,
+    targetCities: cities,
+    targetZipCodes: zipCodes,
+    targetCounties: counties,
+    targetStates: states,
+    targetRegions: regions,
     advertiserName: row.advertiser_name,
     frequencyInterval: Number.isFinite(Number(row.frequency_interval)) ? Math.max(1, Number(row.frequency_interval)) : 1,
     imageUrl: row.image_url,
@@ -171,6 +218,11 @@ function mapVenueRow(row: VenueRow): Venue {
     logoText: row.logo_text ?? undefined,
     iconEmoji: row.icon_emoji ?? undefined,
     address: row.address ?? undefined,
+    city: row.city ?? undefined,
+    state: row.state ?? undefined,
+    zipCode: row.zip_code ?? undefined,
+    county: row.county ?? undefined,
+    region: row.region ?? undefined,
     latitude: Number(row.latitude),
     longitude: Number(row.longitude),
     radius: Number(row.radius),
@@ -358,6 +410,33 @@ export type AdminVenueUser = {
   createdAt: string;
 };
 
+export type AdminPickEmUnsettledGame = {
+  gameId: string;
+  sportSlug: string;
+  league: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeTeamId: string | null;
+  awayTeamId: string | null;
+  startsAt: string;
+  pickCount: number;
+};
+
+export type AdminPickEmMatchup = {
+  gameId: string;
+  sportSlug: string;
+  league: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeTeamId: string | null;
+  awayTeamId: string | null;
+  startsAt: string;
+  pickCount: number;
+  status: "unsettled" | "settled" | "canceled";
+  statusLabel: string;
+  settledWinnerTeam: string | null;
+};
+
 export type PaginatedResult<T> = {
   items: T[];
   total: number;
@@ -371,6 +450,11 @@ export async function listAdminTriviaQuestions(opts?: {
   pageSize?: number;
   questionPool?: string;
   answerFormat?: string;
+  category?: string;
+  startDate?: string;
+  endDate?: string;
+  sortBy?: "created_at" | "category" | "question_pool" | "answer_format";
+  sortDirection?: "asc" | "desc";
 }): Promise<PaginatedResult<TriviaQuestion>> {
   assertAdminConfigured();
 
@@ -398,8 +482,32 @@ export async function listAdminTriviaQuestions(opts?: {
     query = query.eq("answer_format", normalizedAnswerFormat);
   }
 
+  const normalizedCategory = String(opts?.category ?? "").trim();
+  if (normalizedCategory) {
+    query = query.ilike("category", normalizedCategory);
+  }
+
+  const normalizedStartDate = String(opts?.startDate ?? "").trim();
+  if (normalizedStartDate) {
+    query = query.gte("created_at", normalizedStartDate);
+  }
+
+  const normalizedEndDate = String(opts?.endDate ?? "").trim();
+  if (normalizedEndDate) {
+    query = query.lte("created_at", normalizedEndDate);
+  }
+
+  const sortBy =
+    opts?.sortBy === "category" ||
+    opts?.sortBy === "question_pool" ||
+    opts?.sortBy === "answer_format"
+      ? opts.sortBy
+      : "created_at";
+  const ascending = opts?.sortDirection === "asc";
+
   const { data, error, count } = await query
-    .order("created_at", { ascending: false })
+    .order(sortBy, { ascending, nullsFirst: false })
+    .order("created_at", { ascending: false, nullsFirst: false })
     .range(from, to);
 
   if (error || !data) {
@@ -595,19 +703,81 @@ export async function bulkUpdateAdminTriviaQuestions(input: {
 export async function listAdminAdvertisements(opts?: {
   page?: number;
   pageSize?: number;
+  search?: string;
+  pageKey?: AdPageKey | "all";
+  adType?: AdType | "all";
+  active?: "all" | "active" | "inactive";
+  venueIds?: string[];
+  cities?: string[];
+  zipCodes?: string[];
+  states?: string[];
+  regions?: string[];
 }): Promise<PaginatedResult<Advertisement>> {
   assertAdminConfigured();
 
   const page = Math.max(1, Math.floor(opts?.page ?? 1));
-  const pageSize = Math.min(10000, Math.max(1, Math.floor(opts?.pageSize ?? 100)));
+  const pageSize = Math.min(10000, Math.max(1, Math.floor(opts?.pageSize ?? 25)));
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  const { data, error, count } = await supabaseAdmin!
+  let query = supabaseAdmin!
     .from("advertisements")
     .select(AD_SELECT, { count: "exact" })
-    .order("created_at", { ascending: false })
-    .range(from, to);
+    .order("created_at", { ascending: false });
+
+  const search = String(opts?.search ?? "").trim();
+  if (search) {
+    const escaped = search.replace(/[%_]/g, "");
+    query = query.or(`advertiser_name.ilike.%${escaped}%,slot_key.ilike.%${escaped}%`);
+  }
+
+  if (opts?.pageKey && opts.pageKey !== "all") {
+    query = query.eq("page_key", opts.pageKey);
+  }
+
+  if (opts?.adType && opts.adType !== "all") {
+    query = query.eq("ad_type", opts.adType);
+  }
+
+  if (opts?.active === "active") {
+    query = query.eq("active", true);
+  } else if (opts?.active === "inactive") {
+    query = query.eq("active", false);
+  }
+
+  const normalizeList = (values?: string[], uppercase = false) =>
+    Array.from(
+      new Set(
+        (values ?? [])
+          .map((value) => value.trim())
+          .filter(Boolean)
+          .map((value) => (uppercase ? value.toUpperCase() : value))
+      )
+    );
+
+  const venueIds = normalizeList(opts?.venueIds);
+  const cities = normalizeList(opts?.cities);
+  const zipCodes = normalizeList(opts?.zipCodes);
+  const states = normalizeList(opts?.states, true);
+  const regions = normalizeList(opts?.regions, true);
+
+  if (venueIds.length > 0) {
+    query = query.overlaps("venue_ids", venueIds);
+  }
+  if (cities.length > 0) {
+    query = query.overlaps("target_cities", cities);
+  }
+  if (zipCodes.length > 0) {
+    query = query.overlaps("target_zip_codes", zipCodes);
+  }
+  if (states.length > 0) {
+    query = query.overlaps("target_states", states);
+  }
+  if (regions.length > 0) {
+    query = query.overlaps("target_regions", regions);
+  }
+
+  const { data, error, count } = await query.range(from, to);
 
   if (error || !data) {
     throw new Error(error?.message ?? "Failed to load advertisements.");
@@ -634,9 +804,15 @@ export async function createAdminAdvertisement(input: {
   placementKey?: string;
   roundNumber?: number;
   sequenceIndex?: number;
-  venueId?: string;
   venueIds?: string[];
   targetAllVenues?: boolean;
+  cities?: string[];
+  zipCodes?: string[];
+  counties?: string[];
+  states?: string[];
+  regions?: string[];
+  /** Backward-compat aliases while older callers migrate. */
+  venueId?: string;
   targetCities?: string[];
   targetZipCodes?: string[];
   targetCounties?: string[];
@@ -698,11 +874,11 @@ export async function createAdminAdvertisement(input: {
   );
   const normalizeTextList = (values?: string[]) =>
     Array.from(new Set((values ?? []).map((item) => item.trim()).filter(Boolean)));
-  const normalizedTargetCities = normalizeTextList(input.targetCities);
-  const normalizedTargetZipCodes = normalizeTextList(input.targetZipCodes);
-  const normalizedTargetCounties = normalizeTextList(input.targetCounties);
-  const normalizedTargetStates = normalizeTextList(input.targetStates);
-  const normalizedTargetRegions = normalizeTextList(input.targetRegions).map((value) => value.toUpperCase());
+  const normalizedTargetCities = normalizeTextList(input.cities ?? input.targetCities);
+  const normalizedTargetZipCodes = normalizeTextList(input.zipCodes ?? input.targetZipCodes);
+  const normalizedTargetCounties = normalizeTextList(input.counties ?? input.targetCounties);
+  const normalizedTargetStates = normalizeTextList(input.states ?? input.targetStates);
+  const normalizedTargetRegions = normalizeTextList(input.regions ?? input.targetRegions).map((value) => value.toUpperCase());
   const fallbackVenueId = input.venueId?.trim() || "";
   const finalVenueIds = normalizedVenueIds.length > 0 ? normalizedVenueIds : fallbackVenueId ? [fallbackVenueId] : [];
   if (!Number.isFinite(width) || width < 1) {
@@ -731,7 +907,7 @@ export async function createAdminAdvertisement(input: {
     placementMeta.displayTrigger === "round-end" &&
     !placementMeta.roundNumber
   ) {
-    throw new Error("Choose Round 1, Round 2, or Round 3 for Trivia round-end ads.");
+    throw new Error("Choose a round number for Trivia round-end ads.");
   }
 
   const derivedSlotKey =
@@ -794,9 +970,15 @@ export async function updateAdminAdvertisement(input: {
   placementKey?: string;
   roundNumber?: number;
   sequenceIndex?: number;
-  venueId?: string;
   venueIds?: string[];
   targetAllVenues?: boolean;
+  cities?: string[];
+  zipCodes?: string[];
+  counties?: string[];
+  states?: string[];
+  regions?: string[];
+  /** Backward-compat aliases while older callers migrate. */
+  venueId?: string;
   targetCities?: string[];
   targetZipCodes?: string[];
   targetCounties?: string[];
@@ -862,11 +1044,11 @@ export async function updateAdminAdvertisement(input: {
   );
   const normalizeTextList = (values?: string[]) =>
     Array.from(new Set((values ?? []).map((item) => item.trim()).filter(Boolean)));
-  const normalizedTargetCities = normalizeTextList(input.targetCities);
-  const normalizedTargetZipCodes = normalizeTextList(input.targetZipCodes);
-  const normalizedTargetCounties = normalizeTextList(input.targetCounties);
-  const normalizedTargetStates = normalizeTextList(input.targetStates);
-  const normalizedTargetRegions = normalizeTextList(input.targetRegions).map((value) => value.toUpperCase());
+  const normalizedTargetCities = normalizeTextList(input.cities ?? input.targetCities);
+  const normalizedTargetZipCodes = normalizeTextList(input.zipCodes ?? input.targetZipCodes);
+  const normalizedTargetCounties = normalizeTextList(input.counties ?? input.targetCounties);
+  const normalizedTargetStates = normalizeTextList(input.states ?? input.targetStates);
+  const normalizedTargetRegions = normalizeTextList(input.regions ?? input.targetRegions).map((value) => value.toUpperCase());
   const fallbackVenueId = input.venueId?.trim() || "";
   const finalVenueIds = normalizedVenueIds.length > 0 ? normalizedVenueIds : fallbackVenueId ? [fallbackVenueId] : [];
   if (!Number.isFinite(width) || width < 1) {
@@ -895,7 +1077,7 @@ export async function updateAdminAdvertisement(input: {
     placementMeta.displayTrigger === "round-end" &&
     !placementMeta.roundNumber
   ) {
-    throw new Error("Choose Round 1, Round 2, or Round 3 for Trivia round-end ads.");
+    throw new Error("Choose a round number for Trivia round-end ads.");
   }
 
   const derivedSlotKey =
@@ -1301,6 +1483,11 @@ export async function createAdminVenue(input: {
   displayName?: string;
   logoText?: string;
   iconEmoji?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  county?: string;
+  region?: string;
 }): Promise<Venue> {
   assertAdminConfigured();
 
@@ -1367,11 +1554,16 @@ export async function createAdminVenue(input: {
       logo_text: input.logoText?.trim() || null,
       icon_emoji: input.iconEmoji?.trim() || null,
       address,
+      city: input.city?.trim() || null,
+      state: input.state?.trim() || null,
+      zip_code: input.zipCode?.trim() || null,
+      county: input.county?.trim() || null,
+      region: input.region?.trim() || null,
       latitude: resolvedLatitude,
       longitude: resolvedLongitude,
       radius,
     })
-    .select("id, name, display_name, logo_text, icon_emoji, address, latitude, longitude, radius")
+    .select("id, name, display_name, logo_text, icon_emoji, address, city, state, zip_code, county, region, latitude, longitude, radius")
     .single<VenueRow>();
 
   if (error || !data) {
@@ -1391,6 +1583,11 @@ export async function updateAdminVenue(input: {
   radius: number;
   latitude?: number;
   longitude?: number;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  county?: string;
+  region?: string;
 }): Promise<Venue> {
   assertAdminConfigured();
 
@@ -1470,12 +1667,17 @@ export async function updateAdminVenue(input: {
       logo_text: input.logoText?.trim() || null,
       icon_emoji: input.iconEmoji?.trim() || null,
       address,
+      city: input.city?.trim() || null,
+      state: input.state?.trim() || null,
+      zip_code: input.zipCode?.trim() || null,
+      county: input.county?.trim() || null,
+      region: input.region?.trim() || null,
       latitude: resolvedLatitude,
       longitude: resolvedLongitude,
       radius,
     })
     .eq("id", id)
-    .select("id, name, display_name, logo_text, icon_emoji, address, latitude, longitude, radius")
+    .select("id, name, display_name, logo_text, icon_emoji, address, city, state, zip_code, county, region, latitude, longitude, radius")
     .single<VenueRow>();
 
   if (error || !data) {
@@ -1483,6 +1685,313 @@ export async function updateAdminVenue(input: {
   }
 
   return mapVenueRow(data);
+}
+
+export async function deleteAdminVenue(venueId: string): Promise<void> {
+  assertAdminConfigured();
+  const id = venueId.trim();
+  if (!id) {
+    throw new Error("Venue id is required.");
+  }
+
+  const [{ count: userCount }, { count: scheduleCount }] = await Promise.all([
+    supabaseAdmin!
+      .from("users")
+      .select("id", { count: "exact", head: true })
+      .eq("venue_id", id),
+    supabaseAdmin!
+      .from("trivia_schedules")
+      .select("id", { count: "exact", head: true })
+      .eq("venue_id", id),
+  ]);
+
+  if ((userCount ?? 0) > 0 || (scheduleCount ?? 0) > 0) {
+    throw new Error(
+      `Cannot delete venue while dependencies exist (users: ${userCount ?? 0}, trivia schedules: ${
+        scheduleCount ?? 0
+      }).`
+    );
+  }
+
+  const { error } = await supabaseAdmin!.from("venues").delete().eq("id", id);
+  if (error) {
+    throw new Error(error.message ?? "Failed to delete venue.");
+  }
+}
+
+export async function bulkDeleteAdminAdvertisements(ids: string[]): Promise<number> {
+  assertAdminConfigured();
+  const uniqueIds = Array.from(new Set((ids ?? []).map((id) => String(id).trim()).filter(Boolean)));
+  if (uniqueIds.length === 0) {
+    throw new Error("At least one ad id is required.");
+  }
+
+  const { error, count } = await supabaseAdmin!
+    .from("advertisements")
+    .delete({ count: "exact" })
+    .in("id", uniqueIds);
+
+  if (error) {
+    throw new Error(error.message ?? "Failed to delete selected advertisements.");
+  }
+
+  return count ?? 0;
+}
+
+export async function bulkSetAdminAdvertisementsActive(ids: string[], active: boolean): Promise<number> {
+  assertAdminConfigured();
+  const uniqueIds = Array.from(new Set((ids ?? []).map((id) => String(id).trim()).filter(Boolean)));
+  if (uniqueIds.length === 0) {
+    throw new Error("At least one ad id is required.");
+  }
+
+  const { data, error } = await supabaseAdmin!
+    .from("advertisements")
+    .update({ active })
+    .in("id", uniqueIds)
+    .select("id");
+
+  if (error) {
+    throw new Error(error.message ?? "Failed to update selected advertisements.");
+  }
+
+  return (data ?? []).length;
+}
+
+export async function listAdminPickEmUnsettledGames(): Promise<AdminPickEmUnsettledGame[]> {
+  assertAdminConfigured();
+  const { data, error } = await supabaseAdmin!
+    .from("pickem_picks")
+    .select("game_id, home_team, away_team, home_team_id, away_team_id, starts_at, league, sport_slug")
+    .eq("status", "pending")
+    .order("starts_at", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message ?? "Failed to load unsettled Pick 'Em games.");
+  }
+
+  const byGame = new Map<string, AdminPickEmUnsettledGame>();
+  for (const row of (data ?? []) as PickEmPendingGameRow[]) {
+    const gameId = String(row.game_id ?? "").trim();
+    if (!gameId) continue;
+    const existing = byGame.get(gameId);
+    if (existing) {
+      existing.pickCount += 1;
+      continue;
+    }
+    byGame.set(gameId, {
+      gameId,
+      sportSlug: String(row.sport_slug ?? "").trim().toLowerCase(),
+      league: String(row.league ?? "").trim(),
+      homeTeam: String(row.home_team ?? "").trim(),
+      awayTeam: String(row.away_team ?? "").trim(),
+      homeTeamId: row.home_team_id,
+      awayTeamId: row.away_team_id,
+      startsAt: row.starts_at,
+      pickCount: 1,
+    });
+  }
+
+  return [...byGame.values()].sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt));
+}
+
+export async function listAdminPickEmMatchupsByDate(params: {
+  date: string;
+}): Promise<AdminPickEmMatchup[]> {
+  assertAdminConfigured();
+  const rawDate = String(params.date ?? "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+    throw new Error("date must be in YYYY-MM-DD format.");
+  }
+
+  const dayStartIso = `${rawDate}T00:00:00.000Z`;
+  const dayEndIso = `${rawDate}T23:59:59.999Z`;
+
+  const { data, error } = await supabaseAdmin!
+    .from("pickem_picks")
+    .select(
+      "game_id, home_team, away_team, home_team_id, away_team_id, starts_at, league, sport_slug, status, winning_team_id"
+    )
+    .gte("starts_at", dayStartIso)
+    .lte("starts_at", dayEndIso)
+    .order("starts_at", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message ?? "Failed to load Pick 'Em matchups.");
+  }
+
+  const grouped = new Map<
+    string,
+    {
+      gameId: string;
+      sportSlug: string;
+      league: string;
+      homeTeam: string;
+      awayTeam: string;
+      homeTeamId: string | null;
+      awayTeamId: string | null;
+      startsAt: string;
+      pickCount: number;
+      statuses: Array<"pending" | "won" | "lost" | "push" | "canceled">;
+      winningTeamIds: string[];
+    }
+  >();
+
+  for (const row of (data ?? []) as PickEmMatchupRow[]) {
+    const gameId = String(row.game_id ?? "").trim();
+    if (!gameId) continue;
+    const existing = grouped.get(gameId);
+    if (existing) {
+      existing.pickCount += 1;
+      existing.statuses.push(row.status);
+      if (row.winning_team_id) {
+        existing.winningTeamIds.push(row.winning_team_id);
+      }
+      continue;
+    }
+
+    grouped.set(gameId, {
+      gameId,
+      sportSlug: String(row.sport_slug ?? "").trim().toLowerCase(),
+      league: String(row.league ?? "").trim(),
+      homeTeam: String(row.home_team ?? "").trim(),
+      awayTeam: String(row.away_team ?? "").trim(),
+      homeTeamId: row.home_team_id,
+      awayTeamId: row.away_team_id,
+      startsAt: row.starts_at,
+      pickCount: 1,
+      statuses: [row.status],
+      winningTeamIds: row.winning_team_id ? [row.winning_team_id] : [],
+    });
+  }
+
+  return [...grouped.values()]
+    .map((matchup) => {
+      const hasPending = matchup.statuses.includes("pending");
+      const hasCanceled = matchup.statuses.every((status) => status === "canceled");
+      const winnerTeamId = matchup.winningTeamIds[0] ?? null;
+      const winnerTeamName =
+        winnerTeamId && winnerTeamId === matchup.homeTeamId
+          ? matchup.homeTeam
+          : winnerTeamId && winnerTeamId === matchup.awayTeamId
+            ? matchup.awayTeam
+            : null;
+
+      if (hasPending) {
+        return {
+          ...matchup,
+          status: "unsettled" as const,
+          statusLabel: "Unsettled",
+          settledWinnerTeam: null,
+        };
+      }
+
+      if (hasCanceled) {
+        return {
+          ...matchup,
+          status: "canceled" as const,
+          statusLabel: "Canceled",
+          settledWinnerTeam: null,
+        };
+      }
+
+      return {
+        ...matchup,
+        status: "settled" as const,
+        statusLabel: winnerTeamName ? `Settled: ${winnerTeamName}` : "Settled",
+        settledWinnerTeam: winnerTeamName,
+      };
+    })
+    .sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt));
+}
+
+export async function settleAdminPickEmGame(params: {
+  gameId: string;
+  winningTeamId: string;
+}): Promise<{ affectedPicks: number; winners: number; losers: number }> {
+  assertAdminConfigured();
+
+  const gameId = params.gameId.trim();
+  const winningTeamId = params.winningTeamId.trim();
+  if (!gameId) {
+    throw new Error("gameId is required.");
+  }
+  if (!winningTeamId) {
+    throw new Error("winningTeamId is required.");
+  }
+
+  const { data: pendingRows, error } = await supabaseAdmin!
+    .from("pickem_picks")
+    .select("id, user_id, selected_team_id, reward_points")
+    .eq("game_id", gameId)
+    .eq("status", "pending");
+
+  if (error) {
+    throw new Error(error.message ?? "Failed to load pending picks for that game.");
+  }
+
+  const picks = (pendingRows ?? []) as PickEmPendingPickRow[];
+  if (picks.length === 0) {
+    return { affectedPicks: 0, winners: 0, losers: 0 };
+  }
+
+  const resolvedAt = new Date().toISOString();
+  const winnerUserDeltas = new Map<string, number>();
+  let winners = 0;
+  let losers = 0;
+
+  for (const pick of picks) {
+    const isWinner = String(pick.selected_team_id ?? "").trim() === winningTeamId;
+    const status = isWinner ? "won" : "lost";
+
+    const { error: updateError } = await supabaseAdmin!
+      .from("pickem_picks")
+      .update({
+        status,
+        winning_team_id: winningTeamId,
+        resolved_at: resolvedAt,
+      })
+      .eq("id", pick.id)
+      .eq("status", "pending");
+
+    if (updateError) {
+      throw new Error(updateError.message ?? "Failed to settle one or more picks.");
+    }
+
+    if (isWinner) {
+      winners += 1;
+      const current = winnerUserDeltas.get(pick.user_id) ?? 0;
+      winnerUserDeltas.set(pick.user_id, current + Math.max(0, Number(pick.reward_points ?? 0)));
+    } else {
+      losers += 1;
+    }
+  }
+
+  for (const [userId, delta] of winnerUserDeltas.entries()) {
+    const { data: userRow, error: userError } = await supabaseAdmin!
+      .from("users")
+      .select("points")
+      .eq("id", userId)
+      .maybeSingle<{ points: number }>();
+    if (userError) {
+      throw new Error(userError.message ?? "Failed to load user points during settlement.");
+    }
+
+    const nextPoints = Math.max(0, Number(userRow?.points ?? 0)) + delta;
+    const { error: pointsError } = await supabaseAdmin!
+      .from("users")
+      .update({ points: nextPoints })
+      .eq("id", userId);
+    if (pointsError) {
+      throw new Error(pointsError.message ?? "Failed to apply winner points.");
+    }
+  }
+
+  return {
+    affectedPicks: picks.length,
+    winners,
+    losers,
+  };
 }
 
 export async function updateAdminUser(params: {

@@ -7,10 +7,10 @@ const { createClient } = require("@supabase/supabase-js");
 
 const DEFAULT_FILE = "data/trivia/questions.v1.json";
 const DEFAULT_DIR = "data/trivia/categories";
+const DEFAULT_LIVE_DIR = "data/live-trivia/categories";
 const CHUNK_SIZE = 200;
 const MAX_RETRIES = 5;
 const BASE_RETRY_DELAY_MS = 3000;
-const LIVE_BUCKET = "live_open_ended";
 const NORMAL_BUCKET = "normal_multiple_choice";
 const ANYTIME_POOL = "anytime_blitz";
 const LIVE_POOL = "live_showdown";
@@ -25,6 +25,7 @@ function parseArgs(argv) {
   const args = {
     file: "",
     dir: DEFAULT_DIR,
+    liveDir: "",
     checkOnly: false,
   };
 
@@ -43,6 +44,11 @@ function parseArgs(argv) {
     if (token === "--dir") {
       args.dir = argv[i + 1] || DEFAULT_DIR;
       args.file = "";
+      i += 1;
+      continue;
+    }
+    if (token === "--live-dir") {
+      args.liveDir = argv[i + 1] || DEFAULT_LIVE_DIR;
       i += 1;
     }
   }
@@ -81,16 +87,17 @@ function readCategoryPayload(parsed, sourceLabel) {
 
   assert(isPlainObject(parsed), `${sourceLabel} must contain either an array or object.`);
 
-  const live = parsed[LIVE_BUCKET] || [];
   const normal = parsed[NORMAL_BUCKET] || [];
-
-  assert(Array.isArray(live), `${sourceLabel}: "${LIVE_BUCKET}" must be an array.`);
   assert(Array.isArray(normal), `${sourceLabel}: "${NORMAL_BUCKET}" must be an array.`);
 
-  return [
-    ...live.map((item) => ({ ...item, __questionPool: LIVE_POOL, __answerFormat: "write_in" })),
-    ...normal.map((item) => ({ ...item, __questionPool: ANYTIME_POOL, __answerFormat: "multiple_choice" })),
-  ];
+  return normal.map((item) => ({ ...item, __questionPool: ANYTIME_POOL, __answerFormat: "multiple_choice" }));
+}
+
+function readLiveCategoryPayload(parsed, sourceLabel) {
+  assert(isPlainObject(parsed), `${sourceLabel} must contain an object.`);
+  const questions = parsed.questions || [];
+  assert(Array.isArray(questions), `${sourceLabel}: "questions" must be an array.`);
+  return questions.map((item) => ({ ...item, __questionPool: LIVE_POOL, __answerFormat: "write_in" }));
 }
 
 function readQuestionFile(filePath) {
@@ -127,6 +134,29 @@ function readQuestionDir(dirPath) {
   return { absoluteDirPath, files, questions: merged };
 }
 
+function readLiveQuestionDir(dirPath) {
+  const absoluteDirPath = path.resolve(process.cwd(), dirPath);
+  assert(fs.existsSync(absoluteDirPath), `Live trivia directory not found: ${absoluteDirPath}`);
+  assert(fs.statSync(absoluteDirPath).isDirectory(), `Not a directory: ${absoluteDirPath}`);
+
+  const files = fs
+    .readdirSync(absoluteDirPath)
+    .filter((name) => name.endsWith(".json"))
+    .sort();
+  assert(files.length > 0, `No .json files found in ${absoluteDirPath}`);
+
+  const merged = [];
+  for (const file of files) {
+    const filePath = path.join(absoluteDirPath, file);
+    const raw = fs.readFileSync(filePath, "utf8");
+    const parsed = JSON.parse(raw);
+    const rows = readLiveCategoryPayload(parsed, filePath);
+    merged.push(...rows.map((item) => ({ ...item, __sourceFile: file })));
+  }
+
+  return { absoluteDirPath, files, questions: merged };
+}
+
 function normalizeAndValidate(questions) {
   const seenSlugs = new Set();
   const rows = questions.map((item, index) => {
@@ -136,17 +166,6 @@ function normalizeAndValidate(questions) {
 
     const question = String(item.question ?? "").trim();
     assert(question.length > 0, `Row ${rowNumber}${source}: question is required.`);
-
-    assert(Array.isArray(item.options), `Row ${rowNumber}${source}: options must be an array.`);
-    const options = item.options.map((option) => String(option ?? "").trim()).filter(Boolean);
-    assert(options.length === 4, `Row ${rowNumber}${source}: options must contain exactly 4 items.`);
-
-    const correctAnswer = Number(item.correctAnswer);
-    assert(Number.isInteger(correctAnswer), `Row ${rowNumber}${source}: correctAnswer must be an integer.`);
-    assert(
-      correctAnswer >= 0 && correctAnswer < options.length,
-      `Row ${rowNumber}${source}: correctAnswer is out of range.`
-    );
 
     const category = String(item.category ?? "").trim();
     const difficulty = String(item.difficulty ?? "").trim();
@@ -164,6 +183,33 @@ function normalizeAndValidate(questions) {
       answerFormatRaw === "write_in" || answerFormatRaw === "numeric" || answerFormatRaw === "true_false"
         ? answerFormatRaw
         : "multiple_choice";
+
+    // Live trivia questions use a plain `answer` string; store as options[0] with correct_answer=0.
+    if (answer_format !== "multiple_choice") {
+      const answer = String(item.answer ?? (Array.isArray(item.options) ? item.options[0] : "") ?? "").trim();
+      assert(answer.length > 0, `Row ${rowNumber}${source}: answer is required for non-MC questions.`);
+      return {
+        slug,
+        question,
+        options: [answer],
+        correct_answer: 0,
+        category: category || null,
+        difficulty: difficulty || null,
+        question_pool,
+        answer_format,
+      };
+    }
+
+    assert(Array.isArray(item.options), `Row ${rowNumber}${source}: options must be an array.`);
+    const options = item.options.map((option) => String(option ?? "").trim()).filter(Boolean);
+    assert(options.length === 4, `Row ${rowNumber}${source}: options must contain exactly 4 items.`);
+
+    const correctAnswer = Number(item.correctAnswer);
+    assert(Number.isInteger(correctAnswer), `Row ${rowNumber}${source}: correctAnswer must be an integer.`);
+    assert(
+      correctAnswer >= 0 && correctAnswer < options.length,
+      `Row ${rowNumber}${source}: correctAnswer is out of range.`
+    );
 
     return {
       slug,
@@ -577,22 +623,34 @@ function sleep(ms) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const source = args.file ? readQuestionFile(args.file) : readQuestionDir(args.dir || DEFAULT_DIR);
-  const rows = normalizeAndValidate(source.questions);
 
-  if ("files" in source) {
-    console.log(`Loaded ${rows.length} questions from ${source.files.length} files in ${source.absoluteDirPath}`);
+  // --- Speed trivia (normal_multiple_choice) ---
+  const speedSource = args.file ? readQuestionFile(args.file) : readQuestionDir(args.dir || DEFAULT_DIR);
+  const speedRows = normalizeAndValidate(speedSource.questions);
+
+  if ("files" in speedSource) {
+    console.log(`Speed trivia: loaded ${speedRows.length} questions from ${speedSource.files.length} files in ${speedSource.absoluteDirPath}`);
   } else {
-    console.log(`Loaded ${rows.length} questions from ${source.absolutePath}`);
+    console.log(`Speed trivia: loaded ${speedRows.length} questions from ${speedSource.absolutePath}`);
   }
-  console.log("Validation passed.");
+
+  // --- Live trivia (write-in) ---
+  let liveRows = [];
+  if (args.liveDir) {
+    const liveSource = readLiveQuestionDir(args.liveDir);
+    liveRows = normalizeAndValidate(liveSource.questions);
+    console.log(`Live trivia: loaded ${liveRows.length} questions from ${liveSource.files.length} files in ${liveSource.absoluteDirPath}`);
+  }
+
+  const allRows = [...speedRows, ...liveRows];
+  console.log(`Total: ${allRows.length} questions. Validation passed.`);
 
   if (args.checkOnly) {
     console.log("Check mode: no database writes performed.");
     return;
   }
 
-  await upsertRows(rows);
+  await upsertRows(allRows);
 }
 
 main().catch((error) => {

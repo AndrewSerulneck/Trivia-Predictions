@@ -1,0 +1,705 @@
+{
+  "categoryName": "Sports",
+  "questions": [
+    {
+      "slug": "super-bowl-li-winner",
+      "question": "Which team overcame a 28-3 deficit to win Super Bowl LI?",
+      "answer": "New England Patriots",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nba-all-time-scoring-leader",
+      "question": "Who is the NBA's all-time leading regular season scorer?",
+      "answer": "LeBron James",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "world-cup-most-titles",
+      "question": "Which nation has won the most FIFA World Cup titles?",
+      "answer": "Brazil",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mlb-home-run-record-season",
+      "question": "Who holds the single-season MLB home run record with 73?",
+      "answer": "Barry Bonds",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nhl-most-career-points",
+      "question": "Which NHL player has the most career points?",
+      "answer": "Wayne Gretzky",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "olympics-most-gold-medals",
+      "question": "Which athlete holds the record for most Olympic gold medals?",
+      "answer": "Michael Phelps",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "masters-most-green-jackets",
+      "question": "Who has won the most Masters Tournaments in golf history?",
+      "answer": "Jack Nicklaus",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "tennis-men-grand-slam-leader",
+      "question": "As of 2024, which male player holds the most Grand Slam titles?",
+      "answer": "Novak Djokovic",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nfl-most-passing-yards-career",
+      "question": "Which quarterback holds the NFL record for most career passing yards?",
+      "answer": "Tom Brady",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "tour-de-france-most-wins",
+      "question": "Who officially holds the record for most Tour de France wins (5)?",
+      "answer": "Eddy Merckx",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "f1-most-world-championships",
+      "question": "Which drivers are tied for the most F1 World Championships (7)?",
+      "answer": "Schumacher & Hamilton",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "kentucky-derby-distance",
+      "question": "What is the standard distance of the Kentucky Derby?",
+      "answer": "1.25 miles",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "world-series-most-titles",
+      "question": "Which MLB team has won the most World Series championships?",
+      "answer": "New York Yankees",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "ncaab-most-titles-mens",
+      "question": "Which school has the most NCAA Men's Basketball championships?",
+      "answer": "UCLA",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "premier-league-all-time-scorer",
+      "question": "Who is the all-time leading goal scorer in the English Premier League?",
+      "answer": "Alan Shearer",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "first-modern-olympics-year",
+      "question": "In what year were the first modern Olympic Games held?",
+      "answer": "1896",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nfl-perfect-season-team",
+      "question": "Which is the only NFL team to complete an entire season undefeated?",
+      "answer": "1972 Dolphins",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "wimbledon-surface",
+      "question": "On what surface is the Wimbledon tennis tournament played?",
+      "answer": "Grass",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "boxing-heavyweight-longest-reign",
+      "question": "Which boxer held the heavyweight title for the longest consecutive time?",
+      "answer": "Joe Louis",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "soccer-field-common-name",
+      "question": "What is the formal name for a soccer field?",
+      "answer": "Pitch",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-most-rushing-yards-season",
+      "question": "Who holds the record for most rushing yards in a single NFL season?",
+      "answer": "Eric Dickerson",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "mlb-most-career-strikeouts",
+      "question": "Which pitcher has the most career strikeouts in MLB history?",
+      "answer": "Nolan Ryan",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nba-most-championships-player",
+      "question": "Which player has won the most NBA championships?",
+      "answer": "Bill Russell",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "world-cup-top-scorer-all-time",
+      "question": "Who is the all-time leading goal scorer in FIFA World Cup history?",
+      "answer": "Miroslav Klose",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "olympics-swimming-most-medals-woman",
+      "question": "Which female swimmer has won the most Olympic medals?",
+      "answer": "Emma McKeon",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "tour-de-france-yellow-jersey-name",
+      "question": "What is the French name for the yellow jersey in the Tour de France?",
+      "answer": "Maillot Jaune",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "stanley-cup-most-wins-team",
+      "question": "Which NHL team has won the most Stanley Cup titles?",
+      "answer": "Montreal Canadiens",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "tennis-golden-slam-winner",
+      "question": "Who is the only tennis player to achieve a 'Golden Slam' (all 4 majors + Olympic Gold) in a single year?",
+      "answer": "Steffi Graf",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "f1-first-ever-champion",
+      "question": "Who was the first ever Formula 1 World Drivers' Champion in 1950?",
+      "answer": "Giuseppe Farina",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nfl-longest-field-goal",
+      "question": "Who holds the record for the longest successful field goal in NFL history (66 yards)?",
+      "answer": "Justin Tucker",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "boxing-rumble-in-the-jungle-location",
+      "question": "In which city did the 'Rumble in the Jungle' take place?",
+      "answer": "Kinshasa",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nba-shortest-player-ever",
+      "question": "Who is the shortest player to ever play in the NBA?",
+      "answer": "Muggsy Bogues",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "soccer-offside-rule-players",
+      "question": "How many defending players must be between the attacker and the goal for the attacker to be onside?",
+      "answer": "Two",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "golf-albatross-meaning",
+      "question": "In golf, what is another name for an 'Albatross'?",
+      "answer": "Double Eagle",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "mlb-most-hits-career",
+      "question": "Who holds the MLB record for the most career hits?",
+      "answer": "Pete Rose",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "ufc-first-two-division-champ",
+      "question": "Who was the first fighter in UFC history to hold titles in two weight classes simultaneously?",
+      "answer": "Conor McGregor",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "olympics-marathon-distance-km",
+      "question": "What is the official distance of an Olympic marathon in kilometers?",
+      "answer": "42.195 km",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nfl-most-sacks-career",
+      "question": "Who is the NFL's all-time leader in career sacks?",
+      "answer": "Bruce Smith",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nba-team-most-wins-season",
+      "question": "Which NBA team holds the record for the most wins in a single regular season (73)?",
+      "answer": "2016 Golden State Warriors",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "cricket-highest-individual-test-score",
+      "question": "Who holds the record for the highest individual score in a Test cricket innings (400 not out)?",
+      "answer": "Brian Lara",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nba-most-rebounds-game",
+      "question": "Who holds the NBA record for most rebounds in a single game (55)?",
+      "answer": "Wilt Chamberlain",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "mlb-consecutive-games-record",
+      "question": "Who holds the MLB record for most consecutive games played (2,632)?",
+      "answer": "Cal Ripken Jr.",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-most-mvp-awards",
+      "question": "Which player has won the most NFL MVP awards (5)?",
+      "answer": "Peyton Manning",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nhl-most-goals-season",
+      "question": "Who holds the NHL record for most goals in a single season (92)?",
+      "answer": "Wayne Gretzky",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "tennis-french-open-most-titles",
+      "question": "Which player has won the most French Open men's singles titles?",
+      "answer": "Rafael Nadal",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "cycling-giro-d-italia-jersey",
+      "question": "What color jersey is worn by the leader of the Giro d'Italia?",
+      "answer": "Pink",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "f1-monaco-grand-prix-most-wins",
+      "question": "Who holds the record for the most wins at the Monaco Grand Prix?",
+      "answer": "Ayrton Senna",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nba-first-unanimous-mvp",
+      "question": "Who was the first player to be voted unanimous NBA MVP?",
+      "answer": "Stephen Curry",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "soccer-first-world-cup-winner",
+      "question": "Which country won the inaugural FIFA World Cup in 1930?",
+      "answer": "Uruguay",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "boxing-heavyweight-undefeated-retired",
+      "question": "Which heavyweight champion retired with a perfect professional record of 49-0?",
+      "answer": "Rocky Marciano",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nfl-most-receiving-yards-career",
+      "question": "Who is the NFL's all-time leader in career receiving yards?",
+      "answer": "Jerry Rice",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "golf-lowest-round-major",
+      "question": "What is the lowest score ever recorded in a men's major championship round?",
+      "answer": "62",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "mlb-perfect-game-total",
+      "question": "How many players in MLB history have thrown a perfect game?",
+      "answer": "24",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "olympics-gymnastics-perfect-ten",
+      "question": "Who was the first gymnast to score a perfect 10.0 in the Olympics?",
+      "answer": "Nadia Comăneci",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nba-most-blocks-career",
+      "question": "Who is the NBA's all-time leader in blocked shots?",
+      "answer": "Hakeem Olajuwon",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "soccer-ballon-dor-most-wins",
+      "question": "Which player has won the most Ballon d'Or awards?",
+      "answer": "Lionel Messi",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-team-most-super-bowl-losses",
+      "question": "Which team is tied for the most Super Bowl losses in NFL history (5)?",
+      "answer": "Denver Broncos",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "ufc-longest-win-streak",
+      "question": "Who holds the record for the longest winning streak in UFC history (16)?",
+      "answer": "Anderson Silva",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "cricket-ashes-series-nations",
+      "question": "The 'Ashes' is a famous Test cricket series played between which two nations?",
+      "answer": "Australia & England",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nhl-rink-blue-line-purpose",
+      "question": "In the NHL, crossing which line before the puck results in an offside call?",
+      "answer": "Blue line",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nba-most-assists-career",
+      "question": "Who is the NBA's all-time leader in career assists?",
+      "answer": "John Stockton",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "mlb-unbreakable-wins-record",
+      "question": "Which pitcher holds the record for most career MLB wins (511)?",
+      "answer": "Cy Young",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nfl-most-interceptions-career",
+      "question": "Who holds the NFL record for most career interceptions (81)?",
+      "answer": "Paul Krause",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "tennis-youngest-mens-slam-winner",
+      "question": "Who is the youngest male player to win a Grand Slam singles title?",
+      "answer": "Michael Chang",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "f1-ferrari-last-drivers-champion",
+      "question": "Who was the last driver to win an F1 World Championship for Ferrari (2007)?",
+      "answer": "Kimi Räikkönen",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "soccer-maradona-hand-of-god-year",
+      "question": "In what year did Diego Maradona score the 'Hand of God' goal?",
+      "answer": "1986",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "golf-player-career-grand-slam",
+      "question": "How many players have completed the modern men's career Grand Slam in golf?",
+      "answer": "5",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nhl-most-shutouts-career",
+      "question": "Which goalie holds the NHL record for most career shutouts (125)?",
+      "answer": "Martin Brodeur",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "boxing-thrilla-in-manila-winner",
+      "question": "Who won the 'Thrilla in Manila' boxing match in 1975?",
+      "answer": "Muhammad Ali",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "mlb-most-stolen-bases-season",
+      "question": "Who holds the MLB record for most stolen bases in a single season (130)?",
+      "answer": "Rickey Henderson",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nba-most-points-single-game",
+      "question": "Who scored 100 points in a single NBA game in 1962?",
+      "answer": "Wilt Chamberlain",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "olympics-first-perfect-score-gymnastics",
+      "question": "In which city did Nadia Comăneci achieve the first perfect 10 in Olympic history?",
+      "answer": "Montreal",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nfl-first-super-bowl-winner",
+      "question": "Which team won Super Bowl I?",
+      "answer": "Green Bay Packers",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "ufc-fastest-knockout-seconds",
+      "question": "How many seconds did Jorge Masvidal's record-breaking knockout of Ben Askren take?",
+      "answer": "5",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "soccer-ucl-most-titles-club",
+      "question": "Which club has won the most UEFA Champions League titles?",
+      "answer": "Real Madrid",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "cricket-six-sixes-over-t20",
+      "question": "Who was the first player to hit six sixes in an over in a T20 International?",
+      "answer": "Yuvraj Singh",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nba-logo-silhouette-player",
+      "question": "Which player's silhouette is featured on the NBA logo?",
+      "answer": "Jerry West",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "mlb-most-grand-slams-career",
+      "question": "Who holds the MLB record for most career grand slams (25)?",
+      "answer": "Alex Rodriguez",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "horse-racing-triple-crown-races",
+      "question": "Which race is the second leg of the American Triple Crown?",
+      "answer": "Preakness Stakes",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "snooker-maximum-break-score",
+      "question": "What is the maximum break possible in a standard game of snooker?",
+      "answer": "147",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nba-most-three-pointers-career",
+      "question": "Who holds the record for the most career three-pointers made in NBA history?",
+      "answer": "Stephen Curry",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-most-receiving-td-season",
+      "question": "Who holds the NFL record for most receiving touchdowns in a single season (23)?",
+      "answer": "Randy Moss",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "mlb-longest-hitting-streak",
+      "question": "Who holds the MLB record for the longest hitting streak (56 games)?",
+      "answer": "Joe DiMaggio",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "soccer-most-expensive-transfer",
+      "question": "Who is the most expensive soccer player ever based on transfer fee?",
+      "answer": "Neymar",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "tennis-most-weeks-at-number-one",
+      "question": "Which player has spent the most total weeks ranked as world number one?",
+      "answer": "Novak Djokovic",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nhl-most-games-played-career",
+      "question": "Who holds the NHL record for the most career games played?",
+      "answer": "Patrick Marleau",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "golf-youngest-masters-winner",
+      "question": "Who is the youngest player to ever win the Masters?",
+      "answer": "Tiger Woods",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "f1-most-wins-in-a-season",
+      "question": "Which driver holds the record for the most wins in a single F1 season?",
+      "answer": "Max Verstappen",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "boxing-youngest-heavyweight-champ",
+      "question": "Who was the youngest boxer to win a world heavyweight title?",
+      "answer": "Mike Tyson",
+      "category": "Sports",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nfl-most-points-scored-career",
+      "question": "Who is the all-time leading scorer in NFL history?",
+      "answer": "Adam Vinatieri",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "olympics-most-medals-total-career",
+      "question": "Behind Michael Phelps, which athlete has the second-most total Olympic medals (18)?",
+      "answer": "Larisa Latynina",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "mlb-only-player-40-70-season",
+      "question": "Who became the first MLB player to record 40 HRs and 70 SBs in one season?",
+      "answer": "Ronald Acuña Jr.",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nba-most-minutes-played-career",
+      "question": "Who has played the most career minutes in NBA history?",
+      "answer": "Kareem Abdul-Jabbar",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "soccer-first-ever-million-pound-player",
+      "question": "Who was the first soccer player to be transferred for £1 million?",
+      "answer": "Trevor Francis",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "ncaa-football-most-wins-coach",
+      "question": "Which coach has the most wins in major college football history?",
+      "answer": "Joe Paterno",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "tour-de-france-green-jersey",
+      "question": "What does the green jersey signify in the Tour de France?",
+      "answer": "Points/Sprints Leader",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "cricket-highest-odi-score-team",
+      "question": "Which nation holds the record for the highest team total in an ODI (498)?",
+      "answer": "England",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "ufc-first-event-year",
+      "question": "In what year was the first UFC event held?",
+      "answer": "1993",
+      "category": "Sports",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nhl-team-most-recent-expansion",
+      "question": "Which team is the newest franchise to join the NHL?",
+      "answer": "Utah Hockey Club",
+      "category": "Sports",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nba-most-technical-fouls-season",
+      "question": "Who holds the record for most technical fouls in a single NBA season (41)?",
+      "answer": "Rasheed Wallace",
+      "category": "Sports",
+      "difficulty": "medium"
+    }
+  ]
+}

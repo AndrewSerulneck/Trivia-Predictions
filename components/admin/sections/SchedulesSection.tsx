@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Venue } from "@/types";
 import { PaginationBar, BulkActionBar, TH, TD, TR } from "@/components/admin/AdminShell";
 
@@ -64,6 +64,8 @@ type SchedulesSectionProps = {
 };
 
 type ViewMode = "list" | "create";
+type SortField = "title" | "venue" | "rounds" | "timezone" | "city" | "state";
+type SortDirection = "asc" | "desc";
 
 export function SchedulesSection({ venues }: SchedulesSectionProps) {
   const [mode, setMode] = useState<ViewMode>("list");
@@ -75,6 +77,9 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
   const [error, setError] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortField, setSortField] = useState<SortField>("title");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   // Create form
   const [formTitle, setFormTitle] = useState("");
@@ -234,6 +239,64 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
     }
   }
 
+  // ── Derived data (must be before any early return) ───────────────────────
+
+  const venueById = new Map(venues.map((v) => [v.id, v]));
+
+  const filteredAndSortedSchedules = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const filtered = schedules.filter((schedule) => {
+      if (!query) return true;
+      const venue = schedule.venueId ? venueById.get(schedule.venueId) : null;
+      const haystack = [
+        schedule.title,
+        venue?.name ?? "",
+      ]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(query);
+    });
+
+    const sorted = [...filtered].sort((a, b) => {
+      const venueA = a.venueId ? venueById.get(a.venueId) : null;
+      const venueB = b.venueId ? venueById.get(b.venueId) : null;
+      const cityA = (venueA?.city ?? "").toLowerCase();
+      const cityB = (venueB?.city ?? "").toLowerCase();
+      const stateA = (venueA?.state ?? "").toLowerCase();
+      const stateB = (venueB?.state ?? "").toLowerCase();
+
+      let cmp = 0;
+      switch (sortField) {
+        case "title":
+          cmp = a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+          break;
+        case "venue":
+          cmp = (venueA?.name ?? "").localeCompare(venueB?.name ?? "", undefined, { sensitivity: "base" });
+          break;
+        case "rounds":
+          cmp = a.numRounds - b.numRounds;
+          break;
+        case "timezone":
+          cmp = a.timezone.localeCompare(b.timezone, undefined, { sensitivity: "base" });
+          break;
+        case "city":
+          cmp = cityA.localeCompare(cityB, undefined, { sensitivity: "base" });
+          break;
+        case "state":
+          cmp = stateA.localeCompare(stateB, undefined, { sensitivity: "base" });
+          break;
+        default:
+          cmp = 0;
+      }
+      if (cmp === 0) {
+        cmp = +new Date(a.startTime) - +new Date(b.startTime);
+      }
+      return sortDirection === "asc" ? cmp : -cmp;
+    });
+
+    return sorted;
+  }, [schedules, searchQuery, sortField, sortDirection, venueById]);
+
   // ── Create form render ────────────────────────────────────────────────────
 
   if (mode === "create") {
@@ -305,7 +368,7 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
               value={formRounds}
               onChange={(e) => setFormRounds(e.target.value)}
             />
-            <p className="mt-1 text-xs text-slate-400">Each round has 15 questions (30 sec each).</p>
+            <p className="mt-1 text-xs text-slate-400">Each round is 20 minutes.</p>
           </div>
 
           <div className="col-span-2">
@@ -373,7 +436,19 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
 
   // ── List render ───────────────────────────────────────────────────────────
 
-  const venueNameById = new Map(venues.map((v) => [v.id, v.name]));
+  function toggleSort(field: SortField) {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setSortField(field);
+    setSortDirection("asc");
+  }
+
+  function sortLabel(field: SortField, label: string) {
+    if (sortField !== field) return label;
+    return `${label}${sortDirection === "asc" ? " ▲" : " ▼"}`;
+  }
 
   return (
     <div className="space-y-4">
@@ -382,7 +457,7 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <div>
             <h2 className="text-sm font-semibold text-slate-900">Live Trivia Schedules</h2>
-            <p className="text-xs text-slate-500">{total} total sessions</p>
+            <p className="text-xs text-slate-500">{filteredAndSortedSchedules.length} shown ({total} total sessions)</p>
           </div>
           <button
             onClick={() => { resetCreateForm(); setMode("create"); }}
@@ -390,6 +465,16 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
           >
             + Schedule Session
           </button>
+        </div>
+
+        <div className="px-6 pt-4">
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Search</label>
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by title or venue..."
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+          />
         </div>
 
         {/* Bulk action bar */}
@@ -419,11 +504,13 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
                     className="h-4 w-4 rounded border-slate-300 text-indigo-600"
                   />
                 </th>
-                <th className={TH}>Title</th>
+                <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("title")}>{sortLabel("title", "Title")}</th>
                 <th className={TH}>Start Time</th>
-                <th className={TH}>Timezone</th>
-                <th className={TH}>Rounds</th>
-                <th className={TH}>Venue</th>
+                <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("timezone")}>{sortLabel("timezone", "Timezone")}</th>
+                <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("rounds")}>{sortLabel("rounds", "Rounds")}</th>
+                <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("venue")}>{sortLabel("venue", "Venue")}</th>
+                <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("city")}>{sortLabel("city", "City")}</th>
+                <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("state")}>{sortLabel("state", "State")}</th>
                 <th className={TH}>Intermission Delay</th>
                 <th className={TH}>Lobby Ad</th>
                 <th className={TH}>Status</th>
@@ -433,21 +520,22 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-sm text-slate-400">
+                  <td colSpan={12} className="py-12 text-center text-sm text-slate-400">
                     Loading…
                   </td>
                 </tr>
               )}
-              {!loading && schedules.length === 0 && (
+              {!loading && filteredAndSortedSchedules.length === 0 && (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-sm text-slate-400">
+                  <td colSpan={12} className="py-12 text-center text-sm text-slate-400">
                     No sessions scheduled yet.
                   </td>
                 </tr>
               )}
               {!loading &&
-                schedules.map((s) => {
+                filteredAndSortedSchedules.map((s) => {
                   const upcoming = isUpcoming(s.startTime);
+                  const venue = s.venueId ? venueById.get(s.venueId) : null;
                   return (
                     <tr key={s.id} className={TR}>
                       <td className={`${TD} w-10`}>
@@ -467,7 +555,13 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
                       <td className={`${TD} text-slate-500`}>{s.timezone}</td>
                       <td className={`${TD} text-center tabular-nums`}>{s.numRounds}</td>
                       <td className={`${TD} text-slate-500`}>
-                        {s.venueId ? (venueNameById.get(s.venueId) ?? s.venueId) : "All"}
+                        {s.venueId ? (venue?.name ?? s.venueId) : "All"}
+                      </td>
+                      <td className={`${TD} text-slate-500`}>
+                        {venue?.city ?? "—"}
+                      </td>
+                      <td className={`${TD} text-slate-500`}>
+                        {venue?.state ?? "—"}
                       </td>
                       <td className={`${TD} tabular-nums text-slate-600`}>
                         {s.intermissionAdDelaySeconds}s

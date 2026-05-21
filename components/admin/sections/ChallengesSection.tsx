@@ -63,10 +63,12 @@ type ChallengesSectionProps = {
   venues: Venue[];
 };
 
-type ViewMode = "list" | "create";
+type ViewMode = "list" | "create" | "edit";
 
 export function ChallengesSection({ venues }: ChallengesSectionProps) {
   const [mode, setMode] = useState<ViewMode>("list");
+  const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null);
+  const [selectedVenueId, setSelectedVenueId] = useState<string>("all");
   const [campaigns, setCampaigns] = useState<AdminChallengeCampaign[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -91,13 +93,25 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
   const [formActive, setFormActive] = useState(true);
   const [createBusy, setCreateBusy] = useState(false);
   const [createError, setCreateError] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
 
   const fetchCampaigns = useCallback(async (targetPage: number) => {
     setLoading(true);
     setError("");
+    setStatusMessage("");
     setSelectedIds(new Set());
     try {
-      const url = `/api/admin?resource=challenge-campaigns&includeInactive=true&includeResolved=true&page=${targetPage}&pageSize=${PAGE_SIZE}`;
+      const params = new URLSearchParams({
+        resource: "challenge-campaigns",
+        includeInactive: "true",
+        includeResolved: "true",
+        page: String(targetPage),
+        pageSize: String(PAGE_SIZE),
+      });
+      if (selectedVenueId !== "all") {
+        params.set("venueId", selectedVenueId);
+      }
+      const url = `/api/admin?${params.toString()}`;
       const res = await fetch(url, { cache: "no-store" });
       const payload = (await res.json()) as {
         ok: boolean;
@@ -115,11 +129,15 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedVenueId]);
 
   useEffect(() => {
     fetchCampaigns(page);
   }, [page, fetchCampaigns]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [selectedVenueId]);
 
   // ── Selection ────────────────────────────────────────────────────────────
 
@@ -193,6 +211,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
           isActive: !campaign.isActive,
         }),
       });
+      setStatusMessage(`Campaign "${campaign.name}" ${campaign.isActive ? "disabled" : "enabled"}.`);
       await fetchCampaigns(page);
     } catch {
       setError("Failed to toggle campaign.");
@@ -203,6 +222,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
     if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
     try {
       await fetch(`/api/admin?resource=challenge-campaigns&id=${id}`, { method: "DELETE" });
+      setStatusMessage(`Campaign "${name}" deleted.`);
       await fetchCampaigns(page);
     } catch {
       setError("Failed to delete campaign.");
@@ -225,41 +245,71 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
     setFormRecurring("none");
     setFormActive(true);
     setCreateError("");
+    setEditingCampaignId(null);
   }
 
-  async function handleCreate() {
+  function beginCreate() {
+    resetCreateForm();
+    setStatusMessage("");
+    setMode("create");
+  }
+
+  function beginEdit(campaign: AdminChallengeCampaign) {
+    setEditingCampaignId(campaign.id);
+    setFormName(campaign.name);
+    setFormRules(campaign.rules);
+    setFormVenueIds(campaign.venueIds);
+    setFormActiveDays(campaign.activeDays);
+    setFormStartTime(campaign.startTime ?? "");
+    setFormEndTime(campaign.endTime ?? "");
+    setFormEndDate(campaign.endDate ?? "");
+    setFormGameTypes(campaign.gameTypes.length > 0 ? campaign.gameTypes : [...GAME_TYPE_OPTIONS]);
+    setFormMultiplier(String(campaign.pointMultiplier ?? 1));
+    setFormPointsRequired(String(campaign.pointsRequiredToWin ?? 100));
+    setFormRecurring(campaign.recurringType ?? "none");
+    setFormActive(Boolean(campaign.isActive));
+    setCreateError("");
+    setStatusMessage("");
+    setMode("edit");
+  }
+
+  async function handleCreateOrEdit() {
     if (!formName.trim()) { setCreateError("Name is required."); return; }
     if (!formRules.trim()) { setCreateError("Rules are required."); return; }
     setCreateBusy(true);
     setCreateError("");
     try {
+      const body = {
+        resource: "challenge-campaigns" as const,
+        name: formName.trim(),
+        rules: formRules.trim(),
+        venueIds: formVenueIds,
+        activeDays: formActiveDays,
+        startTime: formStartTime || undefined,
+        endTime: formEndTime || undefined,
+        endDate: formEndDate || undefined,
+        gameTypes: formGameTypes,
+        pointMultiplier: parseFloat(formMultiplier) || 1,
+        pointsRequiredToWin: parseInt(formPointsRequired, 10) || 100,
+        recurringType: formRecurring,
+        isActive: formActive,
+      };
+
+      const isEditing = mode === "edit" && editingCampaignId;
       const res = await fetch("/api/admin", {
-        method: "POST",
+        method: isEditing ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          resource: "challenge-campaigns",
-          name: formName.trim(),
-          rules: formRules.trim(),
-          venueIds: formVenueIds,
-          activeDays: formActiveDays,
-          startTime: formStartTime || undefined,
-          endTime: formEndTime || undefined,
-          endDate: formEndDate || undefined,
-          gameTypes: formGameTypes,
-          pointMultiplier: parseFloat(formMultiplier) || 1,
-          pointsRequiredToWin: parseInt(formPointsRequired, 10) || 100,
-          recurringType: formRecurring,
-          isActive: formActive,
-        }),
+        body: JSON.stringify(isEditing ? { ...body, id: editingCampaignId } : body),
       });
       const payload = (await res.json()) as { ok: boolean; error?: string };
       if (!payload.ok) throw new Error(payload.error ?? "Failed to create campaign.");
       resetCreateForm();
       setMode("list");
+      setStatusMessage(isEditing ? "Campaign updated." : "Campaign created.");
       await fetchCampaigns(1);
       setPage(1);
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : "Failed to create campaign.");
+      setCreateError(err instanceof Error ? err.message : "Failed to save campaign.");
     } finally {
       setCreateBusy(false);
     }
@@ -267,7 +317,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
 
   // ── Create form render ────────────────────────────────────────────────────
 
-  if (mode === "create") {
+  if (mode !== "list") {
     const field =
       "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200";
     const lbl = "mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600";
@@ -275,7 +325,9 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
     return (
       <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-slate-900">New Challenge Campaign</h2>
+          <h2 className="text-base font-semibold text-slate-900">
+            {mode === "edit" ? "Edit Challenge Campaign" : "New Challenge Campaign"}
+          </h2>
           <button
             onClick={() => { resetCreateForm(); setMode("list"); }}
             className="text-sm text-slate-500 hover:text-slate-800"
@@ -434,11 +486,11 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
 
         <div className="mt-6 flex gap-3">
           <button
-            onClick={handleCreate}
+            onClick={handleCreateOrEdit}
             disabled={createBusy}
             className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
           >
-            {createBusy ? "Creating…" : "Create Campaign"}
+            {createBusy ? "Saving…" : mode === "edit" ? "Save Campaign" : "Create Campaign"}
           </button>
           <button
             onClick={() => { resetCreateForm(); setMode("list"); }}
@@ -463,14 +515,34 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <div>
             <h2 className="text-sm font-semibold text-slate-900">Challenge Campaigns</h2>
-            <p className="text-xs text-slate-500">{total} total campaigns</p>
+            <p className="text-xs text-slate-500">
+              {selectedVenueId === "all" ? `${total} total campaigns` : `${total} campaigns for selected venue`}
+            </p>
           </div>
           <button
-            onClick={() => { resetCreateForm(); setMode("create"); }}
+            onClick={beginCreate}
             className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
           >
             + New Campaign
           </button>
+        </div>
+
+        <div className="px-6 pt-4">
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+            Select a Venue
+          </label>
+          <select
+            value={selectedVenueId}
+            onChange={(e) => setSelectedVenueId(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+          >
+            <option value="all">All Venues</option>
+            {venues.map((venue) => (
+              <option key={venue.id} value={venue.id}>
+                {venue.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Bulk action bar */}
@@ -487,6 +559,9 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
 
         {error && (
           <div className="mx-6 mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>
+        )}
+        {statusMessage && (
+          <div className="mx-6 mb-4 rounded-lg bg-emerald-50 px-4 py-2 text-sm text-emerald-700">{statusMessage}</div>
         )}
 
         {/* Table */}
@@ -560,6 +635,12 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
                     </td>
                     <td className={`${TD} text-right`}>
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => beginEdit(c)}
+                          className="rounded border border-indigo-200 px-2 py-1 text-xs text-indigo-700 hover:bg-indigo-50"
+                        >
+                          Edit
+                        </button>
                         <button
                           onClick={() => toggleActive(c)}
                           className="rounded border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
