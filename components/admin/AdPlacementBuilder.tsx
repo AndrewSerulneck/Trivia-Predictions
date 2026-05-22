@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type Dispatch, type SetStateAction } from "react";
-import type { Advertisement, Venue } from "@/types";
+import type { Advertisement, AdPageKey, AdType, Venue } from "@/types";
+import { AD_PLACEMENTS } from "@/lib/adPlacements";
 
 // ─── Canonical slot registry ──────────────────────────────────────────────────
 
@@ -63,7 +64,8 @@ const PAGES: PageDef[] = [
     label: "Fantasy Page",
     slots: [
       { key: "fantasy-popup-on-entry", label: "Pop-Up Ad", description: "Appears when users enter Fantasy" },
-      { key: "fantasy-inline", label: "Inline Banner", description: "In-feed fantasy placement" },
+      { key: "fantasy-banner", label: "Banner Ad", description: "Persistent bottom banner in Fantasy" },
+      { key: "fantasy-inline", label: "Inline Ad", description: "In-feed fantasy placement" },
     ],
   },
   {
@@ -71,12 +73,13 @@ const PAGES: PageDef[] = [
     label: "Bingo Page",
     slots: [
       { key: "sports-bingo-popup-on-entry", label: "Pop-Up Ad", description: "Appears when users enter Bingo" },
-      { key: "sports-bingo-inline", label: "Inline Banner", description: "Inline slot on Bingo screens" },
+      { key: "sports-bingo-banner", label: "Banner Ad", description: "Persistent bottom banner in Bingo" },
+      { key: "sports-bingo-inline", label: "Inline Ad", description: "Inline slot on Bingo screens" },
     ],
   },
   {
     id: "live-showdown",
-    label: "Live Showdown Lobby",
+    label: "Live Trivia",
     slots: [
       { key: "live-popup-lobby", label: "Lobby Popup", description: "Primary popup shown in the live lobby" },
       { key: "live-inline-lobby", label: "Lobby Inline", description: "Inline lobby sponsor slot" },
@@ -93,6 +96,14 @@ const PAGES: PageDef[] = [
 ];
 
 const ALL_SLOT_KEYS = new Set(PAGES.flatMap((p) => p.slots.map((s) => s.key)));
+const TAXONOMY_PAGE_KEYS: Array<Exclude<AdPageKey, "global">> = ["trivia", "sports-bingo", "fantasy", "pickem"];
+const AD_TYPE_ORDER: AdType[] = ["popup", "banner", "inline"];
+
+function formatAdType(adType: AdType): string {
+  if (adType === "popup") return "Pop-Up";
+  if (adType === "banner") return "Banner";
+  return "Inline";
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -492,6 +503,12 @@ export function AdPlacementBuilder({ venues }: AdPlacementBuilderProps) {
     return sum + page.slots.filter((s) => (slotMap.get(s.key) ?? []).length === 0).length;
   }, 0);
 
+  const adsByPageType = new Map<string, number>();
+  for (const ad of ads) {
+    const key = `${ad.pageKey}:${ad.adType}`;
+    adsByPageType.set(key, (adsByPageType.get(key) ?? 0) + 1);
+  }
+
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center text-sm text-slate-400">Loading ad inventory…</div>
@@ -615,6 +632,37 @@ export function AdPlacementBuilder({ venues }: AdPlacementBuilderProps) {
           >
             Clear Scope
           </button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white px-6 py-4 shadow-sm">
+        <h3 className="text-sm font-semibold text-slate-900">Ad Type Coverage By Page</h3>
+        <p className="mt-1 text-xs text-slate-500">
+          Popup, Banner, and Inline are configured independently per page. Use this matrix to audit coverage quickly.
+        </p>
+        <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
+          {TAXONOMY_PAGE_KEYS.map((pageKey) => {
+            const placement = AD_PLACEMENTS[pageKey];
+            if (!placement) return null;
+            return (
+              <div key={pageKey} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-700">{placement.name}</p>
+                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  {AD_TYPE_ORDER.map((adType) => {
+                    const count = adsByPageType.get(`${pageKey}:${adType}`) ?? 0;
+                    return (
+                      <div key={`${pageKey}-${adType}`} className="rounded-md border border-slate-200 bg-white px-2 py-2">
+                        <p className="text-[11px] font-semibold text-slate-700">{formatAdType(adType)}</p>
+                        <p className={`text-xs ${count > 0 ? "text-emerald-700" : "text-red-600"}`}>
+                          {count > 0 ? `${count} ad${count === 1 ? "" : "s"}` : "No ads"}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 

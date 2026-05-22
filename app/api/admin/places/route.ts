@@ -14,28 +14,35 @@ type NominatimPayloadItem = {
 };
 
 type GoogleAutocompletePayload = {
-  predictions?: Array<{
-    place_id?: string;
-    description?: string;
+  suggestions?: Array<{
+    placePrediction?: {
+      place?: string;
+      placeId?: string;
+      text?: { text?: string };
+    };
   }>;
-  status?: string;
-  error_message?: string;
+  error?: {
+    message?: string;
+  };
 };
 
 type GooglePlaceDetailsPayload = {
-  result?: {
-    formatted_address?: string;
-    name?: string;
-    geometry?: {
-      location?: {
-        lat?: number;
-        lng?: number;
-      };
-    };
+  id?: string;
+  formattedAddress?: string;
+  displayName?: {
+    text?: string;
   };
-  status?: string;
-  error_message?: string;
+  location?: {
+    latitude?: number;
+    longitude?: number;
+  };
+  error?: {
+    message?: string;
+  };
 };
+
+const GOOGLE_AUTOCOMPLETE_URL = "https://places.googleapis.com/v1/places:autocomplete";
+const GOOGLE_DETAILS_BASE_URL = "https://places.googleapis.com/v1/places";
 
 async function getNominatimSuggestions(
   query: string,
@@ -75,42 +82,59 @@ async function getGoogleSuggestions(
   limit: number,
   apiKey: string
 ): Promise<Suggestion[]> {
-  const encodedQuery = encodeURIComponent(query);
-  const autocompleteResponse = await fetch(
-    `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodedQuery}&types=address&key=${apiKey}`,
-    {
-      headers: {
-        Accept: "application/json",
-      },
-    }
-  );
+  const autocompleteResponse = await fetch(GOOGLE_AUTOCOMPLETE_URL, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": apiKey,
+    },
+    body: JSON.stringify({
+      input: query,
+      includedRegionCodes: ["us"],
+      regionCode: "US",
+      languageCode: "en",
+    }),
+    cache: "no-store",
+  });
 
   if (!autocompleteResponse.ok) {
-    throw new Error("Google Places autocomplete request failed.");
+    const payload = (await autocompleteResponse.json().catch(() => ({}))) as GoogleAutocompletePayload;
+    throw new Error(payload.error?.message?.trim() || "Google Places autocomplete request failed.");
   }
 
   const autocompletePayload = (await autocompleteResponse.json()) as GoogleAutocompletePayload;
-  if (autocompletePayload.status !== "OK" && autocompletePayload.status !== "ZERO_RESULTS") {
-    const message = autocompletePayload.error_message || "Google Places autocomplete failed.";
-    throw new Error(message);
-  }
-
-  const predictions = (autocompletePayload.predictions ?? [])
-    .map((item) => ({ placeId: item.place_id?.trim() ?? "", description: item.description?.trim() ?? "" }))
+  const predictions = (autocompletePayload.suggestions ?? [])
+    .map((item) => {
+      const placePrediction = item.placePrediction;
+      if (!placePrediction) {
+        return { placeId: "", description: "" };
+      }
+      const placeRef = String(placePrediction.place ?? "").trim();
+      const placeIdFromRef = placeRef.startsWith("places/") ? placeRef.slice("places/".length) : "";
+      const placeId = String(placePrediction.placeId ?? placeIdFromRef).trim();
+      const description = String(placePrediction.text?.text ?? "").trim();
+      return { placeId, description };
+    })
     .filter((item) => item.placeId);
   if (predictions.length === 0) {
     return [];
   }
 
   const detailLookups = predictions.slice(0, limit).map(async (item) => {
+    const detailParams = new URLSearchParams({
+      languageCode: "en",
+      regionCode: "us",
+    });
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(
-        item.placeId
-      )}&fields=name,formatted_address,geometry&key=${apiKey}`,
+      `${GOOGLE_DETAILS_BASE_URL}/${encodeURIComponent(item.placeId)}?${detailParams.toString()}`,
       {
         headers: {
           Accept: "application/json",
+          "X-Goog-Api-Key": apiKey,
+          "X-Goog-FieldMask": "id,displayName,formattedAddress,location",
         },
+        cache: "no-store",
       }
     );
     if (!response.ok) {
@@ -118,18 +142,14 @@ async function getGoogleSuggestions(
     }
 
     const payload = (await response.json()) as GooglePlaceDetailsPayload;
-    if (payload.status !== "OK") {
-      return null;
-    }
-
-    const latitude = Number(payload.result?.geometry?.location?.lat);
-    const longitude = Number(payload.result?.geometry?.location?.lng);
+    const latitude = Number(payload.location?.latitude);
+    const longitude = Number(payload.location?.longitude);
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
       return null;
     }
 
-    const formattedAddress = payload.result?.formatted_address?.trim();
-    const name = payload.result?.name?.trim();
+    const formattedAddress = payload.formattedAddress?.trim();
+    const name = payload.displayName?.text?.trim();
     const label = item.description || (name && formattedAddress ? `${name} — ${formattedAddress}` : formattedAddress || name);
     if (!label) {
       return null;

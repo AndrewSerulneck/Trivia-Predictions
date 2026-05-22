@@ -3,7 +3,7 @@ import "server-only";
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 import { parseLargePureNumberAnswer } from "@/lib/liveShowdownClosestGuess";
 import { getLiveShowdownState } from "@/lib/liveShowdownEngine";
-import { gradeWriteInAnswer, normalizeWriteInForStorage } from "@/lib/liveShowdownGrading";
+import { gradeWriteInAnswerWithVariants, normalizeWriteInForStorage } from "@/lib/liveShowdownGrading";
 import { trackLiveShowdownQuestionExposure } from "@/lib/liveShowdown";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -67,7 +67,13 @@ async function getCorrectAnswerForScheduleSlot(
   scheduleId: string,
   roundNumber: number,
   questionIndex: number
-): Promise<{ questionId: string; correctTarget: string; closestGuessEligible: boolean }> {
+): Promise<{
+  questionId: string;
+  questionDbId: string;
+  correctTarget: string;
+  correctAnswerIndex: number;
+  closestGuessEligible: boolean;
+}> {
   if (!supabaseAdmin) {
     throw new Error("Supabase admin client is not configured.");
   }
@@ -137,7 +143,9 @@ async function getCorrectAnswerForScheduleSlot(
 
   return {
     questionId: String(question.slug ?? question.id),
+    questionDbId: String(question.id),
     correctTarget,
+    correctAnswerIndex: answerIndex,
     closestGuessEligible: parseLargePureNumberAnswer(correctTarget) !== null,
   };
 }
@@ -248,7 +256,8 @@ export async function submitLiveShowdownAnswer(
     throw new Error("Submissions are only accepted during the answering phase.");
   }
 
-  const { questionId, correctTarget, closestGuessEligible } = await getCorrectAnswerForScheduleSlot(
+  const { questionId, questionDbId, correctTarget, correctAnswerIndex, closestGuessEligible } =
+    await getCorrectAnswerForScheduleSlot(
     scheduleId,
     roundNumber,
     questionIndex
@@ -280,7 +289,9 @@ export async function submitLiveShowdownAnswer(
     };
   }
   const normalizedAnswer = normalizeWriteInForStorage(submittedAnswer);
-  const isCorrect = closestGuessEligible ? false : gradeWriteInAnswer(submittedAnswer, correctTarget);
+  const isCorrect = closestGuessEligible
+    ? false
+    : await gradeWriteInAnswerWithVariants(submittedAnswer, correctTarget, questionDbId, correctAnswerIndex);
 
   await trackLiveShowdownQuestionExposure([userId], questionId);
 

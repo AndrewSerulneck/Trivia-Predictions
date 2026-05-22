@@ -74,6 +74,92 @@ function listCategoryRecords(dir) {
   };
 }
 
+function slugify(value) {
+  return String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+async function callGeminiOnceForCategories({ apiKey, model, prompt }) {
+  const endpoint =
+    process.env.GEMINI_API_URL ||
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+
+  const response = await fetch(`${endpoint}?key=${encodeURIComponent(apiKey)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.9, responseMimeType: "application/json" },
+    }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = data?.error?.message || response.statusText || "Unknown Gemini API error";
+    throw new Error(`Gemini API request failed (${response.status}): ${message}`);
+  }
+
+  const text = (data?.candidates?.[0]?.content?.parts || [])
+    .map((part) => (typeof part?.text === "string" ? part.text : ""))
+    .join("\n")
+    .trim();
+
+  const trimmed = String(text || "").trim();
+  if (!trimmed) throw new Error("Gemini returned an empty response for category invention.");
+  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  const candidate = fenced ? fenced[1] : trimmed;
+  const parsed = JSON.parse(candidate);
+  if (!Array.isArray(parsed)) throw new Error("Gemini category response is not an array.");
+  return parsed;
+}
+
+async function inventNewLiveCategoryName({ apiKey, model, existingCategoryNames }) {
+  const prompt = [
+    "Invent 12 new trivia category names suitable for a LIVE write-in trivia game.",
+    "Return ONLY a JSON array of strings. No markdown, no commentary.",
+    "Rules:",
+    "- Each category must be broad enough to have 100+ trivia questions.",
+    "- Good examples: 'Classic Movies', 'US Presidents', 'Famous Athletes', 'World Wonders', 'Space Exploration', 'Ancient Civilizations', 'Olympic Sports'.",
+    "- Avoid extremely narrow niche topics.",
+    "- Do not repeat these existing categories:",
+    existingCategoryNames.length > 0
+      ? existingCategoryNames.map((name) => `  - ${name}`).join("\n")
+      : "  - (none)",
+  ].join("\n");
+
+  const candidates = await callGeminiOnceForCategories({ apiKey, model, prompt });
+  const names = candidates
+    .map((entry) => (typeof entry === "string" ? entry : String(entry?.name ?? "")).trim())
+    .filter(Boolean);
+
+  const existingKeys = new Set(existingCategoryNames.map(slugify));
+  for (const name of names) {
+    const key = slugify(name);
+    if (key && !existingKeys.has(key)) {
+      return { name: name.trim(), key };
+    }
+  }
+  throw new Error("Unable to invent a unique new live trivia category from Gemini response.");
+}
+
+function createLiveCategoryFile({ absoluteDir, categoryName, categoryKey, dryRun }) {
+  const fileName = `${categoryKey}.v1.json`;
+  const filePath = path.join(absoluteDir, fileName);
+  const doc = { categoryName, questions: [] };
+  if (!dryRun) {
+    fs.writeFileSync(filePath, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
+    console.log(`Created new live trivia category file: ${fileName}`);
+  } else {
+    console.log(`[dry-run] Would create: ${fileName}`);
+  }
+  return { file: fileName, filePath, categoryKey, categoryName, count: 0 };
+}
+
 function computePlan({ records, nightlyBudget }) {
   const underfilled = records
     .map((r) => ({ ...r, needed: Math.max(0, CATEGORY_TARGET_SIZE - r.count) }))
@@ -126,7 +212,8 @@ async function main() {
   const apiKey = String(process.env.GEMINI_API_KEY || "").trim();
   assert(apiKey, "Missing GEMINI_API_KEY in environment.");
 
-  const { records } = listCategoryRecords(args.dir);
+  const model = args.model || process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  let { absoluteDir, records } = listCategoryRecords(args.dir);
 
   console.log(
     `Live trivia generation starting. Budget=${args.total}, TargetPerCategory=${CATEGORY_TARGET_SIZE}`
@@ -137,14 +224,29 @@ async function main() {
     console.log(`- ${r.categoryKey}: ${r.count}${overfull}`);
   }
 
-  const { plan, remaining } = computePlan({ records, nightlyBudget: args.total });
+  let { plan, remaining } = computePlan({ records, nightlyBudget: args.total });
+
+  // When all existing categories are at target, create a new one.
+  if (plan.size === 0 && remaining > 0) {
+    console.log("\nAll existing categories are at or above target. Inventing a new category...");
+    const existingNames = records.map((r) => r.categoryName || r.categoryKey);
+    const { name, key } = await inventNewLiveCategoryName({ apiKey, model, existingCategoryNames: existingNames });
+    console.log(`New category: "${name}" (${key})`);
+    createLiveCategoryFile({ absoluteDir, categoryName: name, categoryKey: key, dryRun: args.dryRun });
+
+    // Re-read so the new file is visible to listCategoryRecords.
+    ({ absoluteDir, records } = listCategoryRecords(args.dir));
+    const questionsToAdd = Math.min(remaining, CATEGORY_TARGET_SIZE);
+    plan = new Map([[key, questionsToAdd]]);
+    remaining -= questionsToAdd;
+  }
 
   console.log("Planned additions:");
   for (const [key, count] of plan.entries()) {
     console.log(`- ${key}: +${count}`);
   }
   if (remaining > 0) {
-    console.log(`Unspent budget: ${remaining} (all eligible categories may already be at target).`);
+    console.log(`Unspent budget: ${remaining} (some budget may exceed the per-category target).`);
   }
 
   for (const [categoryKey, count] of plan.entries()) {

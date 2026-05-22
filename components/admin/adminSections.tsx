@@ -43,7 +43,7 @@ export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
   { id: "ad-placement",          label: "Placement Builder",     slug: "ad-placement",          component: () => <LegacySectionPlaceholder sectionName="Placement Builder" /> },
   { id: "ad-debug",              label: "Ad Analytics",          slug: "ad-debug",              component: () => <LegacySectionPlaceholder sectionName="Ad Analytics" /> },
   { id: "challenge-campaigns",   label: "Challenge Manager",     slug: "challenge-campaigns",   component: () => <LegacySectionPlaceholder sectionName="Challenge Manager" /> },
-  { id: "live-trivia",           label: "Trivia",                slug: "live-trivia",           component: () => <LegacySectionPlaceholder sectionName="Trivia" /> },
+  { id: "live-trivia",           label: "Live Trivia Schedules", slug: "live-trivia",           component: () => <LegacySectionPlaceholder sectionName="Live Trivia Schedules" /> },
   { id: "pickem-settlement",     label: "Pick 'Em Settlement",   slug: "pickem-settlement",     status: { label: "Ready", tone: "live" }, component: PickEmSettlementSection },
 ];
 

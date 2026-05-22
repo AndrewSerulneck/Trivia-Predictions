@@ -10,6 +10,7 @@ import { AuthSessionProvider } from "@/components/auth/AuthSessionProvider";
 import { AuthNavigationGuard } from "@/components/auth/AuthNavigationGuard";
 import { LoginStuckStateBreaker } from "@/components/auth/LoginStuckStateBreaker";
 import { AppShell } from "@/components/ui/AppShell";
+import { initializeScheduledTasks } from "@/lib/scheduledTasks";
 import "./globals.css";
 
 const GLOBAL_LEGAL_NOTICE =
@@ -29,6 +30,12 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  if (typeof window === "undefined") {
+    void initializeScheduledTasks().catch((error) => {
+      console.error("Failed to initialize scheduled tasks:", error);
+    });
+  }
+
   return (
     <html lang="en" className="m-0 p-0">
       <head>

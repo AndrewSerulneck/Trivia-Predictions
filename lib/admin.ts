@@ -1,6 +1,15 @@
+import { readFileSync, writeFileSync, readdirSync } from "fs";
+import { join } from "path";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { normalizeAdPlacementMeta } from "@/lib/adPlacements";
+import {
+  isAdTypeSupportedForPage,
+  isDisplayTriggerSupportedForPlacement,
+  isSlotCompatibleWithAdType,
+  normalizeAdPlacementMeta,
+} from "@/lib/adPlacements";
 import { getPredictionMarketById, listResolvedPredictionOutcomes } from "@/lib/polymarket";
+import { listPickEmGames, listPickEmSports, type PickEmSportSlug } from "@/lib/pickem";
+import { buildGeographicHierarchy, type GeographicHierarchy } from "@/lib/geographicHierarchy";
 import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, Advertisement, TriviaQuestion, Venue } from "@/types";
 
 type TriviaQuestionRow = {
@@ -84,10 +93,12 @@ type VenueRow = {
   display_name: string | null;
   logo_text: string | null;
   icon_emoji: string | null;
+  street: string | null;
   address: string | null;
   city: string | null;
   state: string | null;
   zip_code: string | null;
+  country: string | null;
   county: string | null;
   region: string | null;
   latitude: number;
@@ -126,17 +137,28 @@ type PickEmMatchupRow = {
   winning_team_id: string | null;
 };
 
-type GoogleGeocodePayload = {
-  status: string;
-  results?: Array<{
-    geometry?: {
-      location?: {
-        lat?: number;
-        lng?: number;
-      };
-    };
-  }>;
+type VenueGeoRow = {
+  id: string;
+  name: string;
+  display_name: string | null;
+  street: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  zip_code: string | null;
+  region: string | null;
 };
+
+type GeographicAdFilterInput = {
+  regionKey?: string;
+  stateCode?: string;
+  cityName?: string;
+  zipCode?: string;
+  venueId?: string;
+};
+
+let geographicHierarchyCache: { value: GeographicHierarchy; expiresAtMs: number } | null = null;
+const GEOGRAPHIC_HIERARCHY_CACHE_MS = 5 * 60 * 1000;
 
 function mapTriviaRow(row: TriviaQuestionRow): TriviaQuestion {
   return {
@@ -217,10 +239,12 @@ function mapVenueRow(row: VenueRow): Venue {
     displayName: row.display_name ?? undefined,
     logoText: row.logo_text ?? undefined,
     iconEmoji: row.icon_emoji ?? undefined,
+    street: row.street ?? row.address ?? undefined,
     address: row.address ?? undefined,
     city: row.city ?? undefined,
     state: row.state ?? undefined,
     zipCode: row.zip_code ?? undefined,
+    country: row.country ?? undefined,
     county: row.county ?? undefined,
     region: row.region ?? undefined,
     latitude: Number(row.latitude),
@@ -281,48 +305,24 @@ function isValidClickUrl(value: string): boolean {
   }
 }
 
-async function geocodeVenueAddress(address: string): Promise<{ latitude: number; longitude: number }> {
-  const googleApiKey = process.env.GOOGLE_MAPS_API_KEY?.trim();
-  if (googleApiKey) {
-    const geocodeResponse = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${googleApiKey}`
-    );
-    if (geocodeResponse.ok) {
-      const geocodePayload = (await geocodeResponse.json()) as GoogleGeocodePayload;
-      const geocodeLocation = geocodePayload.results?.[0]?.geometry?.location;
-      const googleLatitude = Number(geocodeLocation?.lat);
-      const googleLongitude = Number(geocodeLocation?.lng);
-      if (Number.isFinite(googleLatitude) && Number.isFinite(googleLongitude)) {
-        return { latitude: googleLatitude, longitude: googleLongitude };
-      }
-      if (geocodePayload.status !== "OK" && geocodePayload.status !== "ZERO_RESULTS") {
-        throw new Error(
-          geocodePayload.status ? `Google geocode failed with status: ${geocodePayload.status}.` : "Google geocode request failed."
-        );
-      }
-    }
-  }
-
-  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(address)}`;
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent": "Trivia-Predictions-Admin/1.0",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to geocode venue address.");
-  }
-
-  const payload = (await response.json()) as Array<{ lat?: string; lon?: string }>;
-  const first = payload[0];
-  const latitude = Number(first?.lat);
-  const longitude = Number(first?.lon);
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-    throw new Error("Unable to resolve that address. Try a more specific address.");
-  }
-
-  return { latitude, longitude };
+function buildVenueAddressLabel(input: {
+  street?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+  fallbackAddress?: string;
+}): string {
+  const street = String(input.street ?? "").trim();
+  const city = String(input.city ?? "").trim();
+  const state = String(input.state ?? "").trim();
+  const zipCode = String(input.zipCode ?? "").trim();
+  const country = String(input.country ?? "").trim();
+  const fallbackAddress = String(input.fallbackAddress ?? "").trim();
+  const cityStateZip = [city, [state, zipCode].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+  const parts = [street, cityStateZip, country].filter(Boolean);
+  const label = parts.join(", ").trim();
+  return label || fallbackAddress;
 }
 
 function assertAdminConfigured() {
@@ -432,6 +432,8 @@ export type AdminPickEmMatchup = {
   awayTeamId: string | null;
   startsAt: string;
   pickCount: number;
+  settled: boolean;
+  outcome: "home" | "away" | null;
   status: "unsettled" | "settled" | "canceled";
   statusLabel: string;
   settledWinnerTeam: string | null;
@@ -793,6 +795,127 @@ export async function listAdminAdvertisements(opts?: {
   };
 }
 
+function normalizeAdGeoList(values?: string[] | null, uppercase = false): string[] {
+  const base = Array.isArray(values) ? values : [];
+  return Array.from(
+    new Set(
+      base
+        .map((value) => String(value ?? "").trim())
+        .filter(Boolean)
+        .map((value) => (uppercase ? value.toUpperCase() : value))
+    )
+  );
+}
+
+function adHasNoGeoTargeting(ad: Advertisement): boolean {
+  const venueIds = normalizeAdGeoList(ad.venueIds);
+  const cities = normalizeAdGeoList(ad.cities);
+  const zipCodes = normalizeAdGeoList(ad.zipCodes);
+  const states = normalizeAdGeoList(ad.states, true);
+  const regions = normalizeAdGeoList(ad.regions, true);
+  return venueIds.length === 0 && cities.length === 0 && zipCodes.length === 0 && states.length === 0 && regions.length === 0;
+}
+
+function adMatchesGeographicScope(ad: Advertisement, filters: GeographicAdFilterInput): boolean {
+  if (adHasNoGeoTargeting(ad)) {
+    return true;
+  }
+
+  const regions = normalizeAdGeoList(ad.regions, true);
+  const states = normalizeAdGeoList(ad.states, true);
+  const cities = normalizeAdGeoList(ad.cities).map((city) => city.toLowerCase());
+  const zipCodes = normalizeAdGeoList(ad.zipCodes);
+  const venueIds = normalizeAdGeoList(ad.venueIds);
+
+  if (filters.regionKey) {
+    return regions.includes(filters.regionKey.toUpperCase());
+  }
+  if (filters.stateCode) {
+    return states.includes(filters.stateCode.toUpperCase());
+  }
+  if (filters.cityName) {
+    return cities.includes(filters.cityName.trim().toLowerCase());
+  }
+  if (filters.zipCode) {
+    return zipCodes.includes(filters.zipCode.trim());
+  }
+  if (filters.venueId) {
+    return venueIds.includes(filters.venueId.trim());
+  }
+
+  return true;
+}
+
+export async function getAdsByRegion(regionKey: string): Promise<Advertisement[]> {
+  const { items } = await listAdminAdvertisements({ page: 1, pageSize: 10000 });
+  return items.filter((ad) => adMatchesGeographicScope(ad, { regionKey }));
+}
+
+export async function getAdsByState(stateCode: string): Promise<Advertisement[]> {
+  const { items } = await listAdminAdvertisements({ page: 1, pageSize: 10000 });
+  return items.filter((ad) => adMatchesGeographicScope(ad, { stateCode }));
+}
+
+export async function getAdsByCity(cityName: string, stateCode?: string): Promise<Advertisement[]> {
+  const { items } = await listAdminAdvertisements({ page: 1, pageSize: 10000 });
+  return items.filter((ad) => {
+    if (!adMatchesGeographicScope(ad, { cityName })) return false;
+    if (!stateCode) return true;
+    if (adHasNoGeoTargeting(ad)) return true;
+    return normalizeAdGeoList(ad.states, true).includes(stateCode.toUpperCase());
+  });
+}
+
+export async function getAdsByZipCode(zipCode: string): Promise<Advertisement[]> {
+  const { items } = await listAdminAdvertisements({ page: 1, pageSize: 10000 });
+  return items.filter((ad) => adMatchesGeographicScope(ad, { zipCode }));
+}
+
+export async function getAdsByVenue(venueId: string): Promise<Advertisement[]> {
+  const { items } = await listAdminAdvertisements({ page: 1, pageSize: 10000 });
+  return items.filter((ad) => adMatchesGeographicScope(ad, { venueId }));
+}
+
+export async function getAdminGeographicHierarchy(params?: {
+  forceRefresh?: boolean;
+}): Promise<GeographicHierarchy> {
+  assertAdminConfigured();
+
+  if (!params?.forceRefresh && geographicHierarchyCache && geographicHierarchyCache.expiresAtMs > Date.now()) {
+    return geographicHierarchyCache.value;
+  }
+
+  const { data, error } = await supabaseAdmin!
+    .from("venues")
+    .select("id, name, display_name, street, address, city, state, zip_code, region")
+    .order("name", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message ?? "Failed to load geographic hierarchy.");
+  }
+
+  const hierarchy = buildGeographicHierarchy(
+    ((data ?? []) as VenueGeoRow[]).map((row) => ({
+      id: row.id,
+      name: row.name,
+      displayName: row.display_name ?? undefined,
+      street: row.street ?? undefined,
+      address: row.address ?? undefined,
+      city: row.city ?? undefined,
+      state: row.state ?? undefined,
+      zipCode: row.zip_code ?? undefined,
+      region: row.region ?? undefined,
+    }))
+  );
+
+  geographicHierarchyCache = {
+    value: hierarchy,
+    expiresAtMs: Date.now() + GEOGRAPHIC_HIERARCHY_CACHE_MS,
+  };
+
+  return hierarchy;
+}
+
 export async function createAdminAdvertisement(input: {
   slot: AdSlot;
   slotKey?: string;
@@ -899,6 +1022,17 @@ export async function createAdminAdvertisement(input: {
   if (placementMeta.pageKey === "global") {
     throw new Error("Select a specific page for this advertisement.");
   }
+  if (!isAdTypeSupportedForPage(placementMeta.pageKey, placementMeta.adType)) {
+    throw new Error(`Ad type "${placementMeta.adType}" is not supported on page "${placementMeta.pageKey}".`);
+  }
+  if (!isSlotCompatibleWithAdType(placementMeta.slot, placementMeta.adType)) {
+    throw new Error(`Slot "${placementMeta.slot}" is not compatible with ad type "${placementMeta.adType}".`);
+  }
+  if (!isDisplayTriggerSupportedForPlacement(placementMeta.pageKey, placementMeta.adType, placementMeta.displayTrigger)) {
+    throw new Error(
+      `Trigger "${placementMeta.displayTrigger}" is not supported for ${placementMeta.adType} ads on page "${placementMeta.pageKey}".`
+    );
+  }
   if (placementMeta.displayTrigger === "round-end" && placementMeta.pageKey !== "trivia") {
     throw new Error("Round-end trigger is only supported on the Trivia page.");
   }
@@ -912,12 +1046,12 @@ export async function createAdminAdvertisement(input: {
 
   const derivedSlotKey =
     input.slotKey?.trim() ||
-    computeSlotKey(input.slot, placementMeta.pageKey, placementMeta.displayTrigger, placementMeta.roundNumber, placementMeta.placementKey);
+    computeSlotKey(placementMeta.slot, placementMeta.pageKey, placementMeta.displayTrigger, placementMeta.roundNumber, placementMeta.placementKey);
 
   const { data, error } = await supabaseAdmin!
     .from("advertisements")
     .insert({
-      slot: input.slot,
+      slot: placementMeta.slot,
       slot_key: derivedSlotKey,
       priority: Number.isFinite(input.priority) ? Math.max(0, Math.round(Number(input.priority))) : 0,
       is_placeholder: Boolean(input.isPlaceholder),
@@ -1069,6 +1203,17 @@ export async function updateAdminAdvertisement(input: {
   if (placementMeta.pageKey === "global") {
     throw new Error("Select a specific page for this advertisement.");
   }
+  if (!isAdTypeSupportedForPage(placementMeta.pageKey, placementMeta.adType)) {
+    throw new Error(`Ad type "${placementMeta.adType}" is not supported on page "${placementMeta.pageKey}".`);
+  }
+  if (!isSlotCompatibleWithAdType(placementMeta.slot, placementMeta.adType)) {
+    throw new Error(`Slot "${placementMeta.slot}" is not compatible with ad type "${placementMeta.adType}".`);
+  }
+  if (!isDisplayTriggerSupportedForPlacement(placementMeta.pageKey, placementMeta.adType, placementMeta.displayTrigger)) {
+    throw new Error(
+      `Trigger "${placementMeta.displayTrigger}" is not supported for ${placementMeta.adType} ads on page "${placementMeta.pageKey}".`
+    );
+  }
   if (placementMeta.displayTrigger === "round-end" && placementMeta.pageKey !== "trivia") {
     throw new Error("Round-end trigger is only supported on the Trivia page.");
   }
@@ -1082,12 +1227,12 @@ export async function updateAdminAdvertisement(input: {
 
   const derivedSlotKey =
     input.slotKey?.trim() ||
-    computeSlotKey(input.slot, placementMeta.pageKey, placementMeta.displayTrigger, placementMeta.roundNumber, placementMeta.placementKey);
+    computeSlotKey(placementMeta.slot, placementMeta.pageKey, placementMeta.displayTrigger, placementMeta.roundNumber, placementMeta.placementKey);
 
   const { data, error } = await supabaseAdmin!
     .from("advertisements")
     .update({
-      slot: input.slot,
+      slot: placementMeta.slot,
       slot_key: derivedSlotKey,
       priority: Number.isFinite(input.priority) ? Math.max(0, Math.round(Number(input.priority))) : 0,
       is_placeholder: Boolean(input.isPlaceholder),
@@ -1476,7 +1621,8 @@ export async function listAdminUsersByVenue(
 
 export async function createAdminVenue(input: {
   name: string;
-  address: string;
+  street?: string;
+  address?: string;
   radius?: number;
   latitude?: number;
   longitude?: number;
@@ -1486,18 +1632,31 @@ export async function createAdminVenue(input: {
   city?: string;
   state?: string;
   zipCode?: string;
+  country?: string;
   county?: string;
   region?: string;
 }): Promise<Venue> {
   assertAdminConfigured();
 
   const name = input.name.trim();
-  const address = input.address.trim();
+  const street = String(input.street ?? "").trim() || String(input.address ?? "").trim();
+  const city = String(input.city ?? "").trim();
+  const state = String(input.state ?? "").trim().toUpperCase();
+  const zipCode = String(input.zipCode ?? "").trim();
+  const country = String(input.country ?? "").trim();
+  const address = buildVenueAddressLabel({
+    street,
+    city,
+    state,
+    zipCode,
+    country,
+    fallbackAddress: input.address,
+  });
   if (!name) {
     throw new Error("Venue name is required.");
   }
-  if (!address) {
-    throw new Error("Venue address is required.");
+  if (!street) {
+    throw new Error("Street address is required.");
   }
 
   const radius = Number.isFinite(input.radius) ? Math.round(Number(input.radius)) : 100;
@@ -1505,15 +1664,10 @@ export async function createAdminVenue(input: {
     throw new Error("Radius must be between 25m and 2000m.");
   }
 
-  const hasLatitude = Number.isFinite(input.latitude);
-  const hasLongitude = Number.isFinite(input.longitude);
-  const latitude = hasLatitude ? Number(input.latitude) : Number.NaN;
-  const longitude = hasLongitude ? Number(input.longitude) : Number.NaN;
-
-  let resolvedLatitude = latitude;
-  let resolvedLongitude = longitude;
+  const resolvedLatitude = Number(input.latitude);
+  const resolvedLongitude = Number(input.longitude);
   if (!Number.isFinite(resolvedLatitude) || !Number.isFinite(resolvedLongitude)) {
-    ({ latitude: resolvedLatitude, longitude: resolvedLongitude } = await geocodeVenueAddress(address));
+    throw new Error("Latitude and longitude are required.");
   }
 
   if (
@@ -1553,17 +1707,19 @@ export async function createAdminVenue(input: {
       display_name: input.displayName?.trim() || name,
       logo_text: input.logoText?.trim() || null,
       icon_emoji: input.iconEmoji?.trim() || null,
+      street,
       address,
-      city: input.city?.trim() || null,
-      state: input.state?.trim() || null,
-      zip_code: input.zipCode?.trim() || null,
+      city: city || null,
+      state: state || null,
+      zip_code: zipCode || null,
+      country: country || null,
       county: input.county?.trim() || null,
       region: input.region?.trim() || null,
       latitude: resolvedLatitude,
       longitude: resolvedLongitude,
       radius,
     })
-    .select("id, name, display_name, logo_text, icon_emoji, address, city, state, zip_code, county, region, latitude, longitude, radius")
+    .select("id, name, display_name, logo_text, icon_emoji, street, address, city, state, zip_code, country, county, region, latitude, longitude, radius")
     .single<VenueRow>();
 
   if (error || !data) {
@@ -1579,13 +1735,15 @@ export async function updateAdminVenue(input: {
   displayName?: string;
   logoText?: string;
   iconEmoji?: string;
-  address: string;
+  street?: string;
+  address?: string;
   radius: number;
   latitude?: number;
   longitude?: number;
   city?: string;
   state?: string;
   zipCode?: string;
+  country?: string;
   county?: string;
   region?: string;
 }): Promise<Venue> {
@@ -1597,12 +1755,24 @@ export async function updateAdminVenue(input: {
   }
 
   const name = input.name.trim();
-  const address = input.address.trim();
+  const street = String(input.street ?? "").trim() || String(input.address ?? "").trim();
+  const city = String(input.city ?? "").trim();
+  const state = String(input.state ?? "").trim().toUpperCase();
+  const zipCode = String(input.zipCode ?? "").trim();
+  const country = String(input.country ?? "").trim();
+  const address = buildVenueAddressLabel({
+    street,
+    city,
+    state,
+    zipCode,
+    country,
+    fallbackAddress: input.address,
+  });
   if (!name) {
     throw new Error("Venue name is required.");
   }
-  if (!address) {
-    throw new Error("Venue address is required.");
+  if (!street) {
+    throw new Error("Street address is required.");
   }
 
   const radius = Number.isFinite(input.radius) ? Math.round(input.radius) : Number.NaN;
@@ -1610,44 +1780,10 @@ export async function updateAdminVenue(input: {
     throw new Error("Radius must be between 25m and 2000m.");
   }
 
-  const hasLatitude = Number.isFinite(input.latitude);
-  const hasLongitude = Number.isFinite(input.longitude);
-  let resolvedLatitude = hasLatitude ? Number(input.latitude) : Number.NaN;
-  let resolvedLongitude = hasLongitude ? Number(input.longitude) : Number.NaN;
-
-  const { data: existingVenue, error: existingVenueError } = await supabaseAdmin!
-    .from("venues")
-    .select("id, address, latitude, longitude")
-    .eq("id", id)
-    .maybeSingle<Pick<VenueRow, "id" | "address" | "latitude" | "longitude">>();
-  if (existingVenueError) {
-    throw new Error(existingVenueError.message ?? "Failed to load venue before update.");
-  }
-  if (!existingVenue) {
-    throw new Error("Venue not found.");
-  }
-
-  const existingAddress = (existingVenue.address ?? "").trim();
-  const addressChanged = existingAddress.toLowerCase() !== address.toLowerCase();
-  const existingLatitude = Number(existingVenue.latitude);
-  const existingLongitude = Number(existingVenue.longitude);
-  const coordsMatchExisting =
-    Number.isFinite(resolvedLatitude) &&
-    Number.isFinite(resolvedLongitude) &&
-    Number.isFinite(existingLatitude) &&
-    Number.isFinite(existingLongitude) &&
-    Math.abs(resolvedLatitude - existingLatitude) < 0.000001 &&
-    Math.abs(resolvedLongitude - existingLongitude) < 0.000001;
-
-  // If the address changed but submitted coordinates still match the old venue coordinates,
-  // treat them as stale and geocode the new address.
-  if (addressChanged && coordsMatchExisting) {
-    resolvedLatitude = Number.NaN;
-    resolvedLongitude = Number.NaN;
-  }
-
+  const resolvedLatitude = Number(input.latitude);
+  const resolvedLongitude = Number(input.longitude);
   if (!Number.isFinite(resolvedLatitude) || !Number.isFinite(resolvedLongitude)) {
-    ({ latitude: resolvedLatitude, longitude: resolvedLongitude } = await geocodeVenueAddress(address));
+    throw new Error("Latitude and longitude are required.");
   }
 
   if (
@@ -1666,10 +1802,12 @@ export async function updateAdminVenue(input: {
       display_name: input.displayName?.trim() || name,
       logo_text: input.logoText?.trim() || null,
       icon_emoji: input.iconEmoji?.trim() || null,
+      street,
       address,
-      city: input.city?.trim() || null,
-      state: input.state?.trim() || null,
-      zip_code: input.zipCode?.trim() || null,
+      city: city || null,
+      state: state || null,
+      zip_code: zipCode || null,
+      country: country || null,
       county: input.county?.trim() || null,
       region: input.region?.trim() || null,
       latitude: resolvedLatitude,
@@ -1677,7 +1815,7 @@ export async function updateAdminVenue(input: {
       radius,
     })
     .eq("id", id)
-    .select("id, name, display_name, logo_text, icon_emoji, address, city, state, zip_code, county, region, latitude, longitude, radius")
+    .select("id, name, display_name, logo_text, icon_emoji, street, address, city, state, zip_code, country, county, region, latitude, longitude, radius")
     .single<VenueRow>();
 
   if (error || !data) {
@@ -1797,6 +1935,7 @@ export async function listAdminPickEmUnsettledGames(): Promise<AdminPickEmUnsett
 
 export async function listAdminPickEmMatchupsByDate(params: {
   date: string;
+  tzOffsetMinutes?: number | string;
 }): Promise<AdminPickEmMatchup[]> {
   assertAdminConfigured();
   const rawDate = String(params.date ?? "").trim();
@@ -1804,8 +1943,66 @@ export async function listAdminPickEmMatchupsByDate(params: {
     throw new Error("date must be in YYYY-MM-DD format.");
   }
 
-  const dayStartIso = `${rawDate}T00:00:00.000Z`;
-  const dayEndIso = `${rawDate}T23:59:59.999Z`;
+  const parsedOffset = Number.parseInt(String(params.tzOffsetMinutes ?? ""), 10);
+  const tzOffsetMinutes = Number.isFinite(parsedOffset) ? Math.max(-14 * 60, Math.min(14 * 60, parsedOffset)) : 0;
+  const [yearRaw, monthRaw, dayRaw] = rawDate.split("-");
+  const year = Number.parseInt(yearRaw ?? "", 10);
+  const month = Number.parseInt(monthRaw ?? "", 10);
+  const day = Number.parseInt(dayRaw ?? "", 10);
+  const dayStartMs = Date.UTC(year, month - 1, day, 0, 0, 0, 0) + tzOffsetMinutes * 60_000;
+  const dayEndMs = dayStartMs + 24 * 60 * 60 * 1000 - 1;
+  const dayStartIso = new Date(dayStartMs).toISOString();
+  const dayEndIso = new Date(dayEndMs).toISOString();
+
+  const sports = listPickEmSports()
+    .filter((sport) => sport.isClickable)
+    .map((sport) => sport.slug as PickEmSportSlug);
+
+  const slateByGameId = new Map<
+    string,
+    {
+      gameId: string;
+      sportSlug: string;
+      league: string;
+      homeTeam: string;
+      awayTeam: string;
+      homeTeamId: string | null;
+      awayTeamId: string | null;
+      startsAt: string;
+    }
+  >();
+
+  const gameLists = await Promise.all(
+    sports.map(async (sportSlug) => {
+      try {
+        const result = await listPickEmGames({
+          sportSlug,
+          date: rawDate,
+          tzOffsetMinutes,
+        });
+        return result.games;
+      } catch {
+        return [];
+      }
+    })
+  );
+
+  for (const games of gameLists) {
+    for (const game of games) {
+      const gameId = String(game.id ?? "").trim();
+      if (!gameId) continue;
+      slateByGameId.set(gameId, {
+        gameId,
+        sportSlug: String(game.sportSlug ?? "").trim().toLowerCase(),
+        league: String(game.league ?? "").trim(),
+        homeTeam: String(game.homeTeam ?? "").trim(),
+        awayTeam: String(game.awayTeam ?? "").trim(),
+        homeTeamId: game.homeTeamId,
+        awayTeamId: game.awayTeamId,
+        startsAt: game.startsAt,
+      });
+    }
+  }
 
   const { data, error } = await supabaseAdmin!
     .from("pickem_picks")
@@ -1850,36 +2047,63 @@ export async function listAdminPickEmMatchupsByDate(params: {
       continue;
     }
 
+    const slateGame = slateByGameId.get(gameId);
     grouped.set(gameId, {
       gameId,
-      sportSlug: String(row.sport_slug ?? "").trim().toLowerCase(),
-      league: String(row.league ?? "").trim(),
-      homeTeam: String(row.home_team ?? "").trim(),
-      awayTeam: String(row.away_team ?? "").trim(),
-      homeTeamId: row.home_team_id,
-      awayTeamId: row.away_team_id,
-      startsAt: row.starts_at,
+      sportSlug: slateGame?.sportSlug ?? String(row.sport_slug ?? "").trim().toLowerCase(),
+      league: slateGame?.league ?? String(row.league ?? "").trim(),
+      homeTeam: slateGame?.homeTeam ?? String(row.home_team ?? "").trim(),
+      awayTeam: slateGame?.awayTeam ?? String(row.away_team ?? "").trim(),
+      homeTeamId: slateGame?.homeTeamId ?? row.home_team_id,
+      awayTeamId: slateGame?.awayTeamId ?? row.away_team_id,
+      startsAt: slateGame?.startsAt ?? row.starts_at,
       pickCount: 1,
       statuses: [row.status],
       winningTeamIds: row.winning_team_id ? [row.winning_team_id] : [],
     });
   }
 
+  for (const [gameId, game] of slateByGameId.entries()) {
+    if (grouped.has(gameId)) continue;
+    grouped.set(gameId, {
+      gameId,
+      sportSlug: game.sportSlug,
+      league: game.league,
+      homeTeam: game.homeTeam,
+      awayTeam: game.awayTeam,
+      homeTeamId: game.homeTeamId,
+      awayTeamId: game.awayTeamId,
+      startsAt: game.startsAt,
+      pickCount: 0,
+      statuses: [],
+      winningTeamIds: [],
+    });
+  }
+
   return [...grouped.values()]
     .map((matchup) => {
       const hasPending = matchup.statuses.includes("pending");
+      const hasNoPicks = matchup.statuses.length === 0;
       const hasCanceled = matchup.statuses.every((status) => status === "canceled");
       const winnerTeamId = matchup.winningTeamIds[0] ?? null;
-      const winnerTeamName =
+      const outcome: "home" | "away" | null =
         winnerTeamId && winnerTeamId === matchup.homeTeamId
-          ? matchup.homeTeam
+          ? "home"
           : winnerTeamId && winnerTeamId === matchup.awayTeamId
+            ? "away"
+            : null;
+      const winnerTeamName =
+        outcome === "home"
+          ? matchup.homeTeam
+          : outcome === "away"
             ? matchup.awayTeam
             : null;
 
-      if (hasPending) {
+      if (hasPending || hasNoPicks) {
         return {
           ...matchup,
+          settled: false,
+          outcome: null,
           status: "unsettled" as const,
           statusLabel: "Unsettled",
           settledWinnerTeam: null,
@@ -1889,6 +2113,8 @@ export async function listAdminPickEmMatchupsByDate(params: {
       if (hasCanceled) {
         return {
           ...matchup,
+          settled: true,
+          outcome: null,
           status: "canceled" as const,
           statusLabel: "Canceled",
           settledWinnerTeam: null,
@@ -1897,6 +2123,8 @@ export async function listAdminPickEmMatchupsByDate(params: {
 
       return {
         ...matchup,
+        settled: true,
+        outcome,
         status: "settled" as const,
         statusLabel: winnerTeamName ? `Settled: ${winnerTeamName}` : "Settled",
         settledWinnerTeam: winnerTeamName,
@@ -2270,6 +2498,285 @@ export async function autoSettleResolvedPredictionMarkets(): Promise<{
     losers,
     canceled,
   };
+}
+
+// ─── File-based trivia question bank ────────────────────────────────────────
+
+type LiveTriviaFileQuestion = {
+  slug: string;
+  question: string;
+  answer: string;
+  answer_format: "write_in";
+  category: string;
+  difficulty: string;
+};
+
+type SpeedTriviaFileQuestion = {
+  slug: string;
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  category: string;
+  difficulty: string;
+};
+
+function getLiveTriviaDir() {
+  return join(process.cwd(), "data", "live-trivia", "categories");
+}
+
+function getSpeedTriviaDir() {
+  return join(process.cwd(), "data", "trivia", "categories");
+}
+
+function readAllLiveTriviaFiles(): Array<{ file: string; categoryName: string; questions: LiveTriviaFileQuestion[] }> {
+  const dir = getLiveTriviaDir();
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".json"))
+    .sort()
+    .map((file) => {
+      const raw = JSON.parse(readFileSync(join(dir, file), "utf-8")) as {
+        categoryName?: string;
+        questions: LiveTriviaFileQuestion[];
+      };
+      const categoryName = String(raw.categoryName || "").trim() ||
+        file.replace(/\.v\d+\.json$/i, "").replace(/-/g, " ");
+      return { file, categoryName, questions: Array.isArray(raw.questions) ? raw.questions : [] };
+    });
+}
+
+function readAllSpeedTriviaFiles(): Array<{ file: string; categoryName: string; questions: SpeedTriviaFileQuestion[] }> {
+  const dir = getSpeedTriviaDir();
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".json"))
+    .sort()
+    .map((file) => {
+      const raw = JSON.parse(readFileSync(join(dir, file), "utf-8")) as {
+        categoryName?: string;
+        normal_multiple_choice: SpeedTriviaFileQuestion[];
+      };
+      const categoryName = String(raw.categoryName || "").trim() ||
+        file.replace(/\.v\d+\.json$/i, "").replace(/-/g, " ");
+      return { file, categoryName, questions: Array.isArray(raw.normal_multiple_choice) ? raw.normal_multiple_choice : [] };
+    });
+}
+
+function mapLiveFileQuestion(q: LiveTriviaFileQuestion, categoryName: string): TriviaQuestion {
+  return {
+    id: q.slug,
+    question: q.question,
+    options: [q.answer],
+    correctAnswer: 0,
+    category: categoryName || q.category,
+    difficulty: q.difficulty,
+    questionPool: "live_showdown",
+    answerFormat: "write_in",
+  };
+}
+
+function mapSpeedFileQuestion(q: SpeedTriviaFileQuestion, categoryName: string): TriviaQuestion {
+  return {
+    id: q.slug,
+    question: q.question,
+    options: Array.isArray(q.options) ? q.options : [],
+    correctAnswer: Number.isFinite(q.correctAnswer) ? q.correctAnswer : 0,
+    category: categoryName || q.category,
+    difficulty: q.difficulty,
+    questionPool: "anytime_blitz",
+    answerFormat: "multiple_choice",
+  };
+}
+
+function sortFileQuestions(
+  questions: TriviaQuestion[],
+  sortBy: string | undefined,
+  ascending: boolean
+): TriviaQuestion[] {
+  return [...questions].sort((a, b) => {
+    const av = (sortBy === "category" ? a.category : a.question) ?? "";
+    const bv = (sortBy === "category" ? b.category : b.question) ?? "";
+    return ascending ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+}
+
+export async function listAllLiveTriviaCategories(): Promise<string[]> {
+  const categories = new Set<string>();
+  for (const f of readAllLiveTriviaFiles()) {
+    if (f.categoryName.trim()) categories.add(f.categoryName.trim());
+  }
+  return Array.from(categories).sort((a, b) => a.localeCompare(b));
+}
+
+export async function listAllSpeedTriviaCategories(): Promise<string[]> {
+  const categories = new Set<string>();
+  for (const f of readAllSpeedTriviaFiles()) {
+    if (f.categoryName.trim()) categories.add(f.categoryName.trim());
+  }
+  return Array.from(categories).sort((a, b) => a.localeCompare(b));
+}
+
+export async function listAdminLiveTriviaQuestionsFromFiles(opts?: {
+  page?: number;
+  pageSize?: number;
+  category?: string;
+  sortBy?: string;
+  sortDirection?: string;
+}): Promise<PaginatedResult<TriviaQuestion>> {
+  let all = readAllLiveTriviaFiles().flatMap((f) => f.questions.map((q) => mapLiveFileQuestion(q, f.categoryName)));
+
+  const cat = String(opts?.category ?? "").trim().toLowerCase();
+  if (cat) all = all.filter((q) => (q.category ?? "").toLowerCase() === cat);
+
+  all = sortFileQuestions(all, opts?.sortBy, opts?.sortDirection !== "desc");
+
+  const page = Math.max(1, Math.floor(opts?.page ?? 1));
+  const pageSize = Math.min(10000, Math.max(1, Math.floor(opts?.pageSize ?? 25)));
+  const total = all.length;
+  return {
+    items: all.slice((page - 1) * pageSize, page * pageSize),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  };
+}
+
+export async function listAdminSpeedTriviaQuestionsFromFiles(opts?: {
+  page?: number;
+  pageSize?: number;
+  category?: string;
+  sortBy?: string;
+  sortDirection?: string;
+}): Promise<PaginatedResult<TriviaQuestion>> {
+  let all = readAllSpeedTriviaFiles().flatMap((f) => f.questions.map((q) => mapSpeedFileQuestion(q, f.categoryName)));
+
+  const cat = String(opts?.category ?? "").trim().toLowerCase();
+  if (cat) all = all.filter((q) => (q.category ?? "").toLowerCase() === cat);
+
+  all = sortFileQuestions(all, opts?.sortBy, opts?.sortDirection !== "desc");
+
+  const page = Math.max(1, Math.floor(opts?.page ?? 1));
+  const pageSize = Math.min(10000, Math.max(1, Math.floor(opts?.pageSize ?? 25)));
+  const total = all.length;
+  return {
+    items: all.slice((page - 1) * pageSize, page * pageSize),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  };
+}
+
+export async function updateAdminLiveTriviaQuestionInFile(input: {
+  slug: string;
+  question: string;
+  answer: string;
+  category?: string;
+  difficulty?: string;
+}): Promise<TriviaQuestion> {
+  const slug = input.slug.trim();
+  const question = input.question.trim();
+  const answer = input.answer.trim();
+  if (!slug) throw new Error("slug is required.");
+  if (!question) throw new Error("Question is required.");
+  if (!answer) throw new Error("Answer is required for write-in questions.");
+
+  const dir = getLiveTriviaDir();
+  for (const file of readdirSync(dir).filter((f) => f.endsWith(".json")).sort()) {
+    const filePath = join(dir, file);
+    const raw = JSON.parse(readFileSync(filePath, "utf-8")) as { categoryName?: string; questions: LiveTriviaFileQuestion[] };
+    const idx = raw.questions.findIndex((q) => q.slug === slug);
+    if (idx === -1) continue;
+    const categoryName = String(raw.categoryName || "").trim() || file.replace(/\.v\d+\.json$/i, "").replace(/-/g, " ");
+    raw.questions[idx] = {
+      ...raw.questions[idx],
+      question,
+      answer,
+      answer_format: "write_in",
+      ...(input.category !== undefined && { category: input.category.trim() }),
+      ...(input.difficulty !== undefined && { difficulty: input.difficulty.trim() }),
+    };
+    writeFileSync(filePath, JSON.stringify(raw, null, 2) + "\n");
+    return mapLiveFileQuestion(raw.questions[idx], categoryName);
+  }
+  throw new Error(`Live Trivia question "${slug}" not found.`);
+}
+
+export async function deleteAdminLiveTriviaQuestionInFile(slug: string): Promise<void> {
+  const normalizedSlug = String(slug ?? "").trim();
+  if (!normalizedSlug) throw new Error("slug is required.");
+
+  const dir = getLiveTriviaDir();
+  for (const file of readdirSync(dir).filter((f) => f.endsWith(".json")).sort()) {
+    const filePath = join(dir, file);
+    const raw = JSON.parse(readFileSync(filePath, "utf-8")) as { questions: LiveTriviaFileQuestion[] };
+    const idx = raw.questions.findIndex((q) => q.slug === normalizedSlug);
+    if (idx === -1) continue;
+    raw.questions.splice(idx, 1);
+    writeFileSync(filePath, JSON.stringify(raw, null, 2) + "\n");
+    return;
+  }
+  throw new Error(`Live Trivia question "${normalizedSlug}" not found.`);
+}
+
+export async function updateAdminSpeedTriviaQuestionInFile(input: {
+  slug: string;
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  category?: string;
+  difficulty?: string;
+}): Promise<TriviaQuestion> {
+  const slug = input.slug.trim();
+  const question = input.question.trim();
+  const options = (input.options ?? []).map((o) => o.trim()).filter(Boolean);
+  const correctAnswer = Math.floor(Number(input.correctAnswer ?? 0));
+  if (!slug) throw new Error("slug is required.");
+  if (!question) throw new Error("Question is required.");
+  if (options.length < 2) throw new Error("At least two options are required.");
+  if (correctAnswer < 0 || correctAnswer >= options.length) throw new Error("Correct answer index is out of range.");
+
+  const dir = getSpeedTriviaDir();
+  for (const file of readdirSync(dir).filter((f) => f.endsWith(".json")).sort()) {
+    const filePath = join(dir, file);
+    const raw = JSON.parse(readFileSync(filePath, "utf-8")) as {
+      categoryName?: string;
+      normal_multiple_choice: SpeedTriviaFileQuestion[];
+    };
+    const idx = raw.normal_multiple_choice.findIndex((q) => q.slug === slug);
+    if (idx === -1) continue;
+    const categoryName = String(raw.categoryName || "").trim() || file.replace(/\.v\d+\.json$/i, "").replace(/-/g, " ");
+    raw.normal_multiple_choice[idx] = {
+      ...raw.normal_multiple_choice[idx],
+      question,
+      options,
+      correctAnswer,
+      ...(input.category !== undefined && { category: input.category.trim() }),
+      ...(input.difficulty !== undefined && { difficulty: input.difficulty.trim() }),
+    };
+    writeFileSync(filePath, JSON.stringify(raw, null, 2) + "\n");
+    return mapSpeedFileQuestion(raw.normal_multiple_choice[idx], categoryName);
+  }
+  throw new Error(`Speed Trivia question "${slug}" not found.`);
+}
+
+export async function deleteAdminSpeedTriviaQuestionInFile(slug: string): Promise<void> {
+  const normalizedSlug = String(slug ?? "").trim();
+  if (!normalizedSlug) throw new Error("slug is required.");
+
+  const dir = getSpeedTriviaDir();
+  for (const file of readdirSync(dir).filter((f) => f.endsWith(".json")).sort()) {
+    const filePath = join(dir, file);
+    const raw = JSON.parse(readFileSync(filePath, "utf-8")) as {
+      categoryName: string;
+      normal_multiple_choice: SpeedTriviaFileQuestion[];
+    };
+    const idx = raw.normal_multiple_choice.findIndex((q) => q.slug === normalizedSlug);
+    if (idx === -1) continue;
+    raw.normal_multiple_choice.splice(idx, 1);
+    writeFileSync(filePath, JSON.stringify(raw, null, 2) + "\n");
+    return;
+  }
+  throw new Error(`Speed Trivia question "${normalizedSlug}" not found.`);
 }
 
 async function resolvePendingPredictionMarketLegacy(params: {

@@ -5,6 +5,7 @@
       "slug": "barbie-movie-director",
       "question": "Who directed the 2023 blockbuster movie 'Barbie'?",
       "answer": "Greta Gerwig",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -12,6 +13,7 @@
       "slug": "kardashian-youngest-sister",
       "question": "Who is the youngest of the Kardashian-Jenner sisters?",
       "answer": "Kylie Jenner",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -19,6 +21,7 @@
       "slug": "game-of-thrones-iron-throne-swords",
       "question": "In 'Game of Thrones', the Iron Throne was forged from the swords of whom?",
       "answer": "Surrendered Enemies",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -26,6 +29,7 @@
       "slug": "marvel-mcu-first-movie",
       "question": "Which film kicked off the Marvel Cinematic Universe in 2008?",
       "answer": "Iron Man",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -33,6 +37,7 @@
       "slug": "euphoria-zendaya-character",
       "question": "What is the name of the character played by Zendaya in the HBO series 'Euphoria'?",
       "answer": "Rue",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -40,6 +45,7 @@
       "slug": "parasite-best-picture-year",
       "question": "In which year did the South Korean film 'Parasite' make history by winning the Academy Award for Best Picture?",
       "answer": "2020",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -47,6 +53,7 @@
       "slug": "squid-game-country-of-origin",
       "question": "Which country produced the hit Netflix series 'Squid Game'?",
       "answer": "South Korea",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -54,6 +61,7 @@
       "slug": "met-gala-annual-date",
       "question": "The Met Gala is traditionally held on the first Monday of which month?",
       "answer": "May",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -61,6 +69,7 @@
       "slug": "succession-waystar-royco-ceo",
       "question": "Who is the patriarch and original CEO of Waystar Royco in the series 'Succession'?",
       "answer": "Logan Roy",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -68,6 +77,7 @@
       "slug": "bridgerton-narrator-voice",
       "question": "Who provides the voice for Lady Whistledown in the Netflix series 'Bridgerton'?",
       "answer": "Julie Andrews",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -75,6 +85,7 @@
       "slug": "friends-tv-show-central-perk-manager",
       "question": "What was the name of the manager of the Central Perk coffee shop in 'Friends'?",
       "answer": "Gunther",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -82,6 +93,7 @@
       "slug": "stranger-things-eleven-favorite-food",
       "question": "What is Eleven's favorite food in the series 'Stranger Things'?",
       "answer": "Eggo Waffles",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -89,6 +101,7 @@
       "slug": "oscar-slap-year",
       "question": "In which year did the infamous 'slap' involving Will Smith and Chris Rock occur at the Oscars?",
       "answer": "2022",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -96,6 +109,7 @@
       "slug": "hunger-games-katniss-district",
       "question": "Katniss Everdeen represents which district in 'The Hunger Games'?",
       "answer": "District 12",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -103,6 +117,7 @@
       "slug": "rhony-scary-island-location",
       "question": "In the iconic 'Scary Island' episode of RHONY, which island were the housewives visiting?",
       "answer": "St. John",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "hard"
     },
@@ -110,6 +125,7 @@
       "slug": "star-wars-baby-yoda-real-name",
       "question": "What is the real name of the character widely known as 'Baby Yoda'?",
       "answer": "Grogu",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -117,6 +133,7 @@
       "slug": "the-office-dunder-mifflin-city",
       "question": "In which Pennsylvania city is the Dunder Mifflin office located in 'The Office'?",
       "answer": "Scranton",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -124,6 +141,7 @@
       "slug": "white-lotus-season-2-location",
       "question": "Where was the second season of 'The White Lotus' set?",
       "answer": "Sicily",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -131,6 +149,7 @@
       "slug": "spider-man-no-way-home-cameos",
       "question": "How many different versions of Peter Parker appear in 'Spider-Man: No Way Home'?",
       "answer": "3",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -138,6 +157,7 @@
       "slug": "rupauls-drag-race-first-winner",
       "question": "Who was the winner of the very first season of RuPaul's Drag Race?",
       "answer": "BeBe Zahara Benet",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "hard"
     },
@@ -145,6 +165,7 @@
       "slug": "oppenheimer-lead-actor",
       "question": "Which actor won the Academy Award for Best Actor for his role in the 2023 film 'Oppenheimer'?",
       "answer": "Cillian Murphy",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -152,6 +173,7 @@
       "slug": "the-bear-restaurant-name",
       "question": "In the TV series 'The Bear', what is the original name of the sandwich shop Carmy inherits?",
       "answer": "The Beef",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -159,6 +181,7 @@
       "slug": "tiktok-renegade-creator",
       "question": "Which young dancer was eventually credited with creating the viral 'Renegade' TikTok dance?",
       "answer": "Jalaiah Harmon",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "hard"
     },
@@ -166,6 +189,7 @@
       "slug": "saltburn-director",
       "question": "Who directed the 2023 psychological thriller 'Saltburn'?",
       "answer": "Emerald Fennell",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -173,6 +197,7 @@
       "slug": "pedro-pascal-last-of-us-role",
       "question": "Pedro Pascal plays which character in the HBO adaptation of 'The Last of Us'?",
       "answer": "Joel",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -180,6 +205,7 @@
       "slug": "black-panther-wakanda-forever-antagonist",
       "question": "Who was the primary antagonist (Namor) in 'Black Panther: Wakanda Forever'?",
       "answer": "Tenoch Huerta",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -187,6 +213,7 @@
       "slug": "real-housewives-vanderpump-rules-spinoff",
       "question": "Which Real Housewives franchise did 'Vanderpump Rules' spin off from?",
       "answer": "RHOBH",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -194,13 +221,15 @@
       "slug": "squid-game-protagonist-number",
       "question": "What was the player number of the protagonist, Seong Gi-hun, in 'Squid Game'?",
       "answer": "456",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
     {
       "slug": "dune-part-two-paul-atreides",
       "question": "Who plays the character Paul Atreides in Denis Villeneuve's 'Dune' film series?",
-      "answer": "Timothée Chalamet",
+      "answer": "Timoth\u00e9e Chalamet",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -208,6 +237,7 @@
       "slug": "love-is-blind-host-couple",
       "question": "Which real-life married couple hosts the Netflix reality show 'Love is Blind'?",
       "answer": "Nick and Vanessa Lachey",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -215,6 +245,7 @@
       "slug": "wednesday-netflix-director",
       "question": "Which famous gothic filmmaker directed the first four episodes of the Netflix series 'Wednesday'?",
       "answer": "Tim Burton",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -222,6 +253,7 @@
       "slug": "barbie-ken-song-actor",
       "question": "Which actor performed the power ballad 'I'm Just Ken' in the 'Barbie' movie?",
       "answer": "Ryan Gosling",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -229,6 +261,7 @@
       "slug": "vanderpump-rules-scandoval-partner",
       "question": "The 2023 'Scandoval' involved Tom Sandoval having an affair with which other cast member?",
       "answer": "Rachel 'Raquel' Leviss",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -236,6 +269,7 @@
       "slug": "marvel-scarlet-witch-real-name",
       "question": "What is the real name of the Marvel character known as the Scarlet Witch?",
       "answer": "Wanda Maximoff",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -243,6 +277,7 @@
       "slug": "abbott-elementary-creator",
       "question": "Who is the creator, writer, and star of the sitcom 'Abbott Elementary'?",
       "answer": "Quinta Brunson",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -250,6 +285,7 @@
       "slug": "avatar-way-of-water-setting",
       "question": "The second 'Avatar' film, released in 2022, is subtitled what?",
       "answer": "The Way of Water",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -257,6 +293,7 @@
       "slug": "glass-onion-detective-name",
       "question": "What is the name of the detective played by Daniel Craig in 'Knives Out' and 'Glass Onion'?",
       "answer": "Benoit Blanc",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -264,6 +301,7 @@
       "slug": "only-murders-building-name",
       "question": "In the series 'Only Murders in the Building', what is the name of the apartment building?",
       "answer": "The Arconia",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "hard"
     },
@@ -271,6 +309,7 @@
       "slug": "everything-everywhere-lead-actress",
       "question": "Which actress won an Oscar for her lead role in 'Everything Everywhere All at Once'?",
       "answer": "Michelle Yeoh",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -278,6 +317,7 @@
       "slug": "selena-gomez-rare-beauty-brand",
       "question": "What is the name of Selena Gomez's highly successful makeup brand?",
       "answer": "Rare Beauty",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -285,6 +325,7 @@
       "slug": "taylor-swift-travis-kelce-engagement",
       "question": "Which NFL star and music icon officially announced their engagement in 2025 after a highly publicized romance?",
       "answer": "Travis Kelce and Taylor Swift",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -292,6 +333,7 @@
       "slug": "kendrick-lamar-super-bowl-2025",
       "question": "Which rapper headlined the 2025 Super Bowl Halftime Show in New Orleans?",
       "answer": "Kendrick Lamar",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -299,6 +341,7 @@
       "slug": "wicked-movie-elphaba",
       "question": "Who played the role of Elphaba in the 2024 film adaptation of the musical 'Wicked'?",
       "answer": "Cynthia Erivo",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -306,6 +349,7 @@
       "slug": "gladiator-ii-lead-actor",
       "question": "Which actor took on the lead role of Lucius in the 2024 sequel 'Gladiator II'?",
       "answer": "Paul Mescal",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -313,6 +357,7 @@
       "slug": "labubu-craze-2025",
       "question": "Which viral designer toy figure, created by Kasing Lung, became the 'must-have' celebrity bag accessory of 2025?",
       "answer": "Labubu",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -320,6 +365,7 @@
       "slug": "it-ends-with-us-drama",
       "question": "The 2024 film 'It Ends With Us' was overshadowed by a high-profile public feud between star Blake Lively and which director/co-star?",
       "answer": "Justin Baldoni",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -327,6 +373,7 @@
       "slug": "katy-perry-blue-origin-space",
       "question": "In April 2025, which pop star made headlines by flying to space as part of an all-female crew on a Blue Origin rocket?",
       "answer": "Katy Perry",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -334,6 +381,7 @@
       "slug": "survivor-season-50-theme",
       "question": "What is the special milestone theme for the 50th season of the reality show 'Survivor' premiering in 2026?",
       "answer": "All-Stars / Legends",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -341,6 +389,7 @@
       "slug": "ryan-coogler-sinners-star",
       "question": "Which actor reunites with director Ryan Coogler for the 2025 supernatural thriller 'Sinners'?",
       "answer": "Michael B. Jordan",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -348,6 +397,7 @@
       "slug": "sabrina-carpenter-mans-best-friend-album",
       "question": "Sabrina Carpenter followed up 'Short n' Sweet' with which 2025 album that sparked controversy over its cover art?",
       "answer": "Man's Best Friend",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "hard"
     },
@@ -355,6 +405,7 @@
       "slug": "avengers-doomsday-dr-doom-actor",
       "question": "Which actor shocked fans by returning to the MCU to play Doctor Doom in 'Avengers: Doomsday'?",
       "answer": "Robert Downey Jr.",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -362,13 +413,15 @@
       "slug": "selena-gomez-benny-blanco-marriage",
       "question": "Which producer did Selena Gomez reportedly marry in a private ceremony in 2025?",
       "answer": "Benny Blanco",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
     {
       "slug": "joker-2-lady-gaga-character",
-      "question": "What character did Lady Gaga play opposite Joaquin Phoenix in the 2024 musical sequel 'Joker: Folie à Deux'?",
+      "question": "What character did Lady Gaga play opposite Joaquin Phoenix in the 2024 musical sequel 'Joker: Folie \u00e0 Deux'?",
       "answer": "Harlee 'Lee' Quinzel",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -376,6 +429,7 @@
       "slug": "charli-xcx-brat-summer-year",
       "question": "Which year was famously dubbed 'Brat Summer' thanks to the cultural dominance of Charli XCX's album?",
       "answer": "2024",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -383,6 +437,7 @@
       "slug": "the-white-lotus-season-3-location",
       "question": "The third season of 'The White Lotus' is set in which country?",
       "answer": "Thailand",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -390,6 +445,7 @@
       "slug": "28-years-later-lead-actor",
       "question": "Which original star returned for the 2025 sequel '28 Years Later', directed by Danny Boyle?",
       "answer": "Cillian Murphy",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -397,6 +453,7 @@
       "slug": "met-gala-2025-theme",
       "question": "What was the theme of the 2025 Met Gala, focused on Black dandyism and style?",
       "answer": "Superfine: Tailoring Black Style",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "hard"
     },
@@ -404,6 +461,7 @@
       "slug": "moana-2-release-year",
       "question": "In late 2024, Disney released a surprise theatrical sequel to which animated favorite?",
       "answer": "Moana",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -411,6 +469,7 @@
       "slug": "harry-styles-marathon-viral",
       "question": "In 2025, which pop star went viral for running and completing major marathons in Tokyo and Berlin?",
       "answer": "Harry Styles",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -418,6 +477,7 @@
       "slug": "gta-vi-trailer-year",
       "question": "While the game is slated for late 2026, which year did the record-breaking first trailer for 'Grand Theft Auto VI' drop?",
       "answer": "2023",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -425,6 +485,7 @@
       "slug": "oppenheimer-barbie-phenomenon",
       "question": "What portmanteau was used to describe the 2023 cinematic event where 'Oppenheimer' and 'Barbie' were released on the same day?",
       "answer": "Barbenheimer",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -432,6 +493,7 @@
       "slug": "last-of-us-pedro-pascal-viral-nickname",
       "question": "Which affectionate nickname was widely applied to Pedro Pascal by the internet following his roles in 'The Mandalorian' and 'The Last of Us'?",
       "answer": "Internet Daddy",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -439,6 +501,7 @@
       "slug": "marvel-robert-downey-jr-doom-return",
       "question": "At the 2024 San Diego Comic-Con, Robert Downey Jr. was revealed to be returning to the MCU as which villain?",
       "answer": "Doctor Doom",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -446,13 +509,15 @@
       "slug": "netflix-beef-lead-actors",
       "question": "Which two actors starred as the feuding protagonists in the 2023 Netflix limited series 'Beef'?",
       "answer": "Ali Wong and Steven Yeun",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
     {
       "slug": "shogun-hulu-language",
-      "question": "The 2024 Emmy-winning series 'Shōgun' is primarily performed in which language?",
+      "question": "The 2024 Emmy-winning series 'Sh\u014dgun' is primarily performed in which language?",
       "answer": "Japanese",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -460,6 +525,7 @@
       "slug": "squid-game-season-2-release-year",
       "question": "After a long hiatus, in which year did Netflix release the second season of 'Squid Game'?",
       "answer": "2024",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -467,6 +533,7 @@
       "slug": "gta-6-setting-city",
       "question": "The highly anticipated video game 'Grand Theft Auto VI' is set in which fictionalized version of Miami?",
       "answer": "Vice City",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -474,6 +541,7 @@
       "slug": "baby-reindeer-creator-star",
       "question": "Who created and starred in the 2024 viral Netflix series 'Baby Reindeer', based on his own real-life stalking experience?",
       "answer": "Richard Gadd",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -481,6 +549,7 @@
       "slug": "deadpool-wolverine-cameo-blade",
       "question": "Which actor reprised his role as Blade in the 2024 film 'Deadpool & Wolverine'?",
       "answer": "Wesley Snipes",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -488,6 +557,7 @@
       "slug": "challengers-movie-sport",
       "question": "The 2024 film 'Challengers', starring Zendaya, revolves around which professional sport?",
       "answer": "Tennis",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -495,6 +565,7 @@
       "slug": "vanderpump-rules-valley-spinoff",
       "question": "What is the name of the 2024 spinoff of 'Vanderpump Rules' featuring Jax Taylor and Brittany Cartwright?",
       "answer": "The Valley",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -502,6 +573,7 @@
       "slug": "bluey-special-episode-sign",
       "question": "In 2024, the hit children's show 'Bluey' released a highly publicized 28-minute special titled what?",
       "answer": "The Sign",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "hard"
     },
@@ -509,6 +581,7 @@
       "slug": "jeremy-allen-white-bruce-springsteen",
       "question": "Jeremy Allen White was cast to play which legendary musician in the 2025 biopic 'Deliver Me from Nowhere'?",
       "answer": "Bruce Springsteen",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -516,6 +589,7 @@
       "slug": "met-gala-2024-theme",
       "question": "What was the dress code for the 2024 Met Gala?",
       "answer": "The Garden of Time",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -523,6 +597,7 @@
       "slug": "mr-beast-youtube-subscriber-record",
       "question": "In 2024, MrBeast surpassed which channel to become the most-subscribed YouTube creator of all time?",
       "answer": "T-Series",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "hard"
     },
@@ -530,6 +605,7 @@
       "slug": "lady-gaga-bruno-mars-duet",
       "question": "What is the title of the 2024 chart-topping ballad collaboration between Lady Gaga and Bruno Mars?",
       "answer": "Die With A Smile",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -537,6 +613,7 @@
       "slug": "knives-out-3-title",
       "question": "The third installment of the 'Knives Out' franchise, scheduled for 2025, is titled 'Wake Up...' what?",
       "answer": "Dead Man",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "hard"
     },
@@ -544,6 +621,7 @@
       "slug": "dune-prop-popcorn-bucket",
       "question": "Which movie's promotional popcorn bucket became a viral meme in 2024 due to its suggestive design?",
       "answer": "Dune: Part Two",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -551,6 +629,7 @@
       "slug": "bridgerton-season-3-lead",
       "question": "Which Bridgerton sibling was the focus of the third season of the Netflix series?",
       "answer": "Colin",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -558,6 +637,7 @@
       "slug": "shrek-5-announcement-year",
       "question": "In 2024, DreamWorks officially confirmed that 'Shrek 5' would be released in which year?",
       "answer": "2026",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -565,6 +645,7 @@
       "slug": "taylor-swift-eras-tour-end",
       "question": "In which month of 2024 did Taylor Swift officially conclude 'The Eras Tour'?",
       "answer": "December",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -572,6 +653,7 @@
       "slug": "oppenheimer-best-picture-win",
       "question": "Which film won the Academy Award for Best Picture at the 96th Oscars in 2024?",
       "answer": "Oppenheimer",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -579,6 +661,7 @@
       "slug": "challengers-movie-director",
       "question": "Who directed the 2024 tennis-centered drama 'Challengers'?",
       "answer": "Luca Guadagnino",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -586,13 +669,15 @@
       "slug": "the-bear-season-3-release",
       "question": "In which month of 2024 did the third season of 'The Bear' premiere on Hulu/FX?",
       "answer": "June",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
     {
       "slug": "joker-2-subtitle",
       "question": "What is the official subtitle of the 2024 Joker sequel starring Joaquin Phoenix and Lady Gaga?",
-      "answer": "Folie à Deux",
+      "answer": "Folie \u00e0 Deux",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -600,6 +685,7 @@
       "slug": "stranger-things-final-season-filming",
       "question": "The final season of 'Stranger Things' was confirmed to be in production throughout which year for a 2025 release?",
       "answer": "2024",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -607,6 +693,7 @@
       "slug": "house-of-the-dragon-season-2-conflict",
       "question": "What is the name of the civil war depicted in 'House of the Dragon' Season 2, which aired in 2024?",
       "answer": "The Dance of the Dragons",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -614,6 +701,7 @@
       "slug": "inside-out-2-new-emotion",
       "question": "Which new main emotion was introduced in the 2024 Pixar hit 'Inside Out 2'?",
       "answer": "Anxiety",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -621,6 +709,7 @@
       "slug": "furiosa-mad-max-star",
       "question": "Which actress played the titular role in the 2024 prequel 'Furiosa: A Mad Max Saga'?",
       "answer": "Anya Taylor-Joy",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -628,6 +717,7 @@
       "slug": "vanderpump-rules-hiatus",
       "question": "Following the aftermath of 'Scandoval,' which reality show announced a filming hiatus in mid-2024?",
       "answer": "Vanderpump Rules",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -635,6 +725,7 @@
       "slug": "beetlejuice-sequel-title",
       "question": "What is the official title of the 2024 Tim Burton sequel starring Michael Keaton and Jenna Ortega?",
       "answer": "Beetlejuice Beetlejuice",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -642,6 +733,7 @@
       "slug": "knives-out-3-cast-announcement",
       "question": "In 2024, which actor was the first to be announced alongside Daniel Craig for 'Wake Up Dead Man: A Knives Out Mystery'?",
       "answer": "Josh O'Connor",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "hard"
     },
@@ -649,6 +741,7 @@
       "slug": "bridgerton-season-3-part-split",
       "question": "Netflix split the third season of 'Bridgerton' into how many parts in 2024?",
       "answer": "Two",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -656,6 +749,7 @@
       "slug": "baby-reindeer-real-life-lawsuit",
       "question": "In 2024, a woman claiming to be the inspiration for 'Martha' in which show sued Netflix for $120 million?",
       "answer": "Baby Reindeer",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -663,6 +757,7 @@
       "slug": "sonic-the-hedgehog-3-shadow-voice",
       "question": "Which actor was cast to provide the voice for Shadow the Hedgehog in the 2024 film 'Sonic the Hedgehog 3'?",
       "answer": "Keanu Reeves",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -670,6 +765,7 @@
       "slug": "presumed-innocent-apple-tv-star",
       "question": "Which actor stars in the 2024 Apple TV+ legal thriller 'Presumed Innocent'?",
       "answer": "Jake Gyllenhaal",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     },
@@ -677,6 +773,7 @@
       "slug": "despicable-me-4-villain-voice",
       "question": "Will Ferrell voiced the villain Maxime Le Mal in which 2024 animated sequel?",
       "answer": "Despicable Me 4",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
@@ -684,13 +781,15 @@
       "slug": "twisters-movie-star",
       "question": "Glen Powell and Daisy Edgar-Jones starred in which 2024 sequel to a 1996 disaster film?",
       "answer": "Twisters",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
     },
     {
       "slug": "shogun-hulu-limited-series-change",
-      "question": "Despite originally being a limited series, 'Shōgun' was renewed for how many additional seasons in 2024?",
+      "question": "Despite originally being a limited series, 'Sh\u014dgun' was renewed for how many additional seasons in 2024?",
       "answer": "Two",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "hard"
     },
@@ -698,6 +797,7 @@
       "slug": "nosferatu-2024-director",
       "question": "Who directed the late-2024 gothic horror remake 'Nosferatu'?",
       "answer": "Robert Eggers",
+      "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "medium"
     }

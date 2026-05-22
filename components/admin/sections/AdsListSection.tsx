@@ -1,9 +1,11 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useMemo, useState, type ChangeEvent, type Dispatch, type SetStateAction } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import type { Advertisement, AdPageKey, AdType, Venue } from "@/types";
 import { BulkActionBar, PaginationBar, TD, TH, TR } from "@/components/admin/AdminShell";
 import { getErrorMessage } from "@/lib/errors";
+import type { GeographicHierarchy } from "@/lib/geographicHierarchy";
+import { AdGeographicFilter } from "@/components/admin/ads/AdGeographicFilter";
 import {
   AD_PAGE_OPTIONS,
   AD_TYPE_OPTIONS,
@@ -23,6 +25,16 @@ type AdsListSectionProps = {
   venues: Venue[];
 };
 
+type GeographicSelection = {
+  regionKey?: string;
+  stateCode?: string;
+  cityName?: string;
+  zipCode?: string;
+  venueId?: string;
+};
+
+type GeoCountMap = Record<string, number>;
+
 function computeCtr(impressions: number | undefined, clicks: number | undefined): number {
   const safeImpressions = Math.max(0, Number(impressions ?? 0));
   const safeClicks = Math.max(0, Number(clicks ?? 0));
@@ -30,22 +42,124 @@ function computeCtr(impressions: number | undefined, clicks: number | undefined)
   return (safeClicks / safeImpressions) * 100;
 }
 
+function formatAdTypeLabel(adType: AdType): string {
+  if (adType === "popup") return "Pop-Up";
+  if (adType === "banner") return "Banner";
+  return "Inline";
+}
+
+function normalizeAdGeoList(values?: string[] | null, uppercase = false): string[] {
+  const base = Array.isArray(values) ? values : [];
+  return Array.from(
+    new Set(
+      base
+        .map((value) => String(value ?? "").trim())
+        .filter(Boolean)
+        .map((value) => (uppercase ? value.toUpperCase() : value))
+    )
+  );
+}
+
+function adHasNoGeoTargeting(ad: Advertisement): boolean {
+  const venueIds = normalizeAdGeoList(ad.venueIds);
+  const cities = normalizeAdGeoList(ad.cities);
+  const zipCodes = normalizeAdGeoList(ad.zipCodes);
+  const states = normalizeAdGeoList(ad.states, true);
+  const regions = normalizeAdGeoList(ad.regions, true);
+  return venueIds.length === 0 && cities.length === 0 && zipCodes.length === 0 && states.length === 0 && regions.length === 0;
+}
+
+function adMatchesRegion(ad: Advertisement, regionKey: string): boolean {
+  if (adHasNoGeoTargeting(ad)) return true;
+  return normalizeAdGeoList(ad.regions, true).includes(regionKey.toUpperCase());
+}
+
+function adMatchesState(ad: Advertisement, stateCode: string): boolean {
+  if (adHasNoGeoTargeting(ad)) return true;
+  return normalizeAdGeoList(ad.states, true).includes(stateCode.toUpperCase());
+}
+
+function adMatchesCity(ad: Advertisement, cityName: string): boolean {
+  if (adHasNoGeoTargeting(ad)) return true;
+  return normalizeAdGeoList(ad.cities)
+    .map((city) => city.toLowerCase())
+    .includes(cityName.trim().toLowerCase());
+}
+
+function adMatchesZip(ad: Advertisement, zipCode: string): boolean {
+  if (adHasNoGeoTargeting(ad)) return true;
+  return normalizeAdGeoList(ad.zipCodes).includes(zipCode.trim());
+}
+
+function adMatchesVenue(ad: Advertisement, venueId: string): boolean {
+  if (adHasNoGeoTargeting(ad)) return true;
+  return normalizeAdGeoList(ad.venueIds).includes(venueId.trim());
+}
+
+function adMatchesGeography(ad: Advertisement, selection: GeographicSelection): boolean {
+  if (selection.venueId) return adMatchesVenue(ad, selection.venueId);
+  if (selection.zipCode) return adMatchesZip(ad, selection.zipCode);
+  if (selection.cityName) return adMatchesCity(ad, selection.cityName);
+  if (selection.stateCode) return adMatchesState(ad, selection.stateCode);
+  if (selection.regionKey) return adMatchesRegion(ad, selection.regionKey);
+  return true;
+}
+
+function buildAdGeographicTargetingLabel(ad: Advertisement): string {
+  if (adHasNoGeoTargeting(ad)) {
+    return "All Locations";
+  }
+
+  const regions = normalizeAdGeoList(ad.regions, true);
+  if (regions.length > 0) {
+    return `${regions.join(", ")} Region${regions.length > 1 ? "s" : ""}`;
+  }
+
+  const states = normalizeAdGeoList(ad.states, true);
+  if (states.length > 0) {
+    return states.join(", ");
+  }
+
+  const cities = normalizeAdGeoList(ad.cities);
+  if (cities.length > 0) {
+    return cities.join(", ");
+  }
+
+  const zipCodes = normalizeAdGeoList(ad.zipCodes);
+  if (zipCodes.length > 0) {
+    return `ZIP ${zipCodes.join(", ")}`;
+  }
+
+  const venueIds = normalizeAdGeoList(ad.venueIds);
+  if (venueIds.length > 0) {
+    return `Specific Venues (${venueIds.length})`;
+  }
+
+  return "Targeted";
+}
+
+function countKey(level: "all" | "region" | "state" | "city" | "zip" | "venue", parts: string[]): string {
+  return `${level}:${parts.join("::")}`;
+}
+
 export function AdsListSection({ venues }: AdsListSectionProps) {
   const [items, setItems] = useState<Advertisement[]>([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [pageFilter, setPageFilter] = useState<AdPageKey | "all">("all");
   const [typeFilter, setTypeFilter] = useState<AdType | "all">("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [venueIdsFilter, setVenueIdsFilter] = useState<string[]>([]);
-  const [citiesFilter, setCitiesFilter] = useState<string[]>([]);
-  const [statesFilter, setStatesFilter] = useState<string[]>([]);
-  const [zipCodesFilter, setZipCodesFilter] = useState<string[]>([]);
-  const [regionsFilter, setRegionsFilter] = useState<string[]>([]);
+
+  const [selectedRegion, setSelectedRegion] = useState<string | undefined>(undefined);
+  const [selectedState, setSelectedState] = useState<string | undefined>(undefined);
+  const [selectedCity, setSelectedCity] = useState<string | undefined>(undefined);
+  const [selectedZipCode, setSelectedZipCode] = useState<string | undefined>(undefined);
+  const [selectedVenue, setSelectedVenue] = useState<string | undefined>(undefined);
+
+  const [hierarchy, setHierarchy] = useState<GeographicHierarchy | null>(null);
+  const [hierarchyLoading, setHierarchyLoading] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -57,124 +171,160 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
   const [editingDraft, setEditingDraft] = useState<AdDraft | null>(null);
 
   const [uploadingForAdId, setUploadingForAdId] = useState<string | null>(null);
+  const [showGeoOnMobile, setShowGeoOnMobile] = useState(false);
 
-  const allOnPageSelected = useMemo(
-    () => items.length > 0 && items.every((item) => selectedIds.has(item.id)),
-    [items, selectedIds]
+  const geoSelection = useMemo<GeographicSelection>(
+    () => ({
+      regionKey: selectedRegion,
+      stateCode: selectedState,
+      cityName: selectedCity,
+      zipCode: selectedZipCode,
+      venueId: selectedVenue,
+    }),
+    [selectedCity, selectedRegion, selectedState, selectedVenue, selectedZipCode]
   );
 
-  const cityOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          venues
-            .map((venue) => venue.city ?? "")
-            .map((value) => value.trim())
-            .filter(Boolean)
-        )
-      ).sort((a, b) => a.localeCompare(b)),
-    [venues]
-  );
-  const stateOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          venues
-            .map((venue) => venue.state ?? "")
-            .map((value) => value.trim().toUpperCase())
-            .filter(Boolean)
-        )
-      ).sort((a, b) => a.localeCompare(b)),
-    [venues]
-  );
-  const zipCodeOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          venues
-            .map((venue) => venue.zipCode ?? "")
-            .map((value) => value.trim())
-            .filter(Boolean)
-        )
-      ).sort((a, b) => a.localeCompare(b)),
-    [venues]
-  );
-  const regionOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          venues
-            .map((venue) => venue.region ?? "")
-            .map((value) => value.trim().toUpperCase())
-            .filter(Boolean)
-        )
-      ).sort((a, b) => a.localeCompare(b)),
-    [venues]
-  );
+  const fetchAds = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const params = new URLSearchParams({
+        resource: "ads",
+        page: "1",
+        pageSize: "10000",
+      });
 
-  const fetchAds = useCallback(
-    async (targetPage: number) => {
-      setLoading(true);
-      setError("");
-      try {
-        const params = new URLSearchParams({
-          resource: "ads",
-          page: String(targetPage),
-          pageSize: String(PAGE_SIZE),
-        });
+      if (search.trim()) params.set("search", search.trim());
+      if (pageFilter !== "all") params.set("pageKey", pageFilter);
+      if (typeFilter !== "all") params.set("adType", typeFilter);
+      if (statusFilter !== "all") params.set("active", statusFilter);
 
-        if (search.trim()) params.set("search", search.trim());
-        if (pageFilter !== "all") params.set("pageKey", pageFilter);
-        if (typeFilter !== "all") params.set("adType", typeFilter);
-        if (statusFilter !== "all") params.set("active", statusFilter);
-        if (venueIdsFilter.length > 0) params.set("venueIds", venueIdsFilter.join(","));
-        if (citiesFilter.length > 0) params.set("cities", citiesFilter.join(","));
-        if (statesFilter.length > 0) params.set("states", statesFilter.join(","));
-        if (zipCodesFilter.length > 0) params.set("zipCodes", zipCodesFilter.join(","));
-        if (regionsFilter.length > 0) params.set("regions", regionsFilter.join(","));
-
-        const response = await fetch(`/api/admin?${params.toString()}`, { cache: "no-store" });
-        const payload = (await response.json()) as {
-          ok: boolean;
-          items?: Advertisement[];
-          total?: number;
-          totalPages?: number;
-          error?: string;
-        };
-        if (!response.ok || !payload.ok) {
-          throw new Error(payload.error ?? "Failed to load advertisements.");
-        }
-
-        setItems(payload.items ?? []);
-        setTotal(payload.total ?? 0);
-        setTotalPages(payload.totalPages ?? 1);
-      } catch (err) {
-        setError(getErrorMessage(err, "Failed to load advertisements."));
-      } finally {
-        setLoading(false);
+      const response = await fetch(`/api/admin?${params.toString()}`, { cache: "no-store" });
+      const payload = (await response.json()) as {
+        ok: boolean;
+        items?: Advertisement[];
+        error?: string;
+      };
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.error ?? "Failed to load advertisements.");
       }
-    },
-    [citiesFilter, pageFilter, regionsFilter, search, statesFilter, statusFilter, typeFilter, venueIdsFilter, zipCodesFilter]
-  );
+
+      setItems(payload.items ?? []);
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to load advertisements."));
+    } finally {
+      setLoading(false);
+    }
+  }, [pageFilter, search, statusFilter, typeFilter]);
+
+  const fetchHierarchy = useCallback(async () => {
+    setHierarchyLoading(true);
+    try {
+      const response = await fetch("/api/admin?resource=ads-geography", { cache: "no-store" });
+      const payload = (await response.json()) as {
+        ok: boolean;
+        hierarchy?: GeographicHierarchy;
+        error?: string;
+      };
+      if (!response.ok || !payload.ok || !payload.hierarchy) {
+        throw new Error(payload.error ?? "Failed to load geographic hierarchy.");
+      }
+      setHierarchy(payload.hierarchy);
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to load geographic hierarchy."));
+    } finally {
+      setHierarchyLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchHierarchy();
+  }, [fetchHierarchy]);
 
   useEffect(() => {
     setPage(1);
     setSelectedIds(new Set());
     setEditingAdId(null);
     setEditingDraft(null);
-    void fetchAds(1);
+    void fetchAds();
   }, [fetchAds]);
 
   useEffect(() => {
-    void fetchAds(page);
-  }, [page, fetchAds]);
+    setPage(1);
+    setSelectedIds(new Set());
+  }, [geoSelection]);
+
+  const filteredItems = useMemo(() => {
+    return items.filter((ad) => adMatchesGeography(ad, geoSelection));
+  }, [geoSelection, items]);
+
+  const total = filteredItems.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
+  const pageStart = (page - 1) * PAGE_SIZE;
+  const pageItems = filteredItems.slice(pageStart, pageStart + PAGE_SIZE);
+
+  const allOnPageSelected = useMemo(
+    () => pageItems.length > 0 && pageItems.every((item) => selectedIds.has(item.id)),
+    [pageItems, selectedIds]
+  );
+
+  const geoCountMap = useMemo<GeoCountMap>(() => {
+    const counts: GeoCountMap = {
+      [countKey("all", ["all"])]: items.length,
+    };
+
+    if (!hierarchy) return counts;
+
+    for (const region of hierarchy.regions) {
+      counts[countKey("region", [region.regionKey])] = items.filter((ad) => adMatchesRegion(ad, region.regionKey)).length;
+
+      for (const state of region.states) {
+        counts[countKey("state", [state.stateCode])] = items.filter((ad) => adMatchesState(ad, state.stateCode)).length;
+
+        for (const city of state.cities) {
+          counts[countKey("city", [state.stateCode, city.city])] = items.filter((ad) => adMatchesCity(ad, city.city)).length;
+
+          for (const zip of city.zipCodes) {
+            counts[countKey("zip", [state.stateCode, city.city, zip.zipCode])] = items.filter((ad) => adMatchesZip(ad, zip.zipCode)).length;
+
+            for (const venue of zip.venues) {
+              counts[countKey("venue", [venue.id])] = items.filter((ad) => adMatchesVenue(ad, venue.id)).length;
+            }
+          }
+        }
+      }
+    }
+
+    return counts;
+  }, [hierarchy, items]);
+
+  function clearGeoSelection() {
+    setSelectedRegion(undefined);
+    setSelectedState(undefined);
+    setSelectedCity(undefined);
+    setSelectedZipCode(undefined);
+    setSelectedVenue(undefined);
+  }
+
+  function findRegionForState(stateCode: string): string | undefined {
+    const normalized = stateCode.trim().toUpperCase();
+    const region = hierarchy?.regions.find((item) => item.states.some((state) => state.stateCode === normalized));
+    return region?.regionKey;
+  }
 
   function toggleSelectAll() {
     if (allOnPageSelected) {
       setSelectedIds(new Set());
       return;
     }
-    setSelectedIds(new Set(items.map((item) => item.id)));
+    setSelectedIds(new Set(pageItems.map((item) => item.id)));
   }
 
   function toggleRowSelection(id: string) {
@@ -184,13 +334,6 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
       else next.add(id);
       return next;
     });
-  }
-
-  function handleMultiSelectChange(
-    event: ChangeEvent<HTMLSelectElement>,
-    setter: Dispatch<SetStateAction<string[]>>
-  ) {
-    setter(Array.from(event.target.selectedOptions).map((option) => option.value));
   }
 
   async function runBulkAction(action: "delete" | "enable" | "disable") {
@@ -218,7 +361,7 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
       const affected = payload.updated ?? payload.deleted ?? selectedIds.size;
       setSuccess(`${affected} ad(s) ${action === "delete" ? "deleted" : action === "enable" ? "enabled" : "disabled"}.`);
       setSelectedIds(new Set());
-      await fetchAds(page);
+      await fetchAds();
     } catch (err) {
       setError(getErrorMessage(err, `Failed to ${action} selected ads.`));
     } finally {
@@ -290,7 +433,7 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
       setSuccess("Advertisement updated.");
       setEditingAdId(null);
       setEditingDraft(null);
-      await fetchAds(page);
+      await fetchAds();
     } catch (err) {
       setError(getErrorMessage(err, "Failed to update advertisement."));
     } finally {
@@ -315,7 +458,7 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
         setEditingAdId(null);
         setEditingDraft(null);
       }
-      await fetchAds(page);
+      await fetchAds();
     } catch (err) {
       setError(getErrorMessage(err, "Failed to delete advertisement."));
     } finally {
@@ -325,14 +468,14 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Search</label>
             <input
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
-              placeholder="Advertiser or slot key"
+              placeholder="Advertiser, campaign, or slot key"
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </div>
@@ -352,7 +495,7 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Type</label>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Ad Type</label>
             <select
               value={typeFilter}
               onChange={(event) => setTypeFilter(event.target.value as AdType | "all")}
@@ -379,87 +522,11 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
             </select>
           </div>
         </div>
-        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-5">
-          <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Venues</label>
-            <select
-              multiple
-              value={venueIdsFilter}
-              onChange={(event) => handleMultiSelectChange(event, setVenueIdsFilter)}
-              className="h-28 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"
-            >
-              {venues.map((venue) => (
-                <option key={venue.id} value={venue.id}>
-                  {venue.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Cities</label>
-            <select
-              multiple
-              value={citiesFilter}
-              onChange={(event) => handleMultiSelectChange(event, setCitiesFilter)}
-              className="h-28 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"
-            >
-              {cityOptions.map((city) => (
-                <option key={city} value={city}>
-                  {city}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">States</label>
-            <select
-              multiple
-              value={statesFilter}
-              onChange={(event) => handleMultiSelectChange(event, setStatesFilter)}
-              className="h-28 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"
-            >
-              {stateOptions.map((state) => (
-                <option key={state} value={state}>
-                  {state}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Zip Codes</label>
-            <select
-              multiple
-              value={zipCodesFilter}
-              onChange={(event) => handleMultiSelectChange(event, setZipCodesFilter)}
-              className="h-28 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"
-            >
-              {zipCodeOptions.map((zip) => (
-                <option key={zip} value={zip}>
-                  {zip}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Regions</label>
-            <select
-              multiple
-              value={regionsFilter}
-              onChange={(event) => handleMultiSelectChange(event, setRegionsFilter)}
-              className="h-28 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"
-            >
-              {regionOptions.map((region) => (
-                <option key={region} value={region}>
-                  {region}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div className="mt-4 flex items-center gap-2">
+
+        <div className="mt-4 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
           <button
             onClick={() => setSearch(searchInput)}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+            className="min-h-[44px] rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
           >
             Apply Filters
           </button>
@@ -470,15 +537,17 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
               setPageFilter("all");
               setTypeFilter("all");
               setStatusFilter("all");
-              setVenueIdsFilter([]);
-              setCitiesFilter([]);
-              setStatesFilter([]);
-              setZipCodesFilter([]);
-              setRegionsFilter([]);
+              clearGeoSelection();
             }}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            className="min-h-[44px] rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
           >
             Reset
+          </button>
+          <button
+            onClick={() => setShowGeoOnMobile((prev) => !prev)}
+            className="min-h-[44px] rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 lg:hidden"
+          >
+            {showGeoOnMobile ? "Hide Geography" : "Show Geography"}
           </button>
         </div>
       </div>
@@ -486,178 +555,245 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
       {error ? <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
       {success ? <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div> : null}
 
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="px-6 pt-4">
-          <BulkActionBar
-            count={selectedIds.size}
-            onEnableSelected={() => {
-              void runBulkAction("enable");
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[320px,1fr]">
+        <div className={showGeoOnMobile ? "block" : "hidden lg:block"}>
+          <AdGeographicFilter
+            hierarchy={hierarchy}
+            loading={hierarchyLoading}
+            counts={geoCountMap}
+            selectedRegion={selectedRegion}
+            selectedState={selectedState}
+            selectedCity={selectedCity}
+            selectedZipCode={selectedZipCode}
+            selectedVenue={selectedVenue}
+            onSelectRegion={(regionKey) => {
+              setSelectedRegion(regionKey);
+              setSelectedState(undefined);
+              setSelectedCity(undefined);
+              setSelectedZipCode(undefined);
+              setSelectedVenue(undefined);
             }}
-            onDisableSelected={() => {
-              void runBulkAction("disable");
+            onSelectState={(stateCode) => {
+              setSelectedRegion(findRegionForState(stateCode));
+              setSelectedState(stateCode);
+              setSelectedCity(undefined);
+              setSelectedZipCode(undefined);
+              setSelectedVenue(undefined);
             }}
-            onDeleteSelected={() => {
-              void runBulkAction("delete");
+            onSelectCity={(cityName, stateCode) => {
+              setSelectedRegion(findRegionForState(stateCode));
+              setSelectedState(stateCode);
+              setSelectedCity(cityName);
+              setSelectedZipCode(undefined);
+              setSelectedVenue(undefined);
             }}
-            onClear={() => setSelectedIds(new Set())}
-            busy={busy}
+            onSelectZipCode={(zipCode, cityName, stateCode) => {
+              setSelectedRegion(findRegionForState(stateCode));
+              setSelectedState(stateCode);
+              setSelectedCity(cityName);
+              setSelectedZipCode(zipCode);
+              setSelectedVenue(undefined);
+            }}
+            onSelectVenue={(venueId, zipCode, cityName, stateCode) => {
+              setSelectedRegion(findRegionForState(stateCode));
+              setSelectedState(stateCode);
+              setSelectedCity(cityName);
+              setSelectedZipCode(zipCode);
+              setSelectedVenue(venueId);
+            }}
+            onClear={clearGeoSelection}
           />
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50">
-                <th className={`${TH} w-10`}>
-                  <input
-                    type="checkbox"
-                    checked={allOnPageSelected}
-                    onChange={toggleSelectAll}
-                    className="h-4 w-4 rounded border-slate-300 text-indigo-600"
-                  />
-                </th>
-                <th className={TH}>Slot</th>
-                <th className={TH}>Page</th>
-                <th className={TH}>Type</th>
-                <th className={TH}>Advertiser</th>
-                <th className={TH}>Status</th>
-                <th className={TH}>Impressions</th>
-                <th className={TH}>Clicks</th>
-                <th className={TH}>CTR</th>
-                <th className={`${TH} text-right`}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={10} className="py-12 text-center text-sm text-slate-400">Loading ads...</td>
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="px-6 pt-4">
+            <div className="mb-2 text-xs text-slate-500">
+              Showing {total} ad{total === 1 ? "" : "s"}
+              {selectedVenue
+                ? " for selected venue"
+                : selectedZipCode
+                  ? " for selected ZIP code"
+                  : selectedCity
+                    ? " for selected city"
+                    : selectedState
+                      ? " for selected state"
+                      : selectedRegion
+                        ? " for selected region"
+                        : " across all locations"}
+            </div>
+            <BulkActionBar
+              count={selectedIds.size}
+              onEnableSelected={() => {
+                void runBulkAction("enable");
+              }}
+              onDisableSelected={() => {
+                void runBulkAction("disable");
+              }}
+              onDeleteSelected={() => {
+                void runBulkAction("delete");
+              }}
+              onClear={() => setSelectedIds(new Set())}
+              busy={busy}
+            />
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50">
+                  <th className={`${TH} w-10`}>
+                    <input
+                      type="checkbox"
+                      checked={allOnPageSelected}
+                      onChange={toggleSelectAll}
+                      className="h-4 w-4 rounded border-slate-300 text-indigo-600"
+                    />
+                  </th>
+                  <th className={TH}>Ad ID</th>
+                  <th className={TH}>Advertiser / Campaign</th>
+                  <th className={TH}>Ad Type</th>
+                  <th className={TH}>Page</th>
+                  <th className={TH}>Geographic Targeting</th>
+                  <th className={TH}>Status</th>
+                  <th className={TH}>Impressions</th>
+                  <th className={TH}>Clicks</th>
+                  <th className={TH}>CTR</th>
+                  <th className={`${TH} text-right`}>Actions</th>
                 </tr>
-              ) : items.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="py-12 text-center text-sm text-slate-400">No ads found.</td>
-                </tr>
-              ) : (
-                items.map((ad) => {
-                  const isEditing = editingAdId === ad.id;
-                  const ctr = computeCtr(ad.impressions, ad.clicks);
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={11} className="py-12 text-center text-sm text-slate-400">Loading ads...</td>
+                  </tr>
+                ) : pageItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={11} className="py-12 text-center text-sm text-slate-400">No ads found.</td>
+                  </tr>
+                ) : (
+                  pageItems.map((ad) => {
+                    const isEditing = editingAdId === ad.id;
+                    const ctr = computeCtr(ad.impressions, ad.clicks);
 
-                  return (
-                    <Fragment key={ad.id}>
-                      <tr key={ad.id} className={TR}>
-                        <td className={`${TD} w-10`}>
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.has(ad.id)}
-                            onChange={() => toggleRowSelection(ad.id)}
-                            className="h-4 w-4 rounded border-slate-300 text-indigo-600"
-                          />
-                        </td>
-                        <td className={`${TD} text-slate-700`}>
-                          <div className="font-medium text-slate-900">{ad.slotKey}</div>
-                          <div className="text-xs text-slate-500">Priority {ad.priority}</div>
-                        </td>
-                        <td className={TD}>{ad.pageKey}</td>
-                        <td className={TD}>{ad.adType}</td>
-                        <td className={TD}>{ad.advertiserName}</td>
-                        <td className={TD}>
-                          <span
-                            className={`rounded-full px-2 py-1 text-xs font-semibold ${
-                              ad.active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"
-                            }`}
-                          >
-                            {ad.active ? "Active" : "Inactive"}
-                          </span>
-                        </td>
-                        <td className={`${TD} tabular-nums`}>{ad.impressions ?? 0}</td>
-                        <td className={`${TD} tabular-nums`}>{ad.clicks ?? 0}</td>
-                        <td className={`${TD} tabular-nums`}>{ctr.toFixed(2)}%</td>
-                        <td className={`${TD} text-right`}>
-                          <div className="inline-flex gap-2">
-                            <button
-                              onClick={() => (isEditing ? cancelEdit() : startEdit(ad))}
-                              className="rounded border border-slate-300 px-3 py-1 text-xs text-slate-700 hover:bg-slate-50"
-                            >
-                              {isEditing ? "Close" : "Edit"}
-                            </button>
-                            <button
-                              onClick={() => {
-                                void deleteSingle(ad.id);
-                              }}
-                              disabled={busy}
-                              className="rounded border border-red-200 px-3 py-1 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-
-                      {isEditing && editingDraft ? (
-                        <tr className="border-b border-slate-100 bg-slate-50/60">
-                          <td colSpan={10} className="px-4 py-4">
-                            <div className="mb-4">
-                              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
-                                Replace Image (JPEG/PNG/WebP, max 300KB)
-                              </label>
-                              <input
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp"
-                                onChange={(event) => {
-                                  const file = event.target.files?.[0];
-                                  if (!file) return;
-                                  void uploadImageForEditor(file);
-                                }}
-                                className="block w-full text-sm text-slate-600"
-                              />
-                              {uploadingForAdId === ad.id ? (
-                                <p className="mt-1 text-xs text-slate-500">Uploading image...</p>
-                              ) : null}
-                              {editingDraft.imageUrl ? (
-                                <img src={editingDraft.imageUrl} alt="Ad preview" className="mt-2 max-h-40 rounded border border-slate-200" />
-                              ) : null}
-                            </div>
-
-                            <AdFormFields
-                              draft={editingDraft}
-                              onChange={(next) => {
-                                setEditingDraft(next);
-                                setError("");
-                              }}
-                              venues={venues}
-                              disabled={busy || uploadingForAdId === ad.id}
+                    return (
+                      <Fragment key={ad.id}>
+                        <tr key={ad.id} className={TR}>
+                          <td className={`${TD} w-10`}>
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.has(ad.id)}
+                              onChange={() => toggleRowSelection(ad.id)}
+                              className="h-4 w-4 rounded border-slate-300 text-indigo-600"
                             />
-
-                            <div className="mt-4 flex items-center gap-2">
+                          </td>
+                          <td className={`${TD} text-slate-700`}>
+                            <div className="font-medium text-slate-900">{ad.id}</div>
+                            <div className="text-xs text-slate-500">{ad.slotKey}</div>
+                          </td>
+                          <td className={TD}>{ad.advertiserName}</td>
+                          <td className={TD}>{formatAdTypeLabel(ad.adType)}</td>
+                          <td className={TD}>{ad.pageKey}</td>
+                          <td className={TD}>{buildAdGeographicTargetingLabel(ad)}</td>
+                          <td className={TD}>
+                            <span
+                              className={`rounded-full px-2 py-1 text-xs font-semibold ${
+                                ad.active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"
+                              }`}
+                            >
+                              {ad.active ? "Active" : "Inactive"}
+                            </span>
+                          </td>
+                          <td className={`${TD} tabular-nums`}>{ad.impressions ?? 0}</td>
+                          <td className={`${TD} tabular-nums`}>{ad.clicks ?? 0}</td>
+                          <td className={`${TD} tabular-nums`}>{ctr.toFixed(2)}%</td>
+                          <td className={`${TD} text-right`}>
+                            <div className="inline-flex flex-col gap-2 sm:flex-row">
                               <button
-                                onClick={() => {
-                                  void saveEdit();
-                                }}
-                                disabled={busy || uploadingForAdId === ad.id}
-                                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                                onClick={() => (isEditing ? cancelEdit() : startEdit(ad))}
+                                className="min-h-[44px] rounded border border-slate-300 px-3 py-1 text-xs text-slate-700 hover:bg-slate-50"
                               >
-                                {busy ? "Saving..." : "Save Changes"}
+                                {isEditing ? "Close" : "Edit"}
                               </button>
                               <button
-                                onClick={cancelEdit}
-                                className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                                onClick={() => {
+                                  void deleteSingle(ad.id);
+                                }}
+                                disabled={busy}
+                                className="min-h-[44px] rounded border border-red-200 px-3 py-1 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50"
                               >
-                                Cancel
+                                Delete
                               </button>
                             </div>
                           </td>
                         </tr>
-                      ) : null}
-                    </Fragment>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
 
-        {totalPages > 1 ? (
-          <PaginationBar page={page} totalPages={totalPages} total={total} pageSize={PAGE_SIZE} onPageChange={setPage} />
-        ) : null}
+                        {isEditing && editingDraft ? (
+                          <tr className="border-b border-slate-100 bg-slate-50/60">
+                            <td colSpan={11} className="px-4 py-4">
+                              <div className="mb-4">
+                                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                  Replace Image (JPEG/PNG/WebP, max 300KB)
+                                </label>
+                                <input
+                                  type="file"
+                                  accept="image/jpeg,image/png,image/webp"
+                                  onChange={(event) => {
+                                    const file = event.target.files?.[0];
+                                    if (!file) return;
+                                    void uploadImageForEditor(file);
+                                  }}
+                                  className="block w-full text-sm text-slate-600"
+                                />
+                                {uploadingForAdId === ad.id ? (
+                                  <p className="mt-1 text-xs text-slate-500">Uploading image...</p>
+                                ) : null}
+                                {editingDraft.imageUrl ? (
+                                  <img src={editingDraft.imageUrl} alt="Ad preview" className="mt-2 max-h-40 rounded border border-slate-200" />
+                                ) : null}
+                              </div>
+
+                              <AdFormFields
+                                draft={editingDraft}
+                                onChange={(next) => {
+                                  setEditingDraft(next);
+                                  setError("");
+                                }}
+                                venues={venues}
+                                disabled={busy || uploadingForAdId === ad.id}
+                              />
+
+                              <div className="mt-4 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+                                <button
+                                  onClick={() => {
+                                    void saveEdit();
+                                  }}
+                                  disabled={busy || uploadingForAdId === ad.id}
+                                  className="min-h-[44px] rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                                >
+                                  {busy ? "Saving..." : "Save Changes"}
+                                </button>
+                                <button
+                                  onClick={cancelEdit}
+                                  className="min-h-[44px] rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : null}
+                      </Fragment>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {totalPages > 1 ? (
+            <PaginationBar page={page} totalPages={totalPages} total={total} pageSize={PAGE_SIZE} onPageChange={setPage} />
+          ) : null}
+        </div>
       </div>
     </div>
   );

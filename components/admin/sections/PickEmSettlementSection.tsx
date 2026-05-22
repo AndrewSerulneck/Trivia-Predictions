@@ -13,6 +13,8 @@ type PickEmMatchup = {
   awayTeamId: string | null;
   startsAt: string;
   pickCount: number;
+  settled: boolean;
+  outcome: "home" | "away" | null;
   status: "unsettled" | "settled" | "canceled";
   statusLabel: string;
   settledWinnerTeam: string | null;
@@ -21,8 +23,21 @@ type PickEmMatchup = {
 type SortField = "matchup" | "sport" | "league" | "startTime" | "status";
 type SortDirection = "asc" | "desc";
 
+const SPORT_LABELS: Record<string, string> = {
+  nba: "Basketball",
+  mlb: "Baseball",
+  nhl: "Hockey",
+  nfl: "Football",
+  soccer: "Soccer",
+  mma: "MMA",
+};
+
 function getTodayIsoDate() {
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function sortIndicator(active: boolean, direction: SortDirection) {
@@ -49,7 +64,11 @@ export function PickEmSettlementSection() {
     setLoading(true);
     setError("");
     try {
-      const params = new URLSearchParams({ resource: "pickem-matchups", date });
+      const params = new URLSearchParams({
+        resource: "pickem-matchups",
+        date,
+        tzOffsetMinutes: String(new Date().getTimezoneOffset()),
+      });
       const response = await fetch(`/api/admin?${params.toString()}`, { cache: "no-store" });
       const payload = (await response.json()) as {
         ok: boolean;
@@ -74,7 +93,7 @@ export function PickEmSettlementSection() {
   }, [selectedDate, fetchMatchups]);
 
   const sportOptions = useMemo(() => {
-    return ["all", ...Array.from(new Set(items.map((item) => item.sportSlug.toUpperCase()))).sort()];
+    return ["all", ...Array.from(new Set(items.map((item) => item.sportSlug.toLowerCase()))).sort()];
   }, [items]);
 
   const leagueOptions = useMemo(() => {
@@ -85,7 +104,7 @@ export function PickEmSettlementSection() {
     const q = search.trim().toLowerCase();
 
     const filtered = items.filter((item) => {
-      if (sportFilter !== "all" && item.sportSlug.toUpperCase() !== sportFilter) return false;
+      if (sportFilter !== "all" && item.sportSlug.toLowerCase() !== sportFilter) return false;
       if (leagueFilter !== "all" && item.league !== leagueFilter) return false;
       if (!q) return true;
       return item.homeTeam.toLowerCase().includes(q) || item.awayTeam.toLowerCase().includes(q);
@@ -172,6 +191,8 @@ export function PickEmSettlementSection() {
           item.gameId === matchup.gameId
             ? {
                 ...item,
+                settled: true,
+                outcome: winnerTeamId === matchup.homeTeamId ? "home" : winnerTeamId === matchup.awayTeamId ? "away" : null,
                 status: "settled",
                 statusLabel: `Settled: ${winnerLabel}`,
                 settledWinnerTeam: winnerLabel,
@@ -224,7 +245,7 @@ export function PickEmSettlementSection() {
             >
               {sportOptions.map((option) => (
                 <option key={option} value={option}>
-                  {option === "all" ? "All Sports" : option}
+                  {option === "all" ? "All Sports" : SPORT_LABELS[option] ?? option.toUpperCase()}
                 </option>
               ))}
             </select>
@@ -301,17 +322,18 @@ export function PickEmSettlementSection() {
                 >
                   Status{sortIndicator(sortField === "status", sortDirection)}
                 </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Picks</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-slate-400">Loading matchups...</td>
+                  <td colSpan={7} className="px-4 py-12 text-center text-slate-400">Loading matchups...</td>
                 </tr>
               ) : filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-slate-400">No matchups found for this date/filter set.</td>
+                  <td colSpan={7} className="px-4 py-12 text-center text-slate-400">No matchups found for this date/filter set.</td>
                 </tr>
               ) : (
                 filteredItems.map((matchup) => {
@@ -323,16 +345,21 @@ export function PickEmSettlementSection() {
                       <td className="px-4 py-3 text-slate-600">{matchup.league || "-"}</td>
                       <td className="px-4 py-3 text-slate-500">{new Date(matchup.startsAt).toLocaleString()}</td>
                       <td className="px-4 py-3">
-                        {matchup.status === "unsettled" ? (
+                        {!matchup.settled ? (
                           <span className="rounded-full bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-800">Unsettled</span>
                         ) : matchup.status === "canceled" ? (
                           <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700">Canceled</span>
+                        ) : matchup.outcome === "home" ? (
+                          <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700">Settled: Home</span>
+                        ) : matchup.outcome === "away" ? (
+                          <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700">Settled: Away</span>
                         ) : (
-                          <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700">{matchup.statusLabel}</span>
+                          <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700">Settled</span>
                         )}
                       </td>
+                      <td className="px-4 py-3 text-slate-600">{matchup.pickCount}</td>
                       <td className="px-4 py-3 text-right">
-                        {matchup.status === "unsettled" ? (
+                        {!matchup.settled ? (
                           <div className="inline-flex gap-2">
                             <button
                               onClick={() => {
@@ -341,7 +368,7 @@ export function PickEmSettlementSection() {
                               disabled={settling}
                               className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
                             >
-                              {settling ? "Settling..." : "Settle Home Win"}
+                              {settling ? "Settling..." : `Settle ${matchup.homeTeam}`}
                             </button>
                             <button
                               onClick={() => {
@@ -350,11 +377,17 @@ export function PickEmSettlementSection() {
                               disabled={settling}
                               className="rounded-lg bg-slate-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
                             >
-                              {settling ? "Settling..." : "Settle Away Win"}
+                              {settling ? "Settling..." : `Settle ${matchup.awayTeam}`}
                             </button>
                           </div>
+                        ) : matchup.status === "canceled" ? (
+                          <span className="text-xs text-slate-500">Canceled</span>
+                        ) : matchup.outcome === "home" ? (
+                          <span className="text-xs text-slate-500">Outcome: Home</span>
+                        ) : matchup.outcome === "away" ? (
+                          <span className="text-xs text-slate-500">Outcome: Away</span>
                         ) : (
-                          <span className="text-xs text-slate-500">No action needed</span>
+                          <span className="text-xs text-slate-500">Outcome set</span>
                         )}
                       </td>
                     </tr>

@@ -1,0 +1,805 @@
+{
+  "categoryName": "Action Movies",
+  "questions": [
+    {
+      "slug": "die-hard-building-name",
+      "question": "What is the name of the fictional Los Angeles skyscraper where John McClane takes on Hans Gruber in Die Hard?",
+      "answer": "Nakatomi Plaza",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "keanu-reeves-bus-speed",
+      "question": "In the 1994 action thriller Speed, what is the minimum miles-per-hour speed the city bus must maintain to keep the bomb from exploding?",
+      "answer": "50",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "john-wick-rules",
+      "question": "The underworld of John Wick is governed by two sacred, unbreakable rules. One is that no business can be conducted on Continental grounds. What is the other?",
+      "answer": "Every marker must be honored",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "arnold-predator-cia-friend",
+      "question": "In the 1987 film Predator, which actor plays Al Dillon, the CIA operative who shares an iconic mid-air arm-wrestle handshake with Arnold Schwarzenegger's character?",
+      "answer": "Carl Weathers",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mad-max-fury-road-guitarist",
+      "question": "What is the name of the heavily armed, blind guitarist who plays a flame-throwing electric guitar atop a moving vehicle in Mad Max: Fury Road?",
+      "answer": "The Doof Warrior",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "kill-bill-hanzo-profession",
+      "question": "In Kill Bill: Volume 1, what front business does legendary swordsmith Hattori Hanzo run in Okinawa when the Bride tracks him down?",
+      "answer": "Sushi restaurant",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "robocop-omni-consumer-products",
+      "question": "What is the name of the massive, mega-corporation that creates RoboCop and effectively runs the Detroit Police Department?",
+      "answer": "Omni Consumer Products",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "lethal-weapon-riggs-special-forces",
+      "question": "Before joining the LAPD, Martin Riggs served as a sniper in which branch of the U.S. military during the Vietnam War?",
+      "answer": "Army",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "face-off-cage-travolta-characters",
+      "question": "In the John Woo classic Face/Off, what is the name of the unhinged terrorist mastermind played by Nicolas Cage?",
+      "answer": "Castor Troy",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "terminator-2-cyberdyne-scientist",
+      "question": "What is the name of the Cyberdyne Systems scientist responsible for creating the neural-net processor that will eventually become Skynet?",
+      "answer": "Miles Dyson",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mission-impossible-imf-agency",
+      "question": "What does the acronym \"IMF\" stand for in the Mission: Impossible franchise?",
+      "answer": "Impossible Missions Force",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "matrix-red-pill-actor",
+      "question": "Which character famously tells Neo, \"You take the blue pill, the story ends... You take the red pill, you stay in Wonderland\"?",
+      "answer": "Morpheus",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "gladiator-maximus-home-region",
+      "question": "When addressing the Emperor in Gladiator, Maximus identifies himself as the commander of the Armies of the North and the General of which specific legions?",
+      "answer": "Felix Legions",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "top-gun-maverick-callsign",
+      "question": "In the original 1986 Top Gun, what is the callsign of Tom Cruise\u2019s wingman and best friend, Nick Bradshaw?",
+      "answer": "Goose",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "con-air-bunny-recipient",
+      "question": "In Con Air, Cameron Poe goes to extreme lengths to protect a stuffed pink bunny. Who is the intended recipient of this gift?",
+      "answer": "His daughter",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-rock-prison-island",
+      "question": "The 1996 action hit The Rock centers on a rogue group of Marines holding hostages on which famous former prison island?",
+      "answer": "Alcatraz",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "bourne-identity-bank-city",
+      "question": "In The Bourne Identity, Jason Bourne travels to a Swiss bank to open a safety deposit box containing his passports and money. In which specific city is this bank located?",
+      "answer": "Zurich",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "bad-boys-miami-division",
+      "question": "Detectives Mike Lowrey and Marcus Burnett work for the specialized tactical unit of which city's police department?",
+      "answer": "Miami",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "taken-liam-neeson-particular-skills",
+      "question": "What is the name of the retired CIA operative played by Liam Neeson in the Taken franchise?",
+      "answer": "Bryan Mills",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "raid-redemption-martial-art",
+      "question": "The acclaimed Indonesian action film The Raid: Redemption heavily showcases which specific traditional Southeast Asian martial art?",
+      "answer": "Pencak Silat",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "first-blood-rambo-town",
+      "question": "What is the name of the fictional Washington town where John Rambo is arrested and harassed by the local sheriff in First Blood?",
+      "answer": "Hope",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "point-break-ex-presidents-leader",
+      "question": "In the 1991 surfing action movie Point Break, Patrick Swayze plays the leader of a bank-robbing crew. What is the name of his character?",
+      "answer": "Bodhi",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "hard-boiled-director",
+      "question": "The legendary 1992 teahouse and hospital shootout film Hard Boiled was directed by which iconic master of Hong Kong heroic bloodshed cinema?",
+      "answer": "John Woo",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "commando-matrix-daughter-actress",
+      "question": "In the 1985 Schwarzenegger vehicle Commando, a young actress plays John Matrix's kidnapped daughter, Jenny. What is the name of this actress?",
+      "answer": "Alyssa Milano",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "dirty-harry-magnum-caliber",
+      "question": "In Dirty Harry, Inspector Harry Callahan famously wields a Smith & Wesson Model 29 revolver. What caliber ammunition does this handgun fire?",
+      "answer": ".44 Magnum",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "taken-brian-mills-cia",
+      "question": "In the movie Taken, Liam Neeson's character Bryan Mills famously claims he has a \"particular set of skills\" acquired over a long career in which government agency?",
+      "answer": "CIA",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "john-wick-puppy-breed",
+      "question": "In the original John Wick, what breed of puppy is left behind by John's late wife, whose death triggers his entire revenge campaign?",
+      "answer": "Beagle",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mad-max-fury-road-imperator",
+      "question": "What is the full military title used by Charlize Theron's character in Mad Max: Fury Road?",
+      "answer": "Imperator Furiosa",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "gladiator-maximus-nemesis",
+      "question": "What is the name of the corrupt, power-hungry Roman Emperor played by Joaquin Phoenix in Gladiator?",
+      "answer": "Commodus",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "extraction-hemsworth-character-name",
+      "question": "What is the full name of the elite black-ops mercenary played by Chris Hemsworth in the Extraction franchise?",
+      "answer": "Tyler Rake",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "die-hard-2-airport-setting",
+      "question": "While the first Die Hard takes place in a corporate tower, Die Hard 2 traps John McClane at which major international airport?",
+      "answer": "Dulles International Airport",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "matrix-agent-smith-actor",
+      "question": "Which actor brilliantly brings the chilling, monotone program Agent Smith to life in The Matrix trilogy?",
+      "answer": "Hugo Weaving",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "true-lies-danielle-daughter",
+      "question": "In the 1994 action-comedy True Lies, which actress plays Jamie Lee Curtis and Arnold Schwarzenegger\u2019s rebellious teenage daughter, Dana?",
+      "answer": "Eliza Dushku",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "casino-royale-poker-variant",
+      "question": "Departing from James Bond's traditional game of Baccarat, what specific variant of poker is played at the high-stakes tournament in Casino Royale?",
+      "answer": "Texas Hold 'em",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "bourne-identity-laser-projector-location",
+      "question": "At the beginning of The Bourne Identity, Jason Bourne finds a laser projector hidden under his skin that displays the account number for a bank in which Swiss city?",
+      "answer": "Zurich",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "predator-dillon-cia-fate",
+      "question": "In Predator, Carl Weathers' character Dillon is explicitly targeted by the creature while trying to protect Dutch's squad. What body part does Dillon lose right before he is killed?",
+      "answer": "Arm",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "bad-boys-stolen-evidence",
+      "question": "The plot of the original 1995 Bad Boys kicks off when $100 million worth of what specific drug is stolen directly out of the Miami Police headquarters secure vault?",
+      "answer": "Heroin",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "terminator-2-john-connor-friend",
+      "question": "In Terminator 2: Judgment Day, what is the first name of John Connor's dirt-bike-riding, arcade-loving best friend who helps him hack an ATM?",
+      "answer": "Tim",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "air-force-one-terrorist-leader",
+      "question": "Gary Oldman plays the ruthless, ultra-nationalist terrorist leader Ivan Korshunov who hijacks the President's plane in which 1997 action film?",
+      "answer": "Air Force One",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "point-break-johnny-utah-college",
+      "question": "Before becoming an FBI agent in Point Break, Johnny Utah was a standout college football quarterback for which university?",
+      "answer": "Ohio State University",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "indiana-jones-raiders-island",
+      "question": "In Raiders of the Lost Ark, Indiana Jones confronts Belloq and the Nazis on an unnamed island located in which body of water right before the Ark is opened?",
+      "answer": "Aegean Sea",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "lethal-weapon-murtaugh-boat-name",
+      "question": "Throughout the Lethal Weapon series, Roger Murtaugh spends his off-hours working on a personal boat that he has poetically named what?",
+      "answer": "A-Core-A-Blanca",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "hard-boiled-tony-leung-undercover",
+      "question": "In John Woo's Hard Boiled, Tony Leung plays an undercover cop who is deep inside the triad syndicate. What is his character's undercover profession?",
+      "answer": "Hitman",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "mission-impossible-fallout-plutonium",
+      "question": "In Mission: Impossible \u2013 Fallout, Ethan Hunt and the IMF team are racing to recover three missing spheres made of what weaponized element?",
+      "answer": "Plutonium",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "speed-elevator-opening-scene",
+      "question": "Before targeting the city bus, the villain Howard Payne establishes his credentials by rigging an elevator with explosives in what type of building?",
+      "answer": "Skyscraper",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "robocop-alex-murphy-partner",
+      "question": "What is the name of Alex Murphy's tough, loyal police partner who witnesses his brutal ambush and later helps RoboCop remember his past?",
+      "answer": "Anne Lewis",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "demolition-man-frozen-year",
+      "question": "In the Sylvester Stallone sci-fi actioner Demolition Man, John Spartan is cryogenically frozen in 1996 and thawed out to track Simon Phoenix in what specific year?",
+      "answer": "2032",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "the-rock-chemical-weapon",
+      "question": "In the movie The Rock, General Hummel threatens San Francisco with rocket warheads loaded with what deadly, skin-melting nerve agent?",
+      "answer": "VX gas",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "top-gun-maverick-f14",
+      "question": "In the climax of Top Gun: Maverick, Maverick and Rooster escape enemy territory by stealing what specific, outdated model of fighter jet from a bombed hangar?",
+      "answer": "F-14 Tomcat",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "john-wick-4-osaka-manager",
+      "question": "In John Wick: Chapter 4, John seeks refuge at the Osaka Continental. What is the name of the hotel manager and close friend who dies protecting him?",
+      "answer": "Koji Shimazu",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "die-hard-christmas-song",
+      "question": "What classic Run-D.M.C. Christmas song plays over the opening scenes and closing credits of Die Hard?",
+      "answer": "Christmas in Hollis",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "matrix-neo-real-name",
+      "question": "What is the everyday hacker alias/real name of Neo before he is freed from the Matrix?",
+      "answer": "Thomas Anderson",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "terminator-sarah-connor-city",
+      "question": "In the original 1984 Terminator, the T-800 travels back in time to target Sarah Connor in which major U.S. city?",
+      "answer": "Los Angeles",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "john-wick-gold-coin-currency",
+      "question": "What type of physical objects do assassins use as exclusive currency for services like lodging, medical care, and clean-up in the John Wick universe?",
+      "answer": "Gold coins",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "indiana-jones-temple-opening-artifact",
+      "question": "In Raiders of the Lost Ark, what specific golden artifact does Indiana Jones swap for a bag of sand in the opening Peruvian temple sequence?",
+      "answer": "Golden Idol",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mad-max-fury-road-villain",
+      "question": "What is the name of the tyrannical warlord who controls the water supply and rules over the Citadel in Mad Max: Fury Road?",
+      "answer": "Immortan Joe",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mission-impossible-tom-cruise-tallest-building",
+      "question": "In Mission: Impossible - Ghost Protocol, Tom Cruise famously scales the exterior of which real-world, record-breaking Dubai skyscraper?",
+      "answer": "Burj Khalifa",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "gladiator-maximus-wife-son-killer",
+      "question": "In Gladiator, which Roman general-turned-gladiator seeks vengeance for the execution of his wife and son?",
+      "answer": "Maximus Decimus Meridius",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "speed-keanu-reeves-partner",
+      "question": "In the movie Speed, what is the first name of Jack Traven's LAPD SWAT partner, played by Jeff Daniels, who is later killed by the bomber?",
+      "answer": "Harry",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "kill-bill-bride-real-name",
+      "question": "Though she is referred to as \"The Bride\" for most of the films, what is the character's actual first and last name revealed in Kill Bill: Volume 2?",
+      "answer": "Beatrix Kiddo",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "lethal-weapon-riggs-dog-breed",
+      "question": "In the Lethal Weapon franchise, Martin Riggs lives in a beachfront trailer with his loyal pet dog, Sam. What breed of dog is Sam?",
+      "answer": "Golden Retriever",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "robocop-primary-directive-number",
+      "question": "How many \"Primary Directives\" are hardcoded into RoboCop's psychological programming by OCP, excluding the classified hidden one?",
+      "answer": "3",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "predator-schwarzenegger-signature-phrase",
+      "question": "What iconic six-word instruction does Arnold Schwarzenegger scream to a companion when he spots the cloaked Predator preparing to attack?",
+      "answer": "Get to the choppa",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "face-off-john-travolta-fbi-agent",
+      "question": "In the action movie Face/Off, John Travolta plays an obsessive FBI agent tracking down a terrorist. What is the character's name?",
+      "answer": "Sean Archer",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "bourne-identity-fishing-boat-location",
+      "question": "At the start of The Bourne Identity, an amnesiac Jason Bourne is rescued from the Mediterranean Sea by a fishing boat from which country?",
+      "answer": "Italy",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "the-rock-alcatraz-guide",
+      "question": "In The Rock, Sean Connery plays John Patrick Mason, a British operative selected for the mission because he is the only federal inmate to have ever done what?",
+      "answer": "Escape from Alcatraz",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "bad-boys-will-smith-car",
+      "question": "In the opening scene of the 1995 film Bad Boys, Mike Lowrey and Marcus Burnett get into a heated argument while driving what specific model of high-end sports car?",
+      "answer": "Porsche 911",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "con-air-nicolas-cage-weapon",
+      "question": "In Con Air, what type of military division did Cameron Poe serve in, an expert skill set that makes him an elite lethal weapon on the plane?",
+      "answer": "Army Rangers",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "point-break-keanu-reeves-undercover-alias",
+      "question": "When FBI agent Johnny Utah goes undercover to infiltrate the bank-robbing surfers in Point Break, what fake first name does he use?",
+      "answer": "Johnny",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "top-gun-maverick-f5-mig28",
+      "question": "In the original 1986 Top Gun, what real-world American fighter plane was painted black and used to stand in for the fictional Soviet \"MiG-28\"?",
+      "answer": "F-5 Tiger",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "first-blood-rambo-vietnam-unit",
+      "question": "In First Blood, John Rambo is revealed to be a highly decorated veteran of which elite, specialized U.S. Army Special Forces unit?",
+      "answer": "Green Berets",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "dirty-harry-san-francisco-villain",
+      "question": "What is the moniker of the psychopathic, rooftop sniper villain hunted by Harry Callahan in the original 1971 Dirty Harry?",
+      "answer": "Scorpio",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "die-hard-with-a-vengeance-simon-brother",
+      "question": "In Die Hard with a Vengeance, Jeremy Irons plays the brilliant, puzzle-loving terrorist Simon Peter Gruber. Who was his famous brother?",
+      "answer": "Hans Gruber",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "hard-boiled-chow-yun-fat-musical-instrument",
+      "question": "In the iconic opening scene of John Woo's Hard Boiled, Inspector \"Tequila\" Yuen is introduced playing what musical instrument in a jazz club?",
+      "answer": "Clarinet",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "lethal-weapon-murtaugh-boat-lunch",
+      "question": "In the Lethal Weapon sequels, Roger Murtaugh owns a personal boat named after the LAPD radio code for a lunch break. What is this name?",
+      "answer": "Code 7",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "die-hard-wife-name",
+      "question": "What is the first name of John McClane's estranged wife, whom he travels to Los Angeles to visit in Die Hard?",
+      "answer": "Holly",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "terminator-2-t1000-actor",
+      "question": "Which actor plays the cold, liquid-metal T-1000 assassin sent to kill John Connor in Terminator 2: Judgment Day?",
+      "answer": "Robert Patrick",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "john-wick-continental-owner",
+      "question": "What is the first name of the sophisticated manager and co-owner of the New York Continental Hotel, played by Ian McShane?",
+      "answer": "Winston",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "speed-sandra-bullock-character",
+      "question": "What is the first name of Sandra Bullock's character, the passenger who takes over driving the runaway bus in Speed?",
+      "answer": "Annie",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "kill-bill-gogo-yubari-weapon",
+      "question": "In Kill Bill: Volume 1, what distinctive, razor-sharp chain weapon does O-Ren Ishii's teenage bodyguard, Gogo Yubari, use in her fight against the Bride?",
+      "answer": "Meteor hammer",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "matrix-oracle-kitchen-food",
+      "question": "When Neo first visits the Oracle in her apartment in The Matrix, what specific type of food is she baking in her oven?",
+      "answer": "Cookies",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "mad-max-original-profession",
+      "question": "Before society collapses and he becomes a lone wasteland wanderer, what was Max Rockatansky's mainstream law enforcement profession?",
+      "answer": "Highway patrol officer",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "robocop-villain-boddicker-fate",
+      "question": "What is the full name of the sadistic Detroit crime lord responsible for the \"killing\" of Alex Murphy in RoboCop?",
+      "answer": "Clarence Boddicker",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "lethal-weapon-murtaugh-signature-phrase",
+      "question": "What is the iconic, seven-word catchphrase that Danny Glover\u2019s character Roger Murtaugh repeats throughout the Lethal Weapon franchise whenever things get crazy?",
+      "answer": "I'm too old for this shit",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mission-impossible-brian-de-palma-rat",
+      "question": "In the tense vault infiltration scene of the first Mission: Impossible movie, what type of creature triggers a noise sensor in the ventilation shaft, nearly blowing Ethan Hunt's cover?",
+      "answer": "Rat",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "con-air-malcovich-nickname",
+      "question": "In Con Air, John Malkovich plays the brilliant, highly dangerous mastermind behind the plane hijacking. What is his character's colorful criminal nickname?",
+      "answer": "Cyrus the Virus",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-rock-hummel-marines",
+      "question": "In The Rock, Ed Harris plays a rogue Brigadier General holding San Francisco hostage. What branch of the military do his elite, renegade soldiers belong to?",
+      "answer": "U.S. Marine Corps",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "face-off-choke-on-this-object",
+      "question": "During the final speedboat chase in Face/Off, what specific medical item does Sean Archer force Castor Troy to choke on during their physical brawl?",
+      "answer": "Speargun arrow",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "gladiator-proximo-freedom-gift",
+      "question": "In Gladiator, what physical object does the gladiator trainer Proximo give to Maximus to symbolize his official legal freedom from slavery?",
+      "answer": "Wooden sword",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "top-gun-iceman-real-name",
+      "question": "What is the actual first and last name of Maverick's intense rival \"Iceman,\" played by Val Kilmer in Top Gun?",
+      "answer": "Tom Kazansky",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "bourne-identity-marie-car",
+      "question": "In The Bourne Identity, Jason Bourne hitches a ride across Europe with Marie in her beat-up, iconic European compact car. What specific make and model is it?",
+      "answer": "Mini Cooper",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "bad-boys-marcus-burnett-family",
+      "question": "Unlike his wealthy bachelor partner Mike Lowrey, Marcus Burnett is a grounded family man. How many children do Marcus and his wife Theresa have?",
+      "answer": "3",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "point-break-reagan-mask-robber",
+      "question": "In Point Break, the bank robbers wear rubber masks of former U.S. presidents. Which actor's character, Bodhi, wears the Ronald Reagan mask as the group leader?",
+      "answer": "Patrick Swayze",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "taken-kim-kidnap-city",
+      "question": "The terrifying plot of Taken kicks into high gear when Bryan Mills' daughter, Kim, is kidnapped by human traffickers while vacationing in which European capital city?",
+      "answer": "Paris",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "indiana-jones-last-crusade-pet-name",
+      "question": "In Indiana Jones and the Last Crusade, Professor Henry Jones Sr. reveals that \"Indiana\" wasn't his son's birth name, but rather the name of the family's beloved pet what?",
+      "answer": "Dog",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-blood-sheriff-actor",
+      "question": "Which veteran character actor plays Will Teasle, the stubborn town sheriff who makes the mistake of pushing John Rambo too far in First Blood?",
+      "answer": "Brian Dennehy",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "dirty-harry-famous-line-shots",
+      "question": "In his famous street monologue, Dirty Harry tells a wounded bank robber that he lost track of his shots in all the excitement. How many total shots can his revolver hold?",
+      "answer": "6",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "true-lies-schwarzenegger-tango-dance",
+      "question": "In the opening sequence of True Lies, secret agent Harry Tasker infiltrates a high-society Swiss chalet and shares an intimate, high-stakes tango dance with a character played by which actress?",
+      "answer": "Tia Carrere",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "predator-minigun-nickname",
+      "question": "In Predator, the character Blain (played by Jesse Ventura) carries an incredibly heavy, modified handheld M134 military minigun that he affectionately nicknames what?",
+      "answer": "Old Painless",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "hard-boiled-mad-dog-eye-patch",
+      "question": "In John Woo's Hard Boiled, the honorable Triad enforcer Mad Dog wears a distinctive physical accessory due to a past battle injury. What is it?",
+      "answer": "Eye patch",
+      "answer_format": "write_in",
+      "category": "Action movies",
+      "difficulty": "hard"
+    }
+  ]
+}

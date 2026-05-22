@@ -2,879 +2,1004 @@
   "categoryName": "Famous Last Words",
   "questions": [
     {
-    "slug": "last-words-film-citizen-kane",
-    "question": "An elderly newspaper tycoon dies alone in his castle after whispering the single, mysterious word \"Rosebud\" at the very start of which classic 1941 film?",
-    "answer": "Citizen Kane",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-person-julius-caesar",
-    "question": "According to historical tradition, what famous Roman dictator looked at his close friend Marcus Junius Brutus during his assassination and muttered \"Et tu, Brute?\"",
-    "answer": "Julius Caesar",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-book-animal-farm",
-    "question": "The final line \"The creatures outside looked from pig to man, and from man to pig... but already it was impossible to say which was which\" concludes what George Orwell novel?",
-    "answer": "Animal Farm",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-film-king-kong",
-    "question": "What classic monster movie famously ends with the somber final line of dialogue, \"Oh, no, it wasn't the airplanes. It was Beauty killed the Beast\"?",
-    "answer": "King Kong",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-person-pancho-villa",
-    "question": "What Mexican revolutionary general was assassinated in his car in 1923, allegedly begging onlookers: \"Don't let it end like this. Tell them I said something\"?",
-    "answer": "Pancho Villa",
-    "category": "Famous Last Words",
-    "difficulty": "hard"
-  },
-  {
-    "slug": "last-words-play-hamlet",
-    "question": "The dying protagonist of which Shakespearean tragedy utters his final, hauntingly poetic words: \"The potent poison quite o'er-crows my spirit... The rest is silence\"?",
-    "answer": "Hamlet",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-film-casablanca",
-    "question": "Which iconic 1942 romantic drama ends with Rick Blaine walking off into the foggy night after delivering the line, \"Louis, I think this is the beginning of a beautiful friendship\"?",
-    "answer": "Casablanca",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-book-the-great-gatsby",
-    "question": "What American masterpiece finishes with the legendary line, \"So we beat on, boats against the current, borne back ceaselessly into the past\"?",
-    "answer": "The Great Gatsby",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-person-winston-churchill",
-    "question": "What legendary British Prime Minister, known for his wartime grit, reportedly slipped into a terminal coma in 1965 after uttering his final words, \"I'm bored with it all\"?",
-    "answer": "Winston Churchill",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-song-a-day-in-the-life",
-    "question": "Which seminal 1967 Beatles song, the grand finale of their Sgt. Pepper album, concludes with a massive, 40-second sustained E-major piano chord?",
-    "answer": "A Day in the Life",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-film-chinatown",
-    "question": "What 1974 neo-noir mystery masterpiece ends with a cynical associate pulling the protagonist away from a tragic crime scene, advising him, \"Forget it, Jake. It's Chinatown\"?",
-    "answer": "Chinatown",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-person-karl-marx",
-    "question": "What German political philosopher angrily barked at his housekeeper on his deathbed, yelling, \"Go on, get out! Last words are for fools who haven't said enough!\"?",
-    "answer": "Karl Marx",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-book-lolita",
-    "question": "The tragic declaration \"And this is the only immortality you and I may share, my Lolita\" marks the profound final sentence of a controversial novel by what author?",
-    "answer": "Vladimir Nabokov",
-    "category": "Famous Last Words",
-    "difficulty": "hard"
-  },
-  {
-    "slug": "last-words-film-some-like-it-hot",
-    "question": "When Jack Lemmon's cross-dressing character pulls off his wig and yells \"I'm a man!\" at his millionaire suitor, Joe E. Brown delivers the perfect final line of which 1959 comedy?",
-    "answer": "Some Like It Hot",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-person-oscar-wilde",
-    "question": "What witty Irish playwright lay dying in a dreary Parisian hotel room in 1900 and famously quipped, \"My wallpaper and I are fighting a duel to the death. One or the other of us must go\"?",
-    "answer": "Oscar Wilde",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-play-death-of-a-salesman",
-    "question": "Linda Loman tearfully tells her deceased husband \"We're free... We're free\" while sobbing over his fresh grave at the absolute conclusion of which Arthur Miller play?",
-    "answer": "Death of a Salesman",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-film-psycho",
-    "question": "A chilling internal monologue concludes with Norman Bates thinking, \"Why, she wouldn't even harm a fly\" just before the final fade-out of which 1960 Alfred Hitchcock horror thriller?",
-    "answer": "Psycho",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-person-marie-antoinette",
-    "question": "What French queen accidentally stepped on her executioner's foot while walking up to the guillotine in 1793, politely offering her genuine final words, \"Pardon me, sir. I did not mean to do it\"?",
-    "answer": "Marie Antoinette",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-song-stairway-to-heaven",
-    "question": "Which legendary Led Zeppelin rock epic finishes its eight-minute journey with Robert Plant softly acapella-singing the solitary final lyric, \"And she's buying a stairway to heaven\"?",
-    "answer": "Stairway to Heaven",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-fictional-gollum",
-    "question": "What wretched, ring-obsessed fantasy creature slips into the fires of Mount Doom while joyfully screaming his absolute final word: \"Precious!\"",
-    "answer": "Gollum",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-book-moby-dick",
-    "question": "An epilogue quoting the Book of Job (\"And I only am escaped alone to tell thee\") concludes what massive 1851 seafaring novel written by Herman Melville?",
-    "answer": "Moby Dick",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-film-the-godfather-part-two",
-    "question": "What cinematic crime epic tragically closes with a silent, haunting flashback of a young, idealistic Michael Corleone sitting entirely alone at a family dining table?",
-    "answer": "The Godfather Part II",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-person-thomas-edison",
-    "question": "What famous American inventor briefly woke from a coma on his deathbed in 1931, looked out the window at his yard, and told his wife, \"It is very beautiful over there\"?",
-    "answer": "Thomas Edison",
-    "category": "Famous Last Words",
-    "difficulty": "hard"
-  },
-  {
-    "slug": "last-words-film-back-to-the-future",
-    "question": "Doc Brown lowers his silver sunglasses, guns the engine of his DeLorean, and yells, \"Roads? Where we're going, we don't need roads\" to close out which 1985 sci-fi classic?",
-    "answer": "Back to the Future",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-fictional-tony-stark",
-    "question": "What cinematic superhero fiercely stares down the cosmic villain Thanos in the climax of Avengers: Endgame, uttering the defiant final words, \"And I... am... Iron Man\"?",
-    "answer": "Tony Stark",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-book-1984",
-    "question": "What dystopian George Orwell novel famously ends its bleak psychological narrative with the devastating final sentence, \"He loved Big Brother\"?",
-    "answer": "1984",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-person-leonardo-da-vinci",
-    "question": "What legendary Italian Renaissance polymath reportedly lamented his life's work on his 1519 deathbed, saying, \"I have offended God and mankind because my work didn't reach the quality it should have\"?",
-    "answer": "Leonardo da Vinci",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-film-the-truman-show",
-    "question": "Jim Carrey bows deeply to a massive television audience and delivers his signature catchphrase, \"In case I don't see ya, good afternoon, good evening, and good night!\" to close out which 1998 film?",
-    "answer": "The Truman Show",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-person-steve-jobs",
-    "question": "What co-founder of Apple stared past his family members in 2011 and repeatedly gasped his monosyllabic final words: \"Oh wow. Oh wow. Oh wow\"?",
-    "answer": "Steve Jobs",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-book-frankenstein",
-    "question": "Mary Shelley's Gothic masterpiece concludes with a tortured creature traveling north across the ice fields, where he is ultimately \"lost in darkness and distance\" at the end of which novel?",
-    "answer": "Frankenstein",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-fictional-walter-white",
-    "question": "What brilliant, cancer-stricken chemistry teacher bleeds out on the floor of a neonazi meth laboratory while gently patting a steel storage tank in the series finale of Breaking Bad?",
-    "answer": "Walter White",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-film-king-of-comedy",
-    "question": "Robert De Niro's delusional character Rupert Pupkin receives a roaring standing ovation after an announcer introduces him with the repeated final line, \"Wonderful, let's hear it for Rupert Pupkin!\" in what 1982 Martin Scorsese film?",
-    "answer": "The King of Comedy",
-    "category": "Famous Last Words",
-    "difficulty": "hard"
-  },
-  {
-    "slug": "last-words-song-bohemian-rhapsody",
-    "question": "Which multi-part 1975 Queen rock epic gently fades out with Freddie Mercury softly singing the solitary final phrase, \"Any way the wind blows...\" followed by a sharp gong strike?",
-    "answer": "Bohemian Rhapsody",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-person-charles-darwin",
-    "question": "What English naturalist and evolutionary theorist calmly faced his imminent mortality in 1882, reassuring his grieving family with his documented final words, \"I am not the least afraid of death\"?",
-    "answer": "Charles Darwin",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-play-romeo-and-juliet",
-    "question": "A grieving teenage protagonist drinks a deadly apothecary poison inside a stone tomb, crying, \"Thy drugs are quick. Thus with a kiss I die\" in which Shakespeare play?",
-    "answer": "Romeo and Juliet",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-film-fight-club",
-    "question": "Edward Norton holds Helena Bonham Carter's hand as skyscrapers structurally collapse outside their window, remarking, \"You met me at a very strange time in my life\" to end which 1999 movie?",
-    "answer": "Fight Club",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-person-bob-marley",
-    "question": "What international reggae pioneer looked at his eldest son Ziggy in a Miami hospital room in 1981 and delivered his ultimate final words: \"Money can't buy life\"?",
-    "answer": "Bob Marley",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-book-the-catcher-in-the-rye",
-    "question": "What 1951 American novel ends its cynical adolescent narrative with the warning, \"Don't ever tell anybody anything. If you do, you start missing everybody\"?",
-    "answer": "The Catcher in the Rye",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-film-the-usual-suspects",
-    "question": "Kevin Spacey steps into a car and vanishes after quoting the famous French poet Charles Baudelaire: \"The greatest trick the Devil ever pulled was convincing the world he didn't exist. And like that, poof. He's gone\" in what 1995 film?",
-    "answer": "The Usual Suspects",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-fictional-roy-batty",
-    "question": "What dying Replicant delivers the iconic \"Tears in Rain\" monologue atop a rain-slicked roof, concluding with his final words, \"Time to die\" in the sci-fi masterpiece Blade Runner?",
-    "answer": "Roy Batty",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-person-ludwig-van-beethoven",
-    "question": "What iconic German composer, completely deaf by the end of his life, reportedly received a delivery of vintage wine on his deathbed in 1827 and muttered his final words, \"Pity, pity—too late!\"?",
-    "answer": "Ludwig van Beethoven",
-    "category": "Famous Last Words",
-    "difficulty": "hard"
-  },
-  {
-    "slug": "last-words-film-dr-strangelove",
-    "question": "What dark satirical war comedy cuts away from an unhinged, wheelchair-bound scientist screaming \"Mein Führer! I can walk!\" straight into a montage of nuclear explosions?",
-    "answer": "Dr. Strangelove",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-book-ulysses",
-    "question": "Molly Bloom concludes a massive, unpunctuated stream-of-consciousness soliloquy by repeating, \"and yes I said yes I will Yes\" at the end of which legendary 1922 James Joyce modern novel?",
-    "answer": "Ulysses",
-    "category": "Famous Last Words",
-    "difficulty": "hard"
-  },
-  {
-    "slug": "last-words-person-jane-austen",
-    "question": "When asked by her sister Cassandra if she required anything to make her comfortable on her deathbed in 1817, what brilliant English novelist simply replied, \"I want nothing but death\"?",
-    "answer": "Jane Austen",
-    "category": "Famous Last Words",
-    "difficulty": "hard"
-  },
-  {
-    "slug": "last-words-song-hotel-california",
-    "question": "Which 1976 Eagles masterpiece finishes its long narrative with the eerie warning, \"You can check out any time you like, but you can never leave!\" followed by an extended dual-guitar solo?",
-    "answer": "Hotel California",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-film-sunset-boulevard",
-    "question": "Fading silent film star Norma Desmond completely loses her sanity and advances directly toward a police camera lens, stating, \"All right, Mr. DeMille, I'm ready for my close-up\" to conclude which 1950 noir?",
-    "answer": "Sunset Boulevard",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-play-the-crucible",
-    "question": "John Proctor is led away to the gallows after refusing to sign a false confession, while his wife Elizabeth tearfully refuses to stop him, crying, \"He have his goodness now. God forbid I take it from him!\" to end which Arthur Miller play?",
-    "answer": "The Crucible",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-person-george-washington",
-    "question": "What American Founding Father and military leader spent his final moments checking his own pulse before whispering his final words, \"'Tis well,\" to his physician in 1799?",
-    "answer": "George Washington",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-book-charlottes-web",
-    "question": "What beloved E.B. White children's book wraps up with the bittersweet tribute, \"It is not often that someone comes along who is a true friend and a good writer. Charlotte was both\"?",
-    "answer": "Charlotte's Web",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-film-planet-of-the-apes",
-    "question": "Charlton Heston falls to his knees on a desolate beach and screams, \"You maniacs! You blew it up! Ah, damn you! God damn you all to hell!\" at the shock conclusion of which 1968 sci-fi film?",
-    "answer": "Planet of the Apes",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-book-lord-of-the-flies",
-    "question": "A naval officer stares down at a group of crying, dirty children while waiting to rescue them on a burning beach at the sudden, chilling conclusion of which William Golding novel?",
-    "answer": "Lord of the Flies",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-person-salvador-dali",
-    "question": "What eccentric Spanish surrealist painter reportedly muttered his final words, \"Where is my clock?\" on his deathbed in 1889, fittingly obsessing over time until the end?",
-    "answer": "Salvador Dali",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-film-the-shinning",
-    "question": "Stanley Kubrick's psychological horror film slowly pans across a hallway wall, ending on a vintage 1921 July 4th ballroom photograph featuring Jack Nicholson to conclude which masterpiece?",
-    "answer": "The Shining",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-fictional-hal-9000",
-    "question": "Which sentient, homicidal supercomputer slowly loses his artificial consciousness while singing the lyrics to the 19th-century song \"Daisy Bell\" as his core is unplugged?",
-    "answer": "HAL 9000",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-book-the-hobbit",
-    "question": "The protagonist sits down to smoke a pipe with a wizard, remarking that he is \"only quite a little fellow in a wide world after all\" to wrap up which fantasy classic?",
-    "answer": "The Hobbit",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-person-frank-sinatra",
-    "question": "What legendary American crooner and leader of the Rat Pack passed away in a Los Angeles hospital room in 1998 after uttering his desperate final words, \"I'm losing\"?",
-    "answer": "Frank Sinatra",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-film-gone-with-the-wind",
-    "question": "What sweeping 1939 historical epic ends with its stubborn heroine standing against a dramatic sunset sky, declaring, \"After all, tomorrow is another day!\"?",
-    "answer": "Gone with the Wind",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-song-purple-rain",
-    "question": "Which massive 1984 Prince rock anthem ends its theatrical eight-minute emotional peak with a soaring, extended falsetto vocal melody and a dramatic string orchestration fade-out?",
-    "answer": "Purple Rain",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-person-joan-of-arc",
-    "question": "What teenage French military heroine and saint repeatedly called out the single word \"Jesus!\" through the smoke as she was burned at the stake in 1431?",
-    "answer": "Joan of Arc",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-play-a-dolls-house",
-    "question": "What Henrik Ibsen theatrical masterpiece shocked Victorian audiences by ending its final act with the sudden, echoing off-stage sound of a front door slamming shut?",
-    "answer": "A Doll's House",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-film-se7en",
-    "question": "Morgan Freeman delivers a weary voiceover quoting Ernest Hemingway: \"'The world is a fine place and worth fighting for.' I agree with the second part\" to end which gritty thriller?",
-    "answer": "Se7en",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-person-sir-arthur-conan-doyle",
-    "question": "What literary creator of Sherlock Holmes passed away in his garden in 1930, using his absolute final words to look at his wife and whisper, \"You are wonderful\"?",
-    "answer": "Arthur Conan Doyle",
-    "category": "Famous Last Words",
-    "difficulty": "hard"
-  },
-  {
-    "slug": "last-words-book-brave-new-world",
-    "question": "What bleak Aldous Huxley dystopian novel reaches its tragic climax with the horrific image of a dead man's feet slowly rotating like two compass needles inside a lighthouse?",
-    "answer": "Brave New World",
-    "category": "Famous Last Words",
-    "difficulty": "hard"
-  },
-  {
-    "slug": "last-words-film-goodfellas",
-    "question": "Ray Liotta walks out of a quiet suburban house to pick up his morning newspaper, looking at the camera and stating, \"I get to live the rest of my life like a schnook\" to end which film?",
-    "answer": "Goodfellas",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-fictional-gandalf",
-    "question": "What legendary grey wizard slips off the edge of a cavernous stone bridge in the Mines of Moria, yelling the desperate command, \"Fly, you fools!\"?",
-    "answer": "Gandalf",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-person-elvis-presley",
-    "question": "What iconic King of Rock and Roll reportedly told his fiancée Ginger Alden, \"I'm going to the bathroom to read\" right before passing away in 1977?",
-    "answer": "Elvis Presley",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-film-the-dark-knight",
-    "question": "Gary Oldman consoles his son in a voiceover, calling the titular protagonist \"a watchful protector. A silent guardian. A dark knight\" as Christian Bale speeds off into the night?",
-    "answer": "The Dark Knight",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-book-one-hundred-years-of-solitude",
-    "question": "What magical realist Gabriel García Márquez masterpiece closes with the lines: \"races condemned to one hundred years of solitude did not have a second opportunity on earth\"?",
-    "answer": "One Hundred Years of Solitude",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-person-james-brown",
-    "question": "The Godfather of Soul looked at his doctor in an Atlanta hospital in 2006, softly sighed, \"I'm going away tonight,\" and took his very last breath. Who was he?",
-    "answer": "James Brown",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-song-yesterday",
-    "question": "Which short, melancholic 1965 Beatles acoustic guitar track famously concludes with Paul McCartney humming a soft, wordless vocal refrain alongside a lone acoustic string quartet?",
-    "answer": "Yesterday",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-film-american-psycho",
-    "question": "Christian Bale stares blankly into space while a sign behind his head reads \"THIS IS NOT AN EXIT,\" ending his inner monologue with the words: \"This confession has meant nothing\" in what film?",
-    "answer": "American Psycho",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-play-macbeth",
-    "question": "Which dark Shakespearean tragedy ends with Macduff triumphantly marching into the royal castle while hoisting the severed head of the titular villain on a pole?",
-    "answer": "Macbeth",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-person-jack-daniel",
-    "question": "What famous American whiskey distiller and businessman fittingly gasped out his final words, \"One last drink, please,\" to his family on his deathbed in 1911?",
-    "answer": "Jack Daniel",
-    "category": "Famous Last Words",
-    "difficulty": "hard"
-  },
-  {
-    "slug": "last-words-book-the-road",
-    "question": "What bleak, post-apocalyptic Cormac McCarthy novel ends its brutal story with a lyrical reflection on brook trout living in mountain streams before the world was broken?",
-    "answer": "The Road",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-film-gladiator",
-    "question": "Djimon Hounsou buries a set of small wooden figurines in the blood-stained sand of the Colosseum arena, whispering to his fallen friend, \"Now we are free. I will see you again. But not yet... not yet\" to close what 2000 film?",
-    "answer": "Gladiator",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-book-peter-pan",
-    "question": "What classic J.M. Barrie novel ends its whimsical story with the timeless line, \"As long as children are gay and innocent and heartless, they will always fly away\"?",
-    "answer": "Peter Pan",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-person-john-f-kennedy",
-    "question": "Seconds before reaching Dealey Plaza, Nellie Connally remarked, \"Mr. President, you can't say Dallas doesn't love you,\" prompting what man to utter his final words: \"No, you certainly can't\"?",
-    "answer": "John F. Kennedy",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-film-the-matrix",
-    "question": "Keanu Reeves hangs up a public telephone booth, steps into the street, looks directly upward at the sky, and flies straight up into the air to end which 1999 sci-fi classic?",
-    "answer": "The Matrix",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-fictional-vito-corleone",
-    "question": "Which fictional mob patriarch collapses in a garden while playing with his young grandson, uttering his peaceful, final onscreen words, \"Life is so beautiful\"?",
-    "answer": "Vito Corleone",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-book-the-picture-of-dorian-gray",
-    "question": "Servants find a hideously wrinkled dead man lying on the floor next to a painting of a beautiful young youth at the conclusion of which Oscar Wilde novel?",
-    "answer": "The Picture of Dorian Gray",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-person-frank-gautier-matthew-hopkins",
-    "question": "What 1920s Chicago gangster, right before being shot down in a phone booth, allegedly gave the hardboiled final warning, \"They can't shoot a guy while he's making a call\"?",
-    "answer": "Frank Miller",
-    "category": "Famous Last Words",
-    "difficulty": "hard"
-  },
-  {
-    "slug": "last-words-film-avengers-infinity-war",
-    "question": "What massive superhero crossover film ends with total silence as a victorious cosmic villain sits entirely alone on a porch, smiling as he watches the sunset?",
-    "answer": "Avengers: Infinity War",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-song-sympathy-for-the-devil",
-    "question": "Which 1968 Rolling Stones rock anthem ends its intense six-minute run with Mick Jagger relentlessly chanting, \"Tell me baby, what's my name?\" amid manic percussion?",
-    "answer": "Sympathy for the Devil",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-person-abraham-lincoln",
-    "question": "When his wife Mary whispered that people would see them holding hands in the theater box, what U.S. President offered his final words, \"They won't think anything of it\"?",
-    "answer": "Abraham Lincoln",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-play-waiting-for-godot",
-    "question": "Vladimir asks \"Well? Shall we go?\" and Estragon responds \"Yes, let's go,\" but the stage directions note \"They do not move\" to end which Samuel Beckett masterpiece?",
-    "answer": "Waiting for Godot",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-film-jurassic-park",
-    "question": "A massive Tyrannosaurus rex lets out a triumphant roar inside a visitor center as a banner reading \"When Dinosaurs Ruled the Earth\" falls to the floor to close which 1993 film?",
-    "answer": "Jurassic Park",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-person-nostradamus",
-    "question": "What famous French astrologer and seer correctly predicted his own immediate mortality by telling his assistant during his final evening, \"Tomorrow, at sunrise, I shall no longer be here\"?",
-    "answer": "Nostradamus",
-    "category": "Famous Last Words",
-    "difficulty": "hard"
-  },
-  {
-    "slug": "last-words-book-the-sound-and-the-fury",
-    "question": "What complex William Faulkner novel concludes its southern gothic family narrative with the comforting line, \"each in its ordered place\"?",
-    "answer": "The Sound and the Fury",
-    "category": "Famous Last Words",
-    "difficulty": "hard"
-  },
-  {
-    "slug": "last-words-film-inception",
-    "question": "Leonardo DiCaprio walks outside to play with his children while a small metal spinning top wobbles on a table right before the screen abruptly cuts to black in what 2010 movie?",
-    "answer": "Inception",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-fictional-darth-vader",
-    "question": "What dying sci-fi villain requests his son to help remove his dark mechanical mask so he can peer out with his own human eyes, saying, \"You already have, Luke\"?",
-    "answer": "Darth Vader",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-person-roald-dahl",
-    "question": "What beloved children's author reassured his family on his deathbed by saying he wasn't afraid of dying, but then reportedly yelled \"Ow, fuck!\" when a nurse pricked him with a needle?",
-    "answer": "Roald Dahl",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-film-whiplash",
-    "question": "What intense 2014 musical drama ends on a tight, ecstatic close-up of Miles Teller delivering a ferocious drum solo, locking eyes with a smiling J.K. Simmons?",
-    "answer": "Whiplash",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-book-les-miserables",
-    "question": "What massive Victor Hugo masterpiece concludes its epic story with a poetic stanza describing Jean Valjean's simple grave, ending with the line, \"The night comes on, the day goes by\"?",
-    "answer": "Les Misérables",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-person-bob-hope",
-    "question": "When his wife Dolores tenderly asked him where he wanted to be buried when his time came, what legendary American comedian quipped his final words: \"Surprise me\"?",
-    "answer": "Bob Hope",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-song-comfortably-numb",
-    "question": "Which iconic 1979 Pink Floyd track concludes with David Gilmour executing a legendary, multi-minute, emotionally soaring electric guitar solo that fades out into blackness?",
-    "answer": "Comfortably Numb",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-film-psycho-american-beauty",
-    "question": "Kevin Spacey delivers a posthumous voiceover detailing the profound beauty of everyday life, concluding with the line, \"You'll see, one day\" to close out which 1999 drama?",
-    "answer": "American Beauty",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-play-the-importance-of-being-earnest",
-    "question": "Jack Worthing declares to Lady Bracknell that he has finally realized \"the vital Importance of Being Earnest\" to close out which classic Oscar Wilde stage comedy?",
-    "answer": "The Importance of Being Earnest",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-person-humphrey-bogart",
-    "question": "What legendary Hollywood tough guy reportedly looked at his wife Lauren Bacall from his deathbed in 1957 and dryly joked, \"I should never have switched from scotch to martinis\"?",
-    "answer": "Humphrey Bogart",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-book-fahrenheit-451",
-    "question": "What Ray Bradbury sci-fi novel ends with Guy Montag leading a group of book-memorizing rebels down a river toward a destroyed city, thinking of a hopeful verse from the Book of Revelation?",
-    "answer": "Fahrenheit 451",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-film-memento",
-    "question": "Guy Pearce closes his eyes while driving his car, concluding a gritty psychological thriller with the cynical internal monologue line: \"Now, where was I?\" right before pulling over?",
-    "answer": "Memento",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-book-the-odyssey",
-    "question": "What ancient epic poem attributed to Homer reaches its final resolution as the goddess Athena commands an end to the civil strife, establishing \"a firm pact of peace between both sides\"?",
-    "answer": "The Odyssey",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-person-alexander-the-great",
-    "question": "When asked by his weeping generals on his deathbed in 323 BC who should inherit his massive empire, what legendary young king famously whispered his final words: \"To the strongest\"?",
-    "answer": "Alexander the Great",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-film-the-godfather",
-    "question": "Kay Corleone watches from a distance as Al Neri shuts a heavy office door in her face, completely shutting her out of Michael's dark new life at the final frame of which 1972 cinematic masterpiece?",
-    "answer": "The Godfather",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-fictional-john-marston",
-    "question": "Which tragic outlaw protagonist steps out of his barn to face a massive firing squad of federal agents and soldiers, taking his final gasping breaths in the video game Red Dead Redemption?",
-    "answer": "John Marston",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-book-tender-is-the-night",
-    "question": "What 1934 F. Scott Fitzgerald novel tracking the tragic decline of Dick Diver concludes its narrative with the line, \"Perhaps he married again... In any case he is almost certainly in that section of the country, in one town or another\"?",
-    "answer": "Tender Is the Night",
-    "category": "Famous Last Words",
-    "difficulty": "hard"
-  },
-  {
-    "slug": "last-words-person-malcolm-x",
-    "question": "What civil rights icon desperately attempted to calm a staged disturbance in the Audubon Ballroom crowd in 1965, uttering his final words, \"Let's cool it, brothers,\" seconds before being assassinated?",
-    "answer": "Malcolm X",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-film-the-good-the-bad-and-the-ugly",
-    "question": "Clint Eastwood gallops away into the desert while Eli Wallach stands balancing atop a wooden cross with a rope around his neck, screaming a furious profanity to close out which legendary Spaghetti Western?",
-    "answer": "The Good, the Bad and the Ugly",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-song-free-bird",
-    "question": "Which 1973 Lynyrd Skynyrd rock epic concludes its massive nine-minute journey with an incredibly frantic, four-minute-long triple guitar solo that slowly fades out into silence?",
-    "answer": "Free Bird",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-person-che-guevara",
-    "question": "What Marxist revolutionary fiercely stared down his hesitant executioner Mario Terán in a Bolivian schoolhouse in 1967, shouting his defiant final words: \"Shoot, coward! You are only going to kill a man!\"?",
-    "answer": "Che Guevara",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-play-pygmalion",
-    "question": "Professor Henry Higgins bursts into a hearty, arrogant laugh after Eliza Doolittle defiantly walks out of his life forever to marry Freddy Eynsford-Hill at the conclusion of which George Bernard Shaw stage play?",
-    "answer": "Pygmalion",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-film-seven-samurai",
-    "question": "Akira Kurosawa's historical masterpiece ends with a weathered leader somberly looking up at the burial mounds of his fallen comrades, stating, \"In the end, we lost this battle too. The victory belongs to the peasants, not to us\" in which film?",
-    "answer": "Seven Samurai",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-person-sigmund-freud",
-    "question": "What pioneer of psychoanalysis requested a terminal dose of morphine from his physician Max Schur in 1939 to end his agony from cancer, murmuring his final words, \"This is absurd\"?",
-    "answer": "Sigmund Freud",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-book-crime-and-punishment",
-    "question": "What classic Fyodor Dostoevsky novel finishes its intense psychological journey in a Siberian prison camp, promising a future story of a man's gradual regeneration and introduction into a \"new, hitherto unknown reality\"?",
-    "answer": "Crime and Punishment",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-film-no-country-for-old-men",
-    "question": "Tommy Lee Jones sits silently at a kitchen table recounting two cryptic dreams about his late father before the screen abruptly slashes to black in the final seconds of which 2007 Coen Brothers film?",
-    "answer": "No Country for Old Men",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-fictional-boromir",
-    "question": "What brave Gondorian warrior gasps out his final words to Aragorn while riddled with arrows on the riverbanks of Amon Hen, whispering, \"I would have followed you, my brother... my captain... my king\"?",
-    "answer": "Boromir",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-person-richard-feynman",
-    "question": "What brilliant, eccentric theoretical physicist looked at his family from his hospital bed in 1988 and dryly joked his ultimate final words, \"I'd hate to die twice. It's so boring\"?",
-    "answer": "Richard Feynman",
-    "category": "Famous Last Words",
-    "difficulty": "hard"
-  },
-  {
-    "slug": "last-words-film-la-la-land",
-    "question": "Ryan Gosling sits behind a jazz club piano and exchanges a bittersweet, silent nod of mutual understanding with Emma Stone right before she exits the venue to conclude which 2016 musical romance?",
-    "answer": "La La Land",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-book-heart-of-darkness",
-    "question": "Marlow sits entirely alone in a meditative posture as a river appears to lead straight \"into the heart of an immense darkness\" to conclude which foundational Joseph Conrad novella?",
-    "answer": "Heart of Darkness",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-person-jane-wyman",
-    "question": "What legendary Hollywood actress and first wife of Ronald Reagan passed away in 2007, leaving a handwritten message to be read after her death that stated, \"The world has lost a wonderful, gentle man\"?",
-    "answer": "Jane Wyman",
-    "category": "Famous Last Words",
-    "difficulty": "hard"
-  },
-  {
-    "slug": "last-words-song-heroes",
-    "question": "Which soaring 1977 David Bowie masterpiece closes out its emotional art-rock wall of sound with the triumphant, repeated vocal phrase, \"We're heroes, just for one day\"?",
-    "answer": "Heroes",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-film-before-sunset",
-    "question": "Julie Delpy dances to a Nina Simone record in her apartment and tells Ethan Hawke, \"Baby, you are gonna miss that plane,\" causing him to smile and reply, \"I know\" as the screen fades out in what movie?",
-    "answer": "Before Sunset",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-play-othello",
-    "question": "The tragic Moor of Venice collapses onto a bed next to his murdered wife Desdemona after delivering his final words, \"I kiss'd thee ere I kill'd thee: no way but this; killing myself, to die upon a kiss\" in what play?",
-    "answer": "Othello",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-person-joan-crawford",
-    "question": "What fierce classic Hollywood actress angrily barked at her praying housekeeper on her 1977 deathbed, snapping her absolute final words, \"Damn it... Don't you dare ask God to help me!\"?",
-    "answer": "Joan Crawford",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "last-words-book-the-grapes-of-wrath",
-    "question": "What powerful John Steinbeck Dust Bowl novel reaches its intimate, heartbreaking conclusion with Ma Joad and Rose of Sharon taking shelter in a barn, where Rose \"looked up and across the barn, and her lips came together and smiled mysteriously\"?",
-    "answer": "The Grapes of Wrath",
-    "category": "Famous Last Words",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "last-words-film-the-prestige",
-    "question": "Michael Caine delivers a closing voiceover explaining the mechanics of a magic trick, noting, \"You want to be fooled\" as the camera pans across a warehouse filled with burning water tanks to end which Christopher Nolan thriller?",
-    "answer": "The Prestige",
-    "category": "Famous Last Words",
-    "difficulty": "medium"
-  }
-]
+      "slug": "last-words-film-citizen-kane",
+      "question": "An elderly newspaper tycoon dies alone in his castle after whispering the single, mysterious word \"Rosebud\" at the very start of which classic 1941 film?",
+      "answer": "Citizen Kane",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-person-julius-caesar",
+      "question": "According to historical tradition, what famous Roman dictator looked at his close friend Marcus Junius Brutus during his assassination and muttered \"Et tu, Brute?\"",
+      "answer": "Julius Caesar",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-book-animal-farm",
+      "question": "The final line \"The creatures outside looked from pig to man, and from man to pig... but already it was impossible to say which was which\" concludes what George Orwell novel?",
+      "answer": "Animal Farm",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-film-king-kong",
+      "question": "What classic monster movie famously ends with the somber final line of dialogue, \"Oh, no, it wasn't the airplanes. It was Beauty killed the Beast\"?",
+      "answer": "King Kong",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-person-pancho-villa",
+      "question": "What Mexican revolutionary general was assassinated in his car in 1923, allegedly begging onlookers: \"Don't let it end like this. Tell them I said something\"?",
+      "answer": "Pancho Villa",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "last-words-play-hamlet",
+      "question": "The dying protagonist of which Shakespearean tragedy utters his final, hauntingly poetic words: \"The potent poison quite o'er-crows my spirit... The rest is silence\"?",
+      "answer": "Hamlet",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-film-casablanca",
+      "question": "Which iconic 1942 romantic drama ends with Rick Blaine walking off into the foggy night after delivering the line, \"Louis, I think this is the beginning of a beautiful friendship\"?",
+      "answer": "Casablanca",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-book-the-great-gatsby",
+      "question": "What American masterpiece finishes with the legendary line, \"So we beat on, boats against the current, borne back ceaselessly into the past\"?",
+      "answer": "The Great Gatsby",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-person-winston-churchill",
+      "question": "What legendary British Prime Minister, known for his wartime grit, reportedly slipped into a terminal coma in 1965 after uttering his final words, \"I'm bored with it all\"?",
+      "answer": "Winston Churchill",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-song-a-day-in-the-life",
+      "question": "Which seminal 1967 Beatles song, the grand finale of their Sgt. Pepper album, concludes with a massive, 40-second sustained E-major piano chord?",
+      "answer": "A Day in the Life",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-film-chinatown",
+      "question": "What 1974 neo-noir mystery masterpiece ends with a cynical associate pulling the protagonist away from a tragic crime scene, advising him, \"Forget it, Jake. It's Chinatown\"?",
+      "answer": "Chinatown",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-person-karl-marx",
+      "question": "What German political philosopher angrily barked at his housekeeper on his deathbed, yelling, \"Go on, get out! Last words are for fools who haven't said enough!\"?",
+      "answer": "Karl Marx",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-book-lolita",
+      "question": "The tragic declaration \"And this is the only immortality you and I may share, my Lolita\" marks the profound final sentence of a controversial novel by what author?",
+      "answer": "Vladimir Nabokov",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "last-words-film-some-like-it-hot",
+      "question": "When Jack Lemmon's cross-dressing character pulls off his wig and yells \"I'm a man!\" at his millionaire suitor, Joe E. Brown delivers the perfect final line of which 1959 comedy?",
+      "answer": "Some Like It Hot",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-person-oscar-wilde",
+      "question": "What witty Irish playwright lay dying in a dreary Parisian hotel room in 1900 and famously quipped, \"My wallpaper and I are fighting a duel to the death. One or the other of us must go\"?",
+      "answer": "Oscar Wilde",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-play-death-of-a-salesman",
+      "question": "Linda Loman tearfully tells her deceased husband \"We're free... We're free\" while sobbing over his fresh grave at the absolute conclusion of which Arthur Miller play?",
+      "answer": "Death of a Salesman",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-film-psycho",
+      "question": "A chilling internal monologue concludes with Norman Bates thinking, \"Why, she wouldn't even harm a fly\" just before the final fade-out of which 1960 Alfred Hitchcock horror thriller?",
+      "answer": "Psycho",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-person-marie-antoinette",
+      "question": "What French queen accidentally stepped on her executioner's foot while walking up to the guillotine in 1793, politely offering her genuine final words, \"Pardon me, sir. I did not mean to do it\"?",
+      "answer": "Marie Antoinette",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-song-stairway-to-heaven",
+      "question": "Which legendary Led Zeppelin rock epic finishes its eight-minute journey with Robert Plant softly acapella-singing the solitary final lyric, \"And she's buying a stairway to heaven\"?",
+      "answer": "Stairway to Heaven",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-fictional-gollum",
+      "question": "What wretched, ring-obsessed fantasy creature slips into the fires of Mount Doom while joyfully screaming his absolute final word: \"Precious!\"",
+      "answer": "Gollum",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-book-moby-dick",
+      "question": "An epilogue quoting the Book of Job (\"And I only am escaped alone to tell thee\") concludes what massive 1851 seafaring novel written by Herman Melville?",
+      "answer": "Moby Dick",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-film-the-godfather-part-two",
+      "question": "What cinematic crime epic tragically closes with a silent, haunting flashback of a young, idealistic Michael Corleone sitting entirely alone at a family dining table?",
+      "answer": "The Godfather Part II",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-person-thomas-edison",
+      "question": "What famous American inventor briefly woke from a coma on his deathbed in 1931, looked out the window at his yard, and told his wife, \"It is very beautiful over there\"?",
+      "answer": "Thomas Edison",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "last-words-film-back-to-the-future",
+      "question": "Doc Brown lowers his silver sunglasses, guns the engine of his DeLorean, and yells, \"Roads? Where we're going, we don't need roads\" to close out which 1985 sci-fi classic?",
+      "answer": "Back to the Future",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-fictional-tony-stark",
+      "question": "What cinematic superhero fiercely stares down the cosmic villain Thanos in the climax of Avengers: Endgame, uttering the defiant final words, \"And I... am... Iron Man\"?",
+      "answer": "Tony Stark",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-book-1984",
+      "question": "What dystopian George Orwell novel famously ends its bleak psychological narrative with the devastating final sentence, \"He loved Big Brother\"?",
+      "answer": "1984",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-person-leonardo-da-vinci",
+      "question": "What legendary Italian Renaissance polymath reportedly lamented his life's work on his 1519 deathbed, saying, \"I have offended God and mankind because my work didn't reach the quality it should have\"?",
+      "answer": "Leonardo da Vinci",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-film-the-truman-show",
+      "question": "Jim Carrey bows deeply to a massive television audience and delivers his signature catchphrase, \"In case I don't see ya, good afternoon, good evening, and good night!\" to close out which 1998 film?",
+      "answer": "The Truman Show",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-person-steve-jobs",
+      "question": "What co-founder of Apple stared past his family members in 2011 and repeatedly gasped his monosyllabic final words: \"Oh wow. Oh wow. Oh wow\"?",
+      "answer": "Steve Jobs",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-book-frankenstein",
+      "question": "Mary Shelley's Gothic masterpiece concludes with a tortured creature traveling north across the ice fields, where he is ultimately \"lost in darkness and distance\" at the end of which novel?",
+      "answer": "Frankenstein",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-fictional-walter-white",
+      "question": "What brilliant, cancer-stricken chemistry teacher bleeds out on the floor of a neonazi meth laboratory while gently patting a steel storage tank in the series finale of Breaking Bad?",
+      "answer": "Walter White",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-film-king-of-comedy",
+      "question": "Robert De Niro's delusional character Rupert Pupkin receives a roaring standing ovation after an announcer introduces him with the repeated final line, \"Wonderful, let's hear it for Rupert Pupkin!\" in what 1982 Martin Scorsese film?",
+      "answer": "The King of Comedy",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "last-words-song-bohemian-rhapsody",
+      "question": "Which multi-part 1975 Queen rock epic gently fades out with Freddie Mercury softly singing the solitary final phrase, \"Any way the wind blows...\" followed by a sharp gong strike?",
+      "answer": "Bohemian Rhapsody",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-person-charles-darwin",
+      "question": "What English naturalist and evolutionary theorist calmly faced his imminent mortality in 1882, reassuring his grieving family with his documented final words, \"I am not the least afraid of death\"?",
+      "answer": "Charles Darwin",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-play-romeo-and-juliet",
+      "question": "A grieving teenage protagonist drinks a deadly apothecary poison inside a stone tomb, crying, \"Thy drugs are quick. Thus with a kiss I die\" in which Shakespeare play?",
+      "answer": "Romeo and Juliet",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-film-fight-club",
+      "question": "Edward Norton holds Helena Bonham Carter's hand as skyscrapers structurally collapse outside their window, remarking, \"You met me at a very strange time in my life\" to end which 1999 movie?",
+      "answer": "Fight Club",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-person-bob-marley",
+      "question": "What international reggae pioneer looked at his eldest son Ziggy in a Miami hospital room in 1981 and delivered his ultimate final words: \"Money can't buy life\"?",
+      "answer": "Bob Marley",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-book-the-catcher-in-the-rye",
+      "question": "What 1951 American novel ends its cynical adolescent narrative with the warning, \"Don't ever tell anybody anything. If you do, you start missing everybody\"?",
+      "answer": "The Catcher in the Rye",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-film-the-usual-suspects",
+      "question": "Kevin Spacey steps into a car and vanishes after quoting the famous French poet Charles Baudelaire: \"The greatest trick the Devil ever pulled was convincing the world he didn't exist. And like that, poof. He's gone\" in what 1995 film?",
+      "answer": "The Usual Suspects",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-fictional-roy-batty",
+      "question": "What dying Replicant delivers the iconic \"Tears in Rain\" monologue atop a rain-slicked roof, concluding with his final words, \"Time to die\" in the sci-fi masterpiece Blade Runner?",
+      "answer": "Roy Batty",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-person-ludwig-van-beethoven",
+      "question": "What iconic German composer, completely deaf by the end of his life, reportedly received a delivery of vintage wine on his deathbed in 1827 and muttered his final words, \"Pity, pity\u2014too late!\"?",
+      "answer": "Ludwig van Beethoven",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "last-words-film-dr-strangelove",
+      "question": "What dark satirical war comedy cuts away from an unhinged, wheelchair-bound scientist screaming \"Mein F\u00fchrer! I can walk!\" straight into a montage of nuclear explosions?",
+      "answer": "Dr. Strangelove",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-book-ulysses",
+      "question": "Molly Bloom concludes a massive, unpunctuated stream-of-consciousness soliloquy by repeating, \"and yes I said yes I will Yes\" at the end of which legendary 1922 James Joyce modern novel?",
+      "answer": "Ulysses",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "last-words-person-jane-austen",
+      "question": "When asked by her sister Cassandra if she required anything to make her comfortable on her deathbed in 1817, what brilliant English novelist simply replied, \"I want nothing but death\"?",
+      "answer": "Jane Austen",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "last-words-song-hotel-california",
+      "question": "Which 1976 Eagles masterpiece finishes its long narrative with the eerie warning, \"You can check out any time you like, but you can never leave!\" followed by an extended dual-guitar solo?",
+      "answer": "Hotel California",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-film-sunset-boulevard",
+      "question": "Fading silent film star Norma Desmond completely loses her sanity and advances directly toward a police camera lens, stating, \"All right, Mr. DeMille, I'm ready for my close-up\" to conclude which 1950 noir?",
+      "answer": "Sunset Boulevard",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-play-the-crucible",
+      "question": "John Proctor is led away to the gallows after refusing to sign a false confession, while his wife Elizabeth tearfully refuses to stop him, crying, \"He have his goodness now. God forbid I take it from him!\" to end which Arthur Miller play?",
+      "answer": "The Crucible",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-person-george-washington",
+      "question": "What American Founding Father and military leader spent his final moments checking his own pulse before whispering his final words, \"'Tis well,\" to his physician in 1799?",
+      "answer": "George Washington",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-book-charlottes-web",
+      "question": "What beloved E.B. White children's book wraps up with the bittersweet tribute, \"It is not often that someone comes along who is a true friend and a good writer. Charlotte was both\"?",
+      "answer": "Charlotte's Web",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-film-planet-of-the-apes",
+      "question": "Charlton Heston falls to his knees on a desolate beach and screams, \"You maniacs! You blew it up! Ah, damn you! God damn you all to hell!\" at the shock conclusion of which 1968 sci-fi film?",
+      "answer": "Planet of the Apes",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-book-lord-of-the-flies",
+      "question": "A naval officer stares down at a group of crying, dirty children while waiting to rescue them on a burning beach at the sudden, chilling conclusion of which William Golding novel?",
+      "answer": "Lord of the Flies",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-person-salvador-dali",
+      "question": "What eccentric Spanish surrealist painter reportedly muttered his final words, \"Where is my clock?\" on his deathbed in 1889, fittingly obsessing over time until the end?",
+      "answer": "Salvador Dali",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-film-the-shinning",
+      "question": "Stanley Kubrick's psychological horror film slowly pans across a hallway wall, ending on a vintage 1921 July 4th ballroom photograph featuring Jack Nicholson to conclude which masterpiece?",
+      "answer": "The Shining",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-fictional-hal-9000",
+      "question": "Which sentient, homicidal supercomputer slowly loses his artificial consciousness while singing the lyrics to the 19th-century song \"Daisy Bell\" as his core is unplugged?",
+      "answer": "HAL 9000",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-book-the-hobbit",
+      "question": "The protagonist sits down to smoke a pipe with a wizard, remarking that he is \"only quite a little fellow in a wide world after all\" to wrap up which fantasy classic?",
+      "answer": "The Hobbit",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-person-frank-sinatra",
+      "question": "What legendary American crooner and leader of the Rat Pack passed away in a Los Angeles hospital room in 1998 after uttering his desperate final words, \"I'm losing\"?",
+      "answer": "Frank Sinatra",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-film-gone-with-the-wind",
+      "question": "What sweeping 1939 historical epic ends with its stubborn heroine standing against a dramatic sunset sky, declaring, \"After all, tomorrow is another day!\"?",
+      "answer": "Gone with the Wind",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-song-purple-rain",
+      "question": "Which massive 1984 Prince rock anthem ends its theatrical eight-minute emotional peak with a soaring, extended falsetto vocal melody and a dramatic string orchestration fade-out?",
+      "answer": "Purple Rain",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-person-joan-of-arc",
+      "question": "What teenage French military heroine and saint repeatedly called out the single word \"Jesus!\" through the smoke as she was burned at the stake in 1431?",
+      "answer": "Joan of Arc",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-play-a-dolls-house",
+      "question": "What Henrik Ibsen theatrical masterpiece shocked Victorian audiences by ending its final act with the sudden, echoing off-stage sound of a front door slamming shut?",
+      "answer": "A Doll's House",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-film-se7en",
+      "question": "Morgan Freeman delivers a weary voiceover quoting Ernest Hemingway: \"'The world is a fine place and worth fighting for.' I agree with the second part\" to end which gritty thriller?",
+      "answer": "Se7en",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-person-sir-arthur-conan-doyle",
+      "question": "What literary creator of Sherlock Holmes passed away in his garden in 1930, using his absolute final words to look at his wife and whisper, \"You are wonderful\"?",
+      "answer": "Arthur Conan Doyle",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "last-words-book-brave-new-world",
+      "question": "What bleak Aldous Huxley dystopian novel reaches its tragic climax with the horrific image of a dead man's feet slowly rotating like two compass needles inside a lighthouse?",
+      "answer": "Brave New World",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "last-words-film-goodfellas",
+      "question": "Ray Liotta walks out of a quiet suburban house to pick up his morning newspaper, looking at the camera and stating, \"I get to live the rest of my life like a schnook\" to end which film?",
+      "answer": "Goodfellas",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-fictional-gandalf",
+      "question": "What legendary grey wizard slips off the edge of a cavernous stone bridge in the Mines of Moria, yelling the desperate command, \"Fly, you fools!\"?",
+      "answer": "Gandalf",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-person-elvis-presley",
+      "question": "What iconic King of Rock and Roll reportedly told his fianc\u00e9e Ginger Alden, \"I'm going to the bathroom to read\" right before passing away in 1977?",
+      "answer": "Elvis Presley",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-film-the-dark-knight",
+      "question": "Gary Oldman consoles his son in a voiceover, calling the titular protagonist \"a watchful protector. A silent guardian. A dark knight\" as Christian Bale speeds off into the night?",
+      "answer": "The Dark Knight",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-book-one-hundred-years-of-solitude",
+      "question": "What magical realist Gabriel Garc\u00eda M\u00e1rquez masterpiece closes with the lines: \"races condemned to one hundred years of solitude did not have a second opportunity on earth\"?",
+      "answer": "One Hundred Years of Solitude",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-person-james-brown",
+      "question": "The Godfather of Soul looked at his doctor in an Atlanta hospital in 2006, softly sighed, \"I'm going away tonight,\" and took his very last breath. Who was he?",
+      "answer": "James Brown",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-song-yesterday",
+      "question": "Which short, melancholic 1965 Beatles acoustic guitar track famously concludes with Paul McCartney humming a soft, wordless vocal refrain alongside a lone acoustic string quartet?",
+      "answer": "Yesterday",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-film-american-psycho",
+      "question": "Christian Bale stares blankly into space while a sign behind his head reads \"THIS IS NOT AN EXIT,\" ending his inner monologue with the words: \"This confession has meant nothing\" in what film?",
+      "answer": "American Psycho",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-play-macbeth",
+      "question": "Which dark Shakespearean tragedy ends with Macduff triumphantly marching into the royal castle while hoisting the severed head of the titular villain on a pole?",
+      "answer": "Macbeth",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-person-jack-daniel",
+      "question": "What famous American whiskey distiller and businessman fittingly gasped out his final words, \"One last drink, please,\" to his family on his deathbed in 1911?",
+      "answer": "Jack Daniel",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "last-words-book-the-road",
+      "question": "What bleak, post-apocalyptic Cormac McCarthy novel ends its brutal story with a lyrical reflection on brook trout living in mountain streams before the world was broken?",
+      "answer": "The Road",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-film-gladiator",
+      "question": "Djimon Hounsou buries a set of small wooden figurines in the blood-stained sand of the Colosseum arena, whispering to his fallen friend, \"Now we are free. I will see you again. But not yet... not yet\" to close what 2000 film?",
+      "answer": "Gladiator",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-book-peter-pan",
+      "question": "What classic J.M. Barrie novel ends its whimsical story with the timeless line, \"As long as children are gay and innocent and heartless, they will always fly away\"?",
+      "answer": "Peter Pan",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-person-john-f-kennedy",
+      "question": "Seconds before reaching Dealey Plaza, Nellie Connally remarked, \"Mr. President, you can't say Dallas doesn't love you,\" prompting what man to utter his final words: \"No, you certainly can't\"?",
+      "answer": "John F. Kennedy",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-film-the-matrix",
+      "question": "Keanu Reeves hangs up a public telephone booth, steps into the street, looks directly upward at the sky, and flies straight up into the air to end which 1999 sci-fi classic?",
+      "answer": "The Matrix",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-fictional-vito-corleone",
+      "question": "Which fictional mob patriarch collapses in a garden while playing with his young grandson, uttering his peaceful, final onscreen words, \"Life is so beautiful\"?",
+      "answer": "Vito Corleone",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-book-the-picture-of-dorian-gray",
+      "question": "Servants find a hideously wrinkled dead man lying on the floor next to a painting of a beautiful young youth at the conclusion of which Oscar Wilde novel?",
+      "answer": "The Picture of Dorian Gray",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-person-frank-gautier-matthew-hopkins",
+      "question": "What 1920s Chicago gangster, right before being shot down in a phone booth, allegedly gave the hardboiled final warning, \"They can't shoot a guy while he's making a call\"?",
+      "answer": "Frank Miller",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "last-words-film-avengers-infinity-war",
+      "question": "What massive superhero crossover film ends with total silence as a victorious cosmic villain sits entirely alone on a porch, smiling as he watches the sunset?",
+      "answer": "Avengers: Infinity War",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-song-sympathy-for-the-devil",
+      "question": "Which 1968 Rolling Stones rock anthem ends its intense six-minute run with Mick Jagger relentlessly chanting, \"Tell me baby, what's my name?\" amid manic percussion?",
+      "answer": "Sympathy for the Devil",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-person-abraham-lincoln",
+      "question": "When his wife Mary whispered that people would see them holding hands in the theater box, what U.S. President offered his final words, \"They won't think anything of it\"?",
+      "answer": "Abraham Lincoln",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-play-waiting-for-godot",
+      "question": "Vladimir asks \"Well? Shall we go?\" and Estragon responds \"Yes, let's go,\" but the stage directions note \"They do not move\" to end which Samuel Beckett masterpiece?",
+      "answer": "Waiting for Godot",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-film-jurassic-park",
+      "question": "A massive Tyrannosaurus rex lets out a triumphant roar inside a visitor center as a banner reading \"When Dinosaurs Ruled the Earth\" falls to the floor to close which 1993 film?",
+      "answer": "Jurassic Park",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-person-nostradamus",
+      "question": "What famous French astrologer and seer correctly predicted his own immediate mortality by telling his assistant during his final evening, \"Tomorrow, at sunrise, I shall no longer be here\"?",
+      "answer": "Nostradamus",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "last-words-book-the-sound-and-the-fury",
+      "question": "What complex William Faulkner novel concludes its southern gothic family narrative with the comforting line, \"each in its ordered place\"?",
+      "answer": "The Sound and the Fury",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "last-words-film-inception",
+      "question": "Leonardo DiCaprio walks outside to play with his children while a small metal spinning top wobbles on a table right before the screen abruptly cuts to black in what 2010 movie?",
+      "answer": "Inception",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-fictional-darth-vader",
+      "question": "What dying sci-fi villain requests his son to help remove his dark mechanical mask so he can peer out with his own human eyes, saying, \"You already have, Luke\"?",
+      "answer": "Darth Vader",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-person-roald-dahl",
+      "question": "What beloved children's author reassured his family on his deathbed by saying he wasn't afraid of dying, but then reportedly yelled \"Ow, fuck!\" when a nurse pricked him with a needle?",
+      "answer": "Roald Dahl",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-film-whiplash",
+      "question": "What intense 2014 musical drama ends on a tight, ecstatic close-up of Miles Teller delivering a ferocious drum solo, locking eyes with a smiling J.K. Simmons?",
+      "answer": "Whiplash",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-book-les-miserables",
+      "question": "What massive Victor Hugo masterpiece concludes its epic story with a poetic stanza describing Jean Valjean's simple grave, ending with the line, \"The night comes on, the day goes by\"?",
+      "answer": "Les Mis\u00e9rables",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-person-bob-hope",
+      "question": "When his wife Dolores tenderly asked him where he wanted to be buried when his time came, what legendary American comedian quipped his final words: \"Surprise me\"?",
+      "answer": "Bob Hope",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-song-comfortably-numb",
+      "question": "Which iconic 1979 Pink Floyd track concludes with David Gilmour executing a legendary, multi-minute, emotionally soaring electric guitar solo that fades out into blackness?",
+      "answer": "Comfortably Numb",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-film-psycho-american-beauty",
+      "question": "Kevin Spacey delivers a posthumous voiceover detailing the profound beauty of everyday life, concluding with the line, \"You'll see, one day\" to close out which 1999 drama?",
+      "answer": "American Beauty",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-play-the-importance-of-being-earnest",
+      "question": "Jack Worthing declares to Lady Bracknell that he has finally realized \"the vital Importance of Being Earnest\" to close out which classic Oscar Wilde stage comedy?",
+      "answer": "The Importance of Being Earnest",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-person-humphrey-bogart",
+      "question": "What legendary Hollywood tough guy reportedly looked at his wife Lauren Bacall from his deathbed in 1957 and dryly joked, \"I should never have switched from scotch to martinis\"?",
+      "answer": "Humphrey Bogart",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-book-fahrenheit-451",
+      "question": "What Ray Bradbury sci-fi novel ends with Guy Montag leading a group of book-memorizing rebels down a river toward a destroyed city, thinking of a hopeful verse from the Book of Revelation?",
+      "answer": "Fahrenheit 451",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-film-memento",
+      "question": "Guy Pearce closes his eyes while driving his car, concluding a gritty psychological thriller with the cynical internal monologue line: \"Now, where was I?\" right before pulling over?",
+      "answer": "Memento",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-book-the-odyssey",
+      "question": "What ancient epic poem attributed to Homer reaches its final resolution as the goddess Athena commands an end to the civil strife, establishing \"a firm pact of peace between both sides\"?",
+      "answer": "The Odyssey",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-person-alexander-the-great",
+      "question": "When asked by his weeping generals on his deathbed in 323 BC who should inherit his massive empire, what legendary young king famously whispered his final words: \"To the strongest\"?",
+      "answer": "Alexander the Great",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-film-the-godfather",
+      "question": "Kay Corleone watches from a distance as Al Neri shuts a heavy office door in her face, completely shutting her out of Michael's dark new life at the final frame of which 1972 cinematic masterpiece?",
+      "answer": "The Godfather",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-fictional-john-marston",
+      "question": "Which tragic outlaw protagonist steps out of his barn to face a massive firing squad of federal agents and soldiers, taking his final gasping breaths in the video game Red Dead Redemption?",
+      "answer": "John Marston",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-book-tender-is-the-night",
+      "question": "What 1934 F. Scott Fitzgerald novel tracking the tragic decline of Dick Diver concludes its narrative with the line, \"Perhaps he married again... In any case he is almost certainly in that section of the country, in one town or another\"?",
+      "answer": "Tender Is the Night",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "last-words-person-malcolm-x",
+      "question": "What civil rights icon desperately attempted to calm a staged disturbance in the Audubon Ballroom crowd in 1965, uttering his final words, \"Let's cool it, brothers,\" seconds before being assassinated?",
+      "answer": "Malcolm X",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-film-the-good-the-bad-and-the-ugly",
+      "question": "Clint Eastwood gallops away into the desert while Eli Wallach stands balancing atop a wooden cross with a rope around his neck, screaming a furious profanity to close out which legendary Spaghetti Western?",
+      "answer": "The Good, the Bad and the Ugly",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-song-free-bird",
+      "question": "Which 1973 Lynyrd Skynyrd rock epic concludes its massive nine-minute journey with an incredibly frantic, four-minute-long triple guitar solo that slowly fades out into silence?",
+      "answer": "Free Bird",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-person-che-guevara",
+      "question": "What Marxist revolutionary fiercely stared down his hesitant executioner Mario Ter\u00e1n in a Bolivian schoolhouse in 1967, shouting his defiant final words: \"Shoot, coward! You are only going to kill a man!\"?",
+      "answer": "Che Guevara",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-play-pygmalion",
+      "question": "Professor Henry Higgins bursts into a hearty, arrogant laugh after Eliza Doolittle defiantly walks out of his life forever to marry Freddy Eynsford-Hill at the conclusion of which George Bernard Shaw stage play?",
+      "answer": "Pygmalion",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-film-seven-samurai",
+      "question": "Akira Kurosawa's historical masterpiece ends with a weathered leader somberly looking up at the burial mounds of his fallen comrades, stating, \"In the end, we lost this battle too. The victory belongs to the peasants, not to us\" in which film?",
+      "answer": "Seven Samurai",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-person-sigmund-freud",
+      "question": "What pioneer of psychoanalysis requested a terminal dose of morphine from his physician Max Schur in 1939 to end his agony from cancer, murmuring his final words, \"This is absurd\"?",
+      "answer": "Sigmund Freud",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-book-crime-and-punishment",
+      "question": "What classic Fyodor Dostoevsky novel finishes its intense psychological journey in a Siberian prison camp, promising a future story of a man's gradual regeneration and introduction into a \"new, hitherto unknown reality\"?",
+      "answer": "Crime and Punishment",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-film-no-country-for-old-men",
+      "question": "Tommy Lee Jones sits silently at a kitchen table recounting two cryptic dreams about his late father before the screen abruptly slashes to black in the final seconds of which 2007 Coen Brothers film?",
+      "answer": "No Country for Old Men",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-fictional-boromir",
+      "question": "What brave Gondorian warrior gasps out his final words to Aragorn while riddled with arrows on the riverbanks of Amon Hen, whispering, \"I would have followed you, my brother... my captain... my king\"?",
+      "answer": "Boromir",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-person-richard-feynman",
+      "question": "What brilliant, eccentric theoretical physicist looked at his family from his hospital bed in 1988 and dryly joked his ultimate final words, \"I'd hate to die twice. It's so boring\"?",
+      "answer": "Richard Feynman",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "last-words-film-la-la-land",
+      "question": "Ryan Gosling sits behind a jazz club piano and exchanges a bittersweet, silent nod of mutual understanding with Emma Stone right before she exits the venue to conclude which 2016 musical romance?",
+      "answer": "La La Land",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-book-heart-of-darkness",
+      "question": "Marlow sits entirely alone in a meditative posture as a river appears to lead straight \"into the heart of an immense darkness\" to conclude which foundational Joseph Conrad novella?",
+      "answer": "Heart of Darkness",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-person-jane-wyman",
+      "question": "What legendary Hollywood actress and first wife of Ronald Reagan passed away in 2007, leaving a handwritten message to be read after her death that stated, \"The world has lost a wonderful, gentle man\"?",
+      "answer": "Jane Wyman",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "last-words-song-heroes",
+      "question": "Which soaring 1977 David Bowie masterpiece closes out its emotional art-rock wall of sound with the triumphant, repeated vocal phrase, \"We're heroes, just for one day\"?",
+      "answer": "Heroes",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-film-before-sunset",
+      "question": "Julie Delpy dances to a Nina Simone record in her apartment and tells Ethan Hawke, \"Baby, you are gonna miss that plane,\" causing him to smile and reply, \"I know\" as the screen fades out in what movie?",
+      "answer": "Before Sunset",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-play-othello",
+      "question": "The tragic Moor of Venice collapses onto a bed next to his murdered wife Desdemona after delivering his final words, \"I kiss'd thee ere I kill'd thee: no way but this; killing myself, to die upon a kiss\" in what play?",
+      "answer": "Othello",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-person-joan-crawford",
+      "question": "What fierce classic Hollywood actress angrily barked at her praying housekeeper on her 1977 deathbed, snapping her absolute final words, \"Damn it... Don't you dare ask God to help me!\"?",
+      "answer": "Joan Crawford",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "last-words-book-the-grapes-of-wrath",
+      "question": "What powerful John Steinbeck Dust Bowl novel reaches its intimate, heartbreaking conclusion with Ma Joad and Rose of Sharon taking shelter in a barn, where Rose \"looked up and across the barn, and her lips came together and smiled mysteriously\"?",
+      "answer": "The Grapes of Wrath",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-words-film-the-prestige",
+      "question": "Michael Caine delivers a closing voiceover explaining the mechanics of a magic trick, noting, \"You want to be fooled\" as the camera pans across a warehouse filled with burning water tanks to end which Christopher Nolan thriller?",
+      "answer": "The Prestige",
+      "answer_format": "write_in",
+      "category": "Famous Last Words",
+      "difficulty": "medium"
+    }
+  ]
 }

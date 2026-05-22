@@ -8,6 +8,7 @@ import {
   selectLiveShowdownComment,
   type LiveShowdownCommentTrigger,
 } from "@/lib/liveShowdownComments";
+import { ReadyPrompt } from "@/components/trivia/ReadyPrompt";
 
 type Phase = "answering" | "rest_warning" | "mid_game_break" | "pre_game";
 
@@ -53,6 +54,7 @@ type LiveState = {
     question: string;
     options: string[];
     category?: string | null;
+    isClosestGuess?: boolean;
   } | null;
 };
 
@@ -82,6 +84,7 @@ const RULE_LINES = [
   "Players get 30 seconds to type their answers.",
   "There's 15 seconds between questions.",
   "Correct answers award +10 points.",
+  "Some questions are 'Closest Guess' — the player nearest the correct numeric answer wins 10 points.",
   "New players can join any time, but do not get points for questions they missed.",
   "Do not close your browser or switch tabs during live play.",
   "If you wish to leave the game, click 'Back to Home Page' any time.",
@@ -499,10 +502,35 @@ export default function LiveShowdownPage() {
       if (result.pendingClosestGuess) {
         return {
           key: `answer_eval:${activeKey}:closest_guess_pending`,
-          trigger: "round_break",
+          trigger: "closest_guess_pending",
         };
       }
       const isCorrect = Boolean(result.isCorrect);
+
+      // Final question of the game takes priority
+      if (state.currentRound === state.totalRounds && state.currentQuestionIndex === 15) {
+        return {
+          key: `answer_eval:${activeKey}:final_question`,
+          trigger: "game_final_question",
+        };
+      }
+
+      // Scoring streak: 3+ correct in a row within the round
+      if (isCorrect && state.scheduleId && state.currentRound && state.currentQuestionIndex) {
+        let streak = 0;
+        for (let qi = state.currentQuestionIndex; qi >= 1; qi--) {
+          const r = resultByKey[`${state.scheduleId}:${state.currentRound}:${qi}`];
+          if (!r?.isCorrect) break;
+          streak++;
+        }
+        if (streak >= 3) {
+          return {
+            key: `answer_eval:${activeKey}:streak:${streak}`,
+            trigger: "scoring_streak",
+          };
+        }
+      }
+
       return {
         key: `answer_eval:${activeKey}:${isCorrect ? "correct" : "incorrect"}`,
         trigger: isCorrect ? "answer_correct" : "answer_incorrect",
@@ -558,7 +586,22 @@ export default function LiveShowdownPage() {
     : currentResult.isCorrect
     ? "right"
     : "wrong";
-  const feedbackIsRight = feedbackState === "right";
+  const showGameStartPrompt = Boolean(
+    hasOnboarded &&
+    !state.isGameActive &&
+    state.nextSchedule &&
+    state.secondsRemaining > 0 &&
+    state.secondsRemaining <= 10
+  );
+  const showRoundStartPrompt = Boolean(
+    hasOnboarded &&
+    state.isGameActive &&
+    state.activePhase === "mid_game_break" &&
+    state.upcomingRoundNumber &&
+    state.secondsRemaining > 0 &&
+    state.secondsRemaining <= 5
+  );
+  const showReadyPrompt = showGameStartPrompt || showRoundStartPrompt;
   const feedbackLabel =
     feedbackState === "right"
       ? "RIGHT"
@@ -575,7 +618,7 @@ export default function LiveShowdownPage() {
       : feedbackState === "wrong"
       ? "0 points"
       : feedbackState === "pending_closest_guess"
-      ? "Evaluating closest numeric guess..."
+      ? (state.emceeAnnouncement ? "See emcee announcement below." : "Evaluating closest numeric guess...")
       : feedbackState === "unsubmitted_inactive"
       ? "No answer logged, stay ready for the next one."
       : "Joining mid-round? Next question is coming right up!";
@@ -604,8 +647,8 @@ export default function LiveShowdownPage() {
         {!hasOnboarded ? (
           <>
             <section className="rounded-2xl border border-cyan-400/60 bg-slate-900 p-5">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-cyan-300">Live Trivia Rules</p>
-              <ul className="mt-3 space-y-2 text-lg font-semibold leading-snug text-slate-100">
+              <p className="text-sm font-black uppercase tracking-[0.14em] text-cyan-300">Live Trivia Rules</p>
+              <ul className="mt-3 space-y-2 text-xl font-semibold leading-snug text-slate-100">
                 {RULE_LINES.map((rule, index) => {
                   const visible = index < rulesVisibleCount;
                   return (
@@ -635,15 +678,12 @@ export default function LiveShowdownPage() {
                   the lobby and don't miss the first question.
                 </p>
               ) : null}
-              {!state.isGameActive ? (
-                <p className="mt-2 text-sm font-semibold text-amber-100">
-                  {state.nextSchedule
-                    ? "Game has not started yet. Join goes live when the countdown hits 00:00:00."
-                    : "No live session is scheduled for this venue yet."}
-                </p>
-              ) : (
+              {!state.isGameActive && !state.nextSchedule ? (
+                <p className="mt-2 text-sm font-semibold text-amber-100">No live session is scheduled for this venue yet.</p>
+              ) : null}
+              {state.isGameActive ? (
                 <p className="mt-2 text-sm font-semibold text-emerald-200">Live game detected. You can join now.</p>
-              )}
+              ) : null}
               {state.nextSchedule?.firstRoundCategory ? (
                 <p className="mt-3 rounded-xl border border-amber-300/50 bg-amber-950/30 p-2 text-sm font-semibold text-amber-100">
                   Opening category preview: {state.nextSchedule.firstRoundCategory}
@@ -703,7 +743,7 @@ export default function LiveShowdownPage() {
 
             <section className="rounded-2xl border border-cyan-400/60 bg-slate-900 p-5">
               <p className="text-xs font-black uppercase tracking-[0.14em] text-cyan-300">Lobby Rules</p>
-              <ul className="mt-3 space-y-2 text-lg font-semibold leading-snug text-slate-100">
+              <ul className="mt-3 space-y-2 text-xl font-semibold leading-snug text-slate-100">
                 {RULE_LINES.map((rule) => (
                   <li key={`lobby-${rule}`} className="rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-3">
                     {rule}
@@ -727,6 +767,11 @@ export default function LiveShowdownPage() {
             {state.currentRoundCategory ? (
               <p className="mt-1 text-base font-bold uppercase tracking-[0.1em] text-emerald-100/90">
                 Category: {state.currentRoundCategory}
+              </p>
+            ) : null}
+            {state.activeQuestion?.isClosestGuess ? (
+              <p className="mt-2 inline-block rounded-lg border border-amber-400/60 bg-amber-950/40 px-2 py-1 text-sm font-black uppercase tracking-wide text-amber-200">
+                🎯 Closest Guess — nearest answer wins 10 points
               </p>
             ) : null}
             <p className="mt-2 text-3xl font-extrabold tracking-tight leading-tight">
@@ -828,6 +873,14 @@ export default function LiveShowdownPage() {
           </div>
         </div>
       ) : null}
+
+      <ReadyPrompt
+        type={showGameStartPrompt ? "game_start" : "round_start"}
+        roundNumber={showRoundStartPrompt ? (state.upcomingRoundNumber ?? undefined) : undefined}
+        category={showRoundStartPrompt ? (state.upcomingRoundCategory ?? null) : null}
+        secondsRemaining={state.secondsRemaining}
+        isVisible={showReadyPrompt}
+      />
 
       {popupAd ? (
         <div className="fixed inset-0 z-[1250] flex items-center justify-center bg-black/80 p-4">

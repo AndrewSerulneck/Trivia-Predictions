@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
@@ -14,7 +14,7 @@ import {
   validatePin,
   validateUsername,
 } from "@/lib/auth";
-import { calculateDistanceMeters, getBestCurrentLocation, getCurrentLocation } from "@/lib/geolocation";
+import { calculateDistanceMeters, getBestCurrentLocation, getCurrentLocation, type Coordinates } from "@/lib/geolocation";
 import {
   getUserId,
   getVenueId,
@@ -191,6 +191,75 @@ const LOADING_PHRASES = [
   "Taking the field...",
   "Game time...",
 ];
+type LocationResult = {
+  coords: Coordinates | null;
+  permissionDenied: boolean;
+};
+
+async function getInitialLocation(): Promise<LocationResult> {
+  try {
+    let current = await getCurrentLocation();
+    if (!Number.isFinite(current.accuracy) || (current.accuracy ?? 9999) > 500) {
+      current = await getBestCurrentLocation({
+        sampleDurationMs: 2800,
+        timeoutMs: 4000,
+        desiredAccuracyMeters: 220,
+      });
+    }
+    return { coords: current, permissionDenied: false };
+  } catch (error) {
+    return { coords: null, permissionDenied: isLocationPermissionDenied(error) };
+  }
+}
+
+function VenueListSkeleton() {
+  return (
+    <div className="space-y-2" aria-hidden>
+      {[0, 1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className="h-16 animate-pulse rounded-xl border border-slate-200 bg-gradient-to-r from-slate-100 to-slate-50"
+        />
+      ))}
+    </div>
+  );
+}
+
+type VenueListItemProps = {
+  venue: Venue;
+  index: number;
+  isPending: boolean;
+  onSelect: (venue: Venue) => void;
+};
+
+const VenueListItem = memo(function VenueListItem({ venue, index, isPending, onSelect }: VenueListItemProps) {
+  const visual = getVenueVisual(venue, index);
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => onSelect(venue)}
+        className={`flex w-full items-center justify-between rounded-xl border border-slate-200 bg-gradient-to-r from-white to-slate-100 px-4 py-3 text-base text-slate-700 shadow-sm transition-all ${JOIN_BUTTON_POP_CLASS} hover:from-blue-50 hover:to-cyan-50`}
+      >
+        <span className="flex items-center gap-3">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white text-base font-medium text-slate-800">
+            {visual.logoText}
+          </span>
+          <span className="font-medium">
+            {isPending ? `Opening ${getVenueDisplayName(venue)}...` : `Join ${getVenueDisplayName(venue)}`}
+          </span>
+        </span>
+        <span
+          aria-hidden="true"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-xl"
+        >
+          {visual.icon}
+        </span>
+      </button>
+    </li>
+  );
+});
+
 const LIGHTS_MAX_WIDTH = 860;
 const LIGHTS_ASPECT_RATIO = 1.0;
 
@@ -314,69 +383,65 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       autoVerificationAttemptedRef.current = false;
 
       try {
-        const venues = await listVenues();
-        setVenueList(venues);
-
         if (!venueParam) {
+          // Fire geolocation immediately so it runs in parallel with the venue fetch.
+          let locationPromise: Promise<LocationResult> | null = null;
+          if (!DISABLE_GEOFENCE_FOR_TESTING) {
+            setLocationLoading(true);
+            locationPromise = getInitialLocation();
+          }
+
+          const venues = await listVenues();
+          setVenueList(venues);
           setActivePanel("venue-list");
           setStatus("ready");
 
           if (DISABLE_GEOFENCE_FOR_TESTING) {
             setLocationVerified(true);
             setLocationNotice("Testing mode: location checks are disabled.");
-            setVenue(null);
             setLocationLoading(false);
+            setVenue(null);
             return;
           }
 
-          setLocationLoading(true);
-          try {
-            // Quick first-pass location for faster venue discovery UX.
-            let current = await getCurrentLocation();
-            if (!Number.isFinite(current.accuracy) || (current.accuracy ?? 9999) > 500) {
-              current = await getBestCurrentLocation({
-                sampleDurationMs: 2800,
-                timeoutMs: 5500,
-                desiredAccuracyMeters: 220,
-              });
-            }
-            const distanceByVenue = venues.map((item) => {
-              const distance = calculateDistanceMeters(current, {
-                latitude: item.latitude,
-                longitude: item.longitude,
-              });
-              return { venue: item, distance };
-            });
-            const sortedByDistance = [...distanceByVenue]
-              .sort((a, b) => a.distance - b.distance)
-              .map((item) => item.venue);
-            const nearbyCount = distanceByVenue.filter(
-              (item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, current.accuracy)
-            ).length;
-            setVenueList(sortedByDistance);
-            if (nearbyCount > 0) {
-              setLocationNotice(`Found ${nearbyCount} nearby venue(s).`);
-            } else {
-              setLocationNotice("Showing all venues. You'll verify location after selecting one.");
-            }
-          } catch (error) {
-            setVenueList(venues);
-            if (isLocationPermissionDenied(error)) {
-              setLocationNotice("Location permission is off. You can still choose a venue and verify afterward.");
+          // Await location — may already be resolved if venues were slow.
+          if (locationPromise) {
+            const { coords, permissionDenied } = await locationPromise;
+            if (coords) {
+              const distanceByVenue = venues.map((item) => ({
+                venue: item,
+                distance: calculateDistanceMeters(coords, {
+                  latitude: item.latitude,
+                  longitude: item.longitude,
+                }),
+              }));
+              const sortedByDistance = [...distanceByVenue]
+                .sort((a, b) => a.distance - b.distance)
+                .map((item) => item.venue);
+              const nearbyCount = distanceByVenue.filter(
+                (item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, coords.accuracy)
+              ).length;
+              setVenueList(sortedByDistance);
+              setLocationNotice(
+                nearbyCount > 0
+                  ? `Found ${nearbyCount} nearby venue(s).`
+                  : "Showing all venues. You'll verify location after selecting one."
+              );
             } else {
               setLocationNotice(
-                getErrorMessage(
-                  error,
-                  "Location check unavailable right now. You can still choose a venue and verify afterward."
-                )
+                permissionDenied
+                  ? "Location permission is off. You can still choose a venue and verify afterward."
+                  : "Location check unavailable right now. You can still choose a venue and verify afterward."
               );
             }
-          } finally {
             setLocationLoading(false);
           }
           setVenue(null);
           return;
         }
+
+        const venues = await listVenues();
+        setVenueList(venues);
 
         const venueData = await getVenueById(venueParam);
         if (!venueData) {
@@ -1442,37 +1507,15 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                         <p className="text-sm text-slate-600">{locationNotice}</p>
                       ) : null}
                       <ul className="space-y-2">
-                        {venueList.map((item, index) => {
-                          const visual = getVenueVisual(item, index);
-                          return (
-                            <li key={item.id}>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  handleSelectVenue(item);
-                                }}
-                                className={`flex w-full items-center justify-between rounded-xl border border-slate-200 bg-gradient-to-r from-white to-slate-100 px-4 py-3 text-base text-slate-700 shadow-sm transition-all ${JOIN_BUTTON_POP_CLASS} hover:from-blue-50 hover:to-cyan-50`}
-                              >
-                                <span className="flex items-center gap-3">
-                                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white text-base font-medium text-slate-800">
-                                    {visual.logoText}
-                                  </span>
-                                  <span className="font-medium">
-                                    {pendingVenueSelectionId === item.id
-                                      ? `Opening ${getVenueDisplayName(item)}...`
-                                      : `Join ${getVenueDisplayName(item)}`}
-                                  </span>
-                                </span>
-                                <span
-                                  aria-hidden="true"
-                                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-xl"
-                                >
-                                  {visual.icon}
-                                </span>
-                              </button>
-                            </li>
-                          );
-                        })}
+                        {venueList.map((item, index) => (
+                          <VenueListItem
+                            key={item.id}
+                            venue={item}
+                            index={index}
+                            isPending={pendingVenueSelectionId === item.id}
+                            onSelect={handleSelectVenue}
+                          />
+                        ))}
                       </ul>
                       <InlineSlotAdClient
                         slot="leaderboard-sidebar"
@@ -1485,10 +1528,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                       />
                     </div>
                   ) : status === "loading" ? (
-                    <div className="space-y-3 rounded-2xl border-4 border-slate-900 bg-white p-4 text-sm text-slate-800 shadow-[5px_5px_0_#0f172a]">
-                      <p className="font-semibold">Loading venues...</p>
-                      <p>Getting venues ready for you now.</p>
-                    </div>
+                    <VenueListSkeleton />
                   ) : (
                     <div className="space-y-3 rounded-2xl border-4 border-slate-900 bg-white p-4 text-sm text-slate-800 shadow-[5px_5px_0_#0f172a]">
                       <p className="font-semibold">Nearby venues only</p>

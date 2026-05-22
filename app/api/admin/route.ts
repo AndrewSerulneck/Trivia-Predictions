@@ -9,18 +9,27 @@ import {
   createAdminTriviaQuestion,
   deleteAdminAdvertisement,
   deleteAdminTriviaQuestion,
+  deleteAdminLiveTriviaQuestionInFile,
+  deleteAdminSpeedTriviaQuestionInFile,
   getAdminAdsDebugSnapshot,
+  getAdminGeographicHierarchy,
   bulkUpdateAdminTriviaQuestions,
   listPendingPredictionSummaries,
   listAdminAdvertisements,
   listAdminPickEmMatchupsByDate,
   listAdminPickEmUnsettledGames,
   listAdminTriviaQuestions,
+  listAllLiveTriviaCategories,
+  listAllSpeedTriviaCategories,
+  listAdminLiveTriviaQuestionsFromFiles,
+  listAdminSpeedTriviaQuestionsFromFiles,
   resolvePendingPredictionMarket,
   settleAdminPickEmGame,
   updateAdminVenue,
   updateAdminAdvertisement,
   updateAdminTriviaQuestion,
+  updateAdminLiveTriviaQuestionInFile,
+  updateAdminSpeedTriviaQuestionInFile,
   updateAdPlacements,
 } from "@/lib/admin";
 import { requireAdminAuth } from "@/lib/adminAuth";
@@ -54,18 +63,8 @@ export async function GET(request: Request) {
     if (resource === "trivia") {
       const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
       const pageSize = Math.min(10000, Math.max(1, parseInt(searchParams.get("pageSize") ?? "25", 10)));
-      // questionType=speed|live is a friendly alias for questionPool.
       const questionTypeRaw = String(searchParams.get("questionType") ?? "").trim().toLowerCase();
-      const questionTypePool =
-        questionTypeRaw === "speed" ? "anytime_blitz" :
-        questionTypeRaw === "live" ? "live_showdown" :
-        undefined;
-      const rawPool = String(searchParams.get("questionPool") ?? "").trim();
-      const questionPool = questionTypePool ?? (rawPool || undefined);
-      const answerFormat = String(searchParams.get("answerFormat") ?? "").trim() || undefined;
       const category = String(searchParams.get("category") ?? "").trim() || undefined;
-      const startDate = String(searchParams.get("startDate") ?? "").trim() || undefined;
-      const endDate = String(searchParams.get("endDate") ?? "").trim() || undefined;
       const sortByRaw = String(searchParams.get("sortBy") ?? "").trim();
       const sortDirectionRaw = String(searchParams.get("sortDirection") ?? "").trim().toLowerCase();
       const sortBy =
@@ -73,6 +72,23 @@ export async function GET(request: Request) {
           ? sortByRaw
           : undefined;
       const sortDirection = sortDirectionRaw === "asc" || sortDirectionRaw === "desc" ? sortDirectionRaw : undefined;
+
+      // File-based question banks for live and speed trivia
+      if (questionTypeRaw === "live") {
+        const result = await listAdminLiveTriviaQuestionsFromFiles({ page, pageSize, category, sortBy, sortDirection });
+        return NextResponse.json({ ok: true, ...result });
+      }
+      if (questionTypeRaw === "speed") {
+        const result = await listAdminSpeedTriviaQuestionsFromFiles({ page, pageSize, category, sortBy, sortDirection });
+        return NextResponse.json({ ok: true, ...result });
+      }
+
+      // Supabase fallback (no questionType param)
+      const rawPool = String(searchParams.get("questionPool") ?? "").trim();
+      const questionPool = rawPool || undefined;
+      const answerFormat = String(searchParams.get("answerFormat") ?? "").trim() || undefined;
+      const startDate = String(searchParams.get("startDate") ?? "").trim() || undefined;
+      const endDate = String(searchParams.get("endDate") ?? "").trim() || undefined;
       const result = await listAdminTriviaQuestions({
         page,
         pageSize,
@@ -85,6 +101,19 @@ export async function GET(request: Request) {
         sortDirection,
       });
       return NextResponse.json({ ok: true, ...result });
+    }
+
+    if (resource === "trivia-categories") {
+      const questionTypeRaw = String(searchParams.get("questionType") ?? "").trim().toLowerCase();
+      if (questionTypeRaw === "live") {
+        const categories = await listAllLiveTriviaCategories();
+        return NextResponse.json({ ok: true, categories });
+      }
+      if (questionTypeRaw === "speed") {
+        const categories = await listAllSpeedTriviaCategories();
+        return NextResponse.json({ ok: true, categories });
+      }
+      return NextResponse.json({ ok: false, error: "questionType is required (live or speed)" }, { status: 400 });
     }
 
     if (resource === "ads") {
@@ -139,6 +168,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ ok: true, ...result });
     }
 
+    if (resource === "ads-geography") {
+      const hierarchy = await getAdminGeographicHierarchy();
+      return NextResponse.json({ ok: true, hierarchy });
+    }
+
     if (resource === "pickem-unsettled") {
       const items = await listAdminPickEmUnsettledGames();
       return NextResponse.json({ ok: true, items });
@@ -146,10 +180,11 @@ export async function GET(request: Request) {
 
     if (resource === "pickem-matchups") {
       const date = String(searchParams.get("date") ?? "").trim();
+      const tzOffsetMinutes = String(searchParams.get("tzOffsetMinutes") ?? "").trim();
       if (!date) {
         return NextResponse.json({ ok: false, error: "date is required (YYYY-MM-DD)." }, { status: 400 });
       }
-      const items = await listAdminPickEmMatchupsByDate({ date });
+      const items = await listAdminPickEmMatchupsByDate({ date, tzOffsetMinutes });
       return NextResponse.json({ ok: true, items, date });
     }
 
@@ -206,7 +241,7 @@ export async function GET(request: Request) {
       {
         ok: false,
         error:
-          "Unknown resource. Use resource=trivia, resource=ads, resource=ads-debug, resource=pickem-unsettled, resource=pickem-matchups, resource=predictions-pending, resource=challenge-campaigns, or resource=live-showdown-schedules.",
+          "Unknown resource. Use resource=trivia, resource=ads, resource=ads-geography, resource=ads-debug, resource=pickem-unsettled, resource=pickem-matchups, resource=predictions-pending, resource=challenge-campaigns, or resource=live-showdown-schedules.",
       },
       { status: 400 }
     );
@@ -276,7 +311,8 @@ export async function POST(request: Request) {
       | {
           resource: "venues";
           name: string;
-          address: string;
+          street?: string;
+          address?: string;
           radius?: number;
           latitude?: number;
           longitude?: number;
@@ -286,6 +322,7 @@ export async function POST(request: Request) {
           city?: string;
           state?: string;
           zipCode?: string;
+          country?: string;
           county?: string;
           region?: string;
         }
@@ -403,6 +440,7 @@ export async function POST(request: Request) {
     if (body.resource === "venues") {
       const item = await createAdminVenue({
         name: body.name,
+        street: body.street,
         address: body.address,
         radius: body.radius,
         latitude: body.latitude,
@@ -413,6 +451,7 @@ export async function POST(request: Request) {
         city: body.city,
         state: body.state,
         zipCode: body.zipCode,
+        country: body.country,
         county: body.county,
         region: body.region,
       });
@@ -545,6 +584,15 @@ export async function DELETE(request: Request) {
     }
 
     if (resource === "trivia") {
+      const questionType = searchParams.get("questionType");
+      if (questionType === "live") {
+        await deleteAdminLiveTriviaQuestionInFile(id);
+        return NextResponse.json({ ok: true });
+      }
+      if (questionType === "speed") {
+        await deleteAdminSpeedTriviaQuestionInFile(id);
+        return NextResponse.json({ ok: true });
+      }
       await deleteAdminTriviaQuestion(id);
       return NextResponse.json({ ok: true });
     }
@@ -594,6 +642,7 @@ export async function PATCH(request: Request) {
     const body = (await request.json()) as
       | {
           resource: "trivia";
+          questionType?: "live" | "speed";
           id: string;
           question: string;
           options?: string[];
@@ -648,13 +697,15 @@ export async function PATCH(request: Request) {
           displayName?: string;
           logoText?: string;
           iconEmoji?: string;
-          address: string;
+          street?: string;
+          address?: string;
           radius: number;
           latitude?: number;
           longitude?: number;
           city?: string;
           state?: string;
           zipCode?: string;
+          country?: string;
           county?: string;
           region?: string;
         }
@@ -697,6 +748,28 @@ export async function PATCH(request: Request) {
         };
 
     if (body.resource === "trivia") {
+      if (body.questionType === "live") {
+        const answer = body.options?.[body.correctAnswer ?? 0] ?? body.options?.[0] ?? "";
+        const item = await updateAdminLiveTriviaQuestionInFile({
+          slug: body.id,
+          question: body.question,
+          answer,
+          category: body.category,
+          difficulty: body.difficulty,
+        });
+        return NextResponse.json({ ok: true, item });
+      }
+      if (body.questionType === "speed") {
+        const item = await updateAdminSpeedTriviaQuestionInFile({
+          slug: body.id,
+          question: body.question,
+          options: body.options ?? [],
+          correctAnswer: body.correctAnswer ?? 0,
+          category: body.category,
+          difficulty: body.difficulty,
+        });
+        return NextResponse.json({ ok: true, item });
+      }
       const item = await updateAdminTriviaQuestion({
         id: body.id,
         question: body.question,
@@ -757,6 +830,7 @@ export async function PATCH(request: Request) {
         displayName: body.displayName,
         logoText: body.logoText,
         iconEmoji: body.iconEmoji,
+        street: body.street,
         address: body.address,
         radius: body.radius,
         latitude: body.latitude,
@@ -764,6 +838,7 @@ export async function PATCH(request: Request) {
         city: body.city,
         state: body.state,
         zipCode: body.zipCode,
+        country: body.country,
         county: body.county,
         region: body.region,
       });

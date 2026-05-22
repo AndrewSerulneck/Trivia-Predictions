@@ -30,10 +30,12 @@ export interface Venue {
   displayName?: string;
   logoText?: string;
   iconEmoji?: string;
+  street?: string;
   address?: string;
   city?: string;
   state?: string;
   zipCode?: string;
+  country?: string;
   county?: string;
   region?: string;
   latitude: number;
@@ -234,6 +236,7 @@ export interface Advertisement {
   priority: number;
   isPlaceholder?: boolean;
   pageKey: AdPageKey;
+  // Distinct taxonomy: popup (interruptive), banner (persistent strip), inline (embedded content).
   adType: AdType;
   displayTrigger: AdDisplayTrigger;
   placementKey?: string;

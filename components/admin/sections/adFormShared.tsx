@@ -2,18 +2,25 @@
 
 import { useMemo, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, Advertisement, Venue } from "@/types";
+import {
+  AD_PLACEMENTS,
+  getAllowedDisplayTriggers,
+  getDefaultPlacementMeta,
+  getSupportedAdTypesForPage,
+  isSlotCompatibleWithAdType,
+} from "@/lib/adPlacements";
 
 export const AD_PAGE_OPTIONS: Array<{ value: AdPageKey; label: string }> = [
   { value: "join", label: "Join" },
   { value: "venue", label: "Venue" },
-  { value: "trivia", label: "Trivia" },
+  { value: "trivia", label: "Live Trivia + Speed Trivia" },
   { value: "sports-bingo", label: "Sports Bingo" },
   { value: "pickem", label: "Pick 'Em" },
   { value: "fantasy", label: "Fantasy" },
 ];
 
 export const AD_TYPE_OPTIONS: Array<{ value: AdType; label: string }> = [
-  { value: "popup", label: "Popup" },
+  { value: "popup", label: "Pop-Up" },
   { value: "banner", label: "Banner" },
   { value: "inline", label: "Inline" },
 ];
@@ -213,10 +220,67 @@ export function AdFormFields({ draft, onChange, venues, disabled = false }: Prop
     onChange({ ...draft, ...patch });
   }
 
+  function normalizePlacement(
+    nextPageKey: AdPageKey,
+    nextAdType: AdType,
+    preferredTrigger?: AdDisplayTrigger,
+    preferredSlot?: AdSlot
+  ) {
+    const defaults = getDefaultPlacementMeta(nextPageKey, nextAdType);
+    const allowedTriggers = getAllowedDisplayTriggers(nextPageKey, nextAdType);
+    const nextTrigger =
+      preferredTrigger && allowedTriggers.includes(preferredTrigger)
+        ? preferredTrigger
+        : defaults?.displayTrigger ?? "on-load";
+    const fallbackSlot = defaults?.slot ?? "leaderboard-sidebar";
+    const preferredCompatible = preferredSlot && isSlotCompatibleWithAdType(preferredSlot, nextAdType);
+    const nextSlot = preferredCompatible ? preferredSlot : fallbackSlot;
+    return { nextTrigger, nextSlot };
+  }
+
+  function handlePageChange(nextPageKey: AdPageKey) {
+    const supportedTypes = getSupportedAdTypesForPage(nextPageKey);
+    const nextAdType = supportedTypes.includes(draft.adType) ? draft.adType : supportedTypes[0] ?? "inline";
+    const { nextTrigger, nextSlot } = normalizePlacement(nextPageKey, nextAdType, draft.displayTrigger, draft.slot);
+    patch({
+      pageKey: nextPageKey,
+      adType: nextAdType,
+      displayTrigger: nextTrigger,
+      slot: nextSlot,
+      ...(nextTrigger !== "round-end" ? { roundNumber: "", cycleAfterRound: "" } : {}),
+    });
+  }
+
+  function handleAdTypeChange(nextAdType: AdType) {
+    const { nextTrigger, nextSlot } = normalizePlacement(draft.pageKey, nextAdType, draft.displayTrigger, draft.slot);
+    patch({
+      adType: nextAdType,
+      displayTrigger: nextTrigger,
+      slot: nextSlot,
+      ...(nextTrigger !== "round-end" ? { roundNumber: "", cycleAfterRound: "" } : {}),
+    });
+  }
+
+  function handleTriggerChange(nextDisplayTrigger: AdDisplayTrigger) {
+    const { nextTrigger, nextSlot } = normalizePlacement(draft.pageKey, draft.adType, nextDisplayTrigger, draft.slot);
+    patch({
+      displayTrigger: nextTrigger,
+      slot: nextSlot,
+      ...(nextTrigger !== "round-end" ? { roundNumber: "", cycleAfterRound: "" } : {}),
+    });
+  }
+
   function handleVenueMultiSelect(event: ChangeEvent<HTMLSelectElement>) {
     const selected = Array.from(event.target.selectedOptions).map((option) => option.value);
     patch({ venueIds: selected });
   }
+
+  const pagePlacement = draft.pageKey === "global" ? null : AD_PLACEMENTS[draft.pageKey];
+  const allowedAdTypeOptions = getSupportedAdTypesForPage(draft.pageKey);
+  const adTypeOptions = AD_TYPE_OPTIONS.filter((option) => allowedAdTypeOptions.includes(option.value));
+  const allowedTriggers = getAllowedDisplayTriggers(draft.pageKey, draft.adType);
+  const triggerOptions = AD_TRIGGER_OPTIONS.filter((option) => allowedTriggers.includes(option.value));
+  const slotOptions = AD_SLOT_OPTIONS.filter((option) => isSlotCompatibleWithAdType(option.value, draft.adType));
 
   const isRoundEndTrivia = draft.pageKey === "trivia" && draft.displayTrigger === "round-end";
   const [cityInput, setCityInput] = useState("");
@@ -321,19 +385,24 @@ export function AdFormFields({ draft, onChange, venues, disabled = false }: Prop
           disabled={disabled}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
         >
-          {AD_SLOT_OPTIONS.map((option) => (
+          {slotOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
           ))}
         </select>
+        {pagePlacement ? (
+          <p className="mt-1 text-xs text-slate-500">
+            {pagePlacement.name}: {pagePlacement.slots[draft.adType].description}
+          </p>
+        ) : null}
       </div>
 
       <div>
         <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Page</label>
         <select
           value={draft.pageKey}
-          onChange={(event) => patch({ pageKey: event.target.value as AdPageKey })}
+          onChange={(event) => handlePageChange(event.target.value as AdPageKey)}
           disabled={disabled}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
         >
@@ -348,11 +417,11 @@ export function AdFormFields({ draft, onChange, venues, disabled = false }: Prop
         <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Ad Type</label>
         <select
           value={draft.adType}
-          onChange={(event) => patch({ adType: event.target.value as AdType })}
+          onChange={(event) => handleAdTypeChange(event.target.value as AdType)}
           disabled={disabled}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
         >
-          {AD_TYPE_OPTIONS.map((option) => (
+          {adTypeOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
@@ -364,11 +433,11 @@ export function AdFormFields({ draft, onChange, venues, disabled = false }: Prop
         <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Trigger</label>
         <select
           value={draft.displayTrigger}
-          onChange={(event) => patch({ displayTrigger: event.target.value as AdDisplayTrigger })}
+          onChange={(event) => handleTriggerChange(event.target.value as AdDisplayTrigger)}
           disabled={disabled}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
         >
-          {AD_TRIGGER_OPTIONS.map((option) => (
+          {triggerOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>

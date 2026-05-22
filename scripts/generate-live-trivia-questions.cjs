@@ -142,7 +142,7 @@ function validateQuestion(item, displayCategory) {
   const slug = slugify(item.slug || question);
   assert(slug.length > 0, `Question "${question}" produced an empty slug.`);
 
-  return { slug, question, answer, category: displayCategory, difficulty };
+  return { slug, question, answer, answer_format: "write_in", category: displayCategory, difficulty };
 }
 
 function buildPrompt({ category, count, existingSample }) {

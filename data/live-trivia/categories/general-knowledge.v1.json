@@ -5,6 +5,7 @@
       "slug": "what-is-the-capital-city-of-france",
       "question": "What is the capital city of France?",
       "answer": "Paris",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -12,6 +13,7 @@
       "slug": "who-painted-the-mona-lisa",
       "question": "Who painted the Mona Lisa?",
       "answer": "Leonardo da Vinci",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -19,6 +21,7 @@
       "slug": "how-many-days-are-in-a-leap-year",
       "question": "How many days are in a leap year?",
       "answer": "366",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -26,6 +29,7 @@
       "slug": "which-author-wrote-romeo-and-juliet",
       "question": "Which author wrote 'Romeo and Juliet'?",
       "answer": "William Shakespeare",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -33,6 +37,7 @@
       "slug": "which-continent-is-the-largest-by-land-area",
       "question": "Which continent is the largest by land area?",
       "answer": "Asia",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -40,6 +45,7 @@
       "slug": "how-many-players-are-on-a-standard-soccer-team-on-the-field",
       "question": "How many players are on a standard soccer team on the field?",
       "answer": "11",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -47,6 +53,7 @@
       "slug": "in-which-year-did-world-war-ii-officially-end",
       "question": "In which year did World War II officially end?",
       "answer": "1945",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -54,6 +61,7 @@
       "slug": "what-is-the-largest-mammal-in-the-world",
       "question": "What is the largest mammal in the world?",
       "answer": "Blue Whale",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -61,6 +69,7 @@
       "slug": "what-gas-do-plants-absorb-from-the-atmosphere",
       "question": "What gas do plants absorb from the atmosphere?",
       "answer": "Carbon Dioxide",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -68,6 +77,7 @@
       "slug": "which-desert-is-the-largest-hot-desert-in-the-world",
       "question": "Which desert is the largest hot desert in the world?",
       "answer": "Sahara Desert",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -75,6 +85,7 @@
       "slug": "what-is-the-main-organ-of-the-human-respiratory-system",
       "question": "What is the main organ of the human respiratory system?",
       "answer": "Lungs",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -82,6 +93,7 @@
       "slug": "who-invented-the-light-bulb",
       "question": "Who invented the light bulb?",
       "answer": "Thomas Edison",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -89,6 +101,7 @@
       "slug": "which-classic-novel-begins-with-the-line-call-me-ishmael",
       "question": "Which classic novel begins with the line \"Call me Ishmael\"?",
       "answer": "Moby Dick",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -96,6 +109,7 @@
       "slug": "which-fruit-is-famous-for-keeping-the-doctor-away",
       "question": "Which fruit is famous for keeping the doctor away?",
       "answer": "Apple",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -103,6 +117,7 @@
       "slug": "which-instrument-has-black-and-white-keys",
       "question": "Which instrument has black and white keys?",
       "answer": "Piano",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -110,6 +125,7 @@
       "slug": "which-fictional-detective-lives-at-221b-baker-street",
       "question": "Which fictional detective lives at 221B Baker Street?",
       "answer": "Sherlock Holmes",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -117,6 +133,7 @@
       "slug": "who-was-the-first-person-to-step-on-the-moon",
       "question": "Who was the first person to step on the Moon?",
       "answer": "Neil Armstrong",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -124,6 +141,7 @@
       "slug": "which-of-these-cities-is-not-a-capital-city",
       "question": "Which of these cities is NOT a capital city?",
       "answer": "Sydney",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -131,6 +149,7 @@
       "slug": "what-is-a-group-of-lions-called",
       "question": "What is a group of lions called?",
       "answer": "Pride",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -138,6 +157,7 @@
       "slug": "what-is-the-hardest-natural-substance-on-earth",
       "question": "What is the hardest natural substance on Earth?",
       "answer": "Diamond",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -145,6 +165,7 @@
       "slug": "which-ancient-wonder-was-a-massive-lighthouse",
       "question": "Which ancient wonder was a massive lighthouse?",
       "answer": "Lighthouse of Alexandria",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -152,6 +173,7 @@
       "slug": "what-is-the-primary-color-of-a-ripe-banana",
       "question": "What is the primary color of a ripe banana?",
       "answer": "Yellow",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -159,6 +181,7 @@
       "slug": "what-color-is-typically-associated-with-royalty",
       "question": "What color is typically associated with royalty?",
       "answer": "Purple",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -166,6 +189,7 @@
       "slug": "which-famous-tower-is-located-in-paris-france",
       "question": "Which famous tower is located in Paris, France?",
       "answer": "Eiffel Tower",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -173,6 +197,7 @@
       "slug": "who-developed-the-theory-of-relativity",
       "question": "Who developed the theory of relativity?",
       "answer": "Albert Einstein",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -180,6 +205,7 @@
       "slug": "what-is-the-capital-city-of-japan",
       "question": "What is the capital city of Japan?",
       "answer": "Tokyo",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -187,6 +213,7 @@
       "slug": "what-is-the-chemical-symbol-for-water",
       "question": "What is the chemical symbol for water?",
       "answer": "H2O",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -194,6 +221,7 @@
       "slug": "who-wrote-the-classic-novel-don-quixote",
       "question": "Who wrote the classic novel \"Don Quixote\"?",
       "answer": "Miguel de Cervantes",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -201,6 +229,7 @@
       "slug": "in-which-year-did-the-titanic-sink",
       "question": "In which year did the Titanic sink?",
       "answer": "1912",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -208,6 +237,7 @@
       "slug": "which-vegetable-is-known-for-making-people-cry-when-sliced",
       "question": "Which vegetable is known for making people cry when sliced?",
       "answer": "Onion",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -215,6 +245,7 @@
       "slug": "which-artist-painted-the-starry-night",
       "question": "Which artist painted \"The Starry Night\"?",
       "answer": "Vincent van Gogh",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -222,6 +253,7 @@
       "slug": "what-is-the-largest-ocean-on-earth",
       "question": "What is the largest ocean on Earth?",
       "answer": "Pacific Ocean",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -229,6 +261,7 @@
       "slug": "who-was-the-last-queen-of-france-before-the-french-revolution",
       "question": "Who was the last Queen of France before the French Revolution?",
       "answer": "Marie Antoinette",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -236,6 +269,7 @@
       "slug": "what-planet-is-known-as-the-red-planet",
       "question": "What planet is known as the \"Red Planet\"?",
       "answer": "Mars",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -243,6 +277,7 @@
       "slug": "which-fast-food-company-is-known-for-its-golden-arches-logo",
       "question": "Which fast-food company is known for its \"golden arches\" logo?",
       "answer": "McDonald's",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -250,6 +285,7 @@
       "slug": "who-is-the-author-of-the-dystopian-novel-1984",
       "question": "Who is the author of the dystopian novel \"1984\"?",
       "answer": "George Orwell",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -257,6 +293,7 @@
       "slug": "what-is-the-process-by-which-plants-make-their-own-food",
       "question": "What is the process by which plants make their own food?",
       "answer": "Photosynthesis",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -264,6 +301,7 @@
       "slug": "the-magna-carta-was-signed-in-which-year",
       "question": "The Magna Carta was signed in which year?",
       "answer": "1215",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -271,6 +309,7 @@
       "slug": "what-type-of-animal-is-a-killer-whale",
       "question": "What type of animal is a 'killer whale'?",
       "answer": "Dolphin",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -278,6 +317,7 @@
       "slug": "which-country-hosted-the-2016-summer-olympics",
       "question": "Which country hosted the 2016 Summer Olympics?",
       "answer": "Brazil",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -285,6 +325,7 @@
       "slug": "what-is-the-only-letter-in-the-alphabet-not-appearing-in-the-name-of-any-us-state",
       "question": "What is the only letter in the alphabet not appearing in the name of any US state?",
       "answer": "Q",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -292,6 +333,7 @@
       "slug": "what-is-sushi-traditionally-wrapped-in",
       "question": "What is sushi traditionally wrapped in?",
       "answer": "Nori",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -299,6 +341,7 @@
       "slug": "which-musical-instrument-is-sometimes-called-the-king-of-instruments",
       "question": "Which musical instrument is sometimes called the \"king of instruments\"?",
       "answer": "Organ",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -306,6 +349,7 @@
       "slug": "which-film-won-the-first-academy-award-for-best-picture",
       "question": "Which film won the first Academy Award for Best Picture?",
       "answer": "Wings",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -313,6 +357,7 @@
       "slug": "which-city-is-famous-for-its-leaning-tower",
       "question": "Which city is famous for its leaning tower?",
       "answer": "Pisa",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -320,6 +365,7 @@
       "slug": "what-is-the-speed-of-light-in-a-vacuum-approximately",
       "question": "What is the speed of light in a vacuum, approximately?",
       "answer": "300,000 km/s",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -327,6 +373,7 @@
       "slug": "who-wrote-don-quixote",
       "question": "Who wrote 'Don Quixote'?",
       "answer": "Miguel de Cervantes",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -334,6 +381,7 @@
       "slug": "who-is-credited-with-inventing-the-world-wide-web",
       "question": "Who is credited with inventing the World Wide Web?",
       "answer": "Tim Berners-Lee",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -341,6 +389,7 @@
       "slug": "which-of-the-following-is-the-largest-ocean-on-earth",
       "question": "Which of the following is the largest ocean on Earth?",
       "answer": "Pacific Ocean",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -348,6 +397,7 @@
       "slug": "which-famous-landmark-is-located-in-paris-france",
       "question": "Which famous landmark is located in Paris, France?",
       "answer": "Eiffel Tower",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -355,6 +405,7 @@
       "slug": "which-country-is-famous-for-the-great-barrier-reef",
       "question": "Which country is famous for the Great Barrier Reef?",
       "answer": "Australia",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -362,6 +413,7 @@
       "slug": "what-color-is-formed-when-blue-and-yellow-pigments-are-mixed",
       "question": "What color is formed when blue and yellow pigments are mixed?",
       "answer": "Green",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -369,6 +421,7 @@
       "slug": "which-continent-is-home-to-the-sahara-desert",
       "question": "Which continent is home to the Sahara Desert?",
       "answer": "Africa",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -376,6 +429,7 @@
       "slug": "what-is-the-primary-language-spoken-in-brazil",
       "question": "What is the primary language spoken in Brazil?",
       "answer": "Portuguese",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -383,6 +437,7 @@
       "slug": "what-is-the-currency-of-japan",
       "question": "What is the currency of Japan?",
       "answer": "Yen",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -390,6 +445,7 @@
       "slug": "which-famous-scientist-developed-the-theory-of-gravity-after-observing-an-apple-fall",
       "question": "Which famous scientist developed the theory of gravity after observing an apple fall?",
       "answer": "Isaac Newton",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -397,6 +453,7 @@
       "slug": "what-is-the-chemical-formula-for-table-salt",
       "question": "What is the chemical formula for table salt?",
       "answer": "NaCl",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -404,6 +461,7 @@
       "slug": "who-painted-the-famous-artwork-the-starry-night",
       "question": "Who painted the famous artwork 'The Starry Night'?",
       "answer": "Vincent van Gogh",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -411,6 +469,7 @@
       "slug": "which-major-river-flows-through-the-city-of-cairo-egypt",
       "question": "Which major river flows through the city of Cairo, Egypt?",
       "answer": "Nile River",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -418,6 +477,7 @@
       "slug": "in-which-year-did-the-first-man-walk-on-the-moon",
       "question": "In which year did the first man walk on the moon?",
       "answer": "1969",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -425,6 +485,7 @@
       "slug": "who-composed-the-four-seasons",
       "question": "Who composed the 'Four Seasons'?",
       "answer": "Antonio Vivaldi",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -432,6 +493,7 @@
       "slug": "what-is-the-name-of-the-device-used-to-measure-earthquakes",
       "question": "What is the name of the device used to measure earthquakes?",
       "answer": "Seismograph",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -439,6 +501,7 @@
       "slug": "which-war-was-fought-between-the-north-and-south-regions-of-the-united-states",
       "question": "Which war was fought between the North and South regions of the United States?",
       "answer": "Civil War",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -446,6 +509,7 @@
       "slug": "which-ocean-is-the-smallest-and-shallowest-of-the-worlds-five-major-oceans",
       "question": "Which ocean is the smallest and shallowest of the world's five major oceans?",
       "answer": "Arctic Ocean",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -453,6 +517,7 @@
       "slug": "what-is-the-name-of-the-phenomenon-where-light-bends-as-it-passes-from-one-medium-to-another",
       "question": "What is the name of the phenomenon where light bends as it passes from one medium to another?",
       "answer": "Refraction",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -460,6 +525,7 @@
       "slug": "which-of-the-seven-wonders-of-the-ancient-world-was-located-in-alexandria-egypt",
       "question": "Which of the Seven Wonders of the Ancient World was located in Alexandria, Egypt?",
       "answer": "Lighthouse of Alexandria",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -467,6 +533,7 @@
       "slug": "who-wrote-the-odyssey",
       "question": "Who wrote 'The Odyssey'?",
       "answer": "Homer",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -474,6 +541,7 @@
       "slug": "what-is-the-deepest-oceanic-trench-on-earth",
       "question": "What is the deepest oceanic trench on Earth?",
       "answer": "Mariana Trench",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -481,6 +549,7 @@
       "slug": "which-chemical-element-has-the-highest-melting-point",
       "question": "Which chemical element has the highest melting point?",
       "answer": "Tungsten",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -488,6 +557,7 @@
       "slug": "what-is-the-capital-of-france",
       "question": "What is the capital of France?",
       "answer": "Paris",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -495,6 +565,7 @@
       "slug": "which-animal-lays-eggs-and-is-a-mammal",
       "question": "Which animal lays eggs and is a mammal?",
       "answer": "Platypus",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -502,6 +573,7 @@
       "slug": "what-is-the-name-of-the-largest-ocean-on-earth",
       "question": "What is the name of the largest ocean on Earth?",
       "answer": "Pacific",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -509,6 +581,7 @@
       "slug": "who-wrote-the-childrens-book-the-very-hungry-caterpillar",
       "question": "Who wrote the children's book 'The Very Hungry Caterpillar'?",
       "answer": "Eric Carle",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -516,6 +589,7 @@
       "slug": "what-is-the-currency-of-the-united-kingdom",
       "question": "What is the currency of the United Kingdom?",
       "answer": "Pound Sterling",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -523,6 +597,7 @@
       "slug": "which-fruit-is-known-for-containing-a-lot-of-potassium",
       "question": "Which fruit is known for containing a lot of potassium?",
       "answer": "Banana",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -530,6 +605,7 @@
       "slug": "what-is-the-name-of-the-famous-clock-tower-in-london",
       "question": "What is the name of the famous clock tower in London?",
       "answer": "Big Ben",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -537,6 +613,7 @@
       "slug": "which-ancient-civilization-built-the-pyramids",
       "question": "Which ancient civilization built the pyramids?",
       "answer": "Egyptian",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -544,6 +621,7 @@
       "slug": "which-continent-is-home-to-the-amazon-rainforest",
       "question": "Which continent is home to the Amazon Rainforest?",
       "answer": "South America",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -551,6 +629,7 @@
       "slug": "what-is-the-name-of-the-fictional-city-where-batman-operates",
       "question": "What is the name of the fictional city where Batman operates?",
       "answer": "Gotham City",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -558,6 +637,7 @@
       "slug": "which-of-these-is-a-primary-color-of-light",
       "question": "Which of these is a primary color of light?",
       "answer": "Green",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -565,6 +645,7 @@
       "slug": "who-composed-the-opera-the-marriage-of-figaro",
       "question": "Who composed the opera 'The Marriage of Figaro'?",
       "answer": "Wolfgang Amadeus Mozart",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -572,6 +653,7 @@
       "slug": "what-is-the-capital-of-new-zealand",
       "question": "What is the capital of New Zealand?",
       "answer": "Wellington",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -579,6 +661,7 @@
       "slug": "who-was-the-first-person-to-circumnavigate-the-earth",
       "question": "Who was the first person to circumnavigate the Earth?",
       "answer": "Ferdinand Magellan",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -586,6 +669,7 @@
       "slug": "which-element-has-the-atomic-number-1",
       "question": "Which element has the atomic number 1?",
       "answer": "Hydrogen",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -593,6 +677,7 @@
       "slug": "which-famous-novel-begins-with-the-line-call-me-ishmael",
       "question": "Which famous novel begins with the line 'Call me Ishmael.'?",
       "answer": "Moby Dick",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -600,6 +685,7 @@
       "slug": "what-is-the-highest-active-volcano-in-europe",
       "question": "What is the highest active volcano in Europe?",
       "answer": "Mount Etna",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -607,6 +693,7 @@
       "slug": "which-gas-is-responsible-for-the-characteristic-smell-of-rotten-eggs",
       "question": "Which gas is responsible for the characteristic smell of rotten eggs?",
       "answer": "Hydrogen Sulfide",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -614,6 +701,7 @@
       "slug": "who-developed-the-first-successful-polio-vaccine",
       "question": "Who developed the first successful polio vaccine?",
       "answer": "Jonas Salk",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -621,6 +709,7 @@
       "slug": "which-country-has-the-most-natural-lakes",
       "question": "Which country has the most natural lakes?",
       "answer": "Canada",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -628,6 +717,7 @@
       "slug": "which-animal-is-known-as-the-king-of-the-jungle",
       "question": "Which animal is known as the 'king of the jungle'?",
       "answer": "Lion",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -635,6 +725,7 @@
       "slug": "what-is-the-name-of-the-longest-river-in-the-world",
       "question": "What is the name of the longest river in the world?",
       "answer": "Nile River",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
     },
@@ -642,6 +733,7 @@
       "slug": "which-famous-scientist-developed-the-theory-of-relativity",
       "question": "Which famous scientist developed the theory of relativity?",
       "answer": "Albert Einstein",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -649,6 +741,7 @@
       "slug": "which-country-is-famous-for-the-great-wall",
       "question": "Which country is famous for the Great Wall?",
       "answer": "China",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -656,6 +749,7 @@
       "slug": "what-is-the-smallest-country-in-the-world-by-land-area",
       "question": "What is the smallest country in the world by land area?",
       "answer": "Vatican City",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -663,6 +757,7 @@
       "slug": "what-is-the-main-ingredient-in-guacamole",
       "question": "What is the main ingredient in guacamole?",
       "answer": "Avocado",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
     },
@@ -670,6 +765,7 @@
       "slug": "who-wrote-the-play-romeo-and-juliet",
       "question": "Who wrote the play \"Romeo and Juliet\"?",
       "answer": "William Shakespeare",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -677,6 +773,7 @@
       "slug": "what-is-the-name-of-the-deepest-point-in-earths-oceans",
       "question": "What is the name of the deepest point in Earth's oceans?",
       "answer": "Mariana Trench",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -684,6 +781,7 @@
       "slug": "which-element-is-represented-by-the-symbol-au",
       "question": "Which element is represented by the symbol Au?",
       "answer": "Gold",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -691,6 +789,7 @@
       "slug": "what-is-the-only-letter-in-the-english-alphabet-that-is-not-in-the-name-of-any-us-state",
       "question": "What is the only letter in the English alphabet that is not in the name of any U.S. state?",
       "answer": "Q",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -698,6 +797,7 @@
       "slug": "what-is-the-longest-bone-in-the-human-body",
       "question": "What is the longest bone in the human body?",
       "answer": "Femur",
+      "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
     }

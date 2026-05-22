@@ -252,6 +252,7 @@ function validateQuestion(item, displayCategory) {
     question,
     options,
     correctAnswer,
+    answer_format: "multiple_choice",
     category: displayCategory,
     difficulty,
   };

@@ -399,48 +399,54 @@ async function main() {
 
   // Step 1: Read existing files.
   let { absoluteDir, records } = listCategoryRecords(args.dir);
-  const existingKeys = new Set(records.map((record) => record.categoryKey.toLowerCase()));
   const existingDisplay = records.map((record) => record.displayCategory);
 
-  // Step 2: Invent sub-genre categories and create new files if missing.
-  const candidates = await inventCategoryCandidates({
-    apiKey,
-    model,
-    existingDisplayCategories: existingDisplay,
-    countHint: args.newCategoryCount,
-  });
-
+  // Step 2: Invent sub-genre categories only when ALL existing categories are at/above target.
+  const allAtTarget = records.every((record) => record.normalCount >= CATEGORY_TARGET_SIZE);
   const inventedRecords = [];
-  const seenNewKeys = new Set();
 
-  for (const candidate of candidates) {
-    if (inventedRecords.length >= args.newCategoryCount) break;
-    const key = slugify(candidate);
-    if (!key) continue;
-    if (existingKeys.has(key.toLowerCase())) continue;
-    if (seenNewKeys.has(key.toLowerCase())) continue;
-
-    const created = ensureCategoryFile({
-      absoluteDir,
-      categoryName: candidate,
-      existingByKey: new Map(records.map((record) => [record.categoryKey, true])),
-      dryRun: args.dryRun,
+  if (allAtTarget) {
+    console.log("All existing categories are at target. Inventing new category(ies)...");
+    const existingKeys = new Set(records.map((record) => record.categoryKey.toLowerCase()));
+    const candidates = await inventCategoryCandidates({
+      apiKey,
+      model,
+      existingDisplayCategories: existingDisplay,
+      countHint: args.newCategoryCount,
     });
 
-    if (created) {
-      inventedRecords.push(created);
-      seenNewKeys.add(key.toLowerCase());
-      existingKeys.add(key.toLowerCase());
+    const seenNewKeys = new Set();
+    for (const candidate of candidates) {
+      if (inventedRecords.length >= args.newCategoryCount) break;
+      const key = slugify(candidate);
+      if (!key) continue;
+      if (existingKeys.has(key.toLowerCase())) continue;
+      if (seenNewKeys.has(key.toLowerCase())) continue;
+
+      const created = ensureCategoryFile({
+        absoluteDir,
+        categoryName: candidate,
+        existingByKey: new Map(records.map((record) => [record.categoryKey, true])),
+        dryRun: args.dryRun,
+      });
+
+      if (created) {
+        inventedRecords.push(created);
+        seenNewKeys.add(key.toLowerCase());
+        existingKeys.add(key.toLowerCase());
+      }
     }
+
+    assert(
+      inventedRecords.length >= args.newCategoryCount,
+      `Unable to invent ${args.newCategoryCount} unique new category(ies) from Gemini output.`
+    );
+
+    // Re-read after possible file creation.
+    ({ absoluteDir, records } = listCategoryRecords(args.dir));
+  } else {
+    console.log("Some categories are underfilled. Skipping new category creation this run.");
   }
-
-  assert(
-    inventedRecords.length >= args.newCategoryCount,
-    `Unable to invent ${args.newCategoryCount} unique new category(ies) from Gemini output.`
-  );
-
-  // Re-read after possible file creation.
-  ({ absoluteDir, records } = listCategoryRecords(args.dir));
 
   // Step 3 + 4: Count each category and backfill with nightly budget up to target size.
   const inventedKeys = inventedRecords.map((record) => record.categoryKey);

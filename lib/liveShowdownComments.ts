@@ -5,7 +5,10 @@ export type LiveShowdownCommentTrigger =
   | "answer_unsubmitted_inactive"
   | "pregame_intro"
   | "round_start"
-  | "round_break";
+  | "round_break"
+  | "closest_guess_pending"
+  | "game_final_question"
+  | "scoring_streak";
 
 const CORRECT_SUBMISSION_COMMENTS = [
   "Spot on! That's how you set the tone.",
@@ -127,6 +130,17 @@ const UNSUBMITTED_WELCOME_COMMENTS = [
   "Quick reset. Next question is your on-ramp.",
 ] as const;
 
+const CLOSEST_GUESS_PENDING_COMMENTS = [
+  "Closest guess wins this one! Check below for the emcee's call.",
+  "It's a numbers game — whoever got nearest takes the points.",
+  "Nearest answer wins! The emcee is making the call below.",
+  "No partial credit here — only the closest guess walks away with points.",
+  "Your guess is in. Watch the emcee announcement below for the winner.",
+  "Closest-guess round! The emcee will reveal who was nearest.",
+  "It came down to the numbers. Winner gets full points — check below.",
+  "Your answer is locked. The emcee's sorting out the closest guess now.",
+] as const;
+
 const UNSUBMITTED_INACTIVE_COMMENTS = [
   "No answer logged. Did your fingers fall asleep?",
   "Hello? Anyone home? The timer was ticking!",
@@ -138,6 +152,62 @@ const UNSUBMITTED_INACTIVE_COMMENTS = [
   "Frozen hands? Unfreeze for the next prompt.",
   "That timer moved faster than your thumbs that round.",
   "No answer in the books. Come back swinging next question.",
+] as const;
+
+const ROUND_START_COMMENTS = [
+  "New round is LIVE! Show us what you've got.",
+  "Lock in. The points are on the table.",
+  "Fresh round, fresh chance. Let's go.",
+  "Brains on, drinks ready — this round starts NOW.",
+  "New category, new challenge. Come out swinging.",
+  "The competition gets stiffer from here. Stay sharp.",
+  "First question of the round. Set the tone.",
+  "Whoever starts hot carries the momentum.",
+  "This could be the round that flips everything.",
+  "Let's see who's been doing their homework.",
+  "Table chatter is over. Pure focus from here.",
+  "Round is live. No hesitation, no second-guessing.",
+  "New round means new points. Let's chase them.",
+  "The real test starts now. Bring it.",
+  "Here's where the standings actually move.",
+  "Down in the standings? This is your reset button.",
+  "Comfortable lead? Doesn't matter. Round is on.",
+  "Trivia night gets decided in rounds like this.",
+  "Alright everyone — eyes up, brains engaged.",
+  "This round could be the one they talk about.",
+] as const;
+
+const GAME_FINAL_QUESTION_COMMENTS = [
+  "FINAL QUESTION! This is it — everything on the line!",
+  "Last chance to make your mark tonight. Give it everything.",
+  "The game ends with this one. Make it count.",
+  "Final. Question. Who wants bragging rights most?",
+  "One answer stands between you and the finish line.",
+  "The last question of the night. Nothing held back.",
+  "The crowd is on the edge of their seats for this one.",
+  "This answer could lock in a win or flip the whole game.",
+  "The night comes down to THIS. Go.",
+  "All the preparation, all the answers — and it ends here.",
+  "One question. One shot. Everything riding on it.",
+  "This is your last swing. Make it a home run.",
+  "The room goes quiet. The final question is live.",
+  "Last one. Whatever happens, it's been a battle. Now finish it.",
+  "One final answer to write the ending of tonight's story.",
+] as const;
+
+const SCORING_STREAK_COMMENTS = [
+  "THREE IN A ROW! This table is absolutely COOKING!",
+  "A streak is building! The rest of the room is taking notes.",
+  "Nobody's stopping this run. Keep the streak alive!",
+  "The momentum is REAL. Can they keep it going?",
+  "Locked in and on a roll. This is championship form.",
+  "Consecutive correct answers! The other tables are nervous.",
+  "Look at that streak! This is what confidence looks like.",
+  "Answer after answer — clean, fast, correct. Textbook.",
+  "The hot hand doesn't miss. Keep loading them up.",
+  "A streak like this doesn't come without preparation. Respect.",
+  "On fire tonight! The scoreboard says it all.",
+  "They are in a groove nobody can touch right now.",
 ] as const;
 
 function assertCommentBankIntegrity() {
@@ -195,6 +265,18 @@ export function selectLiveShowdownComment(params: {
   }
   if (trigger === "answer_unsubmitted_inactive") {
     return pickFromBank(UNSUBMITTED_INACTIVE_COMMENTS, eventKey);
+  }
+  if (trigger === "closest_guess_pending") {
+    return pickFromBank(CLOSEST_GUESS_PENDING_COMMENTS, eventKey);
+  }
+  if (trigger === "game_final_question") {
+    return pickFromBank(GAME_FINAL_QUESTION_COMMENTS, eventKey);
+  }
+  if (trigger === "scoring_streak") {
+    return pickFromBank(SCORING_STREAK_COMMENTS, eventKey);
+  }
+  if (trigger === "round_start") {
+    return pickFromBank(ROUND_START_COMMENTS, eventKey);
   }
   return pickFromBank(TRANSITION_AND_PREGAME_COMMENTS, eventKey);
 }

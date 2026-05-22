@@ -130,16 +130,16 @@ export function BulkActionBar({
 }: BulkActionBarProps) {
   if (count === 0) return null;
   return (
-    <div className="mb-4 flex items-center gap-3 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2.5">
+    <div className="mb-4 flex flex-col items-start gap-3 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 sm:flex-row sm:items-center">
       <span className="text-sm font-medium text-indigo-800">
         {count} selected
       </span>
-      <div className="h-4 w-px bg-indigo-200" />
+      <div className="hidden h-4 w-px bg-indigo-200 sm:block" />
       {onEnableSelected && (
         <button
           onClick={onEnableSelected}
           disabled={busy}
-          className="text-sm font-medium text-indigo-700 hover:text-indigo-900 disabled:opacity-50"
+          className="min-h-[44px] w-full text-left text-sm font-medium text-indigo-700 hover:text-indigo-900 disabled:opacity-50 sm:min-h-0 sm:w-auto"
         >
           Enable
         </button>
@@ -148,7 +148,7 @@ export function BulkActionBar({
         <button
           onClick={onDisableSelected}
           disabled={busy}
-          className="text-sm font-medium text-indigo-700 hover:text-indigo-900 disabled:opacity-50"
+          className="min-h-[44px] w-full text-left text-sm font-medium text-indigo-700 hover:text-indigo-900 disabled:opacity-50 sm:min-h-0 sm:w-auto"
         >
           Disable
         </button>
@@ -156,14 +156,14 @@ export function BulkActionBar({
       <button
         onClick={onDeleteSelected}
         disabled={busy}
-        className="text-sm font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+        className="min-h-[44px] w-full text-left text-sm font-medium text-red-600 hover:text-red-800 disabled:opacity-50 sm:min-h-0 sm:w-auto"
       >
         Delete
       </button>
       <button
         onClick={onClear}
         disabled={busy}
-        className="ml-auto text-sm text-slate-500 hover:text-slate-700 disabled:opacity-50"
+        className="min-h-[44px] w-full text-left text-sm text-slate-500 hover:text-slate-700 disabled:opacity-50 sm:ml-auto sm:min-h-0 sm:w-auto"
       >
         Clear
       </button>
@@ -296,17 +296,36 @@ type SidebarProps = {
   activeSection: AdminSection;
   onSelect: (section: AdminSection) => void;
   onLogout: () => void;
+  mobile?: boolean;
+  onClose?: () => void;
 };
 
-function Sidebar({ activeSection, onSelect, onLogout }: SidebarProps) {
+function Sidebar({ activeSection, onSelect, onLogout, mobile = false, onClose }: SidebarProps) {
   return (
     <nav
       className="flex flex-col bg-slate-900"
-      style={{ width: 240, minWidth: 240, maxWidth: 240, minHeight: "100vh" }}
+      style={{
+        width: mobile ? "100%" : 240,
+        minWidth: mobile ? "100%" : 240,
+        maxWidth: mobile ? "100%" : 240,
+        minHeight: "100vh",
+      }}
     >
       {/* Logo */}
       <div className="flex h-14 items-center border-b border-slate-800 px-5">
-        <span className="text-sm font-bold tracking-widest text-white">HIGHTOP ADMIN</span>
+        <span className="flex-1 text-sm font-bold tracking-widest text-white">HIGHTOP ADMIN</span>
+        {mobile && onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close menu"
+            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Nav groups */}
@@ -376,6 +395,28 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
   const [authState, setAuthState] = useState<AuthState>("checking");
   const [activeSection, setActiveSection] = useState<AdminSection>(initialSection);
   const [venueList, setVenueList] = useState<Venue[]>(venues);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const syncBreakpoint = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) setMobileSidebarOpen(false);
+    };
+    syncBreakpoint();
+    window.addEventListener("resize", syncBreakpoint);
+    return () => window.removeEventListener("resize", syncBreakpoint);
+  }, []);
+
+  useEffect(() => {
+    if (!mobileSidebarOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileSidebarOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mobileSidebarOpen]);
 
   useEffect(() => {
     let cancelled = false;
@@ -449,24 +490,68 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
     }
   }
 
+  const handleSectionSelect = (section: AdminSection) => {
+    setActiveSection(section);
+    if (isMobile) setMobileSidebarOpen(false);
+  };
+
   return (
     <div className="w-full h-screen max-h-screen m-0 p-0 flex bg-[#030712] overflow-hidden select-none">
-      <Sidebar
-        activeSection={activeSection}
-        onSelect={setActiveSection}
-        onLogout={handleLogout}
-      />
+      {!isMobile ? (
+        <Sidebar
+          activeSection={activeSection}
+          onSelect={handleSectionSelect}
+          onLogout={handleLogout}
+        />
+      ) : null}
+
+      {isMobile ? (
+        <>
+          <div
+            className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-[1px] transition-opacity duration-300 ${
+              mobileSidebarOpen ? "opacity-100" : "pointer-events-none opacity-0"
+            }`}
+            aria-hidden={!mobileSidebarOpen}
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+          <aside
+            className={`fixed inset-y-0 left-0 z-50 w-[78vw] max-w-sm transform transition-transform duration-300 ${
+              mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
+            aria-hidden={!mobileSidebarOpen}
+          >
+            <Sidebar
+              activeSection={activeSection}
+              onSelect={handleSectionSelect}
+              onLogout={handleLogout}
+              mobile
+              onClose={() => setMobileSidebarOpen(false)}
+            />
+          </aside>
+        </>
+      ) : null}
 
       <main className="h-full min-w-0 flex flex-1 flex-col overflow-hidden">
         {/* Top header bar */}
-        <div className="flex h-14 items-center border-b border-slate-200 bg-white px-8">
+        <div className="flex h-14 items-center gap-3 border-b border-slate-200 bg-white px-4 md:px-8">
+          {isMobile ? (
+            <button
+              type="button"
+              aria-label="Toggle navigation menu"
+              aria-expanded={mobileSidebarOpen}
+              onClick={() => setMobileSidebarOpen((prev) => !prev)}
+              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md border border-slate-200 text-slate-700 hover:bg-slate-50"
+            >
+              <span className="text-xl leading-none">☰</span>
+            </button>
+          ) : null}
           <h1 className="text-sm font-semibold text-slate-800">
             {currentSectionOption?.label ?? "Dashboard"}
           </h1>
         </div>
 
         {/* Content area */}
-        <div className="h-full flex-1 overflow-y-auto p-6 box-border">
+        <div className="h-full flex-1 overflow-y-auto p-4 md:p-6 box-border">
           <SectionErrorBoundary>{renderContent()}</SectionErrorBoundary>
         </div>
       </main>

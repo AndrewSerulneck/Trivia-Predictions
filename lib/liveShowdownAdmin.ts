@@ -158,6 +158,26 @@ function zonedDateTimeToUtcIso(dateValue: string, timeValue: string, timeZone: s
   return new Date(guessMs).toISOString();
 }
 
+// Shuffles a copy and deinterleaves it so no two consecutive entries are identical.
+// Used to ensure adjacent rounds never share the same category.
+function buildCategoryRotation(categorySlots: string[]): string[] {
+  const shuffled = shuffleInPlace([...categorySlots]);
+  const result: string[] = [];
+  const remaining = [...shuffled];
+  while (remaining.length > 0) {
+    const lastAssigned = result[result.length - 1];
+    const idx = remaining.findIndex((item) => item !== lastAssigned);
+    if (idx === -1) {
+      // All remaining are the same category — append as-is.
+      result.push(...remaining);
+      break;
+    }
+    result.push(remaining[idx]!);
+    remaining.splice(idx, 1);
+  }
+  return result;
+}
+
 async function buildLiveShowdownQuestionMatrix(numRounds: number): Promise<string[]> {
   const admin = getAdminClient();
   const totalNeeded = numRounds * QUESTIONS_PER_ROUND;
@@ -170,40 +190,64 @@ async function buildLiveShowdownQuestionMatrix(numRounds: number): Promise<strin
     throw new Error(error.message || "Failed to load trivia questions for Live Showdown seeding.");
   }
 
+  type EligibleRow = LiveShowdownQuestionRow & { slug: string };
+
   const rows = ((data ?? []) as LiveShowdownQuestionRow[])
     .filter((row) => String(row.slug ?? "").trim().length > 0)
-    .map((row) => ({ ...row, slug: String(row.slug ?? "").trim() } as LiveShowdownQuestionRow & { slug: string }));
+    .map((row) => ({ ...row, slug: String(row.slug ?? "").trim() }) as EligibleRow);
 
-  const liveEligible = rows.filter((row) => row.question_pool === "live_showdown" && isLiveShowdownEligibleAnswer(getCorrectAnswer(row)));
-  const anytimeEligible = rows.filter((row) => row.question_pool === "anytime_blitz" && isLiveShowdownEligibleAnswer(getCorrectAnswer(row)));
-  const allByCategory = new Map<string, Array<(LiveShowdownQuestionRow & { slug: string })>>();
+  const liveEligible = rows.filter(
+    (row) => row.question_pool === "live_showdown" && isLiveShowdownEligibleAnswer(getCorrectAnswer(row))
+  );
+  const anytimeEligible = rows.filter(
+    (row) => row.question_pool === "anytime_blitz" && isLiveShowdownEligibleAnswer(getCorrectAnswer(row))
+  );
 
+  // Build per-category buckets; shuffle each bucket for variety within the category.
+  const byCategory = new Map<string, EligibleRow[]>();
   for (const row of rows) {
-    const category = normalizeCategory(row.category);
-    const list = allByCategory.get(category) ?? [];
-    list.push(row as LiveShowdownQuestionRow & { slug: string });
-    allByCategory.set(category, list);
+    const cat = normalizeCategory(row.category);
+    const list = byCategory.get(cat) ?? [];
+    list.push(row);
+    byCategory.set(cat, list);
   }
-
-  for (const list of allByCategory.values()) {
+  for (const list of byCategory.values()) {
     shuffleInPlace(list);
   }
 
-  const used = new Set<string>();
-  const selected: string[] = [];
+  // Build a category rotation: each category gets one slot per full QUESTIONS_PER_ROUND
+  // it can provide, then the whole list is shuffled and deinterleaved so consecutive
+  // rounds always have different categories.
+  const categorySlots: string[] = [];
+  for (const [cat, list] of byCategory.entries()) {
+    const slots = Math.floor(list.length / QUESTIONS_PER_ROUND);
+    for (let i = 0; i < slots; i += 1) {
+      categorySlots.push(cat);
+    }
+  }
+  const categoryRotation = buildCategoryRotation(categorySlots);
 
+  const used = new Set<string>();
+
+  // Pick up to `count` unused questions from `source`, optionally filtered to `category`.
+  // Enforces at most one closest-guess (standalone numeric answer) question per round
+  // using the `numericUsed` accumulator passed in from the caller.
   const takeFrom = (
-    source: Array<LiveShowdownQuestionRow & { slug: string }>,
+    source: EligibleRow[],
     count: number,
-    category?: string
+    category: string | undefined,
+    numericUsed: { value: number }
   ): string[] => {
     const picked: string[] = [];
     for (const row of source) {
       if (picked.length >= count) break;
       if (used.has(row.slug)) continue;
-      if (category && normalizeCategory(row.category) !== category) continue;
+      if (category !== undefined && normalizeCategory(row.category) !== category) continue;
+      const isNumeric = isStandaloneNumeric(getCorrectAnswer(row));
+      if (isNumeric && numericUsed.value >= 1) continue;
       used.add(row.slug);
       picked.push(row.slug);
+      if (isNumeric) numericUsed.value += 1;
     }
     return picked;
   };
@@ -211,39 +255,41 @@ async function buildLiveShowdownQuestionMatrix(numRounds: number): Promise<strin
   const rounds: string[][] = [];
 
   for (let round = 1; round <= numRounds; round += 1) {
-    const categoriesWithEnoughRemaining = Array.from(allByCategory.entries())
-      .map(([category, list]) => ({
-        category,
-        remaining: list.filter((row) => !used.has(row.slug)).length,
-      }))
-      .filter((entry) => entry.remaining >= QUESTIONS_PER_ROUND)
-      .sort((a, b) => b.remaining - a.remaining);
+    // Rotate through the pre-shuffled category list; cycle if there are more rounds than slots.
+    const preferredCategory =
+      categoryRotation.length > 0
+        ? (categoryRotation[(round - 1) % categoryRotation.length] ?? null)
+        : null;
 
-    const preferredCategory = categoriesWithEnoughRemaining[0]?.category ?? null;
     const roundSlugs: string[] = [];
+    const numericUsed = { value: 0 };
 
     if (preferredCategory) {
-      roundSlugs.push(...takeFrom(liveEligible as Array<LiveShowdownQuestionRow & { slug: string }>, QUESTIONS_PER_ROUND, preferredCategory));
+      // 1. Live-eligible questions from preferred category.
+      roundSlugs.push(...takeFrom(liveEligible, QUESTIONS_PER_ROUND, preferredCategory, numericUsed));
+      // 2. Anytime-eligible questions from preferred category.
       if (roundSlugs.length < QUESTIONS_PER_ROUND) {
-        roundSlugs.push(...takeFrom(anytimeEligible as Array<LiveShowdownQuestionRow & { slug: string }>, QUESTIONS_PER_ROUND - roundSlugs.length, preferredCategory));
+        roundSlugs.push(
+          ...takeFrom(anytimeEligible, QUESTIONS_PER_ROUND - roundSlugs.length, preferredCategory, numericUsed)
+        );
       }
+      // 3. Any question from preferred category (broadest fallback within category).
       if (roundSlugs.length < QUESTIONS_PER_ROUND) {
-        const categoryAll = allByCategory.get(preferredCategory) ?? [];
-        roundSlugs.push(...takeFrom(categoryAll, QUESTIONS_PER_ROUND - roundSlugs.length));
+        const catAll = byCategory.get(preferredCategory) ?? [];
+        roundSlugs.push(...takeFrom(catAll, QUESTIONS_PER_ROUND - roundSlugs.length, undefined, numericUsed));
       }
     }
 
+    // Global fallback passes — used when preferred category is exhausted or unavailable.
     if (roundSlugs.length < QUESTIONS_PER_ROUND) {
-      const needed = QUESTIONS_PER_ROUND - roundSlugs.length;
-      roundSlugs.push(...takeFrom(liveEligible as Array<LiveShowdownQuestionRow & { slug: string }>, needed));
+      roundSlugs.push(...takeFrom(liveEligible, QUESTIONS_PER_ROUND - roundSlugs.length, undefined, numericUsed));
+    }
+    if (roundSlugs.length < QUESTIONS_PER_ROUND) {
+      roundSlugs.push(...takeFrom(anytimeEligible, QUESTIONS_PER_ROUND - roundSlugs.length, undefined, numericUsed));
     }
     if (roundSlugs.length < QUESTIONS_PER_ROUND) {
       const needed = QUESTIONS_PER_ROUND - roundSlugs.length;
-      roundSlugs.push(...takeFrom(anytimeEligible as Array<LiveShowdownQuestionRow & { slug: string }>, needed));
-    }
-    if (roundSlugs.length < QUESTIONS_PER_ROUND) {
-      const needed = QUESTIONS_PER_ROUND - roundSlugs.length;
-      roundSlugs.push(...takeFrom(rows as Array<LiveShowdownQuestionRow & { slug: string }>, needed));
+      roundSlugs.push(...takeFrom(rows, needed, undefined, numericUsed));
       console.warn(
         `[Live Showdown] Round ${round}: used broad fallback rows outside strict answer filter to fill ${needed} slot(s).`
       );

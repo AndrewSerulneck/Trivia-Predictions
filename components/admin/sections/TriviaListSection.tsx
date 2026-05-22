@@ -7,7 +7,6 @@ import { BulkActionBar, PaginationBar, TD, TH, TR } from "@/components/admin/Adm
 const PAGE_SIZE = 25;
 
 type QuestionType = "speed" | "live";
-type PoolFilter = "all" | "anytime_blitz" | "live_showdown";
 type AnswerFormatFilter = "all" | "multiple_choice" | "write_in" | "numeric" | "true_false";
 type SortField = "created_at" | "category" | "question_pool" | "answer_format";
 type SortDirection = "asc" | "desc";
@@ -70,7 +69,6 @@ export function TriviaListSection() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
-  const poolFilter: PoolFilter = questionType === "speed" ? "anytime_blitz" : "live_showdown";
   const [answerFormatFilter, setAnswerFormatFilter] = useState<AnswerFormatFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -83,19 +81,14 @@ export function TriviaListSection() {
   const [success, setSuccess] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editing, setEditing] = useState<EditFormState | null>(null);
+  const [allCategories, setAllCategories] = useState<string[]>([]);
 
   const allOnPageSelected = useMemo(
     () => items.length > 0 && items.every((item) => selectedIds.has(item.id)),
     [items, selectedIds]
   );
 
-  const categoryOptions = useMemo(() => {
-    const values = new Set<string>();
-    for (const item of items) {
-      if (item.category?.trim()) values.add(item.category.trim());
-    }
-    return ["", ...Array.from(values).sort((a, b) => a.localeCompare(b))];
-  }, [items]);
+  const categoryOptions = useMemo(() => ["", ...allCategories], [allCategories]);
 
   const fetchTrivia = useCallback(
     async (targetPage: number) => {
@@ -109,7 +102,7 @@ export function TriviaListSection() {
           sortBy,
           sortDirection,
         });
-        params.set("questionPool", poolFilter);
+        params.set("questionType", questionType);
         if (answerFormatFilter !== "all") params.set("answerFormat", answerFormatFilter);
         if (categoryFilter.trim()) params.set("category", categoryFilter.trim());
         if (startDate) params.set("startDate", `${startDate}T00:00:00.000Z`);
@@ -136,8 +129,26 @@ export function TriviaListSection() {
         setLoading(false);
       }
     },
-    [answerFormatFilter, categoryFilter, endDate, poolFilter, sortBy, sortDirection, startDate]
+    [answerFormatFilter, categoryFilter, endDate, questionType, sortBy, sortDirection, startDate]
   );
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const params = new URLSearchParams({ resource: "trivia-categories", questionType });
+      const res = await fetch(`/api/admin?${params.toString()}`, { cache: "no-store" });
+      const payload = (await res.json()) as { ok: boolean; categories?: string[] };
+      if (payload.ok && Array.isArray(payload.categories)) {
+        setAllCategories(payload.categories);
+      }
+    } catch {
+      // silently ignore — main fetch error handling covers the user-visible case
+    }
+  }, [questionType]);
+
+  useEffect(() => {
+    setAllCategories([]);
+    void fetchCategories();
+  }, [questionType, fetchCategories]);
 
   useEffect(() => {
     setPage(1);
@@ -173,7 +184,7 @@ export function TriviaListSection() {
     setError("");
     setSuccess("");
     try {
-      const response = await fetch(`/api/admin?resource=trivia&id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      const response = await fetch(`/api/admin?resource=trivia&id=${encodeURIComponent(id)}&questionType=${questionType}`, { method: "DELETE" });
       const payload = (await response.json()) as { ok: boolean; error?: string };
       if (!response.ok || !payload.ok) throw new Error(payload.error ?? "Failed to delete trivia question.");
       setSuccess("Trivia question deleted.");
@@ -201,7 +212,7 @@ export function TriviaListSection() {
     try {
       const ids = Array.from(selectedIds);
       await Promise.all(
-        ids.map((id) => fetch(`/api/admin?resource=trivia&id=${encodeURIComponent(id)}`, { method: "DELETE" }))
+        ids.map((id) => fetch(`/api/admin?resource=trivia&id=${encodeURIComponent(id)}&questionType=${questionType}`, { method: "DELETE" }))
       );
       setSuccess(`${ids.length} trivia question(s) deleted.`);
       setSelectedIds(new Set());
@@ -275,6 +286,7 @@ export function TriviaListSection() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           resource: "trivia",
+          questionType,
           id: editing.id,
           question: editing.question.trim(),
           category: editing.category.trim() || undefined,
@@ -319,20 +331,20 @@ export function TriviaListSection() {
   return (
     <div className="space-y-4">
       {/* Top-level question type toggle */}
-      <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-6 py-4 shadow-sm">
+      <div className="flex flex-col items-start gap-3 rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:px-6">
         <span className="text-sm font-semibold text-slate-700 mr-2">Question Bank:</span>
-        <button type="button" onClick={() => setQuestionType("speed")} className={typeTabClass("speed")}>
+        <button type="button" onClick={() => { setQuestionType("speed"); setCategoryFilter(""); setAnswerFormatFilter("all"); }} className={`${typeTabClass("speed")} min-h-[44px] w-full sm:w-auto`}>
           Speed Trivia
         </button>
-        <button type="button" onClick={() => setQuestionType("live")} className={typeTabClass("live")}>
+        <button type="button" onClick={() => { setQuestionType("live"); setCategoryFilter(""); setAnswerFormatFilter("all"); }} className={`${typeTabClass("live")} min-h-[44px] w-full sm:w-auto`}>
           Live Trivia
         </button>
-        <span className="ml-auto text-xs text-slate-400">
+        <span className="text-xs text-slate-400 sm:ml-auto">
           {questionType === "speed" ? "Multiple-choice · anytime_blitz pool" : "Write-in · live_showdown pool"}
         </span>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Answer Format</label>
@@ -380,7 +392,7 @@ export function TriviaListSection() {
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Sort By</label>
               <select
@@ -463,12 +475,12 @@ export function TriviaListSection() {
                   <td colSpan={7} className="py-12 text-center text-sm text-slate-400">No trivia questions found.</td>
                 </tr>
               ) : (
-                items.map((item) => {
+                items.map((item, index) => {
                   const isEditing = editing?.id === item.id;
 
                   return (
-                    <Fragment key={item.id}>
-                      <tr key={item.id} className={TR}>
+                    <Fragment key={`${item.id}-${index}`}>
+                      <tr className={TR}>
                         <td className={`${TD} w-10`}>
                           <input
                             type="checkbox"
@@ -487,10 +499,10 @@ export function TriviaListSection() {
                           {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "-"}
                         </td>
                         <td className={`${TD} text-right`}>
-                          <div className="inline-flex gap-2">
+                          <div className="inline-flex flex-col gap-2 sm:flex-row">
                             <button
                               onClick={() => setEditing(isEditing ? null : toEditState(item))}
-                              className="rounded border border-slate-300 px-3 py-1 text-xs text-slate-700 hover:bg-slate-50"
+                              className="min-h-[44px] rounded border border-slate-300 px-3 py-1 text-xs text-slate-700 hover:bg-slate-50"
                             >
                               {isEditing ? "Close" : "Edit"}
                             </button>
@@ -499,7 +511,7 @@ export function TriviaListSection() {
                                 void deleteSingle(item.id);
                               }}
                               disabled={busy}
-                              className="rounded border border-red-200 px-3 py-1 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50"
+                              className="min-h-[44px] rounded border border-red-200 px-3 py-1 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50"
                             >
                               Delete
                             </button>
@@ -538,34 +550,38 @@ export function TriviaListSection() {
                                 />
                               </div>
 
-                              <div>
-                                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Pool</label>
-                                <select
-                                  value={editing.questionPool}
-                                  onChange={(event) =>
-                                    setEditing({ ...editing, questionPool: event.target.value as EditFormState["questionPool"] })
-                                  }
-                                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                                >
-                                  <option value="anytime_blitz">anytime_blitz</option>
-                                  <option value="live_showdown">live_showdown</option>
-                                </select>
-                              </div>
-                              <div>
-                                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Format</label>
-                                <select
-                                  value={editing.answerFormat}
-                                  onChange={(event) =>
-                                    setEditing({ ...editing, answerFormat: event.target.value as EditFormState["answerFormat"] })
-                                  }
-                                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                                >
-                                  <option value="multiple_choice">multiple_choice</option>
-                                  <option value="write_in">write_in</option>
-                                  <option value="numeric">numeric</option>
-                                  <option value="true_false">true_false</option>
-                                </select>
-                              </div>
+                              {questionType !== "live" && (
+                                <div>
+                                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Pool</label>
+                                  <select
+                                    value={editing.questionPool}
+                                    onChange={(event) =>
+                                      setEditing({ ...editing, questionPool: event.target.value as EditFormState["questionPool"] })
+                                    }
+                                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                  >
+                                    <option value="anytime_blitz">anytime_blitz</option>
+                                    <option value="live_showdown">live_showdown</option>
+                                  </select>
+                                </div>
+                              )}
+                              {questionType !== "live" && (
+                                <div>
+                                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Format</label>
+                                  <select
+                                    value={editing.answerFormat}
+                                    onChange={(event) =>
+                                      setEditing({ ...editing, answerFormat: event.target.value as EditFormState["answerFormat"] })
+                                    }
+                                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                  >
+                                    <option value="multiple_choice">multiple_choice</option>
+                                    <option value="write_in">write_in</option>
+                                    <option value="numeric">numeric</option>
+                                    <option value="true_false">true_false</option>
+                                  </select>
+                                </div>
+                              )}
 
                               {editing.answerFormat === "multiple_choice" ? (
                                 <>
@@ -614,19 +630,19 @@ export function TriviaListSection() {
                               )}
                             </div>
 
-                            <div className="mt-4 flex items-center gap-2">
+                            <div className="mt-4 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
                               <button
                                 onClick={() => {
                                   void saveEdit();
                                 }}
                                 disabled={busy}
-                                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                                className="min-h-[44px] rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
                               >
                                 {busy ? "Saving..." : "Save"}
                               </button>
                               <button
                                 onClick={() => setEditing(null)}
-                                className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                                className="min-h-[44px] rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
                               >
                                 Cancel
                               </button>

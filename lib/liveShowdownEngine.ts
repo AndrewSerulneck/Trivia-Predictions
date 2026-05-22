@@ -57,6 +57,7 @@ export type LiveShowdownQuestionPublic = {
   difficulty: string | null;
   roundNumber: number;
   questionIndex: number;
+  isClosestGuess: boolean;
 };
 
 type LiveShowdownQuestionInternal = LiveShowdownQuestionPublic & {
@@ -183,6 +184,7 @@ function mapQuestionInternal(
     difficulty: row.difficulty ?? null,
     roundNumber: sessionRow.round_number,
     questionIndex: sessionRow.question_index,
+    isClosestGuess: correctNumericAnswer !== null,
     correctAnswer,
     correctNumericAnswer,
   };
@@ -199,6 +201,7 @@ function toPublicQuestion(question: LiveShowdownQuestionInternal | null): LiveSh
     difficulty: question.difficulty,
     roundNumber: question.roundNumber,
     questionIndex: question.questionIndex,
+    isClosestGuess: question.isClosestGuess,
   };
 }
 

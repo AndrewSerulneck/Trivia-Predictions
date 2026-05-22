@@ -91,9 +91,11 @@ const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
 
 const SWIPE_SCREEN_COUNT = 3;
 const FETCH_TIMEOUT_MS = 4500;
-const ARRIVAL_CORE_MAX_WAIT_MS = 2800;
+const BADGE_FETCH_TIMEOUT_MS = 3500;
+const ARRIVAL_CORE_MAX_WAIT_MS = 1800;
 const ARRIVAL_WATCHDOG_TIMEOUT_MS = 8000;
 const ARRIVAL_RECOVERY_ATTEMPT_KEY = "tp:venue-arrival-recovery-attempt";
+const BOOTSTRAP_QUOTA_FRESH_MS = 30_000;
 
 function formatCountdown(seconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(seconds));
@@ -187,18 +189,28 @@ function formatLiveTriviaNextGameLabel(startAt: Date, timeZone?: string): string
   return `Next Game: ${dayLabel} at ${timeLabel}`;
 }
 
-async function fetchJsonWithTimeout<T>(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<T | null> {
+async function fetchJsonWithTimeout<T>(url: string, timeoutMs = FETCH_TIMEOUT_MS, externalSignal?: AbortSignal): Promise<T | null> {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => {
     controller.abort();
   }, Math.max(300, Math.floor(timeoutMs)));
+  const onExternalAbort = externalSignal
+    ? () => controller.abort()
+    : undefined;
+  if (externalSignal && onExternalAbort) {
+    externalSignal.addEventListener("abort", onExternalAbort, { once: true });
+  }
   try {
     const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+    if (externalSignal?.aborted) return null;
     return (await response.json().catch(() => null)) as T | null;
   } catch {
     return null;
   } finally {
     window.clearTimeout(timeoutId);
+    if (externalSignal && onExternalAbort) {
+      externalSignal.removeEventListener("abort", onExternalAbort);
+    }
   }
 }
 
@@ -207,6 +219,17 @@ function pathMatches(expectedPath: string, candidatePath: string): boolean {
     return true;
   }
   return candidatePath === expectedPath || candidatePath.startsWith(`${expectedPath}/`);
+}
+
+function hasFreshBootstrapTriviaQuota(snapshot: VenueHomeBootstrapSnapshot | null): boolean {
+  if (!snapshot?.triviaQuota) {
+    return false;
+  }
+  const fetchedAt = Number(snapshot.fetchedAt ?? 0);
+  if (!Number.isFinite(fetchedAt) || fetchedAt <= 0) {
+    return false;
+  }
+  return Date.now() - fetchedAt <= BOOTSTRAP_QUOTA_FRESH_MS;
 }
 
 const venueDebugEnabled =
@@ -355,6 +378,10 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const activeScreenRef = useRef<HomeScreenIndex>(0);
   const warmupPromiseRef = useRef<Promise<void> | null>(null);
   const warmupStartedRef = useRef(false);
+  const badgeRequestRef = useRef<AbortController | null>(null);
+  const campaignRequestRef = useRef<AbortController | null>(null);
+  const liveTriviaRequestRef = useRef<AbortController | null>(null);
+  const contentReady = !arrivalInProgress && homeRevealComplete && carouselBootstrapped;
 
   const hasUserTokenInCookie = useCallback((): boolean => {
     if (typeof document === "undefined") return false;
@@ -631,6 +658,10 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       }
       return;
     }
+    badgeRequestRef.current?.abort();
+    const controller = new AbortController();
+    badgeRequestRef.current = controller;
+    const signal = controller.signal;
     if (!silent) {
       setIsBadgeLoading(true);
     }
@@ -638,15 +669,22 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     try {
       const results = await Promise.allSettled([
         fetchJsonWithTimeout<BingoBadgePayload>(
-          `/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=true`
+          `/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=true`,
+          BADGE_FETCH_TIMEOUT_MS,
+          signal
         ).then((payload) => payload ?? ({ ok: false } as BingoBadgePayload)),
         fetchJsonWithTimeout<PickEmBadgePayload>(
-          `/api/pickem/picks?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venue.id)}&includeSettled=true&limit=200`
+          `/api/pickem/picks?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venue.id)}&includeSettled=true&limit=200`,
+          BADGE_FETCH_TIMEOUT_MS,
+          signal
         ).then((payload) => payload ?? ({ ok: false } as PickEmBadgePayload)),
         fetchJsonWithTimeout<FantasyBadgePayload>(
-          `/api/fantasy/entries?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venue.id)}&includeSettled=true&refreshProgress=true&limit=120`
+          `/api/fantasy/entries?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venue.id)}&includeSettled=true&refreshProgress=true&limit=120`,
+          BADGE_FETCH_TIMEOUT_MS,
+          signal
         ).then((payload) => payload ?? ({ ok: false } as FantasyBadgePayload)),
       ]);
+      if (signal.aborted) return;
       const bingoPayload = results[0].status === "fulfilled" ? results[0].value : { ok: false as const };
       const pickEmPayload = results[1].status === "fulfilled" ? results[1].value : { ok: false as const };
       const fantasyPayload = results[2].status === "fulfilled" ? results[2].value : { ok: false as const };
@@ -678,9 +716,14 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       };
       setHomeBadgeCounts((current) => (areHomeBadgeCountsEqual(current, nextCounts) ? current : nextCounts));
     } catch {
-      setBadgeError((current) => (current === "Offline: badge counts unavailable." ? current : "Offline: badge counts unavailable."));
+      if (!signal.aborted) {
+        setBadgeError((current) => (current === "Offline: badge counts unavailable." ? current : "Offline: badge counts unavailable."));
+      }
     } finally {
-      if (!silent) {
+      if (badgeRequestRef.current === controller) {
+        badgeRequestRef.current = null;
+      }
+      if (!silent && !signal.aborted) {
         setIsBadgeLoading(false);
       }
     }
@@ -691,7 +734,14 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       const userId = (getUserId() ?? "").trim();
       const venueId = (getVenueId() ?? "").trim();
       const silent = Boolean(options?.silent);
+      campaignRequestRef.current?.abort();
+      const controller = new AbortController();
+      campaignRequestRef.current = controller;
+      const signal = controller.signal;
       if (!venueId) {
+        if (campaignRequestRef.current === controller) {
+          campaignRequestRef.current = null;
+        }
         setIsChallengesLoading(false);
         return;
       }
@@ -708,15 +758,25 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         if (userId) {
           query.set("userId", userId);
         }
-        const body = await fetchJsonWithTimeout<ChallengeCampaignPayload>(`/api/challenge-campaigns?${query.toString()}`);
+        const body = await fetchJsonWithTimeout<ChallengeCampaignPayload>(
+          `/api/challenge-campaigns?${query.toString()}`,
+          FETCH_TIMEOUT_MS,
+          signal
+        );
+        if (signal.aborted) return;
         if (!body?.ok) {
           throw new Error("Challenges unavailable.");
         }
         setChallengeCards(Array.isArray(body.campaigns) ? body.campaigns : []);
       } catch {
-        setChallengesError("Offline: challenges unavailable.");
+        if (!signal.aborted) {
+          setChallengesError("Offline: challenges unavailable.");
+        }
       } finally {
-        if (!silent) {
+        if (campaignRequestRef.current === controller) {
+          campaignRequestRef.current = null;
+        }
+        if (!silent && !signal.aborted) {
           setIsChallengesLoading(false);
         }
       }
@@ -725,6 +785,10 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   );
 
   const loadLiveTriviaStatus = useCallback(async () => {
+    liveTriviaRequestRef.current?.abort();
+    const controller = new AbortController();
+    liveTriviaRequestRef.current = controller;
+    const signal = controller.signal;
     try {
       const venueId = String(getVenueId() ?? "").trim();
       const query = venueId ? `?venueId=${encodeURIComponent(venueId)}` : "";
@@ -734,7 +798,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           isGameActive?: boolean;
           nextSchedule?: { startTime?: string; timezone?: string } | null;
         };
-      }>(`/api/trivia/live/state${query}`, 3600);
+      }>(`/api/trivia/live/state${query}`, 3600, signal);
+      if (signal.aborted) return;
 
       if (!payload?.ok || !payload.state) {
         setLiveTriviaStatus({ live: false, label: "" });
@@ -762,7 +827,13 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         label: formatLiveTriviaNextGameLabel(nextStart, scheduleTz || undefined),
       });
     } catch {
-      setLiveTriviaStatus({ live: false, label: "" });
+      if (!signal.aborted) {
+        setLiveTriviaStatus({ live: false, label: "" });
+      }
+    } finally {
+      if (liveTriviaRequestRef.current === controller) {
+        liveTriviaRequestRef.current = null;
+      }
     }
   }, []);
 
@@ -803,11 +874,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       try {
         await fetchJsonWithTimeout<{ ok?: boolean }>("/api/pickem/sports");
       } catch {}
-      await Promise.allSettled([loadChallengeCampaigns(), loadHomeBadges()]);
+      void loadHomeBadges({ silent: true });
     })();
     warmupPromiseRef.current = p;
     return p;
-  }, [loadChallengeCampaigns, loadHomeBadges]);
+  }, [loadHomeBadges]);
 
   useEffect(() => {
     if (!arrivalInProgress) {
@@ -828,7 +899,9 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       setArrivalStage("core");
       setArrivalProgress(42);
       setArrivalStatusText("Loading your venue dashboard...");
-      if (!bootstrapSnapshotRef.current) {
+      const bootstrapSnapshot = bootstrapSnapshotRef.current;
+      const hasFreshBootstrapQuota = hasFreshBootstrapTriviaQuota(bootstrapSnapshot);
+      if (!bootstrapSnapshot || !hasFreshBootstrapQuota) {
         // Validate credentials from local storage/cookie only — no blocking network call.
         // A network timeout returning null was being treated as "invalid session" and
         // wiping auth for users who had a perfectly valid cookie.
@@ -841,7 +914,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           }
           return;
         }
-        const coreLoadPromise = Promise.allSettled([loadTriviaQuota(), loadHomeBadges()]);
+        const coreLoadTasks: Array<Promise<unknown>> = [loadHomeBadges()];
+        if (!hasFreshBootstrapQuota) {
+          coreLoadTasks.push(loadTriviaQuota());
+        }
+        const coreLoadPromise = Promise.allSettled(coreLoadTasks);
         await Promise.race([coreLoadPromise, wait(ARRIVAL_CORE_MAX_WAIT_MS)]);
         void coreLoadPromise.catch(() => {});
       } else {
@@ -937,36 +1014,60 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   }, [triviaUnlockSeconds]);
 
   useEffect(() => {
+    const userId = (getUserId() ?? "").trim();
+    if (!userId) return;
+    const snapshot = bootstrapSnapshotRef.current;
+    if (hasFreshBootstrapTriviaQuota(snapshot)) {
+      return;
+    }
+    void loadTriviaQuota();
+  }, [loadTriviaQuota]);
+
+  useEffect(() => {
     if (!triviaGateNotice) return;
     const timer = window.setTimeout(() => setTriviaGateNotice(""), 3500);
     return () => window.clearTimeout(timer);
   }, [triviaGateNotice]);
 
   useEffect(() => {
-    if (!homeRevealComplete) return;
     const userId = (getUserId() ?? "").trim();
-    if (!userId) return;
+    if (!userId) {
+      setIsBadgeLoading(false);
+      return;
+    }
+    void loadHomeBadges();
     const interval = window.setInterval(() => void loadHomeBadges({ silent: true }), 20000);
     return () => window.clearInterval(interval);
-  }, [homeRevealComplete, loadHomeBadges]);
+  }, [loadHomeBadges]);
 
   useEffect(() => {
     if (!homeRevealComplete) return;
-    void loadChallengeCampaigns();
+    if (!contentReady) return;
+    const deferTimer = window.setTimeout(() => {
+      void loadChallengeCampaigns({ silent: true });
+      void loadLiveTriviaStatus();
+    }, 100);
+    return () => window.clearTimeout(deferTimer);
+  }, [contentReady, homeRevealComplete, loadChallengeCampaigns, loadLiveTriviaStatus]);
+
+  useEffect(() => {
+    if (!homeRevealComplete) return;
+    if (!contentReady) return;
     const interval = window.setInterval(() => void loadChallengeCampaigns({ silent: true }), 30000);
     return () => window.clearInterval(interval);
-  }, [homeRevealComplete, loadChallengeCampaigns]);
+  }, [contentReady, homeRevealComplete, loadChallengeCampaigns]);
 
   useEffect(() => {
     if (!homeRevealComplete) return;
-    void loadLiveTriviaStatus();
+    if (!contentReady) return;
     const interval = window.setInterval(() => void loadLiveTriviaStatus(), 15000);
     return () => window.clearInterval(interval);
-  }, [homeRevealComplete, loadLiveTriviaStatus]);
+  }, [contentReady, homeRevealComplete, loadLiveTriviaStatus]);
 
 
   useEffect(() => {
     if (!homeRevealComplete) return;
+    if (!contentReady) return;
     router.prefetch("/trivia");
     router.prefetch("/trivia/live");
     router.prefetch("/predictions");
@@ -981,7 +1082,15 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       warmupStartedRef.current = true;
       void runWarmup();
     }
-  }, [homeRevealComplete, runWarmup, router]);
+  }, [contentReady, homeRevealComplete, runWarmup, router]);
+
+  useEffect(() => {
+    return () => {
+      badgeRequestRef.current?.abort();
+      campaignRequestRef.current?.abort();
+      liveTriviaRequestRef.current?.abort();
+    };
+  }, []);
 
   const goTo = useCallback(
     async (dest: VenueGameKey, sourceElement: HTMLElement | null) => {
@@ -1060,7 +1169,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   );
 
   const showFastPathSkeleton = arrivalInProgress && !arrivalCoreReady;
-  const contentReady = !arrivalInProgress && homeRevealComplete && carouselBootstrapped;
 
   return (
     <div
