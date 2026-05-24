@@ -32,6 +32,7 @@ function parseArgs(argv) {
     count: DEFAULT_COUNT,
     batchSize: DEFAULT_BATCH_SIZE,
     model: DEFAULT_MODEL,
+    familiarity: "", // "mainstream" | "moderate" | "niche" — overrides value in JSON if provided
     allowPartial: false,
     dryRun: false,
   };
@@ -43,6 +44,7 @@ function parseArgs(argv) {
     if (token === "--count") { args.count = Number.parseInt(argv[i + 1] || `${DEFAULT_COUNT}`, 10); i += 1; continue; }
     if (token === "--batch-size") { args.batchSize = Number.parseInt(argv[i + 1] || `${DEFAULT_BATCH_SIZE}`, 10); i += 1; continue; }
     if (token === "--model") { args.model = (argv[i + 1] || DEFAULT_MODEL).trim(); i += 1; continue; }
+    if (token === "--familiarity") { args.familiarity = (argv[i + 1] || "").trim().toLowerCase(); i += 1; continue; }
     if (token === "--dry-run") { args.dryRun = true; continue; }
     if (token === "--allow-partial") { args.allowPartial = true; }
   }
@@ -106,13 +108,16 @@ function resolveCategoryFile(dir, requestedCategory) {
   );
 }
 
+const VALID_FAMILIARITY = new Set(["mainstream", "moderate", "niche"]);
+
 function parseLiveCategoryDocument(parsed, fallbackCategoryName) {
   if (Array.isArray(parsed)) {
-    return { categoryName: fallbackCategoryName, questions: parsed };
+    return { categoryName: fallbackCategoryName, questions: parsed, familiarity: "" };
   }
   const categoryName = String(parsed.categoryName || fallbackCategoryName).trim() || fallbackCategoryName;
   const questions = Array.isArray(parsed.questions) ? parsed.questions : [];
-  return { categoryName, questions };
+  const familiarity = VALID_FAMILIARITY.has(String(parsed.familiarity || "")) ? String(parsed.familiarity) : "";
+  return { categoryName, questions, familiarity };
 }
 
 function loadAllQuestions(absoluteDir, files) {
@@ -145,8 +150,37 @@ function validateQuestion(item, displayCategory) {
   return { slug, question, answer, answer_format: "write_in", category: displayCategory, difficulty };
 }
 
-function buildPrompt({ category, count, existingSample }) {
-  return [
+function buildFamiliarityClause(familiarity) {
+  if (familiarity === "niche") {
+    return [
+      "- ACCESSIBILITY REQUIREMENT — this is a niche/specialized category. Every answer must be",
+      "  something a casual fan or general member of the public would recognize, even if they have",
+      "  never explored this topic in depth.",
+      "  Ask only about the most globally iconic examples: the most famous titles, main characters,",
+      "  award-winning works, best-known scenes, or widely covered milestones in this topic.",
+      "  Do NOT ask about obscure side characters, minor works, rare editions, or details that only",
+      "  dedicated enthusiasts or deep experts would know.",
+      "  Concrete standard: if you picked a random adult from a crowded sports bar, would they",
+      "  recognize the answer? If not, choose a different question.",
+      "  Example for 'Fantasy Epics': ask about Jon Snow, Frodo Baggins, or Hogwarts — not about",
+      "  a side character from a lesser-known novel or a niche plot detail within a larger series.",
+    ].join("\n");
+  }
+  if (familiarity === "moderate") {
+    return [
+      "- Focus questions on well-known aspects, major events, landmark achievements, and widely",
+      "  recognized figures within this topic. Lean toward questions that an engaged general-",
+      "  knowledge player would have a fair chance of knowing.",
+      "  Avoid deep-cut facts that only specialists or enthusiasts would know.",
+    ].join("\n");
+  }
+  return ""; // mainstream — no extra constraint needed
+}
+
+function buildPrompt({ category, count, existingSample, familiarity }) {
+  const familiarityClause = buildFamiliarityClause(familiarity || "");
+
+  const lines = [
     `Generate ${count} write-in trivia questions for the category "${category}".`,
     "Return ONLY a valid JSON array. No markdown, backticks, or commentary.",
     "Schema for each item:",
@@ -161,9 +195,16 @@ function buildPrompt({ category, count, existingSample }) {
     "- Facts must be accurate and unambiguous.",
     "- Mix difficulties across easy/medium/hard.",
     "- Keep question wording concise and production-ready.",
+  ];
+
+  if (familiarityClause) lines.push(familiarityClause);
+
+  lines.push(
     "- Do not reuse these existing questions (sample):",
     existingSample.length > 0 ? existingSample.map((q) => `  - ${q}`).join("\n") : "  - (none)",
-  ].join("\n");
+  );
+
+  return lines.join("\n");
 }
 
 async function callGemini({ apiKey, model, prompt }) {
@@ -286,6 +327,12 @@ async function main() {
     .filter(Boolean)
     .slice(-40);
 
+  // CLI arg overrides the value in the JSON (useful for manual re-runs).
+  const familiarity = args.familiarity || targetDoc.familiarity || "";
+  if (familiarity) {
+    console.log(`Category familiarity: ${familiarity}`);
+  }
+
   const created = [];
   let attempts = 0;
 
@@ -297,6 +344,7 @@ async function main() {
       category: targetDoc.categoryName || record.displayCategory,
       count: requestCount,
       existingSample: existingInBucket.slice(-15),
+      familiarity,
     });
 
     const generated = await callGemini({ apiKey, model: args.model, prompt });

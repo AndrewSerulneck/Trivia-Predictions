@@ -66,12 +66,16 @@ export function PageShell({
           </div>
         </header>
       ) : (
-        <header className="tp-page-header sticky top-0 z-20 p-0 h-[13rem] sm:h-[16.5rem] md:h-[19rem] overflow-visible">
+        <header
+          className={`tp-page-header sticky top-0 z-20 p-0 overflow-visible${lockViewport ? " transition-[height] duration-150 ease-out" : " h-[13rem] sm:h-[16.5rem] md:h-[19rem]"}`}
+          style={lockViewport ? { height: "clamp(5.5rem, calc(var(--tp-vh, 100svh) * 0.26), 13rem)" } : undefined}
+        >
           {showBranding ? (
             <img
               src="/brand/hightop-logo-header.png"
               alt="Hightop Challenge"
-              className="block h-[17rem] sm:h-[22rem] md:h-[25rem] w-full object-contain object-top -translate-y-5 sm:-translate-y-6 md:-translate-y-7"
+              className={`block w-full object-contain object-top -translate-y-5 sm:-translate-y-6 md:-translate-y-7${lockViewport ? " transition-[height] duration-150 ease-out" : " h-[17rem] sm:h-[22rem] md:h-[25rem]"}`}
+              style={lockViewport ? { height: "clamp(5.5rem, calc(var(--tp-vh, 100svh) * 0.26), 17rem)" } : undefined}
             />
           ) : null}
         </header>

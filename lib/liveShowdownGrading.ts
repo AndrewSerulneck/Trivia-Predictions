@@ -490,6 +490,89 @@ function userWordsSubsetOfCorrect(userNorm: string, correctNorm: string): boolea
   return true;
 }
 
+// Words that are too generic to count as an identifying match on their own.
+// If a user submits only generic tokens (e.g. "New" for "New York") it should
+// not pass — the substantive identifying word (e.g. "York") must also match.
+const GENERIC_TOKENS = new Set([
+  "the", "a", "an", "of", "in", "at", "by", "on", "to", "or", "and",
+  "for", "from", "with", "as", "is", "are", "was", "be", "do",
+  "new", "old", "big", "little", "great", "good", "bad", "long", "short",
+  "mr", "mrs", "ms", "dr", "sir", "st", "mt",
+  "city", "town", "state", "country", "island", "river", "lake", "sea",
+  "north", "south", "east", "west",
+]);
+
+function isGenericToken(word: string): boolean {
+  if (word.length <= 2) return true;
+  return GENERIC_TOKENS.has(word);
+}
+
+// Stricter per-token fuzzy match used only inside tokenFuzzySubsetMatch.
+// Short tokens (≤4 chars) must match exactly via wordMatchesVariant (already
+// tried before this is called), so we return false here for them — prevents
+// "yore" from fuzzy-sliding into "york". For longer tokens we require both
+// a tight edit distance AND ≥0.85 similarity.
+function tokenSimilarMatch(userToken: string, correctToken: string): boolean {
+  if (userToken === correctToken) return true;
+  if (arePluralizationVariants(userToken, correctToken)) return true;
+  const maxLen = Math.max(userToken.length, correctToken.length);
+  if (maxLen <= 4) return false;
+  const distance = damerauLevenshteinDistance(userToken, correctToken);
+  const similarity = 1 - distance / maxLen;
+  if (maxLen <= 8) return distance <= 1 && similarity >= 0.80;
+  return distance <= 2 && similarity >= 0.80;
+}
+
+// Token-level fuzzy subset match: every user token fuzzy-matches a distinct
+// correct token, AND at least one matched correct token is substantive (4+ chars,
+// non-generic). This catches "lanister" → "house lannister" while blocking
+// a standalone "new" from matching "new york".
+function tokenFuzzySubsetMatch(userNorm: string, correctNorm: string): boolean {
+  const userTokens = userNorm.split(" ").filter(Boolean);
+  const correctTokens = correctNorm.split(" ").filter(Boolean);
+
+  // Only runs when user gave fewer words than the correct answer.
+  if (userTokens.length === 0 || userTokens.length >= correctTokens.length) return false;
+
+  const usedCorrectIndices = new Set<number>();
+  let hasSubstantiveMatch = false;
+
+  for (const userToken of userTokens) {
+    let bestIdx = -1;
+
+    // Prefer exact/singularization match first for stability.
+    for (let i = 0; i < correctTokens.length; i++) {
+      if (!usedCorrectIndices.has(i) && wordMatchesVariant(userToken, correctTokens[i]!)) {
+        bestIdx = i;
+        break;
+      }
+    }
+
+    // Fall back to stricter token-level fuzzy match if no exact hit.
+    if (bestIdx === -1) {
+      for (let i = 0; i < correctTokens.length; i++) {
+        if (!usedCorrectIndices.has(i) && tokenSimilarMatch(userToken, correctTokens[i]!)) {
+          bestIdx = i;
+          break;
+        }
+      }
+    }
+
+    // This user token matched nothing — the answer doesn't fit.
+    if (bestIdx === -1) return false;
+
+    usedCorrectIndices.add(bestIdx);
+    const matchedCorrectToken = correctTokens[bestIdx]!;
+    if (matchedCorrectToken.length >= 4 && !isGenericToken(matchedCorrectToken)) {
+      hasSubstantiveMatch = true;
+    }
+  }
+
+  // Require at least one substantive identifying token to have matched, so
+  // purely generic submissions ("new", "the") never accidentally pass.
+  return hasSubstantiveMatch;
+}
+
 function isSimilarShortAnswer(left: string, right: string): boolean {
   if (left === right) return true;
   if (!left || !right) return false;
@@ -566,6 +649,14 @@ export function gradeWriteInAnswer(userSubmitted: string, correctTarget: string)
   // 9. Partial word match: user's answer is a meaningful subset of the correct answer
   //    ("Noses" → "Nose Prints", "Nose" → "Nose Prints", "Prints" → "Nose Prints").
   if (userWordsSubsetOfCorrect(normalizedSubmitted, normalizedTarget)) return true;
+
+  // 9b. Token-level fuzzy subset: user gave fewer words than the correct answer and each
+  //     of their tokens fuzzy-matches a distinct correct token, with at least one
+  //     substantive (4+ char, non-generic) token matching. This handles cases like
+  //     "Lanister" → "House Lannister" (typo + prefix word) and "Lannister" → "House
+  //     Lannister" (omitted prefix). The substantive-token guard prevents a bare "New"
+  //     from sliding through as a match for "New York".
+  if (tokenFuzzySubsetMatch(normalizedSubmitted, normalizedTarget)) return true;
 
   // 10. Fuzzy string similarity (typos, transpositions).
   return isSimilarShortAnswer(normalizedSubmitted, normalizedTarget);

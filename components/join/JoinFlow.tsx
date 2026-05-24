@@ -34,7 +34,6 @@ import {
 } from "@/lib/authFastPath";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { getVenueById, listVenues } from "@/lib/venues";
-import { writeWarmPredictionsCache, writeWarmTriviaCache } from "@/lib/warmupCache";
 import {
   setVenueHomeRouteIntent,
   setVenueHomeEntryHandoff,
@@ -43,7 +42,7 @@ import {
   type TriviaQuotaSnapshot,
 } from "@/lib/venueHomeBootstrap";
 import { writeBingoPrefetchCache } from "@/lib/bingoPrefetchCache";
-import type { LeaderboardEntry, Prediction, TriviaQuestion, Venue } from "@/types";
+import type { Venue } from "@/types";
 import { getVenueDisplayName, getVenueVisual as getVenueVisualFromConfig } from "@/lib/venueDisplay";
 import { APP_PAGE_NAMES } from "@/lib/pageNames";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
@@ -52,44 +51,9 @@ type Status = "idle" | "loading" | "ready" | "saving" | "error";
 type JoinPanel = "venue-list" | "venue-login";
 type AuthLoginState = "idle" | "authenticating" | "verifying" | "navigating" | "error";
 
-type LeaderboardPayload = {
-  ok?: boolean;
-  entries?: LeaderboardEntry[];
-};
-
-type TriviaPayload = {
-  ok?: boolean;
-  questions?: TriviaQuestion[];
-};
-
 type TriviaQuotaPayload = {
   ok?: boolean;
   quota?: TriviaQuotaSnapshot | null;
-};
-
-type PredictionsPayload = {
-  ok?: boolean;
-  items?: Prediction[];
-  page?: number;
-  pageSize?: number;
-  totalItems?: number;
-  totalPages?: number;
-  sports?: string[];
-  leaguesBySport?: Record<string, string[]>;
-};
-
-type PrizesPayload = {
-  ok?: boolean;
-  weeklyPrize?: {
-    prizeTitle?: string;
-    prizeDescription?: string;
-    rewardPoints?: number;
-  } | null;
-};
-
-type VenuesPayload = {
-  ok?: boolean;
-  venues?: Venue[];
 };
 
 type BingoBadgePayload = {
@@ -152,7 +116,7 @@ function isLocationPermissionDenied(error: unknown): boolean {
 const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig(venue, index);
 
 const ACCESS_DISTANCE_METERS = 200;
-const PRELOAD_FETCH_TIMEOUT_MS = 4500;
+const PRELOAD_FETCH_TIMEOUT_MS = 1500;
 const LOGIN_WATCHDOG_TIMEOUT_MS = 30000;
 
 function getGeofenceThresholdMeters(venueRadius: number, accuracy?: number): number {
@@ -317,6 +281,208 @@ const JoinHeaderLights = () => {
     document.body
   );
 };
+type UsernameStepProps = {
+  direction: 1 | -1;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  isAdvancingToPin: boolean;
+  locationLoading: boolean;
+  errorMessage: string;
+  onBack: () => void;
+  onNext: (username: string) => void;
+};
+
+const UsernameStep = memo(function UsernameStep({
+  direction,
+  inputRef,
+  isAdvancingToPin,
+  locationLoading,
+  errorMessage,
+  onBack,
+  onNext,
+}: UsernameStepProps) {
+  const [value, setValue] = useState("");
+
+  const handleNext = useCallback(() => {
+    if (!value.trim() || isAdvancingToPin) return;
+    onNext(value);
+  }, [value, isAdvancingToPin, onNext]);
+
+  return (
+    <motion.div
+      key="step-username"
+      custom={direction}
+      variants={ONBOARDING_PANEL_VARIANTS}
+      initial="enter"
+      animate="center"
+      exit="exit"
+      transition={SWIPE_SPRING_TRANSITION}
+      className="flex flex-col pt-4 pb-10"
+    >
+      <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-3">
+        What&apos;s your username?
+      </h1>
+      <p className="mb-8 text-lg font-semibold text-slate-900">
+        If you&apos;ve never played Hightop Challenge before, make one up!
+      </p>
+
+      <input
+        ref={inputRef}
+        id="username"
+        type="text"
+        enterKeyHint="next"
+        autoFocus
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleNext();
+          }
+        }}
+        placeholder=""
+        autoComplete="username"
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
+        className="mb-2 w-full border-0 border-b-2 border-slate-200 bg-transparent px-3 py-3 text-3xl font-bold text-slate-900 outline-none transition-colors placeholder:text-slate-300 focus:border-slate-900"
+      />
+
+      {errorMessage ? (
+        <p className="mb-4 text-sm text-rose-500">{errorMessage}</p>
+      ) : (
+        <div className="mb-4" />
+      )}
+
+      <div className="flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90"
+        >
+          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">←</span>
+          Back
+        </button>
+
+        <button
+          type="button"
+          onClick={handleNext}
+          disabled={!value.trim() || isAdvancingToPin}
+          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90 disabled:opacity-40"
+        >
+          {isAdvancingToPin ? "Loading..." : "Next"}
+          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">→</span>
+        </button>
+      </div>
+
+      {locationLoading ? (
+        <p className="mt-4 text-xs text-slate-400">Verifying your location...</p>
+      ) : null}
+    </motion.div>
+  );
+});
+
+type PinStepProps = {
+  direction: 1 | -1;
+  pin: string;
+  isPinShaking: boolean;
+  isAuthLoading: boolean;
+  canCreate: boolean;
+  loadingPhrase: string;
+  errorMessage: string;
+  connectionRetryMessage: string;
+  pinContainerRef: React.RefObject<HTMLDivElement | null>;
+  onBack: () => void;
+  onSubmit: () => void;
+  onAnimationComplete: () => void;
+  onPinContainerClick: () => void;
+};
+
+const PinStep = memo(function PinStep({
+  direction,
+  pin,
+  isPinShaking,
+  isAuthLoading,
+  canCreate,
+  loadingPhrase,
+  errorMessage,
+  connectionRetryMessage,
+  pinContainerRef,
+  onBack,
+  onSubmit,
+  onAnimationComplete,
+  onPinContainerClick,
+}: PinStepProps) {
+  return (
+    <motion.div
+      key="step-pin"
+      custom={direction}
+      variants={ONBOARDING_PANEL_VARIANTS}
+      initial="enter"
+      animate="center"
+      exit="exit"
+      transition={SWIPE_SPRING_TRANSITION}
+      onAnimationComplete={onAnimationComplete}
+      className="flex flex-col pt-4 pb-10"
+    >
+      <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-3">
+        What&apos;s your PIN?
+      </h1>
+      <p className="mb-10 text-lg font-semibold text-slate-900">
+        Returning user? Use your last PIN.<br />
+        New user? Pick 4 digits you&apos;ll remember.
+      </p>
+
+      <div
+        ref={pinContainerRef}
+        className={`mb-4 flex cursor-text gap-6 px-3 ${isPinShaking ? "animate-shake" : ""}`}
+        onClick={onPinContainerClick}
+      >
+        {[0, 1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className={`h-5 w-5 rounded-full border-2 transition-all duration-150 ${
+              i < pin.length
+                ? "scale-125 border-slate-900 bg-slate-900"
+                : "border-slate-300 bg-transparent"
+            }`}
+          />
+        ))}
+      </div>
+
+      {isAuthLoading ? (
+        <p className="mb-4 animate-pulse text-base text-slate-500">{loadingPhrase}</p>
+      ) : errorMessage ? (
+        <p className="mb-4 text-sm text-rose-500">{errorMessage}</p>
+      ) : connectionRetryMessage ? (
+        <p className="mb-4 text-sm text-amber-700">{connectionRetryMessage}</p>
+      ) : (
+        <div className="mb-4" />
+      )}
+
+      <div className="flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90"
+        >
+          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">←</span>
+          Back
+        </button>
+
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={!canCreate || pin.length !== 4 || isAuthLoading}
+          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90 disabled:opacity-40"
+        >
+          Enter
+          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">↵</span>
+        </button>
+      </div>
+    </motion.div>
+  );
+});
+
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -715,14 +881,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     setPendingVenueSelectionId(null);
   }, []);
 
-  const handleGoToPinStep = useCallback(() => {
+  const handleGoToPinStep = useCallback((usernameValue: string) => {
     if (isAdvancingToPin) {
       return;
     }
-    if (!validateUsername(username)) {
+    if (!validateUsername(usernameValue)) {
       setErrorMessage("Please enter a valid username.");
       return;
     }
+    // Commit username to root state once on advance; input no longer calls setUsername on every keystroke.
+    setUsername(usernameValue);
     setErrorMessage("");
     setPin("");
     setIsAdvancingToPin(true);
@@ -731,9 +899,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     setIsReturningUserForVenue(false);
     // Focus while still in the user-gesture call stack so iOS shows the numeric keypad.
     pinInputRef.current?.focus();
-    if (venue && validateUsername(username)) {
+    if (venue && validateUsername(usernameValue)) {
       void fetch(
-        `/api/join/profile?username=${encodeURIComponent(username.trim())}&venueId=${encodeURIComponent(venue.id)}`,
+        `/api/join/profile?username=${encodeURIComponent(usernameValue.trim())}&venueId=${encodeURIComponent(venue.id)}`,
         { cache: "no-store" }
       )
         .then((response) => response.json().catch(() => null))
@@ -745,7 +913,15 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           setIsReturningUserForVenue(false);
         });
     }
-  }, [isAdvancingToPin, username, venue]);
+  }, [isAdvancingToPin, venue]);
+
+  const handlePinAnimationComplete = useCallback(() => {
+    setIsAdvancingToPin(false);
+  }, []);
+
+  const handlePinContainerClick = useCallback(() => {
+    pinInputRef.current?.focus();
+  }, []);
 
   const handleBackFromPin = useCallback(() => {
     if (pinFocusTimerRef.current) {
@@ -1028,22 +1204,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         }
       };
 
-      // Defaults used when a non-essential fetch fails or times out.
+      // Only fetch what's needed to render game-icon badges immediately.
+      // Leaderboard, predictions, sports, and full trivia questions are large
+      // and are fetched lazily by the venue home page after it mounts — loading
+      // them here would saturate the browser's HTTP pool during navigation.
       let triviaQuota: TriviaQuotaSnapshot | null = null;
       let homeBadgeCounts: HomeBadgeCounts = {};
-      let weeklyPrizeTitle = "Weekly Venue Champion Prize";
-      let weeklyPrizeDescription = "Top the leaderboard by week end to earn this venue's reward.";
-      let weeklyPrizePoints = 0;
-      let leaderboardEntries: LeaderboardEntry[] = [];
 
       try {
         const results = await Promise.allSettled([
-          fetchJson<VenuesPayload>("/api/venues"),
-          fetchJson<LeaderboardPayload>(`/api/leaderboard?venue=${encodeURIComponent(venueId)}`),
-          fetchJson<TriviaPayload>(`/api/trivia?userId=${encodeURIComponent(safeUserId)}`),
           fetchJson<TriviaQuotaPayload>(`/api/trivia/quota?userId=${encodeURIComponent(safeUserId)}`),
-          fetchJson<PredictionsPayload>("/api/predictions?page=1&pageSize=24&excludeSensitive=false"),
-          fetchJson<PrizesPayload>(`/api/prizes?venueId=${encodeURIComponent(venueId)}&userId=${encodeURIComponent(safeUserId)}`),
           fetchJson<BingoBadgePayload>(`/api/bingo/cards?userId=${encodeURIComponent(safeUserId)}&includeSettled=true`),
           fetchJson<PickEmBadgePayload>(
             `/api/pickem/picks?userId=${encodeURIComponent(safeUserId)}&venueId=${encodeURIComponent(venueId)}&includeSettled=true&limit=200`
@@ -1051,49 +1221,17 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           fetchJson<FantasyBadgePayload>(
             `/api/fantasy/entries?userId=${encodeURIComponent(safeUserId)}&venueId=${encodeURIComponent(venueId)}&includeSettled=true&refreshProgress=true&limit=120`
           ),
-          fetchJson<{ ok?: boolean }>("/api/pickem/sports"),
         ]);
 
         const getValue = <T,>(result: PromiseSettledResult<T | null>): T | null =>
           result.status === "fulfilled" ? result.value : null;
 
-        const venuePayload = getValue<VenuesPayload>(results[0]);
-        const leaderboardPayload = getValue<LeaderboardPayload>(results[1]);
-        const triviaPayload = getValue<TriviaPayload>(results[2]);
-        const triviaQuotaPayload = getValue<TriviaQuotaPayload>(results[3]);
-        const predictionsPayload = getValue<PredictionsPayload>(results[4]);
-        const prizesPayload = getValue<PrizesPayload>(results[5]);
-        const bingoPayload = getValue<BingoBadgePayload>(results[6]);
-        const pickEmPayload = getValue<PickEmBadgePayload>(results[7]);
-        const fantasyPayload = getValue<FantasyBadgePayload>(results[8]);
-
-        // Non-blocking venue validation: log but never throw.
-        const venues = venuePayload?.ok && Array.isArray(venuePayload.venues) ? venuePayload.venues : [];
-        if (venues.length > 0 && !venues.some((item) => item.id === venueId)) {
-          console.warn("[preload] Venue not in active list yet; continuing entry.");
-        }
+        const triviaQuotaPayload = getValue<TriviaQuotaPayload>(results[0]);
+        const bingoPayload = getValue<BingoBadgePayload>(results[1]);
+        const pickEmPayload = getValue<PickEmBadgePayload>(results[2]);
+        const fantasyPayload = getValue<FantasyBadgePayload>(results[3]);
 
         triviaQuota = triviaQuotaPayload?.ok ? (triviaQuotaPayload.quota ?? null) : null;
-        const triviaQuestions =
-          triviaPayload?.ok && Array.isArray(triviaPayload.questions) ? triviaPayload.questions : [];
-        if (triviaQuestions.length > 0) {
-          writeWarmTriviaCache({ userId: safeUserId, venueId, questions: triviaQuestions, quota: triviaQuota });
-        }
-
-        if (predictionsPayload?.ok) {
-          writeWarmPredictionsCache({
-            venueId,
-            payload: {
-              items: Array.isArray(predictionsPayload.items) ? predictionsPayload.items : [],
-              page: predictionsPayload.page,
-              pageSize: predictionsPayload.pageSize,
-              totalItems: predictionsPayload.totalItems,
-              totalPages: predictionsPayload.totalPages,
-              sports: predictionsPayload.sports,
-              leaguesBySport: predictionsPayload.leaguesBySport,
-            },
-          });
-        }
 
         const unclaimedBingoCount = (bingoPayload?.cards ?? []).filter(
           (c) => c.status === "won" && !c.rewardClaimedAt && Number(c.rewardPoints ?? 0) > 0
@@ -1108,13 +1246,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           (entry) => entry.status === "final" && !entry.rewardClaimedAt && Number(entry.points ?? 0) > 0
         ).length;
         homeBadgeCounts = { bingo: unclaimedBingoCount, pickem: unclaimedPickEmCount, fantasy: unclaimedFantasyCount };
-
-        const weeklyPrize = prizesPayload?.ok ? (prizesPayload.weeklyPrize ?? null) : null;
-        leaderboardEntries =
-          leaderboardPayload?.ok && Array.isArray(leaderboardPayload.entries) ? leaderboardPayload.entries : [];
-        weeklyPrizeTitle = String(weeklyPrize?.prizeTitle ?? weeklyPrizeTitle);
-        weeklyPrizeDescription = String(weeklyPrize?.prizeDescription ?? weeklyPrizeDescription);
-        weeklyPrizePoints = Math.max(0, Number(weeklyPrize?.rewardPoints ?? 0));
       } catch {
         // Non-essential fetch processing failed; bootstrap will use defaults.
       } finally {
@@ -1125,10 +1256,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           userId: safeUserId,
           triviaQuota,
           homeBadgeCounts,
-          weeklyPrizeTitle,
-          weeklyPrizeDescription,
-          weeklyPrizePoints,
-          leaderboardEntries,
+          weeklyPrizeTitle: "Weekly Venue Champion Prize",
+          weeklyPrizeDescription: "Top the leaderboard by week end to earn this venue's reward.",
+          weeklyPrizePoints: 0,
+          leaderboardEntries: [],
         });
       }
     },
@@ -1297,8 +1428,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         title={APP_PAGE_NAMES.join}
         showBranding
         showAlerts={false}
+        lockViewport
       >
-        <div className="h-full space-y-4 overflow-y-auto text-sm">
+        <div className="flex h-full flex-col gap-4 overflow-hidden text-sm">
           {errorMessage && (
             <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-rose-700">
               {errorMessage}
@@ -1310,7 +1442,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             </div>
           )}
 
-          <div className="relative [overflow-x:clip]">
+          <div className="relative min-h-0 flex-1 overflow-y-auto [overflow-x:clip]">
             <AnimatePresence initial={false} custom={panelDirection} mode="wait">
               {activePanel === "venue-login" && venue ? (
                 <motion.div
@@ -1348,142 +1480,33 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                   />
                   <AnimatePresence custom={loginStepDirection} mode="wait">
                     {loginStep === "username" ? (
-                      <motion.div
+                      <UsernameStep
                         key="step-username"
-                        custom={loginStepDirection}
-                        variants={ONBOARDING_PANEL_VARIANTS}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                        transition={SWIPE_SPRING_TRANSITION}
-                        className="relative flex flex-col pt-4 pb-10"
-                      >
-                        <button
-                          type="button"
-                          onClick={handleBackToVenueList}
-                          className="self-start mb-8 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90"
-                        >
-                          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">←</span>
-                          Back
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={handleGoToPinStep}
-                          disabled={!username.trim() || isAdvancingToPin}
-                          className="absolute right-0 top-4 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90 disabled:opacity-40"
-                        >
-                          {isAdvancingToPin ? "Loading..." : "Next"}
-                          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">→</span>
-                        </button>
-
-                        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-3 pr-28">
-                          What&apos;s your username?
-                        </h1>
-                        <p className="mb-8 text-lg font-semibold text-slate-900">
-                          If you&apos;ve never played Hightop Challenge before, make one up!
-                        </p>
-
-                        <input
-                          ref={usernameInputRef}
-                          id="username"
-                          type="text"
-                          enterKeyHint="next"
-                          autoFocus
-                          value={username}
-                          onChange={(e) => setUsername(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              handleGoToPinStep();
-                            }
-                          }}
-                          placeholder=""
-                          autoComplete="username"
-                          autoCapitalize="none"
-                          autoCorrect="off"
-                          spellCheck={false}
-                          className="mb-2 w-full border-0 border-b-2 border-slate-200 bg-transparent px-3 py-3 text-3xl font-bold text-slate-900 outline-none transition-colors placeholder:text-slate-300 focus:border-slate-900"
-                        />
-
-                        {errorMessage ? (
-                          <p className="mb-6 text-sm text-rose-500">{errorMessage}</p>
-                        ) : (
-                          <div className="mb-6" />
-                        )}
-
-                        {locationLoading ? (
-                          <p className="mt-6 text-xs text-slate-400">Verifying your location...</p>
-                        ) : null}
-                      </motion.div>
+                        direction={loginStepDirection}
+                        inputRef={usernameInputRef}
+                        isAdvancingToPin={isAdvancingToPin}
+                        locationLoading={locationLoading}
+                        errorMessage={errorMessage}
+                        onBack={handleBackToVenueList}
+                        onNext={handleGoToPinStep}
+                      />
                     ) : (
-                      <motion.div
+                      <PinStep
                         key="step-pin"
-                        custom={loginStepDirection}
-                        variants={ONBOARDING_PANEL_VARIANTS}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                        transition={SWIPE_SPRING_TRANSITION}
-                        onAnimationComplete={() => {
-                          setIsAdvancingToPin(false);
-                        }}
-                        className="relative flex flex-col pt-4 pb-10"
-                      >
-                        <button
-                          type="button"
-                          onClick={handleBackFromPin}
-                          className="self-start mb-8 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90"
-                        >
-                          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">←</span>
-                          Back
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleSubmitPinStep()}
-                          disabled={!canCreate || pin.length !== 4 || isAuthLoading}
-                          className="absolute right-0 top-4 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90 disabled:opacity-40"
-                        >
-                          Enter
-                          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">↵</span>
-                        </button>
-
-                        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-3 pr-28">
-                          What&apos;s your PIN?
-                        </h1>
-                        <p className="mb-10 text-lg font-semibold text-slate-900">
-                          Returning user? Use your last PIN.<br />
-                          New user? Pick 4 digits you&apos;ll remember.
-                        </p>
-
-                        <div
-                          ref={pinContainerRef}
-                          className={`mb-8 flex cursor-text gap-6 px-3 ${isPinShaking ? "animate-shake" : ""}`}
-                          onClick={() => pinInputRef.current?.focus()}
-                        >
-                          {[0, 1, 2, 3].map((i) => (
-                            <div
-                              key={i}
-                              className={`h-5 w-5 rounded-full border-2 transition-all duration-150 ${
-                                i < pin.length
-                                  ? "scale-125 border-slate-900 bg-slate-900"
-                                  : "border-slate-300 bg-transparent"
-                              }`}
-                            />
-                          ))}
-                        </div>
-
-
-                        {isAuthLoading ? (
-                          <p className="animate-pulse text-base text-slate-500">{loadingPhrase}</p>
-                        ) : errorMessage ? (
-                          <p className="text-sm text-rose-500">{errorMessage}</p>
-                        ) : connectionRetryMessage ? (
-                          <p className="text-sm text-amber-700">{connectionRetryMessage}</p>
-                        ) : null}
-
-                      </motion.div>
+                        direction={loginStepDirection}
+                        pin={pin}
+                        isPinShaking={isPinShaking}
+                        isAuthLoading={isAuthLoading}
+                        canCreate={canCreate}
+                        loadingPhrase={loadingPhrase}
+                        errorMessage={errorMessage}
+                        connectionRetryMessage={connectionRetryMessage}
+                        pinContainerRef={pinContainerRef}
+                        onBack={handleBackFromPin}
+                        onSubmit={handleSubmitPinStep}
+                        onAnimationComplete={handlePinAnimationComplete}
+                        onPinContainerClick={handlePinContainerClick}
+                      />
                     )}
                   </AnimatePresence>
                 </motion.div>
@@ -1555,15 +1578,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             </AnimatePresence>
           </div>
 
-          <div className="border-t border-slate-200 pt-3">
-            <button
-              type="button"
-              onClick={openAdminDashboard}
-              className={`${JOIN_BUTTON_POP_CLASS} inline-flex min-h-[44px] w-full items-center justify-center rounded-2xl border-4 border-slate-900 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-[4px_4px_0_#0f172a]`}
-            >
-              Admin Login
-            </button>
-          </div>
         </div>
       </PageShell>
     </>

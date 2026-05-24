@@ -435,6 +435,9 @@ export default function LiveShowdownPage() {
     if (document.visibilityState !== "visible" || !document.hasFocus()) return;
     if (forfeitKey === activeKey) return;
 
+    // Timer ref lives outside the handlers so both onVisibility and onReturn share it.
+    let forfeitTimer: ReturnType<typeof setTimeout> | null = null;
+
     const triggerForfeit = () => {
       if (forfeitInFlight.current || forfeitKey === activeKey) return;
       forfeitInFlight.current = true;
@@ -444,16 +447,35 @@ export default function LiveShowdownPage() {
       });
     };
 
-    const onVisibility = () => {
-      if (document.visibilityState !== "visible") triggerForfeit();
+    const scheduleForfeit = () => {
+      if (forfeitTimer !== null || forfeitInFlight.current || forfeitKey === activeKey) return;
+      // 2-second grace period — accidental notification shade swipes or brief
+      // system overlays on mobile won't immediately forfeit the player.
+      forfeitTimer = setTimeout(() => {
+        forfeitTimer = null;
+        triggerForfeit();
+      }, 2000);
     };
-    const onBlur = () => triggerForfeit();
+
+    const cancelForfeit = () => {
+      if (forfeitTimer !== null) {
+        clearTimeout(forfeitTimer);
+        forfeitTimer = null;
+      }
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState !== "visible") {
+        scheduleForfeit();
+      } else {
+        cancelForfeit();
+      }
+    };
 
     document.addEventListener("visibilitychange", onVisibility);
-    window.addEventListener("blur", onBlur);
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
-      window.removeEventListener("blur", onBlur);
+      cancelForfeit();
     };
   }, [activeKey, forfeitKey, hasJoinedSession, hasOnboarded, isEngineReady, isPreGameLobby, isSpectatingActiveBlock, state, submit]);
 
@@ -562,7 +584,10 @@ export default function LiveShowdownPage() {
 
   if (loading || !state) {
     return (
-      <main className="min-h-[100dvh] bg-slate-950 p-4 text-white">
+      <main
+        className="flex flex-col bg-slate-950 p-4 text-white overflow-hidden"
+        style={{ height: "var(--tp-vh, 100dvh)" }}
+      >
         {hasOnboarded ? "Loading Lobby..." : "Syncing Live Showdown..."}
       </main>
     );
@@ -628,7 +653,8 @@ export default function LiveShowdownPage() {
       initial={{ opacity: 1, scale: 1 }}
       animate={isLeaving ? { opacity: 0, scale: 0.9, y: 22 } : { opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-      className="min-h-[100dvh] bg-slate-950 p-4 text-white"
+      className="flex flex-col overflow-hidden bg-slate-950 text-white"
+      style={{ height: "var(--tp-vh, 100dvh)" }}
     >
       <button
         type="button"
@@ -638,7 +664,7 @@ export default function LiveShowdownPage() {
         Back to Venue Home
       </button>
 
-      <div className="mx-auto w-full max-w-md space-y-4 pt-12">
+      <div className="mx-auto w-full max-w-md flex-1 min-h-0 overflow-y-auto space-y-4 px-4 pt-12 pb-4">
         <header className="rounded-2xl border border-cyan-400/60 bg-slate-900 p-4">
           <h1 className="text-3xl font-black tracking-wide text-cyan-300">Live Showdown</h1>
           <p className="mt-1 text-sm font-semibold text-slate-300">Synchronized venue trivia with live room energy.</p>
