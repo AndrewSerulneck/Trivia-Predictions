@@ -25,6 +25,7 @@ const SPORT_ICONS: Record<string, string> = {
   nfl: "🏈",
   nhl: "🏒",
   mma: "🥊",
+  tennis: "🎾",
 };
 
 function getSportIcon(slug: string): string {

@@ -13,9 +13,12 @@
     "trivia:generate:nightly": "node --env-file=.env.local scripts/generate-trivia-nightly.cjs --total 100",
     "trivia:check": "node scripts/import-trivia-questions.cjs --dir data/trivia/categories --live-dir data/live-trivia/categories --check",
     "trivia:import": "node --env-file=.env.local scripts/import-trivia-questions.cjs --dir data/trivia/categories --live-dir data/live-trivia/categories",
+    "trivia:bank:check": "node scripts/backfill-trivia-question-bank.cjs --check",
+    "trivia:bank:backfill": "node --env-file=.env.local scripts/backfill-trivia-question-bank.cjs",
     "live-trivia:generate": "node --env-file=.env.local scripts/generate-live-trivia-questions.cjs",
     "live-trivia:generate:nightly": "node --env-file=.env.local scripts/generate-live-trivia-nightly.cjs --total 50",
     "live-trivia:check": "node scripts/import-trivia-questions.cjs --live-dir data/live-trivia/categories --check",
+    "headshots:sync": "node scripts/sync-headshots.js",
     "apisports:probe:nba": "node --env-file=.env.local scripts/probe-apisports-nba.cjs",
     "live-showdown:seed": "node --env-file=.env.local --import tsx scripts/seedLiveShowdownPool.ts"
   },

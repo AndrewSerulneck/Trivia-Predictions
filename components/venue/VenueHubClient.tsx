@@ -71,13 +71,36 @@ type ChallengeCampaignPayload = {
 type HomeScreenIndex = 0 | 1 | 2;
 type VenueArrivalStage = "identity" | "core" | "warmup" | "ready";
 
-const GAME_ICON_BG_BY_KEY: Record<VenueGameKey, string> = {
-  trivia: "bg-[linear-gradient(138deg,#0ea5e9_0%,#2563eb_45%,#7c3aed_100%)]",
-  live_trivia: "bg-[linear-gradient(138deg,#0ea5e9_0%,#2563eb_45%,#7c3aed_100%)]",
-  bingo: "bg-[linear-gradient(136deg,#f97316_0%,#ef4444_50%,#ec4899_100%)]",
-  pickem: "bg-[linear-gradient(138deg,#2563eb_0%,#7c3aed_58%,#ec4899_100%)]",
-  fantasy: "bg-[linear-gradient(136deg,#7c3aed_0%,#2563eb_50%,#06b6d4_100%)]",
-  predictions: "bg-[linear-gradient(136deg,#0f172a_0%,#334155_50%,#1e293b_100%)]",
+// Background fill per game — each uses a distinct texture strategy
+const GAME_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
+  // Live Trivia: smooth broadcast gradient (The Anchor)
+  live_trivia: "bg-[linear-gradient(132deg,#06b6d4_0%,#0ea5e9_40%,#2563eb_100%)]",
+  // Speed Trivia: near-black navy — neon border provides the accent (The Sprint)
+  trivia:      "bg-[linear-gradient(160deg,#080f1f_0%,#0c1535_100%)]",
+  // Bingo: solid stadium orange with dark ink bottom edge (The Wild Card)
+  bingo:       "bg-[linear-gradient(to_bottom,#ea580c_0%,#ea580c_85%,#1c0400_85%,#1c0400_100%)]",
+  // Pick 'Em: dark field with indigo left stripe — head-to-head split (The Rival)
+  pickem:      "bg-[linear-gradient(to_right,#4338ca_0%,#4338ca_6%,#0f172a_6%,#0f172a_100%)]",
+  // Fantasy: deep violet — premium collectible (The Dynasty)
+  fantasy:     "bg-[linear-gradient(145deg,#2e1065_0%,#1e0a4e_55%,#3b0764_100%)]",
+};
+
+// Per-game button border replaces the universal white/90 border
+const GAME_CARD_BORDER_BY_KEY: Record<VenueGameKey, string> = {
+  live_trivia: "!border-cyan-300/70",
+  trivia:      "!border-blue-400",
+  bingo:       "!border-white/90",
+  pickem:      "!border-indigo-400/70",
+  fantasy:     "!border-violet-400/50",
+};
+
+// Only Live Trivia and Fantasy get the radial sheen (premium / broadcast); flat-texture games skip it
+const GAME_CARD_SHEEN_BY_KEY: Record<VenueGameKey, boolean> = {
+  live_trivia: true,
+  trivia:      false,
+  bingo:       false,
+  pickem:      false,
+  fantasy:     true,
 };
 
 const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
@@ -86,7 +109,6 @@ const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
   bingo: ["Hightop", "Bingo™"],
   pickem: ["Hightop", "Pick 'Em™"],
   fantasy: ["Hightop", "Fantasy™"],
-  predictions: ["Hightop", "Predictions™"],
 };
 
 const SWIPE_SCREEN_COUNT = 3;
@@ -258,7 +280,6 @@ const GAME_LOCKUP_SRC: Record<VenueGameKey, string> = {
   bingo: "/brand/bingo_icon.png",
   pickem: "/brand/pickem_icon.png",
   fantasy: "/brand/fantasy_icon.png",
-  predictions: "/brand/trivia_icon.png",
 };
 
 function GameLockup({ gameKey, className = "" }: { gameKey: VenueGameKey; className?: string }) {
@@ -360,7 +381,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
   const [isBadgeLoading, setIsBadgeLoading] = useState(true);
   const [badgeError, setBadgeError] = useState("");
-  const [liveTriviaStatus, setLiveTriviaStatus] = useState<{ live: boolean; label: string }>({ live: false, label: "" });
+  const [liveTriviaStatus, setLiveTriviaStatus] = useState<{ live: boolean; label: string; nextStartAtMs?: number | null }>({ live: false, label: "" });
   const [leaderboardBootstrapEntries, setLeaderboardBootstrapEntries] = useState<LeaderboardEntry[]>([]);
   const [activeScreen, setActiveScreen] = useState<HomeScreenIndex>(0);
   const [homeRevealComplete, setHomeRevealComplete] = useState(true);
@@ -825,6 +846,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       setLiveTriviaStatus({
         live: false,
         label: formatLiveTriviaNextGameLabel(nextStart, scheduleTz || undefined),
+        nextStartAtMs: nextStart.getTime(),
       });
     } catch {
       if (!signal.aborted) {
@@ -1153,6 +1175,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const leaderboardInitialEntries = leaderboardBootstrapEntries.length > 0 ? leaderboardBootstrapEntries : initialEntries;
   const triviaIsLocked = Boolean(triviaQuota && !triviaQuota.isAdminBypass && triviaQuota.questionsRemaining <= 0);
   const triviaUnlockCountdown = triviaUnlockSeconds > 0 ? triviaUnlockSeconds : triviaIsLocked ? Math.max(0, Math.floor(triviaQuota?.windowSecondsRemaining ?? 0)) : 0;
+  const showLiveBadge =
+    liveTriviaStatus.live ||
+    (liveTriviaStatus.nextStartAtMs != null &&
+      liveTriviaStatus.nextStartAtMs > Date.now() &&
+      liveTriviaStatus.nextStartAtMs - Date.now() <= 10 * 60 * 1000);
 
   const visibleBadgeByGame = useMemo(() => {
     const badges = new Map<VenueGameKey, string>();
@@ -1174,37 +1201,30 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     <div
       className="relative z-[60] flex flex-col isolation-isolate"
     >
-      <section className="relative shrink-0 px-2 pb-3">
-        <div className="relative min-h-[7.8rem] overflow-hidden rounded-[1.2rem] border-[3px] border-[#0f3f2a] bg-[linear-gradient(180deg,#14532d_0%,#0f4427_55%,#0b3420_100%)] p-[18px] shadow-[0_6px_0_rgba(6,24,15,0.55),0_14px_26px_rgba(15,23,42,0.28)]">
-          <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.06)_0px,rgba(255,255,255,0.06)_1px,rgba(255,255,255,0)_1px,rgba(255,255,255,0)_12px)]" />
-          <div className="pointer-events-none absolute inset-[7px] rounded-[0.85rem] border border-[#86efac]/30" />
-          <div className="relative flex flex-col items-center justify-center gap-3">
-            <div className="w-full text-center">
-              <h2 className="text-center text-[clamp(1.55rem,7.1vw,3.3rem)] font-black uppercase leading-[0.95] tracking-[0.04em] text-white [font-family:'Bree_Serif','Nunito',serif]">
-                <span aria-hidden="true" className="mr-2">🏠</span>{venueDisplayName}
-              </h2>
-            </div>
-            <button
-              onMouseDown={triggerPulse}
-              onClick={leaveVenue}
-              className="tp-clean-button inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full border border-[#fef3c7] bg-[linear-gradient(180deg,#dc2626_0%,#b91c1c_100%)] px-6 py-2 text-sm font-extrabold uppercase tracking-[0.12em] text-white shadow-[0_0_0_1px_rgba(127,29,29,0.75)_inset,0_4px_10px_rgba(15,23,42,0.38)] transition hover:brightness-110 active:translate-y-[1px]"
-              aria-label="Back and exit venue"
-            >
-              <span aria-hidden="true" className="inline-flex items-center text-white">
-                <svg viewBox="0 0 40 16" className="h-4 w-10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M39 8H9" stroke="currentColor" strokeWidth="3.25" strokeLinecap="round" />
-                  <path d="M14 2L2 8L14 14" stroke="currentColor" strokeWidth="3.25" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-              <span className="leading-none font-black">Exit</span>
-            </button>
-          </div>
+      <section className="relative shrink-0">
+        <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-4 py-3">
+          <h2 className="text-xl font-black text-white">
+            <span className="text-cyan-300">{venueDisplayName}</span>
+          </h2>
+          <button
+            onMouseDown={triggerPulse}
+            onClick={leaveVenue}
+            style={{ border: "1px solid #1c2b3a" }}
+            className="tp-clean-button inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-5 py-2 text-sm font-black text-[#fff7ea] shadow-sm transition-all active:scale-95 active:brightness-90"
+            aria-label="Back and exit venue"
+          >
+            <svg viewBox="0 0 40 16" className="h-3.5 w-9" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M39 8H9" stroke="currentColor" strokeWidth="3.25" strokeLinecap="round" />
+              <path d="M14 2L2 8L14 14" stroke="currentColor" strokeWidth="3.25" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="leading-none">Exit</span>
+          </button>
         </div>
 
-        <div className="relative z-40 mt-4 flex items-center justify-center gap-2">
-          <button type="button" onClick={() => goToScreen(0)} className={`tp-clean-button min-w-[6.9rem] rounded-full px-4 py-2 text-base font-bold text-center ${activeScreen === 0 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-current={activeScreen === 0 ? "page" : undefined}>Games</button>
-          <button type="button" onClick={() => goToScreen(1)} className={`tp-clean-button min-w-[6.9rem] rounded-full px-4 py-2 text-base font-bold text-center ${activeScreen === 1 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-current={activeScreen === 1 ? "page" : undefined}>Leaderboard</button>
-          <button type="button" onClick={() => goToScreen(2)} className={`tp-clean-button min-w-[6.9rem] rounded-full px-4 py-2 text-base font-bold text-center ${activeScreen === 2 ? "bg-white text-slate-900" : "bg-white/70 text-slate-700"}`} aria-current={activeScreen === 2 ? "page" : undefined}>Challenges</button>
+        <div className="flex items-center justify-center gap-2 border-b border-slate-800 bg-slate-900 px-4 py-2.5">
+          <button type="button" onClick={() => goToScreen(0)} className={`tp-clean-button min-w-[6.2rem] rounded-full px-4 py-1.5 text-sm font-black text-center transition-all ${activeScreen === 0 ? "bg-cyan-400 text-slate-950" : "bg-slate-800 text-slate-400"}`} aria-current={activeScreen === 0 ? "page" : undefined}>Games</button>
+          <button type="button" onClick={() => goToScreen(1)} className={`tp-clean-button min-w-[6.2rem] rounded-full px-4 py-1.5 text-sm font-black text-center transition-all ${activeScreen === 1 ? "bg-cyan-400 text-slate-950" : "bg-slate-800 text-slate-400"}`} aria-current={activeScreen === 1 ? "page" : undefined}>Leaderboard</button>
+          <button type="button" onClick={() => goToScreen(2)} className={`tp-clean-button min-w-[6.2rem] rounded-full px-4 py-1.5 text-sm font-black text-center transition-all ${activeScreen === 2 ? "bg-cyan-400 text-slate-950" : "bg-slate-800 text-slate-400"}`} aria-current={activeScreen === 2 ? "page" : undefined}>Challenges</button>
         </div>
       </section>
 
@@ -1225,9 +1245,9 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         <section className="venue-screen relative m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">
             <div className={`venue-home-panel-content venue-home-games-fit w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-3 pt-1 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>
             {showFastPathSkeleton ? (
-              <div className="mx-auto mb-2 w-full max-w-[24rem] rounded-2xl border border-cyan-200/80 bg-cyan-50/85 px-3 py-2 text-center text-xs font-semibold text-cyan-900">
+              <div className="mx-auto mb-2 w-full max-w-[24rem] rounded-2xl border border-slate-700 bg-slate-800/80 px-3 py-2 text-center text-xs font-semibold text-slate-300">
                 <p>{arrivalStatusText}</p>
-                <p className="mt-0.5 text-[11px] uppercase tracking-[0.08em] text-cyan-800/90">
+                <p className="mt-0.5 text-[11px] uppercase tracking-[0.08em] text-slate-400">
                   {arrivalStage} · {Math.round(arrivalProgress)}%
                 </p>
               </div>
@@ -1241,9 +1261,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                   const isSpeedTriviaCard = card.key === "trivia";
                   const useLargeTriviaLockup = isLiveTriviaCard || isSpeedTriviaCard;
                   return (
-                    <button key={card.key} type="button" onMouseDown={triggerPulse} onClick={(event) => { void goTo(card.key, event.currentTarget); }} disabled={pendingDestination !== null} data-venue-game-card={card.key} className={`tp-clean-button tp-game-card-btn group relative aspect-square w-full max-w-[clamp(8.2rem,40vw,11.5rem)] justify-self-center overflow-hidden !rounded-[22%] !border-[2px] !border-white/90 !shadow-[0_10px_20px_rgba(15,23,42,0.35)] p-0 text-left${isOpening ? " is-opening" : ""}`}>
-                      <div className={`absolute inset-0 ${GAME_ICON_BG_BY_KEY[card.key]}`} />
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_26%_18%,rgba(255,255,255,0.38)_0%,rgba(255,255,255,0.1)_40%,rgba(255,255,255,0)_72%)]" />
+                    <button key={card.key} type="button" onMouseDown={triggerPulse} onClick={(event) => { void goTo(card.key, event.currentTarget); }} disabled={pendingDestination !== null} data-venue-game-card={card.key} className={`tp-clean-button tp-game-card-btn group relative aspect-square w-full max-w-[clamp(8.2rem,40vw,11.5rem)] justify-self-center overflow-hidden !rounded-[22%] !border-[2px] ${GAME_CARD_BORDER_BY_KEY[card.key]} !shadow-[0_10px_20px_rgba(15,23,42,0.35)] p-0 text-left${isOpening ? " is-opening" : ""}`}>
+                      <div className={`absolute inset-0 ${GAME_CARD_BG_BY_KEY[card.key]}`} />
+                      {GAME_CARD_SHEEN_BY_KEY[card.key] ? (
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_26%_18%,rgba(255,255,255,0.38)_0%,rgba(255,255,255,0.1)_40%,rgba(255,255,255,0)_72%)]" />
+                      ) : null}
                       <div className="relative flex h-full flex-col items-center justify-between px-2 pb-2 pt-2 text-white">
                         <div className={`flex min-h-0 w-full flex-1 items-center justify-center ${useLargeTriviaLockup ? "pt-1" : ""}`}>
                           <GameLockup gameKey={card.key} className={`h-full w-full ${useLargeTriviaLockup ? "scale-[1.2] sm:scale-[1.28]" : ""}`} />
@@ -1269,18 +1291,24 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                         ) : null}
                       </div>
                       {badge ? <span className="absolute right-1.5 top-1.5 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black leading-none text-white shadow-[0_2px_8px_rgba(15,23,42,0.45)]">{badge}</span> : null}
+                      {isLiveTriviaCard && showLiveBadge ? (
+                        <span className="absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-slate-950/80 px-2 py-0.5">
+                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />
+                          <span className="text-[9px] font-black uppercase tracking-[0.14em] text-rose-300">LIVE</span>
+                        </span>
+                      ) : null}
                     </button>
                   );
                 })}
               </div>
             </div>
-            {triviaUnlockCountdown > 0 ? <div className="mx-auto mt-2 max-w-[22rem] rounded-full border border-amber-200/80 bg-amber-100/95 px-3 py-1.5 text-center text-[11px] font-black tracking-[0.08em] text-amber-900">Trivia unlocks in {formatCountdown(triviaUnlockCountdown)}</div> : null}
-            {triviaGateNotice ? <div className="mx-auto mt-2 max-w-[22rem] rounded-xl border border-rose-200/80 bg-rose-100/95 px-3 py-2 text-center text-xs font-semibold text-rose-900">{triviaGateNotice}</div> : null}
+            {triviaUnlockCountdown > 0 ? <div className="mx-auto mt-2 max-w-[22rem] rounded-full border border-amber-400/40 bg-amber-950/30 px-3 py-1.5 text-center text-[11px] font-black tracking-[0.08em] text-amber-200">Trivia unlocks in {formatCountdown(triviaUnlockCountdown)}</div> : null}
+            {triviaGateNotice ? <div className="mx-auto mt-2 max-w-[22rem] rounded-xl border border-rose-400/60 bg-rose-950/30 px-3 py-2 text-center text-xs font-semibold text-rose-200">{triviaGateNotice}</div> : null}
             {badgeError ? (
               <button
                 type="button"
                 onClick={() => void loadHomeBadges()}
-                className="mx-auto mt-2 block max-w-[22rem] rounded-full border border-slate-300 bg-white/90 px-3 py-1.5 text-center text-[11px] font-semibold text-slate-800"
+                className="mx-auto mt-2 block max-w-[22rem] rounded-full border border-slate-600 bg-slate-800 px-3 py-1.5 text-center text-[11px] font-semibold text-slate-300"
               >
                 {badgeError} Tap to retry
               </button>
@@ -1291,17 +1319,13 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         <section className="venue-screen m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">
             <div className={`venue-home-panel-content w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-8 pt-1 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>
             <div className="mx-auto w-full max-w-[26rem] space-y-3">
-              <div className="rounded-[1.6rem] border-[3px] border-[#3b2412] bg-[#4a2e18] p-3 shadow-[0_8px_0_rgba(15,23,42,0.3)]">
-                <div className="inline-flex rounded-xl border-2 border-[#3b2412] bg-[#1f5136] px-3 py-1.5 shadow-[0_2px_0_rgba(0,0,0,0.25)]">
-                  <h3 className="text-2xl font-semibold text-[#ecf8f1] [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.45)]">Leaderboard</h3>
-                </div>
-                <div className="mt-3">
-                  <LeaderboardTable
-                    venueId={venue.id}
-                    initialEntries={leaderboardInitialEntries}
-                    isEnabled={homeRevealComplete}
-                  />
-                </div>
+              <div className="rounded-2xl border border-cyan-400/30 bg-slate-900 p-4">
+                <p className="mb-3 text-sm font-black uppercase tracking-[0.14em] text-cyan-300">Leaderboard</p>
+                <LeaderboardTable
+                  venueId={venue.id}
+                  initialEntries={leaderboardInitialEntries}
+                  isEnabled={homeRevealComplete}
+                />
               </div>
             </div>
             </div>
@@ -1310,20 +1334,18 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         <section className="venue-screen m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">
             <div className={`venue-home-panel-content w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-3 pt-1 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>
             <div className="mx-auto w-full max-w-[26rem] space-y-3">
-              <div className="rounded-[1.6rem] border-[3px] border-[#3b2412] bg-[#4a2e18] p-3 shadow-[0_8px_0_rgba(15,23,42,0.3)]">
-                <div className="inline-flex rounded-xl border-2 border-[#3b2412] bg-[#1f5136] px-3 py-1.5 shadow-[0_2px_0_rgba(0,0,0,0.25)]">
-                  <h3 className="text-2xl font-semibold text-[#ecf8f1] [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.45)]">Challenges</h3>
-                </div>
-                <div className="mt-3 space-y-2">
+              <div className="rounded-2xl border border-cyan-400/30 bg-slate-900 p-4">
+                <p className="mb-3 text-sm font-black uppercase tracking-[0.14em] text-cyan-300">Challenges</p>
+                <div className="space-y-2">
                   {isChallengesLoading ? (
-                    <div className="space-y-2 rounded-[1.2rem] border-[3px] border-[#0f172a]/80 bg-[linear-gradient(146deg,#0f766e_0%,#06b6d4_50%,#22d3ee_100%)] p-3 shadow-[0_8px_0_rgba(15,23,42,0.35)]">
-                      <div className="h-4 w-32 animate-pulse rounded bg-white/40" />
-                      <div className="h-3 w-full animate-pulse rounded bg-white/25" />
+                    <div className="space-y-2 rounded-xl border border-slate-700 bg-slate-800/50 p-3">
+                      <div className="h-4 w-32 animate-pulse rounded bg-slate-700" />
+                      <div className="h-3 w-full animate-pulse rounded bg-slate-700/70" />
                     </div>
                   ) : null}
 
                   {!isChallengesLoading && challengeCards.length === 0 ? (
-                    <div className="rounded-[1.2rem] border-[3px] border-[#0f172a]/70 bg-[#0f172a]/50 p-3 text-center text-sm font-semibold text-cyan-50">
+                    <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-3 text-center text-sm font-semibold text-slate-400">
                       No active challenges for this venue yet.
                     </div>
                   ) : null}
@@ -1421,7 +1443,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                     <button
                       type="button"
                       onClick={() => void loadChallengeCampaigns()}
-                      className="rounded-md border border-cyan-100/80 bg-cyan-50/20 px-2 py-1 text-[11px] font-black uppercase tracking-[0.08em] text-cyan-50"
+                      className="rounded-md border border-rose-400/60 bg-rose-950/30 px-2 py-1 text-[11px] font-black uppercase tracking-[0.08em] text-rose-300"
                     >
                       {challengesError} Tap to retry
                     </button>
@@ -1444,7 +1466,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
             onClick={() => setSelectedChallengeId(null)}
           >
             <motion.div
-              className="relative w-fit max-w-[calc(100vw-12px)] max-h-[calc(100svh-5rem)] overflow-y-auto rounded-2xl border border-slate-300 bg-[#fff7ea] px-5 pb-6 pt-5 shadow-[0_20px_45px_rgba(15,23,42,0.28)]"
+              className="relative w-fit max-w-[calc(100vw-12px)] max-h-[calc(100svh-5rem)] overflow-y-auto rounded-2xl border border-cyan-400/40 bg-slate-900 px-5 pb-6 pt-5 shadow-[0_24px_48px_rgba(0,0,0,0.6)]"
               initial={{ opacity: 0, y: 28, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 14, scale: 0.99 }}
@@ -1453,14 +1475,15 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
             >
               <button
                 type="button"
-                className="tp-clean-button absolute right-3 top-3 inline-flex h-14 min-w-14 items-center justify-center rounded-full border border-slate-300 bg-white px-4 text-base font-semibold text-slate-700"
+                style={{ border: "1px solid rgba(255,255,255,0.12)" }}
+                className="tp-clean-button absolute right-3 top-3 inline-flex h-10 min-w-[4.5rem] items-center justify-center rounded-full bg-slate-800 px-4 text-sm font-semibold text-slate-300"
                 onClick={() => setSelectedChallengeId(null)}
                 aria-label="Close challenge rules"
               >
                 Close
               </button>
-              <h4 className="mt-2 w-[min(92vw,24rem)] pr-24 text-3xl font-black leading-9 text-slate-900">{selectedChallenge.name}</h4>
-              <p className="mt-7 w-[min(92vw,24rem)] pb-1 text-[1.65rem] leading-[2.35rem] text-slate-700">{selectedChallenge.rules}</p>
+              <h4 className="mt-2 w-[min(92vw,24rem)] pr-24 text-3xl font-black leading-9 text-white">{selectedChallenge.name}</h4>
+              <p className="mt-7 w-[min(92vw,24rem)] pb-1 text-[1.65rem] leading-[2.35rem] text-slate-300">{selectedChallenge.rules}</p>
             </motion.div>
           </motion.div>
         ) : null}

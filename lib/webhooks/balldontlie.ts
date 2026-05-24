@@ -35,6 +35,14 @@ export function normalizePlayerName(value: string): string {
     .trim();
 }
 
+export function inferBasketballSportKeyFromEventType(eventType: string): "basketball_nba" | "basketball_wnba" {
+  const normalized = String(eventType ?? "").trim().toLowerCase();
+  if (normalized.startsWith("wnba.player")) {
+    return "basketball_wnba";
+  }
+  return "basketball_nba";
+}
+
 // ---- Payload types ----
 
 export type BdlPlayerStats = {

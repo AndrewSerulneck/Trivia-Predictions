@@ -48,7 +48,6 @@ const FALLBACK_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
   bingo: "linear-gradient(128deg,#f97316 0%,#ef4444 48%,#ec4899 100%)",
   pickem: "linear-gradient(134deg,#2563eb 0%,#7c3aed 56%,#ec4899 100%)",
   fantasy: "linear-gradient(134deg,#7c3aed 0%,#2563eb 48%,#06b6d4 100%)",
-  predictions: "linear-gradient(134deg,#0f172a 0%,#334155 48%,#1e293b 100%)",
 };
 
 function wait(ms: number): Promise<void> {

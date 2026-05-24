@@ -9,8 +9,7 @@ type AppShellProps = {
   legalNotice: string;
 };
 
-// Routes that should fill the full viewport with zero AppShell padding or footer.
-// Game screens and the venue hub manage all their own layout internally.
+// All routes that should fill the full viewport with zero AppShell padding or footer.
 const FULLSCREEN_PATHS = [
   "/trivia",
   "/bingo",
@@ -22,10 +21,25 @@ const FULLSCREEN_PATHS = [
   "/pending-challenges",
 ];
 
+// Subset of fullscreen routes that are pure game screens — these need a dark
+// background so the underlying page never bleeds through when the soft keyboard
+// shrinks the visual viewport. The venue hub is fullscreen but not a game screen;
+// it sits on the body's natural background and sets its own surface colors.
+const GAME_SCREEN_PATHS = [
+  "/trivia",
+  "/bingo",
+  "/pickem",
+  "/fantasy",
+  "/predictions",
+  "/active-games",
+  "/pending-challenges",
+];
+
 export function AppShell({ children, legalNotice }: AppShellProps) {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith("/admin");
   const isFullscreen = !isAdmin && FULLSCREEN_PATHS.some((p) => pathname?.startsWith(p));
+  const isGameScreen = !isAdmin && GAME_SCREEN_PATHS.some((p) => pathname?.startsWith(p));
 
   useEffect(() => {
     if (typeof document === "undefined") {
@@ -53,6 +67,8 @@ export function AppShell({ children, legalNotice }: AppShellProps) {
       className={`tp-app-shell relative w-full ${
         isAdmin
           ? "fixed inset-0 h-screen w-screen max-w-full p-0 m-0 gap-0 overflow-hidden"
+          : isGameScreen
+          ? "bg-slate-950"
           : isFullscreen
           ? ""
           : "mx-auto grid min-h-[100svh] max-w-[720px] box-border grid-rows-[1fr_auto] gap-4 overflow-x-hidden overflow-y-visible pb-24"

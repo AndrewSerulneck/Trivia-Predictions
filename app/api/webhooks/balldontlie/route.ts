@@ -8,13 +8,14 @@ import {
   calcMlbFantasyPoints,
   normalizePlayerName,
   getStatForBingoMetric,
+  inferBasketballSportKeyFromEventType,
   type BdlNbaPlayerEvent,
   type BdlMlbPlayerEvent,
 } from "@/lib/webhooks/balldontlie";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { settlePendingPickEmPicks } from "@/lib/pickem";
 import { refreshFantasyProgress } from "@/lib/fantasy";
-import { applyMlbWebhookPropEvent, refreshSportsBingoProgress } from "@/lib/sportsBingo";
+import { applyMlbPlayerSnapshotEvent, applyMlbWebhookPropEvent, refreshSportsBingoProgress } from "@/lib/sportsBingo";
 
 const WEBHOOK_SECRET = process.env.BALLDONTLIE_WEBHOOK_SECRET?.trim() ?? "";
 
@@ -59,13 +60,17 @@ export async function POST(request: Request) {
 
   // BDL uses both "nba.player.*" and "nba.player_stat.*" — match the "nba.player" prefix
   // without the trailing dot so both variants are caught.
-  if (eventType.startsWith("nba.player")) {
+  const isBasketballPlayerEvent =
+    eventType.startsWith("nba.player") ||
+    eventType.startsWith("wnba.player");
+  if (isBasketballPlayerEvent) {
     const event = parseNbaPlayerEvent(body);
     if (!event) {
       return NextResponse.json({ ok: true, skipped: "unparseable_player_event", eventType });
     }
     try {
-      const playerResult = await handleNbaPlayerEvent(event);
+      const sportKey = inferBasketballSportKeyFromEventType(eventType);
+      const playerResult = await handleNbaPlayerEvent(event, sportKey);
       result.playerEvent = { playerId: event.playerId, playerName: event.playerName, ...playerResult };
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
@@ -95,16 +100,43 @@ export async function POST(request: Request) {
         });
       }
       let mlbFantasyResult: { statsUpserted: boolean } | null = null;
+      let playerSnapshotBingoUpdates: { updatedSquares: number } | null = null;
       if (mlbPlayerEvent) {
         mlbFantasyResult = await handleMlbPlayerEvent(mlbPlayerEvent);
+        playerSnapshotBingoUpdates = await applyMlbPlayerSnapshotEvent({
+          gameId: mlbPlayerEvent.gameId,
+          playerId: mlbPlayerEvent.playerId,
+          playerName: mlbPlayerEvent.playerName,
+          gameStatus: mlbPlayerEvent.gameStatus,
+          batterStats: {
+            h: mlbPlayerEvent.batterStats.h,
+            homeRuns: mlbPlayerEvent.batterStats.homeRuns,
+            rbi: mlbPlayerEvent.batterStats.rbi,
+            stolenBases: mlbPlayerEvent.batterStats.stolenBases,
+            strikeoutsAsBatter: mlbPlayerEvent.batterStats.strikeoutsAsBatter,
+          },
+          pitcherStats: {
+            strikeouts: mlbPlayerEvent.pitcherStats.strikeouts,
+            outs: mlbPlayerEvent.pitcherStats.outs,
+            earnedRuns: mlbPlayerEvent.pitcherStats.earnedRuns,
+            hitsAllowed: mlbPlayerEvent.pitcherStats.hitsAllowed,
+          },
+        });
       }
       const bingoResult = await refreshSportsBingoProgress({
         sportKey: "baseball_mlb",
         gameId: gameId || undefined,
         limit: 500,
         bypassCache: true,
+        invalidationMode: "throttled",
       });
-      result.mlbPlayerEvent = { gameId, propUpdates, fantasy: mlbFantasyResult, bingo: bingoResult };
+      result.mlbPlayerEvent = {
+        gameId,
+        propUpdates,
+        playerSnapshotBingoUpdates,
+        fantasy: mlbFantasyResult,
+        bingo: bingoResult,
+      };
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
       console.error("[bdl-webhook] mlb player event refresh failed:", msg);
@@ -145,7 +177,7 @@ export async function POST(request: Request) {
     const [pickEmResult, fantasyResult, bingoResult] = await Promise.allSettled([
       settlePendingPickEmPicks(),
       refreshFantasyProgress({ limit: 500 }),
-      refreshSportsBingoProgress({ limit: 500, bypassCache: true }),
+      refreshSportsBingoProgress({ limit: 500, bypassCache: true, invalidationMode: "throttled" }),
     ]);
 
     if (pickEmResult.status === "rejected") {
@@ -177,9 +209,11 @@ export async function POST(request: Request) {
 }
 
 async function handleNbaPlayerEvent(
-  event: BdlNbaPlayerEvent
+  event: BdlNbaPlayerEvent,
+  sportKey: "basketball_nba" | "basketball_wnba"
 ): Promise<{ statsUpserted: boolean; hit: number; miss: number }> {
   const totalFantasyPoints = calcNbaFantasyPoints(event.stats);
+  const leagueName = sportKey === "basketball_wnba" ? "WNBA" : "NBA";
 
   const { error: upsertError } = await supabaseAdmin!.from("live_player_stats").upsert(
     {
@@ -190,7 +224,7 @@ async function handleNbaPlayerEvent(
       team_id: event.teamId,
       team_name: event.teamName,
       league_id: null,
-      league_name: "NBA",
+      league_name: leagueName,
       game_status: event.gameStatus,
       pts: event.stats.pts,
       reb: event.stats.reb,
@@ -200,7 +234,7 @@ async function handleNbaPlayerEvent(
       turnovers: event.stats.tov,
       total_fantasy_points: totalFantasyPoints,
       source_updated_at: new Date().toISOString(),
-      sport_key: "basketball_nba",
+      sport_key: sportKey,
       stat_type: "fantasy_points_total",
       value: totalFantasyPoints,
     },
@@ -213,10 +247,11 @@ async function handleNbaPlayerEvent(
 
   const { hit, miss } = await resolveBingoSquares(event);
   await refreshSportsBingoProgress({
-    sportKey: "basketball_nba",
+    sportKey,
     gameId: event.gameId,
     limit: 500,
     bypassCache: true,
+    invalidationMode: "throttled",
   });
   return { statsUpserted: true, hit, miss };
 }

@@ -134,6 +134,15 @@ export default function LiveShowdownPage() {
   const intermissionAdKeyRef = useRef("");
   const intermissionAdTimerRef = useRef<number | null>(null);
   const lobbyAdKeyRef = useRef("");
+  // Refs used by the stable forfeit listener so it never re-mounts and never
+  // clears the 2-second grace timer when the 1-second poll fires a re-render.
+  const forfeitKeyRef = useRef("");
+  const activeKeyRef = useRef("");
+  const submitRef = useRef<(submittedAnswer: string, isForfeit?: boolean) => Promise<void>>(
+    () => Promise.resolve()
+  );
+  const forfeitEligibleRef = useRef(false);
+  const answerInputRef = useRef<HTMLInputElement>(null);
 
   const activeKey = useMemo(() => {
     if (!state?.isGameActive || !state.scheduleId || !state.currentRound || !state.currentQuestionIndex) return "";
@@ -156,6 +165,14 @@ export default function LiveShowdownPage() {
       window.localStorage.removeItem("liveTriviaForfeit");
       window.localStorage.removeItem("tp_live_showdown_forfeit");
     }
+  }, []);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
   }, []);
 
   const fetchState = useCallback(async () => {
@@ -223,6 +240,16 @@ export default function LiveShowdownPage() {
   useEffect(() => {
     setAnswer("");
     setSubmitMessage("");
+  }, [activeKey]);
+
+  // Auto-focus the answer input whenever a new question becomes active.
+  // If the input isn't rendered (non-answering phase), the ref is null and this is a no-op.
+  useEffect(() => {
+    if (!activeKey) return;
+    const frame = requestAnimationFrame(() => {
+      answerInputRef.current?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
   }, [activeKey]);
 
   useEffect(() => {
@@ -416,7 +443,6 @@ export default function LiveShowdownPage() {
         if (isForfeit) {
           setSubmitMessage("Forfeited Question. No closing your browser or changing tabs during Live Trivia!");
         } else {
-          setSubmitMessage("Answer locked in. Waiting for reveal.");
           setSubmittedKey(activeKey);
         }
       } catch (e) {
@@ -428,32 +454,46 @@ export default function LiveShowdownPage() {
     [activeKey, state]
   );
 
+  // Keep refs in sync so the stable forfeit listener always reads the freshest
+  // values without re-mounting (and cancelling the grace timer) on every 1-second poll.
+  useEffect(() => { forfeitKeyRef.current = forfeitKey; }, [forfeitKey]);
+  useEffect(() => { activeKeyRef.current = activeKey; }, [activeKey]);
+  useEffect(() => { submitRef.current = submit; }, [submit]);
   useEffect(() => {
-    if (!state || !state.isGameActive || state.activePhase === "pre_game" || isPreGameLobby) return;
-    if (!hasOnboarded || !isEngineReady || !hasJoinedSession || isSpectatingActiveBlock) return;
-    if (state.activePhase !== "answering" || !activeKey) return;
-    if (document.visibilityState !== "visible" || !document.hasFocus()) return;
-    if (forfeitKey === activeKey) return;
+    forfeitEligibleRef.current =
+      Boolean(state?.isGameActive) &&
+      state?.activePhase === "answering" &&
+      Boolean(activeKey) &&
+      hasOnboarded &&
+      isEngineReady &&
+      hasJoinedSession &&
+      !isSpectatingActiveBlock &&
+      !isPreGameLobby &&
+      forfeitKey !== activeKey;
+  }, [activeKey, forfeitKey, hasJoinedSession, hasOnboarded, isEngineReady, isPreGameLobby, isSpectatingActiveBlock, state]);
 
-    // Timer ref lives outside the handlers so both onVisibility and onReturn share it.
+  // Stable visibilitychange listener — registered once on mount, never torn down
+  // by poll cycles. All live values are read from refs so the 2-second grace timer
+  // survives re-renders triggered by the 1-second state poll.
+  useEffect(() => {
     let forfeitTimer: ReturnType<typeof setTimeout> | null = null;
 
     const triggerForfeit = () => {
-      if (forfeitInFlight.current || forfeitKey === activeKey) return;
+      const key = activeKeyRef.current;
+      if (forfeitInFlight.current || forfeitKeyRef.current === key || !key) return;
       forfeitInFlight.current = true;
-      setForfeitKey(activeKey);
-      void submit("__FORFEIT__", true).finally(() => {
+      setForfeitKey(key);
+      void submitRef.current("__FORFEIT__", true).finally(() => {
         forfeitInFlight.current = false;
       });
     };
 
     const scheduleForfeit = () => {
-      if (forfeitTimer !== null || forfeitInFlight.current || forfeitKey === activeKey) return;
-      // 2-second grace period — accidental notification shade swipes or brief
-      // system overlays on mobile won't immediately forfeit the player.
+      if (forfeitTimer !== null || forfeitInFlight.current) return;
+      // 2-second grace — accidental notification-shade swipes won't immediately forfeit.
       forfeitTimer = setTimeout(() => {
         forfeitTimer = null;
-        triggerForfeit();
+        if (forfeitEligibleRef.current) triggerForfeit();
       }, 2000);
     };
 
@@ -465,6 +505,10 @@ export default function LiveShowdownPage() {
     };
 
     const onVisibility = () => {
+      if (!forfeitEligibleRef.current) {
+        cancelForfeit();
+        return;
+      }
       if (document.visibilityState !== "visible") {
         scheduleForfeit();
       } else {
@@ -477,7 +521,7 @@ export default function LiveShowdownPage() {
       document.removeEventListener("visibilitychange", onVisibility);
       cancelForfeit();
     };
-  }, [activeKey, forfeitKey, hasJoinedSession, hasOnboarded, isEngineReady, isPreGameLobby, isSpectatingActiveBlock, state, submit]);
+  }, []);
 
   const goHome = useCallback(async () => {
     if (isLeaving) return;
@@ -586,7 +630,7 @@ export default function LiveShowdownPage() {
     return (
       <main
         className="flex flex-col bg-slate-950 p-4 text-white overflow-hidden"
-        style={{ height: "var(--tp-vh, 100dvh)" }}
+        style={{ height: "var(--tp-vh, 100dvh)", minHeight: "100dvh" }}
       >
         {hasOnboarded ? "Loading Lobby..." : "Syncing Live Showdown..."}
       </main>
@@ -651,23 +695,14 @@ export default function LiveShowdownPage() {
   return (
     <motion.main
       initial={{ opacity: 1, scale: 1 }}
-      animate={isLeaving ? { opacity: 0, scale: 0.9, y: 22 } : { opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-      className="flex flex-col overflow-hidden bg-slate-950 text-white"
-      style={{ height: "var(--tp-vh, 100dvh)" }}
+      animate={isLeaving ? { opacity: 0, scale: 0.85, y: -60 } : { opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      className="flex flex-col overflow-hidden bg-slate-950 text-white touch-none"
+      style={{ height: "var(--tp-vh, 100dvh)", minHeight: "100dvh" }}
     >
-      <button
-        type="button"
-        onClick={() => void goHome()}
-        className="tp-clean-button fixed left-3 top-3 z-[1300] rounded-full border border-cyan-300/70 bg-cyan-100/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.1em] text-cyan-100 hover:bg-cyan-100/20"
-      >
-        Back to Venue Home
-      </button>
-
-      <div className="mx-auto w-full max-w-md flex-1 min-h-0 overflow-y-auto space-y-4 px-4 pt-12 pb-4">
+      <div className="mx-auto w-full max-w-md flex-1 min-h-0 overflow-y-auto touch-pan-y space-y-4 px-4 pt-4 pb-4">
         <header className="rounded-2xl border border-cyan-400/60 bg-slate-900 p-4">
           <h1 className="text-3xl font-black tracking-wide text-cyan-300">Live Showdown</h1>
-          <p className="mt-1 text-sm font-semibold text-slate-300">Synchronized venue trivia with live room energy.</p>
         </header>
 
         {!hasOnboarded ? (
@@ -698,12 +733,6 @@ export default function LiveShowdownPage() {
                   Next Live Trivia Showdown in {formatCountdown(state.secondsRemaining)}
                 </p>
               ) : null}
-              {pregameJoinWindowActive ? (
-                <p className="mt-3 rounded-xl border-2 border-rose-300 bg-rose-500/20 p-3 text-sm font-black text-rose-100">
-                  Live Trivia is starting in less than 2 minutes! Click 'Join Live Trivia' now to ensure you are placed in
-                  the lobby and don't miss the first question.
-                </p>
-              ) : null}
               {!state.isGameActive && !state.nextSchedule ? (
                 <p className="mt-2 text-sm font-semibold text-amber-100">No live session is scheduled for this venue yet.</p>
               ) : null}
@@ -730,7 +759,7 @@ export default function LiveShowdownPage() {
                   setJoinState("active_participant");
                 }
               }}
-              className={`tp-clean-button w-full rounded-xl py-3 text-lg font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-50 ${
+              className={`tp-clean-button w-full rounded-xl py-10 text-3xl font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-50 ${
                 pregameJoinWindowActive
                   ? "animate-pulse border-2 border-rose-300 bg-rose-300"
                   : "bg-cyan-400"
@@ -808,6 +837,7 @@ export default function LiveShowdownPage() {
             </div>
             <p className="mt-1 text-2xl font-black text-emerald-200">{state.secondsRemaining}s</p>
             <input
+              ref={answerInputRef}
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               disabled={locked || isSubmitting}
@@ -818,9 +848,13 @@ export default function LiveShowdownPage() {
               type="button"
               disabled={locked || isSubmitting || answer.trim().length === 0}
               onClick={() => void submit(answer)}
-              className="tp-clean-button mt-3 w-full rounded-xl bg-emerald-500 py-3 text-2xl font-black text-slate-950 disabled:opacity-50"
+              className={`tp-clean-button mt-3 w-full rounded-xl py-3 text-2xl font-black text-slate-950 ${
+                submittedKey === activeKey
+                  ? "cursor-default bg-emerald-600"
+                  : "bg-emerald-500 disabled:opacity-50"
+              }`}
             >
-              Submit
+              {submittedKey === activeKey ? "Answer Locked!" : isSubmitting ? "Submitting..." : "Submit"}
             </button>
           </section>
         ) : restWarning ? (
@@ -888,6 +922,18 @@ export default function LiveShowdownPage() {
         ) : null}
         {error ? <div className="rounded-xl border border-rose-400/50 bg-rose-950/40 p-3 text-sm">{error}</div> : null}
       </div>
+
+      {!answering ? (
+        <div className="shrink-0 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <button
+            type="button"
+            onClick={() => void goHome()}
+            className="tp-clean-button w-full rounded-xl border border-cyan-300/40 bg-cyan-100/10 px-3 py-3 text-sm font-semibold text-cyan-200 hover:bg-cyan-100/20"
+          >
+            ← Back to Home Page
+          </button>
+        </div>
+      ) : null}
 
       {hasOnboarded && Boolean(forfeitKey) && Boolean(activeKey) && forfeitKey === activeKey ? (
         <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/75 p-4">

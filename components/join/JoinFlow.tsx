@@ -93,9 +93,6 @@ function normalizeBooleanEnv(value: string | undefined, fallback = false): boole
 
 const DISABLE_GEOFENCE_FOR_TESTING = normalizeBooleanEnv(process.env.NEXT_PUBLIC_DISABLE_GEOFENCE, false);
 
-const JOIN_BUTTON_POP_CLASS =
-  "transition-all duration-150 active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
-
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message) return error.message;
   if (typeof error === "object" && error && "message" in error) {
@@ -155,6 +152,7 @@ const LOADING_PHRASES = [
   "Taking the field...",
   "Game time...",
 ];
+
 type LocationResult = {
   coords: Coordinates | null;
   permissionDenied: boolean;
@@ -180,10 +178,7 @@ function VenueListSkeleton() {
   return (
     <div className="space-y-2" aria-hidden>
       {[0, 1, 2, 3].map((i) => (
-        <div
-          key={i}
-          className="h-16 animate-pulse rounded-xl border border-slate-200 bg-gradient-to-r from-slate-100 to-slate-50"
-        />
+        <div key={i} className="h-16 animate-pulse rounded-xl border border-slate-700 bg-slate-800/50" />
       ))}
     </div>
   );
@@ -203,19 +198,21 @@ const VenueListItem = memo(function VenueListItem({ venue, index, isPending, onS
       <button
         type="button"
         onClick={() => onSelect(venue)}
-        className={`flex w-full items-center justify-between rounded-xl border border-slate-200 bg-gradient-to-r from-white to-slate-100 px-4 py-3 text-base text-slate-700 shadow-sm transition-all ${JOIN_BUTTON_POP_CLASS} hover:from-blue-50 hover:to-cyan-50`}
+        className="flex w-full items-center justify-between rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3 transition-all hover:border-cyan-400/50 hover:bg-slate-800 active:scale-[0.98]"
       >
         <span className="flex items-center gap-3">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white text-base font-medium text-slate-800">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-600 bg-slate-700 text-base font-medium text-white">
             {visual.logoText}
           </span>
-          <span className="font-medium">
-            {isPending ? `Opening ${getVenueDisplayName(venue)}...` : `Join ${getVenueDisplayName(venue)}`}
+          <span className="font-semibold text-white">
+            {isPending
+              ? `Opening ${getVenueDisplayName(venue)}...`
+              : `Join ${getVenueDisplayName(venue)}`}
           </span>
         </span>
         <span
           aria-hidden="true"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-xl"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-600 bg-slate-700 text-xl"
         >
           {visual.icon}
         </span>
@@ -281,6 +278,7 @@ const JoinHeaderLights = () => {
     document.body
   );
 };
+
 type UsernameStepProps = {
   direction: 1 | -1;
   inputRef: React.RefObject<HTMLInputElement | null>;
@@ -316,14 +314,17 @@ const UsernameStep = memo(function UsernameStep({
       animate="center"
       exit="exit"
       transition={SWIPE_SPRING_TRANSITION}
-      className="flex flex-col pt-4 pb-10"
+      className="flex flex-col gap-5"
     >
-      <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-3">
-        What&apos;s your username?
-      </h1>
-      <p className="mb-8 text-lg font-semibold text-slate-900">
-        If you&apos;ve never played Hightop Challenge before, make one up!
-      </p>
+      <div>
+        <p className="mb-1 text-sm font-black uppercase tracking-[0.14em] text-cyan-300">
+          Your Username
+        </p>
+        <h1 className="text-2xl font-black text-white">What&apos;s your username?</h1>
+        <p className="mt-1 text-sm font-semibold text-slate-400">
+          If you&apos;ve never played before, make one up!
+        </p>
+      </div>
 
       <input
         ref={inputRef}
@@ -339,43 +340,42 @@ const UsernameStep = memo(function UsernameStep({
             handleNext();
           }
         }}
-        placeholder=""
+        placeholder="username"
         autoComplete="username"
         autoCapitalize="none"
         autoCorrect="off"
         spellCheck={false}
-        className="mb-2 w-full border-0 border-b-2 border-slate-200 bg-transparent px-3 py-3 text-3xl font-bold text-slate-900 outline-none transition-colors placeholder:text-slate-300 focus:border-slate-900"
+        className="w-full rounded-xl bg-slate-800 p-3 text-2xl font-semibold text-white placeholder:text-slate-500 focus:outline-none"
       />
 
       {errorMessage ? (
-        <p className="mb-4 text-sm text-rose-500">{errorMessage}</p>
-      ) : (
-        <div className="mb-4" />
-      )}
+        <div className="rounded-xl border border-rose-400/60 bg-rose-950/30 p-3 text-sm text-rose-200">
+          {errorMessage}
+        </div>
+      ) : null}
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90"
+          style={{ border: "1px solid #1c2b3a" }}
+          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-5 py-2.5 text-sm font-black text-[#fff7ea] shadow-sm transition-all active:scale-95 active:brightness-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60"
         >
-          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">←</span>
+          <span aria-hidden="true">←</span>
           Back
         </button>
-
         <button
           type="button"
           onClick={handleNext}
           disabled={!value.trim() || isAdvancingToPin}
-          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90 disabled:opacity-40"
+          className="tp-clean-button inline-flex min-h-[44px] flex-1 items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
         >
-          {isAdvancingToPin ? "Loading..." : "Next"}
-          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">→</span>
+          {isAdvancingToPin ? "Loading..." : "Next →"}
         </button>
       </div>
 
       {locationLoading ? (
-        <p className="mt-4 text-xs text-slate-400">Verifying your location...</p>
+        <p className="text-xs text-slate-500">Verifying your location...</p>
       ) : null}
     </motion.div>
   );
@@ -422,19 +422,21 @@ const PinStep = memo(function PinStep({
       exit="exit"
       transition={SWIPE_SPRING_TRANSITION}
       onAnimationComplete={onAnimationComplete}
-      className="flex flex-col pt-4 pb-10"
+      className="flex flex-col gap-5"
     >
-      <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-3">
-        What&apos;s your PIN?
-      </h1>
-      <p className="mb-10 text-lg font-semibold text-slate-900">
-        Returning user? Use your last PIN.<br />
-        New user? Pick 4 digits you&apos;ll remember.
-      </p>
+      <div>
+        <p className="mb-1 text-sm font-black uppercase tracking-[0.14em] text-cyan-300">
+          Your PIN
+        </p>
+        <h1 className="text-2xl font-black text-white">What&apos;s your PIN?</h1>
+        <p className="mt-1 text-sm font-semibold text-slate-400">
+          Returning? Use your last PIN. New? Pick 4 digits you&apos;ll remember.
+        </p>
+      </div>
 
       <div
         ref={pinContainerRef}
-        className={`mb-4 flex cursor-text gap-6 px-3 ${isPinShaking ? "animate-shake" : ""}`}
+        className={`flex cursor-text items-center gap-6 px-2 ${isPinShaking ? "animate-shake" : ""}`}
         onClick={onPinContainerClick}
       >
         {[0, 1, 2, 3].map((i) => (
@@ -442,41 +444,42 @@ const PinStep = memo(function PinStep({
             key={i}
             className={`h-5 w-5 rounded-full border-2 transition-all duration-150 ${
               i < pin.length
-                ? "scale-125 border-slate-900 bg-slate-900"
-                : "border-slate-300 bg-transparent"
+                ? "scale-125 border-cyan-400 bg-cyan-400"
+                : "border-slate-600 bg-transparent"
             }`}
           />
         ))}
       </div>
 
       {isAuthLoading ? (
-        <p className="mb-4 animate-pulse text-base text-slate-500">{loadingPhrase}</p>
+        <p className="animate-pulse text-sm text-slate-400">{loadingPhrase}</p>
       ) : errorMessage ? (
-        <p className="mb-4 text-sm text-rose-500">{errorMessage}</p>
+        <div className="rounded-xl border border-rose-400/60 bg-rose-950/30 p-3 text-sm text-rose-200">
+          {errorMessage}
+        </div>
       ) : connectionRetryMessage ? (
-        <p className="mb-4 text-sm text-amber-700">{connectionRetryMessage}</p>
-      ) : (
-        <div className="mb-4" />
-      )}
+        <div className="rounded-xl border border-amber-400/40 bg-amber-950/30 p-3 text-sm text-amber-200">
+          {connectionRetryMessage}
+        </div>
+      ) : null}
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90"
+          style={{ border: "1px solid #1c2b3a" }}
+          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-5 py-2.5 text-sm font-black text-[#fff7ea] shadow-sm transition-all active:scale-95 active:brightness-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60"
         >
-          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">←</span>
+          <span aria-hidden="true">←</span>
           Back
         </button>
-
         <button
           type="button"
           onClick={onSubmit}
           disabled={!canCreate || pin.length !== 4 || isAuthLoading}
-          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90 disabled:opacity-40"
+          className="tp-clean-button inline-flex min-h-[44px] flex-1 items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
         >
-          Enter
-          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">↵</span>
+          Enter ↵
         </button>
       </div>
     </motion.div>
@@ -550,7 +553,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
       try {
         if (!venueParam) {
-          // Fire geolocation immediately so it runs in parallel with the venue fetch.
           let locationPromise: Promise<LocationResult> | null = null;
           if (!DISABLE_GEOFENCE_FOR_TESTING) {
             setLocationLoading(true);
@@ -570,7 +572,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             return;
           }
 
-          // Await location — may already be resolved if venues were slow.
           if (locationPromise) {
             const { coords, permissionDenied } = await locationPromise;
             if (coords) {
@@ -856,7 +857,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setIsOptimisticallyEntering(false);
       setStatus("ready");
 
-      // Best-effort keyboard-first flow: move focus to username shortly after panel swap.
       window.setTimeout(() => {
         usernameInputRef.current?.focus();
       }, 220);
@@ -889,7 +889,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setErrorMessage("Please enter a valid username.");
       return;
     }
-    // Commit username to root state once on advance; input no longer calls setUsername on every keystroke.
     setUsername(usernameValue);
     setErrorMessage("");
     setPin("");
@@ -897,7 +896,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     setLoginStepDirection(1);
     setLoginStep("pin");
     setIsReturningUserForVenue(false);
-    // Focus while still in the user-gesture call stack so iOS shows the numeric keypad.
     pinInputRef.current?.focus();
     if (venue && validateUsername(usernameValue)) {
       void fetch(
@@ -1204,10 +1202,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         }
       };
 
-      // Only fetch what's needed to render game-icon badges immediately.
-      // Leaderboard, predictions, sports, and full trivia questions are large
-      // and are fetched lazily by the venue home page after it mounts — loading
-      // them here would saturate the browser's HTTP pool during navigation.
       let triviaQuota: TriviaQuotaSnapshot | null = null;
       let homeBadgeCounts: HomeBadgeCounts = {};
 
@@ -1249,7 +1243,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       } catch {
         // Non-essential fetch processing failed; bootstrap will use defaults.
       } finally {
-        // Always write bootstrap so VenueHubClient never has to cold-start.
         writeVenueHomeBootstrap({
           fetchedAt: Date.now(),
           venueId,
@@ -1296,15 +1289,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       );
     }
 
-    // Step 1: abort any previous in-flight login — activeLoginController is now null.
     abortInFlightLogin();
 
     const attemptId = loginAttemptIdRef.current + 1;
     loginAttemptIdRef.current = attemptId;
 
-    // Step 2: create a fresh controller without clearing auth state yet.
-    // Keeping existing state intact means the app is never in a "null" auth window
-    // during the API call, which could cause route guards to redirect to login.
     const loginController = beginAuthRequest();
     loginAbortRef.current = loginController;
     clearLoginWatchdog();
@@ -1320,7 +1309,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       if (loginAttemptIdRef.current !== attemptId) {
         return;
       }
-      // Abort the stuck request and surface a retry prompt; don't blow away the page.
       if (loginAbortRef.current) {
         loginAbortRef.current.abort();
       }
@@ -1331,8 +1319,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
     let didNavigate = false;
     try {
-      // Run signOut and the profile API call in parallel — the API uses supabaseAdmin
-      // and has no dependency on the client-side Supabase session.
       const [, user] = await Promise.all([
         signOut().catch(() => {}),
         createUserProfile({
@@ -1351,7 +1337,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         throw new Error("Session venue mismatch detected. Please try again.");
       }
 
-      // Clear stale auth immediately before atomic writes — zero window of null state.
       hardClearAuthAndCachePreserveVenue(venue.id);
       saveVenueId(venue.id);
       saveUsername(user.username);
@@ -1367,9 +1352,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       const hardTarget = `/venue/${encodeURIComponent(venue.id)}?entryUser=${encodeURIComponent(
         user.id
       )}&entryVenue=${encodeURIComponent(venue.id)}&entryAt=${Date.now()}`;
-      // Fire anonymous Supabase session without blocking navigation — on slow
-      // connections the await was delaying window.location.assign() long enough
-      // for redirect guards on the destination page to see an empty auth state.
       void signInAnonymously().catch(() => {});
       window.location.assign(hardTarget);
       void preflightVenueHomeCriticalData({
@@ -1405,7 +1387,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         setIsAuthLoading(false);
       }
       if (!didNavigate) {
-        // Always dismiss the global transition overlay on abort or error.
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
         }
@@ -1429,155 +1410,173 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         showBranding
         showAlerts={false}
         lockViewport
+        noContainer
       >
-        <div className="flex h-full flex-col gap-4 overflow-hidden text-sm">
-          {errorMessage && (
-            <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-rose-700">
-              {errorMessage}
-            </div>
-          )}
-          {connectionRetryMessage && (
-            <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900">
-              {connectionRetryMessage}
-            </div>
-          )}
+        <div className="flex h-full flex-col overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+            <div className="mx-auto w-full max-w-md px-4 py-5">
 
-          <div className="relative min-h-0 flex-1 overflow-y-auto [overflow-x:clip]">
-            <AnimatePresence initial={false} custom={panelDirection} mode="wait">
-              {activePanel === "venue-login" && venue ? (
-                <motion.div
-                  key={`venue-login-${venue.id}`}
-                  custom={panelDirection}
-                  variants={ONBOARDING_PANEL_VARIANTS}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={SWIPE_SPRING_TRANSITION}
-                  className="relative z-0"
-                >
-                  {/* Always-mounted hidden input so we can focus it synchronously from handleGoToPinStep (iOS requires focus during user-gesture stack). */}
-                  <input
-                    ref={pinInputRef}
-                    type="tel"
-                    inputMode="numeric"
-                    enterKeyHint="go"
-                    pattern="[0-9]*"
-                    value={pin}
-                    maxLength={4}
-                    autoComplete="one-time-code"
-                    onChange={(e) => {
-                      if (loginStep !== "pin") return;
-                      setPin(e.target.value.replace(/\D/g, "").slice(0, 4));
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleSubmitPinStep();
-                      }
-                    }}
-                    className="absolute h-px w-px overflow-hidden opacity-0"
-                    aria-label="4-digit PIN"
-                  />
-                  <AnimatePresence custom={loginStepDirection} mode="wait">
-                    {loginStep === "username" ? (
-                      <UsernameStep
-                        key="step-username"
-                        direction={loginStepDirection}
-                        inputRef={usernameInputRef}
-                        isAdvancingToPin={isAdvancingToPin}
-                        locationLoading={locationLoading}
-                        errorMessage={errorMessage}
-                        onBack={handleBackToVenueList}
-                        onNext={handleGoToPinStep}
-                      />
-                    ) : (
-                      <PinStep
-                        key="step-pin"
-                        direction={loginStepDirection}
-                        pin={pin}
-                        isPinShaking={isPinShaking}
-                        isAuthLoading={isAuthLoading}
-                        canCreate={canCreate}
-                        loadingPhrase={loadingPhrase}
-                        errorMessage={errorMessage}
-                        connectionRetryMessage={connectionRetryMessage}
-                        pinContainerRef={pinContainerRef}
-                        onBack={handleBackFromPin}
-                        onSubmit={handleSubmitPinStep}
-                        onAnimationComplete={handlePinAnimationComplete}
-                        onPinContainerClick={handlePinContainerClick}
-                      />
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="venue-list"
-                  custom={panelDirection}
-                  variants={ONBOARDING_PANEL_VARIANTS}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={SWIPE_SPRING_TRANSITION}
-                  className="relative z-0"
-                >
-                  {venueList.length > 0 ? (
-                    <div className="space-y-3">
-                      <h2 className="text-xl font-medium text-slate-900">Available Venues:</h2>
-                      {locationLoading ? (
-                        <p className="text-sm text-slate-600">Finding nearby venues in the background...</p>
-                      ) : locationNotice ? (
-                        <p className="text-sm text-slate-600">{locationNotice}</p>
-                      ) : null}
-                      <ul className="space-y-2">
-                        {venueList.map((item, index) => (
-                          <VenueListItem
-                            key={item.id}
-                            venue={item}
-                            index={index}
-                            isPending={pendingVenueSelectionId === item.id}
-                            onSelect={handleSelectVenue}
-                          />
-                        ))}
-                      </ul>
-                      <InlineSlotAdClient
-                        slot="leaderboard-sidebar"
-                        venueId={venueParam || undefined}
-                        pageKey="join"
-                        adType="inline"
-                        displayTrigger="on-load"
-                        allowAnyVenue
-                        showPlaceholder
-                      />
-                    </div>
-                  ) : status === "loading" ? (
-                    <VenueListSkeleton />
-                  ) : (
-                    <div className="space-y-3 rounded-2xl border-4 border-slate-900 bg-white p-4 text-sm text-slate-800 shadow-[5px_5px_0_#0f172a]">
-                      <p className="font-semibold">Nearby venues only</p>
-                      {locationLoading ? (
-                        <p>Checking your location to find venues in range...</p>
-                      ) : locationNotice ? (
-                        <p>{locationNotice}</p>
-                      ) : (
-                        <p>No venue is currently in range from your location.</p>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          router.refresh();
-                        }}
-                        className={`${JOIN_BUTTON_POP_CLASS} inline-flex min-h-[42px] items-center rounded-full bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2 font-medium text-white`}
+              {/* Dark join card */}
+              <div className="rounded-3xl border border-cyan-400/40 bg-slate-900 p-6">
+
+                {/* Panels */}
+                <div className="relative [overflow-x:clip]">
+                  <AnimatePresence initial={false} custom={panelDirection} mode="wait">
+
+                    {activePanel === "venue-login" && venue ? (
+                      <motion.div
+                        key={`venue-login-${venue.id}`}
+                        custom={panelDirection}
+                        variants={ONBOARDING_PANEL_VARIANTS}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={SWIPE_SPRING_TRANSITION}
+                        className="relative"
                       >
-                        Retry nearby venue scan
-                      </button>
-                    </div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                        {/* Venue name context label */}
+                        <p className="mb-5 text-sm font-black uppercase tracking-[0.14em] text-cyan-300">
+                          {getVenueDisplayName(venue)}
+                        </p>
 
+                        {/* Hidden PIN input — always mounted so iOS numeric keypad can be focused synchronously from within the user-gesture stack */}
+                        <input
+                          ref={pinInputRef}
+                          type="tel"
+                          inputMode="numeric"
+                          enterKeyHint="go"
+                          pattern="[0-9]*"
+                          value={pin}
+                          maxLength={4}
+                          autoComplete="one-time-code"
+                          onChange={(e) => {
+                            if (loginStep !== "pin") return;
+                            setPin(e.target.value.replace(/\D/g, "").slice(0, 4));
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleSubmitPinStep();
+                            }
+                          }}
+                          className="absolute h-px w-px overflow-hidden opacity-0"
+                          aria-label="4-digit PIN"
+                        />
+
+                        <AnimatePresence custom={loginStepDirection} mode="wait">
+                          {loginStep === "username" ? (
+                            <UsernameStep
+                              key="step-username"
+                              direction={loginStepDirection}
+                              inputRef={usernameInputRef}
+                              isAdvancingToPin={isAdvancingToPin}
+                              locationLoading={locationLoading}
+                              errorMessage={errorMessage}
+                              onBack={handleBackToVenueList}
+                              onNext={handleGoToPinStep}
+                            />
+                          ) : (
+                            <PinStep
+                              key="step-pin"
+                              direction={loginStepDirection}
+                              pin={pin}
+                              isPinShaking={isPinShaking}
+                              isAuthLoading={isAuthLoading}
+                              canCreate={canCreate}
+                              loadingPhrase={loadingPhrase}
+                              errorMessage={errorMessage}
+                              connectionRetryMessage={connectionRetryMessage}
+                              pinContainerRef={pinContainerRef}
+                              onBack={handleBackFromPin}
+                              onSubmit={handleSubmitPinStep}
+                              onAnimationComplete={handlePinAnimationComplete}
+                              onPinContainerClick={handlePinContainerClick}
+                            />
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+
+                    ) : (
+
+                      <motion.div
+                        key="venue-list"
+                        custom={panelDirection}
+                        variants={ONBOARDING_PANEL_VARIANTS}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={SWIPE_SPRING_TRANSITION}
+                      >
+                        {errorMessage && (
+                          <div className="mb-4 rounded-xl border border-rose-400/60 bg-rose-950/30 p-3 text-sm text-rose-200">
+                            {errorMessage}
+                          </div>
+                        )}
+
+                        {venueList.length > 0 ? (
+                          <div className="space-y-4">
+                            <div>
+                              <p className="mb-1 text-sm font-black uppercase tracking-[0.14em] text-cyan-300">
+                                Choose Your Venue
+                              </p>
+                              {locationLoading ? (
+                                <p className="text-xs text-slate-500">Finding nearby venues...</p>
+                              ) : locationNotice ? (
+                                <p className="text-xs text-slate-500">{locationNotice}</p>
+                              ) : null}
+                            </div>
+                            <ul className="space-y-2">
+                              {venueList.map((item, index) => (
+                                <VenueListItem
+                                  key={item.id}
+                                  venue={item}
+                                  index={index}
+                                  isPending={pendingVenueSelectionId === item.id}
+                                  onSelect={handleSelectVenue}
+                                />
+                              ))}
+                            </ul>
+                            <InlineSlotAdClient
+                              slot="leaderboard-sidebar"
+                              venueId={venueParam || undefined}
+                              pageKey="join"
+                              adType="inline"
+                              displayTrigger="on-load"
+                              allowAnyVenue
+                              showPlaceholder
+                            />
+                          </div>
+                        ) : status === "loading" ? (
+                          <VenueListSkeleton />
+                        ) : (
+                          <div className="space-y-3 rounded-xl border border-slate-700 bg-slate-800/50 p-4">
+                            <p className="font-semibold text-white">Nearby venues only</p>
+                            {locationLoading ? (
+                              <p className="text-sm text-slate-400">Checking your location to find venues in range...</p>
+                            ) : locationNotice ? (
+                              <p className="text-sm text-slate-400">{locationNotice}</p>
+                            ) : (
+                              <p className="text-sm text-slate-400">No venue is currently in range from your location.</p>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => router.refresh()}
+                              className="tp-clean-button inline-flex min-h-[42px] items-center rounded-xl bg-slate-700 px-4 py-2 text-sm font-semibold text-white"
+                            >
+                              Retry nearby venue scan
+                            </button>
+                          </div>
+                        )}
+                      </motion.div>
+
+                    )}
+
+                  </AnimatePresence>
+                </div>
+
+              </div>
+            </div>
+          </div>
         </div>
       </PageShell>
     </>

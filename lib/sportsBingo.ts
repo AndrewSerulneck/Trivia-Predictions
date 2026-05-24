@@ -12,8 +12,24 @@ const BOARD_TARGET_TOLERANCE = Number.parseFloat(process.env.BINGO_BOARD_TARGET_
 const BOARD_SIMULATION_TRIALS = Number.parseInt(process.env.BINGO_BOARD_SIM_TRIALS ?? "2500", 10);
 const MAX_ACTIVE_CARDS_PER_USER = 4;
 const ACTIVE_CARD_SLOT_BUFFER_HOURS = 6;
-const GAME_CATALOG_CACHE_MS = 30_000;
-const SCORE_CACHE_MS = 15_000;
+const cacheMsInWindow = (raw: string | undefined, fallback: number, min: number, max: number): number => {
+  const parsed = Number.parseInt(raw ?? "", 10);
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+  return Math.max(min, Math.min(max, parsed));
+};
+// Keep catalogs warm enough to reduce repeated provider calls while still refreshing quickly.
+const GAME_CATALOG_CACHE_MS = cacheMsInWindow(process.env.BINGO_GAME_CATALOG_CACHE_MS, 90_000, 60_000, 90_000);
+// Score snapshots are short-lived to support near-real-time grading without thrashing.
+const SCORE_CACHE_MS = cacheMsInWindow(process.env.BINGO_SCORE_CACHE_MS, 30_000, 20_000, 30_000);
+// Webhook bursts are common; debounce invalidations to a bounded 10–15s window.
+const CACHE_INVALIDATION_THROTTLE_MS = cacheMsInWindow(
+  process.env.BINGO_CACHE_INVALIDATION_THROTTLE_MS,
+  12_000,
+  10_000,
+  15_000
+);
 const BINGO_FORCE_FINALIZE_AFTER_START_MS = 12 * 60 * 60 * 1000;
 const BINGO_ALLOW_POSSIBLE_SQUARES = String(process.env.BINGO_ALLOW_POSSIBLE_SQUARES ?? "")
   .trim()
@@ -28,6 +44,36 @@ const BALLDONTLIE_GAME_LOOKUP_WINDOW_DAYS = Number.isFinite(BALLDONTLIE_GAME_LOO
   : 1;
 const BINGO_LOOKAHEAD_HOURS = 36;
 const BINGO_PLAYER_SPECIFIC_HARD_FLOOR = 8;
+const MLB_LATE_SCRATCH_SWAP_WINDOW_MS_RAW = Number.parseInt(process.env.BINGO_MLB_LATE_SCRATCH_WINDOW_MS ?? "1800000", 10);
+const MLB_LATE_SCRATCH_SWAP_WINDOW_MS = Number.isFinite(MLB_LATE_SCRATCH_SWAP_WINDOW_MS_RAW)
+  ? Math.max(60_000, MLB_LATE_SCRATCH_SWAP_WINDOW_MS_RAW)
+  : 1_800_000;
+const wnbaConfigNumber = (raw: string | undefined, fallback: number): number => {
+  const parsed = Number.parseFloat(raw ?? "");
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+const WNBA_CALIBRATION = {
+  tripleDoubleBase: wnbaConfigNumber(process.env.BINGO_WNBA_TRIPLE_DOUBLE_BASE, 0.02),
+  tripleDoubleSlope: wnbaConfigNumber(process.env.BINGO_WNBA_TRIPLE_DOUBLE_SLOPE, 0.05),
+  tripleDoubleMax: wnbaConfigNumber(process.env.BINGO_WNBA_TRIPLE_DOUBLE_MAX, 0.12),
+  anyTripleDoubleMax: wnbaConfigNumber(process.env.BINGO_WNBA_ANY_TRIPLE_DOUBLE_MAX, 0.18),
+  averageHomeSpread: wnbaConfigNumber(process.env.BINGO_WNBA_AVERAGE_HOME_SPREAD, -2.5),
+  averageTotal: wnbaConfigNumber(process.env.BINGO_WNBA_AVERAGE_TOTAL, 168),
+  achievementThresholdScale: wnbaConfigNumber(process.env.BINGO_WNBA_ACHIEVEMENT_THRESHOLD_SCALE, 0.82),
+};
+const MLB_STAR_BRANDED_PLAYER_KEYS = new Set([
+  "aaron judge",
+  "shohei ohtani",
+  "juan soto",
+  "yordan alvarez",
+  "pete alonso",
+  "bryce harper",
+  "fernando tatis jr",
+  "mookie betts",
+  "kyle schwarber",
+  "manny machado",
+  "vladimir guerrero jr",
+]);
 const SPORTS_BINGO_MIGRATION_REQUIRED_ERROR =
   "Sports Bingo tables are not installed in this Supabase project yet. Run migration supabase/migrations/20260420113000_add_sports_bingo_tables.sql.";
 
@@ -170,21 +216,21 @@ type SportsBingoResolver =
   | {
       kind: "mlb_webhook_player_event_at_least";
       player: string;
-      event: "hit" | "home_run" | "strikeout" | "walk" | "hit_by_pitch";
+      event: "hit" | "home_run" | "strikeout" | "walk" | "hit_by_pitch" | "rbi" | "stolen_base" | "pitcher_out";
       threshold: number;
       currentCount?: number;
     }
   | {
       kind: "mlb_webhook_player_event_at_most";
       player: string;
-      event: "strikeout";
+      event: "strikeout" | "earned_run" | "hit_allowed";
       threshold: number;
       currentCount?: number;
     }
   | {
       kind: "mlb_webhook_team_event_at_least";
       team: TeamSide;
-      event: "groundout" | "flyout" | "strikeout" | "walk" | "hit_by_pitch" | "hit" | "quick_out_under_3_pitches";
+      event: "groundout" | "flyout" | "strikeout" | "walk" | "hit_by_pitch" | "hit" | "home_run" | "quick_out_under_3_pitches";
       threshold: number;
       currentCount?: number;
     }
@@ -456,6 +502,8 @@ type MLBGamePlayerStatsSnapshot = {
   awayScore: number | null;
   lines: MLBPlayerStatLine[];
   byPlayerKey: Map<string, MLBPlayerStatLine[]>;
+  lineupByPlayerId: Map<number, { starter: boolean; teamSide: TeamSide | null }>;
+  lineupByPlayerKey: Map<string, { starter: boolean; teamSide: TeamSide | null }>;
 };
 
 export type MlbWebhookBingoEvent = {
@@ -467,11 +515,36 @@ export type MlbWebhookBingoEvent = {
     | "hit"
     | "home_run"
     | "walk"
-    | "hit_by_pitch";
+    | "hit_by_pitch"
+    | "rbi"
+    | "stolen_base"
+    | "pitcher_out"
+    | "earned_run"
+    | "hit_allowed";
   playerId: number | null;
   playerName: string;
   teamName: string;
   pitchCount: number | null;
+};
+
+export type MlbPlayerSnapshotBingoEvent = {
+  gameId: string;
+  playerId: number;
+  playerName: string;
+  gameStatus?: string;
+  batterStats: {
+    h: number;
+    homeRuns: number;
+    rbi: number;
+    stolenBases: number;
+    strikeoutsAsBatter: number;
+  };
+  pitcherStats: {
+    strikeouts: number;
+    outs: number;
+    earnedRuns: number;
+    hitsAllowed: number;
+  };
 };
 
 type GameCatalogEntry = {
@@ -554,6 +627,55 @@ let scoreCache = new Map<string, { expiresAt: number; byGameId: Map<string, Scor
 let nbaPlayerStatsCache = new Map<string, { expiresAt: number; snapshot: NBAGamePlayerStatsSnapshot | null }>();
 let mlbPlayerStatsCache = new Map<string, { expiresAt: number; snapshot: MLBGamePlayerStatsSnapshot | null }>();
 let nbaPlayerProfilesCache = new Map<string, { expiresAt: number; profiles: NBAPlayerProfile[] }>();
+let cacheInvalidatedAtByScope = new Map<string, number>();
+const cacheTelemetry = {
+  scoreCacheHits: 0,
+  scoreCacheMisses: 0,
+  invalidationInvocations: 0,
+  invalidationThrottledSkips: 0,
+};
+
+function maybeInvalidateSportsBingoCaches(params: {
+  sportKey?: string;
+  gameId?: string;
+  mode?: "force" | "throttled";
+}): void {
+  cacheTelemetry.invalidationInvocations += 1;
+  const sportKey = params.sportKey?.trim() ?? "";
+  const gameId = params.gameId?.trim() ?? "";
+  const mode = params.mode ?? "force";
+  const scopeKey = `${sportKey || "*"}:${gameId || "*"}`;
+  const now = Date.now();
+
+  if (mode === "throttled") {
+    const last = cacheInvalidatedAtByScope.get(scopeKey);
+    if (typeof last === "number" && now - last < CACHE_INVALIDATION_THROTTLE_MS) {
+      cacheTelemetry.invalidationThrottledSkips += 1;
+      return;
+    }
+    cacheInvalidatedAtByScope.set(scopeKey, now);
+  }
+
+  if (sportKey) {
+    scoreCache.delete(sportKey);
+    gameCatalogCache.delete(sportKey);
+  } else {
+    scoreCache.clear();
+    gameCatalogCache.clear();
+  }
+
+  if (gameId) {
+    nbaPlayerStatsCache.delete(gameId);
+    mlbPlayerStatsCache.delete(gameId);
+    nbaPlayerProfilesCache.delete(gameId);
+  } else {
+    nbaPlayerStatsCache.clear();
+    mlbPlayerStatsCache.clear();
+    nbaPlayerProfilesCache.clear();
+  }
+
+  gameEntryWithCandidatesCache.clear();
+}
 
 function assertSupabaseConfigured(): void {
   if (!supabaseAdmin) {
@@ -563,6 +685,24 @@ function assertSupabaseConfigured(): void {
 
 function isBallDontLieConfigured(): boolean {
   return Boolean(BALLDONTLIE_API_KEY);
+}
+
+function isBasketballSportKey(sportKey: string): boolean {
+  return sportKey === "basketball_nba" || sportKey === "basketball_wnba";
+}
+
+function isWnbaSportKey(sportKey: string): boolean {
+  return sportKey === "basketball_wnba";
+}
+
+function basketballApiPrefixForSportKey(sportKey: string): string | null {
+  if (sportKey === "basketball_nba") {
+    return "/nba/v1";
+  }
+  if (sportKey === "basketball_wnba") {
+    return "/wnba/v1";
+  }
+  return null;
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -846,6 +986,16 @@ function mlbWebhookEventUnitLabel(event: string): string {
   switch (event) {
     case "home_run":
       return "home runs";
+    case "rbi":
+      return "RBIs";
+    case "stolen_base":
+      return "stolen bases";
+    case "pitcher_out":
+      return "pitching outs";
+    case "earned_run":
+      return "earned runs";
+    case "hit_allowed":
+      return "hits allowed";
     case "hit_by_pitch":
       return "HBPs";
     case "quick_out_under_3_pitches":
@@ -859,6 +1009,16 @@ function mlbWebhookEventDisplayLabel(event: string): string {
   switch (event) {
     case "home_run":
       return "home run";
+    case "rbi":
+      return "RBI";
+    case "stolen_base":
+      return "stolen base";
+    case "pitcher_out":
+      return "pitching out";
+    case "earned_run":
+      return "earned run";
+    case "hit_allowed":
+      return "hit allowed";
     case "hit_by_pitch":
       return "hit-by-pitch";
     case "quick_out_under_3_pitches":
@@ -876,6 +1036,16 @@ function toMlbSquareEventType(event: string): string | null {
       return "mlb.batter.strikeout";
     case "hit":
       return "mlb.batter.hit";
+    case "rbi":
+      return "mlb.player.rbi";
+    case "stolen_base":
+      return "mlb.player.stolen_base";
+    case "pitcher_out":
+      return "mlb.player.pitcher_out";
+    case "earned_run":
+      return "mlb.player.earned_run";
+    case "hit_allowed":
+      return "mlb.player.hit_allowed";
     default:
       return null;
   }
@@ -884,7 +1054,7 @@ function toMlbSquareEventType(event: string): string | null {
 function getSquareMetadataForResolver(
   resolver: SportsBingoResolver
 ): { squareType: "generic" | "player_stat"; playerId: number | null; eventType: string | null } {
-  if (resolver.kind !== "mlb_webhook_player_event_at_least") {
+  if (resolver.kind !== "mlb_webhook_player_event_at_least" && resolver.kind !== "mlb_webhook_player_event_at_most") {
     return { squareType: "generic", playerId: null, eventType: null };
   }
   const parsedPlayer = parseResolverPlayerRef(resolver.player);
@@ -1384,7 +1554,11 @@ function buildNBAGamePlayerStatsSnapshot(
 }
 
 async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<NBAGamePlayerStatsSnapshot | null> {
-  if (card.sport_key !== "basketball_nba") {
+  if (!isBasketballSportKey(card.sport_key)) {
+    return null;
+  }
+  const basketballApiPrefix = basketballApiPrefixForSportKey(card.sport_key);
+  if (!basketballApiPrefix) {
     return null;
   }
 
@@ -1413,7 +1587,7 @@ async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
       start_date: startDate,
       end_date: endDate,
     });
-    const games = await fetchBallDontLieList<BallDontLieGame>("/nba/v1/games", gameQuery);
+    const games = await fetchBallDontLieList<BallDontLieGame>(`${basketballApiPrefix}/games`, gameQuery);
     const matchedGame = pickBestMatchingBallDontLieGame(card, games);
     if (!matchedGame || typeof matchedGame.id !== "number") {
       nbaPlayerStatsCache.set(card.game_id, {
@@ -1428,11 +1602,11 @@ async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
       period: "0",
     });
     statsQuery.append("game_ids[]", String(matchedGame.id));
-    const stats = await fetchBallDontLieList<BallDontLieStat>("/nba/v1/stats", statsQuery);
+    const stats = await fetchBallDontLieList<BallDontLieStat>(`${basketballApiPrefix}/stats`, statsQuery);
 
     const lineupsQuery = new URLSearchParams({ per_page: "100" });
     lineupsQuery.append("game_ids[]", String(matchedGame.id));
-    const lineups = await fetchBallDontLieList<BallDontLieLineup>("/nba/v1/lineups", lineupsQuery);
+    const lineups = await fetchBallDontLieList<BallDontLieLineup>(`${basketballApiPrefix}/lineups`, lineupsQuery);
     const lineupByPlayerId = new Map<number, { starter: boolean; teamSide: TeamSide | null }>();
     for (const row of lineups) {
       const playerId = Number(row.player?.id ?? 0);
@@ -1445,7 +1619,7 @@ async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
 
     const playsQuery = new URLSearchParams({ per_page: "100" });
     playsQuery.append("game_ids[]", String(matchedGame.id));
-    const plays = await fetchBallDontLieList<BallDontLiePlay>("/nba/v1/plays", playsQuery);
+    const plays = await fetchBallDontLieList<BallDontLiePlay>(`${basketballApiPrefix}/plays`, playsQuery);
     let firstScoringTeam: TeamSide | null = null;
     let homeHalftimeScore: number | null = null;
     let awayHalftimeScore: number | null = null;
@@ -1499,7 +1673,7 @@ async function getNBAGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
     for (const period of [1, 2, 3, 4]) {
       const periodQuery = new URLSearchParams({ per_page: "100", period: String(period) });
       periodQuery.append("game_ids[]", String(matchedGame.id));
-      const periodStats = await fetchBallDontLieList<BallDontLieStat>("/nba/v1/stats", periodQuery);
+      const periodStats = await fetchBallDontLieList<BallDontLieStat>(`${basketballApiPrefix}/stats`, periodQuery);
       for (const line of periodStats) {
         const playerId = Number(line.player?.id ?? 0);
         if (!Number.isFinite(playerId) || playerId <= 0) continue;
@@ -1562,7 +1736,11 @@ function parseMlbPitcherOutsFromIp(value: unknown): number {
 function buildMLBGamePlayerStatsSnapshot(
   card: SportsBingoCardRow,
   game: BallDontLieGame,
-  stats: Array<Record<string, unknown>>
+  stats: Array<Record<string, unknown>>,
+  extras?: {
+    lineupByPlayerId?: Map<number, { starter: boolean; teamSide: TeamSide | null }>;
+    lineupByPlayerKey?: Map<string, { starter: boolean; teamSide: TeamSide | null }>;
+  }
 ): MLBGamePlayerStatsSnapshot {
   const lines: MLBPlayerStatLine[] = [];
   const byPlayerKey = new Map<string, MLBPlayerStatLine[]>();
@@ -1612,6 +1790,8 @@ function buildMLBGamePlayerStatsSnapshot(
     awayScore: parseScoreValue(game.visitor_team_score),
     lines,
     byPlayerKey,
+    lineupByPlayerId: extras?.lineupByPlayerId ?? new Map(),
+    lineupByPlayerKey: extras?.lineupByPlayerKey ?? new Map(),
   };
 }
 
@@ -1660,8 +1840,33 @@ async function getMLBGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
     });
     statsQuery.append("game_ids[]", String(matchedGame.id));
     const stats = await fetchBallDontLieList<Record<string, unknown>>("/mlb/v1/stats", statsQuery);
+    const lineupByPlayerId = new Map<number, { starter: boolean; teamSide: TeamSide | null }>();
+    const lineupByPlayerKey = new Map<string, { starter: boolean; teamSide: TeamSide | null }>();
+    try {
+      const lineupQuery = new URLSearchParams({ per_page: "100" });
+      lineupQuery.append("game_ids[]", String(matchedGame.id));
+      const lineups = await fetchBallDontLieList<BallDontLieLineup>("/mlb/v1/lineups", lineupQuery);
+      for (const row of lineups) {
+        const playerId = Number(row.player?.id ?? 0);
+        const playerName = `${String(row.player?.first_name ?? "").trim()} ${String(row.player?.last_name ?? "").trim()}`.trim();
+        const teamSide = inferCardTeamSide(card, getTeamDisplayName(row.team));
+        const payload = { starter: row.starter === true, teamSide };
+        if (Number.isFinite(playerId) && playerId > 0) {
+          lineupByPlayerId.set(playerId, payload);
+        }
+        const playerKey = normalizeNameKey(playerName);
+        if (playerKey) {
+          lineupByPlayerKey.set(playerKey, payload);
+        }
+      }
+    } catch {
+      // Lineups can arrive late for MLB; fall back to stat-only grading when unavailable.
+    }
 
-    const snapshot = buildMLBGamePlayerStatsSnapshot(card, matchedGame, stats);
+    const snapshot = buildMLBGamePlayerStatsSnapshot(card, matchedGame, stats, {
+      lineupByPlayerId,
+      lineupByPlayerKey,
+    });
     mlbPlayerStatsCache.set(card.game_id, {
       snapshot,
       expiresAt: now + NBA_PLAYER_STATS_CACHE_MS,
@@ -1677,7 +1882,7 @@ async function getMLBGamePlayerStatsSnapshot(card: SportsBingoCardRow): Promise<
 }
 
 function toNBALiveScoreSnapshot(card: SportsBingoCardRow, snapshot: NBAGamePlayerStatsSnapshot | null): ScoreSnapshot | null {
-  if (card.sport_key !== "basketball_nba" || !snapshot) {
+  if (!isBasketballSportKey(card.sport_key) || !snapshot) {
     return null;
   }
 
@@ -2097,7 +2302,7 @@ async function getGameEntryWithCandidates(params: {
   let candidates = [...entry.candidates];
   let merged = [...candidates];
 
-  if (entry.game.sportKey === "basketball_nba") {
+  if (isBasketballSportKey(entry.game.sportKey)) {
     const achievementCandidates = await buildNBAAchievementCandidates(entry.game, merged);
     if (achievementCandidates.length > 0) {
       merged = aggregateCandidates([...merged, ...achievementCandidates]);
@@ -2188,13 +2393,16 @@ function buildGameAndCandidatesFromBallDontLie(sportKey: string, gameData: BallD
     bucket: "moneyline",
   });
 
-  if (sportKey === "basketball_nba") {
-    const homeTripleDoubleProbability = clamp(0.03 + homeWinProb * 0.07, 0.03, 0.16);
-    const awayTripleDoubleProbability = clamp(0.03 + awayWinProb * 0.07, 0.03, 0.16);
+  if (isBasketballSportKey(sportKey)) {
+    const tripleDoubleBase = isWnbaSportKey(sportKey) ? WNBA_CALIBRATION.tripleDoubleBase : 0.03;
+    const tripleDoubleSlope = isWnbaSportKey(sportKey) ? WNBA_CALIBRATION.tripleDoubleSlope : 0.07;
+    const tripleDoubleMax = isWnbaSportKey(sportKey) ? WNBA_CALIBRATION.tripleDoubleMax : 0.16;
+    const homeTripleDoubleProbability = clamp(tripleDoubleBase + homeWinProb * tripleDoubleSlope, tripleDoubleBase, tripleDoubleMax);
+    const awayTripleDoubleProbability = clamp(tripleDoubleBase + awayWinProb * tripleDoubleSlope, tripleDoubleBase, tripleDoubleMax);
     const anyTripleDoubleProbability = clamp(
       homeTripleDoubleProbability + awayTripleDoubleProbability - (homeTripleDoubleProbability * awayTripleDoubleProbability),
       0.05,
-      0.24
+      isWnbaSportKey(sportKey) ? WNBA_CALIBRATION.anyTripleDoubleMax : 0.24
     );
 
     const homeTripleDoubleResolver: SportsBingoResolver = { kind: "team_triple_double", team: "home" };
@@ -2225,14 +2433,14 @@ function buildGameAndCandidatesFromBallDontLie(sportKey: string, gameData: BallD
     });
   }
 
-  const averageHomeSpread = -3.5;
-  const averageTotal = sportKey === "americanfootball_nfl" ? 45 : sportKey === "baseball_mlb" ? 8 : sportKey === "icehockey_nhl" ? 6 : 226;
+  const averageHomeSpread = isWnbaSportKey(sportKey) ? WNBA_CALIBRATION.averageHomeSpread : -3.5;
+  const averageTotal = sportKey === "americanfootball_nfl" ? 45 : sportKey === "baseball_mlb" ? 8 : sportKey === "icehockey_nhl" ? 6 : isWnbaSportKey(sportKey) ? WNBA_CALIBRATION.averageTotal : 226;
   const baseOverProbability = 0.5;
 
   const favorite: TeamSide = homeWinProb >= awayWinProb ? "home" : "away";
   const underdog: TeamSide = favorite === "home" ? "away" : "home";
   const favoriteBaseLine = Math.max(0.5, Math.abs(averageHomeSpread));
-  const spreadOffsets = sportKey === "baseball_mlb" ? [-0.5, 0, 0.5, 1, 1.5, 2] : [-4, -2, 0, 2, 4, 6, 8];
+  const spreadOffsets = sportKey === "baseball_mlb" ? [-0.5, 0, 0.5, 1, 1.5, 2] : isWnbaSportKey(sportKey) ? [-3, -1, 0, 1, 3, 5] : [-4, -2, 0, 2, 4, 6, 8];
   const spreadLevels = Array.from(new Set(spreadOffsets.map((offset) => roundLine(favoriteBaseLine + offset)))).filter(
     (line) => line >= 0.5
   );
@@ -2260,7 +2468,7 @@ function buildGameAndCandidatesFromBallDontLie(sportKey: string, gameData: BallD
     });
   }
 
-  const totalOffsets = sportKey === "baseball_mlb" ? [-3, -2, -1, 0, 1, 2, 3] : [-15, -10, -6, -3, 0, 3, 6, 10, 15];
+  const totalOffsets = sportKey === "baseball_mlb" ? [-3, -2, -1, 0, 1, 2, 3] : isWnbaSportKey(sportKey) ? [-12, -8, -5, -3, 0, 3, 5, 8, 12] : [-15, -10, -6, -3, 0, 3, 6, 10, 15];
   const totalLevels = Array.from(new Set(totalOffsets.map((offset) => roundLine(averageTotal + offset))));
   for (const line of totalLevels) {
     const overProbability = clamp(sigmoid(logit(baseOverProbability) + (averageTotal - line) / 8.5), 0.08, 0.92);
@@ -2290,7 +2498,7 @@ function buildGameAndCandidatesFromBallDontLie(sportKey: string, gameData: BallD
   const impliedAwayTotal = averageTotal - impliedHomeTotal;
 
   const buildTeamTotalCandidates = (team: TeamSide, impliedTotal: number) => {
-    const offsets = sportKey === "baseball_mlb" ? [-2, -1, 0, 1, 2, 3] : [-14, -10, -6, -3, 0, 3, 6, 10, 14];
+    const offsets = sportKey === "baseball_mlb" ? [-2, -1, 0, 1, 2, 3] : isWnbaSportKey(sportKey) ? [-9, -6, -3, 0, 3, 6, 9] : [-14, -10, -6, -3, 0, 3, 6, 10, 14];
     const levels = Array.from(new Set(offsets.map((offset) => roundLine(impliedTotal + offset))));
     for (const line of levels) {
       if (sportKey === "baseball_mlb" && (line < 0.5 || line > 11.5)) {
@@ -2339,6 +2547,7 @@ function buildGameAndCandidatesFromBallDontLie(sportKey: string, gameData: BallD
 async function loadGameCatalog(sportKey: string): Promise<GameCatalogEntry[]> {
   const sportPathByKey: Record<string, string> = {
     basketball_nba: "/nba/v1/games",
+    basketball_wnba: "/wnba/v1/games",
     americanfootball_nfl: "/nfl/v1/games",
     baseball_mlb: "/mlb/v1/games",
     icehockey_nhl: "/nhl/v1/games",
@@ -2441,300 +2650,314 @@ async function getNBAPlayerProfilesForGame(game: SportsBingoGame): Promise<NBAPl
   if (cache && now < cache.expiresAt) {
     return cache.profiles;
   }
+  const basketballApiPrefix = basketballApiPrefixForSportKey(game.sportKey);
+  if (!basketballApiPrefix) {
+    nbaPlayerProfilesCache.set(game.id, { profiles: [], expiresAt: now + 60_000 });
+    return [];
+  }
 
-  const gameStartMs = Date.parse(game.startsAt);
-  const dayOffsets = [-1, 0, 1];
-  const gamesById = new Map<string, BallDontLieGame>();
-  for (const offset of dayOffsets) {
-    const dayIso = new Date(gameStartMs + offset * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    const gameQuery = new URLSearchParams({ "dates[]": dayIso, per_page: "100" });
-    const rows = await fetchBallDontLieList<BallDontLieGame>("/nba/v1/games", gameQuery);
-    for (const row of rows) {
-      const rowId = String(row.id ?? "").trim();
-      if (!rowId || gamesById.has(rowId)) continue;
-      gamesById.set(rowId, row);
+  try {
+    const gameStartMs = Date.parse(game.startsAt);
+    const dayOffsets = [-1, 0, 1];
+    const gamesById = new Map<string, BallDontLieGame>();
+    for (const offset of dayOffsets) {
+      const dayIso = new Date(gameStartMs + offset * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const gameQuery = new URLSearchParams({ "dates[]": dayIso, per_page: "100" });
+      const rows = await fetchBallDontLieList<BallDontLieGame>(`${basketballApiPrefix}/games`, gameQuery);
+      for (const row of rows) {
+        const rowId = String(row.id ?? "").trim();
+        if (!rowId || gamesById.has(rowId)) continue;
+        gamesById.set(rowId, row);
+      }
     }
-  }
-  const games = [...gamesById.values()];
-  let matched = games.find((row) => String(row.id ?? "") === game.id);
-  if (!matched && games.length > 0) {
-    const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "");
-    const targetHome = normalize(game.homeTeam);
-    const targetAway = normalize(game.awayTeam);
-    const teamMatches = games.filter((row) => {
-      const home = normalize(String(row.home_team?.full_name ?? row.home_team?.name ?? ""));
-      const away = normalize(String(row.visitor_team?.full_name ?? row.visitor_team?.name ?? ""));
-      return home === targetHome && away === targetAway;
-    });
-    const ranked = (teamMatches.length > 0 ? teamMatches : games).slice().sort((a, b) => {
-      const aTs = Date.parse(String(a.datetime ?? a.date ?? ""));
-      const bTs = Date.parse(String(b.datetime ?? b.date ?? ""));
-      const aDelta = Number.isFinite(aTs) ? Math.abs(aTs - gameStartMs) : Number.POSITIVE_INFINITY;
-      const bDelta = Number.isFinite(bTs) ? Math.abs(bTs - gameStartMs) : Number.POSITIVE_INFINITY;
-      return aDelta - bDelta;
-    });
-    matched = ranked[0];
-  }
-  if (!matched) {
-    nbaPlayerProfilesCache.set(game.id, { profiles: [], expiresAt: now + 60_000 });
-    return [];
-  }
+    const games = [...gamesById.values()];
+    let matched = games.find((row) => String(row.id ?? "") === game.id);
+    if (!matched && games.length > 0) {
+      const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+      const targetHome = normalize(game.homeTeam);
+      const targetAway = normalize(game.awayTeam);
+      const teamMatches = games.filter((row) => {
+        const home = normalize(String(row.home_team?.full_name ?? row.home_team?.name ?? ""));
+        const away = normalize(String(row.visitor_team?.full_name ?? row.visitor_team?.name ?? ""));
+        return home === targetHome && away === targetAway;
+      });
+      const ranked = (teamMatches.length > 0 ? teamMatches : games).slice().sort((a, b) => {
+        const aTs = Date.parse(String(a.datetime ?? a.date ?? ""));
+        const bTs = Date.parse(String(b.datetime ?? b.date ?? ""));
+        const aDelta = Number.isFinite(aTs) ? Math.abs(aTs - gameStartMs) : Number.POSITIVE_INFINITY;
+        const bDelta = Number.isFinite(bTs) ? Math.abs(bTs - gameStartMs) : Number.POSITIVE_INFINITY;
+        return aDelta - bDelta;
+      });
+      matched = ranked[0];
+    }
+    if (!matched) {
+      nbaPlayerProfilesCache.set(game.id, { profiles: [], expiresAt: now + 60_000 });
+      return [];
+    }
 
-  const homeId = Number(matched.home_team?.id ?? 0);
-  const awayId = Number(matched.visitor_team?.id ?? 0);
-  const season = Number(matched.season ?? new Date(game.startsAt).getUTCFullYear());
-  const teamIds = [homeId, awayId].filter((id) => Number.isFinite(id) && id > 0);
-  if (teamIds.length === 0) {
-    nbaPlayerProfilesCache.set(game.id, { profiles: [], expiresAt: now + 60_000 });
-    return [];
-  }
+    const homeId = Number(matched.home_team?.id ?? 0);
+    const awayId = Number(matched.visitor_team?.id ?? 0);
+    const season = Number(matched.season ?? new Date(game.startsAt).getUTCFullYear());
+    const teamIds = [homeId, awayId].filter((id) => Number.isFinite(id) && id > 0);
+    if (teamIds.length === 0) {
+      nbaPlayerProfilesCache.set(game.id, { profiles: [], expiresAt: now + 60_000 });
+      return [];
+    }
 
-  const playersQuery = new URLSearchParams({ per_page: "100" });
-  for (const id of teamIds) {
-    playersQuery.append("team_ids[]", String(id));
-  }
-  const activePlayersRaw = await fetchBallDontLieList<Record<string, unknown>>("/nba/v1/players/active", playersQuery);
-  let activePlayers = activePlayersRaw.filter((raw) => {
-    const row = asRecord(raw);
-    const team = asRecord(row.team);
-    const teamId = Number(team.id ?? 0);
-    return Number.isFinite(teamId) && teamId > 0 && teamIds.includes(teamId);
-  });
-  if (activePlayers.length === 0) {
-    const fallbackQuery = new URLSearchParams({ per_page: "100" });
+    const playersQuery = new URLSearchParams({ per_page: "100" });
     for (const id of teamIds) {
-      fallbackQuery.append("team_ids[]", String(id));
+      playersQuery.append("team_ids[]", String(id));
     }
-    const fallbackPlayers = await fetchBallDontLieList<Record<string, unknown>>("/nba/v1/players", fallbackQuery);
-    activePlayers = fallbackPlayers.filter((raw) => {
+    const activePlayersRaw = await fetchBallDontLieList<Record<string, unknown>>(`${basketballApiPrefix}/players/active`, playersQuery);
+    let activePlayers = activePlayersRaw.filter((raw) => {
       const row = asRecord(raw);
       const team = asRecord(row.team);
       const teamId = Number(team.id ?? 0);
       return Number.isFinite(teamId) && teamId > 0 && teamIds.includes(teamId);
     });
+    if (activePlayers.length === 0) {
+      const fallbackQuery = new URLSearchParams({ per_page: "100" });
+      for (const id of teamIds) {
+        fallbackQuery.append("team_ids[]", String(id));
+      }
+      const fallbackPlayers = await fetchBallDontLieList<Record<string, unknown>>(`${basketballApiPrefix}/players`, fallbackQuery);
+      activePlayers = fallbackPlayers.filter((raw) => {
+        const row = asRecord(raw);
+        const team = asRecord(row.team);
+        const teamId = Number(team.id ?? 0);
+        return Number.isFinite(teamId) && teamId > 0 && teamIds.includes(teamId);
+      });
+    }
+    const playerIds = activePlayers
+      .map((row) => Number(asRecord(row).id ?? 0))
+      .filter((id) => Number.isFinite(id) && id > 0)
+      .slice(0, 40);
+    if (playerIds.length === 0) {
+      nbaPlayerProfilesCache.set(game.id, { profiles: [], expiresAt: now + 60_000 });
+      return [];
+    }
+    
+    const seasonTypeCandidates: Array<"regular" | "playoffs" | ""> = ["regular", "playoffs", ""];
+    let seasonRows: Record<string, unknown>[] = [];
+    for (const seasonType of seasonTypeCandidates) {
+      const seasonQuery = new URLSearchParams({
+        season: String(season),
+        type: "base",
+        per_page: "100",
+      });
+      if (seasonType) {
+        seasonQuery.set("season_type", seasonType);
+      }
+      for (const id of playerIds) {
+        seasonQuery.append("player_ids[]", String(id));
+      }
+      const rows = await fetchBallDontLieList<Record<string, unknown>>(`${basketballApiPrefix}/season_averages/general`, seasonQuery);
+      if (rows.length > 0) {
+        seasonRows = rows;
+        break;
+      }
+    }
+    const byPlayerId = new Map<number, Record<string, unknown>>();
+    for (const row of seasonRows) {
+      const player = asRecord(row.player);
+      const playerId = Number(player.id ?? row.player_id ?? 0);
+      if (Number.isFinite(playerId) && playerId > 0) {
+        byPlayerId.set(playerId, row);
+      }
+    }
+
+    const historicalEnd = game.startsAt.slice(0, 10);
+    const historicalStart = new Date(Date.parse(`${historicalEnd}T00:00:00.000Z`) - 45 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10);
+    const historicalStatsByPlayerId = new Map<number, Array<Record<string, unknown>>>();
+    for (const playerChunk of chunkArray(playerIds, 12)) {
+      const historicalQuery = new URLSearchParams({
+        start_date: historicalStart,
+        end_date: historicalEnd,
+        per_page: "100",
+        period: "0",
+      });
+      for (const id of playerChunk) {
+        historicalQuery.append("player_ids[]", String(id));
+      }
+      const rows = await fetchBallDontLieList<Record<string, unknown>>(`${basketballApiPrefix}/stats`, historicalQuery);
+      for (const raw of rows) {
+        const player = asRecord(asRecord(raw).player);
+        const playerId = Number(player.id ?? asRecord(raw).player_id ?? 0);
+        if (!Number.isFinite(playerId) || playerId <= 0) continue;
+        const existing = historicalStatsByPlayerId.get(playerId) ?? [];
+        existing.push(raw);
+        historicalStatsByPlayerId.set(playerId, existing);
+      }
+    }
+
+    const historicalGameIds = new Set<number>();
+    for (const rows of historicalStatsByPlayerId.values()) {
+      for (const raw of rows) {
+        const gameObj = asRecord(asRecord(raw).game);
+        const gameId = Number(gameObj.id ?? asRecord(raw).game_id ?? 0);
+        if (Number.isFinite(gameId) && gameId > 0) historicalGameIds.add(gameId);
+      }
+    }
+    const lineupStarterByGameAndPlayer = new Map<string, boolean>();
+    for (const gameChunk of chunkArray(Array.from(historicalGameIds), 25)) {
+      const lineupQuery = new URLSearchParams({ per_page: "100" });
+      for (const gameId of gameChunk) {
+        lineupQuery.append("game_ids[]", String(gameId));
+      }
+      const lineupRows = await fetchBallDontLieList<BallDontLieLineup>(`${basketballApiPrefix}/lineups`, lineupQuery);
+      for (const row of lineupRows) {
+        const gameId = Number((row as unknown as Record<string, unknown>).game_id ?? 0);
+        const playerId = Number(row.player?.id ?? 0);
+        if (!Number.isFinite(gameId) || gameId <= 0 || !Number.isFinite(playerId) || playerId <= 0) continue;
+        lineupStarterByGameAndPlayer.set(`${gameId}:${playerId}`, row.starter === true);
+      }
+    }
+
+    const profiles: NBAPlayerProfile[] = activePlayers
+      .map((raw) => {
+        const row = asRecord(raw);
+        const team = asRecord(row.team);
+        const playerId = Number(row.id ?? 0);
+        if (!Number.isFinite(playerId) || playerId <= 0) {
+          return null;
+        }
+        const playerName = `${String(row.first_name ?? "").trim()} ${String(row.last_name ?? "").trim()}`.trim();
+        const statsRow = asRecord(byPlayerId.get(playerId));
+        const stats = asRecord(statsRow.stats);
+        const teamId = Number(team.id ?? 0);
+        const historicalRows = historicalStatsByPlayerId.get(playerId) ?? [];
+        let sampleSize = 0;
+        let starterSampleSize = 0;
+        let benchSampleSize = 0;
+        let threes1 = 0;
+        let threes3 = 0;
+        let threes5 = 0;
+        let points10 = 0;
+        let points20 = 0;
+        let rebounds5 = 0;
+        let rebounds10 = 0;
+        let oreb3 = 0;
+        let dreb5 = 0;
+        let assists1 = 0;
+        let assists5 = 0;
+        let assists10 = 0;
+        let steals1 = 0;
+        let steals2 = 0;
+        let blocks1 = 0;
+        let blocks2 = 0;
+        let minutes30 = 0;
+        let plusMinus10 = 0;
+        let benchPoints8 = 0;
+
+        for (const rawLine of historicalRows) {
+          const line = asRecord(rawLine);
+          const gameObj = asRecord(line.game);
+          const gameId = Number(gameObj.id ?? line.game_id ?? 0);
+          const pts = Number(line.pts ?? 0);
+          const reb = Number(line.reb ?? 0);
+          const ast = Number(line.ast ?? 0);
+          const stl = Number(line.stl ?? 0);
+          const blk = Number(line.blk ?? 0);
+          const fg3m = Number(line.fg3m ?? 0);
+          const oreb = Number(line.oreb ?? 0);
+          const dreb = Number(line.dreb ?? 0);
+          const plusMinus = Number(line.plus_minus ?? 0);
+          const minutes = parseMinutesString(String(line.min ?? "")) / 60;
+          sampleSize += 1;
+          if (fg3m >= 1) threes1 += 1;
+          if (fg3m >= 3) threes3 += 1;
+          if (fg3m >= 5) threes5 += 1;
+          if (pts >= 10) points10 += 1;
+          if (pts >= 20) points20 += 1;
+          if (reb >= 5) rebounds5 += 1;
+          if (reb >= 10) rebounds10 += 1;
+          if (oreb >= 3) oreb3 += 1;
+          if (dreb >= 5) dreb5 += 1;
+          if (ast >= 1) assists1 += 1;
+          if (ast >= 5) assists5 += 1;
+          if (ast >= 10) assists10 += 1;
+          if (stl >= 1) steals1 += 1;
+          if (stl >= 2) steals2 += 1;
+          if (blk >= 1) blocks1 += 1;
+          if (blk >= 2) blocks2 += 1;
+          if (minutes >= 30) minutes30 += 1;
+          if (plusMinus >= 10) plusMinus10 += 1;
+          const started = Number.isFinite(gameId) && gameId > 0 ? lineupStarterByGameAndPlayer.get(`${gameId}:${playerId}`) : undefined;
+          if (started === true) {
+            starterSampleSize += 1;
+          } else if (started === false) {
+            benchSampleSize += 1;
+            if (pts >= 8) benchPoints8 += 1;
+          }
+        }
+
+        return {
+          playerId,
+          playerName,
+          teamId,
+          teamSide: teamId === homeId ? "home" : teamId === awayId ? "away" : null,
+          stats: {
+            pts: Number(stats.pts ?? 0),
+            reb: Number(stats.reb ?? 0),
+            ast: Number(stats.ast ?? 0),
+            stl: Number(stats.stl ?? 0),
+            blk: Number(stats.blk ?? 0),
+            oreb: Number(stats.oreb ?? 0),
+            dreb: Number(stats.dreb ?? 0),
+            fg3m: Number(stats.fg3m ?? 0),
+            ftm: Number(stats.ftm ?? 0),
+            fta: Number(stats.fta ?? 0),
+            fgm: Number(stats.fgm ?? 0),
+            fga: Number(stats.fga ?? 0),
+            min: Number(stats.min ?? 0),
+            plus_minus: Number(stats.plus_minus ?? 0),
+          },
+          historical: {
+            sampleSize,
+            starterSampleSize,
+            benchSampleSize,
+            rates: {
+              threes1: smoothedRate(threes1, sampleSize),
+              threes3: smoothedRate(threes3, sampleSize),
+              threes5: smoothedRate(threes5, sampleSize),
+              points10: smoothedRate(points10, sampleSize),
+              points20: smoothedRate(points20, sampleSize),
+              rebounds5: smoothedRate(rebounds5, sampleSize),
+              rebounds10: smoothedRate(rebounds10, sampleSize),
+              oreb3: smoothedRate(oreb3, sampleSize),
+              dreb5: smoothedRate(dreb5, sampleSize),
+              assists1: smoothedRate(assists1, sampleSize),
+              assists5: smoothedRate(assists5, sampleSize),
+              assists10: smoothedRate(assists10, sampleSize),
+              steals1: smoothedRate(steals1, sampleSize),
+              steals2: smoothedRate(steals2, sampleSize),
+              blocks1: smoothedRate(blocks1, sampleSize),
+              blocks2: smoothedRate(blocks2, sampleSize),
+              minutes30: smoothedRate(minutes30, sampleSize),
+              plusMinus10: smoothedRate(plusMinus10, sampleSize),
+              benchPoints8: smoothedRate(benchPoints8, benchSampleSize),
+            },
+          },
+        } as NBAPlayerProfile;
+      })
+      .filter((row): row is NBAPlayerProfile => Boolean(row && row.playerName && row.teamSide));
+
+    nbaPlayerProfilesCache.set(game.id, { profiles, expiresAt: now + 5 * 60 * 1000 });
+    return profiles;
   }
-  const playerIds = activePlayers
-    .map((row) => Number(asRecord(row).id ?? 0))
-    .filter((id) => Number.isFinite(id) && id > 0)
-    .slice(0, 40);
-  if (playerIds.length === 0) {
+  catch {
     nbaPlayerProfilesCache.set(game.id, { profiles: [], expiresAt: now + 60_000 });
     return [];
   }
-
-  const seasonTypeCandidates: Array<"regular" | "playoffs" | ""> = ["regular", "playoffs", ""];
-  let seasonRows: Record<string, unknown>[] = [];
-  for (const seasonType of seasonTypeCandidates) {
-    const seasonQuery = new URLSearchParams({
-      season: String(season),
-      type: "base",
-      per_page: "100",
-    });
-    if (seasonType) {
-      seasonQuery.set("season_type", seasonType);
-    }
-    for (const id of playerIds) {
-      seasonQuery.append("player_ids[]", String(id));
-    }
-    const rows = await fetchBallDontLieList<Record<string, unknown>>("/nba/v1/season_averages/general", seasonQuery);
-    if (rows.length > 0) {
-      seasonRows = rows;
-      break;
-    }
-  }
-  const byPlayerId = new Map<number, Record<string, unknown>>();
-  for (const row of seasonRows) {
-    const player = asRecord(row.player);
-    const playerId = Number(player.id ?? row.player_id ?? 0);
-    if (Number.isFinite(playerId) && playerId > 0) {
-      byPlayerId.set(playerId, row);
-    }
-  }
-
-  const historicalEnd = game.startsAt.slice(0, 10);
-  const historicalStart = new Date(Date.parse(`${historicalEnd}T00:00:00.000Z`) - 45 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 10);
-  const historicalStatsByPlayerId = new Map<number, Array<Record<string, unknown>>>();
-  for (const playerChunk of chunkArray(playerIds, 12)) {
-    const historicalQuery = new URLSearchParams({
-      start_date: historicalStart,
-      end_date: historicalEnd,
-      per_page: "100",
-      period: "0",
-    });
-    for (const id of playerChunk) {
-      historicalQuery.append("player_ids[]", String(id));
-    }
-    const rows = await fetchBallDontLieList<Record<string, unknown>>("/nba/v1/stats", historicalQuery);
-    for (const raw of rows) {
-      const player = asRecord(asRecord(raw).player);
-      const playerId = Number(player.id ?? asRecord(raw).player_id ?? 0);
-      if (!Number.isFinite(playerId) || playerId <= 0) continue;
-      const existing = historicalStatsByPlayerId.get(playerId) ?? [];
-      existing.push(raw);
-      historicalStatsByPlayerId.set(playerId, existing);
-    }
-  }
-
-  const historicalGameIds = new Set<number>();
-  for (const rows of historicalStatsByPlayerId.values()) {
-    for (const raw of rows) {
-      const gameObj = asRecord(asRecord(raw).game);
-      const gameId = Number(gameObj.id ?? asRecord(raw).game_id ?? 0);
-      if (Number.isFinite(gameId) && gameId > 0) historicalGameIds.add(gameId);
-    }
-  }
-  const lineupStarterByGameAndPlayer = new Map<string, boolean>();
-  for (const gameChunk of chunkArray(Array.from(historicalGameIds), 25)) {
-    const lineupQuery = new URLSearchParams({ per_page: "100" });
-    for (const gameId of gameChunk) {
-      lineupQuery.append("game_ids[]", String(gameId));
-    }
-    const lineupRows = await fetchBallDontLieList<BallDontLieLineup>("/nba/v1/lineups", lineupQuery);
-    for (const row of lineupRows) {
-      const gameId = Number((row as unknown as Record<string, unknown>).game_id ?? 0);
-      const playerId = Number(row.player?.id ?? 0);
-      if (!Number.isFinite(gameId) || gameId <= 0 || !Number.isFinite(playerId) || playerId <= 0) continue;
-      lineupStarterByGameAndPlayer.set(`${gameId}:${playerId}`, row.starter === true);
-    }
-  }
-
-  const profiles: NBAPlayerProfile[] = activePlayers
-    .map((raw) => {
-      const row = asRecord(raw);
-      const team = asRecord(row.team);
-      const playerId = Number(row.id ?? 0);
-      if (!Number.isFinite(playerId) || playerId <= 0) {
-        return null;
-      }
-      const playerName = `${String(row.first_name ?? "").trim()} ${String(row.last_name ?? "").trim()}`.trim();
-      const statsRow = asRecord(byPlayerId.get(playerId));
-      const stats = asRecord(statsRow.stats);
-      const teamId = Number(team.id ?? 0);
-      const historicalRows = historicalStatsByPlayerId.get(playerId) ?? [];
-      let sampleSize = 0;
-      let starterSampleSize = 0;
-      let benchSampleSize = 0;
-      let threes1 = 0;
-      let threes3 = 0;
-      let threes5 = 0;
-      let points10 = 0;
-      let points20 = 0;
-      let rebounds5 = 0;
-      let rebounds10 = 0;
-      let oreb3 = 0;
-      let dreb5 = 0;
-      let assists1 = 0;
-      let assists5 = 0;
-      let assists10 = 0;
-      let steals1 = 0;
-      let steals2 = 0;
-      let blocks1 = 0;
-      let blocks2 = 0;
-      let minutes30 = 0;
-      let plusMinus10 = 0;
-      let benchPoints8 = 0;
-
-      for (const rawLine of historicalRows) {
-        const line = asRecord(rawLine);
-        const gameObj = asRecord(line.game);
-        const gameId = Number(gameObj.id ?? line.game_id ?? 0);
-        const pts = Number(line.pts ?? 0);
-        const reb = Number(line.reb ?? 0);
-        const ast = Number(line.ast ?? 0);
-        const stl = Number(line.stl ?? 0);
-        const blk = Number(line.blk ?? 0);
-        const fg3m = Number(line.fg3m ?? 0);
-        const oreb = Number(line.oreb ?? 0);
-        const dreb = Number(line.dreb ?? 0);
-        const plusMinus = Number(line.plus_minus ?? 0);
-        const minutes = parseMinutesString(String(line.min ?? "")) / 60;
-        sampleSize += 1;
-        if (fg3m >= 1) threes1 += 1;
-        if (fg3m >= 3) threes3 += 1;
-        if (fg3m >= 5) threes5 += 1;
-        if (pts >= 10) points10 += 1;
-        if (pts >= 20) points20 += 1;
-        if (reb >= 5) rebounds5 += 1;
-        if (reb >= 10) rebounds10 += 1;
-        if (oreb >= 3) oreb3 += 1;
-        if (dreb >= 5) dreb5 += 1;
-        if (ast >= 1) assists1 += 1;
-        if (ast >= 5) assists5 += 1;
-        if (ast >= 10) assists10 += 1;
-        if (stl >= 1) steals1 += 1;
-        if (stl >= 2) steals2 += 1;
-        if (blk >= 1) blocks1 += 1;
-        if (blk >= 2) blocks2 += 1;
-        if (minutes >= 30) minutes30 += 1;
-        if (plusMinus >= 10) plusMinus10 += 1;
-        const started = Number.isFinite(gameId) && gameId > 0 ? lineupStarterByGameAndPlayer.get(`${gameId}:${playerId}`) : undefined;
-        if (started === true) {
-          starterSampleSize += 1;
-        } else if (started === false) {
-          benchSampleSize += 1;
-          if (pts >= 8) benchPoints8 += 1;
-        }
-      }
-
-      return {
-        playerId,
-        playerName,
-        teamId,
-        teamSide: teamId === homeId ? "home" : teamId === awayId ? "away" : null,
-        stats: {
-          pts: Number(stats.pts ?? 0),
-          reb: Number(stats.reb ?? 0),
-          ast: Number(stats.ast ?? 0),
-          stl: Number(stats.stl ?? 0),
-          blk: Number(stats.blk ?? 0),
-          oreb: Number(stats.oreb ?? 0),
-          dreb: Number(stats.dreb ?? 0),
-          fg3m: Number(stats.fg3m ?? 0),
-          ftm: Number(stats.ftm ?? 0),
-          fta: Number(stats.fta ?? 0),
-          fgm: Number(stats.fgm ?? 0),
-          fga: Number(stats.fga ?? 0),
-          min: Number(stats.min ?? 0),
-          plus_minus: Number(stats.plus_minus ?? 0),
-        },
-        historical: {
-          sampleSize,
-          starterSampleSize,
-          benchSampleSize,
-          rates: {
-            threes1: smoothedRate(threes1, sampleSize),
-            threes3: smoothedRate(threes3, sampleSize),
-            threes5: smoothedRate(threes5, sampleSize),
-            points10: smoothedRate(points10, sampleSize),
-            points20: smoothedRate(points20, sampleSize),
-            rebounds5: smoothedRate(rebounds5, sampleSize),
-            rebounds10: smoothedRate(rebounds10, sampleSize),
-            oreb3: smoothedRate(oreb3, sampleSize),
-            dreb5: smoothedRate(dreb5, sampleSize),
-            assists1: smoothedRate(assists1, sampleSize),
-            assists5: smoothedRate(assists5, sampleSize),
-            assists10: smoothedRate(assists10, sampleSize),
-            steals1: smoothedRate(steals1, sampleSize),
-            steals2: smoothedRate(steals2, sampleSize),
-            blocks1: smoothedRate(blocks1, sampleSize),
-            blocks2: smoothedRate(blocks2, sampleSize),
-            minutes30: smoothedRate(minutes30, sampleSize),
-            plusMinus10: smoothedRate(plusMinus10, sampleSize),
-            benchPoints8: smoothedRate(benchPoints8, benchSampleSize),
-          },
-        },
-      } as NBAPlayerProfile;
-    })
-    .filter((row): row is NBAPlayerProfile => Boolean(row && row.playerName && row.teamSide));
-
-  nbaPlayerProfilesCache.set(game.id, { profiles, expiresAt: now + 5 * 60 * 1000 });
-  return profiles;
 }
 
 async function buildNBAAchievementCandidates(game: SportsBingoGame, _candidates: SportsBingoSquareTemplate[]): Promise<SportsBingoSquareTemplate[]> {
   const profiles = await getNBAPlayerProfilesForGame(game);
+  const wnbaMode = isWnbaSportKey(game.sportKey);
+  const scaleCountThreshold = (base: number, min = 1): number =>
+    Math.max(min, Math.round(base * (wnbaMode ? WNBA_CALIBRATION.achievementThresholdScale : 1)));
   const addTemplatesForThreshold = (minProbability: number): SportsBingoSquareTemplate[] => {
     const templates: SportsBingoSquareTemplate[] = [];
     const push = (resolver: SportsBingoResolver, probability: number, supportLevel: SquareSupportLevel) => {
@@ -2752,81 +2975,93 @@ async function buildNBAAchievementCandidates(game: SportsBingoGame, _candidates:
     };
 
     for (const p of profiles) {
-    const ref = toResolverPlayerRef(p.playerName, p.playerId);
-    const pm = p.stats.plus_minus;
-    const rate = p.historical.rates;
-    const hasSample = p.historical.sampleSize >= 6;
-    push({ kind: "nba_player_stat_at_least", player: ref, metric: "threes", threshold: 1 }, hasSample ? rate.threes1 : probabilityAtLeast(p.stats.fg3m, 1), "supported");
-    push({ kind: "nba_player_stat_at_least", player: ref, metric: "threes", threshold: 3 }, hasSample ? rate.threes3 : probabilityAtLeast(p.stats.fg3m, 3), "supported");
-    push({ kind: "nba_player_stat_at_least", player: ref, metric: "threes", threshold: 5 }, hasSample ? rate.threes5 : probabilityAtLeast(p.stats.fg3m, 5), "possible");
-    push({ kind: "nba_player_stat_at_least", player: ref, metric: "points", threshold: 10 }, hasSample ? rate.points10 : probabilityAtLeast(p.stats.pts, 10), "supported");
-    push({ kind: "nba_player_stat_at_least", player: ref, metric: "points", threshold: 20 }, hasSample ? rate.points20 : probabilityAtLeast(p.stats.pts, 20), "supported");
-    push({ kind: "nba_player_stat_at_least", player: ref, metric: "rebounds", threshold: 5 }, hasSample ? rate.rebounds5 : probabilityAtLeast(p.stats.reb, 5), "supported");
-    push({ kind: "nba_player_stat_at_least", player: ref, metric: "rebounds", threshold: 10 }, hasSample ? rate.rebounds10 : probabilityAtLeast(p.stats.reb, 10), "possible");
-    push({ kind: "nba_player_stat_at_least", player: ref, metric: "offensive_rebounds", threshold: 3 }, hasSample ? rate.oreb3 : probabilityAtLeast(p.stats.oreb, 3), "possible");
-    push({ kind: "nba_player_stat_at_least", player: ref, metric: "defensive_rebounds", threshold: 5 }, hasSample ? rate.dreb5 : probabilityAtLeast(p.stats.dreb, 5), "possible");
-    push({ kind: "nba_player_stat_at_least", player: ref, metric: "assists", threshold: 1 }, hasSample ? rate.assists1 : probabilityAtLeast(p.stats.ast, 1), "supported");
-    push({ kind: "nba_player_stat_at_least", player: ref, metric: "assists", threshold: 5 }, hasSample ? rate.assists5 : probabilityAtLeast(p.stats.ast, 5), "supported");
-    push({ kind: "nba_player_stat_at_least", player: ref, metric: "assists", threshold: 10 }, hasSample ? rate.assists10 : probabilityAtLeast(p.stats.ast, 10), "possible");
-    push({ kind: "nba_player_stat_at_least", player: ref, metric: "steals", threshold: 1 }, hasSample ? rate.steals1 : probabilityAtLeast(p.stats.stl, 1), "supported");
-    push({ kind: "nba_player_stat_at_least", player: ref, metric: "steals", threshold: 2 }, hasSample ? rate.steals2 : probabilityAtLeast(p.stats.stl, 2), "possible");
-    push({ kind: "nba_player_stat_at_least", player: ref, metric: "blocks", threshold: 1 }, hasSample ? rate.blocks1 : probabilityAtLeast(p.stats.blk, 1), "supported");
-    push({ kind: "nba_player_stat_at_least", player: ref, metric: "blocks", threshold: 2 }, hasSample ? rate.blocks2 : probabilityAtLeast(p.stats.blk, 2), "possible");
-    push({ kind: "nba_player_double_double", player: ref }, probabilityAtLeast((p.stats.pts >= 10 ? 1 : 0) + (p.stats.reb >= 10 ? 1 : 0) + (p.stats.ast >= 10 ? 1 : 0), 2, 0.6), "possible");
-    push({ kind: "nba_player_triple_double", player: ref }, probabilityAtLeast((p.stats.pts >= 10 ? 1 : 0) + (p.stats.reb >= 10 ? 1 : 0) + (p.stats.ast >= 10 ? 1 : 0), 3, 0.5), "possible");
-    push({ kind: "nba_player_perfect_ft", player: ref }, p.stats.fta >= 3 ? 0.24 : 0.08, "possible");
-    push({ kind: "nba_player_perfect_fg", player: ref }, p.stats.fga >= 4 ? 0.22 : 0.06, "possible");
-    push({ kind: "nba_player_triple_threat", player: ref }, Math.min(probabilityAtLeast(p.stats.pts, 5) * probabilityAtLeast(p.stats.reb, 5) * probabilityAtLeast(p.stats.ast, 5) * 2.4, 0.95), "possible");
-    push({ kind: "nba_player_stat_at_least", player: ref, metric: "minutes_played", threshold: 30 }, hasSample ? rate.minutes30 : probabilityAtLeast(p.stats.min, 30), "supported");
-    push({ kind: "nba_player_plus_minus_at_least", player: ref, threshold: 10 }, hasSample ? rate.plusMinus10 : probabilityAtLeast(pm + 10, 10), "possible");
-    push(
-      { kind: "nba_player_bench_scores", player: ref, threshold: 8 },
-      p.historical.benchSampleSize >= 3 ? rate.benchPoints8 : p.stats.pts >= 10 ? 0.32 : p.stats.pts >= 7 ? 0.24 : 0.12,
-      "possible"
-    );
-    push({ kind: "nba_player_points_first_half_at_least", player: ref, threshold: 10 }, probabilityAtLeast(p.stats.pts * 0.52, 10), "possible");
-    push({ kind: "nba_player_assists_in_any_quarter_at_least", player: ref, threshold: 3 }, probabilityAtLeast(p.stats.ast * 0.34, 3), "possible");
-    push({ kind: "nba_player_steals_first_half_at_least", player: ref, threshold: 2 }, probabilityAtLeast(p.stats.stl * 0.58, 2), "possible");
-  }
-
-  const hasPlayerSpecific = templates.some((item) => {
-    switch (item.resolver.kind) {
-      case "nba_player_stat_at_least":
-      case "nba_player_double_double":
-      case "nba_player_triple_double":
-      case "nba_player_perfect_ft":
-      case "nba_player_perfect_fg":
-      case "nba_player_triple_threat":
-      case "nba_player_zero_turnovers":
-      case "nba_player_plus_minus_at_least":
-      case "nba_player_bench_scores":
-      case "nba_player_points_first_half_at_least":
-      case "nba_player_assists_in_any_quarter_at_least":
-      case "nba_player_steals_first_half_at_least":
-        return true;
-      default:
-        return false;
-    }
-  });
-  if (!hasPlayerSpecific) {
-    for (const p of profiles.slice(0, 8)) {
       const ref = toResolverPlayerRef(p.playerName, p.playerId);
-      push({ kind: "nba_player_stat_at_least", player: ref, metric: "points", threshold: 10 }, 0.36, "supported");
-      push({ kind: "nba_player_stat_at_least", player: ref, metric: "assists", threshold: 1 }, 0.62, "supported");
+      const pm = p.stats.plus_minus;
+      const rate = p.historical.rates;
+      const hasSample = p.historical.sampleSize >= 6;
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "threes", threshold: 1 }, hasSample ? rate.threes1 : probabilityAtLeast(p.stats.fg3m, 1), "supported");
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "threes", threshold: scaleCountThreshold(3, 2) }, hasSample ? rate.threes3 : probabilityAtLeast(p.stats.fg3m, scaleCountThreshold(3, 2)), "supported");
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "threes", threshold: scaleCountThreshold(5, 3) }, hasSample ? rate.threes5 : probabilityAtLeast(p.stats.fg3m, scaleCountThreshold(5, 3)), "possible");
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "points", threshold: scaleCountThreshold(10, 8) }, hasSample ? rate.points10 : probabilityAtLeast(p.stats.pts, scaleCountThreshold(10, 8)), "supported");
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "points", threshold: scaleCountThreshold(20, 14) }, hasSample ? rate.points20 : probabilityAtLeast(p.stats.pts, scaleCountThreshold(20, 14)), "supported");
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "rebounds", threshold: scaleCountThreshold(5, 4) }, hasSample ? rate.rebounds5 : probabilityAtLeast(p.stats.reb, scaleCountThreshold(5, 4)), "supported");
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "rebounds", threshold: scaleCountThreshold(10, 7) }, hasSample ? rate.rebounds10 : probabilityAtLeast(p.stats.reb, scaleCountThreshold(10, 7)), "possible");
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "offensive_rebounds", threshold: 3 }, hasSample ? rate.oreb3 : probabilityAtLeast(p.stats.oreb, 3), "possible");
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "defensive_rebounds", threshold: 5 }, hasSample ? rate.dreb5 : probabilityAtLeast(p.stats.dreb, 5), "possible");
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "assists", threshold: 1 }, hasSample ? rate.assists1 : probabilityAtLeast(p.stats.ast, 1), "supported");
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "assists", threshold: scaleCountThreshold(5, 3) }, hasSample ? rate.assists5 : probabilityAtLeast(p.stats.ast, scaleCountThreshold(5, 3)), "supported");
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "assists", threshold: scaleCountThreshold(10, 7) }, hasSample ? rate.assists10 : probabilityAtLeast(p.stats.ast, scaleCountThreshold(10, 7)), "possible");
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "steals", threshold: 1 }, hasSample ? rate.steals1 : probabilityAtLeast(p.stats.stl, 1), "supported");
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "steals", threshold: 2 }, hasSample ? rate.steals2 : probabilityAtLeast(p.stats.stl, 2), "possible");
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "blocks", threshold: 1 }, hasSample ? rate.blocks1 : probabilityAtLeast(p.stats.blk, 1), "supported");
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "blocks", threshold: 2 }, hasSample ? rate.blocks2 : probabilityAtLeast(p.stats.blk, 2), "possible");
+      push({ kind: "nba_player_double_double", player: ref }, probabilityAtLeast((p.stats.pts >= 10 ? 1 : 0) + (p.stats.reb >= 10 ? 1 : 0) + (p.stats.ast >= 10 ? 1 : 0), 2, 0.6), "possible");
+      push({ kind: "nba_player_triple_double", player: ref }, probabilityAtLeast((p.stats.pts >= 10 ? 1 : 0) + (p.stats.reb >= 10 ? 1 : 0) + (p.stats.ast >= 10 ? 1 : 0), 3, 0.5), "possible");
+      push({ kind: "nba_player_perfect_ft", player: ref }, p.stats.fta >= 3 ? 0.24 : 0.08, "possible");
+      push({ kind: "nba_player_perfect_fg", player: ref }, p.stats.fga >= 4 ? 0.22 : 0.06, "possible");
+      push({ kind: "nba_player_triple_threat", player: ref }, Math.min(probabilityAtLeast(p.stats.pts, 5) * probabilityAtLeast(p.stats.reb, 5) * probabilityAtLeast(p.stats.ast, 5) * 2.4, 0.95), "possible");
+      push({ kind: "nba_player_stat_at_least", player: ref, metric: "minutes_played", threshold: scaleCountThreshold(30, 24) }, hasSample ? rate.minutes30 : probabilityAtLeast(p.stats.min, scaleCountThreshold(30, 24)), "supported");
+      push({ kind: "nba_player_plus_minus_at_least", player: ref, threshold: 10 }, hasSample ? rate.plusMinus10 : probabilityAtLeast(pm + 10, 10), "possible");
+      push(
+        { kind: "nba_player_bench_scores", player: ref, threshold: scaleCountThreshold(8, 6) },
+        p.historical.benchSampleSize >= 3 ? rate.benchPoints8 : p.stats.pts >= 10 ? 0.32 : p.stats.pts >= 7 ? 0.24 : 0.12,
+        "possible"
+      );
+      push(
+        { kind: "nba_player_points_first_half_at_least", player: ref, threshold: scaleCountThreshold(10, 7) },
+        probabilityAtLeast(p.stats.pts * 0.52, scaleCountThreshold(10, 7)),
+        "possible"
+      );
+      push(
+        { kind: "nba_player_assists_in_any_quarter_at_least", player: ref, threshold: scaleCountThreshold(3, 2) },
+        probabilityAtLeast(p.stats.ast * 0.34, scaleCountThreshold(3, 2)),
+        "possible"
+      );
+      push(
+        { kind: "nba_player_steals_first_half_at_least", player: ref, threshold: scaleCountThreshold(2, 1) },
+        probabilityAtLeast(p.stats.stl * 0.58, scaleCountThreshold(2, 1)),
+        "possible"
+      );
     }
-  }
 
-  for (const team of ["home", "away"] as const) {
-    push({ kind: "nba_team_stat_at_least", team, metric: "made_threes", threshold: 10 }, 0.55, "supported");
-    push({ kind: "nba_team_three_pt_scorers", team, threshold: 5 }, 0.42, "supported");
-    push({ kind: "nba_team_stat_at_least", team, metric: "total_assists", threshold: 25 }, 0.46, "supported");
-    push({ kind: "nba_team_stat_at_least", team, metric: "total_rebounds", threshold: 40 }, 0.52, "supported");
-    push({ kind: "nba_team_outrebounds", team }, 0.48, "supported");
-    push({ kind: "nba_team_turnovers_at_most", team, threshold: 10 }, 0.28, "possible");
-    push({ kind: "nba_team_scores_first", team }, 0.5, "supported");
-    push({ kind: "nba_team_leads_at_halftime", team }, 0.5, "supported");
-    push({ kind: "nba_team_points_in_any_quarter_at_least", team, threshold: 30 }, 0.34, "possible");
-  }
+    const hasPlayerSpecific = templates.some((item) => {
+      switch (item.resolver.kind) {
+        case "nba_player_stat_at_least":
+        case "nba_player_double_double":
+        case "nba_player_triple_double":
+        case "nba_player_perfect_ft":
+        case "nba_player_perfect_fg":
+        case "nba_player_triple_threat":
+        case "nba_player_zero_turnovers":
+        case "nba_player_plus_minus_at_least":
+        case "nba_player_bench_scores":
+        case "nba_player_points_first_half_at_least":
+        case "nba_player_assists_in_any_quarter_at_least":
+        case "nba_player_steals_first_half_at_least":
+          return true;
+        default:
+          return false;
+      }
+    });
+    if (!hasPlayerSpecific) {
+      for (const p of profiles.slice(0, 8)) {
+        const ref = toResolverPlayerRef(p.playerName, p.playerId);
+        push({ kind: "nba_player_stat_at_least", player: ref, metric: "points", threshold: scaleCountThreshold(10, 8) }, 0.36, "supported");
+        push({ kind: "nba_player_stat_at_least", player: ref, metric: "assists", threshold: 1 }, 0.62, "supported");
+      }
+    }
+
+    for (const team of ["home", "away"] as const) {
+      push({ kind: "nba_team_stat_at_least", team, metric: "made_threes", threshold: scaleCountThreshold(10, 7) }, 0.55, "supported");
+      push({ kind: "nba_team_three_pt_scorers", team, threshold: scaleCountThreshold(5, 4) }, 0.42, "supported");
+      push({ kind: "nba_team_stat_at_least", team, metric: "total_assists", threshold: scaleCountThreshold(25, 18) }, 0.46, "supported");
+      push({ kind: "nba_team_stat_at_least", team, metric: "total_rebounds", threshold: scaleCountThreshold(40, 30) }, 0.52, "supported");
+      push({ kind: "nba_team_outrebounds", team }, 0.48, "supported");
+      push({ kind: "nba_team_turnovers_at_most", team, threshold: 10 }, 0.28, "possible");
+      push({ kind: "nba_team_scores_first", team }, 0.5, "supported");
+      push({ kind: "nba_team_leads_at_halftime", team }, 0.5, "supported");
+      push({ kind: "nba_team_points_in_any_quarter_at_least", team, threshold: scaleCountThreshold(30, 22) }, 0.34, "possible");
+    }
 
     return aggregateCandidates(templates).sort((a, b) => a.key.localeCompare(b.key));
   };
@@ -2983,6 +3218,9 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
       plateAppearances: number;
       strikeoutsPitcher: number;
       pitcherOuts: number;
+      stolenBases: number;
+      earnedRunsAllowedPitcher: number;
+      hitsAllowedPitcher: number;
     };
     const byPlayer = new Map<string, MlbPlayerAggregate>();
 
@@ -3026,6 +3264,9 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
           plateAppearances: 0,
           strikeoutsPitcher: 0,
           pitcherOuts: 0,
+          stolenBases: 0,
+          earnedRunsAllowedPitcher: 0,
+          hitsAllowedPitcher: 0,
         };
 
         current.games.add(String(row.game_id ?? asRecord(row.game).id ?? "").trim());
@@ -3043,6 +3284,9 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
         current.plateAppearances += rowPlateAppearances + rowWalks + rowHitByPitch;
         current.strikeoutsPitcher += parseStatNumber(row.pitcher_strikeouts ?? row.p_strikeouts ?? row.so_pitcher);
         current.pitcherOuts += parseStatNumber(row.pitcher_outs ?? row.p_outs ?? row.outs_recorded ?? row.pitching_outs);
+        current.stolenBases += parseStatNumber(row.stolen_bases ?? row.sb);
+        current.earnedRunsAllowedPitcher += parseStatNumber(row.earned_runs ?? row.er);
+        current.hitsAllowedPitcher += parseStatNumber(row.hits_allowed ?? row.ha);
         byPlayer.set(playerKey, current);
       }
     }
@@ -3050,9 +3294,31 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
     const templates: SportsBingoSquareTemplate[] = [];
     const achievementTemplates: SportsBingoSquareTemplate[] = [];
     const players = [...byPlayer.values()].filter((player) => player.games.size > 0);
+    const confirmedStarterByPlayerKey = new Set<string>();
+    try {
+      const lineupQuery = new URLSearchParams({ per_page: "100" });
+      lineupQuery.append("game_ids[]", game.id);
+      const lineupRows = await fetchBallDontLieList<BallDontLieLineup>("/mlb/v1/lineups", lineupQuery);
+      for (const row of lineupRows) {
+        if (row.starter !== true) {
+          continue;
+        }
+        const playerId = Number(row.player?.id ?? 0);
+        const playerName = `${String(row.player?.first_name ?? "").trim()} ${String(row.player?.last_name ?? "").trim()}`.trim();
+        if (!playerName) {
+          continue;
+        }
+        const key = `${normalizeNameKey(playerName)}:${Number.isFinite(playerId) && playerId > 0 ? playerId : "na"}`;
+        confirmedStarterByPlayerKey.add(key);
+      }
+    } catch {
+      // If lineup endpoints are delayed/unavailable, safely skip starter enforcement.
+    }
+
     const hitters = players
       .map((player) => ({
         player,
+        playerKey: `${normalizeNameKey(player.playerName)}:${player.playerId ?? "na"}`,
         games: player.games.size,
         avgHits: player.hits / player.games.size,
         avgRbis: player.rbis / player.games.size,
@@ -3065,7 +3331,7 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
       }))
       .filter((entry) => entry.games >= 2)
       .sort((a, b) => b.score - a.score)
-      .slice(0, 8);
+      .slice(0, 12);
 
     for (const hitter of hitters) {
       const playerRef = toResolverPlayerRef(hitter.player.playerName, hitter.player.playerId);
@@ -3114,6 +3380,19 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
           label: buildSquareLabel(game, hrResolver),
           resolver: hrResolver,
           probability: hrProbability,
+          bucket: "achievement",
+          supportLevel: "supported",
+        });
+      }
+      const normalizedPlayerName = normalizeNameKey(hitter.player.playerName);
+      const isStarHrPlayer = MLB_STAR_BRANDED_PLAYER_KEYS.has(normalizedPlayerName);
+      const isConfirmedStarter = confirmedStarterByPlayerKey.has(hitter.playerKey);
+      if (isStarHrPlayer && isConfirmedStarter && hrProbability >= 0.33) {
+        templates.push({
+          key: `mlb_star_hr:${normalizeNameKey(playerRef)}:${game.id}`,
+          label: `${hitter.player.playerName} HR`,
+          resolver: hrResolver,
+          probability: clamp(hrProbability, 0.2, 0.75),
           bucket: "achievement",
           supportLevel: "supported",
         });
@@ -3178,6 +3457,40 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
         if (achievement) {
           achievementTemplates.push(achievement);
         }
+      }
+      const rbiTwoProbability = clamp(probabilityAtLeast(hitter.avgRbis, 2, 0.72), 0.03, 0.58);
+      if (hitter.avgRbis >= 0.55 && rbiTwoProbability >= 0.24) {
+        const rbiTwoResolver: SportsBingoResolver = {
+          kind: "mlb_webhook_player_event_at_least",
+          player: playerRef,
+          event: "rbi",
+          threshold: 2,
+        };
+        templates.push({
+          key: resolverKey(rbiTwoResolver),
+          label: buildSquareLabel(game, rbiTwoResolver),
+          resolver: rbiTwoResolver,
+          probability: rbiTwoProbability,
+          bucket: "achievement",
+          supportLevel: "supported",
+        });
+      }
+      const stolenBaseProbability = clamp(probabilityAtLeast(hitter.player.stolenBases / hitter.games, 1, 0.82), 0.03, 0.55);
+      if (hitter.player.stolenBases / hitter.games >= 0.12 && stolenBaseProbability >= 0.22) {
+        const stolenBaseResolver: SportsBingoResolver = {
+          kind: "mlb_webhook_player_event_at_least",
+          player: playerRef,
+          event: "stolen_base",
+          threshold: 1,
+        };
+        templates.push({
+          key: resolverKey(stolenBaseResolver),
+          label: buildSquareLabel(game, stolenBaseResolver),
+          resolver: stolenBaseResolver,
+          probability: stolenBaseProbability,
+          bucket: "achievement",
+          supportLevel: "supported",
+        });
       }
       if (hitter.avgRuns >= 0.45) {
         const resolver: SportsBingoResolver = { kind: "player_prop", marketKey: "player_runs", player: playerRef, line: 0.5, direction: "over" };
@@ -3283,13 +3596,24 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
     const pitchers = players
       .map((player) => ({
         player,
+        playerKey: `${normalizeNameKey(player.playerName)}:${player.playerId ?? "na"}`,
         games: player.games.size,
         avgKs: player.strikeoutsPitcher / player.games.size,
         avgOuts: player.pitcherOuts / player.games.size,
+        avgEarnedRunsAllowed: player.earnedRunsAllowedPitcher / player.games.size,
+        avgHitsAllowed: player.hitsAllowedPitcher / player.games.size,
+        starterBoost: confirmedStarterByPlayerKey.has(`${normalizeNameKey(player.playerName)}:${player.playerId ?? "na"}`) ? 1 : 0,
       }))
       .filter((entry) => entry.games >= 2 && (entry.avgKs >= 2.5 || entry.avgOuts >= 8))
-      .sort((a, b) => b.avgKs - a.avgKs)
-      .slice(0, 4);
+      .sort((a, b) => {
+        if (b.starterBoost !== a.starterBoost) {
+          return b.starterBoost - a.starterBoost;
+        }
+        const scoreA = a.avgKs * 1.15 + a.avgOuts * 0.42;
+        const scoreB = b.avgKs * 1.15 + b.avgOuts * 0.42;
+        return scoreB - scoreA;
+      })
+      .slice(0, 8);
 
     for (const pitcher of pitchers) {
       const playerRef = toResolverPlayerRef(pitcher.player.playerName, pitcher.player.playerId);
@@ -3314,6 +3638,51 @@ async function buildMLBPlayerPropCandidatesFromRecentStats(game: SportsBingoGame
       if (achievement) {
         achievementTemplates.push(achievement);
       }
+
+      const pitcherOutsResolver: SportsBingoResolver = {
+        kind: "mlb_webhook_player_event_at_least",
+        player: playerRef,
+        event: "pitcher_out",
+        threshold: 6,
+      };
+      templates.push({
+        key: resolverKey(pitcherOutsResolver),
+        label: buildSquareLabel(game, pitcherOutsResolver),
+        resolver: pitcherOutsResolver,
+        probability: clamp(probabilityAtLeast(pitcher.avgOuts, 6, 0.42), 0.14, 0.9),
+        bucket: "achievement",
+        supportLevel: "supported",
+      });
+
+      const earnedRunsAtMostResolver: SportsBingoResolver = {
+        kind: "mlb_webhook_player_event_at_most",
+        player: playerRef,
+        event: "earned_run",
+        threshold: 2,
+      };
+      templates.push({
+        key: resolverKey(earnedRunsAtMostResolver),
+        label: buildSquareLabel(game, earnedRunsAtMostResolver),
+        resolver: earnedRunsAtMostResolver,
+        probability: clamp(sigmoid((2.4 - pitcher.avgEarnedRunsAllowed) / 0.95), 0.08, 0.9),
+        bucket: "achievement",
+        supportLevel: "supported",
+      });
+
+      const hitsAllowedAtMostResolver: SportsBingoResolver = {
+        kind: "mlb_webhook_player_event_at_most",
+        player: playerRef,
+        event: "hit_allowed",
+        threshold: 5,
+      };
+      templates.push({
+        key: resolverKey(hitsAllowedAtMostResolver),
+        label: buildSquareLabel(game, hitsAllowedAtMostResolver),
+        resolver: hitsAllowedAtMostResolver,
+        probability: clamp(sigmoid((5.4 - pitcher.avgHitsAllowed) / 1.15), 0.08, 0.88),
+        bucket: "achievement",
+        supportLevel: "supported",
+      });
     }
 
     const merged = aggregateCandidates([...templates, ...achievementTemplates]).filter((candidate) => {
@@ -3494,6 +3863,50 @@ function estimateBoardWinProbability(squares: Array<{ index: number; probability
   return wins / trials;
 }
 
+function estimateBoardWinProbabilityWithTrials(
+  squares: Array<{ index: number; probability: number; isFree: boolean }>,
+  requestedTrials: number
+): number {
+  const trials = Math.max(500, Math.min(12_000, Math.floor(requestedTrials)));
+  let wins = 0;
+
+  const lookupByIndex = new Map<number, { probability: number; isFree: boolean }>();
+  for (const square of squares) {
+    lookupByIndex.set(square.index, {
+      probability: clamp(square.probability, 0, 1),
+      isFree: square.isFree,
+    });
+  }
+
+  for (let trial = 0; trial < trials; trial += 1) {
+    const hits = new Array<boolean>(25).fill(false);
+    for (let index = 0; index < 25; index += 1) {
+      const square = lookupByIndex.get(index);
+      if (!square) {
+        continue;
+      }
+      if (square.isFree) {
+        hits[index] = true;
+      } else {
+        hits[index] = Math.random() < square.probability;
+      }
+    }
+
+    const hasLine = LINE_PATTERNS.some((line) => line.every((index) => hits[index]));
+    if (hasLine) {
+      wins += 1;
+    }
+  }
+
+  return wins / trials;
+}
+
+function resolvePreviewSimulationTrials(candidateCount: number): number {
+  const normalized = clamp((candidateCount - 24) / 36, 0, 1);
+  const previewTarget = Math.round(800 + normalized * 400);
+  return Math.max(800, Math.min(1200, previewTarget));
+}
+
 type InternalBoardSquare = {
   index: number;
   key: string;
@@ -3600,6 +4013,139 @@ function isPlayerSpecificAchievementResolver(resolver: SportsBingoResolver): boo
   }
 }
 
+function mlbResolverFamilyKey(candidate: SportsBingoSquareTemplate): string | null {
+  const resolver = candidate.resolver;
+  if (resolver.kind === "player_prop") {
+    switch (resolver.marketKey) {
+      case "player_strikeouts_pitcher":
+        return "strikeout";
+      case "player_home_runs":
+        return "home_run";
+      case "player_hits":
+        return "hit";
+      case "player_rbis":
+        return "rbi";
+      case "player_runs":
+        return "runs";
+      case "player_stolen_bases":
+        return "stolen_base";
+      case "player_earned_runs":
+        return "earned_run";
+      case "player_pitcher_outs":
+        return "pitcher_out";
+      default:
+        return `player_prop:${resolver.marketKey}`;
+    }
+  }
+  if (resolver.kind === "mlb_webhook_player_event_at_least" || resolver.kind === "mlb_webhook_player_event_at_most") {
+    if (resolver.event === "strikeout") {
+      return "strikeout";
+    }
+    return `event:${resolver.event}`;
+  }
+  if (resolver.kind === "mlb_webhook_team_event_at_least") {
+    if (resolver.event === "strikeout") {
+      return "strikeout";
+    }
+    return `event:${resolver.event}`;
+  }
+  return null;
+}
+
+function candidateResolverFamilyKey(candidate: SportsBingoSquareTemplate): string {
+  const resolver = candidate.resolver;
+  const base = `${candidate.bucket}:${resolver.kind}`;
+  switch (resolver.kind) {
+    case "player_prop":
+      return `${base}:${resolver.marketKey}`;
+    case "nba_player_stat_at_least":
+      return `${base}:${resolver.metric}`;
+    case "nba_team_stat_at_least":
+      return `${base}:${resolver.metric}`;
+    case "mlb_webhook_player_event_at_least":
+    case "mlb_webhook_player_event_at_most":
+    case "mlb_webhook_team_event_at_least":
+      return `${base}:${resolver.event}`;
+    default:
+      return base;
+  }
+}
+
+function countCandidateResolverFamilies(items: SportsBingoSquareTemplate[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const item of items) {
+    const family = candidateResolverFamilyKey(item);
+    counts.set(family, (counts.get(family) ?? 0) + 1);
+  }
+  return counts;
+}
+
+function sortedCountObject(map: Map<string, number>): Record<string, number> {
+  return Object.fromEntries([...map.entries()].sort((left, right) => left[0].localeCompare(right[0])));
+}
+
+function isSituationalPivotCandidate(candidate: SportsBingoSquareTemplate): boolean {
+  if (candidate.bucket === "player-prop") {
+    return false;
+  }
+  if (isPlayerSpecificAchievementResolver(candidate.resolver)) {
+    return false;
+  }
+  return true;
+}
+
+function isMlbNamedPlayerSquare(candidate: SportsBingoSquareTemplate): boolean {
+  const resolver = candidate.resolver;
+  if (resolver.kind === "player_prop") {
+    return true;
+  }
+  if (resolver.kind === "mlb_webhook_player_event_at_least" || resolver.kind === "mlb_webhook_player_event_at_most") {
+    return true;
+  }
+  return false;
+}
+
+function isMlbFallbackEventSquare(candidate: SportsBingoSquareTemplate): boolean {
+  const resolver = candidate.resolver;
+  if (resolver.kind === "mlb_webhook_team_event_at_least") {
+    return true;
+  }
+  if (resolver.kind === "team_total_over" || resolver.kind === "team_total_under") {
+    return true;
+  }
+  if (resolver.kind === "game_total_over" || resolver.kind === "game_total_under") {
+    return true;
+  }
+  return false;
+}
+
+function takeWeightedCandidate<T>(
+  pool: T[],
+  weightOf: (item: T) => number
+): T | null {
+  if (pool.length === 0) {
+    return null;
+  }
+  let totalWeight = 0;
+  const weights: number[] = [];
+  for (const item of pool) {
+    const weight = Math.max(0, weightOf(item));
+    weights.push(weight);
+    totalWeight += weight;
+  }
+  if (totalWeight <= 0) {
+    return pool[Math.floor(Math.random() * pool.length)] ?? null;
+  }
+  let threshold = Math.random() * totalWeight;
+  for (let index = 0; index < pool.length; index += 1) {
+    threshold -= weights[index] ?? 0;
+    if (threshold <= 0) {
+      return pool[index] ?? null;
+    }
+  }
+  return pool[pool.length - 1] ?? null;
+}
+
 function pickCandidateSet(candidates: SportsBingoSquareTemplate[], sportKey: string): SportsBingoSquareTemplate[] {
   const grouped: Record<CandidateBucket, SportsBingoSquareTemplate[]> = {
     moneyline: [],
@@ -3619,6 +4165,7 @@ function pickCandidateSet(candidates: SportsBingoSquareTemplate[], sportKey: str
   const selectedKeys = new Set<string>();
   const playerPropMarketCounts = new Map<string, number>();
   const selectedPlayerPropAxes = new Set<string>();
+  const selectedMlbResolverFamilyCounts = new Map<string, number>();
   const rejectionReasons = new Map<string, number>();
   const reject = (reason: string) => rejectionReasons.set(reason, (rejectionReasons.get(reason) ?? 0) + 1);
 
@@ -3639,6 +4186,17 @@ function pickCandidateSet(candidates: SportsBingoSquareTemplate[], sportKey: str
         playerPropMarketCounts.set(marketKey, (playerPropMarketCounts.get(marketKey) ?? 0) + 1);
       }
     }
+    if (sportKey === "baseball_mlb") {
+      const familyKey = mlbResolverFamilyKey(candidate);
+      if (familyKey) {
+        const current = selectedMlbResolverFamilyCounts.get(familyKey) ?? 0;
+        if (current >= 2) {
+          reject(`mlb_family_cap:${familyKey}`);
+          return false;
+        }
+        selectedMlbResolverFamilyCounts.set(familyKey, current + 1);
+      }
+    }
     selected.push(candidate);
     selectedKeys.add(candidate.key);
     return true;
@@ -3649,8 +4207,8 @@ function pickCandidateSet(candidates: SportsBingoSquareTemplate[], sportKey: str
     ["spread", 4],
     ["total", 3],
     ["team-total", 3],
-    ["special", sportKey === "basketball_nba" ? 1 : 0],
-    ["achievement", sportKey === "basketball_nba" ? 5 : sportKey === "baseball_mlb" ? 4 : 0],
+    ["special", isBasketballSportKey(sportKey) ? 1 : 0],
+    ["achievement", isBasketballSportKey(sportKey) ? 5 : sportKey === "baseball_mlb" ? 4 : 0],
   ];
 
   for (const [bucket, desired] of planByBucket) {
@@ -3674,7 +4232,7 @@ function pickCandidateSet(candidates: SportsBingoSquareTemplate[], sportKey: str
   let selectedPlayerProps = 0;
   const rejectedPlayerPropKeys = new Set<string>();
 
-  if (sportKey === "basketball_nba") {
+  if (isBasketballSportKey(sportKey)) {
     const playerAchievementPool = shuffle(grouped.achievement.filter((item) => isPlayerSpecificAchievementResolver(item.resolver)));
     let added = 0;
     for (const candidate of playerAchievementPool) {
@@ -3691,11 +4249,62 @@ function pickCandidateSet(candidates: SportsBingoSquareTemplate[], sportKey: str
           item.resolver.kind === "mlb_webhook_player_event_at_most"
       )
     );
-    let added = 0;
-    for (const candidate of playerAchievementPool) {
-      if (selected.length >= 24 || added >= 3) break;
-      if (tryAdd(candidate)) added += 1;
+    const namedPlayerPool = playerAchievementPool.filter((item) => isMlbNamedPlayerSquare(item));
+    const fallbackEventPool = shuffle(candidates.filter((item) => isMlbFallbackEventSquare(item)));
+
+    const lineupConfidenceSignal = clamp(
+      Math.min(1, namedPlayerPool.length / 10) +
+      Math.min(1, candidates.filter((item) => item.key.startsWith("mlb_star_hr:")).length / 2),
+      0,
+      1.75
+    );
+    // Dynamic target: prefer more named-player squares when lineup confidence is strong,
+    // but avoid rigid floors that deadlock on sparse/elite-pitching slates.
+    const weightedNamedTarget = Math.min(6, Math.max(2, Math.round(2 + lineupConfidenceSignal * 2)));
+    let addedNamed = 0;
+    let fallbackSubstitutions = 0;
+    let fallbackCursor = 0;
+
+    while (selected.length < 24 && addedNamed < weightedNamedTarget) {
+      const availableNamed = namedPlayerPool.filter((item) => !selectedKeys.has(item.key));
+      if (availableNamed.length === 0) {
+        break;
+      }
+      const nextNamed = takeWeightedCandidate(availableNamed, (item) => {
+        const base = clamp(item.probability, 0.05, 0.95);
+        const supportBoost = item.supportLevel === "supported" ? 1.25 : 1;
+        const starBoost = item.key.startsWith("mlb_star_hr:") ? 1.45 : 1;
+        return base * supportBoost * starBoost;
+      });
+      if (!nextNamed) {
+        break;
+      }
+      if (tryAdd(nextNamed)) {
+        addedNamed += 1;
+        continue;
+      }
+      // If this named candidate is rejected by diversity constraints, smoothly degrade
+      // to fallback event squares so generation keeps moving.
+      while (fallbackCursor < fallbackEventPool.length) {
+        const fallbackCandidate = fallbackEventPool[fallbackCursor];
+        fallbackCursor += 1;
+        if (!fallbackCandidate || selectedKeys.has(fallbackCandidate.key)) {
+          continue;
+        }
+        if (tryAdd(fallbackCandidate)) {
+          fallbackSubstitutions += 1;
+          break;
+        }
+      }
     }
+    console.info("[sportsBingo] mlb_named_player_weighting", {
+      named_candidate_pool_size: namedPlayerPool.length,
+      fallback_event_pool_size: fallbackEventPool.length,
+      lineup_confidence_signal: Number(lineupConfidenceSignal.toFixed(2)),
+      weighted_named_target: weightedNamedTarget,
+      added_named: addedNamed,
+      fallback_substitutions: fallbackSubstitutions,
+    });
   }
 
   if (sportKey === "baseball_mlb") {
@@ -3712,7 +4321,7 @@ function pickCandidateSet(candidates: SportsBingoSquareTemplate[], sportKey: str
     }
   }
 
-  if (sportKey === "basketball_nba") {
+  if (isBasketballSportKey(sportKey)) {
     const coreMarkets = shuffle([
       "player_points",
       "player_rebounds",
@@ -3774,17 +4383,91 @@ function pickCandidateSet(candidates: SportsBingoSquareTemplate[], sportKey: str
     throw new Error("Not enough candidate squares are available for this game.");
   }
 
-  if (sportKey === "basketball_nba") {
-    const playerSpecificSelectedCount = selected.filter((item) => isPlayerSpecificAchievementResolver(item.resolver)).length;
-    console.info("[sportsBingo] board_diagnostics", {
-      player_candidate_pool_size: grouped.achievement.filter((item) => isPlayerSpecificAchievementResolver(item.resolver)).length,
+  if (isBasketballSportKey(sportKey)) {
+    const hardFloor = isWnbaSportKey(sportKey) ? Math.max(6, BINGO_PLAYER_SPECIFIC_HARD_FLOOR - 2) : BINGO_PLAYER_SPECIFIC_HARD_FLOOR;
+    const playerSpecificPool = grouped.achievement.filter((item) => isPlayerSpecificAchievementResolver(item.resolver));
+    let playerSpecificSelectedCount = selected.filter((item) => isPlayerSpecificAchievementResolver(item.resolver)).length;
+    const shortfall = Math.max(0, hardFloor - playerSpecificSelectedCount);
+
+    const poolFamilyCounts = countCandidateResolverFamilies(candidates);
+
+    let pivotReplacementsRequested = 0;
+    let pivotReplacementsApplied = 0;
+    if (isWnbaSportKey(sportKey) && shortfall > 0) {
+      pivotReplacementsRequested = shortfall;
+      const situationalPool = shuffle(
+        candidates.filter((candidate) => !selectedKeys.has(candidate.key) && isSituationalPivotCandidate(candidate))
+      );
+
+      const replaceableIndices = selected
+        .map((candidate, index) => ({ candidate, index }))
+        .filter(({ candidate }) => candidate.bucket === "player-prop")
+        .map(({ index }) => index);
+
+      for (const index of replaceableIndices) {
+        if (pivotReplacementsApplied >= shortfall) {
+          break;
+        }
+        const replacement = situationalPool[pivotReplacementsApplied];
+        if (!replacement) {
+          break;
+        }
+        const previous = selected[index];
+        if (!previous) {
+          continue;
+        }
+        selected[index] = replacement;
+        selectedKeys.delete(previous.key);
+        selectedKeys.add(replacement.key);
+        pivotReplacementsApplied += 1;
+      }
+
+      playerSpecificSelectedCount = selected.filter((item) => isPlayerSpecificAchievementResolver(item.resolver)).length;
+    }
+
+    const selectedFamilyCounts = countCandidateResolverFamilies(selected);
+    const droppedFamilyCounts = new Map<string, number>();
+    for (const [family, poolCount] of poolFamilyCounts.entries()) {
+      const dropped = poolCount - (selectedFamilyCounts.get(family) ?? 0);
+      if (dropped > 0) {
+        droppedFamilyCounts.set(family, dropped);
+      }
+    }
+
+    console.info("[sportsBingo] player_floor_telemetry", {
+      sport_key: sportKey,
+      player_candidate_pool_size: playerSpecificPool.length,
       player_specific_selected_count: playerSpecificSelectedCount,
-      hard_floor: BINGO_PLAYER_SPECIFIC_HARD_FLOOR,
+      hard_floor: hardFloor,
+      shortfall,
+      pivot_replacements_requested: pivotReplacementsRequested,
+      pivot_replacements_applied: pivotReplacementsApplied,
+      pool_counts_by_family: sortedCountObject(poolFamilyCounts),
+      selected_counts_by_family: sortedCountObject(selectedFamilyCounts),
+      dropped_counts_by_family: sortedCountObject(droppedFamilyCounts),
       rejection_reasons: Object.fromEntries(rejectionReasons.entries()),
     });
-    if (playerSpecificSelectedCount < BINGO_PLAYER_SPECIFIC_HARD_FLOOR) {
+    console.info("[sportsBingo] board_diagnostics", {
+      sport_key: sportKey,
+      player_candidate_pool_size: playerSpecificPool.length,
+      player_specific_selected_count: playerSpecificSelectedCount,
+      hard_floor: hardFloor,
+      shortfall,
+      pivot_replacements_requested: pivotReplacementsRequested,
+      pivot_replacements_applied: pivotReplacementsApplied,
+      rejection_reasons: Object.fromEntries(rejectionReasons.entries()),
+    });
+    if (playerSpecificSelectedCount < hardFloor) {
+      if (isWnbaSportKey(sportKey)) {
+        console.warn("[sportsBingo] wnba_floor_pivot_applied", {
+          player_specific_selected_count: playerSpecificSelectedCount,
+          hard_floor: hardFloor,
+          shortfall,
+        });
+        return selected.slice(0, 24);
+      }
       throw new Error(
-        `Insufficient player-specific candidates for hard floor (${playerSpecificSelectedCount}/${BINGO_PLAYER_SPECIFIC_HARD_FLOOR}).`
+        `Insufficient player-specific candidates for hard floor (${playerSpecificSelectedCount}/${hardFloor}).`
       );
     }
   }
@@ -3959,7 +4642,11 @@ function arrangeBoardSquaresForFeasibleLines(
   return null;
 }
 
-function buildBoardPreview(game: SportsBingoGame, squares: InternalBoardSquare[]): SportsBingoBoardPreview {
+function buildBoardPreview(
+  game: SportsBingoGame,
+  squares: InternalBoardSquare[],
+  simulationTrials: number
+): SportsBingoBoardPreview {
   const previewSquares: SportsBingoSquarePreview[] = squares.map((square) => ({
     index: square.index,
     key: square.key,
@@ -3969,12 +4656,13 @@ function buildBoardPreview(game: SportsBingoGame, squares: InternalBoardSquare[]
     supportLevel: square.supportLevel,
   }));
 
-  const boardProbability = estimateBoardWinProbability(
+  const boardProbability = estimateBoardWinProbabilityWithTrials(
     previewSquares.map((square) => ({
       index: square.index,
       probability: square.probability,
       isFree: square.isFree,
-    }))
+    })),
+    simulationTrials
   );
 
   return {
@@ -3984,9 +4672,16 @@ function buildBoardPreview(game: SportsBingoGame, squares: InternalBoardSquare[]
   };
 }
 
-function generateBoardForGame(game: SportsBingoGame, candidates: SportsBingoSquareTemplate[]): SportsBingoBoardPreview {
+function generateBoardForGame(
+  game: SportsBingoGame,
+  candidates: SportsBingoSquareTemplate[],
+  options: { generationMode?: "preview" | "final" } = {}
+): SportsBingoBoardPreview {
   const target = clamp(BOARD_TARGET_WIN_RATE, 0.05, 0.95);
   const tolerance = clamp(BOARD_TARGET_TOLERANCE, 0.01, 0.2);
+  const fullTrials = Math.max(500, Math.min(12_000, BOARD_SIMULATION_TRIALS));
+  const simulationTrials =
+    options.generationMode === "preview" ? Math.min(fullTrials, resolvePreviewSimulationTrials(candidates.length)) : fullTrials;
 
   let best: SportsBingoBoardPreview | null = null;
   let bestDelta = Number.POSITIVE_INFINITY;
@@ -3998,7 +4693,7 @@ function generateBoardForGame(game: SportsBingoGame, candidates: SportsBingoSqua
       continue;
     }
 
-    const preview = buildBoardPreview(game, boardSquares);
+    const preview = buildBoardPreview(game, boardSquares, simulationTrials);
     const delta = Math.abs(preview.boardProbability - target);
 
     if (!best || delta < bestDelta) {
@@ -4146,6 +4841,7 @@ export async function listSportsBingoSquareTemplates(params: {
 export async function generateSportsBingoBoard(params: {
   gameId: string;
   sportKey?: string;
+  generationMode?: "preview" | "final";
 }): Promise<SportsBingoBoardPreview> {
   const gameId = params.gameId.trim();
   if (!gameId) {
@@ -4162,7 +4858,9 @@ export async function generateSportsBingoBoard(params: {
     throw new Error("The selected game is unavailable right now.");
   }
 
-  return generateBoardForGame(entry.game, entry.candidates);
+  return generateBoardForGame(entry.game, entry.candidates, {
+    generationMode: params.generationMode ?? "final",
+  });
 }
 
 function parseResolver(value: unknown): SportsBingoResolver | null {
@@ -4410,7 +5108,10 @@ function parseResolver(value: unknown): SportsBingoResolver | null {
           resolver.event === "home_run" ||
           resolver.event === "strikeout" ||
           resolver.event === "walk" ||
-          resolver.event === "hit_by_pitch")
+          resolver.event === "hit_by_pitch" ||
+          resolver.event === "rbi" ||
+          resolver.event === "stolen_base" ||
+          resolver.event === "pitcher_out")
       ) {
         return {
           kind: "mlb_webhook_player_event_at_least",
@@ -4429,12 +5130,14 @@ function parseResolver(value: unknown): SportsBingoResolver | null {
         typeof resolver.player === "string" &&
         typeof resolver.threshold === "number" &&
         Number.isFinite(resolver.threshold) &&
-        resolver.event === "strikeout"
+        (resolver.event === "strikeout" ||
+          resolver.event === "earned_run" ||
+          resolver.event === "hit_allowed")
       ) {
         return {
           kind: "mlb_webhook_player_event_at_most",
           player: resolver.player,
-          event: "strikeout",
+          event: resolver.event,
           threshold: resolver.threshold,
           currentCount:
             typeof resolver.currentCount === "number" && Number.isFinite(resolver.currentCount)
@@ -4454,6 +5157,7 @@ function parseResolver(value: unknown): SportsBingoResolver | null {
           resolver.event === "walk" ||
           resolver.event === "hit_by_pitch" ||
           resolver.event === "hit" ||
+          resolver.event === "home_run" ||
           resolver.event === "quick_out_under_3_pitches")
       ) {
         return {
@@ -5335,6 +6039,108 @@ function applyWebhookCountToResolver(
   return null;
 }
 
+function mlbResolverCurrentCountFromPlayerSnapshot(
+  resolver: SportsBingoResolver,
+  event: MlbPlayerSnapshotBingoEvent
+): number | null {
+  if (resolver.kind === "mlb_webhook_player_event_at_least") {
+    switch (resolver.event) {
+      case "hit":
+        return Math.max(0, Math.floor(Number(event.batterStats.h ?? 0)));
+      case "home_run":
+        return Math.max(0, Math.floor(Number(event.batterStats.homeRuns ?? 0)));
+      case "strikeout":
+        return Math.max(0, Math.floor(Number(event.batterStats.strikeoutsAsBatter ?? 0)));
+      case "rbi":
+        return Math.max(0, Math.floor(Number(event.batterStats.rbi ?? 0)));
+      case "stolen_base":
+        return Math.max(0, Math.floor(Number(event.batterStats.stolenBases ?? 0)));
+      case "pitcher_out":
+        return Math.max(0, Math.floor(Number(event.pitcherStats.outs ?? 0)));
+      default:
+        return null;
+    }
+  }
+  if (resolver.kind === "mlb_webhook_player_event_at_most") {
+    switch (resolver.event) {
+      case "strikeout":
+        return Math.max(0, Math.floor(Number(event.batterStats.strikeoutsAsBatter ?? 0)));
+      case "earned_run":
+        return Math.max(0, Math.floor(Number(event.pitcherStats.earnedRuns ?? 0)));
+      case "hit_allowed":
+        return Math.max(0, Math.floor(Number(event.pitcherStats.hitsAllowed ?? 0)));
+      default:
+        return null;
+    }
+  }
+  return null;
+}
+
+export async function applyMlbPlayerSnapshotEvent(event: MlbPlayerSnapshotBingoEvent): Promise<{ updatedSquares: number }> {
+  assertSupabaseConfigured();
+
+  const gameId = String(event.gameId ?? "").trim();
+  const playerName = String(event.playerName ?? "").trim();
+  const playerId = Number(event.playerId ?? 0);
+  if (!gameId || !playerName || !Number.isFinite(playerId) || playerId <= 0) {
+    return { updatedSquares: 0 };
+  }
+
+  const rows = await listCardRows({
+    activeOnly: true,
+    sportKey: "baseball_mlb",
+    gameId,
+    limit: 300,
+  });
+  if (rows.length === 0) {
+    return { updatedSquares: 0 };
+  }
+
+  const activeCardIds = rows.map(({ card }) => card.id);
+  const { data: squares, error } = await supabaseAdmin!
+    .from("sports_bingo_squares")
+    .select("id, resolver")
+    .in("card_id", activeCardIds)
+    .eq("status", "pending")
+    .eq("player_id", Math.trunc(playerId));
+  if (error || !squares?.length) {
+    return { updatedSquares: 0 };
+  }
+
+  let updatedSquares = 0;
+  for (const square of squares as Array<{ id: string; resolver: unknown }>) {
+    const resolver = parseResolver(square.resolver);
+    if (!resolver) {
+      continue;
+    }
+    if (resolver.kind !== "mlb_webhook_player_event_at_least" && resolver.kind !== "mlb_webhook_player_event_at_most") {
+      continue;
+    }
+    if (!resolverPlayerMatchesEvent(resolver.player, playerId, playerName)) {
+      continue;
+    }
+
+    const nextCount = mlbResolverCurrentCountFromPlayerSnapshot(resolver, event);
+    if (nextCount === null) {
+      continue;
+    }
+    const currentCount = Math.max(0, Math.floor(Number(resolver.currentCount ?? 0)));
+    if (nextCount === currentCount) {
+      continue;
+    }
+    const nextResolver: SportsBingoResolver = { ...resolver, currentCount: nextCount };
+    const { error: updateError } = await supabaseAdmin!
+      .from("sports_bingo_squares")
+      .update({ resolver: nextResolver })
+      .eq("id", square.id);
+    if (!updateError) {
+      updatedSquares += 1;
+    }
+  }
+
+  return { updatedSquares };
+}
+
 export async function applyMlbWebhookPropEvent(event: MlbWebhookBingoEvent): Promise<{ updatedSquares: number; completedSquares: number }> {
   assertSupabaseConfigured();
 
@@ -5477,11 +6283,14 @@ async function getScoresBySportKey(sportKey: string): Promise<Map<string, ScoreS
   const now = Date.now();
   const cached = scoreCache.get(sportKey);
   if (cached && now < cached.expiresAt) {
+    cacheTelemetry.scoreCacheHits += 1;
     return cached.byGameId;
   }
+  cacheTelemetry.scoreCacheMisses += 1;
 
   const sportPathByKey: Record<string, string> = {
     basketball_nba: "/nba/v1/games",
+    basketball_wnba: "/wnba/v1/games",
     americanfootball_nfl: "/nfl/v1/games",
     baseball_mlb: "/mlb/v1/games",
     icehockey_nhl: "/nhl/v1/games",
@@ -5571,12 +6380,139 @@ async function addNotification(userId: string, type: "success" | "warning" | "in
   });
 }
 
+function toGameFromCardRow(card: SportsBingoCardRow): SportsBingoGame {
+  return {
+    id: card.game_id,
+    sportKey: card.sport_key,
+    homeTeam: card.home_team,
+    awayTeam: card.away_team,
+    startsAt: card.starts_at,
+    gameLabel: card.game_label,
+    isLocked: Date.parse(card.starts_at) <= Date.now(),
+  };
+}
+
+function isMlbStarBrandedSquareLabel(label: string): boolean {
+  const trimmed = String(label ?? "").trim();
+  const hrMatch = trimmed.match(/^(.*)\s+HR$/i);
+  if (!hrMatch?.[1]) {
+    return false;
+  }
+  return MLB_STAR_BRANDED_PLAYER_KEYS.has(normalizeNameKey(hrMatch[1]));
+}
+
+function isMlbLateScratchWindow(card: SportsBingoCardRow, nowMs: number): boolean {
+  const startsAtMs = Date.parse(card.starts_at);
+  const createdAtMs = Date.parse(card.created_at);
+  const inGameWindow =
+    Number.isFinite(startsAtMs) &&
+    nowMs >= startsAtMs - MLB_LATE_SCRATCH_SWAP_WINDOW_MS &&
+    nowMs <= startsAtMs + MLB_LATE_SCRATCH_SWAP_WINDOW_MS;
+  const inLockWindow =
+    Number.isFinite(createdAtMs) &&
+    nowMs >= createdAtMs &&
+    nowMs <= createdAtMs + MLB_LATE_SCRATCH_SWAP_WINDOW_MS;
+  return inGameWindow || inLockWindow;
+}
+
+function getMlbPlayerLineupStatus(
+  snapshot: MLBGamePlayerStatsSnapshot,
+  playerRef: string
+): { starter: boolean; teamSide: TeamSide | null } | null {
+  const parsed = parseResolverPlayerRef(playerRef);
+  if (parsed.playerId && snapshot.lineupByPlayerId.has(parsed.playerId)) {
+    return snapshot.lineupByPlayerId.get(parsed.playerId) ?? null;
+  }
+  const playerKey = normalizeNameKey(parsed.displayName || playerRef);
+  if (!playerKey) {
+    return null;
+  }
+  return snapshot.lineupByPlayerKey.get(playerKey) ?? null;
+}
+
+async function autoSwapLateScratchedStarSquares(params: {
+  card: SportsBingoCardRow;
+  squares: SportsBingoSquareRow[];
+  mlbStatsSnapshot: MLBGamePlayerStatsSnapshot | null;
+}): Promise<{ swappedSquares: number; updatedSquares: number; squares: SportsBingoSquareRow[] }> {
+  const { card, mlbStatsSnapshot } = params;
+  const squares = [...params.squares];
+  if (!mlbStatsSnapshot) {
+    return { swappedSquares: 0, updatedSquares: 0, squares };
+  }
+  const nowMs = Date.now();
+  if (!isMlbLateScratchWindow(card, nowMs)) {
+    return { swappedSquares: 0, updatedSquares: 0, squares };
+  }
+  const hasConfirmedLineups =
+    mlbStatsSnapshot.lineupByPlayerId.size > 0 || mlbStatsSnapshot.lineupByPlayerKey.size > 0;
+  if (!hasConfirmedLineups) {
+    return { swappedSquares: 0, updatedSquares: 0, squares };
+  }
+
+  let swappedSquares = 0;
+  let updatedSquares = 0;
+  for (let index = 0; index < squares.length; index += 1) {
+    const square = squares[index];
+    if (!square || square.is_free || square.status !== "pending") {
+      continue;
+    }
+
+    const resolver = parseResolver(square.resolver);
+    if (!resolver || resolver.kind !== "mlb_webhook_player_event_at_least") {
+      continue;
+    }
+    if (resolver.event !== "home_run" || resolver.threshold < 1) {
+      continue;
+    }
+    if (!isMlbStarBrandedSquareLabel(square.label)) {
+      continue;
+    }
+
+    const lineupStatus = getMlbPlayerLineupStatus(mlbStatsSnapshot, resolver.player);
+    if (lineupStatus?.starter) {
+      continue;
+    }
+
+    const replacementTeam = lineupStatus?.teamSide ?? "home";
+    const replacementResolver: SportsBingoResolver = {
+      kind: "mlb_webhook_team_event_at_least",
+      team: replacementTeam,
+      event: "home_run",
+      threshold: 2,
+      currentCount: 0,
+    };
+    const replacementLabel = buildSquareLabel(toGameFromCardRow(card), replacementResolver);
+    const { data, error } = await supabaseAdmin!
+      .from("sports_bingo_squares")
+      .update({
+        resolver: replacementResolver,
+        label: replacementLabel,
+        probability: 0.46,
+        status: "pending",
+        resolved_at: null,
+      })
+      .eq("id", square.id)
+      .select("id, card_id, square_index, label, resolver, probability, is_free, status, created_at, resolved_at")
+      .single<SportsBingoSquareRow>();
+    if (error || !data) {
+      continue;
+    }
+    squares[index] = data;
+    swappedSquares += 1;
+    updatedSquares += 1;
+  }
+
+  return { swappedSquares, updatedSquares, squares };
+}
+
 export async function refreshSportsBingoProgress(params: {
   userId?: string;
   limit?: number;
   sportKey?: string;
   gameId?: string;
   bypassCache?: boolean;
+  invalidationMode?: "force" | "throttled";
 } = {}): Promise<{
   scannedCards: number;
   updatedSquares: number;
@@ -5584,20 +6520,20 @@ export async function refreshSportsBingoProgress(params: {
   settledLosses: number;
   nearWinAlerts: number;
 }> {
+  const refreshStartedAtMs = Date.now();
+  const telemetryStart = {
+    scoreCacheHits: cacheTelemetry.scoreCacheHits,
+    scoreCacheMisses: cacheTelemetry.scoreCacheMisses,
+    invalidationInvocations: cacheTelemetry.invalidationInvocations,
+    invalidationThrottledSkips: cacheTelemetry.invalidationThrottledSkips,
+  };
   assertSupabaseConfigured();
   if (params.bypassCache) {
-    if (params.sportKey) {
-      scoreCache.delete(params.sportKey);
-    } else {
-      scoreCache.clear();
-    }
-    if (params.gameId) {
-      nbaPlayerStatsCache.delete(params.gameId);
-      mlbPlayerStatsCache.delete(params.gameId);
-    } else {
-      nbaPlayerStatsCache.clear();
-      mlbPlayerStatsCache.clear();
-    }
+    maybeInvalidateSportsBingoCaches({
+      sportKey: params.sportKey,
+      gameId: params.gameId,
+      mode: params.invalidationMode ?? "force",
+    });
   }
 
   const activeCardRows = await listCardRows({
@@ -5609,6 +6545,21 @@ export async function refreshSportsBingoProgress(params: {
   });
 
   if (activeCardRows.length === 0) {
+    console.info("[sportsBingo][telemetry]", {
+      phase: "refresh",
+      scanned_cards: 0,
+      updated_squares: 0,
+      refresh_latency_ms: Date.now() - refreshStartedAtMs,
+      score_cache_hits: cacheTelemetry.scoreCacheHits,
+      score_cache_misses: cacheTelemetry.scoreCacheMisses,
+      invalidation_invocations: cacheTelemetry.invalidationInvocations,
+      invalidation_throttled_skips: cacheTelemetry.invalidationThrottledSkips,
+      score_cache_hits_delta: cacheTelemetry.scoreCacheHits - telemetryStart.scoreCacheHits,
+      score_cache_misses_delta: cacheTelemetry.scoreCacheMisses - telemetryStart.scoreCacheMisses,
+      invalidation_invocations_delta: cacheTelemetry.invalidationInvocations - telemetryStart.invalidationInvocations,
+      invalidation_throttled_skips_delta:
+        cacheTelemetry.invalidationThrottledSkips - telemetryStart.invalidationThrottledSkips,
+    });
     return {
       scannedCards: 0,
       updatedSquares: 0,
@@ -5632,17 +6583,18 @@ export async function refreshSportsBingoProgress(params: {
   let settledWins = 0;
   let settledLosses = 0;
   let nearWinAlerts = 0;
+  let swappedLateScratchSquares = 0;
   const nbaStatsSnapshotsByOddsGameId = new Map<string, NBAGamePlayerStatsSnapshot | null>();
   const mlbStatsSnapshotsByOddsGameId = new Map<string, MLBGamePlayerStatsSnapshot | null>();
 
   for (const entry of activeCardRows) {
     const cardRow = entry.card;
-    const squares = [...entry.squares];
+    let squares = [...entry.squares];
     const oddsScore = scoresBySport.get(cardRow.sport_key)?.get(cardRow.game_id) ?? null;
 
     let nbaStatsSnapshot: NBAGamePlayerStatsSnapshot | null = null;
     let mlbStatsSnapshot: MLBGamePlayerStatsSnapshot | null = null;
-    if (cardRow.sport_key === "basketball_nba") {
+    if (isBasketballSportKey(cardRow.sport_key)) {
       if (nbaStatsSnapshotsByOddsGameId.has(cardRow.game_id)) {
         nbaStatsSnapshot = nbaStatsSnapshotsByOddsGameId.get(cardRow.game_id) ?? null;
       } else {
@@ -5656,6 +6608,17 @@ export async function refreshSportsBingoProgress(params: {
         mlbStatsSnapshot = await getMLBGamePlayerStatsSnapshot(cardRow);
         mlbStatsSnapshotsByOddsGameId.set(cardRow.game_id, mlbStatsSnapshot);
       }
+    }
+
+    if (cardRow.sport_key === "baseball_mlb") {
+      const swapResult = await autoSwapLateScratchedStarSquares({
+        card: cardRow,
+        squares,
+        mlbStatsSnapshot,
+      });
+      squares = swapResult.squares;
+      swappedLateScratchSquares += swapResult.swappedSquares;
+      updatedSquares += swapResult.updatedSquares;
     }
 
     const startsAtMs = Date.parse(cardRow.starts_at);
@@ -5842,13 +6805,33 @@ export async function refreshSportsBingoProgress(params: {
     }
   }
 
-  return {
+  const response = {
     scannedCards: activeCardRows.length,
     updatedSquares,
     settledWins,
     settledLosses,
     nearWinAlerts,
   };
+  console.info("[sportsBingo][telemetry]", {
+    phase: "refresh",
+    scanned_cards: response.scannedCards,
+    updated_squares: response.updatedSquares,
+    settled_wins: response.settledWins,
+    settled_losses: response.settledLosses,
+    near_win_alerts: response.nearWinAlerts,
+    late_scratch_swaps: swappedLateScratchSquares,
+    refresh_latency_ms: Date.now() - refreshStartedAtMs,
+    score_cache_hits: cacheTelemetry.scoreCacheHits,
+    score_cache_misses: cacheTelemetry.scoreCacheMisses,
+    invalidation_invocations: cacheTelemetry.invalidationInvocations,
+    invalidation_throttled_skips: cacheTelemetry.invalidationThrottledSkips,
+    score_cache_hits_delta: cacheTelemetry.scoreCacheHits - telemetryStart.scoreCacheHits,
+    score_cache_misses_delta: cacheTelemetry.scoreCacheMisses - telemetryStart.scoreCacheMisses,
+    invalidation_invocations_delta: cacheTelemetry.invalidationInvocations - telemetryStart.invalidationInvocations,
+    invalidation_throttled_skips_delta:
+      cacheTelemetry.invalidationThrottledSkips - telemetryStart.invalidationThrottledSkips,
+  });
+  return response;
 }
 
 export async function listUserSportsBingoCards(params: {
@@ -6007,7 +6990,7 @@ export async function createSportsBingoCard(params: {
   }
 
   if ((activeCount ?? 0) >= MAX_ACTIVE_CARDS_PER_USER) {
-    throw new Error("You can only play up to 4 active Sports Bingo cards at once.");
+    throw new Error("Limit Reached");
   }
 
   const { data: existingSameGame } = await supabaseAdmin!

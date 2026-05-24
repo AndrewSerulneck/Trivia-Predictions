@@ -976,7 +976,7 @@ export function PredictionMarketList() {
         </div>
       )}
       <VenueEntryRulesPanel
-        gameKey="predictions"
+        gameKey="pickem"
         shouldDisplay={Boolean(userId) && !loading && pendingPicks.length === 0}
       />
       <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-3">

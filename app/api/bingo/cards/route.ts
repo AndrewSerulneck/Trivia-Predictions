@@ -19,7 +19,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const userId = (searchParams.get("userId") ?? "").trim();
     const includeSettled = normalizeBoolean(searchParams.get("includeSettled"), true);
-    const refreshProgress = normalizeBoolean(searchParams.get("refreshProgress"), true);
+    const activeView = normalizeBoolean(searchParams.get("activeView"), false);
+    const refreshProgressRequested = normalizeBoolean(searchParams.get("refreshProgress"), activeView && !includeSettled);
+    // Historical/settled queries are immutable snapshots and must never trigger expensive refresh evaluation.
+    const refreshProgress = includeSettled ? false : refreshProgressRequested;
 
     if (!userId) {
       return NextResponse.json({ ok: true, cards: [] });
@@ -74,6 +77,7 @@ export async function POST(request: Request) {
       const board = await generateSportsBingoBoard({
         gameId,
         sportKey: String(body.sportKey ?? "basketball_nba"),
+        generationMode: "preview",
       });
       return NextResponse.json({ ok: true, board });
     }

@@ -65,6 +65,7 @@ export async function GET(request: Request) {
       const pageSize = Math.min(10000, Math.max(1, parseInt(searchParams.get("pageSize") ?? "25", 10)));
       const questionTypeRaw = String(searchParams.get("questionType") ?? "").trim().toLowerCase();
       const category = String(searchParams.get("category") ?? "").trim() || undefined;
+      const answerFormatFilter = String(searchParams.get("answerFormat") ?? "").trim() || undefined;
       const sortByRaw = String(searchParams.get("sortBy") ?? "").trim();
       const sortDirectionRaw = String(searchParams.get("sortDirection") ?? "").trim().toLowerCase();
       const sortBy =
@@ -75,11 +76,25 @@ export async function GET(request: Request) {
 
       // File-based question banks for live and speed trivia
       if (questionTypeRaw === "live") {
-        const result = await listAdminLiveTriviaQuestionsFromFiles({ page, pageSize, category, sortBy, sortDirection });
+        const result = await listAdminLiveTriviaQuestionsFromFiles({
+          page,
+          pageSize,
+          category,
+          sortBy,
+          sortDirection,
+          answerFormat: answerFormatFilter,
+        });
         return NextResponse.json({ ok: true, ...result });
       }
       if (questionTypeRaw === "speed") {
-        const result = await listAdminSpeedTriviaQuestionsFromFiles({ page, pageSize, category, sortBy, sortDirection });
+        const result = await listAdminSpeedTriviaQuestionsFromFiles({
+          page,
+          pageSize,
+          category,
+          sortBy,
+          sortDirection,
+          answerFormat: answerFormatFilter,
+        });
         return NextResponse.json({ ok: true, ...result });
       }
 
@@ -386,16 +401,28 @@ export async function POST(request: Request) {
         };
 
     if (body.resource === "trivia") {
-      const item = await createAdminTriviaQuestion({
-        question: body.question,
-        options: body.options,
-        correctAnswer: body.correctAnswer,
-        category: body.category,
-        difficulty: body.difficulty,
-        questionPool: body.questionPool,
-        answerFormat: body.answerFormat,
-      });
-      return NextResponse.json({ ok: true, item });
+      try {
+        const item = await createAdminTriviaQuestion({
+          question: body.question,
+          options: body.options,
+          correctAnswer: body.correctAnswer,
+          category: body.category,
+          difficulty: body.difficulty,
+          questionPool: body.questionPool,
+          answerFormat: body.answerFormat,
+        });
+        return NextResponse.json({ ok: true, item });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to create trivia question.";
+        console.error("[admin][trivia-bank]", {
+          action: "create",
+          questionType: body.questionPool === "live_showdown" ? "live" : "speed",
+          questionId: null,
+          category: body.category ?? null,
+          error: message,
+        });
+        return NextResponse.json({ ok: false, error: message }, { status: 400 });
+      }
     }
 
     if (body.resource === "ads") {
@@ -585,16 +612,28 @@ export async function DELETE(request: Request) {
 
     if (resource === "trivia") {
       const questionType = searchParams.get("questionType");
-      if (questionType === "live") {
-        await deleteAdminLiveTriviaQuestionInFile(id);
+      try {
+        if (questionType === "live") {
+          await deleteAdminLiveTriviaQuestionInFile(id);
+          return NextResponse.json({ ok: true });
+        }
+        if (questionType === "speed") {
+          await deleteAdminSpeedTriviaQuestionInFile(id);
+          return NextResponse.json({ ok: true });
+        }
+        await deleteAdminTriviaQuestion(id);
         return NextResponse.json({ ok: true });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to delete trivia question.";
+        console.error("[admin][trivia-bank]", {
+          action: "delete",
+          questionType: questionType === "live" ? "live" : questionType === "speed" ? "speed" : "generic",
+          questionId: id,
+          category: null,
+          error: message,
+        });
+        return NextResponse.json({ ok: false, error: message }, { status: 400 });
       }
-      if (questionType === "speed") {
-        await deleteAdminSpeedTriviaQuestionInFile(id);
-        return NextResponse.json({ ok: true });
-      }
-      await deleteAdminTriviaQuestion(id);
-      return NextResponse.json({ ok: true });
     }
 
     if (resource === "ads") {
@@ -748,39 +787,51 @@ export async function PATCH(request: Request) {
         };
 
     if (body.resource === "trivia") {
-      if (body.questionType === "live") {
-        const answer = body.options?.[body.correctAnswer ?? 0] ?? body.options?.[0] ?? "";
-        const item = await updateAdminLiveTriviaQuestionInFile({
-          slug: body.id,
+      try {
+        if (body.questionType === "live") {
+          const answer = body.options?.[body.correctAnswer ?? 0] ?? body.options?.[0] ?? "";
+          const item = await updateAdminLiveTriviaQuestionInFile({
+            slug: body.id,
+            question: body.question,
+            answer,
+            category: body.category,
+            difficulty: body.difficulty,
+          });
+          return NextResponse.json({ ok: true, item });
+        }
+        if (body.questionType === "speed") {
+          const item = await updateAdminSpeedTriviaQuestionInFile({
+            slug: body.id,
+            question: body.question,
+            options: body.options ?? [],
+            correctAnswer: body.correctAnswer ?? 0,
+            category: body.category,
+            difficulty: body.difficulty,
+          });
+          return NextResponse.json({ ok: true, item });
+        }
+        const item = await updateAdminTriviaQuestion({
+          id: body.id,
           question: body.question,
-          answer,
+          options: body.options,
+          correctAnswer: body.correctAnswer,
           category: body.category,
           difficulty: body.difficulty,
+          questionPool: body.questionPool,
+          answerFormat: body.answerFormat,
         });
         return NextResponse.json({ ok: true, item });
-      }
-      if (body.questionType === "speed") {
-        const item = await updateAdminSpeedTriviaQuestionInFile({
-          slug: body.id,
-          question: body.question,
-          options: body.options ?? [],
-          correctAnswer: body.correctAnswer ?? 0,
-          category: body.category,
-          difficulty: body.difficulty,
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to update trivia question.";
+        console.error("[admin][trivia-bank]", {
+          action: "update",
+          questionType: body.questionType ?? "generic",
+          questionId: body.id ?? null,
+          category: body.category ?? null,
+          error: message,
         });
-        return NextResponse.json({ ok: true, item });
+        return NextResponse.json({ ok: false, error: message }, { status: 400 });
       }
-      const item = await updateAdminTriviaQuestion({
-        id: body.id,
-        question: body.question,
-        options: body.options,
-        correctAnswer: body.correctAnswer,
-        category: body.category,
-        difficulty: body.difficulty,
-        questionPool: body.questionPool,
-        answerFormat: body.answerFormat,
-      });
-      return NextResponse.json({ ok: true, item });
     }
 
     if (body.resource === "ads") {

@@ -33,6 +33,7 @@ type CardsResponse = {
 
 const SPORT_LABELS: Record<string, string> = {
   basketball_nba: "NBA",
+  basketball_wnba: "WNBA",
   americanfootball_nfl: "NFL",
   baseball_mlb: "MLB",
 };

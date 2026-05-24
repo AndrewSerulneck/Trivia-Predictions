@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import type { TouchEvent as ReactTouchEvent } from "react";
 import { createPortal } from "react-dom";
@@ -163,18 +164,19 @@ function shortenLabel(label: string, maxLength = 18): string {
 
 function getCardSquareStyle(status: BingoCardSquare["status"], isFree: boolean): string {
   if (isFree) {
-    return "border-emerald-300 bg-[linear-gradient(165deg,#bbf7d0_0%,#86efac_50%,#4ade80_100%)] text-emerald-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]";
+    return "border-emerald-400/60 bg-emerald-500 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]";
   }
   if (status === "hit") {
-    return "border-lime-300 bg-[linear-gradient(165deg,#fde047_0%,#bef264_55%,#4ade80_100%)] text-emerald-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]";
+    return "border-orange-300 bg-orange-500 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]";
   }
   if (status === "miss") {
-    return "border-rose-300 bg-[linear-gradient(165deg,#fee2e2_0%,#fecaca_50%,#fca5a5_100%)] text-rose-900";
+    return "border-rose-400/60 bg-rose-950/20 text-rose-300";
   }
   if (status === "void") {
-    return "border-slate-300 bg-[linear-gradient(165deg,#e2e8f0_0%,#cbd5e1_60%,#94a3b8_100%)] text-slate-700";
+    return "border-slate-600 bg-slate-800/50 text-slate-500";
   }
-  return "border-cyan-200 bg-[linear-gradient(165deg,#ecfeff_0%,#e0f2fe_55%,#bae6fd_100%)] text-slate-800";
+  // pending — board idle canvas
+  return "border-orange-900/50 bg-slate-800 text-slate-300";
 }
 
 function renderSquareStatusGlyph(square: BingoCardSquare) {
@@ -576,11 +578,15 @@ export function SportsBingoHome() {
   const [recentlyUpdatedSquareKeys, setRecentlyUpdatedSquareKeys] = useState<Set<string>>(new Set());
   const [recentlySucceededSquareKeys, setRecentlySucceededSquareKeys] = useState<Set<string>>(new Set());
   const [showBoardLimitMessage, setShowBoardLimitMessage] = useState(false);
+  const [limitPulse, setLimitPulse] = useState(false);
+  const [limitPopAnim, setLimitPopAnim] = useState<{ id: number } | null>(null);
+  const [limitEchoAnim, setLimitEchoAnim] = useState<{ id: number } | null>(null);
   const [lastRealtimeMessageAt, setLastRealtimeMessageAt] = useState<number | null>(null);
   const [isRealtimeFresh, setIsRealtimeFresh] = useState(false);
   const [actionPops, setActionPops] = useState<ActionPopItem[]>([]);
   const [glowCardIds, setGlowCardIds] = useState<Set<string>>(new Set());
   const [glowSquareKeys, setGlowSquareKeys] = useState<Set<string>>(new Set());
+  const [recentlyAddedCardIds, setRecentlyAddedCardIds] = useState<Set<string>>(new Set());
   const [isScreenShaking, setIsScreenShaking] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(() => toLocalDateInput(new Date()));
   const prefetchUsedRef = useRef(false);
@@ -593,6 +599,8 @@ export function SportsBingoHome() {
   const nextActionPopAtRef = useRef<number>(0);
   const liveStatsPrevByPlayerRef = useRef<Map<string, LivePlayerStatRealtimeRow>>(new Map());
   const actionPopCounterRef = useRef(0);
+  const limitPopIdRef = useRef(0);
+  const boardPopTimersRef = useRef<Map<string, number>>(new Map());
   const swipeViewportRef = useRef<HTMLDivElement | null>(null);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
@@ -808,6 +816,10 @@ export function SportsBingoHome() {
         window.clearTimeout(timer);
       }
       glowCardTimersRef.current.clear();
+      for (const timer of boardPopTimersRef.current.values()) {
+        window.clearTimeout(timer);
+      }
+      boardPopTimersRef.current.clear();
     };
   }, []);
 
@@ -920,6 +932,32 @@ export function SportsBingoHome() {
       const nextCards = payload.cards ?? [];
       setCards((previousCards) => {
         queueSquarePop(collectUpdatedSquareChanges(previousCards, nextCards));
+        const previousActiveIds = new Set(previousCards.filter((card) => card.status === "active").map((card) => card.id));
+        const newlyAddedActiveIds = nextCards
+          .filter((card) => card.status === "active" && !previousActiveIds.has(card.id))
+          .map((card) => card.id);
+        if (newlyAddedActiveIds.length > 0) {
+          setRecentlyAddedCardIds((current) => {
+            const next = new Set(current);
+            for (const cardId of newlyAddedActiveIds) {
+              next.add(cardId);
+              const existingTimer = boardPopTimersRef.current.get(cardId);
+              if (existingTimer) {
+                window.clearTimeout(existingTimer);
+              }
+              const timer = window.setTimeout(() => {
+                setRecentlyAddedCardIds((latest) => {
+                  const cleaned = new Set(latest);
+                  cleaned.delete(cardId);
+                  return cleaned;
+                });
+                boardPopTimersRef.current.delete(cardId);
+              }, 850);
+              boardPopTimersRef.current.set(cardId, timer);
+            }
+            return next;
+          });
+        }
         return nextCards;
       });
     } catch (error) {
@@ -1346,6 +1384,20 @@ export function SportsBingoHome() {
     [expandedFinalCardId, settledCards]
   );
   const hasReachedBoardLimit = activeCards.length >= 4;
+  const triggerLimitReachedFeedback = useCallback(() => {
+    setShowBoardLimitMessage(true);
+    window.setTimeout(() => setShowBoardLimitMessage(false), 900);
+
+    limitPopIdRef.current += 1;
+    setLimitPopAnim({ id: limitPopIdRef.current });
+    window.setTimeout(() => {
+      limitPopIdRef.current += 1;
+      setLimitEchoAnim({ id: limitPopIdRef.current });
+    }, 170);
+    setLimitPulse(false);
+    window.requestAnimationFrame(() => setLimitPulse(true));
+    window.setTimeout(() => setLimitPulse(false), 900);
+  }, []);
 
   useEffect(() => {
     if (!userId || hasStartedActiveCard || nextActiveCardStartMs === null) {
@@ -1466,19 +1518,19 @@ export function SportsBingoHome() {
       ) : null}
 
       {/* Header — BINGO rainbow title + controls */}
-      <div className="rounded-2xl border border-orange-200/80 bg-gradient-to-b from-orange-50 to-amber-50 p-4 shadow-sm">
-        <p className="text-center text-[11px] font-bold uppercase tracking-[0.16em] text-orange-500">Hightop Sports</p>
+      <div className="rounded-2xl border border-orange-400/40 bg-slate-900 p-4">
+        <p className="text-center text-[11px] font-black uppercase tracking-[0.16em] text-orange-400">Hightop Sports</p>
         <div className="mb-1 grid grid-cols-5 gap-1">
           {[
-            { letter: "B", cls: "text-rose-600" },
-            { letter: "I", cls: "text-amber-600" },
-            { letter: "N", cls: "text-emerald-600" },
-            { letter: "G", cls: "text-cyan-600" },
-            { letter: "O", cls: "text-violet-600" },
+            { letter: "B", cls: "text-rose-400" },
+            { letter: "I", cls: "text-amber-400" },
+            { letter: "N", cls: "text-emerald-400" },
+            { letter: "G", cls: "text-cyan-400" },
+            { letter: "O", cls: "text-violet-400" },
           ].map((item) => (
             <div
               key={item.letter}
-              className={`text-center text-3xl font-black tracking-[0.1em] drop-shadow-sm ${item.cls}`}
+              className={`text-center text-3xl font-black tracking-[0.1em] drop-shadow-[0_0_8px_currentColor] ${item.cls}`}
             >
               {item.letter}
             </div>
@@ -1489,13 +1541,10 @@ export function SportsBingoHome() {
             <button
               type="button"
               aria-disabled="true"
-              onMouseDown={() => setShowBoardLimitMessage(true)}
-              onMouseUp={() => setShowBoardLimitMessage(false)}
-              onMouseLeave={() => setShowBoardLimitMessage(false)}
-              onTouchStart={() => setShowBoardLimitMessage(true)}
-              onTouchEnd={() => setShowBoardLimitMessage(false)}
-              onTouchCancel={() => setShowBoardLimitMessage(false)}
-              className="inline-flex min-h-[44px] items-center rounded-full bg-orange-100 px-5 py-2 text-sm font-bold text-orange-400"
+              onClick={triggerLimitReachedFeedback}
+              className={`inline-flex min-h-[44px] items-center rounded-full bg-orange-100 px-5 py-2 text-sm font-bold text-orange-400 ${
+                limitPulse ? "pickem-limit-pulse" : ""
+              }`}
             >
               {showBoardLimitMessage ? "Max 4 active boards reached!" : "Generate New Bingo Board"}
             </button>
@@ -1549,7 +1598,8 @@ export function SportsBingoHome() {
                 });
               }
             }}
-            className="tp-clean-button flex flex-1 items-center justify-center gap-1 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] py-2 text-sm font-bold text-white shadow-sm active:scale-95"
+            className="tp-exit-pill tp-clean-button flex flex-1 items-center justify-center gap-1 py-2 text-sm font-black active:scale-95"
+            style={{ boxShadow: "0 0 0 2px #020617, 0 1px 3px rgba(28,43,58,0.5)" }}
           >
             ← Back to Venue
           </button>
@@ -1566,7 +1616,7 @@ export function SportsBingoHome() {
       </div>
 
       {/* Boards section */}
-      <div className="rounded-2xl border border-orange-200/80 bg-gradient-to-b from-orange-50 to-amber-50 p-3 shadow-sm">
+      <div className="rounded-2xl border border-orange-400/30 bg-slate-900 p-3">
         <div className="mb-3 flex items-center justify-center gap-2">
           {isSelectedDateToday ? (
             <button
@@ -1574,8 +1624,8 @@ export function SportsBingoHome() {
             onClick={() => goToScreen(0)}
             className={`tp-clean-button rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.1em] transition-all ${
               activeScreen === 0
-                ? "bg-cyan-500 text-white shadow-[0_2px_10px_rgba(6,182,212,0.4)]"
-                : "bg-orange-100 text-orange-600 hover:bg-orange-200"
+                ? "bg-orange-500 text-white shadow-[0_2px_10px_rgba(234,88,12,0.4)]"
+                : "bg-slate-800 text-orange-400 hover:bg-slate-700"
             }`}
           >
             Active Boards
@@ -1587,7 +1637,7 @@ export function SportsBingoHome() {
             className={`tp-clean-button rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.1em] transition-all ${
               (isSelectedDateToday ? activeScreen === 1 : true)
                 ? "bg-amber-500 text-white shadow-[0_2px_10px_rgba(245,158,11,0.4)]"
-                : "bg-orange-100 text-orange-600 hover:bg-orange-200"
+                : "bg-slate-800 text-orange-400 hover:bg-slate-700"
             }`}
           >
             Scored Boards
@@ -1602,12 +1652,12 @@ export function SportsBingoHome() {
         >
           {/* Active boards panel */}
           <section className="w-full shrink-0 snap-start">
-            <h2 className="text-base font-bold text-orange-900">Active Boards</h2>
-            <p className="mt-1 text-sm text-orange-700/70">Active: {activeCards.length}/4 · Tap a board to expand it.</p>
+            <h2 className="text-base font-black text-orange-300">Active Boards</h2>
+            <p className="mt-1 text-sm text-slate-400">Tap a board to expand it.</p>
             {loadingCards ? (
               <LoadingState label="Loading your cards..." />
             ) : selectedActiveCards.length === 0 ? (
-              <p className="mt-3 rounded-xl border border-orange-200 bg-white/60 p-3 text-sm text-orange-700">
+              <p className="mt-3 rounded-xl border border-orange-400/30 bg-slate-800/50 p-3 text-sm text-slate-400">
                 No active cards yet. Tap Generate New Bingo Board to begin.
               </p>
             ) : (
@@ -1617,7 +1667,9 @@ export function SportsBingoHome() {
                     key={card.id}
                     data-bingo-card-id={card.id}
                     onClick={() => setExpandedActiveCardId(card.id)}
-                    className="relative cursor-pointer rounded-xl border border-orange-200 bg-white/70 p-3 shadow-sm transition-all hover:border-cyan-400 hover:shadow-[0_4px_14px_rgba(6,182,212,0.15)]"
+                    className={`relative cursor-pointer rounded-xl border border-orange-400/40 bg-slate-800/60 p-3 transition-all hover:border-orange-400 hover:bg-slate-800 ${
+                      recentlyAddedCardIds.has(card.id) ? "bingo-board-pop" : ""
+                    }`}
                     style={{ touchAction: "pan-y", WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none" }}
                   >
                     <span
@@ -1761,14 +1813,15 @@ export function SportsBingoHome() {
             onClick={() => setExpandedActiveCardId("")}
           />
           <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-2xl border border-cyan-300 bg-white p-3 shadow-2xl shadow-orange-900/30">
-            <div className="mb-2 flex items-center justify-between gap-2">
+            <div className="sticky top-0 z-10 mb-2 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-cyan-100 bg-white/95 px-3 py-2 backdrop-blur">
               <p className="text-sm font-semibold text-slate-900">{expandedActiveCard.gameLabel}</p>
               <button
                 type="button"
                 onClick={() => setExpandedActiveCardId("")}
-                className="tp-clean-button inline-flex min-h-[32px] items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700"
+                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-slate-900/15 bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm"
               >
-                Close
+                <span aria-hidden="true">✕</span>
+                <span>Close</span>
               </button>
             </div>
             <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.1em] text-cyan-600">Active Board</p>
@@ -1787,14 +1840,15 @@ export function SportsBingoHome() {
             onClick={() => setExpandedFinalCardId("")}
           />
           <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-2xl border border-amber-300 bg-white p-3 shadow-2xl shadow-orange-900/30">
-            <div className="mb-2 flex items-center justify-between gap-2">
+            <div className="sticky top-0 z-10 mb-2 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-amber-100 bg-white/95 px-3 py-2 backdrop-blur">
               <p className="text-sm font-semibold text-slate-900">{expandedFinalCard.gameLabel}</p>
               <button
                 type="button"
                 onClick={() => setExpandedFinalCardId("")}
-                className="tp-clean-button inline-flex min-h-[32px] items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700"
+                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-slate-900/15 bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm"
               >
-                Close
+                <span aria-hidden="true">✕</span>
+                <span>Close</span>
               </button>
             </div>
             <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.1em] text-amber-600">Final Score Board</p>
@@ -1820,6 +1874,49 @@ export function SportsBingoHome() {
             document.body
           )
         : null}
+      {typeof document !== "undefined" && (limitPopAnim || limitEchoAnim)
+        ? createPortal(
+            <div className="pointer-events-none fixed inset-0 z-[7000] flex items-center justify-center">
+              {limitPopAnim ? (
+                <motion.span
+                  key={limitPopAnim.id}
+                  className="select-none whitespace-nowrap font-black leading-none text-red-500 transform-gpu will-change-transform"
+                  style={{
+                    fontSize: "clamp(2.2rem, 10vw, 4.5rem)",
+                    textShadow: "0 0 22px rgba(239,68,68,0.42), 0 0 44px rgba(239,68,68,0.24)",
+                  }}
+                  initial={{ scale: 0.72, opacity: 0, y: 0 }}
+                  animate={{ scale: [0.72, 1.08, 1.02, 0.98], y: [0, -20, -16, -8], opacity: [0, 1, 1, 0] }}
+                  transition={{
+                    duration: 0.55,
+                    times: [0, 0.28, 0.62, 1],
+                    ease: ["easeOut", "easeOut", "easeIn", "easeIn"],
+                  }}
+                  onAnimationComplete={() => setLimitPopAnim(null)}
+                >
+                  Limit Reached
+                </motion.span>
+              ) : null}
+              {limitEchoAnim ? (
+                <motion.span
+                  key={limitEchoAnim.id}
+                  className="absolute top-[19%] select-none whitespace-nowrap font-black leading-none text-red-500 transform-gpu will-change-transform"
+                  style={{
+                    fontSize: "clamp(1.8rem, 7vw, 3.2rem)",
+                    textShadow: "0 0 18px rgba(239,68,68,0.38), 0 0 34px rgba(239,68,68,0.18)",
+                  }}
+                  initial={{ scale: 0.7, opacity: 0, y: 0 }}
+                  animate={{ scale: [0.7, 1.06, 1], opacity: [0, 1, 0], y: [0, -12, -20] }}
+                  transition={{ duration: 0.55, times: [0, 0.45, 1], ease: "easeOut" }}
+                  onAnimationComplete={() => setLimitEchoAnim(null)}
+                >
+                  Limit Reached
+                </motion.span>
+              ) : null}
+            </div>,
+            document.body
+          )
+        : null}
       <style jsx global>{`
         @keyframes tp-bingo-screen-shake {
           0% { transform: translate3d(0, 0, 0); }
@@ -1831,6 +1928,23 @@ export function SportsBingoHome() {
         }
         .tp-bingo-screen-shake {
           animation: tp-bingo-screen-shake 200ms linear;
+          will-change: transform;
+        }
+        @keyframes pickem-limit-pulse {
+          0% { transform: scale(1); opacity: 1; }
+          35% { transform: scale(1.08); opacity: 0.92; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .pickem-limit-pulse {
+          animation: pickem-limit-pulse 420ms ease-in-out;
+        }
+        @keyframes bingo-board-pop {
+          0% { transform: scale(0.92); }
+          60% { transform: scale(1.04); }
+          100% { transform: scale(1); }
+        }
+        .bingo-board-pop {
+          animation: bingo-board-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
           will-change: transform;
         }
       `}</style>

@@ -459,6 +459,10 @@ function getTodayDateInOffset(tzOffsetMinutes: number): string {
   return `${y}-${m}-${day}`;
 }
 
+function getServerTodayDate(): string {
+  return getTodayDateInOffset(new Date().getTimezoneOffset());
+}
+
 function formatUtcDateOffset(offsetDays = 0): string {
   const date = new Date();
   date.setUTCDate(date.getUTCDate() + offsetDays);
@@ -2133,7 +2137,7 @@ export async function submitFantasyEntry(params: {
   const gameId = String(params.gameId ?? "").trim();
   const lineup = validateLineup(params.lineup);
   const tzOffsetMinutes = parseTimezoneOffset(params.tzOffsetMinutes);
-  const todayDate = getTodayDateInOffset(tzOffsetMinutes);
+  const serverTodayDate = getServerTodayDate();
   const allowStartedDrafting = shouldAllowStartedDraftingForTesting();
 
   if (!userId || !venueId || !gameId) {
@@ -2154,7 +2158,7 @@ export async function submitFantasyEntry(params: {
   if (anyDailyId) {
     const { date: dailyDate, league: dailyLeague } = anyDailyId;
 
-    if (dailyDate !== todayDate) {
+    if (dailyDate !== serverTodayDate) {
       throw new Error(`You can only draft players from today's ${dailyLeague} games.`);
     }
 
@@ -2272,6 +2276,7 @@ export async function updateFantasyEntryLineup(params: {
   const gameId = String(params.gameId ?? "").trim();
   const lineup = validateLineup(params.lineup);
   const tzOffsetMinutes = parseTimezoneOffset(params.tzOffsetMinutes);
+  const serverTodayDate = getServerTodayDate();
   const allowStartedDrafting = shouldAllowStartedDraftingForTesting();
 
   if (!userId || !venueId || !gameId) {
@@ -2301,6 +2306,9 @@ export async function updateFantasyEntryLineup(params: {
   }
 
   const anyDailyId = parseAnyDailyGameId(gameId);
+  if (anyDailyId && anyDailyId.date < serverTodayDate) {
+    throw new Error("Past fantasy slates are read-only.");
+  }
   const playerPool = anyDailyId
     ? await getFantasyPlayerPoolForDate({ date: anyDailyId.date, tzOffsetMinutes, includeStartedGames: true, league: anyDailyId.league })
     : await getFantasyPlayerPoolForGame({ gameId, sportKey: existingRow.sport_key, tzOffsetMinutes, includeStartedGames: true });

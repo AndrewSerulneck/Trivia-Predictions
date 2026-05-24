@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { fetchBallDontLieList } from "@/lib/balldontlie";
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 
-export type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl" | "mma";
+export type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl" | "mma" | "tennis";
 type PickEmPickStatus = "pending" | "won" | "lost" | "push" | "canceled";
 type PickEmGameStatus = "scheduled" | "live" | "final";
 
@@ -138,6 +138,10 @@ type BallDontLieScoreEvent = {
   completed?: boolean;
   home_team?: string;
   away_team?: string;
+  home_team_id?: string | null;
+  away_team_id?: string | null;
+  winner_team_id?: string | null;
+  winner_team?: string | null;
   scores?: Array<{
     name?: string;
     score?: number | string | null;
@@ -156,6 +160,8 @@ type NormalizedBallDontLieEvent = {
   awayTeam: string;
   homeScore: number | null;
   awayScore: number | null;
+  winnerTeamId: string | null;
+  winnerTeam: string | null;
   isCompleted: boolean;
   periodLabel: string | null;
 };
@@ -174,15 +180,24 @@ const BALLDONTLIE_API_KEY = process.env.BALLDONTLIE_API_KEY?.trim() ?? "";
 type BallDontLieGame = {
   id?: number | string;
   status?: string;
+  match_status?: string;
   datetime?: string;
   date?: string;
   commence_time?: string;
   start_time?: string;
+  scheduled_time?: string;
   scheduled_at?: string;
   home_team_score?: number | string | null;
   visitor_team_score?: number | string | null;
   home_score?: number | string | null;
   away_score?: number | string | null;
+  player1_game_score?: number | string | null;
+  player2_game_score?: number | string | null;
+  is_live?: boolean;
+  score?: string | null;
+  player1?: { id?: number | string; full_name?: string; first_name?: string; last_name?: string } | string;
+  player2?: { id?: number | string; full_name?: string; first_name?: string; last_name?: string } | string;
+  winner?: { id?: number | string; full_name?: string; first_name?: string; last_name?: string } | string | null;
   home_team?: { full_name?: string; name?: string; city?: string } | string;
   visitor_team?: { full_name?: string; name?: string; city?: string };
   home_team_id?: number | string;
@@ -214,6 +229,10 @@ const BDL_PATH_BY_SPORT_KEY: Record<string, { path: string; league: string; isSo
   nfl: { path: "/nfl/v1/games", league: "NFL" },
   mma_ufc: { path: "/mma/v1/fights", league: "UFC" },
   mma: { path: "/mma/v1/fights", league: "MMA" },
+  tennis_atp: { path: "/atp/v1/matches", league: "ATP" },
+  atp: { path: "/atp/v1/matches", league: "ATP" },
+  tennis_wta: { path: "/wta/v1/matches", league: "WTA" },
+  wta: { path: "/wta/v1/matches", league: "WTA" },
   soccer_usa_mls: { path: "/mls/v1/matches", league: "MLS", isSoccerMatch: true },
   soccer_epl: { path: "/epl/v2/matches", league: "EPL", isSoccerMatch: true },
   soccer_spain_la_liga: { path: "/laliga/v1/matches", league: "La Liga", isSoccerMatch: true },
@@ -292,6 +311,14 @@ const PICKEM_SPORTS: PickEmSportOption[] = [
     isClickable: true,
     sportKeys: ["mma_ufc"],
   },
+  {
+    slug: "tennis",
+    label: "Tennis",
+    subtitle: "ATP + WTA",
+    isInSeason: true,
+    isClickable: true,
+    sportKeys: ["tennis_atp", "tennis_wta"],
+  },
 ];
 
 const SPORT_BY_SLUG = new Map(PICKEM_SPORTS.map((item) => [item.slug, item]));
@@ -365,6 +392,8 @@ function normalizeLeagueLabel(value: string): string {
       if (lower === "wnba") return "WNBA";
       if (lower === "mma") return "MMA";
       if (lower === "ufc") return "UFC";
+      if (lower === "atp") return "ATP";
+      if (lower === "wta") return "WTA";
       if (lower === "usa") return "USA";
       if (lower === "uefa") return "UEFA";
       if (lower === "epl") return "EPL";
@@ -432,8 +461,62 @@ function extractTeamName(value: unknown): string {
   return "";
 }
 
+function extractEntityId(value: unknown): string {
+  if (value === null || value === undefined) {
+    return "";
+  }
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value).trim();
+  }
+  if (typeof value === "object") {
+    return String((value as Record<string, unknown>).id ?? "").trim();
+  }
+  return "";
+}
+
+function extractParticipantName(value: unknown): string {
+  if (typeof value === "string") {
+    return value.trim();
+  }
+  if (!value || typeof value !== "object") {
+    return "";
+  }
+  const row = value as Record<string, unknown>;
+  const full = String(row.full_name ?? "").trim();
+  if (full) return full;
+  const name = String(row.name ?? "").trim();
+  if (name) return name;
+  const first = String(row.first_name ?? "").trim();
+  const last = String(row.last_name ?? "").trim();
+  const combined = `${first} ${last}`.trim();
+  if (combined) return combined;
+  const display = String(row.display_name ?? "").trim();
+  if (display) return display;
+  return "";
+}
+
+function isTennisSportKey(sportKey: string): boolean {
+  return sportKey === "tennis_atp" || sportKey === "tennis_wta" || sportKey === "atp" || sportKey === "wta";
+}
+
+function extractTennisWinner(event: Record<string, unknown>): { winnerTeamId: string | null; winnerTeam: string | null } {
+  const winnerObject = event.winner as Record<string, unknown> | undefined;
+  const winnerTeamId =
+    extractEntityId(event.winner_id) ||
+    extractEntityId(event.winnerId) ||
+    extractEntityId(event.winning_player_id) ||
+    extractEntityId(event.winner_player_id) ||
+    extractEntityId(winnerObject?.id);
+  const winnerTeam = extractParticipantName(event.winner) || String(event.winner_name ?? "").trim() || null;
+  return {
+    winnerTeamId: winnerTeamId || null,
+    winnerTeam: winnerTeam || null,
+  };
+}
+
 function extractEventStartIso(event: Record<string, unknown>): string | null {
   const rawCandidates = [
+    event.scheduled_time,
     event.starts_at,
     event.datetime,
     event.date,
@@ -589,6 +672,7 @@ function parseTimezoneOffset(input: number | string | undefined): number {
 
 function isBallDontLieFinalStatus(eventRecord: Record<string, unknown>): boolean {
   const statusRaw = String(eventRecord.status ?? "").trim().toLowerCase();
+  const matchStatusRaw = String(eventRecord.match_status ?? "").trim().toLowerCase();
   const timeRaw = String(eventRecord.time ?? "").trim().toLowerCase();
   const gameStatusRaw = String(
     (eventRecord.game as Record<string, unknown> | undefined)?.status ?? ""
@@ -600,12 +684,20 @@ function isBallDontLieFinalStatus(eventRecord: Record<string, unknown>): boolean
     .trim()
     .toLowerCase();
 
-  const statusValues = [statusRaw, timeRaw, gameStatusRaw, gameStateRaw, eventStatusRaw].filter(Boolean);
+  const statusValues = [statusRaw, matchStatusRaw, timeRaw, gameStatusRaw, gameStateRaw, eventStatusRaw].filter(Boolean);
   return statusValues.some(
     (value) =>
       value === "post" ||
       value === "off" ||
       value === "completed" ||
+      value === "finished" ||
+      value === "retired" ||
+      value === "walkover" ||
+      value === "w/o" ||
+      value === "wo" ||
+      value === "cancelled" ||
+      value === "canceled" ||
+      value === "defaulted" ||
       value.includes("final") ||
       value.includes("full_time") ||
       value.includes("full time") ||
@@ -682,11 +774,25 @@ function buildQueryVariants(fromIso: string, toIso: string, perPage = "100"): UR
 }
 
 function buildQueryVariantsForSportKey(
-  _sportKey: string,
+  sportKey: string,
   fromIso: string,
   toIso: string,
   perPage = "100"
 ): URLSearchParams[] {
+  if (isTennisSportKey(sportKey)) {
+    const fromYear = new Date(fromIso).getUTCFullYear();
+    const toYear = new Date(toIso).getUTCFullYear();
+    const years = Array.from(new Set([fromYear, toYear].filter((year) => Number.isFinite(year))));
+    if (years.length === 0) {
+      years.push(new Date().getUTCFullYear());
+    }
+    const queries: URLSearchParams[] = [];
+    for (const year of years) {
+      queries.push(new URLSearchParams({ per_page: perPage, season: String(year) }));
+      queries.push(new URLSearchParams({ per_page: perPage, season: String(year), is_live: "true" }));
+    }
+    return queries;
+  }
   return listUtcDaysInclusive(fromIso, toIso).map(
     (day) => new URLSearchParams({ per_page: perPage, "dates[]": day })
   );
@@ -932,6 +1038,8 @@ async function fetchBallDontLieEventsForSportKey(
         awayTeam,
         homeScore,
         awayScore,
+        winnerTeamId: winnerId || null,
+        winnerTeam: winnerId === homeTeamId ? homeTeam : winnerId === awayTeamId ? awayTeam : null,
         isCompleted,
         periodLabel: null,
       });
@@ -971,31 +1079,45 @@ async function fetchBallDontLieEventsForSportKey(
   const events: NormalizedBallDontLieEvent[] = [];
   for (const event of payload) {
     const eventRecord = event as unknown as Record<string, unknown>;
+    const tennisMode = isTennisSportKey(sportKey);
     const id = String(event.id ?? "").trim();
-    const homeId =
-      String(event.home_team_id ?? "").trim() ||
-      String((eventRecord.home_team as Record<string, unknown> | undefined)?.id ?? "").trim();
-    const awayId =
-      String(event.away_team_id ?? "").trim() ||
-      String((eventRecord.away_team as Record<string, unknown> | undefined)?.id ?? "").trim() ||
-      String((eventRecord.visitor_team as Record<string, unknown> | undefined)?.id ?? "").trim();
+    const homeId = tennisMode
+      ? extractEntityId(eventRecord.player1) ||
+        String(event.home_team_id ?? "").trim() ||
+        String((eventRecord.home_team as Record<string, unknown> | undefined)?.id ?? "").trim()
+      : String(event.home_team_id ?? "").trim() ||
+        String((eventRecord.home_team as Record<string, unknown> | undefined)?.id ?? "").trim();
+    const awayId = tennisMode
+      ? extractEntityId(eventRecord.player2) ||
+        String(event.away_team_id ?? "").trim() ||
+        String((eventRecord.away_team as Record<string, unknown> | undefined)?.id ?? "").trim() ||
+        String((eventRecord.visitor_team as Record<string, unknown> | undefined)?.id ?? "").trim()
+      : String(event.away_team_id ?? "").trim() ||
+        String((eventRecord.away_team as Record<string, unknown> | undefined)?.id ?? "").trim() ||
+        String((eventRecord.visitor_team as Record<string, unknown> | undefined)?.id ?? "").trim();
     const splitNames = splitMatchName(String(event.name ?? "").trim());
-    const homeTeam =
-      String(event.home_team_name ?? "").trim() ||
-      extractTeamName(eventRecord.home_team) ||
-      extractTeamName(eventRecord.home_team_data) ||
-      teamNameMap.get(homeId) ||
-      splitNames?.home ||
-      "";
-    const awayTeam =
-      String(event.away_team_name ?? "").trim() ||
-      extractTeamName(eventRecord.away_team) ||
-      extractTeamName(eventRecord.away_team_data) ||
-      extractTeamName(eventRecord.visitor_team) ||
-      teamNameMap.get(awayId) ||
-      splitNames?.away ||
-      "";
-    const startsAt = extractEventStartIso(eventRecord);
+    const homeTeam = tennisMode
+      ? extractParticipantName(eventRecord.player1) || splitNames?.home || ""
+      : String(event.home_team_name ?? "").trim() ||
+        extractTeamName(eventRecord.home_team) ||
+        extractTeamName(eventRecord.home_team_data) ||
+        teamNameMap.get(homeId) ||
+        splitNames?.home ||
+        "";
+    const awayTeam = tennisMode
+      ? extractParticipantName(eventRecord.player2) || splitNames?.away || ""
+      : String(event.away_team_name ?? "").trim() ||
+        extractTeamName(eventRecord.away_team) ||
+        extractTeamName(eventRecord.away_team_data) ||
+        extractTeamName(eventRecord.visitor_team) ||
+        teamNameMap.get(awayId) ||
+        splitNames?.away ||
+        "";
+    const startsAt =
+      extractEventStartIso(eventRecord) ||
+      normalizeBallDontLieGameStartIso(
+        String((eventRecord.tournament as Record<string, unknown> | undefined)?.start_date ?? "").trim()
+      );
 
     if (!id || !homeTeam || !awayTeam || !startsAt) {
       continue;
@@ -1006,10 +1128,15 @@ async function fetchBallDontLieEventsForSportKey(
       continue;
     }
 
-    const homeScore = extractHomeScore(eventRecord);
-    const awayScore = extractAwayScore(eventRecord);
+    const homeScore = tennisMode
+      ? parseScore((eventRecord.player1_game_score as number | string | null | undefined) ?? null)
+      : extractHomeScore(eventRecord);
+    const awayScore = tennisMode
+      ? parseScore((eventRecord.player2_game_score as number | string | null | undefined) ?? null)
+      : extractAwayScore(eventRecord);
     const isCompleted = isBallDontLieFinalStatus(eventRecord);
     const periodLabel = formatPeriodLabel(event.time, event.time_in_period, provider.isSoccerMatch ?? false, typeof event.period === "number" ? event.period : null);
+    const tennisWinner = tennisMode ? extractTennisWinner(eventRecord) : null;
 
     events.push({
       id: buildPickEmGameId({
@@ -1028,6 +1155,8 @@ async function fetchBallDontLieEventsForSportKey(
       awayTeam,
       homeScore,
       awayScore,
+      winnerTeamId: tennisWinner?.winnerTeamId ?? null,
+      winnerTeam: tennisWinner?.winnerTeam ?? null,
       isCompleted,
       periodLabel,
     });
@@ -1090,6 +1219,10 @@ async function fetchScoresForSportKey(sportKey: string): Promise<Map<string, Bal
         completed,
         home_team: homeTeam,
         away_team: awayTeam,
+        home_team_id: fighter1Id || null,
+        away_team_id: fighter2Id || null,
+        winner_team_id: winnerId || null,
+        winner_team: winnerId === fighter1Id ? homeTeam : winnerId === fighter2Id ? awayTeam : null,
         scores: [
           { name: homeTeam, score: homeScore },
           { name: awayTeam, score: awayScore },
@@ -1133,25 +1266,44 @@ async function fetchScoresForSportKey(sportKey: string): Promise<Map<string, Bal
     if (!id) {
       continue;
     }
-    const homeTeam =
-      String(event.home_team_name ?? "").trim() ||
-      extractTeamName(eventRecord.home_team) ||
-      extractTeamName(eventRecord.home_team_data) ||
-      teamNameMap.get(String(event.home_team_id ?? "").trim()) ||
-      splitMatchName(String(event.name ?? "").trim())?.home ||
-      "";
-    const awayTeam =
-      String(event.away_team_name ?? "").trim() ||
-      extractTeamName(eventRecord.away_team) ||
-      extractTeamName(eventRecord.away_team_data) ||
-      extractTeamName(eventRecord.visitor_team) ||
-      teamNameMap.get(String(event.away_team_id ?? "").trim()) ||
-      splitMatchName(String(event.name ?? "").trim())?.away ||
-      "";
-    const startsAtIso = extractEventStartIso(eventRecord);
-    const homeScore = extractHomeScore(eventRecord);
-    const awayScore = extractAwayScore(eventRecord);
+    const tennisMode = isTennisSportKey(sportKey);
+    const splitNames = splitMatchName(String(event.name ?? "").trim());
+    const homeTeam = tennisMode
+      ? extractParticipantName(eventRecord.player1) || splitNames?.home || ""
+      : String(event.home_team_name ?? "").trim() ||
+        extractTeamName(eventRecord.home_team) ||
+        extractTeamName(eventRecord.home_team_data) ||
+        teamNameMap.get(String(event.home_team_id ?? "").trim()) ||
+        splitNames?.home ||
+        "";
+    const awayTeam = tennisMode
+      ? extractParticipantName(eventRecord.player2) || splitNames?.away || ""
+      : String(event.away_team_name ?? "").trim() ||
+        extractTeamName(eventRecord.away_team) ||
+        extractTeamName(eventRecord.away_team_data) ||
+        extractTeamName(eventRecord.visitor_team) ||
+        teamNameMap.get(String(event.away_team_id ?? "").trim()) ||
+        splitNames?.away ||
+        "";
+    const startsAtIso =
+      extractEventStartIso(eventRecord) ||
+      normalizeBallDontLieGameStartIso(
+        String((eventRecord.tournament as Record<string, unknown> | undefined)?.start_date ?? "").trim()
+      );
+    const homeScore = tennisMode
+      ? parseScore((eventRecord.player1_game_score as number | string | null | undefined) ?? null)
+      : extractHomeScore(eventRecord);
+    const awayScore = tennisMode
+      ? parseScore((eventRecord.player2_game_score as number | string | null | undefined) ?? null)
+      : extractAwayScore(eventRecord);
     const completed = isBallDontLieFinalStatus(eventRecord);
+    const tennisWinner = tennisMode ? extractTennisWinner(eventRecord) : null;
+    const homeTeamId = tennisMode
+      ? extractEntityId(eventRecord.player1) || String(event.home_team_id ?? "").trim() || null
+      : String(event.home_team_id ?? "").trim() || null;
+    const awayTeamId = tennisMode
+      ? extractEntityId(eventRecord.player2) || String(event.away_team_id ?? "").trim() || null
+      : String(event.away_team_id ?? "").trim() || null;
     byId.set(id, {
       id,
       sport_key: sportKey,
@@ -1160,6 +1312,10 @@ async function fetchScoresForSportKey(sportKey: string): Promise<Map<string, Bal
       completed,
       home_team: homeTeam,
       away_team: awayTeam,
+      home_team_id: homeTeamId,
+      away_team_id: awayTeamId,
+      winner_team_id: tennisWinner?.winnerTeamId ?? null,
+      winner_team: tennisWinner?.winnerTeam ?? null,
       scores: [
         { name: homeTeam, score: homeScore },
         { name: awayTeam, score: awayScore },
@@ -1653,7 +1809,8 @@ export async function listPickEmGames(params: {
   for (const event of eventsById.values()) {
     const homeScore = event.homeScore;
     const awayScore = event.awayScore;
-    const winner = resolveWinner(event.homeTeam, event.awayTeam, homeScore, awayScore);
+    const scoreWinner = resolveWinner(event.homeTeam, event.awayTeam, homeScore, awayScore);
+    const winner = event.winnerTeam ?? scoreWinner;
 
     let status: PickEmGameStatus = "scheduled";
     if (event.isCompleted) {
@@ -1701,7 +1858,7 @@ export async function listPickEmGames(params: {
     const probes: PickEmDebugProbe[] = [];
     for (const sportKey of sportKeys) {
       const paths = getPathVariantsForSportKey(sportKey);
-      const queries = buildQueryVariants(fromIso, toIso, "5");
+      const queries = buildQueryVariantsForSportKey(sportKey, fromIso, toIso, "5");
       for (const path of paths) {
         for (const query of queries) {
           const probe = await probePathForDebug(sportKey, path, query);
@@ -2102,16 +2259,53 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
 
     const homeScore = getTeamScore(scoreEvent.scores, row.home_team);
     const awayScore = getTeamScore(scoreEvent.scores, row.away_team);
+    const providerWinnerTeamId = String(scoreEvent.winner_team_id ?? "").trim();
+    const providerWinnerTeamName = String(scoreEvent.winner_team ?? "").trim();
     const startsAtMs = Date.parse(row.starts_at);
     const isStale = Number.isFinite(startsAtMs) && nowMs - startsAtMs >= staleFinalizeMs;
     const canFinalizeFromScores = homeScore !== null && awayScore !== null && isStale;
-    if (!scoreEvent.completed && !canFinalizeFromScores) {
+    const canFinalizeFromProviderWinner = providerWinnerTeamId.length > 0 || providerWinnerTeamName.length > 0;
+    if (!scoreEvent.completed && !canFinalizeFromScores && !canFinalizeFromProviderWinner) {
       continue;
     }
 
     let status: PickEmPickStatus = "canceled";
     let winningTeamId: string | null = null;
-    if (homeScore !== null && awayScore !== null) {
+    if (providerWinnerTeamId) {
+      if (row.home_team_id && providerWinnerTeamId === row.home_team_id) {
+        winningTeamId = row.home_team_id;
+      } else if (row.away_team_id && providerWinnerTeamId === row.away_team_id) {
+        winningTeamId = row.away_team_id;
+      } else if (row.home_team_id && providerWinnerTeamId === String(scoreEvent.home_team_id ?? "").trim()) {
+        winningTeamId = row.home_team_id;
+      } else if (row.away_team_id && providerWinnerTeamId === String(scoreEvent.away_team_id ?? "").trim()) {
+        winningTeamId = row.away_team_id;
+      }
+    }
+    if (!winningTeamId && providerWinnerTeamName) {
+      const winnerKey = normalizeTeamKey(providerWinnerTeamName);
+      if (winnerKey && winnerKey === normalizeTeamKey(row.home_team)) {
+        winningTeamId = row.home_team_id;
+      } else if (winnerKey && winnerKey === normalizeTeamKey(row.away_team)) {
+        winningTeamId = row.away_team_id;
+      }
+    }
+
+    if (winningTeamId || providerWinnerTeamName) {
+      const selectedTeamId = String(row.selected_team_id ?? "").trim() || null;
+      if (selectedTeamId && winningTeamId) {
+        status = selectedTeamId === winningTeamId ? "won" : "lost";
+      } else if (providerWinnerTeamName) {
+        status = normalizeTeamKey(providerWinnerTeamName) === normalizeTeamKey(row.selected_team) ? "won" : "lost";
+      } else {
+        status = "canceled";
+      }
+      if (status === "won") {
+        won += 1;
+      } else if (status === "lost") {
+        lost += 1;
+      }
+    } else if (homeScore !== null && awayScore !== null) {
       const winner = resolveWinner(row.home_team, row.away_team, homeScore, awayScore);
       if (winner === "tie") {
         status = "push";

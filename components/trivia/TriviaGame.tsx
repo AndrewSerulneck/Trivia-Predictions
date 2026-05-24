@@ -46,7 +46,7 @@ const PRE_ROUND_COUNTDOWN_START = 3;
 const BUTTON_POP_CLASS =
   "transition-all duration-150 transform active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
 const BACK_TO_VENUE_CLASS =
-  "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-blue-300 bg-gradient-to-r from-blue-700 to-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 active:scale-95 active:brightness-90";
+  "tp-exit-pill tp-clean-button inline-flex items-center justify-center gap-2 px-4 text-sm font-black";
 const INCORRECT_EMOJIS = [
   "😢",
   "😞",
@@ -282,14 +282,14 @@ function AnswerButton({
       onMouseDown={() => triggerHaptic()}
       onClick={() => onChoose(optionIndex)}
       disabled={locked}
-      className={`min-h-[56px] w-full rounded-xl border-2 border-slate-900 px-2.5 py-2 text-left text-[15px] font-bold leading-snug shadow-[2px_2px_0_#0f172a] transition-colors duration-[80ms] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 sm:min-h-[64px] sm:rounded-2xl sm:border-4 sm:px-3 sm:py-2.5 sm:text-base sm:shadow-[4px_4px_0_#0f172a] disabled:opacity-80 ${
+      className={`min-h-[56px] w-full rounded-xl border-2 px-2.5 py-2 text-left text-[15px] font-bold leading-snug transition-colors duration-[80ms] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:min-h-[64px] sm:rounded-2xl sm:px-3 sm:py-2.5 sm:text-base disabled:opacity-80 ${
         isRevealedCorrect
-          ? "bg-emerald-500 text-white"
+          ? "border-emerald-400 bg-emerald-500/20 text-emerald-200"
           : isSelectedWrong
-          ? "bg-rose-500 text-white"
+          ? "border-rose-400 bg-rose-500/20 text-rose-200"
           : selected
-          ? "bg-pink-500 text-white"
-          : "bg-white text-slate-900 enabled:hover:bg-cyan-100"
+          ? "border-blue-400 bg-blue-950/40 text-blue-100"
+          : "border-slate-700 bg-slate-800/80 text-slate-100 enabled:hover:border-blue-500/60 enabled:hover:bg-slate-800"
       }`}
     >
       {option}
@@ -1403,7 +1403,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
             setRoundStartPoints(currentUserPoints ?? null);
           }}
           disabled={triviaQuotaLocked}
-          className={`${BUTTON_POP_CLASS} inline-flex min-h-[44px] w-full items-center justify-center rounded-md bg-blue-700 px-3 py-2 text-base font-semibold text-white shadow-sm shadow-blue-200 sm:min-h-[50px] sm:px-4 sm:py-2`}
+          className={`${BUTTON_POP_CLASS} inline-flex min-h-[44px] w-full items-center justify-center rounded-xl border border-blue-400/60 bg-blue-500 px-3 py-2 text-base font-black text-white sm:min-h-[50px] sm:px-4 sm:py-2`}
         >
           {triviaQuotaLocked ? `Locked ${formatCountdown(quotaSecondsRemaining)}` : "Yes, Start Trivia"}
         </button>
@@ -1427,9 +1427,9 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
   if (preRoundCountdown !== null) {
     return (
-      <div className="space-y-3 rounded-2xl border-2 border-cyan-200/55 bg-slate-950/38 p-4 text-center text-cyan-50 shadow-[0_12px_28px_rgba(15,23,42,0.45)] backdrop-blur-sm">
-        <p className="text-sm font-black uppercase tracking-[0.12em] text-cyan-100">Get Ready</p>
-        <p className="text-2xl font-black text-yellow-200 sm:text-3xl">
+      <div className="space-y-3 rounded-2xl border border-blue-400/40 bg-slate-900 p-4 text-center shadow-[0_12px_28px_rgba(15,23,42,0.45)]">
+        <p className="text-sm font-black uppercase tracking-[0.12em] text-blue-300">Get Ready</p>
+        <p className="text-2xl font-black text-blue-100 sm:text-3xl">
           Round {upcomingRoundNumber}
         </p>
         <p
@@ -1496,28 +1496,28 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         </div>
       ) : null}
 
-      <div className="rounded-xl border-2 border-cyan-200/55 bg-slate-900/45 p-1.5 text-cyan-50 shadow-[2px_2px_0_#0f172a] sm:rounded-2xl sm:border-4 sm:p-2 sm:shadow-[5px_5px_0_#0f172a]">
+      <div className="rounded-xl border border-blue-400/40 bg-slate-900 p-1.5 text-blue-200 sm:rounded-2xl sm:p-2">
         <div className="flex items-center justify-between gap-2 text-sm font-black uppercase tracking-[0.08em]">
           <span>Round {upcomingRoundNumber} of {ROUND_LIMIT_PER_WINDOW}</span>
           <span>{quota?.isAdminBypass ? "Admin Unlimited" : "Live Round"}</span>
         </div>
         {triviaQuotaLocked ? (
-          <p className="mt-1 text-sm font-semibold text-rose-200">
+          <p className="mt-1 text-sm font-semibold text-rose-300">
             Limit reached. Next round unlocks in {formatCountdown(quotaSecondsRemaining)}.
           </p>
         ) : null}
       </div>
 
-      <div className="rounded-xl border-2 border-slate-900 bg-yellow-100 p-1.5 text-sm font-semibold text-slate-700 shadow-[2px_2px_0_#0f172a] sm:rounded-2xl sm:border-4 sm:p-2 sm:shadow-[5px_5px_0_#0f172a]">
+      <div className="rounded-xl border border-blue-400/40 bg-slate-900 p-1.5 sm:rounded-2xl sm:p-2">
         <div className="flex items-center justify-between gap-2 sm:gap-3">
-          <span>
-            Question {index + 1} of {questions.length}
+          <span className="text-sm font-black tabular-nums text-blue-200">Q {index + 1}/{questions.length}</span>
+          <span className={`text-5xl font-black tabular-nums leading-none ${secondsRemaining <= 3 ? "text-rose-400" : "text-blue-200"}`}>
+            {secondsRemaining}
           </span>
-          <span className="font-semibold text-slate-800">{secondsRemaining}s</span>
         </div>
-        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-200 sm:mt-2 sm:h-2">
+        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-800 sm:mt-2 sm:h-2">
           <div
-            className={`h-full rounded-full transition-all ${secondsRemaining <= 3 ? "bg-rose-500" : "bg-blue-600"}`}
+            className={`h-full rounded-full transition-all duration-300 ${secondsRemaining <= 3 ? "bg-rose-500" : "bg-blue-400"}`}
             style={{ width: `${Math.max(0, (secondsRemaining / QUESTION_TIME_LIMIT_SECONDS) * 100)}%` }}
           />
         </div>
@@ -1594,7 +1594,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
           onMouseDown={() => triggerHaptic(14)}
           onClick={nextQuestion}
           disabled={!canAdvanceToNextTriviaQuestion({ selectedAnswer, isSubmitting })}
-          className={`${BUTTON_POP_CLASS} inline-flex min-h-[44px] w-full items-center justify-center rounded-xl border-2 border-slate-900 bg-cyan-300 px-3 py-2 text-base font-black text-slate-900 shadow-[2px_2px_0_#0f172a] sm:min-h-[50px] sm:rounded-2xl sm:border-4 sm:px-4 sm:py-2.5 sm:shadow-[5px_5px_0_#0f172a] disabled:opacity-60`}
+          className={`${BUTTON_POP_CLASS} inline-flex min-h-[44px] w-full items-center justify-center rounded-xl border border-blue-400/60 bg-blue-500 px-3 py-2 text-base font-black text-white sm:min-h-[50px] sm:rounded-2xl sm:px-4 sm:py-2.5 disabled:opacity-60`}
         >
           Next Question
         </button>

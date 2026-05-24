@@ -8,7 +8,7 @@ import { getUserId, getVenueId } from "@/lib/storage";
 import { navigateBackToVenue } from "@/lib/venueGameTransition";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 
-type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl" | "mma";
+type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl" | "mma" | "tennis";
 
 type PickEmSport = {
   slug: PickEmSportSlug;
@@ -109,6 +109,7 @@ const SPORT_ICONS: Record<string, string> = {
   nfl: "🏈",
   nhl: "🏒",
   mma: "🥊",
+  tennis: "🎾",
 };
 const PICKEM_PICK_LIMIT = 10;
 
@@ -886,9 +887,9 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         .pickem-gold-flash { animation: pickem-gold-flash 700ms ease-out; }
         .pickem-limit-pulse { animation: pickem-limit-pulse 420ms ease-in-out; }
       `}</style>
-      <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-3 shadow-sm sm:p-4">
-        <h2 className="text-base font-semibold text-slate-900 sm:text-lg">Hightop Pick &apos;Em™</h2>
-        <p className="mt-1 text-xs text-slate-700 sm:text-sm">
+      <section className="rounded-2xl border border-indigo-400/40 bg-slate-900 p-3 sm:p-4">
+        <h2 className="text-base font-black text-indigo-300 sm:text-lg">Hightop Pick &apos;Em™</h2>
+        <p className="mt-1 text-xs text-slate-400 sm:text-sm">
           Select winners by checking a team. Picks lock at scheduled start time and are final.
         </p>
 
@@ -897,19 +898,19 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           transition={{ duration: 0.35 }}
           className={`mt-3 overflow-hidden rounded-xl border ${
             pickCount >= PICKEM_PICK_LIMIT
-              ? "border-red-300 bg-red-50"
-              : "border-slate-200 bg-white"
-          } shadow-sm`}
+              ? "border-rose-400/60 bg-rose-950/20"
+              : "border-slate-700 bg-slate-800/60"
+          }`}
         >
           {/* Label row */}
           <div className={`flex items-center justify-between border-b px-3 py-1.5 ${
-            pickCount >= PICKEM_PICK_LIMIT ? "border-red-200 bg-red-100/60" : "border-slate-100 bg-slate-50"
+            pickCount >= PICKEM_PICK_LIMIT ? "border-rose-400/40 bg-rose-950/30" : "border-slate-700 bg-slate-800"
           }`}>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
               Pick Tracker
             </span>
             <span className={`text-[10px] font-bold uppercase tracking-widest ${
-              pickCount >= PICKEM_PICK_LIMIT ? "text-red-500" : "text-slate-400"
+              pickCount >= PICKEM_PICK_LIMIT ? "text-rose-400" : "text-slate-500"
             } ${pickCount >= PICKEM_PICK_LIMIT && limitPulse ? "pickem-limit-pulse" : ""}`}>
               {pickCount >= PICKEM_PICK_LIMIT ? "Limit Reached" : "Daily Picks"}
             </span>
@@ -1180,7 +1181,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
       ) : (
         <div className="space-y-5">
           {grouped.map(([league, leagueGames]) => (
-            <section key={league} className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm sm:p-5">
+            <section key={league} className="rounded-2xl border border-indigo-400/40 bg-slate-900 p-4 sm:p-5">
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-700 sm:text-sm">{league}</h3>
                 <span className="text-[11px] font-medium text-slate-500">{leagueGames.length} games</span>
@@ -1197,16 +1198,16 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                   const disableHomeSelection = baseDisabled || (pickLimitReached && !awaySelected && !homeSelected);
 
                   return (
-                    <li key={game.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                    <li key={game.id} className="rounded-xl border border-indigo-400/60 bg-slate-900 border-l-4 border-l-indigo-500 p-4 sm:p-5">
                       {/* Scoreboard — team name rows are the pick action */}
-                      <div className="rounded-lg border border-slate-200 bg-slate-50 overflow-hidden">
-                        <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2">
-                          <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Tap to pick</span>
-                          <span className="text-sm font-semibold text-slate-700 sm:text-base">
+                      <div className="rounded-lg border border-slate-700 bg-slate-800 overflow-hidden">
+                        <div className="flex items-center justify-between border-b border-slate-700 px-3 py-2">
+                          <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Tap to pick</span>
+                          <span className="text-sm font-semibold text-slate-300 sm:text-base">
                             {formatLocalStartTime(game.startsAt)}
                           </span>
                         </div>
-                        <div className="divide-y divide-slate-200">
+                        <div className="divide-y divide-slate-700">
                           <button
                             type="button"
                             aria-disabled={disableAwaySelection}
@@ -1237,19 +1238,19 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                               disableAwaySelection ? "cursor-not-allowed opacity-40" : ""
                             } ${
                               awaySelected
-                                ? "bg-emerald-50"
-                                : "hover:bg-white"
-                            } ${pickPulseByGameId[game.id] === game.awayTeam ? "scale-[1.01] shadow-[inset_0_0_0_2px_rgba(34,197,94,0.4)]" : ""}`}
+                                ? "bg-cyan-500/15"
+                                : "hover:bg-slate-700/50"
+                            } ${pickPulseByGameId[game.id] === game.awayTeam ? "scale-[1.01] shadow-[inset_0_0_0_2px_rgba(34,211,238,0.3)]" : ""}`}
                           >
-                            <span className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${awaySelected ? "border-emerald-500 bg-emerald-500" : "border-slate-300 bg-white"}`}>
+                            <span className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${awaySelected ? "border-cyan-400 bg-cyan-400" : "border-slate-600 bg-transparent"}`}>
                               {awaySelected ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 text-white" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 text-slate-950" aria-hidden="true">
                                   <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
                                 </svg>
                               ) : null}
                             </span>
-                            <span className={`text-sm font-bold sm:text-base ${awaySelected ? "text-emerald-900" : "text-slate-900"}`}>{game.awayTeam}</span>
-                            <span className={`text-base font-black tabular-nums sm:text-lg ${awaySelected ? "text-emerald-900" : "text-slate-500"}`}>{getDisplayedScoreCell(game, game.awayTeam, game.awayScore)}</span>
+                            <span className={`text-sm font-bold sm:text-base ${awaySelected ? "text-cyan-100" : "text-slate-200"}`}>{game.awayTeam}</span>
+                            <span className={`text-base font-black tabular-nums sm:text-lg ${awaySelected ? "text-cyan-200" : "text-slate-400"}`}>{getDisplayedScoreCell(game, game.awayTeam, game.awayScore)}</span>
                           </button>
                           <button
                             type="button"
@@ -1281,24 +1282,24 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                               disableHomeSelection ? "cursor-not-allowed opacity-40" : ""
                             } ${
                               homeSelected
-                                ? "bg-emerald-50"
-                                : "hover:bg-white"
-                            } ${pickPulseByGameId[game.id] === game.homeTeam ? "scale-[1.01] shadow-[inset_0_0_0_2px_rgba(34,197,94,0.4)]" : ""}`}
+                                ? "bg-cyan-500/15"
+                                : "hover:bg-slate-700/50"
+                            } ${pickPulseByGameId[game.id] === game.homeTeam ? "scale-[1.01] shadow-[inset_0_0_0_2px_rgba(34,211,238,0.3)]" : ""}`}
                           >
-                            <span className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${homeSelected ? "border-emerald-500 bg-emerald-500" : "border-slate-300 bg-white"}`}>
+                            <span className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${homeSelected ? "border-cyan-400 bg-cyan-400" : "border-slate-600 bg-transparent"}`}>
                               {homeSelected ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 text-white" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 text-slate-950" aria-hidden="true">
                                   <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
                                 </svg>
                               ) : null}
                             </span>
-                            <span className={`text-sm font-bold sm:text-base ${homeSelected ? "text-emerald-900" : "text-slate-900"}`}>{game.homeTeam}</span>
-                            <span className={`text-base font-black tabular-nums sm:text-lg ${homeSelected ? "text-emerald-900" : "text-slate-500"}`}>{getDisplayedScoreCell(game, game.homeTeam, game.homeScore)}</span>
+                            <span className={`text-sm font-bold sm:text-base ${homeSelected ? "text-cyan-100" : "text-slate-200"}`}>{game.homeTeam}</span>
+                            <span className={`text-base font-black tabular-nums sm:text-lg ${homeSelected ? "text-cyan-200" : "text-slate-400"}`}>{getDisplayedScoreCell(game, game.homeTeam, game.homeScore)}</span>
                           </button>
                         </div>
                       </div>
                       {displayedPickTeam ? (
-                        <p className="mt-2 text-[11px] font-black uppercase tracking-[0.08em] text-emerald-600">
+                        <p className="mt-2 text-[11px] font-black uppercase tracking-[0.08em] text-cyan-400">
                           Pick locked in
                         </p>
                       ) : null}
@@ -1332,9 +1333,9 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                         <p
                           className={`mt-1 text-xs font-semibold ${
                             game.userPickStatus === "won"
-                              ? "text-cyan-600"
+                              ? "text-emerald-400"
                               : game.userPickStatus === "lost"
-                              ? "text-rose-700"
+                              ? "text-rose-400"
                               : "text-slate-500"
                           }`}
                         >

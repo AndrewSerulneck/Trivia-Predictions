@@ -1,4 +1,4 @@
-export type VenueGameKey = "trivia" | "live_trivia" | "predictions" | "pickem" | "bingo" | "fantasy";
+export type VenueGameKey = "trivia" | "live_trivia" | "pickem" | "bingo" | "fantasy";
 
 export type VenueGameCardConfig = {
   key: VenueGameKey;
@@ -12,7 +12,7 @@ export type VenueGameCardConfig = {
 export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
   {
     key: "trivia",
-    title: "Hightop Trivia™",
+    title: "Hightop Speed Trivia",
     path: "/trivia",
     cardClassName: "bg-blue-600 text-white",
     visibleOnVenueHome: true,
@@ -34,18 +34,6 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
       "-30-second write-in answer windows",
       "-Server-timed rounds with screen-lock forfeits on tab/browser switches",
       "-2 points per correct answer",
-    ],
-  },
-  {
-    key: "predictions",
-    title: "Hightop Predictions™",
-    path: "/predictions",
-    cardClassName: "bg-slate-900 text-white",
-    visibleOnVenueHome: false,
-    rules: [
-      "-Browse live sports prediction markets",
-      "-Earn points with correct predictions",
-      "-Points are awarded based on probability (less likely outcomes award more points)",
     ],
   },
   {
@@ -71,7 +59,7 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
       "-10 picks total",
       "-10 points per correct pick",
       "-7 correct picks wins double",
-      "-10 correct picks wins triple", 
+      "-10 correct picks wins triple",
     ],
   },
   {
@@ -103,7 +91,6 @@ export const VENUE_HOME_GAME_KEYS: VenueGameKey[] = ["trivia", "live_trivia", "b
 export function inferVenueGameKeyFromPath(pathname: string): VenueGameKey | null {
   if (pathname.startsWith("/trivia/live")) return "live_trivia";
   if (pathname.startsWith("/trivia")) return "trivia";
-  if (pathname.startsWith("/predictions")) return "predictions";
   if (pathname.startsWith("/pickem")) return "pickem";
   if (pathname.startsWith("/bingo")) return "bingo";
   if (pathname.startsWith("/fantasy")) return "fantasy";

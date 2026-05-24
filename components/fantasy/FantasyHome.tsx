@@ -20,6 +20,7 @@ type GamesPayload = {
   leaderboard?: FantasyLeaderboardEntry[];
   dailyGameId?: string;
   wnbaDailyGameId?: string;
+  mlbDailyGameId?: string;
   error?: string;
 };
 
@@ -234,6 +235,17 @@ function parseDailyGameDateFromId(gameId: string): string | null {
   if (trimmed.startsWith("mlb-daily-")) {
     const rawDate = trimmed.slice("mlb-daily-".length).trim();
     return /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null;
+  }
+  return null;
+}
+
+function getServerDateFromGamesPayload(payload: GamesPayload): string | null {
+  const candidates = [payload.dailyGameId, payload.wnbaDailyGameId, payload.mlbDailyGameId];
+  for (const candidate of candidates) {
+    const parsed = parseDailyGameDateFromId(String(candidate ?? ""));
+    if (parsed) {
+      return parsed;
+    }
   }
   return null;
 }
@@ -552,6 +564,7 @@ export function FantasyHome() {
   const [entries, setEntries] = useState<FantasyEntry[]>([]);
   const [selectedSport, setSelectedSport] = useState<FantasySport>("basketball");
   const [selectedDate, setSelectedDate] = useState(() => getTodayDateInput());
+  const [serverTodayDate, setServerTodayDate] = useState(() => getTodayDateInput());
   const [selectedGameId, setSelectedGameId] = useState("");
   const [playerPool, setPlayerPool] = useState<FantasyPlayerPoolItem[]>([]);
   const [leaderboard, setLeaderboard] = useState<FantasyLeaderboardEntry[]>([]);
@@ -597,7 +610,6 @@ export function FantasyHome() {
   const fantasyRealtimeFallbackTimerRef = useRef<number | null>(null);
   const fantasyHighlightResetTimerRef = useRef<number | null>(null);
   const geofencePauseRef = useRef(false);
-  const todayDate = useMemo(() => getTodayDateInput(), []);
   const requiredLineupSize = FANTASY_LINEUP_SIZE_BY_SPORT[selectedSport] ?? 5;
 
   useEffect(() => {
@@ -672,6 +684,10 @@ export function FantasyHome() {
       const payload = (await response.json()) as GamesPayload;
       if (!payload.ok) {
         throw new Error(payload.error ?? "Failed to load fantasy games.");
+      }
+      const serverDate = getServerDateFromGamesPayload(payload);
+      if (serverDate) {
+        setServerTodayDate(serverDate);
       }
       setGames(payload.games ?? []);
     } catch (error) {
@@ -955,11 +971,14 @@ export function FantasyHome() {
     if (!existingEntryForSelectedGame) {
       return false;
     }
+    if (selectedDate < serverTodayDate) {
+      return false;
+    }
     if (existingEntryForSelectedGame.status === "canceled" || existingEntryForSelectedGame.status === "final") {
       return false;
     }
     return !existingEntryForSelectedGame.lineup.some((playerName) => !playerPoolKeys.has(normalizePlayerKey(playerName)));
-  }, [existingEntryForSelectedGame, playerPoolKeys]);
+  }, [existingEntryForSelectedGame, playerPoolKeys, selectedDate, serverTodayDate]);
 
   // Persist in-progress draft to localStorage on every selection change
   useEffect(() => {
@@ -1587,14 +1606,14 @@ export function FantasyHome() {
 
   const navigateToNextDay = useCallback(() => {
     setSelectedDate((prev) => {
-      if (prev >= todayDate) return prev;
+      if (prev >= serverTodayDate) return prev;
       const d = new Date(`${prev}T00:00:00`);
       d.setDate(d.getDate() + 1);
       return toLocalDateInput(d);
     });
     setHasStartedGame(false);
     setSelectedPlayers([]);
-  }, [todayDate]);
+  }, [serverTodayDate]);
 
   const persistLineup = useCallback(async (lineup: string[]) => {
     if (!userId || !venueId || !selectedGameId || lineup.length !== requiredLineupSize) {
@@ -1894,11 +1913,14 @@ export function FantasyHome() {
     );
   }
 
-  const isToday = selectedDate === todayDate;
+  const isToday = selectedDate === serverTodayDate;
+  const isPastSelectedDate = selectedDate < serverTodayDate;
+  const draftCtaLabel = existingEntryForSelectedGame ? "Edit your roster" : "Draft your roster";
   const showGameStart =
     (selectedSport === "basketball" || selectedSport === "baseball") &&
     selectedGameId &&
     hasResolvedEntries &&
+    !isPastSelectedDate &&
     !hasActiveDraftedEntry &&
     !existingEntryForSelectedGame &&
     !hasStartedGame;
@@ -1906,6 +1928,7 @@ export function FantasyHome() {
     (selectedSport === "basketball" || selectedSport === "baseball") &&
     selectedGameId &&
     hasResolvedEntries &&
+    !isPastSelectedDate &&
     ((hasStartedGame && !existingEntryForSelectedGame) || (canEditExistingEntryLineup && isEditingRoster));
 
   return (
@@ -1999,7 +2022,7 @@ export function FantasyHome() {
       <h1 className="px-1 text-xl font-black tracking-tight text-slate-900">Hightop Fantasy Sports</h1>
 
       {/* Top section — date nav, sport scroll, roster tracker */}
-      <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-3 shadow-sm">
+      <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-3">
 
         {/* Date nav pill */}
         <div className="flex w-full items-center justify-between rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-2 py-1.5">
@@ -2016,7 +2039,7 @@ export function FantasyHome() {
               </span>
             ) : null}
           </button>
-          <span className="text-sm font-bold text-white">{formatDateLabel(selectedDate, todayDate)}</span>
+          <span className="text-sm font-bold text-white">{formatDateLabel(selectedDate, serverTodayDate)}</span>
           <button
             type="button"
             onClick={navigateToNextDay}
@@ -2111,26 +2134,26 @@ export function FantasyHome() {
       <VenueEntryRulesPanel gameKey="fantasy" shouldDisplay={entries.length === 0} />
 
       {isGeofencePaused ? (
-        <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
+        <p className="rounded-lg border border-amber-400/40 bg-amber-950/30 px-3 py-2 text-xs font-semibold text-amber-200">
           {geofencePauseReason || "Fantasy scoring is paused while outside the venue geofence."}
         </p>
       ) : null}
 
       {statusMessage ? (
-        <p className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
+        <p className="rounded-lg border border-emerald-400/40 bg-emerald-950/30 px-3 py-2 text-xs font-semibold text-emerald-300">
           {statusMessage}
         </p>
       ) : null}
 
       {errorMessage ? (
-        <p className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800">
+        <p className="rounded-lg border border-rose-400/40 bg-rose-950/30 px-3 py-2 text-xs font-semibold text-rose-300">
           {errorMessage}
         </p>
       ) : null}
 
       {/* "Coming soon" for football */}
       {selectedSport === "football" ? (
-        <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm">
+        <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-4">
           <p className="text-center text-sm font-semibold text-slate-600">
             🏈 Football fantasy is coming soon!
           </p>
@@ -2139,7 +2162,7 @@ export function FantasyHome() {
 
       {/* Team tracker for live/pending entry */}
       {(selectedSport === "basketball" || selectedSport === "baseball") && trackedEntry ? (
-        <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm">
+        <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-4">
           <div className="flex items-center justify-between gap-2">
             <h3 className="text-base font-semibold text-slate-900">Your Team Tracker</h3>
             {existingEntryForSelectedGame ? (
@@ -2153,9 +2176,9 @@ export function FantasyHome() {
                       setIsEditingRoster(true);
                     }
                   }}
-                  className="tp-clean-button rounded-lg border border-indigo-500 bg-indigo-100 px-3 py-1.5 text-xs font-semibold text-indigo-900"
+                  className="tp-clean-button rounded-lg border border-violet-400/60 bg-violet-950/30 px-3 py-1.5 text-xs font-semibold text-violet-300"
                 >
-                  {isEditingRoster ? "Submit Roster" : "Edit Roster"}
+                  {isEditingRoster ? "Submit Roster" : "Edit your roster"}
                 </button>
               ) : (
                 <button
@@ -2168,7 +2191,7 @@ export function FantasyHome() {
               )
             ) : null}
           </div>
-          <div className="mt-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
+          <div className="mt-2 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2">
             <div className="flex items-center justify-between gap-2">
               <p className="text-sm font-semibold text-slate-900">{showTrackedEntryClaimButton ? "Final Score" : "Live Points"}</p>
               <SpringPop
@@ -2224,7 +2247,7 @@ export function FantasyHome() {
                         ? popTone === "loss"
                           ? "scale-[1.03] text-rose-300 drop-shadow-[0_0_10px_rgba(244,63,94,0.95)]"
                           : "scale-[1.03] text-emerald-300 drop-shadow-[0_0_10px_rgba(34,197,94,0.95)]"
-                        : "text-slate-700"
+                        : "text-slate-300"
                     }`}
                   >
                     <div className="flex min-w-0 items-center gap-2">
@@ -2239,7 +2262,7 @@ export function FantasyHome() {
                         </button>
                       ) : null}
                       <PlayerHeadshot src={player.headshotUrl ?? null} name={playerName} sizeClass="h-9 w-9" />
-                      <span className="truncate text-sm font-semibold text-slate-800">{playerName}</span>
+                      <span className="truncate text-sm font-semibold text-slate-200">{playerName}</span>
                     </div>
                     <SpringPop
                       popKey={playerPopTickById[String(player.playerId)] ?? 0}
@@ -2262,7 +2285,7 @@ export function FantasyHome() {
                 void claimReward(trackedEntry, rect);
               }}
               disabled={claimingEntryId === trackedEntry.id}
-              className="tp-clean-button mt-3 w-full rounded-lg border border-emerald-500 bg-emerald-100 px-3 py-2 text-sm font-semibold text-emerald-900 disabled:opacity-60"
+              className="tp-clean-button mt-3 w-full rounded-lg border border-emerald-400/60 bg-emerald-950/30 px-3 py-2 text-sm font-semibold text-emerald-300 disabled:opacity-60"
             >
               {claimingEntryId === trackedEntry.id ? "Collecting..." : `Collect ${trackedEntryClaimablePoints} Points`}
             </button>
@@ -2274,7 +2297,7 @@ export function FantasyHome() {
                   type="button"
                   onClick={() => void collectLivePoints()}
                   disabled={isCollectingLive || isGeofencePaused}
-                  className="tp-clean-button mt-2 w-full rounded-lg border border-amber-500 bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-900 disabled:opacity-60"
+                  className="tp-clean-button mt-2 w-full rounded-lg border border-amber-400/60 bg-amber-950/30 px-3 py-2 text-sm font-semibold text-amber-300 disabled:opacity-60"
                 >
                   {isCollectingLive
                     ? "Collecting..."
@@ -2292,7 +2315,7 @@ export function FantasyHome() {
 
       {/* Completed games with unclaimed points */}
       {(selectedSport === "basketball" || selectedSport === "baseball") && finalUnclaimedEntries.length > 1 ? (
-        <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm">
+        <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-4">
           <h3 className="text-base font-semibold text-slate-900">Completed Games Ready To Collect</h3>
           <p className="mt-1 text-xs leading-relaxed text-slate-700">
             Finalized rosters stay here until you collect points.
@@ -2325,7 +2348,7 @@ export function FantasyHome() {
 
       {/* Game Start card */}
       {showGameStart ? (
-        <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm">
+        <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-4">
           <p className="text-xs font-black uppercase tracking-[0.12em] text-indigo-700">Game Start</p>
           {sportGames.length > 0 ? (
             <p className="mt-1 text-sm text-slate-700">
@@ -2352,7 +2375,7 @@ export function FantasyHome() {
                 onClick={() => setHasStartedGame(true)}
                 className="tp-clean-button mt-3 w-full rounded-xl border border-indigo-500 bg-gradient-to-r from-[#5b2ca5] via-[#7b3fd6] to-[#8f4de8] px-3 py-3 text-sm font-bold text-white shadow-sm active:scale-95"
               >
-                Draft your roster
+                {draftCtaLabel}
               </button>
             )
           ) : null}
@@ -2361,7 +2384,7 @@ export function FantasyHome() {
 
       {/* Lineup Builder */}
       {showLineupBuilder ? (
-        <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm">
+        <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-4">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold text-slate-900">
               {existingEntryForSelectedGame ? "Update Lineup" : "Lineup Builder"}
