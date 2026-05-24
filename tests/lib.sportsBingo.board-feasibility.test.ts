@@ -232,50 +232,62 @@ describe("sports bingo board feasibility", () => {
       }),
     });
 
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        jsonResponse({
-          body: [
-            {
-              id: "nba-evt-2",
-              sport_key: "basketball_nba",
-              commence_time: "2030-02-01T00:00:00Z",
-              home_team: "Boston Celtics",
-              away_team: "Miami Heat",
-              bookmakers: [
-                {
-                  title: "DraftKings",
-                  markets: [
-                    {
-                      key: "h2h",
-                      outcomes: [
-                        { name: "Boston Celtics", price: -145 },
-                        { name: "Miami Heat", price: 125 },
-                      ],
-                    },
-                    {
-                      key: "spreads",
-                      outcomes: [
-                        { name: "Boston Celtics", point: -4.5, price: -110 },
-                        { name: "Miami Heat", point: 4.5, price: -110 },
-                      ],
-                    },
-                    {
-                      key: "totals",
-                      outcomes: [
-                        { name: "Over", point: 219.5, price: -110 },
-                        { name: "Under", point: 219.5, price: -110 },
-                      ],
-                    },
-                  ],
-                },
-              ],
+    const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/nba/v1/games")) {
+        return Promise.resolve(
+          jsonResponse({
+            body: {
+              data: [{ id: "nba-evt-2", date: "2030-02-01T00:00:00Z", home_team: "Boston Celtics", visitor_team: "Miami Heat", status: "Final" }],
+              meta: { next_cursor: null },
             },
-          ],
-        })
-      )
-      .mockResolvedValueOnce(
+          })
+        );
+      }
+      if (url.includes("/sports/basketball_nba/odds")) {
+        return Promise.resolve(
+          jsonResponse({
+            body: [
+              {
+                id: "nba-evt-2",
+                sport_key: "basketball_nba",
+                commence_time: "2030-02-01T00:00:00Z",
+                home_team: "Boston Celtics",
+                away_team: "Miami Heat",
+                bookmakers: [
+                  {
+                    title: "DraftKings",
+                    markets: [
+                      {
+                        key: "h2h",
+                        outcomes: [
+                          { name: "Boston Celtics", price: -145 },
+                          { name: "Miami Heat", price: 125 },
+                        ],
+                      },
+                      {
+                        key: "spreads",
+                        outcomes: [
+                          { name: "Boston Celtics", point: -4.5, price: -110 },
+                          { name: "Miami Heat", point: 4.5, price: -110 },
+                        ],
+                      },
+                      {
+                        key: "totals",
+                        outcomes: [
+                          { name: "Over", point: 219.5, price: -110 },
+                          { name: "Under", point: 219.5, price: -110 },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          })
+        );
+      }
+      return Promise.resolve(
         jsonResponse({
           body: {
             id: "nba-evt-2",
@@ -294,6 +306,7 @@ describe("sports bingo board feasibility", () => {
           },
         })
       );
+    });
 
     vi.stubGlobal("fetch", fetchMock);
 

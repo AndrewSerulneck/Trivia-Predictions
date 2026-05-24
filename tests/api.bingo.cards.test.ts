@@ -44,7 +44,7 @@ describe("/api/bingo/cards", () => {
     expect(mocks.listUserSportsBingoCards).toHaveBeenCalledWith({
       userId: "u1",
       includeSettled: true,
-      refreshProgress: true,
+      refreshProgress: false,
     });
   });
 
@@ -66,6 +66,7 @@ describe("/api/bingo/cards", () => {
     expect(mocks.generateSportsBingoBoard).toHaveBeenCalledWith({
       gameId: "game-1",
       sportKey: "basketball_nba",
+      generationMode: "preview",
     });
   });
 

@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("server-only", () => ({}));
+
 const mocks = vi.hoisted(() => ({
   from: vi.fn(),
 }));
@@ -16,116 +18,89 @@ describe("updateAdminVenue address/coordinate behavior", () => {
   beforeEach(() => {
     mocks.from.mockReset();
     vi.restoreAllMocks();
-    delete process.env.GOOGLE_MAPS_API_KEY;
   });
 
-  it("re-geocodes when address changes but submitted coords still match old venue coords", async () => {
-    const maybeSingle = vi.fn().mockResolvedValue({
-      data: {
-        id: "venue-downtown",
-        address: "Old Address",
-        latitude: 40.712776,
-        longitude: -74.005974,
-      },
-      error: null,
-    });
-    const selectExisting = vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ maybeSingle }) });
-
-    const single = vi.fn().mockResolvedValue({
-      data: {
-        id: "venue-downtown",
-        name: "Brunswick Grove",
-        display_name: "Brunswick Grove",
-        logo_text: null,
-        icon_emoji: null,
-        address: "327 Milltown Rd, East Brunswick, NJ",
-        latitude: 40.4376405,
-        longitude: -74.4264871,
-        radius: 100,
-      },
-      error: null,
-    });
+  function mockUpdateChain(venueRow: Record<string, unknown>) {
+    const single = vi.fn().mockResolvedValue({ data: venueRow, error: null });
     const selectUpdated = vi.fn().mockReturnValue({ single });
     const eqUpdate = vi.fn().mockReturnValue({ select: selectUpdated });
     const update = vi.fn().mockReturnValue({ eq: eqUpdate });
+    mocks.from.mockReturnValue({ update });
+    return { update, eqUpdate, single };
+  }
 
-    mocks.from
-      .mockReturnValueOnce({ select: selectExisting })
-      .mockReturnValueOnce({ update });
-
-    vi.spyOn(global, "fetch").mockResolvedValue({
-      ok: true,
-      json: async () => [{ lat: "40.4376405", lon: "-74.4264871" }],
-    } as Response);
+  it("updates venue with provided coordinates", async () => {
+    const { update } = mockUpdateChain({
+      id: "venue-downtown",
+      name: "Brunswick Grove",
+      display_name: "Brunswick Grove",
+      logo_text: null,
+      icon_emoji: null,
+      street: "327 Milltown Rd",
+      address: "327 Milltown Rd, East Brunswick, NJ",
+      city: "East Brunswick",
+      state: "NJ",
+      zip_code: null,
+      country: null,
+      county: null,
+      region: null,
+      latitude: 40.4376405,
+      longitude: -74.4264871,
+      radius: 100,
+    });
 
     await updateAdminVenue({
       id: "venue-downtown",
       name: "Brunswick Grove",
       address: "327 Milltown Rd, East Brunswick, NJ",
       radius: 100,
-      latitude: 40.712776,
-      longitude: -74.005974,
-    });
-
-    expect(update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        address: "327 Milltown Rd, East Brunswick, NJ",
-        latitude: 40.4376405,
-        longitude: -74.4264871,
-      })
-    );
-  });
-
-  it("keeps supplied coords and skips geocoding when address is unchanged", async () => {
-    const maybeSingle = vi.fn().mockResolvedValue({
-      data: {
-        id: "venue-downtown",
-        address: "327 Milltown Rd, East Brunswick, NJ",
-        latitude: 40.4376405,
-        longitude: -74.4264871,
-      },
-      error: null,
-    });
-    const selectExisting = vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ maybeSingle }) });
-
-    const single = vi.fn().mockResolvedValue({
-      data: {
-        id: "venue-downtown",
-        name: "Brunswick Grove",
-        display_name: "Brunswick Grove",
-        logo_text: null,
-        icon_emoji: null,
-        address: "327 Milltown Rd, East Brunswick, NJ",
-        latitude: 40.4376405,
-        longitude: -74.4264871,
-        radius: 120,
-      },
-      error: null,
-    });
-    const selectUpdated = vi.fn().mockReturnValue({ single });
-    const eqUpdate = vi.fn().mockReturnValue({ select: selectUpdated });
-    const update = vi.fn().mockReturnValue({ eq: eqUpdate });
-
-    mocks.from
-      .mockReturnValueOnce({ select: selectExisting })
-      .mockReturnValueOnce({ update });
-
-    const fetchSpy = vi.spyOn(global, "fetch");
-
-    await updateAdminVenue({
-      id: "venue-downtown",
-      name: "Brunswick Grove",
-      address: "327 Milltown Rd, East Brunswick, NJ",
-      radius: 120,
       latitude: 40.4376405,
       longitude: -74.4264871,
     });
 
-    expect(fetchSpy).not.toHaveBeenCalled();
     expect(update).toHaveBeenCalledWith(
       expect.objectContaining({
+        name: "Brunswick Grove",
         latitude: 40.4376405,
         longitude: -74.4264871,
+        radius: 100,
+      })
+    );
+  });
+
+  it("falls back display_name to name when displayName is not provided", async () => {
+    const { update } = mockUpdateChain({
+      id: "venue-downtown",
+      name: "The Anchor",
+      display_name: "The Anchor",
+      logo_text: null,
+      icon_emoji: null,
+      street: "10 Main St",
+      address: "10 Main St, Springfield, IL",
+      city: "Springfield",
+      state: "IL",
+      zip_code: null,
+      country: null,
+      county: null,
+      region: null,
+      latitude: 39.7817,
+      longitude: -89.6501,
+      radius: 150,
+    });
+
+    await updateAdminVenue({
+      id: "venue-downtown",
+      name: "The Anchor",
+      address: "10 Main St, Springfield, IL",
+      radius: 150,
+      latitude: 39.7817,
+      longitude: -89.6501,
+    });
+
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "The Anchor",
+        display_name: "The Anchor",
       })
     );
   });

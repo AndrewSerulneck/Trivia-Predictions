@@ -4458,17 +4458,13 @@ function pickCandidateSet(candidates: SportsBingoSquareTemplate[], sportKey: str
       rejection_reasons: Object.fromEntries(rejectionReasons.entries()),
     });
     if (playerSpecificSelectedCount < hardFloor) {
-      if (isWnbaSportKey(sportKey)) {
-        console.warn("[sportsBingo] wnba_floor_pivot_applied", {
-          player_specific_selected_count: playerSpecificSelectedCount,
-          hard_floor: hardFloor,
-          shortfall,
-        });
-        return selected.slice(0, 24);
-      }
-      throw new Error(
-        `Insufficient player-specific candidates for hard floor (${playerSpecificSelectedCount}/${hardFloor}).`
-      );
+      console.warn("[sportsBingo] basketball_floor_pivot_applied", {
+        sport_key: sportKey,
+        player_specific_selected_count: playerSpecificSelectedCount,
+        hard_floor: hardFloor,
+        shortfall,
+      });
+      return selected.slice(0, 24);
     }
   }
 

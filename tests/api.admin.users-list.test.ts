@@ -49,16 +49,19 @@ describe("GET /api/admin/users", () => {
 
   it("returns users for valid venue", async () => {
     mocks.requireAdminAuth.mockResolvedValue({ ok: true, status: 200 });
-    mocks.listAdminUsersByVenue.mockResolvedValue([
-      {
-        id: "u1",
-        username: "player_one",
-        venueId: "v1",
-        points: 120,
-        isAdmin: false,
-        createdAt: "2026-02-16T10:00:00.000Z",
-      },
-    ]);
+    mocks.listAdminUsersByVenue.mockResolvedValue({
+      users: [
+        {
+          id: "u1",
+          username: "player_one",
+          venueId: "v1",
+          points: 120,
+          isAdmin: false,
+          createdAt: "2026-02-16T10:00:00.000Z",
+        },
+      ],
+      pagination: { page: 1, pageSize: 25, totalUsers: 1, totalPages: 1 },
+    });
 
     const response = await GET(new Request("http://localhost/api/admin/users?venueId=v1"));
     const body = (await response.json()) as {
@@ -67,7 +70,7 @@ describe("GET /api/admin/users", () => {
     };
 
     expect(response.status).toBe(200);
-    expect(mocks.listAdminUsersByVenue).toHaveBeenCalledWith("v1");
+    expect(mocks.listAdminUsersByVenue).toHaveBeenCalledWith("v1", { page: 1, pageSize: 25 });
     expect(body.ok).toBe(true);
     expect(body.users).toHaveLength(1);
     expect(body.users[0]?.username).toBe("player_one");

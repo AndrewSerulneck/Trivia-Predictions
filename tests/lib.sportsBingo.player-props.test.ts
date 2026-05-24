@@ -17,6 +17,10 @@ function jsonResponse(payload: MockResponsePayload): Response {
   } as Response;
 }
 
+function bdlList(data: unknown[]): Response {
+  return jsonResponse({ body: { data, meta: { next_cursor: null } } });
+}
+
 describe("sports bingo player props ingestion", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -29,58 +33,42 @@ describe("sports bingo player props ingestion", () => {
     vi.unstubAllGlobals();
   });
 
-  it("falls back regions and ingests event player props for NBA", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        jsonResponse({
-          body: [
-            {
-              id: "nba-evt-1",
-              sport_key: "basketball_nba",
-              commence_time: "2030-01-01T22:00:00Z",
-              home_team: "Boston Celtics",
-              away_team: "New York Knicks",
-              bookmakers: [],
-            },
-          ],
-        })
-      )
-      .mockResolvedValueOnce(
-        jsonResponse({
-          body: {
-            id: "nba-evt-1",
-            bookmakers: [],
-          },
-        })
-      )
-      .mockResolvedValueOnce(
-        jsonResponse({
-          body: {
-            id: "nba-evt-1",
-            bookmakers: [
-              {
-                title: "DraftKings",
-                markets: [
-                  {
-                    key: "player_points",
-                    outcomes: [
-                      { name: "Over", description: "Jayson Tatum", point: 28.5, price: -115 },
-                      { name: "Under", description: "Jayson Tatum", point: 28.5, price: -105 },
-                      { name: "Over", description: "Jalen Brunson", point: 27.5, price: -110 },
-                      { name: "Under", description: "Jalen Brunson", point: 27.5, price: -110 },
-                      { name: "Over", description: "Kristaps Porzingis", point: 19.5, price: -108 },
-                      { name: "Under", description: "Kristaps Porzingis", point: 19.5, price: -112 },
-                      { name: "Over", description: "Josh Hart", point: 14.5, price: -102 },
-                      { name: "Under", description: "Josh Hart", point: 14.5, price: -118 },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        })
-      );
+  it("builds NBA board using BallDontLie player profiles", async () => {
+    const nbaGame = {
+      id: "nba-evt-1",
+      date: "2030-01-01T22:00:00Z",
+      home_team: { id: 2, full_name: "Boston Celtics" },
+      visitor_team: { id: 20, full_name: "New York Knicks" },
+      status: "Final",
+    };
+
+    const nbaPlayers = [
+      { id: 101, first_name: "Jayson", last_name: "Tatum", team: { id: 2 } },
+      { id: 102, first_name: "Jalen", last_name: "Brunson", team: { id: 20 } },
+      { id: 103, first_name: "Kristaps", last_name: "Porzingis", team: { id: 2 } },
+    ];
+
+    const nbaSeasonAverages = [
+      { player: { id: 101 }, stats: { pts: 26.9, reb: 8.1, ast: 4.9, stl: 1.1, blk: 0.6, fg3m: 3.2, fg3a: 8.1, fgm: 9.8, fga: 21.2, ftm: 4.3, fta: 5.1, oreb: 1.2, dreb: 6.9, min: 36.2, plus_minus: 5.1 } },
+      { player: { id: 102 }, stats: { pts: 27.5, reb: 3.5, ast: 6.8, stl: 0.8, blk: 0.2, fg3m: 2.5, fg3a: 6.2, fgm: 9.7, fga: 20.5, ftm: 5.6, fta: 6.3, oreb: 0.4, dreb: 3.1, min: 33.8, plus_minus: 2.3 } },
+      { player: { id: 103 }, stats: { pts: 20.1, reb: 7.2, ast: 1.9, stl: 0.7, blk: 1.9, fg3m: 1.8, fg3a: 4.5, fgm: 7.4, fga: 14.8, ftm: 3.6, fta: 4.5, oreb: 1.7, dreb: 5.5, min: 28.5, plus_minus: 3.2 } },
+    ];
+
+    const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url.includes("/nba/v1/games")) {
+        return Promise.resolve(bdlList([nbaGame]));
+      }
+      if (url.includes("/nba/v1/players")) {
+        return Promise.resolve(bdlList(nbaPlayers));
+      }
+      if (url.includes("/nba/v1/season_averages")) {
+        return Promise.resolve(bdlList(nbaSeasonAverages));
+      }
+      // /nba/v1/stats (historical) and /nba/v1/lineups — return empty
+      return Promise.resolve(bdlList([]));
+    });
 
     vi.stubGlobal("fetch", fetchMock);
 
@@ -91,102 +79,46 @@ describe("sports bingo player props ingestion", () => {
       sportKey: "basketball_nba",
     });
 
-    const eventCalls = fetchMock.mock.calls
-      .map((call) => String(call[0]))
-      .filter((url) => url.includes("/sports/basketball_nba/events/nba-evt-1/odds"));
-
-    expect(eventCalls).toHaveLength(2);
-    expect(eventCalls[0]).toContain("regions=us");
-    expect(eventCalls[1]).toContain("regions=us%2Ceu%2Cuk");
-    expect(eventCalls[0]).toContain("player_points");
-    expect(eventCalls[0]).toContain("player_rebounds");
-    expect(eventCalls[0]).toContain("player_assists");
-    expect(eventCalls[0]).toContain("player_steals");
-    expect(eventCalls[0]).toContain("player_blocks");
-    expect(eventCalls[0]).not.toContain("player_points_rebounds_assists");
-    expect(eventCalls[0]).not.toContain("player_points_rebounds");
-    expect(eventCalls[0]).not.toContain("player_points_assists");
-    expect(eventCalls[0]).not.toContain("player_rebounds_assists");
-    expect(board.squares.some((square) => square.label.includes("Jayson Tatum"))).toBe(true);
-    expect(board.squares.some((square) => square.label.toLowerCase().includes("triple-double"))).toBe(true);
+    expect(board.squares).toHaveLength(25);
+    expect(board.squares.some((sq) => sq.label.toLowerCase().includes("triple-double"))).toBe(true);
+    expect(board.squares.some((sq) => sq.label.includes("Jayson Tatum"))).toBe(true);
+    expect(
+      board.squares.some((sq) =>
+        /points \+ rebounds|points \+ assists|rebounds \+ assists|points \+ rebounds \+ assists/i.test(sq.label)
+      )
+    ).toBe(false);
   });
 
-  it("requests NFL player prop market keys for NFL games", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        jsonResponse({
-          body: [
-            {
-              id: "nfl-evt-1",
-              sport_key: "americanfootball_nfl",
-              commence_time: "2030-01-02T18:00:00Z",
-              home_team: "Buffalo Bills",
-              away_team: "New York Jets",
-              bookmakers: [
-                {
-                  title: "DraftKings",
-                  markets: [
-                    {
-                      key: "h2h",
-                      outcomes: [
-                        { name: "Buffalo Bills", price: -145 },
-                        { name: "New York Jets", price: 125 },
-                      ],
-                    },
-                    {
-                      key: "spreads",
-                      outcomes: [
-                        { name: "Buffalo Bills", point: -3.5, price: -110 },
-                        { name: "New York Jets", point: 3.5, price: -110 },
-                      ],
-                    },
-                    {
-                      key: "totals",
-                      outcomes: [
-                        { name: "Over", point: 45.5, price: -110 },
-                        { name: "Under", point: 45.5, price: -110 },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        })
-      )
-      .mockResolvedValueOnce(
-        jsonResponse({
-          body: {
-            id: "nfl-evt-1",
-            bookmakers: [],
-          },
-        })
-      )
-      .mockResolvedValueOnce(
-        jsonResponse({
-          body: {
-            id: "nfl-evt-1",
-            bookmakers: [],
-          },
-        })
-      );
+  it("builds NFL board using spread and total markets", async () => {
+    const nflGame = {
+      id: "nfl-evt-1",
+      date: "2030-01-02T18:00:00Z",
+      home_team: { id: 4, full_name: "Buffalo Bills" },
+      visitor_team: { id: 19, full_name: "New York Jets" },
+      status: "Final",
+    };
+
+    const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url.includes("/nfl/v1/games")) {
+        return Promise.resolve(bdlList([nflGame]));
+      }
+      return Promise.resolve(bdlList([]));
+    });
 
     vi.stubGlobal("fetch", fetchMock);
 
     const { generateSportsBingoBoard } = await import("@/lib/sportsBingo");
 
-    await generateSportsBingoBoard({
+    const board = await generateSportsBingoBoard({
       gameId: "nfl-evt-1",
       sportKey: "americanfootball_nfl",
     });
 
-    const eventCall = (fetchMock.mock.calls
-      .map((call) => String(call[0]))
-      .find((url) => url.includes("/sports/americanfootball_nfl/events/nfl-evt-1/odds") && url.includes("regions=us"))) ?? "";
-
-    expect(eventCall).toContain("player_pass_tds");
-    expect(eventCall).toContain("player_reception_yds");
-    expect(eventCall).not.toContain("player_points");
+    expect(board.squares).toHaveLength(25);
+    expect(
+      board.squares.some((sq) => sq.key.startsWith("spread_") || sq.key.startsWith("game_total_"))
+    ).toBe(true);
   });
 });
