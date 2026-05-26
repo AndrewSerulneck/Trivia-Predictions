@@ -756,21 +756,21 @@ export function PredictionMarketList() {
 
   if (isInitializing) {
     return (
-      <div className="space-y-6 rounded-lg border border-slate-200 bg-white p-6">
+      <div className="space-y-6 rounded-ht-lg border border-ht-border-hairline bg-ht-elevated p-6">
         <div className="relative mx-auto h-20 w-20">
-          <div className="absolute inset-0 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
-          <div className="absolute inset-2 flex items-center justify-center rounded-full bg-slate-900 text-sm font-black tracking-wider text-white">
+          <div className="absolute inset-0 animate-spin rounded-full border-4 border-ht-border-soft border-t-ht-fg-primary" />
+          <div className="absolute inset-2 flex items-center justify-center rounded-full bg-ht-elevated-2 text-sm font-black tracking-wider text-ht-fg-primary">
             HC
           </div>
         </div>
         <div className="space-y-2 text-center">
-          <p className="text-lg font-semibold text-slate-900">Hightop Challenge</p>
-          <p className="text-sm text-slate-600">Loading live prediction markets...</p>
+          <p className="text-lg font-semibold text-ht-fg-primary">Hightop Challenge</p>
+          <p className="text-sm text-ht-fg-muted">Loading live prediction markets...</p>
         </div>
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Crunching markets from venue...</p>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-            <div className="h-full w-1/3 animate-pulse rounded-full bg-slate-900" />
+          <p className="text-xs uppercase tracking-wide text-ht-fg-muted">Crunching markets from venue...</p>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-ht-surface">
+            <div className="h-full w-1/3 animate-pulse rounded-full bg-ht-elevated-2" />
           </div>
         </div>
       </div>
@@ -885,12 +885,12 @@ export function PredictionMarketList() {
     return (
       <article
         key={market.id}
-        className={`relative rounded-xl border bg-white/90 p-4 shadow-sm transition-all duration-300 ${
-          isJustLocked ? "scale-[1.01] border-emerald-300 shadow-[0_0_0_3px_rgba(16,185,129,0.18)]" : "border-slate-200"
+        className={`relative rounded-ht-xl border bg-ht-elevated p-4 shadow-ht-card transition-all duration-300 ${
+          isJustLocked ? "scale-[1.01] border-emerald-500/50 shadow-[0_0_0_3px_rgba(16,185,129,0.18)]" : "border-ht-border-hairline"
         }`}
       >
         <h2 className="font-medium">{market.question}</h2>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-ht-fg-muted">
           {[market.sport, market.league].filter(Boolean).join(" · ")}
           {[market.sport, market.league].some(Boolean) ? " · " : ""}
           Closes: {new Date(market.closesAt).toLocaleString()}
@@ -902,12 +902,12 @@ export function PredictionMarketList() {
               <li
                 key={outcome.id}
                 className={`rounded-md border p-2 text-sm ${
-                  isSelectedOutcome ? "border-emerald-300 bg-emerald-50" : "border-slate-100 bg-slate-50"
+                  isSelectedOutcome ? "border-emerald-500/50 bg-emerald-500/10" : "border-ht-border-hairline bg-ht-surface"
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className="min-w-0 flex-1">{outcome.title}</span>
-                  <span className="shrink-0 font-medium text-slate-700">
+                  <span className="shrink-0 font-medium text-ht-fg-secondary">
                     {formatProbability(outcome.probability)} · {calculatePoints(outcome.probability)} pts
                   </span>
                 </div>
@@ -922,7 +922,7 @@ export function PredictionMarketList() {
                     existingPendingPick
                       ? isSelectedOutcome
                         ? "bg-emerald-700"
-                        : "bg-slate-500"
+                        : "bg-ht-border-strong"
                       : "bg-gradient-to-r from-blue-700 to-cyan-600"
                   }`}
                 >
@@ -933,16 +933,16 @@ export function PredictionMarketList() {
           })}
         </ul>
         {existingPendingPick ? (
-          <p className="mt-2 text-xs font-semibold text-emerald-800">
+          <p className="mt-2 text-xs font-semibold text-emerald-400">
             You already picked {existingPendingPick.outcomeTitle} for this market.
           </p>
         ) : null}
         {limitPopups[market.id] ? (
-          <div className="pointer-events-none absolute right-3 top-3 z-20 max-w-[240px] rounded-md border border-rose-300 bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-800 shadow-sm">
+          <div className="pointer-events-none absolute right-3 top-3 z-20 max-w-[240px] rounded-md border border-rose-500/40 bg-rose-500/10 px-2 py-1 text-[11px] font-semibold text-rose-400 shadow-sm">
             {limitPopups[market.id]}
           </div>
         ) : null}
-        {messages[market.id] ? <p className="mt-2 text-xs text-slate-600">{messages[market.id]}</p> : null}
+        {messages[market.id] ? <p className="mt-2 text-xs text-ht-fg-muted">{messages[market.id]}</p> : null}
       </article>
     );
   };
@@ -950,28 +950,28 @@ export function PredictionMarketList() {
   return (
     <div className="space-y-4">
       {quota && !quota.isAdminBypass ? (
-        <div className="space-y-1 rounded-md border border-slate-200 bg-slate-50 p-3">
-          <div className="flex items-center justify-between text-xs font-medium text-slate-700">
+        <div className="space-y-1 rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3">
+          <div className="flex items-center justify-between text-xs font-medium text-ht-fg-secondary">
             <span>Predictions Progress This Hour</span>
             <span>
               {quota.picksUsed}/{quota.limit}
             </span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-ht-border-soft">
             <div
-              className="h-full rounded-full bg-slate-900 transition-all"
+              className="h-full rounded-full bg-ht-fg-primary transition-all"
               style={{ width: `${Math.min(100, (quota.picksUsed / quota.limit) * 100)}%` }}
             />
           </div>
           {predictionsQuotaLocked ? (
-            <p className="text-xs font-semibold text-rose-700">
+            <p className="text-xs font-semibold text-rose-400">
               Limit reached. Picks unlock in {formatCountdown(quotaSecondsRemaining)}.
             </p>
           ) : null}
         </div>
       ) : null}
       {!userId && (
-        <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+        <div className="rounded-md border border-amber-400/40 bg-amber-500/10 p-3 text-sm text-amber-300">
           You are not joined to a venue in this browser yet. Use Home to join a venue first.
         </div>
       )}
@@ -979,37 +979,37 @@ export function PredictionMarketList() {
         gameKey="pickem"
         shouldDisplay={Boolean(userId) && !loading && pendingPicks.length === 0}
       />
-      <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-3">
+      <section className="space-y-2 rounded-ht-lg border border-ht-border-hairline bg-ht-elevated p-3">
         <div className="flex items-center justify-between gap-2">
           <div className="inline-flex items-center gap-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Your Pending Predictions</p>
-            <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-700">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ht-fg-muted">Your Pending Predictions</p>
+            <span className="rounded-full bg-ht-border-soft px-2 py-0.5 text-xs font-semibold text-ht-fg-secondary">
               {pendingPicks.length}
             </span>
           </div>
           <button
             type="button"
             onClick={() => setPendingPredictionsCollapsed((value) => !value)}
-            className={`${BUTTON_POP_CLASS} rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:border-slate-400`}
+            className={`${BUTTON_POP_CLASS} rounded-full border border-ht-border-soft bg-ht-elevated-2 px-3 py-1 text-xs font-semibold text-ht-fg-secondary`}
           >
             {pendingPredictionsCollapsed ? "Expand" : "Collapse"}
           </button>
         </div>
         {pendingPredictionsCollapsed ? (
-          <p className="text-sm text-slate-500">Section collapsed.</p>
+          <p className="text-sm text-ht-fg-muted">Section collapsed.</p>
         ) : pendingPicks.length === 0 ? (
-          <p className="text-sm text-slate-600">No pending predictions right now.</p>
+          <p className="text-sm text-ht-fg-muted">No pending predictions right now.</p>
         ) : (
           <ul className="space-y-2">
             {pendingPicks.map((pick) => (
-              <li key={pick.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm font-semibold text-slate-900">{getPendingQuestion(pick)}</p>
-                <p className="mt-1 text-xs text-slate-600">
+              <li key={pick.id} className="rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3">
+                <p className="text-sm font-semibold text-ht-fg-primary">{getPendingQuestion(pick)}</p>
+                <p className="mt-1 text-xs text-ht-fg-muted">
                   Pick: {pick.outcomeTitle}
                   {(pick.marketSport || pick.marketLeague) ? " · " : ""}
                   {[pick.marketSport, pick.marketLeague].filter(Boolean).join(" · ")}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-ht-fg-muted">
                   {pick.marketClosesAt
                     ? `Resolves after: ${new Date(pick.marketClosesAt).toLocaleString()}`
                     : `Placed: ${new Date(pick.createdAt).toLocaleString()}`}
@@ -1020,13 +1020,13 @@ export function PredictionMarketList() {
         )}
       </section>
 
-      <section className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <section className="space-y-3 rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Browse by Category</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ht-fg-muted">Browse by Category</p>
           <button
             type="button"
             onClick={() => setBrowseFiltersCollapsed((value) => !value)}
-            className={`${BUTTON_POP_CLASS} rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700`}
+            className={`${BUTTON_POP_CLASS} rounded-full border border-ht-border-soft bg-ht-elevated-2 px-3 py-1 text-xs font-semibold text-ht-fg-secondary`}
           >
             {browseFiltersCollapsed ? "Expand" : "Collapse"}
           </button>
@@ -1035,7 +1035,7 @@ export function PredictionMarketList() {
         {!browseFiltersCollapsed ? (
           <div className="space-y-3">
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">When Markets Close</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ht-fg-muted">When Markets Close</p>
               <div className="-mx-1 overflow-x-auto px-1 pb-1">
                 <div className="flex min-w-max items-center gap-2">
                   {CLOSE_WINDOW_OPTIONS.map((option) => (
@@ -1045,8 +1045,8 @@ export function PredictionMarketList() {
                       onClick={() => setSelectedCloseWindow(option.value)}
                       className={`inline-flex min-h-[36px] shrink-0 items-center justify-center rounded-full border px-4 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
                         selectedCloseWindow === option.value
-                          ? "border-slate-900 bg-slate-900 text-white"
-                          : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+                          ? "border-ht-cyan-600/60 bg-ht-cyan-600/20 text-ht-cyan-400"
+                          : "border-ht-border-soft bg-ht-elevated text-ht-fg-secondary"
                       }`}
                     >
                       {option.label}
@@ -1057,7 +1057,7 @@ export function PredictionMarketList() {
             </div>
 
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Sports</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ht-fg-muted">Sports</p>
               <div className="-mx-1 overflow-x-auto px-1 pb-1">
                 <div className="flex min-w-max items-center gap-2">
                   <button
@@ -1068,8 +1068,8 @@ export function PredictionMarketList() {
                     }}
                     className={`inline-flex min-h-[36px] shrink-0 items-center justify-center gap-1 rounded-full border px-4 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
                       selectedSport === ""
-                        ? "border-slate-900 bg-slate-900 text-white"
-                        : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+                        ? "border-ht-cyan-600/60 bg-ht-cyan-600/20 text-ht-cyan-400"
+                        : "border-ht-border-soft bg-ht-elevated text-ht-fg-secondary"
                     }`}
                   >
                     <span aria-hidden="true" className="text-base">
@@ -1087,8 +1087,8 @@ export function PredictionMarketList() {
                       }}
                       className={`inline-flex min-h-[36px] shrink-0 items-center justify-center gap-1 rounded-full border px-4 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
                         selectedSport === item
-                          ? "border-slate-900 bg-slate-900 text-white"
-                          : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+                          ? "border-ht-cyan-600/60 bg-ht-cyan-600/20 text-ht-cyan-400"
+                          : "border-ht-border-soft bg-ht-elevated text-ht-fg-secondary"
                       }`}
                     >
                       <span aria-hidden="true" className="text-base">
@@ -1102,11 +1102,11 @@ export function PredictionMarketList() {
             </div>
 
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Leagues</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ht-fg-muted">Leagues</p>
               {!selectedSport ? (
-                <span className="text-xs text-slate-500">Select a sport to browse leagues.</span>
+                <span className="text-xs text-ht-fg-muted">Select a sport to browse leagues.</span>
               ) : leagueOptions.length === 0 ? (
-                <span className="text-xs text-slate-500">No leagues found for this sport right now.</span>
+                <span className="text-xs text-ht-fg-muted">No leagues found for this sport right now.</span>
               ) : (
                 <div className="-mx-1 overflow-x-auto px-1 pb-1">
                   <div className="flex min-w-max items-center gap-2">
@@ -1118,8 +1118,8 @@ export function PredictionMarketList() {
                       }}
                       className={`inline-flex min-h-[36px] shrink-0 items-center justify-center gap-1 rounded-full border px-4 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
                         selectedLeague === ""
-                          ? "border-blue-700 bg-blue-700 text-white"
-                          : "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300"
+                          ? "border-ht-cyan-600/60 bg-ht-cyan-600/20 text-ht-cyan-400"
+                          : "border-ht-border-soft bg-ht-elevated text-ht-fg-secondary"
                       }`}
                     >
                       <span aria-hidden="true" className="text-base">
@@ -1136,8 +1136,8 @@ export function PredictionMarketList() {
                         }}
                         className={`inline-flex min-h-[36px] shrink-0 items-center justify-center gap-1 rounded-full border px-4 py-1.5 text-xs font-semibold ${BUTTON_POP_CLASS} ${
                           selectedLeague === item
-                            ? "border-blue-700 bg-blue-700 text-white"
-                            : "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300"
+                            ? "border-ht-cyan-600/60 bg-ht-cyan-600/20 text-ht-cyan-400"
+                            : "border-ht-border-soft bg-ht-elevated text-ht-fg-secondary"
                         }`}
                       >
                         <span aria-hidden="true" className="text-base">
@@ -1151,7 +1151,7 @@ export function PredictionMarketList() {
               )}
             </div>
 
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-ht-fg-muted">
               {loading
                 ? "Loading markets..."
                 : `Showing ${markets.length} of ${totalItems} market${totalItems === 1 ? "" : "s"}`}.
@@ -1161,35 +1161,35 @@ export function PredictionMarketList() {
       </section>
 
       {errorMessage ? (
-        <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">{errorMessage}</div>
+        <div className="rounded-md border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-400">{errorMessage}</div>
       ) : null}
       {showOutOfSeasonMessage ? (
-        <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-900">
+        <div className="rounded-md border border-amber-400/40 bg-amber-500/10 p-3 text-sm font-medium text-amber-300">
           No markets available.
         </div>
       ) : null}
 
       {loading ? (
         <section className="space-y-3">
-          <div className="flex items-center gap-2 text-sm text-slate-600">
-            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
+          <div className="flex items-center gap-2 text-sm text-ht-fg-muted">
+            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-ht-border-soft border-t-ht-fg-primary" />
             Loading live prediction markets...
           </div>
           <div className="grid grid-cols-1 gap-3">
             {Array.from({ length: 6 }).map((_, index) => (
-              <div key={`prediction-skeleton-${index}`} className="rounded-lg border border-slate-200 p-3">
-                <div className="h-4 w-5/6 animate-pulse rounded bg-slate-200" />
-                <div className="mt-2 h-3 w-2/3 animate-pulse rounded bg-slate-100" />
+              <div key={`prediction-skeleton-${index}`} className="rounded-ht-lg border border-ht-border-hairline p-3">
+                <div className="h-4 w-5/6 animate-pulse rounded bg-ht-border-soft" />
+                <div className="mt-2 h-3 w-2/3 animate-pulse rounded bg-ht-border-hairline" />
                 <div className="mt-4 space-y-2">
-                  <div className="h-10 animate-pulse rounded-md bg-slate-100" />
-                  <div className="h-10 animate-pulse rounded-md bg-slate-100" />
+                  <div className="h-10 animate-pulse rounded-md bg-ht-border-hairline" />
+                  <div className="h-10 animate-pulse rounded-md bg-ht-border-hairline" />
                 </div>
               </div>
             ))}
           </div>
         </section>
       ) : markets.length === 0 ? (
-        <section className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+        <section className="rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-4 text-sm text-ht-fg-muted">
           No markets available.
         </section>
       ) : (
@@ -1200,14 +1200,14 @@ export function PredictionMarketList() {
           */}
           {groupedMarketSections.map((section) => (
             <div key={section.id} className="space-y-4">
-              <section id={section.id} className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <section id={section.id} className="space-y-3 rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="inline-flex items-center gap-2">
                     <span className="text-base" aria-hidden="true">
                       {getSportIcon(markets.find((market) => market.league === section.label)?.sport || selectedSport || "Sports")}
                     </span>
-                    <h3 className="text-sm font-semibold text-slate-900">{section.label}</h3>
-                    <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-700">
+                    <h3 className="text-sm font-semibold text-ht-fg-primary">{section.label}</h3>
+                    <span className="rounded-full bg-ht-border-soft px-2 py-0.5 text-xs font-semibold text-ht-fg-secondary">
                       {section.markets.length}
                     </span>
                   </div>
@@ -1220,14 +1220,14 @@ export function PredictionMarketList() {
                           [section.id]: !prev[section.id],
                         }));
                       }}
-                      className={`${BUTTON_POP_CLASS} rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-400`}
+                      className={`${BUTTON_POP_CLASS} rounded-full border border-ht-border-soft bg-ht-elevated-2 px-3 py-1.5 text-xs font-semibold text-ht-fg-secondary`}
                     >
                       {collapsedSections[section.id] ? "Expand" : "Collapse"}
                     </button>
                   </div>
                 </div>
                 {collapsedSections[section.id] ? (
-                  <p className="text-xs text-slate-500">Section collapsed.</p>
+                  <p className="text-xs text-ht-fg-muted">Section collapsed.</p>
                 ) : (
                   <div className="grid grid-cols-1 gap-3">
                     {section.markets.map((market) => {
@@ -1239,7 +1239,7 @@ export function PredictionMarketList() {
                           {renderMarketCard(market)}
                           {shouldRenderAdBreak ? (
                             <InlineSlotAdClient
-                              slot="leaderboard-sidebar"
+                              slot="inline-content"
                               venueId={getVenueId() ?? undefined}
                               pageKey="pickem"
                               adType="inline"
@@ -1260,16 +1260,16 @@ export function PredictionMarketList() {
         </div>
       )}
 
-      <section className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
+      <section className="rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3 text-sm">
         {isLoadingMore ? (
-          <div className="flex items-center gap-2 text-slate-600">
-            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
+          <div className="flex items-center gap-2 text-ht-fg-muted">
+            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-ht-border-soft border-t-ht-fg-primary" />
             Loading more markets...
           </div>
         ) : hasMorePages ? (
-          <p className="text-slate-600">Scroll down to load more markets.</p>
+          <p className="text-ht-fg-muted">Scroll down to load more markets.</p>
         ) : (
-          <p className="text-slate-600">You&apos;ve reached the end of the market list.</p>
+          <p className="text-ht-fg-muted">You&apos;ve reached the end of the market list.</p>
         )}
         <div ref={loadMoreRef} className="h-1 w-full" aria-hidden="true" />
       </section>

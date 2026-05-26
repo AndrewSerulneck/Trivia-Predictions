@@ -22,6 +22,8 @@ type TriviaScheduleRow = {
   title: string;
   start_time: string;
   timezone: string;
+  recurring_type: "none" | "daily" | "weekly" | "monthly" | "yearly" | null;
+  recurring_days: string[] | null;
   num_rounds: number;
   venue_id: string | null;
   intermission_ad_delay_seconds: number | null;
@@ -30,11 +32,15 @@ type TriviaScheduleRow = {
   updated_at: string;
 };
 
+type TriviaScheduleRowLegacy = Omit<TriviaScheduleRow, "recurring_type" | "recurring_days">;
+
 export type AdminLiveShowdownSchedule = {
   id: string;
   title: string;
   startTime: string;
   timezone: string;
+  recurringType: "none" | "daily" | "weekly" | "monthly" | "yearly";
+  recurringDays: string[];
   numRounds: number;
   venueId: string | null;
   intermissionAdDelaySeconds: number;
@@ -42,6 +48,18 @@ export type AdminLiveShowdownSchedule = {
   createdAt: string;
   updatedAt: string;
 };
+
+const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+
+function normalizeRecurringDays(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const normalized = value
+    .map((entry) => String(entry ?? "").trim().toLowerCase())
+    .filter((entry): entry is (typeof WEEKDAY_KEYS)[number] =>
+      WEEKDAY_KEYS.includes(entry as (typeof WEEKDAY_KEYS)[number])
+    );
+  return Array.from(new Set(normalized));
+}
 
 function getAdminClient(): NonNullable<typeof supabaseAdmin> {
   if (!supabaseAdmin) {
@@ -56,11 +74,20 @@ function clampRounds(value: number): number {
 }
 
 function mapScheduleRow(row: TriviaScheduleRow): AdminLiveShowdownSchedule {
+  const recurringType =
+    row.recurring_type === "daily" ||
+    row.recurring_type === "weekly" ||
+    row.recurring_type === "monthly" ||
+    row.recurring_type === "yearly"
+      ? row.recurring_type
+      : "none";
   return {
     id: row.id,
     title: row.title,
     startTime: row.start_time,
     timezone: row.timezone,
+    recurringType,
+    recurringDays: normalizeRecurringDays(row.recurring_days),
     numRounds: row.num_rounds,
     venueId: row.venue_id ?? null,
     intermissionAdDelaySeconds: Math.max(
@@ -71,6 +98,17 @@ function mapScheduleRow(row: TriviaScheduleRow): AdminLiveShowdownSchedule {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+function mapScheduleRowLegacy(row: TriviaScheduleRowLegacy): AdminLiveShowdownSchedule {
+  return mapScheduleRow({ ...row, recurring_type: "none", recurring_days: null });
+}
+
+function isMissingRecurringColumnError(message: string | undefined): boolean {
+  const normalized = String(message ?? "").toLowerCase();
+  const mentionsRecurringColumn =
+    normalized.includes("recurring_type") || normalized.includes("recurring_days");
+  return mentionsRecurringColumn && (normalized.includes("does not exist") || normalized.includes("schema cache"));
 }
 
 function toWordCount(value: string): number {
@@ -337,17 +375,29 @@ function computeNextSlot(params: {
 export async function listAdminLiveShowdownSchedules(limit = 30): Promise<AdminLiveShowdownSchedule[]> {
   const admin = getAdminClient();
   const safeLimit = Math.max(1, Math.min(200, Math.floor(limit)));
-  const { data, error } = await admin
+  const withRecurring = await admin
     .from("trivia_schedules")
-    .select("id, title, start_time, timezone, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled, created_at, updated_at")
+    .select("id, title, start_time, timezone, recurring_type, recurring_days, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled, created_at, updated_at")
     .order("start_time", { ascending: false })
     .limit(safeLimit);
 
-  if (error) {
-    throw new Error(error.message || "Failed to list Live Showdown schedules.");
+  if (withRecurring.error && isMissingRecurringColumnError(withRecurring.error.message)) {
+    const legacy = await admin
+      .from("trivia_schedules")
+      .select("id, title, start_time, timezone, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled, created_at, updated_at")
+      .order("start_time", { ascending: false })
+      .limit(safeLimit);
+    if (legacy.error) {
+      throw new Error(legacy.error.message || "Failed to list Live Showdown schedules.");
+    }
+    return ((legacy.data ?? []) as TriviaScheduleRowLegacy[]).map(mapScheduleRowLegacy);
   }
 
-  return ((data ?? []) as TriviaScheduleRow[]).map(mapScheduleRow);
+  if (withRecurring.error) {
+    throw new Error(withRecurring.error.message || "Failed to list Live Showdown schedules.");
+  }
+
+  return ((withRecurring.data ?? []) as TriviaScheduleRow[]).map(mapScheduleRow);
 }
 
 export async function createAdminLiveShowdownSchedule(params: {
@@ -355,6 +405,8 @@ export async function createAdminLiveShowdownSchedule(params: {
   targetDate: string;
   startTime: string;
   timezone: string;
+  recurringType?: "none" | "daily" | "weekly" | "monthly" | "yearly";
+  recurringDays?: string[];
   numRounds: number;
   venueId: string;
   intermissionAdDelaySeconds?: number;
@@ -366,6 +418,14 @@ export async function createAdminLiveShowdownSchedule(params: {
   const targetDate = String(params.targetDate ?? "").trim();
   const startTime = String(params.startTime ?? "").trim();
   const timezone = String(params.timezone ?? "America/New_York").trim() || "America/New_York";
+  const recurringType =
+    params.recurringType === "daily" ||
+    params.recurringType === "weekly" ||
+    params.recurringType === "monthly" ||
+    params.recurringType === "yearly"
+      ? params.recurringType
+      : "none";
+  const recurringDays = normalizeRecurringDays(params.recurringDays);
   const venueId = String(params.venueId ?? "").trim();
   const numRounds = clampRounds(Number(params.numRounds));
   const intermissionAdDelaySeconds = Math.max(
@@ -377,6 +437,9 @@ export async function createAdminLiveShowdownSchedule(params: {
   if (!title || !targetDate || !startTime || !venueId) {
     throw new Error("title, targetDate, startTime, timezone, numRounds, and venueId are required.");
   }
+  if (recurringType === "weekly" && recurringDays.length === 0) {
+    throw new Error("Weekly recurring schedules require at least one recurring day.");
+  }
 
   const startTimeIso = zonedDateTimeToUtcIso(targetDate, startTime, timezone);
   const sampledQuestionSlugs = await buildLiveShowdownQuestionMatrix(numRounds);
@@ -387,19 +450,40 @@ export async function createAdminLiveShowdownSchedule(params: {
       title,
       start_time: startTimeIso,
       timezone,
+      recurring_type: recurringType,
+      recurring_days: recurringDays,
       num_rounds: numRounds,
       venue_id: venueId,
       intermission_ad_delay_seconds: intermissionAdDelaySeconds,
       lobby_ad_enabled: lobbyAdEnabled,
     })
-    .select("id, title, start_time, timezone, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled, created_at, updated_at")
+    .select("id, title, start_time, timezone, recurring_type, recurring_days, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled, created_at, updated_at")
     .single();
 
-  if (scheduleInsert.error || !scheduleInsert.data) {
+  let schedule: TriviaScheduleRow | null = null;
+  if (scheduleInsert.error && isMissingRecurringColumnError(scheduleInsert.error.message)) {
+    const legacyInsert = await admin
+      .from("trivia_schedules")
+      .insert({
+        title,
+        start_time: startTimeIso,
+        timezone,
+        num_rounds: numRounds,
+        venue_id: venueId,
+        intermission_ad_delay_seconds: intermissionAdDelaySeconds,
+        lobby_ad_enabled: lobbyAdEnabled,
+      })
+      .select("id, title, start_time, timezone, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled, created_at, updated_at")
+      .single();
+    if (legacyInsert.error || !legacyInsert.data) {
+      throw new Error(legacyInsert.error?.message || "Failed to create Live Showdown schedule.");
+    }
+    schedule = { ...(legacyInsert.data as TriviaScheduleRowLegacy), recurring_type: "none", recurring_days: null };
+  } else if (scheduleInsert.error || !scheduleInsert.data) {
     throw new Error(scheduleInsert.error?.message || "Failed to create Live Showdown schedule.");
+  } else {
+    schedule = scheduleInsert.data as TriviaScheduleRow;
   }
-
-  const schedule = scheduleInsert.data as TriviaScheduleRow;
   const sessionRows: Array<{
     schedule_id: string;
     question_id: string;

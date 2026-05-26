@@ -1,0 +1,145 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:#0a0f1e;color:var(--ht-fg-primary);font-family:var(--ht-font-body)}
+  .card{box-sizing:border-box;width:700px;padding:18px;display:flex;gap:14px;align-items:stretch}
+  .phone{
+    width:330px;height:560px;flex-shrink:0;
+    background:var(--ht-canvas);border-radius:24px;
+    border:1px solid rgba(255,255,255,.08);
+    overflow:hidden;position:relative;
+    box-shadow:0 16px 40px rgba(0,0,0,.55);
+  }
+
+  /* Dim scrim behind the open drawer */
+  .scrim{
+    position:absolute;inset:0;
+    background:rgba(2,6,23,.78);
+    backdrop-filter:blur(4px);z-index:1;
+  }
+  /* The hamburger drawer */
+  .drawer{
+    position:absolute;left:0;top:0;bottom:0;width:88%;max-width:320px;z-index:2;
+    background:var(--ht-surface);
+    border-right:1px solid rgba(255,255,255,.10);
+    box-shadow:8px 0 32px rgba(0,0,0,.45);
+    display:flex;flex-direction:column;
+    padding:16px 16px 18px;gap:14px;
+  }
+
+  /* Drawer header — "Menu" + Close */
+  .head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:2px;
+  }
+  .head h3{
+    margin:0;font-family:var(--ht-font-display);font-size:24px;
+    letter-spacing:.05em;text-transform:uppercase;color:#fff;
+  }
+  .close{
+    padding:7px 14px;border-radius:10px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.18);
+    color:var(--ht-fg-secondary);
+    font-weight:800;font-size:12.5px;letter-spacing:.04em;
+    cursor:pointer;
+  }
+
+  /* User identity tile at top of drawer */
+  .me{
+    background:rgba(30,41,59,.7);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:14px;padding:12px;display:flex;gap:10px;align-items:center;
+  }
+  .me .av{
+    width:42px;height:42px;border-radius:50%;flex-shrink:0;
+    background:linear-gradient(132deg,#0ea5e9,#2563eb,#7c3aed);
+    border:1.5px solid rgba(255,255,255,.5);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-family:var(--ht-font-display);font-size:16px;
+  }
+  .me .who{flex:1;min-width:0}
+  .me .who b{display:block;color:#fff;font-weight:800;font-size:13px;line-height:1.2}
+  .me .who span{display:block;color:var(--ht-cyan-300);font-size:11px;font-weight:700;margin-top:2px}
+  .me .points{
+    color:var(--ht-amber-300);font-weight:900;font-size:14px;
+    font-variant-numeric:tabular-nums;line-height:1;
+    text-align:right;flex-shrink:0;
+  }
+  .me .points small{display:block;font-weight:700;font-size:9px;color:var(--ht-fg-muted);letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+
+  /* Nav items — title + description per item, matching the codebase shape */
+  nav{display:flex;flex-direction:column;gap:8px;flex:1}
+  .item{
+    text-align:left;cursor:pointer;
+    background:rgba(30,41,59,.5);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:14px;padding:12px 14px;
+    transition:all 150ms ease;
+  }
+  .item:hover{background:rgba(30,41,59,.85);border-color:rgba(34,211,238,.20)}
+  .item.active{
+    background:rgba(34,211,238,.10);
+    border-color:rgba(34,211,238,.45);
+    box-shadow:inset 0 0 0 1px rgba(34,211,238,.20);
+  }
+  .item .t{
+    color:var(--ht-fg-primary);font-weight:900;font-size:14px;line-height:1.2;
+    letter-spacing:.01em;
+  }
+  .item.active .t{color:var(--ht-cyan-300)}
+  .item .d{
+    color:var(--ht-fg-muted);font-weight:600;font-size:11.5px;line-height:1.35;
+    margin-top:3px;
+  }
+  .item.active .d{color:var(--ht-cyan-200);opacity:.85}
+
+  .meta{flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px;font-size:12px;color:var(--ht-fg-muted);font-weight:600;line-height:1.55;padding:0 4px}
+  .meta b{color:var(--ht-cyan-300);font-weight:900;font-size:10px;letter-spacing:.14em;text-transform:uppercase;display:block}
+  code{font-family:var(--ht-font-mono);color:var(--ht-cyan-300);font-weight:700;font-size:11px}
+  .meta .src{color:var(--ht-fg-muted);font-size:10.5px;font-weight:600;line-height:1.4}
+</style></head><body><div class="card">
+
+  <div class="phone">
+    <div class="scrim"></div>
+    <aside class="drawer">
+      <div class="head">
+        <h3>Menu</h3>
+        <button class="close">Close</button>
+      </div>
+
+      <div class="me">
+        <div class="av">YH</div>
+        <div class="who"><b>you_are_here</b><span>The Local Tavern</span></div>
+        <div class="points">312<small>pts</small></div>
+      </div>
+
+      <nav>
+        <button class="item">
+          <div class="t">Career Stats</div>
+          <div class="d">Track your lifetime performance across every game.</div>
+        </button>
+        <button class="item">
+          <div class="t">FAQs</div>
+          <div class="d">Get quick answers about gameplay and prizes.</div>
+        </button>
+        <button class="item">
+          <div class="t">Advertise With Us</div>
+          <div class="d">Submit the advertiser intake form.</div>
+        </button>
+        <button class="item">
+          <div class="t">Redeem Prizes</div>
+          <div class="d">See earned rewards and prize redemptions.</div>
+        </button>
+      </nav>
+    </aside>
+  </div>
+
+  <div class="meta">
+    <div class="src">Items match <code>components/ui/LeftHamburgerMenu.tsx</code> in the live codebase, in order. Routes: <code>/active-games</code>, <code>/faqs</code>, <code>/advertise</code>, <code>/redeem-prizes</code>.</div>
+    <div><b>Header</b>"Menu" in Bree Serif + Close ghost button.</div>
+    <div><b>Identity tile</b>Gradient avatar + venue label + tabular point total in amber. Pulled out of the legacy top header into the drawer per the brief.</div>
+    <div><b>Item card</b>Title (slate-50, 900) + description (slate-400, 600) on a slate-800/.50 fill. Hover lifts to .85.</div>
+    <div><b>Active state</b>Cyan-400/45 border · cyan/.10 fill · cyan-300 title.</div>
+  </div>
+
+</div></body></html>

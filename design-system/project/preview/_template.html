@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=700, initial-scale=1" />
+<title>HT card</title>
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  html, body { margin: 0; background: var(--ht-canvas); color: var(--ht-fg-primary); }
+  body { font-family: var(--ht-font-body); -webkit-font-smoothing: antialiased; }
+  .card {
+    box-sizing: border-box;
+    width: 700px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  /* Compact utility helpers used inside individual cards. */
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .grid { display: grid; gap: 12px; }
+  .label-eyebrow {
+    font-family: var(--ht-font-body);
+    font-weight: 900;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ht-cyan-300);
+  }
+  .swatch {
+    border-radius: 12px;
+    height: 92px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 10px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+    color: white;
+    font-size: 11px;
+    line-height: 1.2;
+    font-weight: 700;
+  }
+  .swatch small { display: block; opacity: 0.7; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .chip {
+    border-radius: 9999px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+</style>
+</head>
+<body>
+  <div class="card" id="card"><!-- content goes here --></div>
+</body>
+</html>

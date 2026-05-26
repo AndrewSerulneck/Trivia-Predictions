@@ -25,8 +25,11 @@ function resolvePageKey(pathname: string | null): AdPageKey {
   if (pathname.startsWith("/venue/")) {
     return "venue";
   }
+  if (pathname.startsWith("/trivia/live")) {
+    return "live-trivia";
+  }
   if (pathname.startsWith("/trivia")) {
-    return "trivia";
+    return "speed-trivia";
   }
   if (pathname.startsWith("/bingo")) {
     return "sports-bingo";
@@ -41,6 +44,19 @@ function resolvePageKey(pathname: string | null): AdPageKey {
     return "pickem";
   }
   return "global";
+}
+
+function getRoundVariantMax(pageKey: AdPageKey): number {
+  if (pageKey === "live-trivia") return 12;
+  if (pageKey === "speed-trivia" || pageKey === "trivia") return 3;
+  return 1;
+}
+
+function normalizeRoundVariant(pageKey: AdPageKey, roundNumber?: number): number | undefined {
+  if (!Number.isFinite(roundNumber)) return undefined;
+  const max = getRoundVariantMax(pageKey);
+  const safeRound = Math.max(1, Math.floor(Number(roundNumber)));
+  return ((safeRound - 1) % max) + 1;
 }
 
 export function MobileAdhesionAd() {
@@ -58,7 +74,12 @@ export function MobileAdhesionAd() {
 
   const SCROLL_TRIGGER_PX = 120;
 
-  const loadAd = useCallback(async (venueId: string, pageKey: AdPageKey, displayTrigger: AdDisplayTrigger) => {
+  const loadAd = useCallback(async (
+    venueId: string,
+    pageKey: AdPageKey,
+    displayTrigger: AdDisplayTrigger,
+    roundNumber?: number
+  ) => {
     const params = new URLSearchParams({ slot: "mobile-adhesion" });
     if (venueId) {
       params.set("venueId", venueId);
@@ -66,6 +87,9 @@ export function MobileAdhesionAd() {
     params.set("pageKey", pageKey);
     params.set("adType", "banner");
     params.set("displayTrigger", displayTrigger);
+    if (Number.isFinite(roundNumber)) {
+      params.set("roundNumber", String(Math.floor(Number(roundNumber))));
+    }
 
     try {
       const response = await fetch(`/api/ads/slot?${params.toString()}`, { cache: "no-store" });
@@ -88,6 +112,48 @@ export function MobileAdhesionAd() {
       return;
     }
 
+    const currentPageKey = resolvePageKey(pathname);
+    if (currentPageKey !== "speed-trivia" && currentPageKey !== "live-trivia" && currentPageKey !== "trivia") {
+      return;
+    }
+
+    const venueId = getVenueId() ?? "";
+    const loadRoundBanner = (roundNumber?: number) => {
+      const normalizedRound = normalizeRoundVariant(currentPageKey, roundNumber);
+      if (!normalizedRound) return;
+      void loadAd(venueId, currentPageKey, "round-end", normalizedRound).then((nextAd) => {
+        if (!nextAd) return;
+        setIsDismissed(false);
+        setShowDismissButton(false);
+      });
+    };
+
+    const onLegacyRoundComplete = (event: Event) => {
+      const detail = (event as CustomEvent<{ roundNumber?: number } | undefined>).detail;
+      loadRoundBanner(detail?.roundNumber);
+    };
+    const onRoundBannerEvent = (event: Event) => {
+      const detail =
+        (event as CustomEvent<{ roundNumber?: number; pageKey?: AdPageKey } | undefined>).detail ?? {};
+      if (detail.pageKey && detail.pageKey !== currentPageKey) {
+        return;
+      }
+      loadRoundBanner(detail.roundNumber);
+    };
+
+    window.addEventListener("tp:trivia-round-complete", onLegacyRoundComplete as EventListener);
+    window.addEventListener("tp:trivia-round-banner", onRoundBannerEvent as EventListener);
+    return () => {
+      window.removeEventListener("tp:trivia-round-complete", onLegacyRoundComplete as EventListener);
+      window.removeEventListener("tp:trivia-round-banner", onRoundBannerEvent as EventListener);
+    };
+  }, [loadAd, pathname]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || isAdminRoute(pathname)) {
+      return;
+    }
+
     const venueId = getVenueId() ?? "";
     const pageKey = resolvePageKey(pathname);
     const routeKey = `${pageKey}:${venueId}`;
@@ -98,6 +164,7 @@ export function MobileAdhesionAd() {
     activeVenueRef.current = routeKey;
     scrollTriggerFiredRef.current = false;
     maxScrollTopRef.current = 0;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- route changes should reset transient banner UI state.
     setAwaitingScrollTrigger(false);
     setIsDismissed(false);
     setShowDismissButton(false);
@@ -235,7 +302,7 @@ export function MobileAdhesionAd() {
           <button
             type="button"
             onClick={() => setIsDismissed(true)}
-            className="tp-clean-button absolute -top-2 right-1 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 bg-white text-sm font-semibold text-slate-700 shadow"
+            className="tp-clean-button absolute -top-2 right-1 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full border border-ht-border-soft bg-ht-elevated-2 text-sm font-semibold text-ht-fg-secondary shadow"
             aria-label="Close ad"
           >
             x

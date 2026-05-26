@@ -1,0 +1,47 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--ht-canvas);color:var(--ht-fg-primary);font-family:var(--ht-font-body)}
+  .card{box-sizing:border-box;width:700px;padding:22px;display:flex;flex-direction:column;gap:12px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:6px 12px;border-radius:9999px;
+    font-weight:900;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+    border:1px solid;
+  }
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+  .live{color:#fda4af;border-color:rgba(253,164,175,.6);background:rgba(244,63,94,.15)}
+  .live .dot{background:#f43f5e}
+
+  .next{color:#fde68a;border-color:rgba(252,211,77,.6);background:rgba(245,158,11,.15)}
+  .next .dot{background:#fbbf24}
+
+  .answering{color:#a7f3d0;border-color:rgba(110,231,183,.6);background:rgba(16,185,129,.18)}
+  .answering .dot{background:#34d399}
+
+  .lobby{color:#bae6fd;border-color:rgba(125,211,252,.6);background:rgba(14,165,233,.15)}
+  .lobby .dot{background:#22d3ee}
+
+  .closed{color:#cbd5e1;border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.04)}
+
+  .closest{color:#fde68a;border-color:rgba(252,211,77,.6);background:rgba(120,53,15,.4)}
+
+  .lab{font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--ht-fg-muted);margin-top:4px;min-width:90px}
+</style></head><body><div class="card">
+  <div class="row">
+    <span class="lab">Status</span>
+    <span class="chip live"><span class="dot"></span>Live Now</span>
+    <span class="chip next"><span class="dot"></span>Next Up · 2m</span>
+    <span class="chip answering"><span class="dot"></span>Answering</span>
+    <span class="chip lobby"><span class="dot"></span>In Lobby</span>
+    <span class="chip closed">Closed</span>
+  </div>
+  <div class="row">
+    <span class="lab">Tag / flag</span>
+    <span class="chip closest">🎯 Closest Guess</span>
+    <span class="chip" style="color:var(--ht-cyan-200);border-color:rgba(34,211,238,.5);background:rgba(34,211,238,.12)">Sponsor Spotlight</span>
+    <span class="chip" style="color:var(--ht-fg-primary);border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.10)">You</span>
+  </div>
+</div></body></html>

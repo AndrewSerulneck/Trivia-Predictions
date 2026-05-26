@@ -1,0 +1,167 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--ht-canvas);color:var(--ht-fg-primary);font-family:var(--ht-font-body)}
+  .card{box-sizing:border-box;width:700px;padding:18px;display:grid;grid-template-columns:1fr 1.1fr;gap:14px;align-items:start}
+
+  /* Header strip */
+  .head{
+    grid-column:1/-1;
+    background:var(--ht-surface);border:1px solid rgba(125,211,252,.55);
+    border-radius:16px;padding:12px 14px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .head .eb{font-weight:900;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#7dd3fc;line-height:1}
+  .head .t{font-family:var(--ht-font-display);font-size:20px;color:var(--ht-fg-primary);margin-top:3px;letter-spacing:.02em}
+  .head .pill{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(125,211,252,.10);border:1px solid rgba(125,211,252,.45);
+    color:#7dd3fc;border-radius:9999px;padding:5px 11px;
+    font-weight:900;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  }
+  .head .pill::before{content:"";width:7px;height:7px;border-radius:50%;background:#7dd3fc;animation:ht-pulse 1.5s ease-in-out infinite}
+
+  /* — Bingo board — */
+  .board{
+    background:
+      radial-gradient(circle at 20% 80%, rgba(0,0,0,.45), transparent 60%),
+      #0c3a2e;
+    border:2px solid #7dd3fc;
+    border-radius:18px;padding:10px;
+    box-shadow:0 0 0 1px rgba(125,211,252,.5) inset, 0 0 28px rgba(125,211,252,.18);
+  }
+  .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+  .sq{
+    aspect-ratio:1;border-radius:8px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:4px;text-align:center;line-height:1;position:relative;
+  }
+  .sq .label{font-size:7.5px;font-weight:800;color:rgba(255,255,255,.55);letter-spacing:.04em;line-height:1.05;margin-top:2px}
+  .sq .val{font-family:var(--ht-font-display);font-size:13px;color:#fff;font-weight:900;letter-spacing:.02em}
+
+  /* Hit (filled) squares — orange glow */
+  .sq.hit{
+    background:
+      radial-gradient(circle at 50% 40%, rgba(249,115,22,.55), rgba(249,115,22,.15) 70%, transparent),
+      rgba(249,115,22,.18);
+    border-color:rgba(251,146,60,.7);
+    box-shadow:0 0 12px rgba(249,115,22,.45);
+  }
+  .sq.hit .val{color:#fed7aa}
+  .sq.hit .label{color:#fdba74}
+  .sq.hit::after{
+    content:"✓";position:absolute;top:3px;right:4px;
+    color:#fdba74;font-weight:900;font-size:11px;line-height:1;
+  }
+
+  /* Center "FREE" square */
+  .sq.free{
+    background:linear-gradient(135deg,rgba(252,211,77,.4),rgba(217,119,6,.3));
+    border-color:rgba(252,211,77,.65);
+  }
+  .sq.free .val{color:#fde68a}
+  .sq.free .label{color:#fcd34d}
+
+  /* Sidebar — progress + stat */
+  .side{display:flex;flex-direction:column;gap:10px}
+  .card-pane{
+    background:var(--ht-surface);border:1px solid rgba(125,211,252,.30);
+    border-radius:16px;padding:14px;
+  }
+  .card-pane .eb{font-weight:900;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#7dd3fc;margin-bottom:8px}
+  .progress{display:flex;align-items:center;gap:10px}
+  .progress .ring{
+    width:46px;height:46px;border-radius:50%;
+    background:conic-gradient(#f97316 0 76%, rgba(255,255,255,.06) 76% 100%);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .progress .ring .inner{
+    width:34px;height:34px;border-radius:50%;background:var(--ht-surface);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:900;color:#fed7aa;font-size:13px;font-variant-numeric:tabular-nums;
+  }
+  .progress .lab{font-weight:800;font-size:13px;color:var(--ht-fg-primary);line-height:1.2}
+  .progress .lab small{display:block;color:var(--ht-fg-muted);font-weight:600;font-size:11px;margin-top:2px}
+  .legend{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .legend .l{display:flex;align-items:center;gap:8px;font-weight:700;font-size:11.5px;color:var(--ht-fg-secondary)}
+  .legend .sw{width:14px;height:14px;border-radius:4px}
+  .collect{
+    background:var(--ht-amber-400);color:#0f172a;font-weight:900;
+    border:1px solid rgba(255,255,255,.12);border-radius:12px;
+    width:100%;padding:11px;font-size:13px;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;
+    margin-top:10px;
+  }
+  .collect.dim{opacity:.55;cursor:not-allowed}
+
+  .game-ctx{font-weight:700;font-size:12px;color:var(--ht-fg-secondary);line-height:1.45}
+  .game-ctx b{display:block;font-size:11px;font-weight:900;letter-spacing:.14em;color:var(--ht-amber-300);text-transform:uppercase;margin-bottom:2px}
+</style></head><body><div class="card">
+
+  <div class="head">
+    <div>
+      <div class="eb">Sports Bingo · Board 2 of 4</div>
+      <div class="t">Lakers @ Celtics · Q3</div>
+    </div>
+    <span class="pill">Live</span>
+  </div>
+
+  <div class="board">
+    <div class="grid">
+      <!-- Row 1 -->
+      <div class="sq hit"><div class="label">LeBron PTS</div><div class="val">25+</div></div>
+      <div class="sq"><div class="label">3PM</div><div class="val">8+</div></div>
+      <div class="sq"><div class="label">Tatum REB</div><div class="val">10+</div></div>
+      <div class="sq hit"><div class="label">Turnover</div><div class="val">15+</div></div>
+      <div class="sq"><div class="label">Block</div><div class="val">6+</div></div>
+      <!-- Row 2 -->
+      <div class="sq"><div class="label">AD PTS</div><div class="val">18+</div></div>
+      <div class="sq hit"><div class="label">Pritchard 3</div><div class="val">3+</div></div>
+      <div class="sq"><div class="label">Brown AST</div><div class="val">7+</div></div>
+      <div class="sq"><div class="label">FG%</div><div class="val">50%+</div></div>
+      <div class="sq hit"><div class="label">Foul</div><div class="val">18+</div></div>
+      <!-- Row 3 — center FREE -->
+      <div class="sq"><div class="label">Reaves PTS</div><div class="val">12+</div></div>
+      <div class="sq hit"><div class="label">Holiday STL</div><div class="val">2+</div></div>
+      <div class="sq free"><div class="label">Free</div><div class="val">★</div></div>
+      <div class="sq"><div class="label">White 3PM</div><div class="val">4+</div></div>
+      <div class="sq hit"><div class="label">FT%</div><div class="val">75%+</div></div>
+      <!-- Row 4 -->
+      <div class="sq"><div class="label">Reb total</div><div class="val">95+</div></div>
+      <div class="sq"><div class="label">Bench PTS</div><div class="val">25+</div></div>
+      <div class="sq hit"><div class="label">Dunk</div><div class="val">5+</div></div>
+      <div class="sq"><div class="label">Tatum 3PM</div><div class="val">3+</div></div>
+      <div class="sq"><div class="label">Pace</div><div class="val">100+</div></div>
+      <!-- Row 5 -->
+      <div class="sq hit"><div class="label">Lead change</div><div class="val">8+</div></div>
+      <div class="sq"><div class="label">Steal</div><div class="val">10+</div></div>
+      <div class="sq"><div class="label">Vincent FG</div><div class="val">3+</div></div>
+      <div class="sq hit"><div class="label">FT made</div><div class="val">28+</div></div>
+      <div class="sq"><div class="label">OT?</div><div class="val">Y/N</div></div>
+    </div>
+  </div>
+
+  <div class="side">
+    <div class="card-pane">
+      <div class="eb">Board progress</div>
+      <div class="progress">
+        <div class="ring"><div class="inner">19/25</div></div>
+        <div class="lab">Squares hit<small>76% filled · 6 to bingo</small></div>
+      </div>
+      <button class="collect dim">Collect points</button>
+    </div>
+    <div class="card-pane">
+      <div class="eb">Legend</div>
+      <div class="legend">
+        <div class="l"><div class="sw" style="background:linear-gradient(135deg,rgba(252,211,77,.4),rgba(217,119,6,.3));border:1px solid rgba(252,211,77,.6)"></div>Center FREE — auto-filled</div>
+        <div class="l"><div class="sw" style="background:rgba(249,115,22,.35);border:1px solid rgba(251,146,60,.7);box-shadow:0 0 6px rgba(249,115,22,.45)"></div>Hit · square completed live</div>
+        <div class="l"><div class="sw" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)"></div>Open · awaiting stat update</div>
+      </div>
+    </div>
+    <div class="game-ctx">
+      <b>Identity</b>
+      Casino felt <code style="font-family:var(--ht-font-mono);color:#7dd3fc;font-weight:700">#0c3a2e</code> with cool ice <code style="font-family:var(--ht-font-mono);color:#7dd3fc;font-weight:700">sky-300</code> border that cuts cleanly against the warm exit pill on the same screen.
+    </div>
+  </div>
+
+</div></body></html>

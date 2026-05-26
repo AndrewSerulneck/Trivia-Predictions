@@ -5,10 +5,12 @@ create table if not exists trivia_schedules (
   title text not null,
   start_time timestamptz not null,
   timezone text not null default 'America/New_York',
+  recurring_type text not null default 'none',
   num_rounds integer not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint trivia_schedules_num_rounds_valid check (num_rounds >= 1 and num_rounds <= 24)
+  constraint trivia_schedules_num_rounds_valid check (num_rounds >= 1 and num_rounds <= 24),
+  constraint trivia_schedules_recurring_type_valid check (recurring_type in ('none', 'daily', 'weekly', 'monthly', 'yearly'))
 );
 
 create index if not exists idx_trivia_schedules_start_time

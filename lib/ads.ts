@@ -238,7 +238,6 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string, options?: AdLook
   if (options?.pageKey) query = query.eq("page_key", options.pageKey);
   if (options?.adType) query = query.eq("ad_type", options.adType);
   if (options?.displayTrigger) query = query.eq("display_trigger", options.displayTrigger);
-  if (options?.placementKey) query = query.eq("placement_key", options.placementKey);
 
   const { data, error } = await query.returns<AdvertisementRow[]>();
   if (error || !data || data.length === 0) return null;
@@ -254,18 +253,39 @@ async function getActiveAdQuery(slot: AdSlot, venueId?: string, options?: AdLook
 
   const requestedRound = Number.isFinite(options?.roundNumber) ? Math.round(Number(options?.roundNumber)) : undefined;
   const requestedSequence = Number.isFinite(options?.sequenceIndex) ? Math.round(Number(options?.sequenceIndex)) : undefined;
+  const requestedPlacementKey = options?.placementKey?.trim() || "";
 
-  const filteredByRound = requestedRound ? pool.filter((r) => Number(r.round_number) === requestedRound) : pool;
-  const roundPool = filteredByRound.length > 0 ? filteredByRound : pool;
+  let placementPool = pool;
+  if (requestedPlacementKey) {
+    const exactPlacement = pool.filter((r) => (r.placement_key ?? "").trim() === requestedPlacementKey);
+    const genericPlacement = pool.filter((r) => !(r.placement_key ?? "").trim());
+    // Prefer exact placement matches, but fall back to generic slot ads so
+    // admin-created ads without placement metadata still render in-slot.
+    if (exactPlacement.length > 0) {
+      placementPool = exactPlacement;
+    } else if (genericPlacement.length > 0) {
+      placementPool = genericPlacement;
+    }
+  }
+
+  const filteredByRound = requestedRound ? placementPool.filter((r) => Number(r.round_number) === requestedRound) : placementPool;
+  const roundPool = filteredByRound.length > 0 ? filteredByRound : placementPool;
 
   const isStrictLeaderboardVariantRequest =
-    options?.placementKey === "venue-leaderboard-inline" && Number.isFinite(requestedSequence) && Number(requestedSequence) >= 1;
+    requestedPlacementKey === "venue-leaderboard-inline" && Number.isFinite(requestedSequence) && Number(requestedSequence) >= 1;
 
   let sequencePool = roundPool;
-  if (requestedSequence && options?.placementKey === "venue-leaderboard-inline") {
+  if (requestedSequence && requestedPlacementKey === "venue-leaderboard-inline") {
     const filteredBySequence = roundPool.filter((r) => Number(r.sequence_index) === requestedSequence);
-    if (filteredBySequence.length === 0) return null;
-    sequencePool = filteredBySequence;
+    const genericSequence = roundPool.filter((r) => !Number.isFinite(Number(r.sequence_index)));
+    if (filteredBySequence.length > 0) {
+      sequencePool = filteredBySequence;
+    } else if (genericSequence.length > 0) {
+      // Backward-compatible fallback for older records missing sequence_index.
+      sequencePool = genericSequence;
+    } else {
+      return null;
+    }
   }
 
   const counter = Number.isFinite(options?.clientCounter) ? Math.max(0, Math.round(Number(options?.clientCounter))) : 0;

@@ -16,8 +16,10 @@ export function AdsCreateSection({ venues }: AdsCreateSectionProps) {
   const [draft, setDraft] = useState<AdDraft>(defaultAdDraft());
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [applyingPlaceholder, setApplyingPlaceholder] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [placeholderApplySummary, setPlaceholderApplySummary] = useState("");
 
   const imagePreview = useMemo(() => draft.imageUrl.trim(), [draft.imageUrl]);
 
@@ -59,6 +61,7 @@ export function AdsCreateSection({ venues }: AdsCreateSectionProps) {
     setSaving(true);
     setError("");
     setSuccess("");
+    setPlaceholderApplySummary("");
 
     try {
       const payload = draftToPayload(draft);
@@ -78,6 +81,84 @@ export function AdsCreateSection({ venues }: AdsCreateSectionProps) {
       setError(getErrorMessage(err, "Failed to create advertisement."));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function applyDraftAsInlinePlaceholderTemplate() {
+    if (!draft.isPlaceholder) {
+      setError("Mark this ad as Placeholder before applying to all inline slots.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "This will create placeholder ads in any inline slots that currently have no placeholder. This will NOT overwrite or delete existing ads. Proceed?"
+    );
+    if (!confirmed) return;
+
+    setApplyingPlaceholder(true);
+    setError("");
+    setSuccess("");
+    setPlaceholderApplySummary("");
+
+    try {
+      const payload = draftToPayload(draft);
+      const response = await fetch("/api/admin?resource=apply-placeholder-inline", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          template: {
+            advertiserName: payload.advertiserName,
+            imageUrl: payload.imageUrl,
+            clickUrl: payload.clickUrl,
+            altText: payload.altText,
+            width: payload.width,
+            height: payload.height,
+            adType: payload.adType,
+            displayTrigger: payload.displayTrigger,
+            priority: payload.priority,
+            placementKey: payload.placementKey,
+            startDate: payload.startDate,
+            endDate: payload.endDate ?? null,
+            frequencyInterval: payload.frequencyInterval,
+            dismissDelaySeconds: payload.dismissDelaySeconds,
+            popupCooldownSeconds: payload.popupCooldownSeconds,
+            sequenceIndex: payload.sequenceIndex,
+          },
+        }),
+      });
+
+      const body = (await response.json()) as {
+        ok: boolean;
+        created?: number;
+        skipped?: number;
+        errors?: Array<{ slotId: string; pageKey: string; error: string }>;
+        error?: string;
+      };
+      if (!response.ok || !body.ok) {
+        throw new Error(body.error ?? "Failed to apply placeholders.");
+      }
+
+      const created = Number(body.created ?? 0);
+      const skipped = Number(body.skipped ?? 0);
+      const errors = Array.isArray(body.errors) ? body.errors : [];
+      const errorPreview = errors
+        .slice(0, 5)
+        .map((entry) => `${entry.slotId}/${entry.pageKey}: ${entry.error}`)
+        .join(" | ");
+
+      setPlaceholderApplySummary(
+        `Created ${created} placeholders. Skipped ${skipped} slots. Errors ${errors.length}${
+          errorPreview ? ` (${errorPreview})` : ""
+        }.`
+      );
+      setSuccess(`Created ${created} placeholders. Skipped ${skipped}.`);
+      if (errors.length > 0) {
+        setError(`Some slots failed: ${errorPreview}`);
+      }
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to apply placeholders."));
+    } finally {
+      setApplyingPlaceholder(false);
     }
   }
 
@@ -124,7 +205,10 @@ export function AdsCreateSection({ venues }: AdsCreateSectionProps) {
             setError("");
           }}
           venues={venues}
-          disabled={saving || uploading}
+          disabled={saving || uploading || applyingPlaceholder}
+          onApplyPlaceholderToAllInlineSlots={applyDraftAsInlinePlaceholderTemplate}
+          applyingPlaceholderToAllInlineSlots={applyingPlaceholder}
+          placeholderApplySummary={placeholderApplySummary}
         />
 
         <div className="mt-6">
@@ -132,7 +216,7 @@ export function AdsCreateSection({ venues }: AdsCreateSectionProps) {
             onClick={() => {
               void handleSubmit();
             }}
-            disabled={saving || uploading}
+            disabled={saving || uploading || applyingPlaceholder}
             className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
           >
             {saving ? "Creating..." : "Create Advertisement"}

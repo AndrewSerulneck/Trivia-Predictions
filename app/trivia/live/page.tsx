@@ -106,6 +106,11 @@ function formatMmSs(totalSeconds: number): string {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+function toLiveIntermissionVariant(roundNumber: number): number {
+  const safeRound = Math.max(1, Math.floor(roundNumber));
+  return ((safeRound - 1) % 12) + 1;
+}
+
 export default function LiveShowdownPage() {
   const [state, setState] = useState<LiveState | null>(null);
   const [loading, setLoading] = useState(true);
@@ -213,11 +218,19 @@ export default function LiveShowdownPage() {
     }
   }, []);
 
-  const loadPopupAdBySlotKey = useCallback(async (slotKey: string) => {
+  const loadPopupAd = useCallback(async (options: { displayTrigger: "on-load" | "round-end"; roundNumber?: number }) => {
     const venueId = String(getVenueId() ?? "").trim();
-    const params = new URLSearchParams({ slotKey });
+    const params = new URLSearchParams({
+      slot: "popup-on-entry",
+      pageKey: "live-trivia",
+      adType: "popup",
+      displayTrigger: options.displayTrigger,
+    });
     if (venueId) {
       params.set("venueId", venueId);
+    }
+    if (Number.isFinite(options.roundNumber)) {
+      params.set("roundNumber", String(Math.floor(Number(options.roundNumber))));
     }
     const response = await fetch(`/api/ads/slot?${params.toString()}`, { cache: "no-store" });
     const payload = (await response.json()) as {
@@ -321,7 +334,11 @@ export default function LiveShowdownPage() {
       return;
     }
 
-    const adEventKey = `${state.scheduleId}:${state.currentRound}`;
+    const currentRound = Number(state.currentRound);
+    if (!Number.isFinite(currentRound) || currentRound < 1) {
+      return;
+    }
+    const adEventKey = `${state.scheduleId}:${currentRound}`;
     if (intermissionAdKeyRef.current === adEventKey) {
       return;
     }
@@ -333,7 +350,13 @@ export default function LiveShowdownPage() {
 
     intermissionAdKeyRef.current = adEventKey;
     intermissionAdTimerRef.current = window.setTimeout(() => {
-      void loadPopupAdBySlotKey("live-popup-intermission")
+      const variantRound = toLiveIntermissionVariant(currentRound);
+      window.dispatchEvent(
+        new CustomEvent("tp:trivia-round-banner", {
+          detail: { pageKey: "live-trivia", roundNumber: variantRound },
+        })
+      );
+      void loadPopupAd({ displayTrigger: "round-end", roundNumber: variantRound })
         .then((ad) => {
           if (ad) {
             setPopupAd(ad);
@@ -349,7 +372,7 @@ export default function LiveShowdownPage() {
       }
     };
   }, [
-    loadPopupAdBySlotKey,
+    loadPopupAd,
     state?.activePhase,
     state?.currentRound,
     state?.intermissionAdDelaySeconds,
@@ -372,14 +395,14 @@ export default function LiveShowdownPage() {
     }
 
     lobbyAdKeyRef.current = nextScheduleKey;
-    void loadPopupAdBySlotKey("live-popup-lobby")
+    void loadPopupAd({ displayTrigger: "on-load" })
       .then((ad) => {
         if (ad) {
           setPopupAd(ad);
         }
       })
       .catch(() => undefined);
-  }, [hasOnboarded, loadPopupAdBySlotKey, state?.isGameActive, state?.nextSchedule]);
+  }, [hasOnboarded, loadPopupAd, state?.isGameActive, state?.nextSchedule]);
 
   useEffect(() => {
     if (!hasOnboarded) {

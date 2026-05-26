@@ -1,0 +1,80 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--ht-canvas);color:var(--ht-fg-primary);font-family:var(--ht-font-body)}
+  .card{box-sizing:border-box;width:700px;padding:18px}
+  .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .col{display:flex;flex-direction:column;gap:4px}
+  .head{font-weight:900;font-size:10px;letter-spacing:.14em;text-transform:uppercase;text-align:center;margin-bottom:4px}
+  .swatch{height:36px;border-radius:8px;position:relative;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+  .swatch::after{content:attr(data-hex);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:rgba(0,0,0,.5);font-variant-numeric:tabular-nums}
+  .swatch.dark::after{color:rgba(255,255,255,.8)}
+  .use{font-size:9.5px;font-weight:700;color:var(--ht-fg-muted);text-align:center;line-height:1.2;margin-top:6px;letter-spacing:.02em}
+</style></head><body><div class="card"><div class="grid">
+
+<div class="col">
+  <div class="head" style="color:var(--ht-cyan-300)">Cyan</div>
+  <div class="swatch" style="background:#ecfeff" data-hex="50"></div>
+  <div class="swatch" style="background:#a5f3fc" data-hex="200"></div>
+  <div class="swatch" style="background:#67e8f9" data-hex="300"></div>
+  <div class="swatch dark" style="background:#22d3ee" data-hex="400"></div>
+  <div class="swatch dark" style="background:#06b6d4" data-hex="500"></div>
+  <div class="swatch dark" style="background:#0891b2" data-hex="600"></div>
+  <div class="use">info · focus · Live Trivia</div>
+</div>
+
+<div class="col">
+  <div class="head" style="color:var(--ht-emerald-300)">Emerald</div>
+  <div class="swatch" style="background:#d1fae5" data-hex="100"></div>
+  <div class="swatch" style="background:#a7f3d0" data-hex="200"></div>
+  <div class="swatch" style="background:#6ee7b7" data-hex="300"></div>
+  <div class="swatch dark" style="background:#34d399" data-hex="400"></div>
+  <div class="swatch dark" style="background:#10b981" data-hex="500"></div>
+  <div class="swatch dark" style="background:#059669" data-hex="600"></div>
+  <div class="use">answering · success · +points</div>
+</div>
+
+<div class="col">
+  <div class="head" style="color:var(--ht-amber-300)">Amber</div>
+  <div class="swatch" style="background:#fef3c7" data-hex="100"></div>
+  <div class="swatch" style="background:#fde68a" data-hex="200"></div>
+  <div class="swatch" style="background:#fcd34d" data-hex="300"></div>
+  <div class="swatch dark" style="background:#fbbf24" data-hex="400"></div>
+  <div class="swatch dark" style="background:#f59e0b" data-hex="500"></div>
+  <div class="swatch dark" style="background:#d97706" data-hex="600"></div>
+  <div class="use">countdown · next up · closest guess</div>
+</div>
+
+<div class="col">
+  <div class="head" style="color:var(--ht-fuchsia-300)">Fuchsia</div>
+  <div class="swatch" style="background:#fae8ff" data-hex="100"></div>
+  <div class="swatch" style="background:#f5d0fe" data-hex="200"></div>
+  <div class="swatch" style="background:#f0abfc" data-hex="300"></div>
+  <div class="swatch dark" style="background:#e879f9" data-hex="400"></div>
+  <div class="swatch dark" style="background:#d946ef" data-hex="500"></div>
+  <div class="swatch dark" style="background:#a21caf" data-hex="700"></div>
+  <div class="use">reveal · intermission</div>
+</div>
+
+<div class="col">
+  <div class="head" style="color:var(--ht-rose-400)">Rose</div>
+  <div class="swatch" style="background:#ffe4e6" data-hex="100"></div>
+  <div class="swatch" style="background:#fecdd3" data-hex="200"></div>
+  <div class="swatch" style="background:#fda4af" data-hex="300"></div>
+  <div class="swatch dark" style="background:#fb7185" data-hex="400"></div>
+  <div class="swatch dark" style="background:#f43f5e" data-hex="500"></div>
+  <div class="swatch dark" style="background:#be123c" data-hex="700"></div>
+  <div class="use">wrong · error · forfeit</div>
+</div>
+
+<div class="col">
+  <div class="head" style="color:var(--ht-violet-400)">Violet</div>
+  <div class="swatch" style="background:#ede9fe" data-hex="100"></div>
+  <div class="swatch" style="background:#ddd6fe" data-hex="200"></div>
+  <div class="swatch" style="background:#a78bfa" data-hex="400"></div>
+  <div class="swatch dark" style="background:#8b5cf6" data-hex="500"></div>
+  <div class="swatch dark" style="background:#7c3aed" data-hex="600"></div>
+  <div class="swatch dark" style="background:#5b21b6" data-hex="800"></div>
+  <div class="use">Fantasy · Pick'Em accent</div>
+</div>
+
+</div></div></body></html>

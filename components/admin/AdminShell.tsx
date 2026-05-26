@@ -190,7 +190,7 @@ function LoginScreen({ onSuccess }: { onSuccess: () => void }) {
     setBusy(true);
     setError("");
     try {
-      const res = await fetch("/api/admin/bootstrap", {
+      const res = await fetch("/api/admin/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -397,6 +397,14 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
   const [venueList, setVenueList] = useState<Venue[]>(venues);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const checkSession = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/session", { cache: "no-store" });
+      setAuthState(res.ok ? "authenticated" : "unauthenticated");
+    } catch {
+      setAuthState("unauthenticated");
+    }
+  }, []);
 
   useEffect(() => {
     const syncBreakpoint = () => {
@@ -419,19 +427,25 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
   }, [mobileSidebarOpen]);
 
   useEffect(() => {
-    let cancelled = false;
-    fetch("/api/admin?resource=session", { cache: "no-store" })
-      .then((res) => {
-        if (cancelled) return;
-        setAuthState(res.ok ? "authenticated" : "unauthenticated");
-      })
-      .catch(() => {
-        if (!cancelled) setAuthState("unauthenticated");
-      });
-    return () => {
-      cancelled = true;
+    void checkSession();
+  }, [checkSession]);
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (!document.hidden) {
+        void checkSession();
+      }
     };
-  }, []);
+    const onFocus = () => {
+      void checkSession();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [checkSession]);
 
   const handleLoginSuccess = useCallback(() => {
     setAuthState("authenticated");
@@ -496,7 +510,7 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
   };
 
   return (
-    <div className="w-full h-screen max-h-screen m-0 p-0 flex bg-[#030712] overflow-hidden select-none">
+    <div className="w-full h-screen max-h-screen m-0 p-0 flex bg-[#030712] overflow-hidden">
       {!isMobile ? (
         <Sidebar
           activeSection={activeSection}

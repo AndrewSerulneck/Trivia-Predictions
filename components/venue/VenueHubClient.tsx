@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Venue, LeaderboardEntry } from "@/types";
-import { getUserId, getVenueId, saveUserId, saveVenueId, clearVenueSession } from "@/lib/storage";
+import { getUserId, getUsername, getVenueId, saveUserId, saveVenueId, clearVenueSession } from "@/lib/storage";
 import { clearLoginInProgress } from "@/lib/authFastPath";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
 import { writeWarmTriviaCache, writeWarmPredictionsCache } from "@/lib/warmupCache";
@@ -19,6 +19,7 @@ import {
 import { VENUE_GAME_CARD_BY_KEY, VENUE_HOME_GAME_KEYS, type VenueGameKey } from "@/lib/venueGameCards";
 import { runVenueGameOpenTransition } from "@/lib/venueGameTransition";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 
 type BingoBadgePayload = {
   ok: boolean;
@@ -42,6 +43,8 @@ type FantasyBadgePayload = {
 type UserSummaryPayload = {
   ok?: boolean;
   profile?: {
+    username?: string;
+    points?: number;
     venueId?: string;
   } | null;
 };
@@ -70,6 +73,12 @@ type ChallengeCampaignPayload = {
 
 type HomeScreenIndex = 0 | 1 | 2;
 type VenueArrivalStage = "identity" | "core" | "warmup" | "ready";
+
+type VenueMenuItem = {
+  label: string;
+  description: string;
+  href: string;
+};
 
 // Background fill per game — each uses a distinct texture strategy
 const GAME_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
@@ -110,6 +119,43 @@ const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
   pickem: ["Hightop", "Pick 'Em™"],
   fantasy: ["Hightop", "Fantasy™"],
 };
+const VENUE_HUB_TILE_GRADIENT_BY_KEY: Record<VenueGameKey, string> = {
+  live_trivia: "linear-gradient(132deg,#06b6d4 0%,#0ea5e9 48%,#2563eb 100%)",
+  trivia: "linear-gradient(132deg,#f59e0b 0%,#f97316 52%,#ea580c 100%)",
+  bingo: "linear-gradient(128deg,#10b981 0%,#14b8a6 52%,#0f766e 100%)",
+  pickem: "linear-gradient(134deg,#3b82f6 0%,#6366f1 55%,#4f46e5 100%)",
+  fantasy: "linear-gradient(134deg,#a855f7 0%,#8b5cf6 52%,#7c3aed 100%)",
+};
+const VENUE_HUB_TILE_SUBTITLE_BY_KEY: Record<VenueGameKey, string> = {
+  live_trivia: "Synchronized live venue play · 30s answers",
+  trivia: "15 questions · 15s each · 3 rounds an hour",
+  bingo: "Player-stat squares fill in real time",
+  pickem: "Pick winners across 5 leagues",
+  fantasy: "Build one lineup against the room",
+};
+const VENUE_HUB_GAME_ORDER: VenueGameKey[] = ["live_trivia", "trivia", "bingo", "pickem", "fantasy"];
+const VENUE_DRAWER_MENU_ITEMS: VenueMenuItem[] = [
+  {
+    label: "Career Stats",
+    description: "Track your lifetime performance across every game.",
+    href: "/active-games",
+  },
+  {
+    label: "FAQs",
+    description: "Get quick answers about gameplay and prizes.",
+    href: "/faqs",
+  },
+  {
+    label: "Advertise With Us",
+    description: "Submit the advertiser intake form.",
+    href: "/advertise",
+  },
+  {
+    label: "Redeem Prizes",
+    description: "See earned rewards and prize redemptions.",
+    href: "/redeem-prizes",
+  },
+];
 
 const SWIPE_SCREEN_COUNT = 3;
 const FETCH_TIMEOUT_MS = 4500;
@@ -124,6 +170,14 @@ function formatCountdown(seconds: number): string {
   const minutes = Math.floor(safeSeconds / 60);
   const remainingSeconds = safeSeconds % 60;
   return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+}
+
+function formatLongCountdown(seconds: number): string {
+  const safeSeconds = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60);
+  const remainingSeconds = safeSeconds % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
 }
 
 function formatBadgeCount(value: number): string {
@@ -243,6 +297,16 @@ function pathMatches(expectedPath: string, candidatePath: string): boolean {
   return candidatePath === expectedPath || candidatePath.startsWith(`${expectedPath}/`);
 }
 
+function isActiveMenuPath(pathname: string, href: string): boolean {
+  if (href === "/") {
+    return pathname === href;
+  }
+  if (href.startsWith("/venue/")) {
+    return pathname.startsWith("/venue/");
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 function hasFreshBootstrapTriviaQuota(snapshot: VenueHomeBootstrapSnapshot | null): boolean {
   if (!snapshot?.triviaQuota) {
     return false;
@@ -360,6 +424,7 @@ function GameGlyph({ gameKey }: { gameKey: VenueGameKey }) {
 
 function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; initialEntries?: LeaderboardEntry[] }) {
   const router = useRouter();
+  const pathname = usePathname();
   // Bootstrap snapshot and entry handoff are read from sessionStorage ONLY after
   // mount (in useEffect). Reading them during render would produce different values
   // on the server (no sessionStorage) vs. the client, causing a hydration mismatch.
@@ -379,9 +444,13 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const [isChallengesLoading, setIsChallengesLoading] = useState(true);
   const [challengesError, setChallengesError] = useState("");
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [menuUsername, setMenuUsername] = useState("");
+  const [menuPoints, setMenuPoints] = useState(0);
   const [isBadgeLoading, setIsBadgeLoading] = useState(true);
   const [badgeError, setBadgeError] = useState("");
   const [liveTriviaStatus, setLiveTriviaStatus] = useState<{ live: boolean; label: string; nextStartAtMs?: number | null }>({ live: false, label: "" });
+  const [liveCountdownNowMs, setLiveCountdownNowMs] = useState(() => Date.now());
   const [leaderboardBootstrapEntries, setLeaderboardBootstrapEntries] = useState<LeaderboardEntry[]>([]);
   const [activeScreen, setActiveScreen] = useState<HomeScreenIndex>(0);
   const [homeRevealComplete, setHomeRevealComplete] = useState(true);
@@ -668,6 +737,35 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     }
     return String(payload.profile.venueId ?? "").trim() === venue.id;
   }, [venue.id]);
+
+  const loadMenuSummary = useCallback(async () => {
+    const userId = (getUserId() ?? "").trim();
+    const venueId = (getVenueId() ?? "").trim();
+    if (!userId) {
+      setMenuUsername("");
+      setMenuPoints(0);
+      return;
+    }
+
+    const fallbackUsername = (getUsername() ?? "").trim();
+    if (fallbackUsername) {
+      setMenuUsername(fallbackUsername);
+    }
+
+    const payload = await fetchJsonWithTimeout<UserSummaryPayload>(
+      `/api/users/summary?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venueId)}`,
+      3600
+    );
+    if (!payload?.ok || !payload.profile) {
+      return;
+    }
+    const nextUsername = String(payload.profile.username ?? "").trim();
+    const nextPoints = Math.max(0, Math.round(Number(payload.profile.points ?? 0)));
+    if (nextUsername) {
+      setMenuUsername(nextUsername);
+    }
+    setMenuPoints(nextPoints);
+  }, []);
 
   const loadHomeBadges = useCallback(async (options?: { silent?: boolean }) => {
     const silent = Boolean(options?.silent);
@@ -1063,6 +1161,21 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   }, [loadHomeBadges]);
 
   useEffect(() => {
+    void loadMenuSummary();
+    const interval = window.setInterval(() => {
+      void loadMenuSummary();
+    }, 20000);
+    const onPointsUpdated = () => {
+      void loadMenuSummary();
+    };
+    window.addEventListener("tp:points-updated", onPointsUpdated);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("tp:points-updated", onPointsUpdated);
+    };
+  }, [loadMenuSummary]);
+
+  useEffect(() => {
     if (!homeRevealComplete) return;
     if (!contentReady) return;
     const deferTimer = window.setTimeout(() => {
@@ -1085,6 +1198,13 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     const interval = window.setInterval(() => void loadLiveTriviaStatus(), 15000);
     return () => window.clearInterval(interval);
   }, [contentReady, homeRevealComplete, loadLiveTriviaStatus]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setLiveCountdownNowMs(Date.now());
+    }, 1000);
+    return () => window.clearInterval(interval);
+  }, []);
 
 
   useEffect(() => {
@@ -1175,11 +1295,22 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const leaderboardInitialEntries = leaderboardBootstrapEntries.length > 0 ? leaderboardBootstrapEntries : initialEntries;
   const triviaIsLocked = Boolean(triviaQuota && !triviaQuota.isAdminBypass && triviaQuota.questionsRemaining <= 0);
   const triviaUnlockCountdown = triviaUnlockSeconds > 0 ? triviaUnlockSeconds : triviaIsLocked ? Math.max(0, Math.floor(triviaQuota?.windowSecondsRemaining ?? 0)) : 0;
+  const nextLiveTriviaCountdownSeconds =
+    liveTriviaStatus.nextStartAtMs != null
+      ? Math.max(0, Math.floor((liveTriviaStatus.nextStartAtMs - liveCountdownNowMs) / 1000))
+      : null;
+  const nextLiveTriviaCountdownLabel = liveTriviaStatus.live
+    ? "00:00:00"
+    : nextLiveTriviaCountdownSeconds != null
+    ? formatLongCountdown(nextLiveTriviaCountdownSeconds)
+    : "--:--:--";
+  const liveSoonMinutes =
+    nextLiveTriviaCountdownSeconds != null ? Math.max(1, Math.ceil(nextLiveTriviaCountdownSeconds / 60)) : null;
   const showLiveBadge =
     liveTriviaStatus.live ||
     (liveTriviaStatus.nextStartAtMs != null &&
-      liveTriviaStatus.nextStartAtMs > Date.now() &&
-      liveTriviaStatus.nextStartAtMs - Date.now() <= 10 * 60 * 1000);
+      liveTriviaStatus.nextStartAtMs > liveCountdownNowMs &&
+      liveTriviaStatus.nextStartAtMs - liveCountdownNowMs <= 10 * 60 * 1000);
 
   const visibleBadgeByGame = useMemo(() => {
     const badges = new Map<VenueGameKey, string>();
@@ -1194,6 +1325,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     () => challengeCards.find((card) => card.id === selectedChallengeId) ?? null,
     [challengeCards, selectedChallengeId]
   );
+  const orderedHomeCards = useMemo(() => {
+    const byKey = new Map(homeCards.map((card) => [card.key, card] as const));
+    return VENUE_HUB_GAME_ORDER.map((key) => byKey.get(key)).filter((card): card is (typeof homeCards)[number] => Boolean(card));
+  }, [homeCards]);
+  const challengeBadgeCount = challengeCards.filter((challenge) => Boolean(challenge.winnerUserId && challenge.winnerUserId === currentUserId && !challenge.prizeClaimedAt)).length;
 
   const showFastPathSkeleton = arrivalInProgress && !arrivalCoreReady;
 
@@ -1201,32 +1337,73 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     <div
       className="relative z-[60] flex flex-col isolation-isolate"
     >
-      <section className="relative shrink-0">
-        <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-4 py-3">
-          <h2 className="text-xl font-black text-white">
-            <span className="text-cyan-300">{venueDisplayName}</span>
-          </h2>
+      <section className="fixed inset-x-0 top-0 z-[1100] shrink-0 border-b border-white/10 bg-[rgba(2,6,23,0.92)] pt-[max(env(safe-area-inset-top),0px)] backdrop-blur-xl">
+        <div className="flex items-center justify-between px-4 py-1.5">
           <button
+            type="button"
             onMouseDown={triggerPulse}
-            onClick={leaveVenue}
-            style={{ border: "1px solid #1c2b3a" }}
-            className="tp-clean-button inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-5 py-2 text-sm font-black text-[#fff7ea] shadow-sm transition-all active:scale-95 active:brightness-90"
-            aria-label="Back and exit venue"
+            onClick={() => setIsMenuOpen(true)}
+            className="tp-clean-button inline-flex h-8 w-8 items-center justify-center rounded-[10px] border border-white/10 bg-ht-surface text-ht-fg-primary"
+            aria-label="Open navigation menu"
+            aria-expanded={isMenuOpen}
           >
-            <svg viewBox="0 0 40 16" className="h-3.5 w-9" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M39 8H9" stroke="currentColor" strokeWidth="3.25" strokeLinecap="round" />
-              <path d="M14 2L2 8L14 14" stroke="currentColor" strokeWidth="3.25" strokeLinecap="round" strokeLinejoin="round" />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              <path d="M3 6h18M3 12h18M3 18h18" />
             </svg>
-            <span className="leading-none">Exit</span>
           </button>
+          <h2
+            className="truncate px-3 text-center text-[1.15rem] font-black uppercase tracking-[0.04em] text-cyan-300"
+            style={{ fontFamily: "'Bree Serif', 'Nunito', serif" }}
+          >
+            {venueDisplayName}
+          </h2>
+          <div className="shrink-0">
+            <NotificationBell />
+          </div>
         </div>
-
-        <div className="flex items-center justify-center gap-2 border-b border-slate-800 bg-slate-900 px-4 py-2.5">
-          <button type="button" onClick={() => goToScreen(0)} className={`tp-clean-button min-w-[6.2rem] rounded-full px-4 py-1.5 text-sm font-black text-center transition-all ${activeScreen === 0 ? "bg-cyan-400 text-slate-950" : "bg-slate-800 text-slate-400"}`} aria-current={activeScreen === 0 ? "page" : undefined}>Games</button>
-          <button type="button" onClick={() => goToScreen(1)} className={`tp-clean-button min-w-[6.2rem] rounded-full px-4 py-1.5 text-sm font-black text-center transition-all ${activeScreen === 1 ? "bg-cyan-400 text-slate-950" : "bg-slate-800 text-slate-400"}`} aria-current={activeScreen === 1 ? "page" : undefined}>Leaderboard</button>
-          <button type="button" onClick={() => goToScreen(2)} className={`tp-clean-button min-w-[6.2rem] rounded-full px-4 py-1.5 text-sm font-black text-center transition-all ${activeScreen === 2 ? "bg-cyan-400 text-slate-950" : "bg-slate-800 text-slate-400"}`} aria-current={activeScreen === 2 ? "page" : undefined}>Challenges</button>
+        <div className="px-4 pb-2">
+          <div className="mx-auto w-full max-w-[24rem] sm:max-w-md">
+            <div className="rounded-full border border-cyan-400/35 bg-slate-900/90 p-1 shadow-[0_8px_24px_rgba(2,6,23,0.45)]">
+              <div className="grid grid-cols-3 gap-1">
+                <button
+                  type="button"
+                  onClick={() => goToScreen(0)}
+                  className={`tp-clean-button rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
+                    activeScreen === 0 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
+                  }`}
+                >
+                  Games
+                </button>
+                <button
+                  type="button"
+                  onClick={() => goToScreen(1)}
+                  className={`tp-clean-button rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
+                    activeScreen === 1 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
+                  }`}
+                >
+                  Leaderboard
+                </button>
+                <button
+                  type="button"
+                  onClick={() => goToScreen(2)}
+                  className={`tp-clean-button relative rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
+                    activeScreen === 2 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
+                  }`}
+                >
+                  Challenges
+                  {challengeBadgeCount > 0 ? (
+                    <span className="absolute -right-1 -top-1 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-black leading-none text-white">
+                      {formatBadgeCount(challengeBadgeCount)}
+                    </span>
+                  ) : null}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
+
+      <div aria-hidden className="shrink-0 h-[calc(max(env(safe-area-inset-top),0px)+8rem)]" />
 
       <div className="canvas-ribbon m-0 w-full p-0">
         <div
@@ -1243,7 +1420,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           aria-label="Venue home screens"
         >
         <section className="venue-screen relative m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">
-            <div className={`venue-home-panel-content venue-home-games-fit w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-3 pt-1 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>
+          <div className={`venue-home-panel-content venue-home-games-fit w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-4 pt-2 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>
             {showFastPathSkeleton ? (
               <div className="mx-auto mb-2 w-full max-w-[24rem] rounded-2xl border border-slate-700 bg-slate-800/80 px-3 py-2 text-center text-xs font-semibold text-slate-300">
                 <p>{arrivalStatusText}</p>
@@ -1252,49 +1429,99 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 </p>
               </div>
             ) : null}
-            <div className="relative mx-auto min-h-0 w-full max-w-[24rem] flex-1 pt-1 sm:max-w-md">
-              <div className="grid w-full grid-cols-2 gap-[clamp(0.55rem,2.4vw,1rem)] pb-2">
-                {homeCards.map((card) => {
+
+            <div className="mx-auto w-full max-w-[24rem] space-y-3 sm:max-w-md">
+              <div className="rounded-2xl border border-amber-400/60 bg-ht-surface p-3 shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+                <div className="flex items-stretch gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-300">Next Live Trivia Showdown In</p>
+                    <p className="mt-1 font-black tabular-nums text-amber-200 text-[2.2rem] leading-none">
+                      {nextLiveTriviaCountdownLabel}
+                    </p>
+                    {liveTriviaStatus.label ? (
+                      <p className="mt-1 text-xs font-semibold text-amber-100/90">{liveTriviaStatus.label}</p>
+                    ) : null}
+                  </div>
+                  <button
+                    type="button"
+                    onMouseDown={triggerPulse}
+                    onClick={(event) => {
+                      void goTo("live_trivia", event.currentTarget);
+                    }}
+                    disabled={pendingDestination !== null}
+                    className="tp-clean-button min-w-[7.2rem] rounded-[12px] border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-lg font-black leading-tight text-cyan-200 shadow-[0_0_0_1px_rgba(34,211,238,0.28)] transition-all hover:bg-cyan-400/15 disabled:opacity-60"
+                  >
+                    Enter
+                    <br />
+                    lobby
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {orderedHomeCards.map((card) => {
                   const isOpening = pendingDestination === card.key;
                   const badge = visibleBadgeByGame.get(card.key);
                   const isLiveTriviaCard = card.key === "live_trivia";
                   const isSpeedTriviaCard = card.key === "trivia";
-                  const useLargeTriviaLockup = isLiveTriviaCard || isSpeedTriviaCard;
+                  const statusLabel = isLiveTriviaCard
+                    ? liveTriviaStatus.live
+                      ? "Live Now"
+                      : liveSoonMinutes != null
+                      ? `Live · ${liveSoonMinutes}m`
+                      : "Next Up"
+                    : null;
                   return (
-                    <button key={card.key} type="button" onMouseDown={triggerPulse} onClick={(event) => { void goTo(card.key, event.currentTarget); }} disabled={pendingDestination !== null} data-venue-game-card={card.key} className={`tp-clean-button tp-game-card-btn group relative aspect-square w-full max-w-[clamp(8.2rem,40vw,11.5rem)] justify-self-center overflow-hidden !rounded-[22%] !border-[2px] ${GAME_CARD_BORDER_BY_KEY[card.key]} !shadow-[0_10px_20px_rgba(15,23,42,0.35)] p-0 text-left${isOpening ? " is-opening" : ""}`}>
-                      <div className={`absolute inset-0 ${GAME_CARD_BG_BY_KEY[card.key]}`} />
-                      {GAME_CARD_SHEEN_BY_KEY[card.key] ? (
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_26%_18%,rgba(255,255,255,0.38)_0%,rgba(255,255,255,0.1)_40%,rgba(255,255,255,0)_72%)]" />
-                      ) : null}
-                      <div className="relative flex h-full flex-col items-center justify-between px-2 pb-2 pt-2 text-white">
-                        <div className={`flex min-h-0 w-full flex-1 items-center justify-center ${useLargeTriviaLockup ? "pt-1" : ""}`}>
-                          <GameLockup gameKey={card.key} className={`h-full w-full ${useLargeTriviaLockup ? "scale-[1.2] sm:scale-[1.28]" : ""}`} />
+                    <button
+                      key={card.key}
+                      type="button"
+                      onMouseDown={triggerPulse}
+                      onClick={(event) => {
+                        void goTo(card.key, event.currentTarget);
+                      }}
+                      disabled={pendingDestination !== null}
+                      data-venue-game-card={card.key}
+                      className={`tp-clean-button tp-game-card-btn group relative w-full overflow-hidden rounded-[22px] border border-white/75 text-left shadow-[0_12px_26px_rgba(15,23,42,0.5)] ${isOpening ? "is-opening" : ""}`}
+                      style={{ backgroundImage: VENUE_HUB_TILE_GRADIENT_BY_KEY[card.key] }}
+                    >
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_14%,rgba(255,255,255,0.35)_0%,rgba(255,255,255,0.12)_40%,rgba(255,255,255,0)_72%)]" />
+                      <div className="relative flex min-h-[152px] flex-col gap-3 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div
+                            className="text-[2rem] font-black uppercase leading-[0.95] text-white"
+                            style={{
+                              fontFamily: "'Bree Serif', 'Nunito', serif",
+                              letterSpacing: "0.045em",
+                              textShadow: "0 1px 0 rgba(12,18,28,.8), 0 3px 0 rgba(12,18,28,.58), 0 0 12px rgba(255,255,255,.5)",
+                            }}
+                          >
+                            {GAME_TITLE_LINES_BY_KEY[card.key][0]}
+                            <br />
+                            {GAME_TITLE_LINES_BY_KEY[card.key][1]}
+                          </div>
+                          {statusLabel ? (
+                            <span className="shrink-0 inline-flex items-center gap-1 rounded-full border border-rose-300/60 bg-rose-500/15 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-rose-200">
+                              <span className="h-[7px] w-[7px] rounded-full bg-rose-500" />
+                              {statusLabel}
+                            </span>
+                          ) : null}
                         </div>
-                        {isLiveTriviaCard ? (
-                          <div className="pointer-events-none mt-2 w-full rounded-md bg-slate-950/76 px-2 py-1.5 text-center">
-                            <div className="text-[10px] font-black uppercase leading-tight tracking-[0.08em] text-white [font-family:'Bree_Serif','Nunito',serif]">
-                              Synchronized Live Venue Play
-                            </div>
-                            <div
-                              className={`mt-1 text-[10px] font-black uppercase leading-tight tracking-[0.08em] ${
-                                liveTriviaStatus.live ? "animate-pulse text-emerald-300" : "text-amber-200"
-                              }`}
-                            >
-                              {liveTriviaStatus.live ? "LIVE NOW" : liveTriviaStatus.label}
-                            </div>
-                          </div>
-                        ) : null}
-                        {isSpeedTriviaCard ? (
-                          <div className="pointer-events-none mt-2 w-full rounded-md bg-slate-950/76 px-2 py-1.5 text-center text-[10px] font-black uppercase leading-tight tracking-[0.08em] text-white [font-family:'Bree_Serif','Nunito',serif]">
-                            Rapid Fire Multiple Choice
-                          </div>
-                        ) : null}
+
+                        <div className="max-w-[92%] rounded-xl border border-white/40 bg-black/30 px-3 py-2 text-[12px] font-bold text-white/95">
+                          {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key]}
+                        </div>
+
                       </div>
-                      {badge ? <span className="absolute right-1.5 top-1.5 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black leading-none text-white shadow-[0_2px_8px_rgba(15,23,42,0.45)]">{badge}</span> : null}
+
+                      {badge ? (
+                        <span className="absolute right-2 top-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-black leading-none text-white shadow-[0_2px_8px_rgba(15,23,42,0.45)]">
+                          {badge}
+                        </span>
+                      ) : null}
                       {isLiveTriviaCard && showLiveBadge ? (
-                        <span className="absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-slate-950/80 px-2 py-0.5">
+                        <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full border border-rose-300/50 bg-rose-500/15 px-2 py-0.5">
                           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />
-                          <span className="text-[9px] font-black uppercase tracking-[0.14em] text-rose-300">LIVE</span>
+                          <span className="text-[9px] font-black uppercase tracking-[0.14em] text-rose-200">Live</span>
                         </span>
                       ) : null}
                     </button>
@@ -1302,18 +1529,27 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 })}
               </div>
             </div>
-            {triviaUnlockCountdown > 0 ? <div className="mx-auto mt-2 max-w-[22rem] rounded-full border border-amber-400/40 bg-amber-950/30 px-3 py-1.5 text-center text-[11px] font-black tracking-[0.08em] text-amber-200">Trivia unlocks in {formatCountdown(triviaUnlockCountdown)}</div> : null}
-            {triviaGateNotice ? <div className="mx-auto mt-2 max-w-[22rem] rounded-xl border border-rose-400/60 bg-rose-950/30 px-3 py-2 text-center text-xs font-semibold text-rose-200">{triviaGateNotice}</div> : null}
+
+            {triviaUnlockCountdown > 0 ? (
+              <div className="mx-auto mt-3 max-w-[24rem] rounded-full border border-amber-400/40 bg-amber-950/30 px-3 py-1.5 text-center text-[11px] font-black tracking-[0.08em] text-amber-200">
+                Trivia unlocks in {formatCountdown(triviaUnlockCountdown)}
+              </div>
+            ) : null}
+            {triviaGateNotice ? (
+              <div className="mx-auto mt-2 max-w-[24rem] rounded-xl border border-rose-400/60 bg-rose-950/30 px-3 py-2 text-center text-xs font-semibold text-rose-200">
+                {triviaGateNotice}
+              </div>
+            ) : null}
             {badgeError ? (
               <button
                 type="button"
                 onClick={() => void loadHomeBadges()}
-                className="mx-auto mt-2 block max-w-[22rem] rounded-full border border-slate-600 bg-slate-800 px-3 py-1.5 text-center text-[11px] font-semibold text-slate-300"
+                className="mx-auto mt-2 block max-w-[24rem] rounded-full border border-slate-600 bg-slate-800 px-3 py-1.5 text-center text-[11px] font-semibold text-slate-300"
               >
                 {badgeError} Tap to retry
               </button>
             ) : null}
-            </div>
+          </div>
         </section>
 
         <section className="venue-screen m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">
@@ -1374,7 +1610,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                         }}
                         disabled={!canOpenRules && !canOpenRedeem}
                         aria-disabled={!canOpenRules && !canOpenRedeem}
-                        className={`tp-clean-button relative flex min-h-[122px] w-full items-center gap-3 overflow-hidden rounded-[1.2rem] border-[3px] border-[#0f172a]/80 p-3 text-left shadow-[0_8px_0_rgba(15,23,42,0.35)] ${
+                        className={`relative flex min-h-[122px] w-full items-center gap-3 overflow-hidden rounded-[1.2rem] border-[3px] border-ht-border-strong p-3 text-left shadow-[0_8px_0_rgba(15,23,42,0.35)] ${
                           isWinner
                             ? "bg-[linear-gradient(146deg,#1d4ed8_0%,#2563eb_48%,#38bdf8_100%)]"
                             : "bg-[linear-gradient(146deg,#0f766e_0%,#06b6d4_50%,#22d3ee_100%)]"
@@ -1411,7 +1647,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                               <div className="text-[11px] font-black uppercase tracking-[0.09em] text-amber-100">
                                 Congratulations! You won the {challenge.name}!
                               </div>
-                              <div className="mt-2 inline-flex min-h-[38px] items-center rounded-full border border-amber-100/90 bg-amber-200/90 px-3 text-xs font-black uppercase tracking-[0.08em] text-amber-900">
+                              <div className="mt-2 inline-flex min-h-[38px] items-center rounded-full border border-amber-400/50 bg-amber-500/20 px-3 text-xs font-black uppercase tracking-[0.08em] text-amber-300">
                                 {isBusy ? "Opening..." : challenge.prizeClaimedAt ? "Prize Claimed" : "Claim Prize"}
                               </div>
                             </div>
@@ -1454,6 +1690,96 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
             </div>
         </section>
         </div>
+      </div>
+
+      <div
+        data-tp-scroll-lock={isMenuOpen ? "active" : undefined}
+        className={`fixed inset-0 z-[1200] ${isMenuOpen ? "pointer-events-auto" : "pointer-events-none"}`}
+        aria-hidden={!isMenuOpen}
+      >
+        <button
+          type="button"
+          onClick={() => setIsMenuOpen(false)}
+          className={`absolute inset-0 h-full w-full bg-black/40 transition-opacity duration-200 ${
+            isMenuOpen ? "opacity-100" : "opacity-0"
+          }`}
+          aria-label="Close navigation menu"
+        />
+
+        <aside
+          className={`absolute inset-y-0 left-0 w-[22rem] max-w-[92vw] border-r border-ht-border-soft bg-ht-surface px-5 py-5 shadow-ht-modal transition-transform duration-200 ${
+            isMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-xl font-black tracking-wide text-ht-fg-primary">Menu</h3>
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen(false)}
+              className="rounded-ht-sm border border-ht-border-soft bg-ht-elevated px-3 py-1.5 text-base font-semibold text-ht-fg-muted"
+            >
+              Close
+            </button>
+          </div>
+
+          <div className="mb-5 rounded-ht-lg border border-cyan-400/45 bg-cyan-400/10 px-4 py-3.5">
+            <div className="flex items-end justify-between gap-3">
+              <p className="min-w-0 truncate text-[1.15rem] font-black leading-tight text-ht-fg-primary">
+                {menuUsername || "Guest"}
+              </p>
+              <div className="shrink-0 text-right">
+                <p className="text-[0.68rem] font-black uppercase tracking-[0.12em] text-amber-200/85">Points</p>
+                <p
+                  className="text-[1.02rem] font-black leading-tight"
+                  style={{ color: "var(--ht-accent-gold, #fbbf24)", fontVariantNumeric: "tabular-nums" }}
+                >
+                  {(menuPoints ?? 0).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <nav aria-label="Primary navigation">
+            <ul className="space-y-3">
+              {VENUE_DRAWER_MENU_ITEMS.map((item) => {
+                const active = isActiveMenuPath(pathname, item.href);
+                return (
+                  <li key={`${item.label}:${item.href}`}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        router.push(item.href);
+                      }}
+                      className={`w-full rounded-ht-lg border px-4 py-3.5 text-left ${
+                        active
+                          ? "border-ht-border-strong bg-ht-elevated text-ht-fg-primary"
+                          : "border-ht-border-hairline bg-ht-elevated/50 text-ht-fg-secondary hover:border-ht-border-soft hover:bg-ht-elevated"
+                      }`}
+                    >
+                      <div className="text-lg font-black leading-tight">{item.label}</div>
+                      <div className={`mt-1 text-sm leading-snug ${active ? "text-ht-fg-secondary" : "text-ht-fg-muted"}`}>
+                        {item.description}
+                      </div>
+                    </button>
+                  </li>
+                );
+              })}
+              <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    leaveVenue();
+                  }}
+                  className="w-full rounded-ht-lg border border-rose-400/45 bg-rose-500/10 px-4 py-3 text-left text-base font-black text-rose-300"
+                >
+                  Leave Venue
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </aside>
       </div>
 
       <AnimatePresence>

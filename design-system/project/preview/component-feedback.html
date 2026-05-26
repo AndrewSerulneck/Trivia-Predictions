@@ -1,0 +1,32 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--ht-canvas);color:var(--ht-fg-primary);font-family:var(--ht-font-body)}
+  .card{box-sizing:border-box;width:700px;padding:22px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .fb{
+    border-radius:14px;padding:14px 16px;text-align:center;
+    border:1px solid;
+  }
+  .fb .lab{font-weight:900;font-size:28px;letter-spacing:.04em;line-height:1}
+  .fb .sub{font-weight:800;font-size:15px;margin-top:6px;opacity:.9}
+  .right{background:rgba(16,185,129,.22);border-color:rgba(110,231,183,.7);color:#a7f3d0}
+  .wrong{background:rgba(244,63,94,.22);border-color:rgba(253,164,175,.7);color:#fda4af}
+  .pending{background:rgba(14,165,233,.20);border-color:rgba(125,211,252,.7);color:#bae6fd}
+  .skip{background:rgba(14,165,233,.20);border-color:rgba(125,211,252,.7);color:#bae6fd}
+</style></head><body><div class="card">
+  <div class="fb right">
+    <div class="lab">RIGHT</div>
+    <div class="sub">+10 points</div>
+  </div>
+  <div class="fb wrong">
+    <div class="lab">WRONG</div>
+    <div class="sub">0 points</div>
+  </div>
+  <div class="fb pending">
+    <div class="lab" style="font-size:22px">CLOSEST GUESS SCORING</div>
+    <div class="sub">Evaluating closest numeric guess…</div>
+  </div>
+  <div class="fb skip">
+    <div class="lab" style="font-size:22px">SKIPPED</div>
+    <div class="sub">Joining mid-round? Next question is coming right up!</div>
+  </div>
+</div></body></html>

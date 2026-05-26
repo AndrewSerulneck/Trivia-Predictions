@@ -33,12 +33,12 @@ function gameTypeLabel(gameType: ChallengeGameType): string {
 }
 
 function statusStyle(status: ChallengeInvite["status"]): string {
-  if (status === "accepted") return "bg-emerald-100 text-emerald-800";
-  if (status === "declined") return "bg-rose-100 text-rose-800";
-  if (status === "completed") return "bg-blue-100 text-blue-800";
-  if (status === "canceled") return "bg-slate-200 text-slate-700";
-  if (status === "expired") return "bg-amber-100 text-amber-800";
-  return "bg-amber-50 text-amber-900";
+  if (status === "accepted") return "bg-emerald-500/15 text-emerald-400";
+  if (status === "declined") return "bg-rose-500/15 text-rose-400";
+  if (status === "completed") return "bg-sky-500/15 text-sky-300";
+  if (status === "canceled") return "bg-ht-elevated text-ht-fg-secondary";
+  if (status === "expired") return "bg-amber-500/15 text-amber-300";
+  return "bg-amber-500/10 text-amber-300";
 }
 
 export function PendingChallengesPanel() {
@@ -197,7 +197,7 @@ export function PendingChallengesPanel() {
 
   if (!userId || !venueId) {
     return (
-      <div className="rounded-2xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+      <div className="rounded-ht-2xl border border-amber-400/40 bg-amber-500/10 p-3 text-sm text-amber-300">
         Join a venue to send and manage challenges.
       </div>
     );
@@ -213,45 +213,45 @@ export function PendingChallengesPanel() {
         gameKey="fantasy"
         shouldDisplay={pendingReceived.length + pendingSent.length === 0}
       />
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Challenge Center</h2>
-        <p className="mt-1 text-sm text-slate-700">
+      <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
+        <h2 className="text-lg font-semibold text-ht-fg-primary">Challenge Center</h2>
+        <p className="mt-1 text-sm text-ht-fg-secondary">
           Send and manage head-to-head challenges for this week.
         </p>
         <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-          <div className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-2">
-            <div className="font-semibold text-slate-900">Received Pending</div>
-            <div className="mt-1 text-base font-black text-slate-800">{pendingReceived.length}</div>
+          <div className="rounded-ht-md border border-ht-border-hairline bg-ht-surface px-2 py-2">
+            <div className="font-semibold text-ht-fg-primary">Received Pending</div>
+            <div className="mt-1 text-base font-black text-ht-fg-primary">{pendingReceived.length}</div>
           </div>
-          <div className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-2">
-            <div className="font-semibold text-slate-900">Sent Pending</div>
-            <div className="mt-1 text-base font-black text-slate-800">{pendingSent.length}</div>
+          <div className="rounded-ht-md border border-ht-border-hairline bg-ht-surface px-2 py-2">
+            <div className="font-semibold text-ht-fg-primary">Sent Pending</div>
+            <div className="mt-1 text-base font-black text-ht-fg-primary">{pendingSent.length}</div>
           </div>
-          <div className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-2">
-            <div className="font-semibold text-slate-900">Accepted</div>
-            <div className="mt-1 text-base font-black text-slate-800">{accepted.length}</div>
+          <div className="rounded-ht-md border border-ht-border-hairline bg-ht-surface px-2 py-2">
+            <div className="font-semibold text-ht-fg-primary">Accepted</div>
+            <div className="mt-1 text-base font-black text-ht-fg-primary">{accepted.length}</div>
           </div>
-          <div className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-2">
-            <div className="font-semibold text-slate-900">Completed</div>
-            <div className="mt-1 text-base font-black text-slate-800">{completed.length}</div>
+          <div className="rounded-ht-md border border-ht-border-hairline bg-ht-surface px-2 py-2">
+            <div className="font-semibold text-ht-fg-primary">Completed</div>
+            <div className="mt-1 text-base font-black text-ht-fg-primary">{completed.length}</div>
           </div>
         </div>
 
         {statusMessage ? (
-          <p className="mt-3 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
+          <p className="mt-3 rounded-ht-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-400">
             {statusMessage}
           </p>
         ) : null}
         {errorMessage ? (
-          <p className="mt-3 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800">
+          <p className="mt-3 rounded-ht-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-400">
             {errorMessage}
           </p>
         ) : null}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h3 className="text-base font-semibold text-slate-900">Create Challenge</h3>
-        <p className="mt-1 text-xs text-slate-600">
+      <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
+        <h3 className="text-base font-semibold text-ht-fg-primary">Create Challenge</h3>
+        <p className="mt-1 text-xs text-ht-fg-muted">
           Challenge another player in your venue by username.
         </p>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -259,12 +259,12 @@ export function PendingChallengesPanel() {
             value={receiverUsername}
             onChange={(event) => setReceiverUsername(event.target.value)}
             placeholder="Opponent username"
-            className="tp-clean-button rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+            className="rounded-ht-lg border border-ht-border-soft bg-ht-elevated px-3 py-2 text-sm text-ht-fg-secondary hover:opacity-80 transition-opacity"
           />
           <select
             value={gameType}
             onChange={(event) => setGameType(event.target.value as ChallengeGameType)}
-            className="tp-clean-button rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+            className="rounded-ht-lg border border-ht-border-soft bg-ht-elevated px-3 py-2 text-sm text-ht-fg-secondary hover:opacity-80 transition-opacity"
           >
             <option value="pickem">Hightop Pick &apos;Em</option>
             <option value="fantasy">Hightop Fantasy</option>
@@ -276,7 +276,7 @@ export function PendingChallengesPanel() {
           value={challengeDetails}
           onChange={(event) => setChallengeDetails(event.target.value)}
           placeholder="Optional message"
-          className="tp-clean-button mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+          className="tp-clean-button mt-2 w-full rounded-ht-md border border-ht-border-soft bg-ht-elevated px-3 py-2 text-sm text-ht-fg-secondary"
           rows={3}
         />
         <button
@@ -289,25 +289,25 @@ export function PendingChallengesPanel() {
         </button>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h3 className="text-base font-semibold text-slate-900">Received Challenges</h3>
+      <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
+        <h3 className="text-base font-semibold text-ht-fg-primary">Received Challenges</h3>
         {pendingReceived.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-600">No incoming pending challenges.</p>
+          <p className="mt-2 text-sm text-ht-fg-muted">No incoming pending challenges.</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {pendingReceived.map((challenge) => (
-              <li key={challenge.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <li key={challenge.id} className="rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{challenge.challengeTitle}</p>
-                    <p className="text-xs text-slate-600">
+                    <p className="text-sm font-semibold text-ht-fg-primary">{challenge.challengeTitle}</p>
+                    <p className="text-xs text-ht-fg-muted">
                       From <span className="font-semibold">{challenge.senderUsername}</span> ·{" "}
                       {gameTypeLabel(challenge.gameType)}
                     </p>
                     {challenge.challengeDetails ? (
-                      <p className="mt-1 text-xs text-slate-700">{challenge.challengeDetails}</p>
+                      <p className="mt-1 text-xs text-ht-fg-secondary">{challenge.challengeDetails}</p>
                     ) : null}
-                    <p className="mt-1 text-[11px] text-slate-500">
+                    <p className="mt-1 text-[11px] text-ht-fg-muted">
                       Sent {formatLocalDateTime(challenge.createdAt)}
                     </p>
                   </div>
@@ -322,7 +322,7 @@ export function PendingChallengesPanel() {
                     onClick={() =>
                       void respondToChallenge(challenge.id, "accept", "Challenge accepted.")
                     }
-                    className="tp-clean-button rounded-lg border border-emerald-500 bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-900 disabled:opacity-60"
+                    className="rounded-ht-md border border-emerald-500/50 bg-emerald-500/15 px-2 py-1 text-xs font-semibold text-emerald-400 disabled:opacity-60"
                   >
                     Accept
                   </button>
@@ -332,7 +332,7 @@ export function PendingChallengesPanel() {
                     onClick={() =>
                       void respondToChallenge(challenge.id, "decline", "Challenge declined.")
                     }
-                    className="tp-clean-button rounded-lg border border-rose-500 bg-rose-100 px-2 py-1 text-xs font-semibold text-rose-900 disabled:opacity-60"
+                    className="rounded-ht-md border border-rose-500/50 bg-rose-500/15 px-2 py-1 text-xs font-semibold text-rose-400 disabled:opacity-60"
                   >
                     Decline
                   </button>
@@ -343,25 +343,25 @@ export function PendingChallengesPanel() {
         )}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h3 className="text-base font-semibold text-slate-900">Sent Challenges</h3>
+      <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
+        <h3 className="text-base font-semibold text-ht-fg-primary">Sent Challenges</h3>
         {pendingSent.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-600">No outgoing pending challenges.</p>
+          <p className="mt-2 text-sm text-ht-fg-muted">No outgoing pending challenges.</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {pendingSent.map((challenge) => (
-              <li key={challenge.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <li key={challenge.id} className="rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{challenge.challengeTitle}</p>
-                    <p className="text-xs text-slate-600">
+                    <p className="text-sm font-semibold text-ht-fg-primary">{challenge.challengeTitle}</p>
+                    <p className="text-xs text-ht-fg-muted">
                       To <span className="font-semibold">{challenge.receiverUsername}</span> ·{" "}
                       {gameTypeLabel(challenge.gameType)}
                     </p>
                     {challenge.challengeDetails ? (
-                      <p className="mt-1 text-xs text-slate-700">{challenge.challengeDetails}</p>
+                      <p className="mt-1 text-xs text-ht-fg-secondary">{challenge.challengeDetails}</p>
                     ) : null}
-                    <p className="mt-1 text-[11px] text-slate-500">
+                    <p className="mt-1 text-[11px] text-ht-fg-muted">
                       Sent {formatLocalDateTime(challenge.createdAt)}
                     </p>
                   </div>
@@ -371,7 +371,7 @@ export function PendingChallengesPanel() {
                     onClick={() =>
                       void respondToChallenge(challenge.id, "cancel", "Challenge canceled.")
                     }
-                    className="tp-clean-button rounded-lg border border-slate-400 bg-white px-2 py-1 text-xs font-semibold text-slate-800 disabled:opacity-60"
+                    className="rounded-ht-md border border-ht-border-soft bg-ht-elevated px-2 py-1 text-xs font-semibold text-ht-fg-muted disabled:opacity-60"
                   >
                     Cancel
                   </button>
@@ -382,21 +382,21 @@ export function PendingChallengesPanel() {
         )}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h3 className="text-base font-semibold text-slate-900">Recent Challenge Results</h3>
+      <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
+        <h3 className="text-base font-semibold text-ht-fg-primary">Recent Challenge Results</h3>
         {accepted.length + completed.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-600">No resolved challenges yet.</p>
+          <p className="mt-2 text-sm text-ht-fg-muted">No resolved challenges yet.</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {[...accepted, ...completed]
               .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
               .slice(0, 10)
               .map((challenge) => (
-                <li key={challenge.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <li key={challenge.id} className="rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3">
                   <div className="flex items-center justify-between gap-2">
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">{challenge.challengeTitle}</p>
-                      <p className="text-xs text-slate-600">
+                      <p className="text-sm font-semibold text-ht-fg-primary">{challenge.challengeTitle}</p>
+                      <p className="text-xs text-ht-fg-muted">
                         {challenge.senderUsername} vs {challenge.receiverUsername} · {gameTypeLabel(challenge.gameType)}
                       </p>
                     </div>

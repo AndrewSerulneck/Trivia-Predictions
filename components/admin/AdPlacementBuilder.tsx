@@ -10,6 +10,7 @@ type SlotDef = {
   key: string;
   label: string;
   description: string;
+  id?: string;
 };
 
 type PageDef = {
@@ -23,80 +24,89 @@ const PAGES: PageDef[] = [
     id: "join",
     label: "Join Page",
     slots: [
-      { key: "join-popup-on-entry", label: "Entry Popup", description: "Appears on page load" },
-      { key: "join-inline", label: "Inline Content", description: "Between content blocks" },
-      { key: "join-banner", label: "Banner", description: "Mobile adhesion / bottom banner" },
+      { key: "join-popup-on-entry", label: "Entry Popup",    description: "Appears on page load",              id: "001" },
+      { key: "join-inline",         label: "Inline Content", description: "Between content blocks",            id: "003" },
+      { key: "join-banner",         label: "Banner",         description: "Mobile adhesion / bottom banner",   id: "004" },
     ],
   },
   {
     id: "venue",
-    label: "Venue Page",
+    label: "Venue Home Page",
     slots: [
-      { key: "venue-popup-on-entry", label: "Entry Popup", description: "Appears on venue load" },
-      { key: "venue-popup-on-scroll", label: "Scroll Popup", description: "Triggered on scroll" },
-      { key: "venue-inline-content", label: "Inline Content", description: "Mid-page inline slot" },
-      { key: "venue-leaderboard-sidebar", label: "Leaderboard Sidebar", description: "Next to leaderboard" },
-      { key: "venue-banner", label: "Banner", description: "Mobile adhesion / bottom banner" },
+      { key: "venue-popup-on-entry",          label: "Entry Popup",               description: "Appears on venue load",          id: "010" },
+      { key: "venue-popup-on-scroll",         label: "Scroll Popup",              description: "Triggered on scroll",            id: "011" },
+      { key: "venue-leaderboard-rows-1-10",   label: "Leaderboard (Rows 1-10)",   description: "Inline ad after position 10",    id: "012" },
+      { key: "venue-leaderboard-rows-11-20",  label: "Leaderboard (Rows 11-20)",  description: "Inline ad after position 20",    id: "013" },
+      { key: "venue-leaderboard-rows-21-30",  label: "Leaderboard (Rows 21-30)",  description: "Inline ad after position 30",    id: "014" },
+      { key: "venue-leaderboard-rows-31-40",  label: "Leaderboard (Rows 31-40)",  description: "Inline ad after position 40",    id: "015" },
+      { key: "venue-leaderboard-rows-41-50",  label: "Leaderboard (Rows 41-50)",  description: "Inline ad after position 50",    id: "016" },
+      { key: "venue-banner",                  label: "Banner",                    description: "Mobile adhesion / bottom banner", id: "017" },
     ],
   },
   {
     id: "trivia-blitz",
     label: "Speed Trivia (Blitz)",
     slots: [
-      { key: "trivia-popup-on-entry", label: "Entry Popup", description: "Appears on game load" },
-      { key: "trivia-round-end-r1", label: "Round 1 End", description: "After round 1 completes" },
-      { key: "trivia-round-end-r2", label: "Round 2 End", description: "After round 2 completes" },
-      { key: "trivia-round-end-r3", label: "Round 3 End", description: "After round 3 completes" },
-      { key: "trivia-banner", label: "Banner", description: "Mobile adhesion during play" },
+      { key: "trivia-popup-on-entry", label: "Entry Popup",  description: "Appears on game load",        id: "020" },
+      { key: "trivia-round-end-r1",   label: "Round 1 End",  description: "After round 1 completes",     id: "022" },
+      { key: "trivia-round-end-r2",   label: "Round 2 End",  description: "After round 2 completes",     id: "023" },
+      { key: "trivia-round-end-r3",   label: "Round 3 End",  description: "After round 3 completes",     id: "024" },
+      { key: "trivia-banner",         label: "Banner",        description: "Mobile adhesion during play", id: "026" },
     ],
   },
   {
     id: "pickem",
     label: "Pick'Em",
     slots: [
-      { key: "pickem-popup-on-entry", label: "Entry Popup", description: "Appears on game load" },
-      { key: "pickem-inline", label: "Inline Content", description: "Between prediction cards" },
-      { key: "pickem-banner", label: "Banner", description: "Mobile adhesion" },
+      { key: "pickem-popup-on-entry", label: "Entry Popup",         description: "Appears on game load",  id: "050" },
+      { key: "pickem-popup-on-scroll", label: "Scroll Popup",       description: "Triggered on scroll",    id: "051" },
+      { key: "pickem-inline-cards-1-5", label: "Inline (Cards 1-5)", description: "After 5th game card",  id: "071" },
+      { key: "pickem-inline-cards-6-10", label: "Inline (Cards 6-10)", description: "After 10th game card", id: "072" },
+      { key: "pickem-inline-cards-11-15", label: "Inline (Cards 11-15)", description: "After 15th game card", id: "073" },
+      { key: "pickem-inline-cards-16-20", label: "Inline (Cards 16-20)", description: "After 20th game card", id: "074" },
+      { key: "pickem-inline-cards-21-25", label: "Inline (Cards 21-25)", description: "After 25th game card", id: "075" },
+      { key: "pickem-inline-cards-26-30", label: "Inline (Cards 26-30)", description: "After 30th game card", id: "076" },
+      { key: "pickem-banner", label: "Banner", description: "Mobile adhesion", id: "053" },
     ],
   },
   {
     id: "fantasy",
     label: "Fantasy Page",
     slots: [
-      { key: "fantasy-popup-on-entry", label: "Pop-Up Ad", description: "Appears when users enter Fantasy" },
-      { key: "fantasy-banner", label: "Banner Ad", description: "Persistent bottom banner in Fantasy" },
-      { key: "fantasy-inline", label: "Inline Ad", description: "In-feed fantasy placement" },
+      { key: "fantasy-popup-on-entry", label: "Pop-Up Ad",  description: "Appears when users enter Fantasy",       id: "060" },
+      { key: "fantasy-banner",         label: "Banner Ad",  description: "Persistent bottom banner in Fantasy",    id: "063" },
+      { key: "fantasy-inline",         label: "Inline Ad",  description: "In-feed fantasy placement",             id: "062" },
     ],
   },
   {
     id: "sports-bingo",
     label: "Bingo Page",
     slots: [
-      { key: "sports-bingo-popup-on-entry", label: "Pop-Up Ad", description: "Appears when users enter Bingo" },
-      { key: "sports-bingo-banner", label: "Banner Ad", description: "Persistent bottom banner in Bingo" },
-      { key: "sports-bingo-inline", label: "Inline Ad", description: "Inline slot on Bingo screens" },
+      { key: "sports-bingo-popup-on-entry", label: "Pop-Up Ad",  description: "Appears when users enter Bingo",        id: "040" },
+      { key: "sports-bingo-banner",         label: "Banner Ad",  description: "Persistent bottom banner in Bingo",     id: "043" },
+      { key: "sports-bingo-inline",         label: "Inline Ad",  description: "Inline slot on Bingo screens",          id: "042" },
     ],
   },
   {
     id: "live-showdown",
     label: "Live Trivia",
     slots: [
-      { key: "live-popup-lobby", label: "Lobby Popup", description: "Primary popup shown in the live lobby" },
-      { key: "live-inline-lobby", label: "Lobby Inline", description: "Inline lobby sponsor slot" },
-      { key: "live-banner-mobile", label: "Live Mobile Banner", description: "Mobile adhesion in live flow" },
-      { key: "live-popup-intermission", label: "Intermission Popup", description: "Delay-triggered popup during round breaks" },
-      { key: "live-showdown-lobby-on-entry", label: "Legacy Lobby Entry", description: "Legacy key for backward compatibility" },
-      { key: "live-showdown-intermission-r1", label: "Legacy Intermission R1", description: "Legacy key for round 1 intermission" },
-      { key: "live-showdown-intermission-r2", label: "Legacy Intermission R2", description: "Legacy key for round 2 intermission" },
-      { key: "live-showdown-intermission-r3", label: "Legacy Intermission R3", description: "Legacy key for round 3 intermission" },
-      { key: "live-showdown-intermission-r4", label: "Legacy Intermission R4", description: "Legacy key for round 4 intermission" },
-      { key: "live-showdown-intermission-r5", label: "Legacy Intermission R5", description: "Legacy key for round 5 intermission" },
+      { key: "live-popup-lobby",              label: "Lobby Popup",         description: "Primary popup shown in the live lobby",        id: "030" },
+      { key: "live-inline-lobby",             label: "Lobby Inline",        description: "Inline lobby sponsor slot",                    id: "036" },
+      { key: "live-banner-mobile",            label: "Live Mobile Banner",  description: "Mobile adhesion in live flow",                 id: "037" },
+      { key: "live-popup-intermission",       label: "Intermission Popup",  description: "Delay-triggered popup during round breaks"              },
+      { key: "live-showdown-lobby-on-entry",  label: "Legacy Lobby Entry",  description: "Legacy key for backward compatibility"                  },
+      { key: "live-showdown-intermission-r1", label: "Legacy Intermission R1", description: "Legacy key for round 1 intermission",       id: "031" },
+      { key: "live-showdown-intermission-r2", label: "Legacy Intermission R2", description: "Legacy key for round 2 intermission",       id: "032" },
+      { key: "live-showdown-intermission-r3", label: "Legacy Intermission R3", description: "Legacy key for round 3 intermission",       id: "033" },
+      { key: "live-showdown-intermission-r4", label: "Legacy Intermission R4", description: "Legacy key for round 4 intermission",       id: "034" },
+      { key: "live-showdown-intermission-r5", label: "Legacy Intermission R5", description: "Legacy key for round 5 intermission",       id: "035" },
     ],
   },
 ];
 
 const ALL_SLOT_KEYS = new Set(PAGES.flatMap((p) => p.slots.map((s) => s.key)));
-const TAXONOMY_PAGE_KEYS: Array<Exclude<AdPageKey, "global">> = ["trivia", "sports-bingo", "fantasy", "pickem"];
+const TAXONOMY_PAGE_KEYS: Array<Exclude<AdPageKey, "global">> = ["speed-trivia", "live-trivia", "sports-bingo", "fantasy", "pickem"];
 const AD_TYPE_ORDER: AdType[] = ["popup", "banner", "inline"];
 
 function formatAdType(adType: AdType): string {
@@ -240,7 +250,10 @@ function SlotPanel({
     >
       <div className="mb-2 flex items-center justify-between">
         <div>
-          <p className="text-xs font-semibold text-slate-700">{slot.label}</p>
+          <p className="text-xs font-semibold text-slate-700">
+              {slot.id ? <span className="mr-1.5 font-mono text-slate-400">{slot.id}</span> : null}
+              {slot.label}
+            </p>
           <p className="text-[10px] text-slate-400">{slot.description}</p>
         </div>
         <div className="flex items-center gap-1">

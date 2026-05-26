@@ -179,7 +179,7 @@ export function GameLandingExperience({
             </div>
           ) : isResumeCheckPending ? (
             <div className="flex h-full min-h-[60dvh] items-center justify-center px-4">
-              <div className="rounded-xl border border-slate-200 bg-white/85 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
+              <div className="rounded-ht-lg border border-ht-border-soft bg-ht-elevated px-4 py-3 text-sm font-semibold text-ht-fg-muted">
                 Restoring your active game...
               </div>
             </div>

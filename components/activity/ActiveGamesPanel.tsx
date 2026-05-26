@@ -469,7 +469,7 @@ export function ActiveGamesPanel() {
 
   if (!userId) {
     return (
-      <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+      <div className="rounded-ht-lg border border-amber-400/40 bg-amber-500/10 p-3 text-sm text-amber-300">
         Join a venue to view your active games.
       </div>
     );
@@ -480,38 +480,38 @@ export function ActiveGamesPanel() {
   }
 
   if (errorMessage) {
-    return <div className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">{errorMessage}</div>;
+    return <div className="rounded-ht-lg border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-400">{errorMessage}</div>;
   }
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Active and Completed Games</h2>
-        <p className="mt-1 text-sm text-slate-700">
+      <div className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
+        <h2 className="text-lg font-semibold text-ht-fg-primary">Active and Completed Games</h2>
+        <p className="mt-1 text-sm text-ht-fg-secondary">
           You currently have <span className="font-semibold">{totalActiveGames}</span> active game
           {totalActiveGames === 1 ? "" : "s"}.
         </p>
-        <p className="mt-1 text-sm text-slate-700">
+        <p className="mt-1 text-sm text-ht-fg-secondary">
           Completed this week: <span className="font-semibold">{totalCompletedThisWeek}</span>.
         </p>
-        <p className="mt-1 text-sm text-slate-700">
+        <p className="mt-1 text-sm text-ht-fg-secondary">
           Games won this week: <span className="font-semibold">{totalWinsThisWeek}</span>.
         </p>
-        <p className="mt-1 text-sm text-slate-700">
+        <p className="mt-1 text-sm text-ht-fg-secondary">
           Pending challenges:{" "}
           <span className="font-semibold">{pendingChallengesReceived}</span> received ·{" "}
           <span className="font-semibold">{pendingChallengesSent}</span> sent.
         </p>
         {statusMessage ? (
-          <p className="mt-2 rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800">
+          <p className="mt-2 rounded-ht-md border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-400">
             {statusMessage}
           </p>
         ) : null}
       </div>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-base font-semibold text-slate-900">Sports Bingo Boards ({activeBingoCards.length})</h3>
+          <h3 className="text-base font-semibold text-ht-fg-primary">Sports Bingo Boards ({activeBingoCards.length})</h3>
           <div className="flex items-center gap-2">
             {unclaimedBingoCards.length > 0 ? (
               <button
@@ -528,29 +528,29 @@ export function ActiveGamesPanel() {
                   : `Claim Points! (+${unclaimedBingoPoints.toLocaleString()})`}
               </button>
             ) : null}
-            <Link href="/bingo" className="text-xs font-semibold text-blue-700 underline">
+            <Link href="/bingo" className="text-xs font-semibold text-ht-cyan-400 underline">
               Open Bingo
             </Link>
           </div>
         </div>
 
         {activeBingoCards.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-600">No active Sports Bingo boards.</p>
+          <p className="mt-2 text-sm text-ht-fg-muted">No active Sports Bingo boards.</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {activeBingoCards.map((card) => (
-              <li key={card.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm font-semibold text-slate-900">{card.gameLabel}</p>
-                <p className="mt-1 text-xs text-slate-600">Starts {formatLocalDateTime(card.startsAt)}</p>
+              <li key={card.id} className="rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3">
+                <p className="text-sm font-semibold text-ht-fg-primary">{card.gameLabel}</p>
+                <p className="mt-1 text-xs text-ht-fg-muted">Starts {formatLocalDateTime(card.startsAt)}</p>
               </li>
             ))}
           </ul>
         )}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-base font-semibold text-slate-900">Pick &apos;Em Picks ({activePickEmPicks.length})</h3>
+          <h3 className="text-base font-semibold text-ht-fg-primary">Pick &apos;Em Picks ({activePickEmPicks.length})</h3>
           <div className="flex items-center gap-2">
             {unclaimedPickEmRewards.length > 0 ? (
               <button
@@ -567,69 +567,69 @@ export function ActiveGamesPanel() {
                   : `Claim Points! (+${unclaimedPickEmPoints.toLocaleString()})`}
               </button>
             ) : null}
-            <Link href="/pickem" className="text-xs font-semibold text-blue-700 underline">
+            <Link href="/pickem" className="text-xs font-semibold text-ht-cyan-400 underline">
               Open Pick &apos;Em
             </Link>
           </div>
         </div>
 
         {activePickEmPicks.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-600">No active Pick &apos;Em selections.</p>
+          <p className="mt-2 text-sm text-ht-fg-muted">No active Pick &apos;Em selections.</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {activePickEmPicks.map((pick) => (
-              <li key={pick.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm font-semibold text-slate-900">{pick.gameLabel}</p>
-                <p className="mt-1 text-xs text-slate-600">
+              <li key={pick.id} className="rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3">
+                <p className="text-sm font-semibold text-ht-fg-primary">{pick.gameLabel}</p>
+                <p className="mt-1 text-xs text-ht-fg-muted">
                   Picked: <span className="font-semibold">{pick.selectedTeam}</span>
                 </p>
-                <p className="text-xs text-slate-600">Starts {formatLocalDateTime(pick.startsAt)}</p>
+                <p className="text-xs text-ht-fg-muted">Starts {formatLocalDateTime(pick.startsAt)}</p>
               </li>
             ))}
           </ul>
         )}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-base font-semibold text-slate-900">Sports Predictions ({activePredictionPicks.length})</h3>
-          <Link href="/predictions" className="text-xs font-semibold text-blue-700 underline">
+          <h3 className="text-base font-semibold text-ht-fg-primary">Sports Predictions ({activePredictionPicks.length})</h3>
+          <Link href="/predictions" className="text-xs font-semibold text-ht-cyan-400 underline">
             Open Predictions
           </Link>
         </div>
 
         {activePredictionPicks.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-600">No pending prediction picks.</p>
+          <p className="mt-2 text-sm text-ht-fg-muted">No pending prediction picks.</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {activePredictionPicks.map((pick) => (
-              <li key={pick.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm font-semibold text-slate-900">{pick.marketQuestion ?? "Prediction Market"}</p>
-                <p className="mt-1 text-xs text-slate-600">Selected: {pick.outcomeTitle}</p>
-                <p className="text-xs text-slate-600">{pick.points} points at stake</p>
+              <li key={pick.id} className="rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3">
+                <p className="text-sm font-semibold text-ht-fg-primary">{pick.marketQuestion ?? "Prediction Market"}</p>
+                <p className="mt-1 text-xs text-ht-fg-muted">Selected: {pick.outcomeTitle}</p>
+                <p className="text-xs text-ht-fg-muted">{pick.points} points at stake</p>
               </li>
             ))}
           </ul>
         )}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h3 className="text-base font-semibold text-slate-900">Completed This Week ({totalCompletedThisWeek})</h3>
+      <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
+        <h3 className="text-base font-semibold text-ht-fg-primary">Completed This Week ({totalCompletedThisWeek})</h3>
 
         {totalCompletedThisWeek === 0 ? (
-          <p className="mt-2 text-sm text-slate-600">No completed games from this week yet.</p>
+          <p className="mt-2 text-sm text-ht-fg-muted">No completed games from this week yet.</p>
         ) : (
           <div className="mt-3 space-y-4">
             <div>
-              <h4 className="text-sm font-semibold text-slate-800">Sports Bingo ({completedBingoCardsThisWeek.length})</h4>
+              <h4 className="text-sm font-semibold text-ht-fg-primary">Sports Bingo ({completedBingoCardsThisWeek.length})</h4>
               {completedBingoCardsThisWeek.length === 0 ? (
-                <p className="mt-1 text-xs text-slate-600">No completed Sports Bingo boards this week.</p>
+                <p className="mt-1 text-xs text-ht-fg-muted">No completed Sports Bingo boards this week.</p>
               ) : (
                 <ul className="mt-2 space-y-2">
                   {completedBingoCardsThisWeek.map((card) => (
-                    <li key={`completed-bingo-${card.id}`} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                      <p className="text-sm font-semibold text-slate-900">{card.gameLabel}</p>
-                      <p className="mt-1 text-xs text-slate-600">Result: {formatStatus(card.status)}</p>
+                    <li key={`completed-bingo-${card.id}`} className="rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3">
+                      <p className="text-sm font-semibold text-ht-fg-primary">{card.gameLabel}</p>
+                      <p className="mt-1 text-xs text-ht-fg-muted">Result: {formatStatus(card.status)}</p>
                     </li>
                   ))}
                 </ul>
@@ -637,15 +637,15 @@ export function ActiveGamesPanel() {
             </div>
 
             <div>
-              <h4 className="text-sm font-semibold text-slate-800">Pick &apos;Em ({completedPickEmPicksThisWeek.length})</h4>
+              <h4 className="text-sm font-semibold text-ht-fg-primary">Pick &apos;Em ({completedPickEmPicksThisWeek.length})</h4>
               {completedPickEmPicksThisWeek.length === 0 ? (
-                <p className="mt-1 text-xs text-slate-600">No completed Pick &apos;Em picks this week.</p>
+                <p className="mt-1 text-xs text-ht-fg-muted">No completed Pick &apos;Em picks this week.</p>
               ) : (
                 <ul className="mt-2 space-y-2">
                   {completedPickEmPicksThisWeek.map((pick) => (
-                    <li key={`completed-pickem-${pick.id}`} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                      <p className="text-sm font-semibold text-slate-900">{pick.gameLabel}</p>
-                      <p className="mt-1 text-xs text-slate-600">
+                    <li key={`completed-pickem-${pick.id}`} className="rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3">
+                      <p className="text-sm font-semibold text-ht-fg-primary">{pick.gameLabel}</p>
+                      <p className="mt-1 text-xs text-ht-fg-muted">
                         Picked: <span className="font-semibold">{pick.selectedTeam}</span> · Result: {formatStatus(pick.status)}
                       </p>
                     </li>
@@ -655,16 +655,16 @@ export function ActiveGamesPanel() {
             </div>
 
             <div>
-              <h4 className="text-sm font-semibold text-slate-800">Sports Predictions ({completedPredictionPicksThisWeek.length})</h4>
+              <h4 className="text-sm font-semibold text-ht-fg-primary">Sports Predictions ({completedPredictionPicksThisWeek.length})</h4>
               {completedPredictionPicksThisWeek.length === 0 ? (
-                <p className="mt-1 text-xs text-slate-600">No completed prediction picks this week.</p>
+                <p className="mt-1 text-xs text-ht-fg-muted">No completed prediction picks this week.</p>
               ) : (
                 <ul className="mt-2 space-y-2">
                   {completedPredictionPicksThisWeek.map((pick) => (
-                    <li key={`completed-prediction-${pick.id}`} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                      <p className="text-sm font-semibold text-slate-900">{pick.marketQuestion ?? "Prediction Market"}</p>
-                      <p className="mt-1 text-xs text-slate-600">Selected: {pick.outcomeTitle}</p>
-                      <p className="text-xs text-slate-600">Result: {formatStatus(pick.status)}</p>
+                    <li key={`completed-prediction-${pick.id}`} className="rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3">
+                      <p className="text-sm font-semibold text-ht-fg-primary">{pick.marketQuestion ?? "Prediction Market"}</p>
+                      <p className="mt-1 text-xs text-ht-fg-muted">Selected: {pick.outcomeTitle}</p>
+                      <p className="text-xs text-ht-fg-muted">Result: {formatStatus(pick.status)}</p>
                     </li>
                   ))}
                 </ul>

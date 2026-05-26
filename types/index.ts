@@ -7,13 +7,26 @@ export type AdSlot =
   | "footer"
   | "mobile-adhesion"
   | "popup-on-entry"
-  | "popup-on-scroll";
+  | "popup-on-scroll"
+  | "venue-leaderboard-rows-1-10"
+  | "venue-leaderboard-rows-11-20"
+  | "venue-leaderboard-rows-21-30"
+  | "venue-leaderboard-rows-31-40"
+  | "venue-leaderboard-rows-41-50"
+  | "pickem-inline-cards-1-5"
+  | "pickem-inline-cards-6-10"
+  | "pickem-inline-cards-11-15"
+  | "pickem-inline-cards-16-20"
+  | "pickem-inline-cards-21-25"
+  | "pickem-inline-cards-26-30";
 
 export type AdPageKey =
   | "global"
   | "join"
   | "venue"
-  | "trivia"
+  | "trivia"        // kept for backward compat — existing DB records use this key
+  | "speed-trivia"
+  | "live-trivia"
   | "sports-bingo"
   | "pickem"
   | "fantasy";

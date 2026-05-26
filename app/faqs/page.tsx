@@ -23,9 +23,9 @@ export default function FaqsPage() {
         <BackButton label="Back" venueHomeFallback />
         <section className="space-y-3">
           {FAQ_ITEMS.map((item) => (
-            <article key={item.question} className="rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm">
-              <h2 className="text-base font-semibold text-slate-900">{item.question}</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-700">{item.answer}</p>
+            <article key={item.question} className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
+              <h2 className="text-base font-semibold text-ht-fg-primary">{item.question}</h2>
+              <p className="mt-2 text-sm leading-6 text-ht-fg-secondary">{item.answer}</p>
             </article>
           ))}
         </section>

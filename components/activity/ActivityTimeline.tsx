@@ -30,13 +30,13 @@ type NotificationsPayload = {
 };
 
 function statusBadgeClass(status?: PredictionStatus): string {
-  if (!status) return "bg-slate-100 text-slate-600";
-  if (status === "pending") return "bg-amber-100 text-amber-700";
-  if (status === "won") return "bg-emerald-100 text-emerald-700";
-  if (status === "lost") return "bg-rose-100 text-rose-700";
-  if (status === "push") return "bg-sky-100 text-sky-700";
-  if (status === "canceled") return "bg-slate-200 text-slate-700";
-  return "bg-slate-100 text-slate-700";
+  if (!status) return "bg-ht-elevated text-ht-fg-muted";
+  if (status === "pending") return "bg-amber-500/15 text-amber-300";
+  if (status === "won") return "bg-emerald-500/15 text-emerald-400";
+  if (status === "lost") return "bg-rose-500/15 text-rose-400";
+  if (status === "push") return "bg-sky-500/15 text-sky-300";
+  if (status === "canceled") return "bg-ht-elevated text-ht-fg-muted";
+  return "bg-ht-elevated text-ht-fg-muted";
 }
 
 function resolveNotificationHref(message: string): string {
@@ -191,7 +191,7 @@ export function ActivityTimeline() {
 
   if (!hasVenueSession) {
     return (
-      <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+      <div className="rounded-ht-md border border-ht-border-hairline bg-ht-surface p-3 text-sm text-ht-fg-muted">
         Join a venue to view your picks and notifications history.
       </div>
     );
@@ -199,7 +199,7 @@ export function ActivityTimeline() {
 
   if (errorMessage) {
     return (
-      <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">
+      <div className="rounded-ht-md border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-400">
         {errorMessage}
       </div>
     );
@@ -212,7 +212,7 @@ export function ActivityTimeline() {
           type="button"
           onClick={() => setTab("picks")}
           className={`rounded-md px-3 py-1.5 text-xs font-medium ${
-            tab === "picks" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"
+            tab === "picks" ? "bg-ht-elevated text-ht-fg-primary border border-ht-border-soft" : "bg-ht-surface text-ht-fg-muted hover:text-ht-fg-primary"
           }`}
         >
           My Picks ({picksTotalItems})
@@ -221,7 +221,7 @@ export function ActivityTimeline() {
           type="button"
           onClick={() => setTab("notifications")}
           className={`rounded-md px-3 py-1.5 text-xs font-medium ${
-            tab === "notifications" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"
+            tab === "notifications" ? "bg-ht-elevated text-ht-fg-primary border border-ht-border-soft" : "bg-ht-surface text-ht-fg-muted hover:text-ht-fg-primary"
           }`}
         >
           Notifications ({notificationsTotalItems})
@@ -241,7 +241,7 @@ export function ActivityTimeline() {
                   setPicksPage(1);
                 }}
                 className={`rounded-md px-3 py-1.5 text-xs font-medium ${
-                  picksFilter === value ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"
+                  picksFilter === value ? "bg-ht-elevated text-ht-fg-primary border border-ht-border-soft" : "bg-ht-surface text-ht-fg-muted hover:text-ht-fg-primary"
                 }`}
               >
                 {value === "all" ? "All" : value.charAt(0).toUpperCase() + value.slice(1)}
@@ -253,26 +253,26 @@ export function ActivityTimeline() {
           {loadingPicks ? (
             <BouncingBallLoader size="sm" label="Loading pick history..." />
           ) : picks.length === 0 ? (
-            <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+            <div className="rounded-ht-md border border-ht-border-hairline bg-ht-surface p-3 text-sm text-ht-fg-muted">
               No picks found for this filter.
             </div>
           ) : (
             <ul className="space-y-3">
               {picks.map((pick) => (
-                <li key={pick.id} className="rounded-md border border-slate-200 p-3">
+                <li key={pick.id} className="rounded-ht-md border border-ht-border-hairline bg-ht-elevated p-3">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Prediction</p>
+                    <p className="text-xs uppercase tracking-wide text-ht-fg-muted">Prediction</p>
                     <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${statusBadgeClass(pick.status)}`}>
                       {pick.status}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm font-medium text-slate-900">{pick.outcomeTitle}</p>
-                  <p className="mt-1 text-sm text-slate-700">
+                  <p className="mt-1 text-sm font-medium text-ht-fg-primary">{pick.outcomeTitle}</p>
+                  <p className="mt-1 text-sm text-ht-fg-secondary">
                     {pick.status === "pending"
                       ? `${pick.points} potential points`
                       : `${pick.points} points at stake · final status ${pick.status}`}
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-ht-fg-muted">
                     Picked: {new Date(pick.createdAt).toLocaleString()}
                     {pick.resolvedAt ? ` · Resolved: ${new Date(pick.resolvedAt).toLocaleString()}` : ""}
                   </p>
@@ -282,7 +282,7 @@ export function ActivityTimeline() {
           )}
 
           <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-ht-fg-muted">
               Page {picksPage} of {picksTotalPages}
             </p>
             <div className="flex gap-2">
@@ -290,7 +290,7 @@ export function ActivityTimeline() {
                 type="button"
                 onClick={() => setPicksPage((value) => Math.max(1, value - 1))}
                 disabled={picksPage <= 1 || loadingPicks}
-                className="rounded-md bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 disabled:opacity-50"
+                className="rounded-ht-md bg-ht-elevated px-3 py-1.5 text-xs font-medium text-ht-fg-secondary disabled:opacity-50"
               >
                 Previous
               </button>
@@ -298,7 +298,7 @@ export function ActivityTimeline() {
                 type="button"
                 onClick={() => setPicksPage((value) => Math.min(picksTotalPages, value + 1))}
                 disabled={picksPage >= picksTotalPages || loadingPicks}
-                className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+                className="rounded-ht-md bg-ht-elevated-2 px-3 py-1.5 text-xs font-medium text-ht-fg-primary disabled:opacity-50"
               >
                 Next
               </button>
@@ -315,7 +315,7 @@ export function ActivityTimeline() {
                 setNotificationsPage(1);
               }}
               className={`rounded-md px-3 py-1.5 text-xs font-medium ${
-                notificationFilter === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"
+                notificationFilter === "all" ? "bg-ht-elevated text-ht-fg-primary border border-ht-border-soft" : "bg-ht-surface text-ht-fg-muted hover:text-ht-fg-primary"
               }`}
             >
               All ({notificationsTotalItems})
@@ -327,7 +327,7 @@ export function ActivityTimeline() {
                 setNotificationsPage(1);
               }}
               className={`rounded-md px-3 py-1.5 text-xs font-medium ${
-                notificationFilter === "unread" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"
+                notificationFilter === "unread" ? "bg-ht-elevated text-ht-fg-primary border border-ht-border-soft" : "bg-ht-surface text-ht-fg-muted hover:text-ht-fg-primary"
               }`}
             >
               Unread ({unreadCount})
@@ -337,7 +337,7 @@ export function ActivityTimeline() {
           {loadingNotifications ? (
             <BouncingBallLoader size="sm" label="Loading notifications..." />
           ) : notifications.length === 0 ? (
-            <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+            <div className="rounded-ht-md border border-ht-border-hairline bg-ht-surface p-3 text-sm text-ht-fg-muted">
               No notifications found for this filter.
             </div>
           ) : (
@@ -345,8 +345,8 @@ export function ActivityTimeline() {
               {notifications.map((item) => (
                 <li
                   key={item.id}
-                  className={`rounded-md border p-3 ${
-                    item.read ? "border-slate-200 bg-white text-slate-700" : "border-blue-200 bg-blue-50 text-slate-800"
+                  className={`rounded-ht-md border p-3 ${
+                    item.read ? "border-ht-border-hairline bg-ht-elevated text-ht-fg-secondary" : "border-ht-cyan-600/40 bg-ht-elevated text-ht-fg-primary"
                   }`}
                 >
                   <button
@@ -357,9 +357,9 @@ export function ActivityTimeline() {
                     className="w-full text-left"
                   >
                     <p className="text-sm font-medium">{item.message}</p>
-                    <div className="mt-1 flex items-center justify-between text-xs text-slate-500">
+                    <div className="mt-1 flex items-center justify-between text-xs text-ht-fg-muted">
                       <span>{new Date(item.createdAt).toLocaleString()}</span>
-                      <span className="font-semibold text-blue-700">View</span>
+                      <span className="font-semibold text-ht-cyan-400">View</span>
                     </div>
                   </button>
                 </li>
@@ -368,7 +368,7 @@ export function ActivityTimeline() {
           )}
 
           <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-ht-fg-muted">
               Page {notificationsPage} of {notificationsTotalPages}
             </p>
             <div className="flex gap-2">
@@ -376,7 +376,7 @@ export function ActivityTimeline() {
                 type="button"
                 onClick={() => setNotificationsPage((value) => Math.max(1, value - 1))}
                 disabled={notificationsPage <= 1 || loadingNotifications}
-                className="rounded-md bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 disabled:opacity-50"
+                className="rounded-ht-md bg-ht-elevated px-3 py-1.5 text-xs font-medium text-ht-fg-secondary disabled:opacity-50"
               >
                 Previous
               </button>
@@ -384,7 +384,7 @@ export function ActivityTimeline() {
                 type="button"
                 onClick={() => setNotificationsPage((value) => Math.min(notificationsTotalPages, value + 1))}
                 disabled={notificationsPage >= notificationsTotalPages || loadingNotifications}
-                className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+                className="rounded-ht-md bg-ht-elevated-2 px-3 py-1.5 text-xs font-medium text-ht-fg-primary disabled:opacity-50"
               >
                 Next
               </button>

@@ -93,6 +93,7 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
   const pathname = usePathname();
   const router = useRouter();
   const isJoinRoute = pathname === "/" || pathname === "/join";
+  const isVenueRoute = pathname.startsWith("/venue/");
   const compact = variant === "trivia";
   const venueIdFromPath = getVenueIdFromPathname(pathname);
 
@@ -337,7 +338,7 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
     };
   }, [compact, isJoinRoute, isMenuOpen, scrollLockOwnerId]);
 
-  if (isJoinRoute) {
+  if (isJoinRoute || isVenueRoute) {
     return null;
   }
 
@@ -345,8 +346,8 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
     return (
       <div className="relative flex w-full items-center justify-between gap-1.5">
         <CoinFXCanvas />
-        <div className="flex h-10 min-w-0 flex-1 items-center gap-1 rounded-xl border-2 border-slate-900 bg-[#f7d7b0] px-2 py-1 text-[13px] font-medium text-slate-900 shadow-[2px_2px_0_#0f172a]">
-          <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-slate-900 bg-white text-sm">
+        <div className="flex h-10 min-w-0 flex-1 items-center gap-1 rounded-xl border border-ht-border-soft bg-ht-elevated px-2 py-1 text-[13px] font-medium text-ht-fg-primary">
+          <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-ht-border-strong bg-ht-elevated-2 text-sm text-ht-fg-primary">
             {((username || "G").trim()[0] ?? "G").toUpperCase()}
           </span>
           <span className="truncate">{username || "Guest"}</span>
@@ -363,8 +364,8 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
             }
           }}
           id="tp-points-pill"
-          className={`relative flex h-10 min-w-0 flex-1 items-center gap-1 rounded-xl border-2 border-slate-900 px-2 py-1 text-[13px] font-medium text-slate-900 shadow-[2px_2px_0_#0f172a] transition-all duration-300 ${
-            pointsFlash ? "bg-[#f5cf88]" : "bg-[#f2bb66]"
+          className={`relative flex h-10 min-w-0 flex-1 items-center gap-1 rounded-xl border px-2 py-1 text-[13px] font-medium transition-all duration-300 ${
+            pointsFlash ? "bg-amber-400/25 border-amber-400/50 text-amber-200" : "bg-amber-500/15 border-amber-400/30 text-amber-300"
           } ${pointsPop ? "scale-105" : "scale-100"} cursor-pointer`}
           aria-label="Open venue leaderboard"
         >
@@ -402,11 +403,11 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
       <CoinFXCanvas />
 
       <div className="relative z-[220]">
-        <div className="relative flex w-full items-center gap-2 rounded-none border-2 border-x-0 border-t-0 border-slate-900 bg-[#f7d7b0] px-2 py-1.5 text-slate-900 shadow-[0_3px_0_#0f172a]">
+        <div className="relative flex w-full items-center gap-2 rounded-none border-b border-ht-border-hairline bg-ht-surface px-2 py-1.5 shadow-[0_1px_0_rgba(255,255,255,0.04)]">
           <button
             type="button"
             onClick={() => setIsMenuOpen(true)}
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-2 border-slate-900 bg-white text-lg font-bold text-slate-900 shadow-[2px_2px_0_#0f172a]"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-ht-border-soft bg-ht-elevated text-lg font-bold text-ht-fg-primary"
             aria-label="Open navigation menu"
             aria-expanded={isMenuOpen}
           >
@@ -424,10 +425,10 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
                   router.push(venueHomeHref);
                 }
               }}
-              className="inline-flex min-h-9 min-w-0 max-w-[13.5rem] cursor-pointer items-center gap-1.5 rounded-lg border-2 border-slate-900 bg-white px-2 py-1 text-sm font-semibold shadow-[2px_2px_0_#0f172a] sm:max-w-[16rem]"
+              className="inline-flex min-h-9 min-w-0 max-w-[13.5rem] cursor-pointer items-center gap-1.5 rounded-lg border border-ht-border-soft bg-ht-elevated px-2 py-1 text-sm font-semibold text-ht-fg-primary sm:max-w-[16rem]"
               aria-label="Open venue home"
             >
-              <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-900 bg-[#f7d7b0] text-[11px] font-black">
+              <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-ht-border-strong bg-ht-elevated-2 text-[11px] font-black text-ht-fg-primary">
                 {((username || "G").trim()[0] ?? "G").toUpperCase()}
               </span>
               <span className="break-all text-[13px] leading-tight">{username || "Guest"}</span>
@@ -444,8 +445,8 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
                 }
               }}
               id="tp-points-pill"
-              className={`relative inline-flex h-9 min-w-[6.25rem] items-center justify-center gap-1.5 rounded-lg border-2 border-slate-900 px-2 text-sm font-black shadow-[2px_2px_0_#0f172a] transition-all duration-300 ${
-                pointsFlash ? "bg-[#f5cf88]" : "bg-[#f2bb66]"
+              className={`relative inline-flex h-9 min-w-[6.25rem] items-center justify-center gap-1.5 rounded-lg border px-2 text-sm font-black transition-all duration-300 ${
+                pointsFlash ? "bg-amber-400/25 border-amber-400/50 text-amber-200" : "bg-amber-500/15 border-amber-400/30 text-amber-300"
               } ${pointsPop ? "scale-105" : "scale-100"} cursor-pointer`}
               aria-label="Open venue leaderboard"
             >
@@ -498,16 +499,16 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
         />
 
         <aside
-          className={`absolute inset-y-0 left-0 w-[22rem] max-w-[92vw] border-r-2 border-slate-900 bg-[#fff7ea] px-5 py-5 shadow-xl transition-transform duration-200 ${
+          className={`absolute inset-y-0 left-0 w-[22rem] max-w-[92vw] border-r border-ht-border-soft bg-ht-surface px-5 py-5 shadow-ht-modal transition-transform duration-200 ${
             isMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-xl font-black tracking-wide text-slate-900">Menu</h3>
+            <h3 className="text-xl font-black tracking-wide text-ht-fg-primary">Menu</h3>
             <button
               type="button"
               onClick={() => setIsMenuOpen(false)}
-              className="rounded-md border-2 border-slate-900 bg-white px-3 py-1.5 text-base font-semibold text-slate-900 shadow-[2px_2px_0_#0f172a]"
+              className="rounded-ht-sm border border-ht-border-soft bg-ht-elevated px-3 py-1.5 text-base font-semibold text-ht-fg-muted"
             >
               Close
             </button>
@@ -525,14 +526,14 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
                         setIsMenuOpen(false);
                         router.push(item.href);
                       }}
-                      className={`w-full rounded-lg border-2 px-4 py-3.5 text-left shadow-[2px_2px_0_#0f172a] ${
+                      className={`w-full rounded-ht-lg border px-4 py-3.5 text-left ${
                         active
-                          ? "border-slate-900 bg-slate-900 text-white"
-                          : "border-slate-900 bg-white text-slate-900"
+                          ? "border-ht-border-strong bg-ht-elevated text-ht-fg-primary"
+                          : "border-ht-border-hairline bg-ht-elevated/50 text-ht-fg-secondary hover:border-ht-border-soft hover:bg-ht-elevated"
                       }`}
                     >
                       <div className="text-lg font-black leading-tight">{item.label}</div>
-                      <div className={`mt-1 text-sm leading-snug ${active ? "text-slate-200" : "text-slate-600"}`}>
+                      <div className={`mt-1 text-sm leading-snug ${active ? "text-ht-fg-secondary" : "text-ht-fg-muted"}`}>
                         {item.description}
                       </div>
                     </button>

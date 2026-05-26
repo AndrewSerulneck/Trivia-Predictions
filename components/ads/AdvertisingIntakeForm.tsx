@@ -82,32 +82,32 @@ export function AdvertisingIntakeForm() {
   };
 
   return (
-    <form onSubmit={submit} className="space-y-4 rounded-lg border border-slate-200 bg-white p-4">
+    <form onSubmit={submit} className="space-y-4 rounded-ht-lg border border-ht-border-hairline bg-ht-elevated p-4">
       {errorMessage ? (
-        <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">{errorMessage}</div>
+        <div className="rounded-md border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-400">{errorMessage}</div>
       ) : null}
       {submitted ? (
-        <div className="rounded-md border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-700">
+        <div className="rounded-md border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-400">
           Thanks. Your advertising interest form has been sent to {INTAKE_EMAIL}.
         </div>
       ) : null}
 
       <div className="space-y-1">
-        <label htmlFor="ad-intake-name" className="text-sm font-semibold text-slate-800">
+        <label htmlFor="ad-intake-name" className="text-sm font-semibold text-ht-fg-primary">
           Name *
         </label>
         <input
           id="ad-intake-name"
           value={name}
           onChange={(event) => setName(event.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-base"
+          className="w-full rounded-md border border-ht-border-soft bg-ht-surface px-3 py-2 text-base text-ht-fg-primary"
           placeholder="Your full name"
           required
         />
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="ad-intake-email" className="text-sm font-semibold text-slate-800">
+        <label htmlFor="ad-intake-email" className="text-sm font-semibold text-ht-fg-primary">
           Email *
         </label>
         <input
@@ -115,14 +115,14 @@ export function AdvertisingIntakeForm() {
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-base"
+          className="w-full rounded-md border border-ht-border-soft bg-ht-surface px-3 py-2 text-base text-ht-fg-primary"
           placeholder="you@company.com"
           required
         />
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="ad-intake-phone" className="text-sm font-semibold text-slate-800">
+        <label htmlFor="ad-intake-phone" className="text-sm font-semibold text-ht-fg-primary">
           Phone Number *
         </label>
         <input
@@ -130,27 +130,27 @@ export function AdvertisingIntakeForm() {
           type="tel"
           value={phone}
           onChange={(event) => setPhone(event.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-base"
+          className="w-full rounded-md border border-ht-border-soft bg-ht-surface px-3 py-2 text-base text-ht-fg-primary"
           placeholder="(555) 555-5555"
           required
         />
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="ad-intake-business" className="text-sm font-semibold text-slate-800">
+        <label htmlFor="ad-intake-business" className="text-sm font-semibold text-ht-fg-primary">
           Business (Optional)
         </label>
         <input
           id="ad-intake-business"
           value={business}
           onChange={(event) => setBusiness(event.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-base"
+          className="w-full rounded-md border border-ht-border-soft bg-ht-surface px-3 py-2 text-base text-ht-fg-primary"
           placeholder="Business name"
         />
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="ad-intake-business-link" className="text-sm font-semibold text-slate-800">
+        <label htmlFor="ad-intake-business-link" className="text-sm font-semibold text-ht-fg-primary">
           Business Link (Optional)
         </label>
         <input
@@ -158,20 +158,20 @@ export function AdvertisingIntakeForm() {
           type="url"
           value={businessLink}
           onChange={(event) => setBusinessLink(event.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-base"
+          className="w-full rounded-md border border-ht-border-soft bg-ht-surface px-3 py-2 text-base text-ht-fg-primary"
           placeholder="https://yourbusiness.com"
         />
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="ad-intake-description" className="text-sm font-semibold text-slate-800">
+        <label htmlFor="ad-intake-description" className="text-sm font-semibold text-ht-fg-primary">
           What Kind of Ad Would You Like to Place? (Optional)
         </label>
         <textarea
           id="ad-intake-description"
           value={adDescription}
           onChange={(event) => setAdDescription(event.target.value)}
-          className="min-h-[110px] w-full rounded-md border border-slate-300 px-3 py-2 text-base"
+          className="min-h-[110px] w-full rounded-md border border-ht-border-soft bg-ht-surface px-3 py-2 text-base text-ht-fg-primary"
           placeholder="Short description of the ad type, goals, placement ideas, etc."
         />
       </div>

@@ -66,7 +66,7 @@ export function PredictionQuotaBadge() {
 
   if (quota?.isAdminBypass) {
     return (
-      <div className="rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
+      <div className="rounded-ht-md bg-emerald-500/15 px-3 py-1.5 text-xs font-medium text-emerald-400">
         Picks: Unlimited (Admin)
       </div>
     );
@@ -74,12 +74,12 @@ export function PredictionQuotaBadge() {
 
   if (!quota) {
     return (
-      <div className="rounded-md bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600">Loading picks...</div>
+      <div className="rounded-ht-md bg-ht-elevated px-3 py-1.5 text-xs font-medium text-ht-fg-muted">Loading picks...</div>
     );
   }
 
   return (
-    <div className="rounded-md bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700">
+    <div className="rounded-ht-md bg-ht-elevated px-3 py-1.5 text-xs font-medium text-ht-fg-secondary">
       Picks left: {quota.picksRemaining}/{quota.limit}
       {quota.picksRemaining === 0 ? ` · Reset in ${formatReset(quota.windowSecondsRemaining)}` : ""}
     </div>

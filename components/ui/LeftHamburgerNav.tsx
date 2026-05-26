@@ -80,7 +80,7 @@ export function LeftHamburgerNav() {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="fixed left-3 top-3 z-40 rounded-lg border border-slate-200 bg-white p-2 text-xl shadow-md md:hidden"
+        className="fixed left-3 top-3 z-40 rounded-lg border border-ht-border-soft bg-ht-elevated p-2 text-xl text-ht-fg-primary shadow-ht-card md:hidden"
         aria-label="Open navigation menu"
         aria-expanded={isOpen}
       >
@@ -100,16 +100,16 @@ export function LeftHamburgerNav() {
         />
 
         <aside
-          className={`absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-white px-4 py-4 shadow-xl transition-transform duration-200 ${
+          className={`absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-ht-surface border-r border-ht-border-soft px-4 py-4 shadow-ht-modal transition-transform duration-200 ${
             isOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
           <div className="mb-4 flex items-center justify-between">
-            <span className="text-lg font-semibold">Menu</span>
+            <span className="text-lg font-semibold text-ht-fg-primary">Menu</span>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="rounded-md border border-slate-200 px-3 py-1 text-sm"
+              className="rounded-ht-sm border border-ht-border-soft bg-ht-elevated px-3 py-1 text-sm text-ht-fg-muted"
             >
               ✕
             </button>
@@ -124,8 +124,8 @@ export function LeftHamburgerNav() {
                     onClick={() => setIsOpen(false)}
                     className={`block rounded-md px-3 py-3 text-base font-semibold ${
                       isActive(pathname, item.href)
-                        ? "bg-slate-900 text-white"
-                        : "text-slate-700 hover:bg-slate-100"
+                        ? "bg-ht-elevated text-ht-fg-primary border border-ht-border-strong"
+                        : "text-ht-fg-muted hover:bg-ht-elevated hover:text-ht-fg-primary"
                     }`}
                   >
                     {item.label}

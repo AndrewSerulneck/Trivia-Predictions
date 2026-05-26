@@ -1,19 +1,21 @@
+/* Codex: Page -> Ad Type -> Slot dependent dropdowns implemented */
 "use client";
 
-import { useMemo, useState, type ChangeEvent, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, Advertisement, Venue } from "@/types";
 import {
   AD_PLACEMENTS,
   getAllowedDisplayTriggers,
   getDefaultPlacementMeta,
-  getSupportedAdTypesForPage,
   isSlotCompatibleWithAdType,
 } from "@/lib/adPlacements";
+import { AD_SLOT_REGISTRY } from "@/lib/adSlotRegistry";
 
 export const AD_PAGE_OPTIONS: Array<{ value: AdPageKey; label: string }> = [
   { value: "join", label: "Join" },
-  { value: "venue", label: "Venue" },
-  { value: "trivia", label: "Live Trivia + Speed Trivia" },
+  { value: "venue", label: "Venue Home Page" },
+  { value: "speed-trivia", label: "Speed Trivia" },
+  { value: "live-trivia", label: "Live Trivia" },
   { value: "sports-bingo", label: "Sports Bingo" },
   { value: "pickem", label: "Pick 'Em" },
   { value: "fantasy", label: "Fantasy" },
@@ -31,17 +33,13 @@ export const AD_TRIGGER_OPTIONS: Array<{ value: AdDisplayTrigger; label: string 
   { value: "round-end", label: "Round End" },
 ];
 
-export const AD_SLOT_OPTIONS: Array<{ value: AdSlot; label: string }> = [
-  { value: "popup-on-entry", label: "Popup (Entry)" },
-  { value: "popup-on-scroll", label: "Popup (Scroll)" },
-  { value: "mobile-adhesion", label: "Banner" },
-  { value: "leaderboard-sidebar", label: "Inline" },
-  { value: "inline-content", label: "Inline Content" },
-  { value: "mid-content", label: "Mid Content" },
-  { value: "header", label: "Header" },
-  { value: "footer", label: "Footer" },
-  { value: "sidebar", label: "Sidebar" },
-];
+type RegistrySlotOption = {
+  id: string;
+  slot: AdSlot;
+  label: string;
+  trigger: AdDisplayTrigger;
+  roundNumber?: number;
+};
 
 export type AdDraft = {
   slot: AdSlot;
@@ -73,6 +71,34 @@ export type AdDraft = {
   zipCodes: string[];
   regions: string[];
 };
+
+const VENUE_LEADERBOARD_PLACEMENT_KEY = "venue-leaderboard-inline";
+const VENUE_LEADERBOARD_SLOT_PATTERN = /^venue-leaderboard-rows-\d+-\d+$/;
+
+function isVenueLeaderboardSlot(pageKey: AdPageKey, slot: AdSlot): boolean {
+  return pageKey === "venue" && VENUE_LEADERBOARD_SLOT_PATTERN.test(slot);
+}
+
+function isValidVenueLeaderboardSequenceIndex(value: string | number | undefined): boolean {
+  const parsed =
+    typeof value === "number"
+      ? Math.round(value)
+      : Number.parseInt(String(value ?? "").trim(), 10);
+  return Number.isInteger(parsed) && parsed >= 1 && parsed <= 5;
+}
+
+function getDefaultDimensionsForAdType(adType: AdType): { width: string; height: string } {
+  switch (adType) {
+    case "popup":
+      return { width: "540", height: "960" };
+    case "banner":
+      return { width: "320", height: "50" };
+    case "inline":
+      return { width: "300", height: "250" };
+    default:
+      return { width: "300", height: "250" };
+  }
+}
 
 function dedupeList(values: string[]): string[] {
   return Array.from(
@@ -120,6 +146,73 @@ export function defaultAdDraft(): AdDraft {
   };
 }
 
+function getSlotHintForPage(pageKey: AdPageKey, slot: AdSlot): string {
+  if (slot === "inline-content") {
+    switch (pageKey) {
+      case "pickem":
+        if (slot.startsWith("pickem-inline-cards-")) {
+          return "Appears in specific Pick 'Em card range";
+        }
+        return "Generic inline placement (deprecated for Pick 'Em)";
+      case "sports-bingo":
+        return "Appears within Bingo game area";
+      case "fantasy":
+        return "Appears in Fantasy player feed";
+      case "live-trivia":
+        return "Appears in Live Trivia lobby content";
+      case "join":
+        return "Appears between venue listings";
+      default:
+        return "Inline ad placement";
+    }
+  }
+  if (slot.startsWith("venue-leaderboard-rows-")) {
+    return "Appears on Venue leaderboard at this row range";
+  }
+  if (slot.startsWith("pickem-inline-cards-")) {
+    return "Specific Pick 'Em inline ad slot for card range shown";
+  }
+  return "";
+}
+
+function getAvailableAdTypesForPage(pageKey?: AdPageKey): AdType[] {
+  if (!pageKey) return [];
+  const pageSlots = Array.from(
+    new Set(AD_SLOT_REGISTRY.filter((entry) => entry.pageKey === pageKey).map((entry) => entry.slot))
+  );
+  return AD_TYPE_OPTIONS.map((option) => option.value).filter((adType) =>
+    pageSlots.some((slot) => isSlotCompatibleWithAdType(slot, adType))
+  );
+}
+
+function getAvailableSlotsForPageAndType(
+  pageKey?: AdPageKey,
+  adType?: AdType
+) : RegistrySlotOption[] {
+  if (!pageKey || !adType) return [];
+
+  return AD_SLOT_REGISTRY
+    .filter((entry) => entry.pageKey === pageKey && isSlotCompatibleWithAdType(entry.slot, adType))
+    .map((entry) => ({
+      id: entry.id,
+      slot: entry.slot,
+      label: entry.label,
+      trigger: entry.trigger,
+      roundNumber: entry.roundNumber,
+    }));
+}
+
+function getDraftSlotOptionId(draft: AdDraft, slotOptions: RegistrySlotOption[]): string {
+  const draftRoundNumber = draft.roundNumber.trim() ? Number.parseInt(draft.roundNumber, 10) : undefined;
+  const exactMatch = slotOptions.find(
+    (option) =>
+      option.slot === draft.slot &&
+      option.trigger === draft.displayTrigger &&
+      (option.roundNumber ?? undefined) === (Number.isFinite(draftRoundNumber) ? draftRoundNumber : undefined)
+  );
+  return exactMatch?.id ?? "";
+}
+
 export function draftFromAdvertisement(ad: Advertisement): AdDraft {
   return {
     slot: ad.slot,
@@ -161,6 +254,13 @@ export function draftToPayload(draft: AdDraft) {
       : undefined;
 
   const placementKey = draft.placementKey.trim() || (draft.cycleAfterRound.trim() ? `cycle-after-r${draft.cycleAfterRound.trim()}` : undefined);
+  // Venue leaderboard inline slots need explicit variant targeting so rendering can match sequence breaks.
+  if (
+    isVenueLeaderboardSlot(draft.pageKey, draft.slot) &&
+    (placementKey !== VENUE_LEADERBOARD_PLACEMENT_KEY || !isValidVenueLeaderboardSequenceIndex(draft.sequenceIndex))
+  ) {
+    throw new Error("Leaderboard inline ads require placementKey='venue-leaderboard-inline' and sequenceIndex 1-5.");
+  }
 
   return {
     slot: draft.slot,
@@ -213,9 +313,23 @@ type Props = {
   onChange: (next: AdDraft) => void;
   venues: Venue[];
   disabled?: boolean;
+  onApplyPlaceholderToAllInlineSlots?: () => Promise<void> | void;
+  applyingPlaceholderToAllInlineSlots?: boolean;
+  placeholderApplySummary?: string;
 };
 
-export function AdFormFields({ draft, onChange, venues, disabled = false }: Props) {
+export function AdFormFields({
+  draft,
+  onChange,
+  venues,
+  disabled = false,
+  onApplyPlaceholderToAllInlineSlots,
+  applyingPlaceholderToAllInlineSlots = false,
+  placeholderApplySummary = "",
+}: Props) {
+  const [didAutoSetLeaderboardPlacementKey, setDidAutoSetLeaderboardPlacementKey] = useState(false);
+  const [didAutoSetLeaderboardSequenceIndex, setDidAutoSetLeaderboardSequenceIndex] = useState(false);
+
   function patch(patch: Partial<AdDraft>) {
     onChange({ ...draft, ...patch });
   }
@@ -232,16 +346,18 @@ export function AdFormFields({ draft, onChange, venues, disabled = false }: Prop
       preferredTrigger && allowedTriggers.includes(preferredTrigger)
         ? preferredTrigger
         : defaults?.displayTrigger ?? "on-load";
-    const fallbackSlot = defaults?.slot ?? "leaderboard-sidebar";
+    const fallbackSlot =
+      defaults?.slot ??
+      (nextAdType === "popup" ? "popup-on-entry" : nextAdType === "banner" ? "mobile-adhesion" : "inline-content");
     const preferredCompatible = preferredSlot && isSlotCompatibleWithAdType(preferredSlot, nextAdType);
     const nextSlot = preferredCompatible ? preferredSlot : fallbackSlot;
     return { nextTrigger, nextSlot };
   }
 
   function handlePageChange(nextPageKey: AdPageKey) {
-    const supportedTypes = getSupportedAdTypesForPage(nextPageKey);
+    const supportedTypes = getAvailableAdTypesForPage(nextPageKey);
     const nextAdType = supportedTypes.includes(draft.adType) ? draft.adType : supportedTypes[0] ?? "inline";
-    const { nextTrigger, nextSlot } = normalizePlacement(nextPageKey, nextAdType, draft.displayTrigger, draft.slot);
+    const { nextTrigger, nextSlot } = normalizePlacement(nextPageKey, nextAdType, draft.displayTrigger);
     patch({
       pageKey: nextPageKey,
       adType: nextAdType,
@@ -252,12 +368,15 @@ export function AdFormFields({ draft, onChange, venues, disabled = false }: Prop
   }
 
   function handleAdTypeChange(nextAdType: AdType) {
-    const { nextTrigger, nextSlot } = normalizePlacement(draft.pageKey, nextAdType, draft.displayTrigger, draft.slot);
+    const { nextTrigger, nextSlot } = normalizePlacement(draft.pageKey, nextAdType, draft.displayTrigger);
+    const dimensions = getDefaultDimensionsForAdType(nextAdType);
     patch({
       adType: nextAdType,
       displayTrigger: nextTrigger,
       slot: nextSlot,
       ...(nextTrigger !== "round-end" ? { roundNumber: "", cycleAfterRound: "" } : {}),
+      width: dimensions.width,
+      height: dimensions.height,
     });
   }
 
@@ -270,19 +389,92 @@ export function AdFormFields({ draft, onChange, venues, disabled = false }: Prop
     });
   }
 
+  function handleSlotOptionChange(optionId: string) {
+    const selected = slotOptions.find((option) => option.id === optionId);
+    if (!selected) return;
+    patch({
+      slot: selected.slot,
+      displayTrigger: selected.trigger,
+      roundNumber: Number.isFinite(selected.roundNumber) ? String(selected.roundNumber) : "",
+      ...(selected.trigger !== "round-end" ? { cycleAfterRound: "" } : {}),
+    });
+  }
+
   function handleVenueMultiSelect(event: ChangeEvent<HTMLSelectElement>) {
     const selected = Array.from(event.target.selectedOptions).map((option) => option.value);
     patch({ venueIds: selected });
   }
 
   const pagePlacement = draft.pageKey === "global" ? null : AD_PLACEMENTS[draft.pageKey];
-  const allowedAdTypeOptions = getSupportedAdTypesForPage(draft.pageKey);
-  const adTypeOptions = AD_TYPE_OPTIONS.filter((option) => allowedAdTypeOptions.includes(option.value));
+  const availableAdTypes = getAvailableAdTypesForPage(draft.pageKey);
+  const adTypeOptions = AD_TYPE_OPTIONS.filter((option) => availableAdTypes.includes(option.value));
   const allowedTriggers = getAllowedDisplayTriggers(draft.pageKey, draft.adType);
   const triggerOptions = AD_TRIGGER_OPTIONS.filter((option) => allowedTriggers.includes(option.value));
-  const slotOptions = AD_SLOT_OPTIONS.filter((option) => isSlotCompatibleWithAdType(option.value, draft.adType));
+  const slotOptions = getAvailableSlotsForPageAndType(draft.pageKey, draft.adType);
+  const selectedSlotOptionId = getDraftSlotOptionId(draft, slotOptions) || slotOptions[0]?.id || "";
+  const slotHint = getSlotHintForPage(draft.pageKey, draft.slot);
+  const isVenueLeaderboardSelection = isVenueLeaderboardSlot(draft.pageKey, draft.slot);
+  const hasValidLeaderboardSequence = isValidVenueLeaderboardSequenceIndex(draft.sequenceIndex);
 
-  const isRoundEndTrivia = draft.pageKey === "trivia" && draft.displayTrigger === "round-end";
+  useEffect(() => {
+    if (slotOptions.length === 0) {
+      return;
+    }
+    if (getDraftSlotOptionId(draft, slotOptions)) {
+      return;
+    }
+    const first = slotOptions[0];
+    if (!first) return;
+    onChange({
+      ...draft,
+      slot: first.slot,
+      displayTrigger: first.trigger,
+      roundNumber: Number.isFinite(first.roundNumber) ? String(first.roundNumber) : "",
+      ...(first.trigger !== "round-end" ? { cycleAfterRound: "" } : {}),
+    });
+  }, [draft, onChange, slotOptions]);
+
+  useEffect(() => {
+    if (isVenueLeaderboardSelection) {
+      const nextPatch: Partial<AdDraft> = {};
+      if (draft.placementKey !== VENUE_LEADERBOARD_PLACEMENT_KEY) {
+        // Keep this deterministic for leaderboard inline lookups.
+        nextPatch.placementKey = VENUE_LEADERBOARD_PLACEMENT_KEY;
+        setDidAutoSetLeaderboardPlacementKey(true);
+      }
+      if (!hasValidLeaderboardSequence) {
+        // Default to sequence 1 so newly selected leaderboard slots stay valid.
+        nextPatch.sequenceIndex = "1";
+        setDidAutoSetLeaderboardSequenceIndex(true);
+      }
+      if (Object.keys(nextPatch).length > 0) {
+        onChange({ ...draft, ...nextPatch });
+      }
+      return;
+    }
+
+    const clearPatch: Partial<AdDraft> = {};
+    if (didAutoSetLeaderboardPlacementKey && draft.placementKey === VENUE_LEADERBOARD_PLACEMENT_KEY) {
+      clearPatch.placementKey = "";
+    }
+    if (didAutoSetLeaderboardSequenceIndex && draft.sequenceIndex.trim()) {
+      clearPatch.sequenceIndex = "";
+    }
+    if (Object.keys(clearPatch).length > 0) {
+      onChange({ ...draft, ...clearPatch });
+    }
+    if (didAutoSetLeaderboardPlacementKey) setDidAutoSetLeaderboardPlacementKey(false);
+    if (didAutoSetLeaderboardSequenceIndex) setDidAutoSetLeaderboardSequenceIndex(false);
+  }, [
+    didAutoSetLeaderboardPlacementKey,
+    didAutoSetLeaderboardSequenceIndex,
+    draft,
+    hasValidLeaderboardSequence,
+    isVenueLeaderboardSelection,
+    onChange,
+  ]);
+
+  const isRoundEndTrivia = (draft.pageKey === "trivia" || draft.pageKey === "speed-trivia" || draft.pageKey === "live-trivia") && draft.displayTrigger === "round-end";
   const [cityInput, setCityInput] = useState("");
   const [stateInput, setStateInput] = useState("");
   const [zipInput, setZipInput] = useState("");
@@ -378,27 +570,6 @@ export function AdFormFields({ draft, onChange, venues, disabled = false }: Prop
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Slot</label>
-        <select
-          value={draft.slot}
-          onChange={(event) => patch({ slot: event.target.value as AdSlot })}
-          disabled={disabled}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-        >
-          {slotOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        {pagePlacement ? (
-          <p className="mt-1 text-xs text-slate-500">
-            {pagePlacement.name}: {pagePlacement.slots[draft.adType].description}
-          </p>
-        ) : null}
-      </div>
-
-      <div>
         <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Page</label>
         <select
           value={draft.pageKey}
@@ -413,20 +584,61 @@ export function AdFormFields({ draft, onChange, venues, disabled = false }: Prop
           ))}
         </select>
       </div>
+
       <div>
         <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Ad Type</label>
         <select
           value={draft.adType}
           onChange={(event) => handleAdTypeChange(event.target.value as AdType)}
-          disabled={disabled}
+          disabled={disabled || !draft.pageKey || adTypeOptions.length === 0}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
         >
+          {adTypeOptions.length === 0 ? (
+            <option value="">No ad types available for this page</option>
+          ) : null}
           {adTypeOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
           ))}
         </select>
+      </div>
+
+      <div>
+        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Slot</label>
+        <select
+          value={selectedSlotOptionId}
+          onChange={(event) => handleSlotOptionChange(event.target.value)}
+          disabled={disabled || !draft.pageKey || !draft.adType || slotOptions.length === 0}
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+        >
+          {slotOptions.length === 0 ? (
+            <option value="">No slots available for this page & ad type</option>
+          ) : null}
+          {slotOptions.map((option) => {
+            const displayLabel = `${option.id} — ${option.label}`;
+            return (
+              <option key={option.id} value={option.id}>
+                {displayLabel}
+              </option>
+            );
+          })}
+        </select>
+        {pagePlacement ? (
+          <p className="mt-1 text-xs text-slate-500">
+            {pagePlacement.name}: {pagePlacement.slots[draft.adType]?.description}
+          </p>
+        ) : null}
+        {slotHint ? (
+          <p className="mt-2 text-xs italic text-slate-500">
+            💡 {slotHint}
+          </p>
+        ) : null}
+        {isVenueLeaderboardSelection ? (
+          <p className="mt-1 text-xs text-indigo-600">
+            Leaderboard slots require placement key <code>{VENUE_LEADERBOARD_PLACEMENT_KEY}</code> and sequence index 1-5.
+          </p>
+        ) : null}
       </div>
 
       <div>
@@ -450,10 +662,15 @@ export function AdFormFields({ draft, onChange, venues, disabled = false }: Prop
         <input
           value={draft.placementKey}
           onChange={(event) => patch({ placementKey: event.target.value })}
-          disabled={disabled}
+          disabled={disabled || isVenueLeaderboardSelection}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          placeholder="Optional custom placement key"
+          placeholder={isVenueLeaderboardSelection ? VENUE_LEADERBOARD_PLACEMENT_KEY : "Optional custom placement key"}
         />
+        {isVenueLeaderboardSelection ? (
+          <p className="mt-1 text-xs text-slate-500">
+            This value is auto-set for venue leaderboard inline placements.
+          </p>
+        ) : null}
       </div>
 
       {isRoundEndTrivia ? (
@@ -489,16 +706,44 @@ export function AdFormFields({ draft, onChange, venues, disabled = false }: Prop
       ) : null}
 
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Sequence Index</label>
-        <input
-          type="number"
-          min={1}
-          value={draft.sequenceIndex}
-          onChange={(event) => patch({ sequenceIndex: event.target.value })}
-          disabled={disabled}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          placeholder="Used for inline ordering"
-        />
+        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+          Sequence Index{isVenueLeaderboardSelection ? " *" : ""}
+        </label>
+        {isVenueLeaderboardSelection ? (
+          <>
+            <select
+              value={draft.sequenceIndex}
+              onChange={(event) => {
+                setDidAutoSetLeaderboardSequenceIndex(false);
+                patch({ sequenceIndex: event.target.value });
+              }}
+              disabled={disabled}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            >
+              <option value="">Select sequence index</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+            {!hasValidLeaderboardSequence ? (
+              <p className="mt-1 text-xs text-red-600">Leaderboard slots require a Sequence Index (1-5).</p>
+            ) : (
+              <p className="mt-1 text-xs text-slate-500">Leaderboard slots require a Sequence Index (1-5).</p>
+            )}
+          </>
+        ) : (
+          <input
+            type="number"
+            min={1}
+            value={draft.sequenceIndex}
+            onChange={(event) => patch({ sequenceIndex: event.target.value })}
+            disabled={disabled}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            placeholder="Used for inline ordering"
+          />
+        )}
       </div>
       <div>
         <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Priority</label>
@@ -562,6 +807,9 @@ export function AdFormFields({ draft, onChange, venues, disabled = false }: Prop
           disabled={disabled}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
         />
+        <p className="mt-1 text-xs text-slate-500">
+          Recommended: popup 540x960, banner 320x50, inline 300x250.
+        </p>
       </div>
 
       <div>
@@ -620,27 +868,48 @@ export function AdFormFields({ draft, onChange, venues, disabled = false }: Prop
         />
       </div>
 
-      <div className="flex items-center gap-4">
-        <label className="inline-flex items-center gap-2 text-sm text-slate-700">
-          <input
-            type="checkbox"
-            checked={draft.active}
-            onChange={(event) => patch({ active: event.target.checked })}
-            disabled={disabled}
-            className="h-4 w-4 rounded border-slate-300 text-indigo-600"
-          />
-          Active
-        </label>
-        <label className="inline-flex items-center gap-2 text-sm text-slate-700">
-          <input
-            type="checkbox"
-            checked={draft.isPlaceholder}
-            onChange={(event) => patch({ isPlaceholder: event.target.checked })}
-            disabled={disabled}
-            className="h-4 w-4 rounded border-slate-300 text-indigo-600"
-          />
-          Placeholder Ad
-        </label>
+      <div className="md:col-span-2 space-y-2">
+        <div className="flex items-center gap-4">
+          <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              checked={draft.active}
+              onChange={(event) => patch({ active: event.target.checked })}
+              disabled={disabled}
+              className="h-4 w-4 rounded border-slate-300 text-indigo-600"
+            />
+            Active
+          </label>
+          <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              checked={draft.isPlaceholder}
+              onChange={(event) => patch({ isPlaceholder: event.target.checked })}
+              disabled={disabled}
+              className="h-4 w-4 rounded border-slate-300 text-indigo-600"
+            />
+            Placeholder Ad
+          </label>
+        </div>
+        {draft.isPlaceholder && onApplyPlaceholderToAllInlineSlots ? (
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => {
+                void onApplyPlaceholderToAllInlineSlots();
+              }}
+              disabled={disabled || applyingPlaceholderToAllInlineSlots}
+              className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {applyingPlaceholderToAllInlineSlots
+                ? "Applying Placeholder..."
+                : "Apply this ad as placeholder across ALL inline slots"}
+            </button>
+            {placeholderApplySummary ? (
+              <p className="text-xs text-slate-600">{placeholderApplySummary}</p>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       <div className="md:col-span-2 rounded-lg border border-slate-200 bg-slate-50 p-4">

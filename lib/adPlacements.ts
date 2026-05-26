@@ -1,4 +1,5 @@
 import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType } from "@/types";
+import { AD_SLOT_REGISTRY, type SlotRegistryEntry } from "@/lib/adSlotRegistry";
 
 type AdTypePlacementDefinition = {
   name: string;
@@ -10,7 +11,7 @@ type AdTypePlacementDefinition = {
 
 type AdPagePlacementDefinition = {
   name: string;
-  slots: Record<AdType, AdTypePlacementDefinition>;
+  slots: Partial<Record<AdType, AdTypePlacementDefinition>>;
 };
 
 const DEFAULT_SLOT_BY_AD_TYPE: Record<AdType, AdSlot> = {
@@ -32,7 +33,7 @@ export const AD_PLACEMENTS: Record<Exclude<AdPageKey, "global">, AdPagePlacement
         description: "Full-screen ad shown when users enter the Join flow.",
         defaultSlot: "popup-on-entry",
         defaultDisplayTrigger: "on-load",
-        allowedDisplayTriggers: ["on-load", "on-scroll"],
+        allowedDisplayTriggers: ["on-load"],
       },
       banner: {
         name: "Banner Ad",
@@ -65,12 +66,12 @@ export const AD_PLACEMENTS: Record<Exclude<AdPageKey, "global">, AdPagePlacement
         description: "Persistent bottom-bar ad on venue pages.",
         defaultSlot: "mobile-adhesion",
         defaultDisplayTrigger: "on-load",
-        allowedDisplayTriggers: ["on-load"],
+        allowedDisplayTriggers: ["on-load", "on-scroll"],
       },
       inline: {
         name: "Inline Ad",
-        description: "Embedded ad inside venue content/leaderboards.",
-        defaultSlot: "leaderboard-sidebar",
+        description: "Embedded ad inside the venue leaderboard (every 10 rows).",
+        defaultSlot: "venue-leaderboard-rows-1-10",
         defaultDisplayTrigger: "on-load",
         allowedDisplayTriggers: ["on-load"],
       },
@@ -91,12 +92,57 @@ export const AD_PLACEMENTS: Record<Exclude<AdPageKey, "global">, AdPagePlacement
         description: "Persistent bottom-bar ad during Trivia play.",
         defaultSlot: "mobile-adhesion",
         defaultDisplayTrigger: "on-load",
-        allowedDisplayTriggers: ["on-load"],
+        allowedDisplayTriggers: ["on-load", "round-end"],
       },
       inline: {
         name: "Inline Ad",
         description: "Embedded ad in Trivia content streams and lobby surfaces.",
-        defaultSlot: "leaderboard-sidebar",
+        defaultSlot: "inline-content",
+        defaultDisplayTrigger: "on-load",
+        allowedDisplayTriggers: ["on-load"],
+      },
+    },
+  },
+  "speed-trivia": {
+    name: "Speed Trivia",
+    slots: {
+      popup: {
+        name: "Pop-Up Ad",
+        description: "Full-screen ad on Speed Trivia entry or at round-end breakpoints (R1–R3).",
+        defaultSlot: "popup-on-entry",
+        defaultDisplayTrigger: "on-load",
+        allowedDisplayTriggers: ["on-load", "round-end"],
+      },
+      banner: {
+        name: "Banner Ad",
+        description: "Persistent bottom-bar ad during Speed Trivia play.",
+        defaultSlot: "mobile-adhesion",
+        defaultDisplayTrigger: "on-load",
+        allowedDisplayTriggers: ["on-load", "round-end"],
+      },
+    },
+  },
+  "live-trivia": {
+    name: "Live Trivia",
+    slots: {
+      popup: {
+        name: "Pop-Up Ad",
+        description: "Full-screen ad in the Live Trivia lobby or at round intermissions.",
+        defaultSlot: "popup-on-entry",
+        defaultDisplayTrigger: "on-load",
+        allowedDisplayTriggers: ["on-load", "round-end"],
+      },
+      banner: {
+        name: "Banner Ad",
+        description: "Persistent bottom-bar ad during Live Trivia sessions.",
+        defaultSlot: "mobile-adhesion",
+        defaultDisplayTrigger: "on-load",
+        allowedDisplayTriggers: ["on-load", "round-end"],
+      },
+      inline: {
+        name: "Inline Ad",
+        description: "Embedded ad in the Live Trivia lobby content area.",
+        defaultSlot: "inline-content",
         defaultDisplayTrigger: "on-load",
         allowedDisplayTriggers: ["on-load"],
       },
@@ -117,12 +163,12 @@ export const AD_PLACEMENTS: Record<Exclude<AdPageKey, "global">, AdPagePlacement
         description: "Persistent bottom-bar ad while users play Bingo.",
         defaultSlot: "mobile-adhesion",
         defaultDisplayTrigger: "on-load",
-        allowedDisplayTriggers: ["on-load"],
+        allowedDisplayTriggers: ["on-load", "on-scroll"],
       },
       inline: {
         name: "Inline Ad",
         description: "Embedded ad inline with Bingo content.",
-        defaultSlot: "leaderboard-sidebar",
+        defaultSlot: "inline-content",
         defaultDisplayTrigger: "on-load",
         allowedDisplayTriggers: ["on-load"],
       },
@@ -143,12 +189,12 @@ export const AD_PLACEMENTS: Record<Exclude<AdPageKey, "global">, AdPagePlacement
         description: "Persistent bottom-bar ad in Pick 'Em views.",
         defaultSlot: "mobile-adhesion",
         defaultDisplayTrigger: "on-load",
-        allowedDisplayTriggers: ["on-load"],
+        allowedDisplayTriggers: ["on-load", "on-scroll"],
       },
       inline: {
         name: "Inline Ad",
         description: "Embedded ad between Pick 'Em cards/content.",
-        defaultSlot: "leaderboard-sidebar",
+        defaultSlot: "inline-content",
         defaultDisplayTrigger: "on-load",
         allowedDisplayTriggers: ["on-load"],
       },
@@ -169,12 +215,12 @@ export const AD_PLACEMENTS: Record<Exclude<AdPageKey, "global">, AdPagePlacement
         description: "Persistent bottom-bar ad during Fantasy gameplay.",
         defaultSlot: "mobile-adhesion",
         defaultDisplayTrigger: "on-load",
-        allowedDisplayTriggers: ["on-load"],
+        allowedDisplayTriggers: ["on-load", "on-scroll"],
       },
       inline: {
         name: "Inline Ad",
         description: "Embedded in-feed Fantasy placement users can scroll past.",
-        defaultSlot: "leaderboard-sidebar",
+        defaultSlot: "inline-content",
         defaultDisplayTrigger: "on-load",
         allowedDisplayTriggers: ["on-load"],
       },
@@ -189,7 +235,38 @@ export function isSlotCompatibleWithAdType(slot: AdSlot, adType: AdType): boolea
   if (adType === "banner") {
     return slot === "mobile-adhesion" || slot === "header" || slot === "footer" || slot === "sidebar";
   }
-  return slot === "leaderboard-sidebar" || slot === "inline-content" || slot === "mid-content";
+  return (
+    slot === "leaderboard-sidebar" ||
+    slot === "inline-content" ||
+    slot === "mid-content" ||
+    slot === "venue-leaderboard-rows-1-10" ||
+    slot === "venue-leaderboard-rows-11-20" ||
+    slot === "venue-leaderboard-rows-21-30" ||
+    slot === "venue-leaderboard-rows-31-40" ||
+    slot === "venue-leaderboard-rows-41-50" ||
+    slot === "pickem-inline-cards-1-5" ||
+    slot === "pickem-inline-cards-6-10" ||
+    slot === "pickem-inline-cards-11-15" ||
+    slot === "pickem-inline-cards-16-20" ||
+    slot === "pickem-inline-cards-21-25" ||
+    slot === "pickem-inline-cards-26-30"
+  );
+}
+
+export function getAdTypesForPage(pageKey?: AdPageKey): AdType[] {
+  if (!pageKey) return [];
+  const pageSlots = Array.from(
+    new Set(AD_SLOT_REGISTRY.filter((entry) => entry.pageKey === pageKey).map((entry) => entry.slot))
+  );
+  const adTypes: AdType[] = ["popup", "banner", "inline"];
+  return adTypes.filter((adType) => pageSlots.some((slot) => isSlotCompatibleWithAdType(slot, adType)));
+}
+
+export function getSlotsForPageAndAdType(pageKey?: AdPageKey, adType?: AdType): SlotRegistryEntry[] {
+  if (!pageKey || !adType) return [];
+  return AD_SLOT_REGISTRY.filter(
+    (entry) => entry.pageKey === pageKey && isSlotCompatibleWithAdType(entry.slot, adType)
+  );
 }
 
 export function getAdPlacementPage(pageKey: AdPageKey): AdPagePlacementDefinition | null {
@@ -210,13 +287,14 @@ export function isAdTypeSupportedForPage(pageKey: AdPageKey, adType: AdType): bo
 export function getAllowedDisplayTriggers(pageKey: AdPageKey, adType: AdType): AdDisplayTrigger[] {
   const page = getAdPlacementPage(pageKey);
   if (!page) return [];
-  return page.slots[adType].allowedDisplayTriggers;
+  return page.slots[adType]?.allowedDisplayTriggers ?? [];
 }
 
 export function getDefaultPlacementMeta(pageKey: AdPageKey, adType: AdType): Pick<AdPlacementMeta, "slot" | "displayTrigger"> | null {
   const page = getAdPlacementPage(pageKey);
   if (!page) return null;
   const slotConfig = page.slots[adType];
+  if (!slotConfig) return null;
   return { slot: slotConfig.defaultSlot, displayTrigger: slotConfig.defaultDisplayTrigger };
 }
 

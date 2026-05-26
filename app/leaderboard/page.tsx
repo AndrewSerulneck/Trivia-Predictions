@@ -23,7 +23,7 @@ export default async function LeaderboardPage() {
       <div className="space-y-4">
         <BackButton label="Back" />
         {!selectedVenue ? (
-          <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+          <div className="rounded-ht-md border border-amber-400/40 bg-amber-500/10 p-3 text-sm text-amber-300">
             Join a venue to view leaderboard stats.
             <Link href="/" className="ml-2 font-medium underline">
               Go to join page
@@ -31,7 +31,7 @@ export default async function LeaderboardPage() {
           </div>
         ) : null}
         {selectedVenue && (
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-ht-fg-muted">
             Showing top players for <strong>{getVenueDisplayName(selectedVenue)}</strong>.
           </p>
         )}
@@ -45,7 +45,7 @@ export default async function LeaderboardPage() {
         ) : null}
 
         <InlineSlotAdClient
-          slot="leaderboard-sidebar"
+          slot="venue-leaderboard-rows-1-10"
           venueId={selectedVenue?.id}
           showPlaceholder
         />

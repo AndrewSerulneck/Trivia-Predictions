@@ -65,13 +65,13 @@ export function PickEmSportSelect() {
   return (
     <div className="space-y-4">
       {errorMessage ? (
-        <div className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">{errorMessage}</div>
+        <div className="rounded-ht-lg border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-400">{errorMessage}</div>
       ) : null}
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Step 1 of 2</p>
-        <h2 className="mt-1 text-lg font-semibold text-slate-900">Choose a sport or league</h2>
-        <p className="mt-1 text-sm text-slate-700">
+        <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ht-fg-muted">Step 1 of 2</p>
+        <h2 className="mt-1 text-lg font-semibold text-ht-fg-primary">Choose a sport or league</h2>
+        <p className="mt-1 text-sm text-ht-fg-secondary">
           Select the sport you want to play today. {clickableCount} available now.
         </p>
 
@@ -92,10 +92,10 @@ export function PickEmSportSelect() {
                   }
                   router.push(`/pickem/${encodeURIComponent(sport.slug)}`);
                 }}
-                className={`tp-clean-button flex w-full items-center justify-between rounded-xl border p-3 text-left ${
+                className={`tp-clean-button flex w-full items-center justify-between rounded-ht-xl border p-3 text-left ${
                   sport.isClickable
-                    ? "border-slate-200 bg-white text-slate-900"
-                    : "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-500"
+                    ? "border-ht-border-hairline bg-ht-surface text-ht-fg-primary hover:border-ht-border-soft hover:bg-ht-elevated"
+                    : "cursor-not-allowed border-ht-border-hairline bg-ht-surface/50 text-ht-fg-muted"
                 }`}
               >
                 <span className="inline-flex min-w-0 flex-col">
@@ -105,13 +105,13 @@ export function PickEmSportSelect() {
                     </span>
                     {sport.label}
                   </span>
-                  <span className="mt-0.5 text-xs text-slate-600">{sport.subtitle}</span>
+                  <span className="mt-0.5 text-xs text-ht-fg-muted">{sport.subtitle}</span>
                 </span>
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] ${
                     sport.isClickable
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "bg-slate-200 text-slate-600"
+                      ? "bg-emerald-500/15 text-emerald-400"
+                      : "bg-ht-elevated text-ht-fg-muted"
                   }`}
                 >
                   {sport.isClickable ? "Available" : "Coming Soon"}

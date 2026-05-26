@@ -367,9 +367,9 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
       )}
 
       {/* ── Prize redemption ── */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Redeem Prize</h2>
-        <p className="mt-1 text-sm text-slate-600">
+      <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
+        <h2 className="text-lg font-semibold text-ht-fg-primary">Redeem Prize</h2>
+        <p className="mt-1 text-sm text-ht-fg-muted">
           Claim your challenge win once. Redeemed prizes cannot be claimed again.
         </p>
 
@@ -379,14 +379,14 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
           </div>
         ) : null}
         {!loading && !latestWin ? (
-          <p className="mt-3 text-sm text-slate-700">No redeemable challenge wins found for this venue.</p>
+          <p className="mt-3 text-sm text-ht-fg-secondary">No redeemable challenge wins found for this venue.</p>
         ) : null}
 
         {latestWin ? (
-          <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3">
-            <p className="text-sm font-semibold text-amber-900">{latestWin.challengeName}</p>
-            <p className="mt-1 text-xs text-amber-800">{latestWin.challengeRules}</p>
-            <p className="mt-2 text-xs font-semibold text-amber-900">
+          <div className="mt-3 rounded-ht-lg border border-amber-400/40 bg-amber-500/10 p-3">
+            <p className="text-sm font-semibold text-amber-300">{latestWin.challengeName}</p>
+            <p className="mt-1 text-xs text-amber-400/70">{latestWin.challengeRules}</p>
+            <p className="mt-2 text-xs font-semibold text-amber-300">
               Prize: Venue champion recognition and winner redemption status.
             </p>
             <button
@@ -396,7 +396,7 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
                 const rect = event.currentTarget.getBoundingClientRect();
                 void claim(latestWin, rect);
               }}
-              className="tp-clean-button mt-3 min-h-[44px] rounded-lg border border-indigo-500 bg-indigo-100 px-3 py-2 text-sm font-semibold text-indigo-900 disabled:opacity-60"
+              className="mt-3 min-h-[44px] rounded-ht-lg border border-indigo-500/50 bg-indigo-500/15 px-3 py-2 text-sm font-semibold text-indigo-300 disabled:opacity-60"
             >
               {latestWin.claimedAt
                 ? "Already Redeemed"
@@ -408,12 +408,12 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
         ) : null}
 
         {statusMessage ? (
-          <p className="mt-3 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
+          <p className="mt-3 rounded-ht-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-400">
             {statusMessage}
           </p>
         ) : null}
         {errorMessage ? (
-          <p className="mt-3 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800">
+          <p className="mt-3 rounded-ht-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-400">
             {errorMessage}
           </p>
         ) : null}

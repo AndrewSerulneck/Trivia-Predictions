@@ -421,7 +421,7 @@ function renderCompactGrid(
       {Array.from({ length: 25 }).map((_, index) => {
         const square = byIndex.get(index);
         if (!square) {
-          return <div key={index} className="h-10 rounded-md border border-slate-200 bg-slate-50" />;
+          return <div key={index} className="h-10 rounded-md border border-ht-border-hairline bg-ht-surface" />;
         }
 
         const isFree = Boolean(square.isFree);
@@ -498,7 +498,7 @@ function renderExpandedGrid(
         {Array.from({ length: 25 }).map((_, index) => {
           const square = byIndex.get(index);
           if (!square) {
-            return <div key={index} className="min-h-[72px] rounded-lg border border-slate-200 bg-slate-50 sm:min-h-[82px]" />;
+            return <div key={index} className="min-h-[72px] rounded-lg border border-ht-border-hairline bg-ht-surface sm:min-h-[82px]" />;
           }
 
           const isFree = Boolean(square.isFree);
@@ -1509,7 +1509,7 @@ export function SportsBingoHome() {
               data-bingo-collect-all
               onClick={() => void collectAllBingoPoints()}
               disabled={isCollectingAllBingo}
-              className="tp-clean-button inline-flex min-h-[44px] items-center rounded-full border-2 border-emerald-300 bg-white px-4 py-2 text-sm font-black text-emerald-900 shadow-[0_3px_0_rgba(0,0,0,0.25)] transition-all active:scale-95 disabled:opacity-60"
+              className="tp-clean-button inline-flex min-h-[44px] items-center rounded-full border-2 border-emerald-500/60 bg-emerald-500/15 px-4 py-2 text-sm font-black text-emerald-300 shadow-[0_3px_0_rgba(0,0,0,0.25)] transition-all active:scale-95 disabled:opacity-60"
             >
               {isCollectingAllBingo ? "Collecting..." : "Collect Points"}
             </button>
@@ -1679,12 +1679,12 @@ export function SportsBingoHome() {
                       style={{ willChange: "transform, opacity" }}
                     />
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-sm font-semibold text-slate-900">{card.gameLabel}</p>
-                      <span className="rounded-full border border-cyan-300 bg-cyan-50 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-cyan-700">
+                      <p className="text-sm font-semibold text-ht-fg-primary">{card.gameLabel}</p>
+                      <span className="rounded-full border border-ht-cyan-600/40 bg-ht-cyan-600/15 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-ht-cyan-400">
                         Active
                       </span>
                     </div>
-                    <p className="mt-1 text-xs text-slate-500">Starts {formatLocalDateTime(card.startsAt)}</p>
+                    <p className="mt-1 text-xs text-ht-fg-muted">Starts {formatLocalDateTime(card.startsAt)}</p>
                     <div className="mt-2">
                       {renderCompactGrid(card.id, card.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys, glowSquareKeys)}
                     </div>
@@ -1694,7 +1694,7 @@ export function SportsBingoHome() {
             )}
             <div className="mt-3">
               <InlineSlotAdClient
-                slot="leaderboard-sidebar"
+                slot="inline-content"
                 venueId={venueId}
                 pageKey="sports-bingo"
                 adType="inline"
@@ -1706,7 +1706,7 @@ export function SportsBingoHome() {
 
           {/* Final scores panel */}
           <section className="w-full shrink-0 snap-start pl-3">
-            <h2 className="text-base font-bold text-orange-900">Scored Boards</h2>
+            <h2 className="text-base font-bold text-orange-300">Scored Boards</h2>
             {loadingCards ? (
               <LoadingState label="Loading scored boards..." />
             ) : selectedSettledCards.length === 0 ? (
@@ -1722,31 +1722,31 @@ export function SportsBingoHome() {
                       data-bingo-card-id={card.id}
                       className={`rounded-xl border p-3 shadow-sm transition-all ${
                         showClaimOverlay
-                          ? "cursor-pointer border-emerald-300 bg-emerald-50 ring-2 ring-emerald-300 animate-pulse"
-                          : "border-orange-200 bg-white/70"
+                          ? "cursor-pointer border-emerald-500/60 bg-emerald-500/10 ring-2 ring-emerald-500/40 animate-pulse"
+                          : "border-ht-border-soft bg-ht-elevated"
                       }`}
                       onClick={showClaimOverlay ? (event) => void claimPoints(card, event.currentTarget) : undefined}
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-slate-900">{card.gameLabel}</p>
+                        <p className="text-sm font-semibold text-ht-fg-primary">{card.gameLabel}</p>
                         <span
                           className={`rounded-full px-2 py-1 text-[11px] font-bold uppercase tracking-[0.08em] ${
                             card.status === "won"
-                              ? "border border-emerald-300 bg-emerald-50 text-emerald-700"
+                              ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
                               : card.status === "lost"
-                              ? "border border-rose-300 bg-rose-50 text-rose-700"
-                              : "border border-orange-200 bg-orange-50 text-orange-600"
+                              ? "border border-rose-500/40 bg-rose-500/15 text-rose-400"
+                              : "border border-amber-400/40 bg-amber-500/15 text-amber-300"
                           }`}
                         >
                           {card.status}
                         </span>
                         {showClaimOverlay ? (
-                          <span className="rounded-full border border-emerald-400 bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-emerald-800">
+                          <span className="rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-emerald-400">
                             Tap to Claim
                           </span>
                         ) : null}
                       </div>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-ht-fg-muted">
                         {formatLocalDateTime(card.startsAt)} · Hits {summary.hitCount}/25
                         {card.status === "won" ? ` · +${card.rewardPoints} pts` : ""}
                         {card.status === "won" && card.rewardClaimedAt ? " · Claimed" : ""}
@@ -1778,7 +1778,7 @@ export function SportsBingoHome() {
                           <button
                             type="button"
                             onClick={() => setExpandedFinalCardId(card.id)}
-                            className="tp-clean-button inline-flex min-h-[36px] items-center rounded-full border border-orange-300 bg-white/80 px-3 py-1.5 text-xs font-semibold text-orange-700 transition-all active:scale-95 hover:border-orange-400"
+                            className="tp-clean-button inline-flex min-h-[36px] items-center rounded-full border border-orange-400/40 bg-orange-500/10 px-3 py-1.5 text-xs font-semibold text-orange-300 transition-all active:scale-95 hover:border-orange-400/60"
                           >
                             View Final Board
                           </button>
@@ -1791,7 +1791,7 @@ export function SportsBingoHome() {
             )}
             <div className="mt-3">
               <InlineSlotAdClient
-                slot="leaderboard-sidebar"
+                slot="inline-content"
                 venueId={venueId}
                 pageKey="sports-bingo"
                 adType="inline"
@@ -1812,19 +1812,19 @@ export function SportsBingoHome() {
             className="absolute inset-0 bg-orange-950/50"
             onClick={() => setExpandedActiveCardId("")}
           />
-          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-2xl border border-cyan-300 bg-white p-3 shadow-2xl shadow-orange-900/30">
-            <div className="sticky top-0 z-10 mb-2 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-cyan-100 bg-white/95 px-3 py-2 backdrop-blur">
-              <p className="text-sm font-semibold text-slate-900">{expandedActiveCard.gameLabel}</p>
+          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-ht-2xl border border-ht-cyan-600/40 bg-ht-elevated p-3 shadow-2xl shadow-black/60">
+            <div className="sticky top-0 z-10 mb-2 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-ht-border-soft bg-ht-elevated/95 px-3 py-2 backdrop-blur">
+              <p className="text-sm font-semibold text-ht-fg-primary">{expandedActiveCard.gameLabel}</p>
               <button
                 type="button"
                 onClick={() => setExpandedActiveCardId("")}
-                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-slate-900/15 bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm"
+                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-ht-border-soft bg-ht-elevated-2 px-3 py-2 text-xs font-semibold text-ht-fg-primary shadow-sm"
               >
                 <span aria-hidden="true">✕</span>
                 <span>Close</span>
               </button>
             </div>
-            <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.1em] text-cyan-600">Active Board</p>
+            <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.1em] text-ht-cyan-400">Active Board</p>
             {renderExpandedGrid(expandedActiveCard.id, expandedActiveCard.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys, glowSquareKeys)}
           </div>
         </div>
@@ -1839,19 +1839,19 @@ export function SportsBingoHome() {
             className="absolute inset-0 bg-orange-950/50"
             onClick={() => setExpandedFinalCardId("")}
           />
-          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-2xl border border-amber-300 bg-white p-3 shadow-2xl shadow-orange-900/30">
-            <div className="sticky top-0 z-10 mb-2 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-amber-100 bg-white/95 px-3 py-2 backdrop-blur">
-              <p className="text-sm font-semibold text-slate-900">{expandedFinalCard.gameLabel}</p>
+          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-ht-2xl border border-amber-400/40 bg-ht-elevated p-3 shadow-2xl shadow-black/60">
+            <div className="sticky top-0 z-10 mb-2 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-ht-border-soft bg-ht-elevated/95 px-3 py-2 backdrop-blur">
+              <p className="text-sm font-semibold text-ht-fg-primary">{expandedFinalCard.gameLabel}</p>
               <button
                 type="button"
                 onClick={() => setExpandedFinalCardId("")}
-                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-slate-900/15 bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm"
+                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-ht-border-soft bg-ht-elevated-2 px-3 py-2 text-xs font-semibold text-ht-fg-primary shadow-sm"
               >
                 <span aria-hidden="true">✕</span>
                 <span>Close</span>
               </button>
             </div>
-            <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.1em] text-amber-600">Final Score Board</p>
+            <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.1em] text-amber-300">Final Score Board</p>
             {renderExpandedGrid(expandedFinalCard.id, expandedFinalCard.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys, glowSquareKeys)}
           </div>
         </div>

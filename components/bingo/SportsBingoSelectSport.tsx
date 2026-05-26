@@ -22,9 +22,9 @@ export function SportsBingoSelectSport() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-center text-3xl font-semibold text-slate-900">Sports Bingo</h2>
-        <p className="mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+      <div className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
+        <h2 className="text-center text-3xl font-semibold text-ht-fg-primary">Sports Bingo</h2>
+        <p className="mt-2 rounded-ht-md border border-ht-cyan-600/40 bg-ht-elevated px-3 py-2 text-xs text-ht-cyan-400">
           Tip: For best board readability, rotate your phone to landscape during board selection.
         </p>
 
@@ -40,19 +40,19 @@ export function SportsBingoSelectSport() {
                 router.push(`/bingo/select-game?sportKey=${encodeURIComponent(sport.key)}`);
               }}
               disabled={!sport.enabled}
-              className={`flex w-full items-center justify-between rounded-lg border p-3 text-left transition-all ${
+              className={`flex w-full items-center justify-between rounded-ht-lg border p-3 text-left transition-all ${
                 sport.enabled
-                  ? "border-slate-200 bg-white hover:border-slate-300"
-                  : "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+                  ? "border-ht-border-hairline bg-ht-surface hover:border-ht-border-soft hover:bg-ht-elevated"
+                  : "cursor-not-allowed border-ht-border-hairline bg-ht-surface/50 text-ht-fg-muted"
               }`}
             >
-              <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
+              <span className="inline-flex items-center gap-2 text-sm font-semibold text-ht-fg-primary">
                 <span aria-hidden="true" className="text-base">
                   {sport.icon}
                 </span>
                 {sport.label}
               </span>
-              <span className="text-xs font-medium text-slate-500">{sport.note ?? "Continue"}</span>
+              <span className="text-xs font-medium text-ht-fg-muted">{sport.note ?? "Continue"}</span>
             </button>
           ))}
         </div>

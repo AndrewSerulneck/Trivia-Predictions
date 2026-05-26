@@ -36,28 +36,28 @@ export function PointsLedger({
   const visible = entries.slice(0, 5);
 
   return (
-    <div className="rounded-2xl border border-cyan-200/60 bg-white/30 p-4 shadow-lg backdrop-blur-sm">
+    <div className="rounded-ht-2xl border border-ht-cyan-600/40 bg-ht-elevated p-4">
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <h3 className="text-base font-semibold text-slate-900">Live Points Ledger</h3>
+          <h3 className="text-base font-semibold text-ht-fg-primary">Live Points Ledger</h3>
           {gameLabel ? (
-            <p className="mt-0.5 truncate text-xs text-slate-500">{gameLabel}</p>
+            <p className="mt-0.5 truncate text-xs text-ht-fg-muted">{gameLabel}</p>
           ) : null}
         </div>
-        <div className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-cyan-200 bg-white/80 px-2 py-1">
+        <div className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-ht-cyan-600/40 bg-ht-elevated-2 px-2 py-1">
           <span
             className={`inline-flex h-2 w-2 rounded-full ${
-              isLive ? "animate-pulse bg-cyan-500" : "bg-slate-300"
+              isLive ? "animate-pulse bg-cyan-500" : "bg-ht-border-soft"
             }`}
           />
-          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-cyan-700">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-ht-cyan-400">
             {isLive ? "Live" : "Waiting"}
           </span>
         </div>
       </div>
 
       {visible.length === 0 ? (
-        <p className="mt-3 text-xs text-slate-500">{isLive ? "Waiting for scoring activity..." : "No Live Games"}</p>
+        <p className="mt-3 text-xs text-ht-fg-muted">{isLive ? "Waiting for scoring activity..." : "No Live Games"}</p>
       ) : (
         <ul className="mt-3 space-y-1.5">
           <AnimatePresence initial={false} mode="popLayout">
@@ -74,22 +74,22 @@ export function PointsLedger({
                   damping: 30,
                   mass: 0.7,
                 }}
-                className="flex items-start justify-between gap-2 rounded-lg border border-white/50 bg-white/65 px-3 py-2 backdrop-blur-sm"
+                className="flex items-start justify-between gap-2 rounded-ht-lg border border-ht-border-hairline bg-ht-surface px-3 py-2"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-semibold text-slate-900">
+                  <p className="truncate text-xs font-semibold text-ht-fg-primary">
                     {entry.playerName}
-                    <span className="ml-1 font-normal text-slate-400">·</span>
-                    <span className="ml-1 font-normal text-slate-500">{entry.teamName}</span>
+                    <span className="ml-1 font-normal text-ht-fg-muted">·</span>
+                    <span className="ml-1 font-normal text-ht-fg-muted">{entry.teamName}</span>
                   </p>
-                  <p className="mt-0.5 text-[11px] text-slate-600">{entry.actionLabel}</p>
-                  <p className="mt-0.5 text-[10px] text-slate-400">{formatTime(entry.timestamp)}</p>
+                  <p className="mt-0.5 text-[11px] text-ht-fg-muted">{entry.actionLabel}</p>
+                  <p className="mt-0.5 text-[10px] text-ht-fg-muted">{formatTime(entry.timestamp)}</p>
                 </div>
                 <span
                   className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums ${
                     entry.pointsDelta >= 0
-                      ? "bg-emerald-100 text-emerald-800"
-                      : "bg-rose-100 text-rose-800"
+                      ? "bg-emerald-500/15 text-emerald-400"
+                      : "bg-rose-500/15 text-rose-400"
                   }`}
                 >
                   {formatDelta(entry.pointsDelta)}

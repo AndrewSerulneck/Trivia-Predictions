@@ -146,16 +146,16 @@ const BINGO_HEADER_LETTERS = [
 
 function getPreviewSquareStyle(isFree: boolean): string {
   if (isFree) {
-    return "border-emerald-300 bg-[linear-gradient(165deg,#bbf7d0_0%,#86efac_50%,#4ade80_100%)] text-emerald-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]";
+    return "border-emerald-500/60 bg-[linear-gradient(165deg,#052e16_0%,#064e3b_50%,#065f46_100%)] text-emerald-300 shadow-[inset_0_1px_0_rgba(16,185,129,0.2)]";
   }
-  return "border-cyan-200 bg-[linear-gradient(165deg,#ecfeff_0%,#e0f2fe_55%,#bae6fd_100%)] text-slate-800";
+  return "border-ht-border-soft bg-ht-surface text-ht-fg-secondary";
 }
 
 function getExpandedSquareStyle(isFree: boolean): string {
   if (isFree) {
-    return "border-emerald-300 bg-[linear-gradient(165deg,#bbf7d0_0%,#86efac_50%,#4ade80_100%)] text-emerald-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]";
+    return "border-emerald-500/60 bg-[linear-gradient(165deg,#052e16_0%,#064e3b_50%,#065f46_100%)] text-emerald-300 shadow-[inset_0_1px_0_rgba(16,185,129,0.2)]";
   }
-  return "border-cyan-200 bg-[linear-gradient(165deg,#ecfeff_0%,#e0f2fe_55%,#bae6fd_100%)] text-slate-800";
+  return "border-ht-border-soft bg-ht-surface text-ht-fg-secondary";
 }
 
 function toMascotDisplayName(team: string): string {
@@ -201,9 +201,9 @@ function getGeneratingLoaderVariant(sportKey: string): {
       emoji: "🏀",
       title: "Generating WNBA board...",
       subtitle: "Calibrating pace-aware player and team squares.",
-      panelClassName: "border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50",
-      badgeClassName: "bg-orange-100 text-orange-700 border border-orange-200",
-      barTrackClassName: "bg-orange-100",
+      panelClassName: "border-orange-400/40 bg-orange-500/10",
+      badgeClassName: "bg-orange-500/15 text-orange-300 border border-orange-400/30",
+      barTrackClassName: "bg-ht-border-soft",
       barClassName: "bg-gradient-to-r from-orange-500 to-amber-500",
     };
   }
@@ -212,9 +212,9 @@ function getGeneratingLoaderVariant(sportKey: string): {
       emoji: "⚾",
       title: "Generating MLB board...",
       subtitle: "Building balanced prop and team-event squares.",
-      panelClassName: "border-rose-200 bg-gradient-to-r from-rose-50 to-orange-50",
-      badgeClassName: "bg-rose-100 text-rose-700 border border-rose-200",
-      barTrackClassName: "bg-rose-100",
+      panelClassName: "border-rose-400/40 bg-rose-500/10",
+      badgeClassName: "bg-rose-500/15 text-rose-400 border border-rose-400/30",
+      barTrackClassName: "bg-ht-border-soft",
       barClassName: "bg-gradient-to-r from-rose-500 to-orange-500",
     };
   }
@@ -222,9 +222,9 @@ function getGeneratingLoaderVariant(sportKey: string): {
     emoji: "🏀",
     title: "Generating NBA board...",
     subtitle: "Optimizing a fresh mix of team and player squares.",
-    panelClassName: "border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50",
-    badgeClassName: "bg-blue-100 text-blue-700 border border-blue-200",
-    barTrackClassName: "bg-blue-100",
+    panelClassName: "border-ht-cyan-600/40 bg-ht-elevated",
+    badgeClassName: "bg-sky-500/15 text-sky-300 border border-sky-400/30",
+    barTrackClassName: "bg-ht-border-soft",
     barClassName: "bg-gradient-to-r from-blue-600 to-cyan-500",
   };
 }
@@ -465,7 +465,7 @@ export function SportsBingoSelectBoard() {
           {Array.from({ length: 25 }).map((_, index) => {
             const square = byIndex.get(index);
             if (!square) {
-              return <div key={index} className="aspect-square rounded-md border border-slate-200 bg-white" />;
+              return <div key={index} className="aspect-square rounded-md border border-ht-border-hairline bg-ht-surface" />;
             }
 
             const isFree = Boolean(square.isFree);
@@ -510,7 +510,7 @@ export function SportsBingoSelectBoard() {
           {Array.from({ length: 25 }).map((_, index) => {
             const square = byIndex.get(index);
             if (!square) {
-              return <div key={index} className="min-h-[72px] rounded-lg border border-slate-200 bg-slate-50 sm:min-h-[82px]" />;
+              return <div key={index} className="min-h-[72px] rounded-lg border border-ht-border-hairline bg-ht-surface sm:min-h-[82px]" />;
             }
 
             const isFree = Boolean(square.isFree);
@@ -561,24 +561,24 @@ export function SportsBingoSelectBoard() {
   return (
     <div className="space-y-4">
       {errorMessage ? (
-        <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">{errorMessage}</div>
+        <div className="rounded-md border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-400">{errorMessage}</div>
       ) : null}
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Step 3 of 3</p>
-        <h2 className="mt-1 text-lg font-semibold text-slate-900">Generate And Lock Board</h2>
+      <div className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ht-fg-muted">Step 3 of 3</p>
+        <h2 className="mt-1 text-lg font-semibold text-ht-fg-primary">Generate And Lock Board</h2>
 
         {loadingGame ? (
           <div className="mt-2">
             <BouncingBallLoader size="sm" label="Loading game..." />
           </div>
         ) : !game ? (
-          <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          <div className="mt-3 rounded-md border border-amber-400/40 bg-amber-500/10 p-3 text-sm text-amber-300">
             That game is no longer available. Please pick another game.
           </div>
         ) : (
-          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 sm:text-base">
-            <p className="font-bold text-slate-900">
+          <div className="mt-3 rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3 text-sm text-ht-fg-secondary sm:text-base">
+            <p className="font-bold text-ht-fg-primary">
               {toMascotDisplayName(game.awayTeam)} vs {toMascotDisplayName(game.homeTeam)}
             </p>
             <p className="mt-1 font-medium">Starts {formatLocalDateTime(game.startsAt)} · Cards lock at game start.</p>
@@ -615,8 +615,8 @@ export function SportsBingoSelectBoard() {
                 {generatingLoader.emoji}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-slate-900">{generatingLoader.title}</p>
-                <p className="mt-0.5 text-xs text-slate-600">{generatingLoader.subtitle}</p>
+                <p className="text-sm font-bold text-ht-fg-primary">{generatingLoader.title}</p>
+                <p className="mt-0.5 text-xs text-ht-fg-muted">{generatingLoader.subtitle}</p>
               </div>
               <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em] ${generatingLoader.badgeClassName}`}>
                 Loading
@@ -628,15 +628,15 @@ export function SportsBingoSelectBoard() {
           </div>
         ) : null}
 
-        {loadingCards ? <p className="mt-2 text-xs text-slate-500">Checking your active cards...</p> : null}
-        {hasCardForGame ? <p className="mt-2 text-xs text-slate-600">You already have an active card for this game.</p> : null}
-        {!userId || !venueId ? <p className="mt-2 text-xs text-amber-700">Join a venue before locking this board.</p> : null}
+        {loadingCards ? <p className="mt-2 text-xs text-ht-fg-muted">Checking your active cards...</p> : null}
+        {hasCardForGame ? <p className="mt-2 text-xs text-ht-fg-muted">You already have an active card for this game.</p> : null}
+        {!userId || !venueId ? <p className="mt-2 text-xs text-amber-300">Join a venue before locking this board.</p> : null}
         {preview ? (
-          <div className="mt-4 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-            <p className="rounded-md border border-blue-200 bg-blue-50 px-2.5 py-2 text-sm font-semibold text-blue-800">
+          <div className="mt-4 space-y-3 rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3">
+            <p className="rounded-md border border-ht-cyan-600/40 bg-ht-elevated px-2.5 py-2 text-sm font-semibold text-ht-cyan-400">
               Tap the board to expand it.
             </p>
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-ht-fg-muted">
               Keep generating new bingo cards until you find one you like, then press play!
             </p>
             <motion.div
@@ -671,21 +671,21 @@ export function SportsBingoSelectBoard() {
               setIsPreviewExpanded(false);
             }}
           />
-          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-2xl border border-cyan-300 bg-white p-3 shadow-2xl shadow-slate-900/40">
-            <div className="sticky top-0 z-10 mb-2 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-cyan-100 bg-white/95 px-3 py-2 backdrop-blur">
-              <p className="text-sm font-semibold text-slate-900">{preview.game.gameLabel}</p>
+          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-ht-2xl border border-ht-cyan-600/40 bg-ht-elevated p-3 shadow-2xl shadow-black/60">
+            <div className="sticky top-0 z-10 mb-2 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-ht-border-soft bg-ht-elevated/95 px-3 py-2 backdrop-blur">
+              <p className="text-sm font-semibold text-ht-fg-primary">{preview.game.gameLabel}</p>
               <button
                 type="button"
                 onClick={() => {
                   setIsPreviewExpanded(false);
                 }}
-                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-slate-900/15 bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm"
+                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-ht-border-soft bg-ht-elevated-2 px-3 py-2 text-xs font-semibold text-ht-fg-primary shadow-sm"
               >
                 <span aria-hidden="true">✕</span>
                 <span>Close</span>
               </button>
             </div>
-            <p className="mb-2 mt-1 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-cyan-700">
+            <p className="mb-2 mt-1 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-ht-cyan-400">
               Expanded Board Preview
             </p>
             {renderExpandedGrid(preview.squares)}

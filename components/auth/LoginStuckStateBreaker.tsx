@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { clearLoginInProgress, readLoginInProgress } from "@/lib/authFastPath";
 
@@ -9,12 +9,18 @@ const STUCK_LOGIN_TIMEOUT_MS = 5000;
 
 export function LoginStuckStateBreaker() {
   const router = useRouter();
+  const pathname = usePathname();
   const { state } = useAuthSession();
 
   useEffect(() => {
     const timer = window.setInterval(() => {
       const pendingLogin = readLoginInProgress();
       if (!pendingLogin) {
+        return;
+      }
+      const currentPath = pathname ?? "";
+      // Never force redirect while user is on join/login routes.
+      if (currentPath === "/" || currentPath === "/join") {
         return;
       }
       if (!state.tokenVerified) {
@@ -36,7 +42,7 @@ export function LoginStuckStateBreaker() {
     return () => {
       window.clearInterval(timer);
     };
-  }, [router, state.tokenVerified, state.venueId]);
+  }, [pathname, router, state.tokenVerified, state.venueId]);
 
   return null;
 }

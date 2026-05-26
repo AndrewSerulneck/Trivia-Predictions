@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  applyPlaceholderAdToAllInlineSlots,
   bulkDeleteAdminAdvertisements,
   bulkSetAdminAdvertisementsActive,
   createAdminAdvertisement,
@@ -12,6 +13,7 @@ import {
   deleteAdminLiveTriviaQuestionInFile,
   deleteAdminSpeedTriviaQuestionInFile,
   getAdminAdsDebugSnapshot,
+  getAdminAdvertisementById,
   getAdminGeographicHierarchy,
   bulkUpdateAdminTriviaQuestions,
   listPendingPredictionSummaries,
@@ -32,6 +34,7 @@ import {
   updateAdminSpeedTriviaQuestionInFile,
   updateAdPlacements,
 } from "@/lib/admin";
+import type { PlaceholderAdTemplateInput } from "@/lib/admin";
 import { requireAdminAuth } from "@/lib/adminAuth";
 import {
   createChallengeCampaign,
@@ -116,6 +119,13 @@ export async function GET(request: Request) {
         sortDirection,
       });
       return NextResponse.json({ ok: true, ...result });
+    }
+
+    if (resource === "apply-placeholder-inline") {
+      return NextResponse.json(
+        { ok: false, error: "Method not allowed. Use POST for apply-placeholder-inline." },
+        { status: 405 }
+      );
     }
 
     if (resource === "trivia-categories") {
@@ -275,6 +285,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
     }
 
+    const { searchParams } = new URL(request.url);
+    const resourceFromQuery = String(searchParams.get("resource") ?? "").trim();
+
     const body = (await request.json()) as
       | {
           resource: "trivia";
@@ -381,11 +394,35 @@ export async function POST(request: Request) {
           isActive?: boolean;
         }
       | {
+          resource: "apply-placeholder-inline";
+          templateAdId?: string;
+          template?: {
+            advertiserName?: string;
+            imageUrl?: string;
+            clickUrl?: string;
+            width?: number;
+            height?: number;
+            altText?: string;
+            adType?: AdType;
+            displayTrigger?: AdDisplayTrigger;
+            priority?: number;
+            placementKey?: string;
+            startDate?: string;
+            endDate?: string | null;
+            frequencyInterval?: number;
+            dismissDelaySeconds?: number;
+            popupCooldownSeconds?: number;
+            sequenceIndex?: number;
+          };
+        }
+      | {
           resource: "live-showdown-schedules";
           title: string;
           targetDate: string;
           startTime: string;
           timezone: string;
+          recurringType?: CampaignRecurringType;
+          recurringDays?: string[];
           numRounds: number;
           venueId: string;
           intermissionAdDelaySeconds?: number;
@@ -399,6 +436,79 @@ export async function POST(request: Request) {
           resource: "live-showdown-reset-answers";
           scheduleId: string;
         };
+
+    if (resourceFromQuery === "apply-placeholder-inline" || body.resource === "apply-placeholder-inline") {
+      const templateAdId = String((body as { templateAdId?: string }).templateAdId ?? "").trim() || undefined;
+      const rawTemplate = (body as { template?: Record<string, unknown> }).template;
+      const toNumberIfFinite = (value: unknown): number | undefined => {
+        const numeric = Number(value);
+        return Number.isFinite(numeric) ? numeric : undefined;
+      };
+
+      let template: PlaceholderAdTemplateInput | undefined = rawTemplate
+        ? {
+            advertiserName: typeof rawTemplate.advertiserName === "string" ? rawTemplate.advertiserName : undefined,
+            imageUrl: typeof rawTemplate.imageUrl === "string" ? rawTemplate.imageUrl : undefined,
+            clickUrl: typeof rawTemplate.clickUrl === "string" ? rawTemplate.clickUrl : undefined,
+            width: toNumberIfFinite(rawTemplate.width),
+            height: toNumberIfFinite(rawTemplate.height),
+            altText: typeof rawTemplate.altText === "string" ? rawTemplate.altText : undefined,
+            adType:
+              rawTemplate.adType === "popup" || rawTemplate.adType === "banner" || rawTemplate.adType === "inline"
+                ? (rawTemplate.adType as AdType)
+                : undefined,
+            displayTrigger:
+              rawTemplate.displayTrigger === "on-load" ||
+              rawTemplate.displayTrigger === "on-scroll" ||
+              rawTemplate.displayTrigger === "round-end"
+                ? (rawTemplate.displayTrigger as AdDisplayTrigger)
+                : undefined,
+            priority: toNumberIfFinite(rawTemplate.priority),
+            placementKey: typeof rawTemplate.placementKey === "string" ? rawTemplate.placementKey : undefined,
+            startDate: typeof rawTemplate.startDate === "string" ? rawTemplate.startDate : undefined,
+            endDate:
+              rawTemplate.endDate === null || typeof rawTemplate.endDate === "string"
+                ? (rawTemplate.endDate as string | null)
+                : undefined,
+            frequencyInterval: toNumberIfFinite(rawTemplate.frequencyInterval),
+            dismissDelaySeconds: toNumberIfFinite(rawTemplate.dismissDelaySeconds),
+            popupCooldownSeconds: toNumberIfFinite(rawTemplate.popupCooldownSeconds),
+            sequenceIndex: toNumberIfFinite(rawTemplate.sequenceIndex),
+          }
+        : undefined;
+
+      if (templateAdId && !template) {
+        const source = await getAdminAdvertisementById(templateAdId);
+        if (!source) {
+          return NextResponse.json({ ok: false, error: "Template ad not found." }, { status: 404 });
+        }
+        template = {
+          advertiserName: source.advertiserName,
+          imageUrl: source.imageUrl,
+          clickUrl: source.clickUrl,
+          width: source.width,
+          height: source.height,
+          altText: source.altText,
+          adType: source.adType,
+          displayTrigger: source.displayTrigger,
+          priority: source.priority,
+          placementKey: source.placementKey,
+          startDate: source.startDate,
+          endDate: source.endDate ?? null,
+          frequencyInterval: source.frequencyInterval,
+          dismissDelaySeconds: source.dismissDelaySeconds,
+          popupCooldownSeconds: source.popupCooldownSeconds,
+          sequenceIndex: source.sequenceIndex,
+        };
+      }
+
+      const result = await applyPlaceholderAdToAllInlineSlots({
+        templateAdId,
+        template,
+        adminUserId: auth.authUserId,
+      });
+      return NextResponse.json({ ok: true, ...result });
+    }
 
     if (body.resource === "trivia") {
       try {
@@ -426,42 +536,49 @@ export async function POST(request: Request) {
     }
 
     if (body.resource === "ads") {
-      const item = await createAdminAdvertisement({
-        slot: body.slot,
-        isPlaceholder: body.isPlaceholder,
-        pageKey: body.pageKey,
-        adType: body.adType,
-        displayTrigger: body.displayTrigger,
-        placementKey: body.placementKey,
-        roundNumber: body.roundNumber,
-        sequenceIndex: body.sequenceIndex,
-        venueId: body.venueId,
-        venueIds: body.venueIds,
-        targetAllVenues: body.targetAllVenues,
-        cities: body.cities,
-        zipCodes: body.zipCodes,
-        counties: body.counties,
-        states: body.states,
-        regions: body.regions,
-        targetCities: body.targetCities,
-        targetZipCodes: body.targetZipCodes,
-        targetCounties: body.targetCounties,
-        targetStates: body.targetStates,
-        targetRegions: body.targetRegions,
-        advertiserName: body.advertiserName,
-        frequencyInterval: body.frequencyInterval,
-        imageUrl: body.imageUrl,
-        clickUrl: body.clickUrl,
-        altText: body.altText,
-        width: body.width,
-        height: body.height,
-        dismissDelaySeconds: body.dismissDelaySeconds,
-        popupCooldownSeconds: body.popupCooldownSeconds,
-        active: body.active,
-        startDate: body.startDate,
-        endDate: body.endDate,
-      });
-      return NextResponse.json({ ok: true, item });
+      try {
+        const item = await createAdminAdvertisement({
+          slot: body.slot,
+          isPlaceholder: body.isPlaceholder,
+          pageKey: body.pageKey,
+          adType: body.adType,
+          displayTrigger: body.displayTrigger,
+          placementKey: body.placementKey,
+          roundNumber: body.roundNumber,
+          sequenceIndex: body.sequenceIndex,
+          venueId: body.venueId,
+          venueIds: body.venueIds,
+          targetAllVenues: body.targetAllVenues,
+          cities: body.cities,
+          zipCodes: body.zipCodes,
+          counties: body.counties,
+          states: body.states,
+          regions: body.regions,
+          targetCities: body.targetCities,
+          targetZipCodes: body.targetZipCodes,
+          targetCounties: body.targetCounties,
+          targetStates: body.targetStates,
+          targetRegions: body.targetRegions,
+          advertiserName: body.advertiserName,
+          frequencyInterval: body.frequencyInterval,
+          imageUrl: body.imageUrl,
+          clickUrl: body.clickUrl,
+          altText: body.altText,
+          width: body.width,
+          height: body.height,
+          dismissDelaySeconds: body.dismissDelaySeconds,
+          popupCooldownSeconds: body.popupCooldownSeconds,
+          active: body.active,
+          startDate: body.startDate,
+          endDate: body.endDate,
+        });
+        return NextResponse.json({ ok: true, item });
+      } catch (error) {
+        return NextResponse.json(
+          { ok: false, error: error instanceof Error ? error.message : "Failed to create advertisement." },
+          { status: 400 }
+        );
+      }
     }
 
     if (body.resource === "venues") {
@@ -550,12 +667,14 @@ export async function POST(request: Request) {
         title: body.title,
         targetDate: body.targetDate,
         startTime: body.startTime,
-          timezone: body.timezone,
-          numRounds: body.numRounds,
-          venueId: body.venueId,
-          intermissionAdDelaySeconds: body.intermissionAdDelaySeconds,
-          lobbyAdEnabled: body.lobbyAdEnabled,
-        });
+        timezone: body.timezone,
+        recurringType: body.recurringType,
+        recurringDays: body.recurringDays,
+        numRounds: body.numRounds,
+        venueId: body.venueId,
+        intermissionAdDelaySeconds: body.intermissionAdDelaySeconds,
+        lobbyAdEnabled: body.lobbyAdEnabled,
+      });
       return NextResponse.json({ ok: true, item });
     }
 
@@ -605,6 +724,13 @@ export async function DELETE(request: Request) {
     const { searchParams } = new URL(request.url);
     const resource = searchParams.get("resource");
     const id = searchParams.get("id");
+
+    if (resource === "apply-placeholder-inline") {
+      return NextResponse.json(
+        { ok: false, error: "Method not allowed. Use POST for apply-placeholder-inline." },
+        { status: 405 }
+      );
+    }
 
     if (!id) {
       return NextResponse.json({ ok: false, error: "id is required." }, { status: 400 });
@@ -676,6 +802,14 @@ export async function PATCH(request: Request) {
     const auth = await requireAdminAuth(request);
     if (!auth.ok) {
       return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
+    }
+
+    const { searchParams } = new URL(request.url);
+    if (searchParams.get("resource") === "apply-placeholder-inline") {
+      return NextResponse.json(
+        { ok: false, error: "Method not allowed. Use POST for apply-placeholder-inline." },
+        { status: 405 }
+      );
     }
 
     const body = (await request.json()) as
@@ -835,43 +969,50 @@ export async function PATCH(request: Request) {
     }
 
     if (body.resource === "ads") {
-      const item = await updateAdminAdvertisement({
-        id: body.id,
-        slot: body.slot,
-        isPlaceholder: body.isPlaceholder,
-        pageKey: body.pageKey,
-        adType: body.adType,
-        displayTrigger: body.displayTrigger,
-        placementKey: body.placementKey,
-        roundNumber: body.roundNumber,
-        sequenceIndex: body.sequenceIndex,
-        venueId: body.venueId,
-        venueIds: body.venueIds,
-        targetAllVenues: body.targetAllVenues,
-        cities: body.cities,
-        zipCodes: body.zipCodes,
-        counties: body.counties,
-        states: body.states,
-        regions: body.regions,
-        targetCities: body.targetCities,
-        targetZipCodes: body.targetZipCodes,
-        targetCounties: body.targetCounties,
-        targetStates: body.targetStates,
-        targetRegions: body.targetRegions,
-        advertiserName: body.advertiserName,
-        frequencyInterval: body.frequencyInterval,
-        imageUrl: body.imageUrl,
-        clickUrl: body.clickUrl,
-        altText: body.altText,
-        width: body.width,
-        height: body.height,
-        dismissDelaySeconds: body.dismissDelaySeconds,
-        popupCooldownSeconds: body.popupCooldownSeconds,
-        active: body.active,
-        startDate: body.startDate,
-        endDate: body.endDate,
-      });
-      return NextResponse.json({ ok: true, item });
+      try {
+        const item = await updateAdminAdvertisement({
+          id: body.id,
+          slot: body.slot,
+          isPlaceholder: body.isPlaceholder,
+          pageKey: body.pageKey,
+          adType: body.adType,
+          displayTrigger: body.displayTrigger,
+          placementKey: body.placementKey,
+          roundNumber: body.roundNumber,
+          sequenceIndex: body.sequenceIndex,
+          venueId: body.venueId,
+          venueIds: body.venueIds,
+          targetAllVenues: body.targetAllVenues,
+          cities: body.cities,
+          zipCodes: body.zipCodes,
+          counties: body.counties,
+          states: body.states,
+          regions: body.regions,
+          targetCities: body.targetCities,
+          targetZipCodes: body.targetZipCodes,
+          targetCounties: body.targetCounties,
+          targetStates: body.targetStates,
+          targetRegions: body.targetRegions,
+          advertiserName: body.advertiserName,
+          frequencyInterval: body.frequencyInterval,
+          imageUrl: body.imageUrl,
+          clickUrl: body.clickUrl,
+          altText: body.altText,
+          width: body.width,
+          height: body.height,
+          dismissDelaySeconds: body.dismissDelaySeconds,
+          popupCooldownSeconds: body.popupCooldownSeconds,
+          active: body.active,
+          startDate: body.startDate,
+          endDate: body.endDate,
+        });
+        return NextResponse.json({ ok: true, item });
+      } catch (error) {
+        return NextResponse.json(
+          { ok: false, error: error instanceof Error ? error.message : "Failed to update advertisement." },
+          { status: 400 }
+        );
+      }
     }
 
     if (body.resource === "venues") {

@@ -13,7 +13,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
   }, [error]);
 
   return (
-    <div className="space-y-3 rounded-xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-900 shadow-sm">
+    <div className="space-y-3 rounded-ht-xl border border-rose-500/40 bg-rose-500/10 p-6 text-sm text-rose-300">
       <h2 className="text-base font-semibold">Something went wrong</h2>
       <p>Try again. If this keeps happening, contact an admin.</p>
       <button

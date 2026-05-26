@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Venue } from "@/types";
+import type { CampaignRecurringType, Venue } from "@/types";
 import { PaginationBar, BulkActionBar, TH, TD, TR } from "@/components/admin/AdminShell";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -11,6 +11,8 @@ type AdminLiveShowdownSchedule = {
   title: string;
   startTime: string;
   timezone: string;
+  recurringType: CampaignRecurringType;
+  recurringDays: string[];
   numRounds: number;
   venueId: string | null;
   intermissionAdDelaySeconds: number;
@@ -36,6 +38,24 @@ const TIMEZONES = [
   "Europe/Paris",
   "Australia/Sydney",
 ];
+
+const RECURRING_OPTIONS: Array<{ value: CampaignRecurringType; label: string }> = [
+  { value: "none", label: "None (One-off)" },
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+  { value: "monthly", label: "Monthly" },
+  { value: "yearly", label: "Yearly" },
+];
+
+const WEEKDAY_OPTIONS = [
+  { key: "sun", label: "Sun" },
+  { key: "mon", label: "Mon" },
+  { key: "tue", label: "Tue" },
+  { key: "wed", label: "Wed" },
+  { key: "thu", label: "Thu" },
+  { key: "fri", label: "Fri" },
+  { key: "sat", label: "Sat" },
+] as const;
 
 function formatStartTime(iso: string, tz: string): string {
   try {
@@ -86,6 +106,8 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
   const [formDate, setFormDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [formTime, setFormTime] = useState("19:00");
   const [formTz, setFormTz] = useState("America/New_York");
+  const [formRecurringType, setFormRecurringType] = useState<CampaignRecurringType>("none");
+  const [formRecurringDays, setFormRecurringDays] = useState<string[]>([]);
   const [formRounds, setFormRounds] = useState("3");
   const [formVenueId, setFormVenueId] = useState(() => venues[0]?.id ?? "");
   const [formIntermissionDelay, setFormIntermissionDelay] = useState("10");
@@ -182,6 +204,8 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
     setFormDate(new Date().toISOString().slice(0, 10));
     setFormTime("19:00");
     setFormTz("America/New_York");
+    setFormRecurringType("none");
+    setFormRecurringDays([]);
     setFormRounds("3");
     setFormVenueId(venues[0]?.id ?? "");
     setFormIntermissionDelay("10");
@@ -208,6 +232,10 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
       setCreateError("Intermission ad delay must be between 0 and 300 seconds.");
       return;
     }
+    if (formRecurringType === "weekly" && formRecurringDays.length === 0) {
+      setCreateError("Select at least one day for weekly recurring schedules.");
+      return;
+    }
     setCreateBusy(true);
     setCreateError("");
     try {
@@ -220,6 +248,8 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
           targetDate: formDate,
           startTime: formTime,
           timezone: formTz,
+          recurringType: formRecurringType,
+          recurringDays: formRecurringType === "weekly" ? formRecurringDays : [],
           numRounds,
           venueId: formVenueId,
           intermissionAdDelaySeconds,
@@ -241,7 +271,7 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
 
   // ── Derived data (must be before any early return) ───────────────────────
 
-  const venueById = new Map(venues.map((v) => [v.id, v]));
+  const venueById = useMemo(() => new Map(venues.map((v) => [v.id, v])), [venues]);
 
   const filteredAndSortedSchedules = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -357,6 +387,49 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
                 <option key={tz} value={tz}>{tz}</option>
               ))}
             </select>
+          </div>
+          <div>
+            <label className={lbl}>Recurring</label>
+            <select
+              className={field}
+              value={formRecurringType}
+              onChange={(e) => setFormRecurringType(e.target.value as CampaignRecurringType)}
+            >
+              {RECURRING_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={lbl}>Weekly Days</label>
+            <div className="flex flex-wrap gap-2 rounded-lg border border-slate-200 px-3 py-2">
+              {WEEKDAY_OPTIONS.map((day) => {
+                const checked = formRecurringDays.includes(day.key);
+                return (
+                  <label key={day.key} className="inline-flex items-center gap-1.5 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-slate-300 text-indigo-600"
+                      disabled={formRecurringType !== "weekly"}
+                      checked={checked}
+                      onChange={() =>
+                        setFormRecurringDays((prev) =>
+                          checked ? prev.filter((item) => item !== day.key) : [...prev, day.key]
+                        )
+                      }
+                    />
+                    {day.label}
+                  </label>
+                );
+              })}
+            </div>
+            <p className="mt-1 text-xs text-slate-400">
+              {formRecurringType === "weekly"
+                ? "Choose one or more weekdays."
+                : "Weekly days are only used when Recurring = Weekly."}
+            </p>
           </div>
           <div>
             <label className={lbl}>Number of Rounds *</label>
@@ -507,6 +580,8 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
                 <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("title")}>{sortLabel("title", "Title")}</th>
                 <th className={TH}>Start Time</th>
                 <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("timezone")}>{sortLabel("timezone", "Timezone")}</th>
+                <th className={TH}>Recurring</th>
+                <th className={TH}>Days</th>
                 <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("rounds")}>{sortLabel("rounds", "Rounds")}</th>
                 <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("venue")}>{sortLabel("venue", "Venue")}</th>
                 <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("city")}>{sortLabel("city", "City")}</th>
@@ -520,14 +595,14 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={12} className="py-12 text-center text-sm text-slate-400">
+                  <td colSpan={14} className="py-12 text-center text-sm text-slate-400">
                     Loading…
                   </td>
                 </tr>
               )}
               {!loading && filteredAndSortedSchedules.length === 0 && (
                 <tr>
-                  <td colSpan={12} className="py-12 text-center text-sm text-slate-400">
+                  <td colSpan={14} className="py-12 text-center text-sm text-slate-400">
                     No sessions scheduled yet.
                   </td>
                 </tr>
@@ -553,6 +628,12 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
                         {formatStartTime(s.startTime, s.timezone)}
                       </td>
                       <td className={`${TD} text-slate-500`}>{s.timezone}</td>
+                      <td className={`${TD} text-slate-500 capitalize`}>{s.recurringType ?? "none"}</td>
+                      <td className={`${TD} text-slate-500`}>
+                        {s.recurringType === "weekly" && (s.recurringDays?.length ?? 0) > 0
+                          ? s.recurringDays.map((day) => day.slice(0, 1).toUpperCase() + day.slice(1)).join(", ")
+                          : "—"}
+                      </td>
                       <td className={`${TD} text-center tabular-nums`}>{s.numRounds}</td>
                       <td className={`${TD} text-slate-500`}>
                         {s.venueId ? (venue?.name ?? s.venueId) : "All"}

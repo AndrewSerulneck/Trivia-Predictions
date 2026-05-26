@@ -1,23 +1,27 @@
 import { NextResponse } from "next/server";
 import { getActiveAdForSlot, getAdForSlotKey } from "@/lib/ads";
+import { AD_SLOT_REGISTRY } from "@/lib/adSlotRegistry";
 import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType } from "@/types";
 
+const VALID_AD_SLOTS = new Set<string>([
+  "header",
+  "inline-content",
+  "sidebar",
+  "mid-content",
+  "leaderboard-sidebar",
+  "footer",
+  "mobile-adhesion",
+  "popup-on-entry",
+  "popup-on-scroll",
+  ...AD_SLOT_REGISTRY.map((entry) => entry.slot),
+]);
+
 function isAdSlot(value: string): value is AdSlot {
-  return [
-    "header",
-    "inline-content",
-    "sidebar",
-    "mid-content",
-    "leaderboard-sidebar",
-    "footer",
-    "mobile-adhesion",
-    "popup-on-entry",
-    "popup-on-scroll",
-  ].includes(value);
+  return VALID_AD_SLOTS.has(value);
 }
 
 function isAdPageKey(value: string): value is AdPageKey {
-  return ["global", "join", "venue", "trivia", "sports-bingo", "pickem", "fantasy"].includes(value);
+  return ["global", "join", "venue", "trivia", "speed-trivia", "live-trivia", "sports-bingo", "pickem", "fantasy"].includes(value);
 }
 
 function isAdType(value: string): value is AdType {

@@ -85,14 +85,16 @@ function getGeofenceThresholdMeters(venueRadius: number, accuracy?: number): num
   return baseRadius + accuracyBuffer;
 }
 
-type FantasySport = "basketball" | "baseball" | "football";
+type FantasySport = "nba" | "wnba" | "baseball" | "football";
 const FANTASY_SPORTS: Array<{ key: FantasySport; icon: string; available: boolean }> = [
-  { key: "basketball", icon: "🏀", available: true },
+  { key: "nba", icon: "NBA", available: true },
+  { key: "wnba", icon: "WNBA", available: true },
   { key: "baseball", icon: "⚾", available: true },
   { key: "football", icon: "🏈", available: false },
 ];
 const FANTASY_LINEUP_SIZE_BY_SPORT: Record<FantasySport, number> = {
-  basketball: 5,
+  nba: 5,
+  wnba: 5,
   baseball: 5,
   football: 5,
 };
@@ -239,6 +241,32 @@ function parseDailyGameDateFromId(gameId: string): string | null {
   return null;
 }
 
+function getGameIdForSportDate(sport: FantasySport, date: string): string {
+  if (sport === "nba") {
+    return `nba-daily-${date}`;
+  }
+  if (sport === "wnba") {
+    return `wnba-daily-${date}`;
+  }
+  if (sport === "baseball") {
+    return `mlb-daily-${date}`;
+  }
+  return "";
+}
+
+function getEntrySportKeyForFantasySport(sport: FantasySport): string | null {
+  if (sport === "nba") {
+    return "basketball_nba";
+  }
+  if (sport === "wnba") {
+    return "basketball_wnba";
+  }
+  if (sport === "baseball") {
+    return "baseball_mlb";
+  }
+  return null;
+}
+
 function getServerDateFromGamesPayload(payload: GamesPayload): string | null {
   const candidates = [payload.dailyGameId, payload.wnbaDailyGameId, payload.mlbDailyGameId];
   for (const candidate of candidates) {
@@ -276,10 +304,10 @@ function formatLocalDateTime(iso: string): string {
 }
 
 function statusBadge(status: FantasyEntry["status"] | FantasyGame["status"]): string {
-  if (status === "final") return "bg-emerald-100 text-emerald-900 border-emerald-300";
-  if (status === "live") return "bg-amber-100 text-amber-900 border-amber-300";
-  if (status === "canceled") return "bg-slate-200 text-slate-700 border-slate-300";
-  return "bg-blue-100 text-blue-900 border-blue-300";
+  if (status === "final") return "bg-emerald-500/15 text-emerald-400 border-emerald-500/40";
+  if (status === "live") return "bg-amber-500/15 text-amber-300 border-amber-400/40";
+  if (status === "canceled") return "bg-ht-border-soft text-ht-fg-muted border-ht-border-strong";
+  return "bg-sky-500/15 text-sky-300 border-sky-400/40";
 }
 
 function toStatusLabel(status: FantasyEntry["status"] | FantasyGame["status"]): string {
@@ -557,12 +585,16 @@ function PlayerHeadshot({ src, name, sizeClass = "h-7 w-7" }: { src?: string | n
   );
 }
 
-export function FantasyHome() {
+type FantasyHomeProps = {
+  defaultSport?: FantasySport;
+};
+
+export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
   const [userId, setUserId] = useState("");
   const [venueId, setVenueId] = useState("");
   const [games, setGames] = useState<FantasyGame[]>([]);
   const [entries, setEntries] = useState<FantasyEntry[]>([]);
-  const [selectedSport, setSelectedSport] = useState<FantasySport>("basketball");
+  const [selectedSport, setSelectedSport] = useState<FantasySport>(defaultSport);
   const [selectedDate, setSelectedDate] = useState(() => getTodayDateInput());
   const [serverTodayDate, setServerTodayDate] = useState(() => getTodayDateInput());
   const [selectedGameId, setSelectedGameId] = useState("");
@@ -606,11 +638,14 @@ export function FantasyHome() {
   const statAnimCounterRef = useRef(0);
   const statFlashTimersRef = useRef<Map<string, number>>(new Map());
   const fantasyKickoffRefreshTimerRef = useRef<number | null>(null);
-  const fantasyLineupAutosaveTimerRef = useRef<number | null>(null);
   const fantasyRealtimeFallbackTimerRef = useRef<number | null>(null);
   const fantasyHighlightResetTimerRef = useRef<number | null>(null);
   const geofencePauseRef = useRef(false);
   const requiredLineupSize = FANTASY_LINEUP_SIZE_BY_SPORT[selectedSport] ?? 5;
+
+  useEffect(() => {
+    setSelectedSport(defaultSport);
+  }, [defaultSport]);
 
   useEffect(() => {
     setUserId(getUserId() ?? "");
@@ -818,7 +853,7 @@ export function FantasyHome() {
       return;
     }
 
-    if (selectedSport !== "basketball" && selectedSport !== "baseball") {
+    if (selectedSport !== "nba" && selectedSport !== "wnba" && selectedSport !== "baseball") {
       setPlayerPool([]);
       setLeaderboard([]);
       setIsLoadingPool(false);
@@ -842,48 +877,19 @@ export function FantasyHome() {
         return p.toString();
       };
 
-      if (selectedSport === "baseball") {
-        const mlbId = `mlb-daily-${gameDate}`;
-        const mlbRes = await fetch(`/api/fantasy/games?${makeParams(mlbId)}`, { cache: "no-store" });
-        const mlbPayload = (await mlbRes.json()) as GamesPayload;
+      if (selectedSport === "baseball" || selectedSport === "nba" || selectedSport === "wnba") {
+        const sportGameId = getGameIdForSportDate(selectedSport, gameDate);
+        const sportRes = await fetch(`/api/fantasy/games?${makeParams(sportGameId)}`, { cache: "no-store" });
+        const sportPayload = (await sportRes.json()) as GamesPayload;
         if (requestNonce !== gameDetailsRequestNonceRef.current) return;
-        setPlayerPool(mlbPayload.playerPool ?? []);
-        setLeaderboard(mlbPayload.leaderboard ?? []);
+        setPlayerPool(sportPayload.playerPool ?? []);
+        setLeaderboard(sportPayload.leaderboard ?? []);
         setSelectedPlayers((current) => {
-          const poolKeys = new Set((mlbPayload.playerPool ?? []).map((item) => item.playerName));
+          const poolKeys = new Set((sportPayload.playerPool ?? []).map((item) => item.playerName));
           return current.filter((name) => poolKeys.has(name));
         });
         return;
       }
-
-      const nbaId = `nba-daily-${gameDate}`;
-      const wnbaId = `wnba-daily-${gameDate}`;
-
-      const [nbaRes, wnbaRes] = await Promise.all([
-        fetch(`/api/fantasy/games?${makeParams(nbaId)}`, { cache: "no-store" }),
-        fetch(`/api/fantasy/games?${makeParams(wnbaId)}`, { cache: "no-store" }),
-      ]);
-      const [nbaPayload, wnbaPayload] = (await Promise.all([nbaRes.json(), wnbaRes.json()])) as [GamesPayload, GamesPayload];
-
-      if (requestNonce !== gameDetailsRequestNonceRef.current) return;
-
-      const seen = new Set<string>();
-      const combined: FantasyPlayerPoolItem[] = [];
-      for (const item of [...(nbaPayload.playerPool ?? []), ...(wnbaPayload.playerPool ?? [])]) {
-        const key = normalizePlayerKey(item.playerName);
-        if (key && !seen.has(key)) {
-          seen.add(key);
-          combined.push(item);
-        }
-      }
-
-      setPlayerPool(combined);
-      setLeaderboard(nbaPayload.leaderboard ?? []);
-
-      setSelectedPlayers((current) => {
-        const poolKeys = new Set(combined.map((item) => item.playerName));
-        return current.filter((name) => poolKeys.has(name));
-      });
     } catch (error) {
       setPlayerPool([]);
       setLeaderboard([]);
@@ -916,15 +922,9 @@ export function FantasyHome() {
 
   // Derive selectedGameId from sport + date + available games
   useEffect(() => {
-    if (selectedSport === "basketball") {
-      const hasNba = games.some((g) => g.league === "NBA");
-      const hasWnba = games.some((g) => g.league === "WNBA");
-      const id = !hasNba && hasWnba ? `wnba-daily-${selectedDate}` : `nba-daily-${selectedDate}`;
-      setSelectedGameId(id);
-    } else if (selectedSport === "baseball") {
-      setSelectedGameId(`mlb-daily-${selectedDate}`);
-    }
-  }, [selectedSport, selectedDate, games]);
+    const id = getGameIdForSportDate(selectedSport, selectedDate);
+    setSelectedGameId(id);
+  }, [selectedSport, selectedDate]);
 
   useEffect(() => {
     if (!userId) {
@@ -938,18 +938,18 @@ export function FantasyHome() {
     void loadSelectedGameDetails();
   }, [loadSelectedGameDetails]);
 
+  const selectedEntrySportKey = useMemo(() => getEntrySportKeyForFantasySport(selectedSport), [selectedSport]);
+
   const existingEntryForSelectedGame = useMemo(
-    () =>
-      entries.find((entry) => {
-        if (selectedSport === "basketball") {
-          const isBasketballEntry =
-            entry.sportKey === "basketball_nba" || entry.sportKey === "basketball_wnba";
-          return isBasketballEntry && parseDailyGameDateFromId(entry.gameId) === selectedDate;
+    () => {
+      return entries.find((entry) => {
+        if (!selectedEntrySportKey) {
+          return false;
         }
-        // baseball and any other sport: match by exact game ID (sport-specific prefix)
-        return entry.gameId === selectedGameId;
-      }),
-    [entries, selectedGameId, selectedSport, selectedDate]
+        return entry.sportKey === selectedEntrySportKey && entry.gameId === selectedGameId;
+      });
+    },
+    [entries, selectedEntrySportKey, selectedGameId]
   );
   const playerPoolKeys = useMemo(
     () => new Set(playerPool.map((item) => normalizePlayerKey(item.playerName)).filter(Boolean)),
@@ -1021,8 +1021,10 @@ export function FantasyHome() {
 
   const sportGames = useMemo(
     () =>
-      selectedSport === "basketball"
-        ? games.filter((g) => g.league === "NBA" || g.league === "WNBA")
+      selectedSport === "nba"
+        ? games.filter((g) => g.league === "NBA")
+        : selectedSport === "wnba"
+        ? games.filter((g) => g.league === "WNBA")
         : selectedSport === "baseball"
         ? games.filter((g) => g.league === "MLB")
         : [],
@@ -1042,51 +1044,57 @@ export function FantasyHome() {
       return hasLakers && hasThunder;
     });
     return lakersThunder ?? liveGames[0] ?? null;
-  }, [games]);
+  }, [sportGames]);
   const selectedSlateDate = selectedDate;
   const liveEntries = useMemo(
     () =>
       entries.filter((entry) => {
+        if (!selectedEntrySportKey || entry.sportKey !== selectedEntrySportKey) {
+          return false;
+        }
         if (entry.status !== "live") {
           return false;
         }
         const entryDateKey = getEntryLocalDateKey(entry);
         return entryDateKey === selectedSlateDate;
       }),
-    [entries, selectedSlateDate]
+    [entries, selectedEntrySportKey, selectedSlateDate]
   );
   const hasActiveDraftedEntry = useMemo(
     () =>
       entries.some((entry) => {
-        if (selectedSport === "basketball") {
-          const isBasketballEntry =
-            entry.sportKey === "basketball_nba" || entry.sportKey === "basketball_wnba";
-          return (
-            isBasketballEntry &&
-            parseDailyGameDateFromId(entry.gameId) === selectedDate &&
-            (entry.status === "pending" || entry.status === "live")
-          );
+        if (!selectedEntrySportKey || entry.sportKey !== selectedEntrySportKey) {
+          return false;
         }
-        return entry.gameId === selectedGameId && (entry.status === "pending" || entry.status === "live");
+        return (
+          entry.gameId === selectedGameId &&
+          (entry.status === "pending" || entry.status === "live")
+        );
       }),
-    [entries, selectedGameId, selectedSport, selectedDate]
+    [entries, selectedEntrySportKey, selectedGameId]
   );
   const hasLiveEntry = liveEntries.length > 0;
   const hasSyncableEntry = useMemo(
     () =>
       entries.some((entry) => {
+        if (!selectedEntrySportKey || entry.sportKey !== selectedEntrySportKey) {
+          return false;
+        }
         const entryDateKey = getEntryLocalDateKey(entry);
         if (entryDateKey !== selectedSlateDate) {
           return false;
         }
         return entry.status === "pending" || entry.status === "live";
       }),
-    [entries, selectedSlateDate]
+    [entries, selectedEntrySportKey, selectedSlateDate]
   );
   const nextPendingEntryStartMs = useMemo(() => {
     const now = Date.now();
     let nextStart: number | null = null;
     for (const entry of entries) {
+      if (!selectedEntrySportKey || entry.sportKey !== selectedEntrySportKey) {
+        continue;
+      }
       const entryDateKey = getEntryLocalDateKey(entry);
       if (entryDateKey !== selectedSlateDate) {
         continue;
@@ -1103,12 +1111,14 @@ export function FantasyHome() {
       }
     }
     return nextStart;
-  }, [entries, selectedSlateDate]);
+  }, [entries, selectedEntrySportKey, selectedSlateDate]);
   const finalUnclaimedEntries = useMemo(
     () =>
       entries
         .filter(
           (entry) =>
+            Boolean(selectedEntrySportKey) &&
+            entry.sportKey === selectedEntrySportKey &&
             getEntryLocalDateKey(entry) === selectedSlateDate &&
             entry.status === "final" &&
             !entry.rewardClaimedAt &&
@@ -1116,11 +1126,14 @@ export function FantasyHome() {
             isIsoInCurrentLocalWeek(entry.startsAt)
         )
         .sort((left, right) => Date.parse(right.startsAt) - Date.parse(left.startsAt)),
-    [entries, selectedSlateDate]
+    [entries, selectedEntrySportKey, selectedSlateDate]
   );
   const hasPreviousUnclaimedFantasyEntries = useMemo(
     () =>
       entries.some((entry) => {
+        if (!selectedEntrySportKey || entry.sportKey !== selectedEntrySportKey) {
+          return false;
+        }
         if (entry.status !== "final" || entry.rewardClaimedAt || computeFantasyClaimablePoints(entry) <= 0) {
           return false;
         }
@@ -1130,11 +1143,14 @@ export function FantasyHome() {
         }
         return entryDateKey < selectedSlateDate;
       }),
-    [entries, selectedSlateDate]
+    [entries, selectedEntrySportKey, selectedSlateDate]
   );
   const hasCurrentUnclaimedFantasyEntries = useMemo(
     () =>
       entries.some((entry) => {
+        if (!selectedEntrySportKey || entry.sportKey !== selectedEntrySportKey) {
+          return false;
+        }
         if (entry.status !== "final" || entry.rewardClaimedAt || computeFantasyClaimablePoints(entry) <= 0) {
           return false;
         }
@@ -1144,11 +1160,14 @@ export function FantasyHome() {
         }
         return entryDateKey === selectedSlateDate;
       }),
-    [entries, selectedSlateDate]
+    [entries, selectedEntrySportKey, selectedSlateDate]
   );
   const hasFutureUnclaimedFantasyEntries = useMemo(
     () =>
       entries.some((entry) => {
+        if (!selectedEntrySportKey || entry.sportKey !== selectedEntrySportKey) {
+          return false;
+        }
         if (entry.status !== "final" || entry.rewardClaimedAt || computeFantasyClaimablePoints(entry) <= 0) {
           return false;
         }
@@ -1158,10 +1177,15 @@ export function FantasyHome() {
         }
         return entryDateKey > selectedSlateDate;
       }),
-    [entries, selectedSlateDate]
+    [entries, selectedEntrySportKey, selectedSlateDate]
   );
   const trackedEntry = useMemo(() => {
-    const selected = entries.find((entry) => entry.gameId === selectedGameId);
+    const selected = entries.find(
+      (entry) =>
+        Boolean(selectedEntrySportKey) &&
+        entry.sportKey === selectedEntrySportKey &&
+        entry.gameId === selectedGameId
+    );
     if (selected && !(selected.status === "final" && Boolean(selected.rewardClaimedAt))) {
       return selected;
     }
@@ -1169,7 +1193,7 @@ export function FantasyHome() {
       return liveEntries[0] ?? null;
     }
     return finalUnclaimedEntries[0] ?? null;
-  }, [entries, finalUnclaimedEntries, liveEntries, selectedGameId]);
+  }, [entries, finalUnclaimedEntries, liveEntries, selectedEntrySportKey, selectedGameId]);
   const trackedEntryClaimablePoints = useMemo(
     () => (trackedEntry ? computeFantasyClaimablePoints(trackedEntry) : 0),
     [trackedEntry]
@@ -1308,10 +1332,6 @@ export function FantasyHome() {
       if (fantasyKickoffRefreshTimerRef.current) {
         window.clearTimeout(fantasyKickoffRefreshTimerRef.current);
         fantasyKickoffRefreshTimerRef.current = null;
-      }
-      if (fantasyLineupAutosaveTimerRef.current) {
-        window.clearTimeout(fantasyLineupAutosaveTimerRef.current);
-        fantasyLineupAutosaveTimerRef.current = null;
       }
       if (fantasyRealtimeFallbackTimerRef.current) {
         window.clearTimeout(fantasyRealtimeFallbackTimerRef.current);
@@ -1617,7 +1637,7 @@ export function FantasyHome() {
 
   const persistLineup = useCallback(async (lineup: string[]) => {
     if (!userId || !venueId || !selectedGameId || lineup.length !== requiredLineupSize) {
-      return;
+      return false;
     }
 
     setSubmitting(true);
@@ -1644,13 +1664,15 @@ export function FantasyHome() {
 
       setStatusMessage(
         existingEntryForSelectedGame
-          ? "Roster updated and saved automatically."
-          : "Roster submitted automatically. Live scoring will update automatically."
+          ? "Roster updated successfully."
+          : "Roster submitted successfully. Live scoring will update automatically."
       );
       setHasLocalLineupDraft(false);
       await Promise.all([loadEntries(true), loadSelectedGameDetails()]);
+      return true;
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Failed to save fantasy lineup.");
+      return false;
     } finally {
       setSubmitting(false);
     }
@@ -1668,37 +1690,31 @@ export function FantasyHome() {
     if (selectedPlayers.length !== requiredLineupSize) {
       setStatusMessage(
         selectedPlayers.length === 0
-          ? `Tap players to build your roster. Saves happen automatically at ${requiredLineupSize} selections.`
-          : `Select ${requiredLineupSize - selectedPlayers.length} more player${requiredLineupSize - selectedPlayers.length === 1 ? "" : "s"} to auto-save.`
+          ? "Tap players to build your roster."
+          : `Select ${requiredLineupSize - selectedPlayers.length} more player${requiredLineupSize - selectedPlayers.length === 1 ? "" : "s"}, then tap ${existingEntryForSelectedGame ? "Update roster" : "Submit roster"}.`
       );
       return;
     }
-
-    if (fantasyLineupAutosaveTimerRef.current) {
-      window.clearTimeout(fantasyLineupAutosaveTimerRef.current);
-    }
-    fantasyLineupAutosaveTimerRef.current = window.setTimeout(() => {
-      fantasyLineupAutosaveTimerRef.current = null;
-      void persistLineup(selectedPlayers);
-    }, 220);
-
-    return () => {
-      if (fantasyLineupAutosaveTimerRef.current) {
-        window.clearTimeout(fantasyLineupAutosaveTimerRef.current);
-        fantasyLineupAutosaveTimerRef.current = null;
-      }
-    };
+    setStatusMessage(
+      `${existingEntryForSelectedGame ? "Update roster" : "Submit roster"} to lock this lineup.`
+    );
   }, [
     canEditExistingEntryLineup,
     existingEntryForSelectedGame,
     hasLocalLineupDraft,
     hasResolvedEntries,
     hasStartedGame,
-    persistLineup,
     requiredLineupSize,
     selectedGameId,
     selectedPlayers,
   ]);
+
+  const handleSubmitRoster = useCallback(async () => {
+    const didSave = await persistLineup(selectedPlayers);
+    if (didSave && existingEntryForSelectedGame) {
+      setIsEditingRoster(false);
+    }
+  }, [existingEntryForSelectedGame, persistLineup, selectedPlayers]);
 
   const claimReward = useCallback(
     async (entry: FantasyEntry, sourceRect?: DOMRect) => {
@@ -1916,8 +1932,11 @@ export function FantasyHome() {
   const isToday = selectedDate === serverTodayDate;
   const isPastSelectedDate = selectedDate < serverTodayDate;
   const draftCtaLabel = existingEntryForSelectedGame ? "Edit your roster" : "Draft your roster";
+  const isFantasyLineupSport = selectedSport === "nba" || selectedSport === "wnba" || selectedSport === "baseball";
+  const selectedSportLabel =
+    selectedSport === "baseball" ? "baseball" : selectedSport === "wnba" ? "WNBA" : "NBA";
   const showGameStart =
-    (selectedSport === "basketball" || selectedSport === "baseball") &&
+    isFantasyLineupSport &&
     selectedGameId &&
     hasResolvedEntries &&
     !isPastSelectedDate &&
@@ -1925,7 +1944,7 @@ export function FantasyHome() {
     !existingEntryForSelectedGame &&
     !hasStartedGame;
   const showLineupBuilder =
-    (selectedSport === "basketball" || selectedSport === "baseball") &&
+    isFantasyLineupSport &&
     selectedGameId &&
     hasResolvedEntries &&
     !isPastSelectedDate &&
@@ -2019,7 +2038,7 @@ export function FantasyHome() {
         : null}
 
       {/* Page title */}
-      <h1 className="px-1 text-xl font-black tracking-tight text-slate-900">Hightop Fantasy Sports</h1>
+      <h1 className="px-1 text-xl font-black tracking-tight text-ht-fg-primary">Hightop Fantasy Sports</h1>
 
       {/* Top section — date nav, sport scroll, roster tracker */}
       <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-3">
@@ -2059,30 +2078,35 @@ export function FantasyHome() {
         {/* Sport scroll */}
         <div className="mt-4 w-full touch-pan-x overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:thin]">
           <div className="inline-flex w-max min-w-full justify-center gap-3 pr-1">
-            {FANTASY_SPORTS.map((sport) => (
-              <button
-                key={sport.key}
-                type="button"
-                disabled={!sport.available}
-                onClick={() => sport.available && setSelectedSport(sport.key)}
-                className={`tp-clean-button flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-full border-2 text-[3.25rem] leading-none transition-all ${
-                  selectedSport === sport.key
-                    ? "border-indigo-700 bg-indigo-600 shadow-sm"
-                    : sport.available
-                    ? "border-slate-300 bg-white hover:border-indigo-300"
-                    : "border-slate-200 bg-slate-100 opacity-40"
-                }`}
-                title={sport.available ? sport.key : `${sport.key} — coming soon`}
-              >
-                {sport.icon}
-              </button>
-            ))}
+            {FANTASY_SPORTS.map((sport) => {
+              const usesTextLabel = sport.icon.length > 2;
+              return (
+                <button
+                  key={sport.key}
+                  type="button"
+                  disabled={!sport.available}
+                  onClick={() => sport.available && setSelectedSport(sport.key)}
+                  className={`tp-clean-button flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-full border-2 leading-none transition-all ${
+                    usesTextLabel ? "px-1 text-sm font-black tracking-wide" : "text-[3.25rem]"
+                  } ${
+                    selectedSport === sport.key
+                      ? "border-indigo-700 bg-indigo-600 shadow-sm"
+                      : sport.available
+                      ? "border-ht-border-soft bg-ht-elevated hover:border-indigo-400/60"
+                      : "border-ht-border-hairline bg-ht-surface opacity-40"
+                  }`}
+                  title={sport.available ? sport.key.toUpperCase() : `${sport.key} — coming soon`}
+                >
+                  {sport.icon}
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Roster tracker pips */}
         <div className="mt-3 flex items-center gap-2">
-          <p className="text-[11px] font-semibold text-slate-500">Roster</p>
+          <p className="text-[11px] font-semibold text-ht-fg-muted">Roster</p>
           <div className="flex flex-1 gap-1">
             {Array.from({ length: requiredLineupSize }).map((_, i) => (
               <div
@@ -2093,7 +2117,7 @@ export function FantasyHome() {
               />
             ))}
           </div>
-          <p className="text-[11px] font-semibold text-slate-500">
+          <p className="text-[11px] font-semibold text-ht-fg-muted">
             {selectedPlayers.length}/{requiredLineupSize}
           </p>
         </div>
@@ -2154,37 +2178,33 @@ export function FantasyHome() {
       {/* "Coming soon" for football */}
       {selectedSport === "football" ? (
         <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-4">
-          <p className="text-center text-sm font-semibold text-slate-600">
+          <p className="text-center text-sm font-semibold text-ht-fg-muted">
             🏈 Football fantasy is coming soon!
           </p>
         </section>
       ) : null}
 
       {/* Team tracker for live/pending entry */}
-      {(selectedSport === "basketball" || selectedSport === "baseball") && trackedEntry ? (
+      {isFantasyLineupSport && trackedEntry ? (
         <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-4">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-base font-semibold text-slate-900">Your Team Tracker</h3>
+            <h3 className="text-base font-semibold text-ht-fg-primary">Your Team Tracker</h3>
             {existingEntryForSelectedGame ? (
               canEditExistingEntryLineup ? (
                 <button
                   type="button"
                   onClick={() => {
-                    if (isEditingRoster) {
-                      setHasLocalLineupDraft(true);
-                    } else {
-                      setIsEditingRoster(true);
-                    }
+                    setIsEditingRoster(true);
                   }}
                   className="tp-clean-button rounded-lg border border-violet-400/60 bg-violet-950/30 px-3 py-1.5 text-xs font-semibold text-violet-300"
                 >
-                  {isEditingRoster ? "Submit Roster" : "Edit your roster"}
+                  {isEditingRoster ? "Editing roster" : "Edit your roster"}
                 </button>
               ) : (
                 <button
                   type="button"
                   disabled
-                  className="tp-clean-button cursor-not-allowed rounded-lg border border-slate-400 bg-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 opacity-90"
+                  className="tp-clean-button cursor-not-allowed rounded-lg border border-ht-border-strong bg-ht-elevated-2 px-3 py-1.5 text-xs font-semibold text-ht-fg-muted opacity-90"
                 >
                   Roster Locked
                 </button>
@@ -2193,7 +2213,7 @@ export function FantasyHome() {
           </div>
           <div className="mt-2 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-slate-900">{showTrackedEntryClaimButton ? "Final Score" : "Live Points"}</p>
+              <p className="text-sm font-semibold text-ht-fg-primary">{showTrackedEntryClaimButton ? "Final Score" : "Live Points"}</p>
               <SpringPop
                 popKey={totalScorePopTick}
                 glowSize={12}
@@ -2202,10 +2222,10 @@ export function FantasyHome() {
                 <p
                   className={`text-sm font-black ${
                     totalScorePopTone === "loss"
-                      ? "text-rose-700"
+                      ? "text-rose-400"
                       : isRealtimeFresh
-                      ? "text-emerald-700"
-                      : "text-slate-900"
+                      ? "text-emerald-400"
+                      : "text-ht-fg-primary"
                   }`}
                 >
                   {liveTrackedEntryPoints.toFixed(2)} pts
@@ -2291,7 +2311,7 @@ export function FantasyHome() {
             </button>
           ) : hasLiveEntry ? (
             <>
-              <p className="mt-2 text-[11px] font-semibold text-emerald-800">Live game detected. Streaming realtime updates.</p>
+              <p className="mt-2 text-[11px] font-semibold text-emerald-400">Live game detected. Streaming realtime updates.</p>
               {uncollectedPoints > 0 ? (
                 <button
                   type="button"
@@ -2308,25 +2328,25 @@ export function FantasyHome() {
               ) : null}
             </>
           ) : (
-            <p className="mt-2 text-[11px] text-slate-600">No live game right now. Automatic updates will resume when your next game starts.</p>
+            <p className="mt-2 text-[11px] text-ht-fg-muted">No live game right now. Automatic updates will resume when your next game starts.</p>
           )}
         </section>
       ) : null}
 
       {/* Completed games with unclaimed points */}
-      {(selectedSport === "basketball" || selectedSport === "baseball") && finalUnclaimedEntries.length > 1 ? (
+      {isFantasyLineupSport && finalUnclaimedEntries.length > 1 ? (
         <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-4">
-          <h3 className="text-base font-semibold text-slate-900">Completed Games Ready To Collect</h3>
-          <p className="mt-1 text-xs leading-relaxed text-slate-700">
+          <h3 className="text-base font-semibold text-ht-fg-primary">Completed Games Ready To Collect</h3>
+          <p className="mt-1 text-xs leading-relaxed text-ht-fg-secondary">
             Finalized rosters stay here until you collect points.
           </p>
           <div className="mt-3 space-y-2">
             {finalUnclaimedEntries.map((entry) => (
-              <div key={entry.id} className="rounded-lg border border-indigo-200 bg-white px-3 py-2">
+              <div key={entry.id} className="rounded-ht-lg border border-indigo-400/40 bg-ht-elevated px-3 py-2">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-900">{entry.gameLabel}</p>
-                    <p className="text-xs text-slate-600">{formatLocalDateTime(entry.startsAt)}</p>
+                    <p className="truncate text-sm font-semibold text-ht-fg-primary">{entry.gameLabel}</p>
+                    <p className="text-xs text-ht-fg-muted">{formatLocalDateTime(entry.startsAt)}</p>
                   </div>
                   <button
                     type="button"
@@ -2335,7 +2355,7 @@ export function FantasyHome() {
                       void claimReward(entry, rect);
                     }}
                     disabled={claimingEntryId === entry.id}
-                    className="tp-clean-button rounded-lg border border-indigo-500 bg-indigo-100 px-2.5 py-1.5 text-xs font-semibold text-indigo-900 disabled:opacity-60"
+                    className="tp-clean-button rounded-lg border border-indigo-400/60 bg-indigo-500/15 px-2.5 py-1.5 text-xs font-semibold text-indigo-300 disabled:opacity-60"
                   >
                     {claimingEntryId === entry.id ? "Collecting..." : `Collect ${computeFantasyClaimablePoints(entry)} Points`}
                   </button>
@@ -2349,15 +2369,15 @@ export function FantasyHome() {
       {/* Game Start card */}
       {showGameStart ? (
         <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-4">
-          <p className="text-xs font-black uppercase tracking-[0.12em] text-indigo-700">Game Start</p>
+          <p className="text-xs font-black uppercase tracking-[0.12em] text-indigo-300">Game Start</p>
           {sportGames.length > 0 ? (
-            <p className="mt-1 text-sm text-slate-700">
+            <p className="mt-1 text-sm text-ht-fg-secondary">
               {sportGames[0] ? formatLocalDateTime(sportGames[0].startsAt) : null}
             </p>
           ) : null}
           {sportGames.length === 0 ? (
-            <p className="mt-1 text-sm text-slate-600">
-              No {selectedSport === "baseball" ? "baseball" : "basketball"} games scheduled for this day.
+            <p className="mt-1 text-sm text-ht-fg-muted">
+              No {selectedSportLabel} games scheduled for this day.
             </p>
           ) : null}
           {sportGames.length > 0 ? (
@@ -2386,62 +2406,64 @@ export function FantasyHome() {
       {showLineupBuilder ? (
         <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-semibold text-slate-900">
+            <h3 className="text-base font-semibold text-ht-fg-primary">
               {existingEntryForSelectedGame ? "Update Lineup" : "Lineup Builder"}
             </h3>
-            <div className="text-xs font-semibold text-slate-700">
+            <div className="text-xs font-semibold text-ht-fg-secondary">
               {selectedPlayers.length}/{requiredLineupSize} selected
             </div>
           </div>
 
           {/* Scoring reference */}
-          <div className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-3">
-            <p className="text-center text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Scoring System</p>
+          <div className="mt-3 rounded-ht-xl border border-ht-border-hairline bg-ht-surface px-3 py-3">
+            <p className="text-center text-[11px] font-bold uppercase tracking-[0.08em] text-ht-fg-muted">Scoring System</p>
             {selectedSport === "baseball" ? (
               <div className="mt-2 space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Batting</p>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-ht-fg-muted">Batting</p>
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                  <span className="text-slate-600">Single / Walk</span><span className="text-right font-semibold text-slate-900">+10</span>
-                  <span className="text-slate-600">Double</span><span className="text-right font-semibold text-slate-900">+20</span>
-                  <span className="text-slate-600">Triple</span><span className="text-right font-semibold text-slate-900">+30</span>
-                  <span className="text-slate-600">Home Run</span><span className="text-right font-semibold text-slate-900">+50</span>
-                  <span className="text-slate-600">Run / RBI</span><span className="text-right font-semibold text-slate-900">+10</span>
-                  <span className="text-slate-600">Stolen Base</span><span className="text-right font-semibold text-slate-900">+15</span>
-                  <span className="text-slate-600">Strikeout (bat)</span><span className="text-right font-semibold text-rose-700">-5</span>
+                  <span className="text-ht-fg-secondary">Single / Walk</span><span className="text-right font-semibold text-ht-fg-primary">+10</span>
+                  <span className="text-ht-fg-secondary">Double</span><span className="text-right font-semibold text-ht-fg-primary">+20</span>
+                  <span className="text-ht-fg-secondary">Triple</span><span className="text-right font-semibold text-ht-fg-primary">+30</span>
+                  <span className="text-ht-fg-secondary">Home Run</span><span className="text-right font-semibold text-ht-fg-primary">+50</span>
+                  <span className="text-ht-fg-secondary">Run / RBI</span><span className="text-right font-semibold text-ht-fg-primary">+10</span>
+                  <span className="text-ht-fg-secondary">Stolen Base</span><span className="text-right font-semibold text-ht-fg-primary">+15</span>
+                  <span className="text-ht-fg-secondary">Strikeout (bat)</span><span className="text-right font-semibold text-rose-400">-5</span>
                 </div>
-                <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-slate-400">Pitching</p>
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-ht-fg-muted">Pitching</p>
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                  <span className="text-slate-600">Strikeout</span><span className="text-right font-semibold text-slate-900">+10</span>
-                  <span className="text-slate-600">Out Recorded</span><span className="text-right font-semibold text-slate-900">+5</span>
-                  <span className="text-slate-600">Earned Run</span><span className="text-right font-semibold text-rose-700">-15</span>
-                  <span className="text-slate-600">Walk / Hit Allowed</span><span className="text-right font-semibold text-rose-700">-5</span>
+                  <span className="text-ht-fg-secondary">Strikeout</span><span className="text-right font-semibold text-ht-fg-primary">+10</span>
+                  <span className="text-ht-fg-secondary">Out Recorded</span><span className="text-right font-semibold text-ht-fg-primary">+5</span>
+                  <span className="text-ht-fg-secondary">Earned Run</span><span className="text-right font-semibold text-rose-400">-15</span>
+                  <span className="text-ht-fg-secondary">Walk / Hit Allowed</span><span className="text-right font-semibold text-rose-400">-5</span>
                 </div>
               </div>
             ) : (
               <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                <span className="text-slate-600">Points</span><span className="text-right font-semibold text-slate-900">+1.0</span>
-                <span className="text-slate-600">Rebounds</span><span className="text-right font-semibold text-slate-900">+1.2</span>
-                <span className="text-slate-600">Assists</span><span className="text-right font-semibold text-slate-900">+1.5</span>
-                <span className="text-slate-600">Steals</span><span className="text-right font-semibold text-slate-900">+3.0</span>
-                <span className="text-slate-600">Blocks</span><span className="text-right font-semibold text-slate-900">+3.0</span>
-                <span className="text-slate-600">Turnovers</span><span className="text-right font-semibold text-rose-700">-1.0</span>
+                <span className="text-ht-fg-secondary">Points</span><span className="text-right font-semibold text-ht-fg-primary">+1.0</span>
+                <span className="text-ht-fg-secondary">Rebounds</span><span className="text-right font-semibold text-ht-fg-primary">+1.2</span>
+                <span className="text-ht-fg-secondary">Assists</span><span className="text-right font-semibold text-ht-fg-primary">+1.5</span>
+                <span className="text-ht-fg-secondary">Steals</span><span className="text-right font-semibold text-ht-fg-primary">+3.0</span>
+                <span className="text-ht-fg-secondary">Blocks</span><span className="text-right font-semibold text-ht-fg-primary">+3.0</span>
+                <span className="text-ht-fg-secondary">Turnovers</span><span className="text-right font-semibold text-rose-400">-1.0</span>
               </div>
             )}
           </div>
 
           {/* ── Live Roster Preview ── */}
-          <div className="mt-3 rounded-xl border border-indigo-300 bg-white px-3 py-3">
+          <div className="mt-3 rounded-ht-xl border border-indigo-400/40 bg-ht-surface px-3 py-3">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-[11px] font-black uppercase tracking-[0.1em] text-indigo-700">
+              <p className="text-[11px] font-black uppercase tracking-[0.1em] text-indigo-300">
                 My Roster
               </p>
               {submitting ? (
-                <span className="text-[10px] font-semibold text-slate-500">Saving…</span>
+                <span className="text-[10px] font-semibold text-ht-fg-muted">Saving…</span>
               ) : selectedPlayers.length === requiredLineupSize ? (
-                <span className="text-[10px] font-bold text-emerald-700">Auto-saved ✓</span>
+                <span className="text-[10px] font-bold text-emerald-400">
+                  Ready to {existingEntryForSelectedGame ? "update" : "submit"}
+                </span>
               ) : (
-                <span className="text-[10px] text-slate-400">
-                  {requiredLineupSize - selectedPlayers.length} more to auto-save
+                <span className="text-[10px] text-ht-fg-muted">
+                  {requiredLineupSize - selectedPlayers.length} more to complete
                 </span>
               )}
             </div>
@@ -2465,9 +2487,9 @@ export function FantasyHome() {
                         sizeClass="h-7 w-7"
                       />
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-slate-800">{name}</p>
+                        <p className="truncate text-sm font-semibold text-ht-fg-primary">{name}</p>
                         {(poolItem?.position || poolItem?.team) ? (
-                          <p className="text-[10px] text-slate-500">
+                          <p className="text-[10px] text-ht-fg-muted">
                             {[poolItem.position, poolItem.team].filter(Boolean).join(" · ")}
                           </p>
                         ) : null}
@@ -2482,8 +2504,8 @@ export function FantasyHome() {
                         <span
                           className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-black ${
                             rosterProj > 0
-                              ? "border-indigo-200 bg-indigo-50 text-indigo-700"
-                              : "border-slate-200 bg-slate-50 text-slate-400"
+                              ? "border-indigo-400/40 bg-indigo-500/15 text-indigo-300"
+                              : "border-ht-border-hairline bg-ht-elevated text-ht-fg-muted"
                           }`}
                         >
                           Projected: {rosterProj} pts
@@ -2496,7 +2518,7 @@ export function FantasyHome() {
               {Array.from({ length: requiredLineupSize - selectedPlayers.length }).map((_, i) => (
                 <li key={`empty-${i}`} className="flex items-center gap-2 opacity-40">
                   <div className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-dashed border-slate-400" />
-                  <span className="text-xs text-slate-500">Pick a player below…</span>
+                  <span className="text-xs text-ht-fg-muted">Pick a player below…</span>
                 </li>
               ))}
             </ul>
@@ -2514,7 +2536,7 @@ export function FantasyHome() {
                   className={`tp-clean-button rounded-full border px-3 py-1 text-[11px] font-bold transition-colors ${
                     sortBy === mode
                       ? "border-indigo-600 bg-indigo-600 text-white"
-                      : "border-slate-300 bg-white text-slate-600 hover:border-indigo-300"
+                      : "border-ht-border-soft bg-ht-elevated text-ht-fg-secondary hover:border-indigo-400/60"
                   }`}
                 >
                   {mode === "projected" ? "Best Proj" : mode === "alpha" ? "A–Z" : mode === "position" ? "Position" : "Team"}
@@ -2526,7 +2548,7 @@ export function FantasyHome() {
               <select
                 value={filterPosition}
                 onChange={(e) => setFilterPosition(e.target.value)}
-                className="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                className="flex-1 rounded-lg border border-ht-border-soft bg-ht-surface px-2.5 py-1.5 text-xs font-semibold text-ht-fg-primary shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-400"
               >
                 <option value="all">All Positions</option>
                 {CANONICAL_POSITIONS.map((pos) => (
@@ -2536,7 +2558,7 @@ export function FantasyHome() {
               <select
                 value={filterTeam}
                 onChange={(e) => setFilterTeam(e.target.value)}
-                className="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                className="flex-1 rounded-lg border border-ht-border-soft bg-ht-surface px-2.5 py-1.5 text-xs font-semibold text-ht-fg-primary shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-400"
               >
                 <option value="all">All Teams</option>
                 {uniqueTeams.map((team) => (
@@ -2552,11 +2574,11 @@ export function FantasyHome() {
               {sportGames.length > 0 ? (
                 <BasketballLoader label="Loading today's eligible players…" />
               ) : (
-                <p className="text-sm text-slate-600">No players available for this date.</p>
+                <p className="text-sm text-ht-fg-muted">No players available for this date.</p>
               )}
             </div>
           ) : sortedFilteredPool.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-600">No players match the current filter.</p>
+            <p className="mt-3 text-sm text-ht-fg-muted">No players match the current filter.</p>
           ) : (
             <>
               <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -2571,8 +2593,8 @@ export function FantasyHome() {
                       onClick={() => togglePlayer(item.playerName)}
                       className={`tp-clean-button rounded-lg border px-3 py-2 text-left transition-colors disabled:opacity-50 ${
                         isSelected
-                          ? "border-emerald-500 bg-emerald-50"
-                          : "border-indigo-200 bg-white/90 hover:border-indigo-400 active:bg-indigo-50"
+                          ? "border-emerald-500/50 bg-emerald-500/10"
+                          : "border-ht-border-soft bg-ht-elevated hover:border-indigo-400/60"
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -2582,9 +2604,9 @@ export function FantasyHome() {
                           sizeClass="h-9 w-9 shrink-0"
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-slate-900">{item.playerName}</p>
+                          <p className="truncate text-sm font-semibold text-ht-fg-primary">{item.playerName}</p>
                           {(item.position || item.team) ? (
-                            <p className="text-[10px] font-semibold text-slate-500">
+                            <p className="text-[10px] font-semibold text-ht-fg-muted">
                               {[item.position, item.team].filter(Boolean).join(" · ")}
                             </p>
                           ) : null}
@@ -2599,10 +2621,10 @@ export function FantasyHome() {
                               <span
                                 className={`text-xs font-black tabular-nums ${
                                   isSelected
-                                    ? "text-emerald-700"
+                                    ? "text-emerald-400"
                                     : displayProjection > 0
-                                    ? "text-indigo-700"
-                                    : "text-slate-400"
+                                    ? "text-indigo-300"
+                                    : "text-ht-fg-muted"
                                 }`}
                               >
                                 Projected: {displayProjection} pts
@@ -2610,7 +2632,7 @@ export function FantasyHome() {
                             );
                           })()}
                           {isSelected ? (
-                            <span className="rounded-full border border-emerald-300 bg-emerald-100 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-emerald-800">
+                            <span className="rounded-full border border-emerald-500/40 bg-emerald-500/15 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-emerald-400">
                               Added
                             </span>
                           ) : null}
@@ -2626,7 +2648,7 @@ export function FantasyHome() {
                 <button
                   type="button"
                   onClick={() => setVisibleCount((n) => n + 25)}
-                  className="tp-clean-button mt-3 w-full rounded-lg border border-indigo-200 bg-white py-2 text-xs font-semibold text-indigo-700 hover:border-indigo-400 active:bg-indigo-50"
+                  className="tp-clean-button mt-3 w-full rounded-lg border border-indigo-400/40 bg-indigo-500/10 py-2 text-xs font-semibold text-indigo-300 hover:border-indigo-400/60"
                 >
                   Load more · {sortedFilteredPool.length - visibleCount} remaining
                 </button>
@@ -2635,13 +2657,24 @@ export function FantasyHome() {
           )}
 
           {submitting ? (
-            <p className="mt-3 text-xs font-semibold leading-relaxed text-slate-700">Saving lineup…</p>
+            <p className="mt-3 text-xs font-semibold leading-relaxed text-ht-fg-muted">Saving lineup…</p>
           ) : null}
+          <button
+            type="button"
+            onClick={() => void handleSubmitRoster()}
+            disabled={submitting || selectedPlayers.length !== requiredLineupSize}
+            className="tp-clean-button mt-3 w-full rounded-xl border border-indigo-500 bg-gradient-to-r from-[#5b2ca5] via-[#7b3fd6] to-[#8f4de8] px-3 py-3 text-sm font-bold text-white shadow-sm active:scale-95 disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            {existingEntryForSelectedGame ? "Update roster" : "Submit roster"}
+          </button>
+          <p className="mt-2 text-[11px] font-medium text-ht-fg-muted">
+            Your lineup is saved only when you tap {existingEntryForSelectedGame ? "Update roster" : "Submit roster"}.
+          </p>
         </section>
       ) : null}
 
       <InlineSlotAdClient
-        slot="leaderboard-sidebar"
+        slot="inline-content"
         venueId={venueId}
         pageKey="fantasy"
         adType="inline"

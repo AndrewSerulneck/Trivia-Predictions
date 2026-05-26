@@ -1,0 +1,263 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--ht-canvas);color:var(--ht-fg-primary);font-family:var(--ht-font-body)}
+  .card{box-sizing:border-box;width:700px;padding:18px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+  /* Universal tile chrome */
+  .tile{
+    position:relative;height:200px;border-radius:24px;
+    padding:14px 16px;overflow:hidden;
+    box-shadow:0 12px 26px rgba(0,0,0,.55);
+    display:flex;flex-direction:column;justify-content:space-between;
+  }
+  .tile .title{
+    position:relative;z-index:2;
+    font-family:var(--ht-font-display);font-size:24px;line-height:.98;
+    letter-spacing:.045em;text-transform:uppercase;color:#fff;
+    text-shadow:0 1px 0 rgba(12,18,28,.85),0 3px 0 rgba(12,18,28,.55),0 0 12px rgba(255,255,255,.5);
+  }
+  .tile .meta{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+  .tile .meta .lab{
+    font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;
+    background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.22);
+    padding:5px 9px;border-radius:9999px;color:rgba(255,255,255,.95);
+    backdrop-filter:blur(4px);
+  }
+  .tile .meta code{
+    font-family:var(--ht-font-mono);font-size:10.5px;font-weight:700;
+    color:rgba(255,255,255,.85);
+  }
+  .full{grid-column:1/-1}
+
+  /* ───── 1. Live Trivia — broadcast (kept) ───── */
+  .live{
+    border:3px solid rgba(255,255,255,.6);
+    background:linear-gradient(132deg,#0ea5e9 0%,#2563eb 42%,#7c3aed 100%);
+  }
+  .live::before{
+    content:"?";position:absolute;font-family:var(--ht-font-display);font-weight:900;
+    font-size:240px;line-height:1;color:rgba(255,255,255,.07);
+    right:-20px;bottom:-90px;text-shadow:0 0 60px rgba(34,211,238,.5);
+  }
+  .live .qmarks{position:absolute;inset:0;z-index:1;opacity:.55}
+  .live .qmarks span{position:absolute;font-family:var(--ht-font-display);font-weight:900;line-height:1}
+
+  /* ───── 2. Speed Trivia — racing stripes + electric yellow ───── */
+  .speed{
+    border:3px solid #facc15;
+    background:#0a0a0f;
+  }
+  .speed .stripes{
+    position:absolute;inset:0;z-index:1;
+    background:repeating-linear-gradient(115deg,
+      transparent 0 22px,
+      rgba(250,204,21,.92) 22px 30px,
+      transparent 30px 38px,
+      rgba(132,204,22,.85) 38px 44px,
+      transparent 44px 62px);
+    mask-image:linear-gradient(90deg, #000 0%, #000 70%, transparent 100%);
+    -webkit-mask-image:linear-gradient(90deg, #000 0%, #000 70%, transparent 100%);
+  }
+  .speed .bolt{
+    position:absolute;z-index:2;right:14px;top:14px;
+    width:48px;height:48px;color:#facc15;
+    filter:drop-shadow(0 0 12px rgba(250,204,21,.7));
+  }
+  .speed .title{color:#facc15;text-shadow:0 1px 0 #000,0 3px 0 rgba(0,0,0,.7),0 0 18px rgba(250,204,21,.65)}
+  .speed .speedo{
+    position:absolute;right:-32px;bottom:-44px;width:160px;height:160px;
+    border-radius:50%;border:6px solid rgba(250,204,21,.18);z-index:1;
+  }
+  .speed .speedo::after{
+    content:"";position:absolute;inset:14px;border-radius:50%;
+    border:2px dashed rgba(250,204,21,.35);
+  }
+
+  /* ───── 3. Sports Bingo — casino felt + slot reels + cool ice border ───── */
+  .bingo{
+    border:3px solid #7dd3fc;
+    box-shadow:0 0 0 1px rgba(125,211,252,.6) inset, 0 12px 26px rgba(0,0,0,.55), 0 0 28px rgba(125,211,252,.18);
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(255,215,128,.10), transparent 60%),
+      radial-gradient(circle at 20% 80%, rgba(0,0,0,.45), transparent 60%),
+      #0c3a2e;
+  }
+  .bingo .felt{
+    position:absolute;inset:0;z-index:1;opacity:.22;
+    background-image:radial-gradient(rgba(255,255,255,.4) 1px, transparent 1.4px);
+    background-size:14px 14px;
+  }
+  .bingo .reels{
+    position:absolute;right:14px;bottom:14px;z-index:2;
+    display:flex;gap:6px;
+    background:linear-gradient(180deg,#5a3919,#3a2410);
+    padding:7px 7px 8px;border-radius:10px;
+    border:2px solid #c89b3a;
+    box-shadow:inset 0 1px 0 rgba(255,221,140,.4),0 4px 0 #1a0f04;
+  }
+  .bingo .reels .r{
+    width:34px;height:46px;
+    background:linear-gradient(180deg,#fff8e7,#e8d09a);
+    border:1.5px solid #9a7320;border-radius:5px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--ht-font-display);font-weight:900;
+    font-size:28px;color:#9a1c1c;line-height:1;
+    box-shadow:inset 0 -3px 0 rgba(0,0,0,.18);
+  }
+  .bingo .reels .r.cherry{color:#dc2626;font-size:22px}
+  .bingo .reels .r.bar{font-size:14px;color:#1c1917;letter-spacing:0}
+  .bingo .title{color:#fef3c7;text-shadow:0 1px 0 #1a0f04,0 3px 0 rgba(0,0,0,.6),0 0 14px rgba(250,204,21,.4)}
+  .bingo .luck{
+    position:absolute;left:14px;top:50%;transform:translateY(-50%);z-index:2;
+    font-family:var(--ht-font-display);font-size:64px;font-weight:900;
+    color:#fbbf24;line-height:1;letter-spacing:-.04em;
+    text-shadow:0 2px 0 #5a3919,0 0 22px rgba(251,191,36,.55);
+  }
+
+  /* ───── 4. Pick 'Em — sportsbook ticket / split VS ───── */
+  .pickem{
+    border:3px solid #fde68a;
+    background:
+      linear-gradient(115deg, #1a2f72 0%, #1a2f72 48%, #6b1a4e 52%, #6b1a4e 100%);
+  }
+  .pickem .vs{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;
+    font-family:var(--ht-font-display);font-size:108px;font-weight:900;line-height:1;
+    color:rgba(255,255,255,.92);letter-spacing:-.04em;
+    text-shadow:0 0 28px rgba(0,0,0,.65),0 0 6px rgba(0,0,0,.6);
+  }
+  .pickem .vs em{font-style:normal;color:#fde68a;text-shadow:0 0 30px rgba(253,224,71,.7)}
+  .pickem .perf{
+    position:absolute;left:50%;top:0;bottom:0;width:0;z-index:2;
+    border-left:2px dashed rgba(253,230,138,.65);transform:translateX(-1px);
+  }
+  .pickem .check{
+    position:absolute;z-index:2;left:16px;bottom:54px;
+    width:36px;height:36px;border-radius:10px;
+    background:#fde68a;color:#1a2f72;display:flex;align-items:center;justify-content:center;
+    font-weight:900;font-size:22px;line-height:1;
+    box-shadow:0 4px 0 rgba(0,0,0,.4);transform:rotate(-8deg);
+  }
+  .pickem .stub{
+    position:absolute;z-index:2;right:16px;top:14px;
+    font-size:9px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;
+    background:rgba(0,0,0,.4);padding:5px 10px;border-radius:4px;
+    border:1px dashed rgba(253,230,138,.6);color:#fde68a;
+  }
+  .pickem .title{color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.7),0 0 18px rgba(253,230,138,.45)}
+
+  /* ───── 5. Fantasy — coach's chalkboard tactics ───── */
+  .fantasy{
+    border:3px solid rgba(254,243,199,.55);
+    background:
+      radial-gradient(60% 50% at 80% 20%, rgba(255,255,255,.06), transparent 70%),
+      #0a3128;
+  }
+  .fantasy .grid{
+    position:absolute;inset:0;z-index:1;
+    background-image:
+      linear-gradient(rgba(254,243,199,.10) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(254,243,199,.10) 1px, transparent 1px);
+    background-size:32px 32px;
+  }
+  .fantasy .court{
+    position:absolute;inset:0;z-index:1;pointer-events:none;
+  }
+  .fantasy .court::before{
+    /* baseline */
+    content:"";position:absolute;left:14px;right:14px;bottom:42px;height:2px;
+    background:rgba(254,243,199,.55);
+  }
+  .fantasy .court::after{
+    /* free-throw arc */
+    content:"";position:absolute;right:30px;bottom:14px;width:90px;height:60px;
+    border:2px solid rgba(254,243,199,.55);border-bottom:0;border-radius:90px 90px 0 0;
+  }
+  .fantasy .xo{position:absolute;z-index:2;font-family:var(--ht-font-display);font-weight:900;line-height:1}
+  .fantasy .x1{left:20px;top:60px;font-size:32px;color:#fde68a;transform:rotate(-12deg)}
+  .fantasy .o1{left:64px;top:88px;font-size:30px;color:#67e8f9;transform:rotate(8deg)}
+  .fantasy .x2{left:108px;top:54px;font-size:30px;color:#fde68a;transform:rotate(6deg)}
+  .fantasy .arrow{
+    position:absolute;z-index:2;left:36px;top:74px;
+    width:90px;height:60px;
+  }
+  .fantasy .title{color:#fef3c7;font-family:var(--ht-font-display);
+    text-shadow:0 1px 0 #062b25,0 3px 0 rgba(0,0,0,.55),0 0 14px rgba(254,243,199,.35)}
+
+  .empty{display:none}
+</style></head><body><div class="card">
+
+  <!-- Live Trivia (kept) -->
+  <div class="tile live">
+    <div class="qmarks">
+      <span style="left:8%;top:20%;font-size:34px;color:rgba(207,250,254,.55);transform:rotate(-12deg)">?</span>
+      <span style="left:78%;top:14%;font-size:26px;color:rgba(254,240,138,.5);transform:rotate(10deg)">?</span>
+      <span style="left:34%;top:60%;font-size:22px;color:rgba(167,243,208,.5);transform:rotate(-4deg)">?</span>
+    </div>
+    <div class="title">Live Trivia</div>
+    <div class="meta">
+      <span class="lab">Broadcast</span>
+      <code>cyan → blue → violet</code>
+    </div>
+  </div>
+
+  <!-- Speed Trivia — racing stripes + bolt -->
+  <div class="tile speed">
+    <div class="stripes"></div>
+    <div class="speedo"></div>
+    <svg class="bolt" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+    <div class="title">Speed<br/>Trivia</div>
+    <div class="meta">
+      <span class="lab" style="border-color:rgba(250,204,21,.55);color:#fde047">15s · Go</span>
+      <code style="color:#facc15">#facc15 · racing yellow</code>
+    </div>
+  </div>
+
+  <!-- Sports Bingo — casino felt + slot reels -->
+  <div class="tile bingo">
+    <div class="felt"></div>
+    <div class="luck">7<span style="font-size:.7em;vertical-align:.05em">7</span></div>
+    <div class="reels">
+      <div class="r cherry">🍒</div>
+      <div class="r">7</div>
+      <div class="r bar">BAR</div>
+    </div>
+    <div class="title">Sports<br/>Bingo</div>
+    <div class="meta">
+      <span class="lab" style="border-color:rgba(200,155,58,.55);color:#fbbf24">Luck</span>
+      <code style="color:#fbbf24">felt #0c3a2e · gold trim</code>
+    </div>
+  </div>
+
+  <!-- Pick'Em — sportsbook split VS -->
+  <div class="tile pickem">
+    <div class="vs">VS</div>
+    <div class="perf"></div>
+    <div class="check">✓</div>
+    <div class="stub">Ticket #042</div>
+    <div class="title">Pick<br/>'Em</div>
+    <div class="meta">
+      <span class="lab" style="border-color:rgba(253,230,138,.5);color:#fde68a">Sportsbook</span>
+      <code style="color:#fde68a">#1a2f72 · #6b1a4e</code>
+    </div>
+  </div>
+
+  <!-- Fantasy — coach's chalkboard -->
+  <div class="tile fantasy full" style="height:170px">
+    <div class="grid"></div>
+    <div class="court"></div>
+    <span class="xo x1">X</span>
+    <span class="xo o1">O</span>
+    <span class="xo x2">X</span>
+    <svg class="arrow" viewBox="0 0 90 60" fill="none" stroke="#fef3c7" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 4">
+      <path d="M5 50 Q 40 5 80 30"/>
+      <path d="M70 22 L82 30 L70 38" fill="none" stroke-dasharray="0"/>
+    </svg>
+    <div class="title">Fantasy</div>
+    <div class="meta">
+      <span class="lab" style="border-color:rgba(254,243,199,.45);color:#fef3c7">Strategy</span>
+      <code style="color:#fef3c7">chalkboard #0a3128 · chalk lines</code>
+    </div>
+  </div>
+
+</div></body></html>

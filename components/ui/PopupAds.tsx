@@ -7,6 +7,7 @@ import { isVenueTransitionGateActive } from "@/lib/venueGameTransition";
 import { releaseAdTier, requestAdTier, setLandingPopupGate } from "@/components/ui/adPriority";
 import { setScrollLock } from "@/lib/scrollLock";
 import { incrementAdCounter } from "@/lib/adFrequency";
+import { lookupSlotId } from "@/lib/adSlotRegistry";
 import type { Advertisement, AdPageKey } from "@/types";
 
 type PopupTrigger = "popup-on-entry" | "popup-on-scroll" | "popup-round-end";
@@ -47,8 +48,11 @@ function resolvePageKey(pathname: string | null): AdPageKey | null {
   if (/^\/venue\/[^/]+/.test(pathname)) {
     return "venue";
   }
+  if (pathname.startsWith("/trivia/live")) {
+    return "live-trivia";
+  }
   if (pathname.startsWith("/trivia")) {
-    return "trivia";
+    return "speed-trivia";
   }
   if (pathname.startsWith("/bingo")) {
     return "sports-bingo";
@@ -359,7 +363,7 @@ export function PopupAds() {
         }
         // Trivia landing popups may race with initial transition completion.
         // Wait briefly only on trivia routes.
-        if (pageKey === "trivia") {
+        if (pageKey === "trivia" || pageKey === "speed-trivia" || pageKey === "live-trivia") {
           const gateStart = Date.now();
           while (!cancelled && isVenueTransitionGateActive() && Date.now() - gateStart < 7000) {
             await wait(120);
@@ -476,7 +480,8 @@ export function PopupAds() {
 
   useEffect(() => {
     const pageKey = resolvePageKey(pathname);
-    if (pageKey !== "trivia" || pathname?.startsWith("/admin")) {
+    const isTriviaRoute = pageKey === "trivia" || pageKey === "speed-trivia" || pageKey === "live-trivia";
+    if (!isTriviaRoute || pathname?.startsWith("/admin")) {
       return;
     }
 
@@ -491,7 +496,7 @@ export function PopupAds() {
       // covers it — the ad should appear *over* the summary, not before it.
       void wait(350).then(() =>
         showPopup("popup-round-end", {
-          pageKey: "trivia",
+          pageKey,
           displayTrigger: "round-end",
           roundNumber: requestedRound,
         }).then((opened) => {
@@ -510,7 +515,8 @@ export function PopupAds() {
 
   useEffect(() => {
     const pageKey = resolvePageKey(pathname);
-    if (pageKey !== "trivia" || pathname?.startsWith("/admin")) {
+    const isTriviaRoute = pageKey === "trivia" || pageKey === "speed-trivia" || pageKey === "live-trivia";
+    if (!isTriviaRoute || pathname?.startsWith("/admin")) {
       return;
     }
 
@@ -527,7 +533,7 @@ export function PopupAds() {
         return;
       }
       void showPopup("popup-round-end", {
-        pageKey: "trivia",
+        pageKey,
         displayTrigger: "round-end",
         roundNumber: nextRound,
       }).then((opened) => {
@@ -578,6 +584,8 @@ export function PopupAds() {
   }
 
   const adRatio = popup.ad.width > 0 && popup.ad.height > 0 ? popup.ad.width / popup.ad.height : 9 / 16;
+  const popupSlotId = lookupSlotId(popup.ad.pageKey, popup.ad.slot, popup.ad.displayTrigger, popup.ad.roundNumber ?? undefined);
+  const popupSlotLabel = popupSlotId ?? popup.ad.slot;
   const safeWidth = "calc(100vw - 28px)";
   const safeHeight = "calc(100svh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 190px)";
   const modalMaxHeight = "calc(100svh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 16px)";
@@ -601,15 +609,20 @@ export function PopupAds() {
       }}
     >
       <div
-        className="pointer-events-auto animate-tp-popup-sheet-up w-fit max-w-[calc(100vw-12px)] overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.28)]"
+        className="pointer-events-auto animate-tp-popup-sheet-up w-fit max-w-[calc(100vw-12px)] overflow-hidden rounded-ht-2xl border border-ht-border-soft bg-ht-elevated shadow-[0_20px_45px_rgba(0,0,0,0.55)]"
         style={{ maxHeight: modalMaxHeight }}
       >
-        <div className="flex items-center justify-between border-b border-amber-200 bg-gradient-to-r from-amber-100 via-orange-100 to-red-100 px-3 py-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-700">Sponsored</p>
+        <div className="flex items-center justify-between border-b border-ht-border-hairline bg-ht-surface px-3 py-2">
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ht-fg-muted">Sponsored</p>
+            <span className="rounded bg-indigo-500/15 px-1.5 py-0.5 font-mono text-[11px] font-bold text-indigo-300">
+              {popupSlotLabel}
+            </span>
+          </div>
           <button
             type="button"
             onClick={closePopup}
-            className="tp-clean-button inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-white text-lg font-semibold text-slate-700"
+            className="tp-clean-button inline-flex h-8 w-8 items-center justify-center rounded-full border border-ht-border-soft bg-ht-elevated-2 text-lg font-semibold text-ht-fg-secondary"
             aria-label="Close advertisement"
           >
             ×
@@ -630,7 +643,7 @@ export function PopupAds() {
               width={popup.ad.width}
               height={popup.ad.height}
               style={frameStyle}
-              className="block rounded-lg border border-slate-200 bg-slate-100 object-contain"
+              className="block rounded-ht-lg border border-ht-border-hairline bg-ht-surface object-contain"
             />
           </div>
         </a>

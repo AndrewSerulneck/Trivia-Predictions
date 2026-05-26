@@ -13,7 +13,7 @@ export default function AdvertisePage() {
     >
       <div className="space-y-4">
         <BackButton label="Back" />
-        <p className="text-sm text-slate-700">
+        <p className="text-sm text-ht-fg-secondary">
           Fill out this quick intake form and our team will follow up.
         </p>
         <AdvertisingIntakeForm />

@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from "fs";
 import { join } from "path";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getInlineSlotRegistryEntries } from "@/lib/adSlotRegistry";
 import {
   isAdTypeSupportedForPage,
   isDisplayTriggerSupportedForPlacement,
@@ -255,6 +256,8 @@ function mapVenueRow(row: VenueRow): Venue {
 
 const AD_SELECT =
   "id, slot, slot_key, priority, is_placeholder, page_key, ad_type, display_trigger, placement_key, round_number, sequence_index, venue_id, venue_ids, target_all_venues, target_cities, target_zip_codes, target_counties, target_states, target_regions, advertiser_name, frequency_interval, image_url, click_url, alt_text, width, height, dismiss_delay_seconds, popup_cooldown_seconds, active, start_date, end_date, impressions, clicks";
+const VENUE_LEADERBOARD_SLOT_PATTERN = /^venue-leaderboard-rows-\d+-\d+$/;
+const VENUE_LEADERBOARD_PLACEMENT_KEY = "venue-leaderboard-inline";
 
 function computeSlotKey(
   slot: AdSlot,
@@ -264,7 +267,7 @@ function computeSlotKey(
   placementKey?: string
 ): string {
   if (displayTrigger === "round-end") {
-    return `${pageKey}-round-end${roundNumber ? `-r${roundNumber}` : ""}`;
+    return `${pageKey}-${slot}-round-end${roundNumber ? `-r${roundNumber}` : ""}`;
   }
   if (slot === "popup-on-entry") return `${pageKey}-popup-on-entry`;
   if (slot === "popup-on-scroll") return `${pageKey}-popup-on-scroll`;
@@ -302,6 +305,32 @@ function isValidClickUrl(value: string): boolean {
     return false;
   } catch {
     return false;
+  }
+}
+
+function isVenueLeaderboardInlineSlot(pageKey: AdPageKey, slot: AdSlot): boolean {
+  return pageKey === "venue" && VENUE_LEADERBOARD_SLOT_PATTERN.test(slot);
+}
+
+function assertVenueLeaderboardInlineRequirements(input: {
+  pageKey: AdPageKey;
+  slot: AdSlot;
+  placementKey?: string;
+  sequenceIndex?: number;
+}): void {
+  if (!isVenueLeaderboardInlineSlot(input.pageKey, input.slot)) {
+    return;
+  }
+  const placementKey = input.placementKey?.trim() ?? "";
+  const sequenceIndex = Number(input.sequenceIndex);
+  // Explicit server guard to keep leaderboard inline placement deterministic.
+  if (
+    placementKey !== VENUE_LEADERBOARD_PLACEMENT_KEY ||
+    !Number.isInteger(sequenceIndex) ||
+    sequenceIndex < 1 ||
+    sequenceIndex > 5
+  ) {
+    throw new Error("Leaderboard inline ads require placementKey='venue-leaderboard-inline' and sequenceIndex 1-5.");
   }
 }
 
@@ -446,6 +475,26 @@ export type PaginatedResult<T> = {
   pageSize: number;
   totalPages: number;
 };
+
+export type PlaceholderAdTemplateInput = Partial<{
+  adType: AdType;
+  displayTrigger: AdDisplayTrigger;
+  placementKey: string;
+  sequenceIndex: number;
+  priority: number;
+  advertiserName: string;
+  imageUrl: string;
+  adImageUrl: string;
+  clickUrl: string;
+  altText: string;
+  width: number;
+  height: number;
+  frequencyInterval: number;
+  dismissDelaySeconds: number;
+  popupCooldownSeconds: number;
+  startDate: string;
+  endDate: string | null;
+}>;
 
 export async function listAdminTriviaQuestions(opts?: {
   page?: number;
@@ -795,6 +844,24 @@ export async function listAdminAdvertisements(opts?: {
   };
 }
 
+export async function getAdminAdvertisementById(id: string): Promise<Advertisement | null> {
+  assertAdminConfigured();
+  const normalizedId = String(id ?? "").trim();
+  if (!normalizedId) {
+    throw new Error("Advertisement id is required.");
+  }
+  const { data, error } = await supabaseAdmin!
+    .from("advertisements")
+    .select(AD_SELECT)
+    .eq("id", normalizedId)
+    .maybeSingle<AdvertisementRow>();
+  if (error) {
+    throw new Error(error.message ?? "Failed to load advertisement.");
+  }
+  if (!data) return null;
+  return mapAdRow(data);
+}
+
 function normalizeAdGeoList(values?: string[] | null, uppercase = false): string[] {
   const base = Array.isArray(values) ? values : [];
   return Array.from(
@@ -1033,16 +1100,19 @@ export async function createAdminAdvertisement(input: {
       `Trigger "${placementMeta.displayTrigger}" is not supported for ${placementMeta.adType} ads on page "${placementMeta.pageKey}".`
     );
   }
-  if (placementMeta.displayTrigger === "round-end" && placementMeta.pageKey !== "trivia") {
-    throw new Error("Round-end trigger is only supported on the Trivia page.");
+  const isTriviaPage = placementMeta.pageKey === "trivia" || placementMeta.pageKey === "speed-trivia" || placementMeta.pageKey === "live-trivia";
+  if (placementMeta.displayTrigger === "round-end" && !isTriviaPage) {
+    throw new Error("Round-end trigger is only supported on Trivia pages.");
   }
-  if (
-    placementMeta.pageKey === "trivia" &&
-    placementMeta.displayTrigger === "round-end" &&
-    !placementMeta.roundNumber
-  ) {
+  if (isTriviaPage && placementMeta.displayTrigger === "round-end" && !placementMeta.roundNumber) {
     throw new Error("Choose a round number for Trivia round-end ads.");
   }
+  assertVenueLeaderboardInlineRequirements({
+    pageKey: placementMeta.pageKey,
+    slot: placementMeta.slot,
+    placementKey: placementMeta.placementKey,
+    sequenceIndex: placementMeta.sequenceIndex,
+  });
 
   const derivedSlotKey =
     input.slotKey?.trim() ||
@@ -1214,16 +1284,19 @@ export async function updateAdminAdvertisement(input: {
       `Trigger "${placementMeta.displayTrigger}" is not supported for ${placementMeta.adType} ads on page "${placementMeta.pageKey}".`
     );
   }
-  if (placementMeta.displayTrigger === "round-end" && placementMeta.pageKey !== "trivia") {
-    throw new Error("Round-end trigger is only supported on the Trivia page.");
+  const isTriviaPage = placementMeta.pageKey === "trivia" || placementMeta.pageKey === "speed-trivia" || placementMeta.pageKey === "live-trivia";
+  if (placementMeta.displayTrigger === "round-end" && !isTriviaPage) {
+    throw new Error("Round-end trigger is only supported on Trivia pages.");
   }
-  if (
-    placementMeta.pageKey === "trivia" &&
-    placementMeta.displayTrigger === "round-end" &&
-    !placementMeta.roundNumber
-  ) {
+  if (isTriviaPage && placementMeta.displayTrigger === "round-end" && !placementMeta.roundNumber) {
     throw new Error("Choose a round number for Trivia round-end ads.");
   }
+  assertVenueLeaderboardInlineRequirements({
+    pageKey: placementMeta.pageKey,
+    slot: placementMeta.slot,
+    placementKey: placementMeta.placementKey,
+    sequenceIndex: placementMeta.sequenceIndex,
+  });
 
   const derivedSlotKey =
     input.slotKey?.trim() ||
@@ -1272,6 +1345,117 @@ export async function updateAdminAdvertisement(input: {
   }
 
   return mapAdRow(data);
+}
+
+/**
+ * Creates fallback placeholders for every inline slot that currently lacks an active placeholder.
+ * This operation is idempotent: slots already covered by an active placeholder are skipped.
+ */
+export async function applyPlaceholderAdToAllInlineSlots(input: {
+  templateAdId?: string;
+  template?: PlaceholderAdTemplateInput;
+  adminUserId?: string;
+}): Promise<{
+  created: number;
+  skipped: number;
+  errors: Array<{ slotId: string; pageKey: string; error: string }>;
+}> {
+  assertAdminConfigured();
+
+  const errors: Array<{ slotId: string; pageKey: string; error: string }> = [];
+  let created = 0;
+  let skipped = 0;
+
+  let template: PlaceholderAdTemplateInput = { ...(input.template ?? {}) };
+  const templateAdId = String(input.templateAdId ?? "").trim();
+  if (templateAdId) {
+    const source = await getAdminAdvertisementById(templateAdId);
+    if (!source) {
+      throw new Error("Template advertisement not found.");
+    }
+    template = {
+      adType: source.adType,
+      displayTrigger: source.displayTrigger,
+      placementKey: source.placementKey,
+      sequenceIndex: source.sequenceIndex,
+      priority: source.priority,
+      advertiserName: source.advertiserName,
+      imageUrl: source.imageUrl,
+      clickUrl: source.clickUrl,
+      altText: source.altText,
+      width: source.width,
+      height: source.height,
+      frequencyInterval: source.frequencyInterval,
+      dismissDelaySeconds: source.dismissDelaySeconds,
+      popupCooldownSeconds: source.popupCooldownSeconds,
+      startDate: source.startDate,
+      endDate: source.endDate ?? null,
+      ...template,
+    };
+  }
+
+  const inlineEntries = getInlineSlotRegistryEntries();
+  const today = new Date().toISOString().slice(0, 10);
+
+  for (const entry of inlineEntries) {
+    try {
+      const { count, error: existsError } = await supabaseAdmin!
+        .from("advertisements")
+        .select("id", { count: "exact", head: true })
+        .eq("slot", entry.slot)
+        .eq("page_key", entry.pageKey)
+        .eq("is_placeholder", true)
+        .eq("active", true);
+
+      if (existsError) {
+        throw new Error(existsError.message ?? "Failed to check existing placeholder.");
+      }
+      if ((count ?? 0) > 0) {
+        skipped += 1;
+        continue;
+      }
+
+      const fallbackImageUrl = "https://via.placeholder.com/300x250?text=Placeholder+Ad";
+      const startDate = String(template.startDate ?? today).slice(0, 10);
+      const endDate = template.endDate ? String(template.endDate).slice(0, 10) : undefined;
+
+      await createAdminAdvertisement({
+        slot: entry.slot,
+        pageKey: entry.pageKey,
+        adType: template.adType ?? "inline",
+        displayTrigger: template.displayTrigger ?? entry.trigger ?? "on-load",
+        placementKey: template.placementKey ?? undefined,
+        sequenceIndex: Number.isFinite(template.sequenceIndex) ? Number(template.sequenceIndex) : undefined,
+        priority: Number.isFinite(template.priority) ? Number(template.priority) : 1000,
+        advertiserName: template.advertiserName?.trim()
+          ? `${template.advertiserName.trim()} (${entry.label})`
+          : `Placeholder (${entry.label})`,
+        frequencyInterval: Number.isFinite(template.frequencyInterval) ? Number(template.frequencyInterval) : 1,
+        imageUrl: String(template.imageUrl ?? template.adImageUrl ?? fallbackImageUrl),
+        clickUrl: String(template.clickUrl ?? "https://example.com"),
+        altText: String(template.altText ?? "Placeholder ad"),
+        width: Number.isFinite(template.width) ? Number(template.width) : 300,
+        height: Number.isFinite(template.height) ? Number(template.height) : 250,
+        dismissDelaySeconds: Number.isFinite(template.dismissDelaySeconds) ? Number(template.dismissDelaySeconds) : 3,
+        popupCooldownSeconds: Number.isFinite(template.popupCooldownSeconds) ? Number(template.popupCooldownSeconds) : 180,
+        active: true,
+        isPlaceholder: true,
+        startDate,
+        endDate,
+        targetAllVenues: true,
+      });
+
+      created += 1;
+    } catch (error) {
+      errors.push({
+        slotId: entry.id,
+        pageKey: entry.pageKey,
+        error: error instanceof Error ? error.message : "Unknown slot creation error.",
+      });
+    }
+  }
+
+  return { created, skipped, errors };
 }
 
 export async function deleteAdminAdvertisement(id: string): Promise<void> {

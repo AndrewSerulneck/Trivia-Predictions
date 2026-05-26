@@ -1,0 +1,326 @@
+/* =============================================================
+   Hightop Challenge — Colors & Type
+   The single source of truth for foundations. Import this first.
+   ============================================================= */
+
+/* Web fonts — Google Fonts (Bree Serif, Nunito).
+   Kalam is INTENTIONALLY excluded: it belongs to the legacy "comic" era
+   and should not appear on any player-facing surface in the dark-native rebuild.
+   ------------------------------------------------------------- */
+@import url("https://fonts.googleapis.com/css2?family=Bree+Serif&family=Nunito:wght@400;600;700;800;900&display=swap");
+
+:root {
+  color-scheme: dark;
+
+  /* -----------------------------------------------------------
+     CANVAS & SURFACES
+     Every player-facing surface is dark. There is no light mode.
+     ----------------------------------------------------------- */
+  --ht-canvas:          #020617;   /* page background (slate-950)        */
+  --ht-surface:         #0f172a;   /* card / panel default (slate-900)   */
+  --ht-elevated:        #1e293b;   /* nested panel / input (slate-800)   */
+  --ht-elevated-2:      #334155;   /* highest nested level (slate-700)   */
+
+  /* Borders — always rgba on dark, never pure slate-200 / gray-200       */
+  --ht-border-hairline: rgba(255, 255, 255, 0.08);  /* default card edge  */
+  --ht-border-soft:     rgba(255, 255, 255, 0.12);  /* button/input edge  */
+  --ht-border-strong:   rgba(255, 255, 255, 0.20);  /* tabs, dividers     */
+
+  /* -----------------------------------------------------------
+     TEXT — dark surface rules
+     fg-primary is what you reach for. fg-muted is for labels and
+     metadata. Anything dimmer than fg-dim is illegible at typical
+     mobile brightness — DO NOT use slate-600/700 on dark surfaces.
+     ----------------------------------------------------------- */
+  --ht-fg-primary:      #f8fafc;   /* slate-50  — body, headings         */
+  --ht-fg-secondary:    #e2e8f0;   /* slate-200 — secondary body         */
+  --ht-fg-muted:        #94a3b8;   /* slate-400 — labels, captions       */
+  --ht-fg-dim:          #64748b;   /* slate-500 — placeholder only       */
+
+  /* -----------------------------------------------------------
+     ACCENT COLORS — "the accent tells you where you are"
+     Every screen carries one accent. Borders, eyebrow labels, and
+     accent fills inherit from the section's accent token.
+     ----------------------------------------------------------- */
+
+  /* Cyan — Live Trivia, primary informational, focus rings           */
+  --ht-cyan-50:   #ecfeff;
+  --ht-cyan-200:  #a5f3fc;
+  --ht-cyan-300:  #67e8f9;
+  --ht-cyan-400:  #22d3ee;
+  --ht-cyan-500:  #06b6d4;
+  --ht-cyan-600:  #0891b2;
+
+  /* Emerald — Speed Trivia "answering" state, success, +points     */
+  --ht-emerald-200: #a7f3d0;
+  --ht-emerald-300: #6ee7b7;
+  --ht-emerald-400: #34d399;
+  --ht-emerald-500: #10b981;
+  --ht-emerald-600: #059669;
+
+  /* Amber — countdowns, "next up" status, closest-guess flag       */
+  --ht-amber-200: #fde68a;
+  --ht-amber-300: #fcd34d;
+  --ht-amber-400: #fbbf24;
+  --ht-amber-500: #f59e0b;
+
+  /* Fuchsia — answer reveal, intermission, "between" states        */
+  --ht-fuchsia-200: #f5d0fe;
+  --ht-fuchsia-300: #f0abfc;
+  --ht-fuchsia-400: #e879f9;
+  --ht-fuchsia-500: #d946ef;
+
+  /* Indigo / Violet — Pick'Em, Fantasy                              */
+  --ht-indigo-400: #818cf8;
+  --ht-indigo-500: #6366f1;
+  --ht-violet-400: #a78bfa;
+  --ht-violet-500: #8b5cf6;
+  --ht-violet-600: #7c3aed;
+
+  /* Rose — wrong answer, errors, forfeit (NEVER the exit pill)     */
+  --ht-rose-300: #fda4af;
+  --ht-rose-400: #fb7185;
+  --ht-rose-500: #f43f5e;
+
+  /* -----------------------------------------------------------
+     THE EXIT PILL — the ONLY warm element on screen
+     Used exclusively for Back / Exit / Leave actions. Always
+     paired with the dark structural border so it reads on warm
+     backgrounds like Bingo.
+     ----------------------------------------------------------- */
+  --ht-exit-from:   #a93d3a;
+  --ht-exit-via:    #c8573e;
+  --ht-exit-to:     #e9784e;
+  --ht-exit-text:   #fff7ea;
+  --ht-exit-border: #1c2b3a;
+
+  /* -----------------------------------------------------------
+     PAGE-LEVEL ACCENTS — what color a non-game screen takes.
+     "Cyan = home base." Other pages override only when they have
+     a specific functional accent (table from the design brief §3).
+     ----------------------------------------------------------- */
+  --ht-page-home:        var(--ht-cyan-500);       /* Venue Hub, Join, Login */
+  --ht-page-leaderboard: var(--ht-amber-500);
+  --ht-page-activity:    #60a5fa;                  /* blue-400 — Activity, Career */
+  --ht-page-prizes:      #d89a4f;                  /* gold — Prize Wallet, Redeem */
+  --ht-page-faqs:        var(--ht-fg-muted);       /* slate-400 — Info pages */
+  --ht-page-danger:      var(--ht-rose-500);
+  --ht-page-notify:      var(--ht-cyan-500);
+
+  /* -----------------------------------------------------------
+     GAME COLOR IDENTITIES
+     Each game owns a continuous gradient that runs from the
+     venue hub button -> landing rules card -> live gameplay.
+     ----------------------------------------------------------- */
+  /* Live Trivia — Broadcast (kept). Cyan → blue → violet. */
+  --ht-game-live:        linear-gradient(132deg, #0ea5e9 0%, #2563eb 42%, #7c3aed 100%);
+  --ht-game-live-tint:   linear-gradient(132deg, rgba(14,165,233,0.20) 0%, rgba(37,99,235,0.24) 42%, rgba(124,58,237,0.26) 100%);
+  --ht-game-live-edge:   var(--ht-cyan-300);
+  --ht-game-live-primary:  var(--ht-cyan-500);
+  --ht-game-live-secondary:var(--ht-emerald-500);
+
+  /* Speed Trivia — Racing electricity. Yellow + lime stripes on near-black. */
+  --ht-game-trivia:        #facc15;                /* primary accent */
+  --ht-game-trivia-base:   #0a0a0f;                /* near-black background */
+  --ht-game-trivia-stripe: linear-gradient(115deg,
+                              transparent 0 22px,
+                              rgba(250,204,21,0.92) 22px 30px,
+                              transparent 30px 38px,
+                              rgba(132,204,22,0.85) 38px 44px,
+                              transparent 44px 62px);
+  --ht-game-trivia-edge:   #facc15;
+  --ht-game-trivia-primary:  #facc15;
+  --ht-game-trivia-secondary:#84cc16;
+
+  /* Sports Bingo — Casino felt with a HIGH-CONTRAST COOL ICE border.
+     The cool border is the only non-warm element so it cuts cleanly
+     against orange/red/gold even when adjacent to the warm exit pill. */
+  --ht-game-bingo:        radial-gradient(120% 80% at 50% 0%, rgba(255,215,128,0.10), transparent 60%),
+                          radial-gradient(circle at 20% 80%, rgba(0,0,0,0.45), transparent 60%),
+                          #0c3a2e;
+  --ht-game-bingo-base:   #0c3a2e;
+  --ht-game-bingo-trim:   #c89b3a;                  /* gold inner trim */
+  --ht-game-bingo-edge:   #7dd3fc;                  /* sky-300 — cool ice border */
+  --ht-game-bingo-primary:  #f97316;
+  --ht-game-bingo-secondary:#f59e0b;
+
+  /* Pick 'Em — Sportsbook ticket. Diagonal navy / magenta split. */
+  --ht-game-pickem:       linear-gradient(115deg, #1a2f72 0%, #1a2f72 48%, #6b1a4e 52%, #6b1a4e 100%);
+  --ht-game-pickem-edge:  #fde68a;                  /* ticket-yellow */
+  --ht-game-pickem-primary:  #4f46e5;
+  --ht-game-pickem-secondary:var(--ht-cyan-500);
+
+  /* Fantasy — Coach's chalkboard. Deep forest with chalk grid. */
+  --ht-game-fantasy:      #0a3128;
+  --ht-game-fantasy-edge: rgba(254, 243, 199, 0.55);
+  --ht-game-fantasy-primary:  var(--ht-violet-600);
+  --ht-game-fantasy-secondary:var(--ht-cyan-500);
+
+  /* -----------------------------------------------------------
+     FOCUS RING — always cyan, always 2px halo
+     ----------------------------------------------------------- */
+  --ht-focus-ring: 0 0 0 2px rgba(34, 211, 238, 0.36);
+
+  /* -----------------------------------------------------------
+     SHADOWS — dark-native. There are exactly three.
+     ----------------------------------------------------------- */
+  --ht-shadow-card:    0 8px 24px rgba(0, 0, 0, 0.40);
+  --ht-shadow-modal:   0 20px 60px rgba(0, 0, 0, 0.55);
+  --ht-shadow-glow-cyan:  0 0 0 1px rgba(34, 211, 238, 0.30), 0 8px 28px rgba(34, 211, 238, 0.18);
+
+  /* -----------------------------------------------------------
+     RADII
+     ----------------------------------------------------------- */
+  --ht-radius-sm:    8px;
+  --ht-radius-md:    12px;
+  --ht-radius-lg:    16px;   /* default card                          */
+  --ht-radius-xl:    20px;
+  --ht-radius-2xl:   24px;
+  --ht-radius-pill:  9999px;
+
+  /* -----------------------------------------------------------
+     SPACING — 4px grid
+     ----------------------------------------------------------- */
+  --ht-space-1: 4px;
+  --ht-space-2: 8px;
+  --ht-space-3: 12px;
+  --ht-space-4: 16px;
+  --ht-space-5: 20px;
+  --ht-space-6: 24px;
+  --ht-space-8: 32px;
+  --ht-space-10: 40px;
+  --ht-space-12: 48px;
+
+  /* -----------------------------------------------------------
+     TYPOGRAPHY — primitives
+     Display: Bree Serif (slab, headlines, game titles)
+     Body:    Nunito (UI, paragraphs, buttons)
+     Mono:    ui-monospace (countdowns, score tickers)
+     ----------------------------------------------------------- */
+  --ht-font-display: "Bree Serif", "Nunito", Georgia, serif;
+  --ht-font-body:    "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --ht-font-mono:    ui-monospace, "SF Mono", "JetBrains Mono", "Menlo", monospace;
+
+  /* Type scale — mobile-first (designed at 14px root on <430px) */
+  --ht-text-xs:   12px;
+  --ht-text-sm:   14px;
+  --ht-text-base: 16px;
+  --ht-text-md:   18px;
+  --ht-text-lg:   20px;
+  --ht-text-xl:   24px;
+  --ht-text-2xl:  30px;
+  --ht-text-3xl:  36px;
+  --ht-text-4xl:  44px;
+  --ht-text-5xl:  56px;
+
+  /* Tracking presets */
+  --ht-track-eyebrow: 0.14em; /* uppercase section labels             */
+  --ht-track-title:   0.045em;/* game card titles                     */
+  --ht-track-tight:  -0.01em; /* big question text                    */
+}
+
+/* =============================================================
+   SEMANTIC TYPE — apply with class names
+   ============================================================= */
+
+/* Hero / game title — used on landing rules card */
+.ht-display {
+  font-family: var(--ht-font-display);
+  font-weight: 400;            /* Bree Serif has only 400 */
+  font-size: clamp(2rem, 6.2vw, 3.35rem);
+  line-height: 1.02;
+  letter-spacing: var(--ht-track-title);
+  text-transform: uppercase;
+  color: var(--ht-fg-primary);
+  text-shadow:
+    0 1px 0 rgba(12, 18, 28, 0.80),
+    0 3px 0 rgba(12, 18, 28, 0.58),
+    0 0 12px rgba(255, 255, 255, 0.50);
+}
+
+/* Section title — "Live Showdown", "Round 2 · Question 7"  */
+.ht-h1 {
+  font-family: var(--ht-font-display);
+  font-size: var(--ht-text-3xl);
+  line-height: 1.05;
+  color: var(--ht-fg-primary);
+}
+
+/* Card title */
+.ht-h2 {
+  font-family: var(--ht-font-display);
+  font-size: var(--ht-text-2xl);
+  line-height: 1.1;
+  color: var(--ht-fg-primary);
+}
+
+/* Big numerical / question text (Nunito, 800) */
+.ht-question {
+  font-family: var(--ht-font-body);
+  font-weight: 800;
+  font-size: var(--ht-text-3xl);
+  line-height: 1.1;
+  letter-spacing: var(--ht-track-tight);
+  color: var(--ht-fg-primary);
+}
+
+/* Default body */
+.ht-body {
+  font-family: var(--ht-font-body);
+  font-weight: 600;
+  font-size: var(--ht-text-base);
+  line-height: 1.4;
+  color: var(--ht-fg-secondary);
+}
+
+/* Small body / caption */
+.ht-caption {
+  font-family: var(--ht-font-body);
+  font-weight: 600;
+  font-size: var(--ht-text-sm);
+  line-height: 1.35;
+  color: var(--ht-fg-muted);
+}
+
+/* Eyebrow — accent-colored, tracked, all-caps. Use inline color from
+   the section's accent token, e.g. style="color:var(--ht-cyan-300)" */
+.ht-eyebrow {
+  font-family: var(--ht-font-body);
+  font-weight: 900;
+  font-size: var(--ht-text-xs);
+  letter-spacing: var(--ht-track-eyebrow);
+  text-transform: uppercase;
+}
+
+/* Tabular numbers for timers/scores */
+.ht-tabular {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--ht-font-body);
+  font-weight: 900;
+}
+
+/* =============================================================
+   ANIMATIONS — shared keyframes
+   ============================================================= */
+
+/* Soft cyan glow ring — used on LIVE dots, pre-game CTA, active challenges. */
+@keyframes tp-glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0   rgba(6, 182, 212, 0.45); }
+  50%      { box-shadow: 0 0 0 6px rgba(6, 182, 212, 0); }
+}
+.tp-glow-pulse {
+  animation: tp-glow-pulse 2s ease-in-out infinite;
+}
+
+/* Soft dot pulse — opacity-only, used on status badges. */
+@keyframes ht-pulse {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-glow-pulse,
+  [class*="animate-tp-"] {
+    animation: none !important;
+  }
+}

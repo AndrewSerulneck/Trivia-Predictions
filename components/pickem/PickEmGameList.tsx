@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { navigateBackToVenue } from "@/lib/venueGameTransition";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
+import type { AdSlot } from "@/types";
 
 type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl" | "mma" | "tennis";
 
@@ -112,6 +113,14 @@ const SPORT_ICONS: Record<string, string> = {
   tennis: "🎾",
 };
 const PICKEM_PICK_LIMIT = 10;
+const PICKEM_INLINE_SLOTS: Record<number, AdSlot> = {
+  1: "pickem-inline-cards-1-5",
+  2: "pickem-inline-cards-6-10",
+  3: "pickem-inline-cards-11-15",
+  4: "pickem-inline-cards-16-20",
+  5: "pickem-inline-cards-21-25",
+  6: "pickem-inline-cards-26-30",
+};
 
 function GoldCoinIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
@@ -864,6 +873,9 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
   }, [pointsBank, userId, venueId]);
 
 
+  const totalPickEmGames = grouped.reduce((sum, [, leagueGames]) => sum + leagueGames.length, 0);
+  let renderedPickEmCardCount = 0;
+
   return (
     <div className="tp-pickem-compact min-h-[100dvh] touch-pan-y space-y-3 sm:space-y-4">
       <style>{`
@@ -906,11 +918,11 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           <div className={`flex items-center justify-between border-b px-3 py-1.5 ${
             pickCount >= PICKEM_PICK_LIMIT ? "border-rose-400/40 bg-rose-950/30" : "border-slate-700 bg-slate-800"
           }`}>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-ht-fg-muted">
               Pick Tracker
             </span>
             <span className={`text-[10px] font-bold uppercase tracking-widest ${
-              pickCount >= PICKEM_PICK_LIMIT ? "text-rose-400" : "text-slate-500"
+              pickCount >= PICKEM_PICK_LIMIT ? "text-rose-400" : "text-ht-fg-muted"
             } ${pickCount >= PICKEM_PICK_LIMIT && limitPulse ? "pickem-limit-pulse" : ""}`}>
               {pickCount >= PICKEM_PICK_LIMIT ? "Limit Reached" : "Daily Picks"}
             </span>
@@ -928,7 +940,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                       ? pickCount >= PICKEM_PICK_LIMIT
                         ? `bg-red-500 ${limitPulse ? "pickem-limit-pulse" : ""}`
                         : "bg-emerald-500"
-                      : "bg-slate-200"
+                      : "bg-ht-border-soft"
                   }`}
                 />
               ))}
@@ -941,7 +953,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
               animate={{ scale: [1, 1.18, 1] }}
               transition={{ duration: 0.25, ease: "easeOut" }}
               className={`shrink-0 text-lg font-black tabular-nums leading-none ${
-                pickCount >= PICKEM_PICK_LIMIT ? "text-red-500" : "text-slate-900"
+                pickCount >= PICKEM_PICK_LIMIT ? "text-red-500" : "text-ht-fg-primary"
               } ${pickCount >= PICKEM_PICK_LIMIT && limitPulse ? "pickem-limit-pulse" : ""}`}
             >
               {pickCount}
@@ -1005,7 +1017,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           </div>
           {selectedSportSlug === "nfl" && nflWeekOptions.length > 0 ? (
             <>
-              <label htmlFor="pickem-nfl-week" className="text-xs font-medium text-slate-700">
+              <label htmlFor="pickem-nfl-week" className="text-xs font-medium text-ht-fg-secondary">
                 NFL Week:
               </label>
               <select
@@ -1015,7 +1027,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                   setNflWeekStartDate(event.target.value);
                   setSubmitMessage("");
                 }}
-                className="tp-clean-button rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 sm:text-sm"
+                className="tp-clean-button rounded-lg border border-ht-border-soft bg-ht-surface px-2 py-1 text-xs text-ht-fg-primary sm:text-sm"
               >
                 {nflWeekOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -1026,7 +1038,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
             </>
           ) : null}
           {!userId || !venueId ? (
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-800">
+            <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-300 border border-amber-400/30">
               Browse only
             </span>
           ) : null}
@@ -1038,7 +1050,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
               {loadingSports ? (
                 <BouncingBallLoader size="sm" label="Loading sports..." />
               ) : sports.length === 0 ? (
-                <p className="text-sm text-slate-600">No sports available.</p>
+                <p className="text-sm text-ht-fg-muted">No sports available.</p>
               ) : (
                 sports.map((item) => {
                   const isSelected = selectedSportSlug === item.slug;
@@ -1061,8 +1073,8 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                         isSelected
                           ? "border-indigo-700 bg-indigo-600 text-white shadow-md shadow-indigo-300"
                           : isDisabled
-                          ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
-                          : "border-slate-300 bg-white text-slate-700 hover:border-indigo-300 hover:bg-indigo-50"
+                          ? "cursor-not-allowed border-ht-border-hairline bg-ht-surface text-ht-fg-muted opacity-50"
+                          : "border-ht-border-soft bg-ht-elevated text-ht-fg-secondary hover:border-indigo-400/60"
                       } ${flashingSportSlug === item.slug ? "sport-pop" : ""}`}
                     >
                       <span aria-label={item.label} className="text-3xl sm:text-4xl">{getSportIcon(item.slug)}</span>
@@ -1107,40 +1119,40 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
       </div>
 
       {errorMessage ? (
-        <div className="rounded-xl border border-rose-300 bg-rose-50 p-2.5 text-xs text-rose-700 sm:p-3 sm:text-sm">{errorMessage}</div>
+        <div className="rounded-ht-xl border border-rose-500/40 bg-rose-500/10 p-2.5 text-xs text-rose-400 sm:p-3 sm:text-sm">{errorMessage}</div>
       ) : null}
 
       {submitMessage ? (
-        <div className="rounded-xl border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-800 sm:p-3 sm:text-sm">{submitMessage}</div>
+        <div className="rounded-ht-xl border border-amber-400/40 bg-amber-500/10 p-2.5 text-xs text-amber-300 sm:p-3 sm:text-sm">{submitMessage}</div>
       ) : null}
 
       {!isViewingToday ? (
         loadingPickHistory ? (
           <BouncingBallLoader size="sm" label="Loading your picks..." />
         ) : historicalPicks.length === 0 ? (
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-600 sm:p-3 sm:text-sm">
+          <div className="rounded-ht-xl border border-ht-border-hairline bg-ht-surface p-2.5 text-xs text-ht-fg-muted sm:p-3 sm:text-sm">
             No picks found for this date.
           </div>
         ) : (
-          <section className="rounded-2xl border border-indigo-200/70 bg-indigo-50/85 p-4 shadow-sm sm:p-5">
+          <section className="rounded-ht-2xl border border-indigo-400/40 bg-ht-surface p-4 sm:p-5">
             <div className="mb-3 flex items-center justify-between gap-2">
-              <h3 className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-700 sm:text-sm">Your Picks</h3>
-              <span className="text-[11px] font-medium text-slate-500">{historicalPicks.length} picks</span>
+              <h3 className="text-xs font-semibold uppercase tracking-[0.1em] text-ht-fg-secondary sm:text-sm">Your Picks</h3>
+              <span className="text-[11px] font-medium text-ht-fg-muted">{historicalPicks.length} picks</span>
             </div>
             <ul className="space-y-3">
               {historicalPicks.map((pick) => {
                 const statusClass =
                   pick.status === "won"
-                    ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                    ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
                     : pick.status === "lost"
-                    ? "border-rose-300 bg-rose-50 text-rose-700"
+                    ? "border-rose-500/40 bg-rose-500/15 text-rose-400"
                     : pick.status === "pending"
-                    ? "border-amber-300 bg-amber-50 text-amber-700"
-                    : "border-slate-300 bg-slate-100 text-slate-700";
+                    ? "border-amber-400/40 bg-amber-500/15 text-amber-300"
+                    : "border-ht-border-soft bg-ht-surface text-ht-fg-muted";
                 return (
-                  <li key={pick.id} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+                  <li key={pick.id} className="rounded-ht-xl border border-ht-border-hairline bg-ht-elevated p-3 sm:p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-sm font-bold text-slate-900">
+                      <p className="text-sm font-bold text-ht-fg-primary">
                         <span className="mr-1.5" aria-hidden="true">{getSportIcon(pick.sportSlug)}</span>
                         {pick.league}
                       </p>
@@ -1148,8 +1160,8 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                         {pick.status}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs font-semibold text-slate-700">{pick.awayTeam} at {pick.homeTeam}</p>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs font-semibold text-ht-fg-secondary">{pick.awayTeam} at {pick.homeTeam}</p>
+                    <p className="mt-1 text-xs text-ht-fg-muted">
                       {new Date(pick.startsAt).toLocaleString(undefined, {
                         month: "short",
                         day: "numeric",
@@ -1157,7 +1169,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                         minute: "2-digit",
                       })}
                     </p>
-                    <p className="mt-2 text-xs font-semibold text-slate-700">Your pick: {pick.selectedTeam}</p>
+                    <p className="mt-2 text-xs font-semibold text-ht-fg-secondary">Your pick: {pick.selectedTeam}</p>
                   </li>
                 );
               })}
@@ -1167,15 +1179,15 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
       ) : loadingGames ? (
         <BouncingBallLoader size="sm" label="Loading games..." />
       ) : !sport ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800 sm:p-3 sm:text-sm">
+        <div className="rounded-ht-xl border border-amber-400/40 bg-amber-500/10 p-2.5 text-xs text-amber-300 sm:p-3 sm:text-sm">
           Choose a sport to load today&apos;s games.
         </div>
       ) : !sport.isClickable && sport.slug !== "nfl" ? (
-        <div className="rounded-xl border border-slate-300 bg-slate-50 p-2.5 text-xs text-slate-700 sm:p-3 sm:text-sm">
+        <div className="rounded-ht-xl border border-ht-border-soft bg-ht-surface p-2.5 text-xs text-ht-fg-muted sm:p-3 sm:text-sm">
           {sport.label} Pick &apos;Em is coming soon.
         </div>
       ) : grouped.length === 0 ? (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-600 sm:p-3 sm:text-sm">
+        <div className="rounded-ht-xl border border-ht-border-hairline bg-ht-surface p-2.5 text-xs text-ht-fg-muted sm:p-3 sm:text-sm">
           Sorry, no games available. Check back later!
         </div>
       ) : (
@@ -1183,12 +1195,21 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           {grouped.map(([league, leagueGames]) => (
             <section key={league} className="rounded-2xl border border-indigo-400/40 bg-slate-900 p-4 sm:p-5">
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-700 sm:text-sm">{league}</h3>
-                <span className="text-[11px] font-medium text-slate-500">{leagueGames.length} games</span>
+                <h3 className="text-xs font-semibold uppercase tracking-[0.1em] text-ht-fg-secondary sm:text-sm">{league}</h3>
+                <span className="text-[11px] font-medium text-ht-fg-muted">{leagueGames.length} games</span>
               </div>
 
               <ul className="mt-4 space-y-4">
                 {leagueGames.map((game) => {
+                  renderedPickEmCardCount += 1;
+                  const isLastGame = renderedPickEmCardCount === totalPickEmGames;
+                  const shouldRenderAdBreak =
+                    renderedPickEmCardCount <= 30 &&
+                    (
+                      renderedPickEmCardCount % 5 === 0 ||
+                      (isLastGame && renderedPickEmCardCount % 5 !== 0)
+                    );
+                  const sequenceIndex = shouldRenderAdBreak ? Math.ceil(renderedPickEmCardCount / 5) : 1;
                   const displayedPickTeam = optimisticPickByGame[game.id] ?? game.userPickTeam;
                   const baseDisabled = !sport.isClickable || !userId || !venueId || !isViewingToday;
                   const awaySelected = displayedPickTeam === game.awayTeam;
@@ -1198,165 +1219,179 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                   const disableHomeSelection = baseDisabled || (pickLimitReached && !awaySelected && !homeSelected);
 
                   return (
-                    <li key={game.id} className="rounded-xl border border-indigo-400/60 bg-slate-900 border-l-4 border-l-indigo-500 p-4 sm:p-5">
-                      {/* Scoreboard — team name rows are the pick action */}
-                      <div className="rounded-lg border border-slate-700 bg-slate-800 overflow-hidden">
-                        <div className="flex items-center justify-between border-b border-slate-700 px-3 py-2">
-                          <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Tap to pick</span>
-                          <span className="text-sm font-semibold text-slate-300 sm:text-base">
-                            {formatLocalStartTime(game.startsAt)}
-                          </span>
-                        </div>
-                        <div className="divide-y divide-slate-700">
-                          <button
-                            type="button"
-                            aria-disabled={disableAwaySelection}
-                            onClick={() => {
-                              if (disableAwaySelection) {
-                                if (!awaySelected && !homeSelected && pickCount >= PICKEM_PICK_LIMIT) {
-                                  setSubmitMessage(`Pick limit reached (${PICKEM_PICK_LIMIT}/${PICKEM_PICK_LIMIT}). Remove one pick to change your slate.`);
-                                  popIdRef.current += 1;
-                                  setPopAnim({ count: PICKEM_PICK_LIMIT, shake: true, id: popIdRef.current });
-                                  window.setTimeout(() => {
+                    <Fragment key={game.id}>
+                      <li className="rounded-xl border border-indigo-400/60 bg-slate-900 border-l-4 border-l-indigo-500 p-4 sm:p-5">
+                        {/* Scoreboard — team name rows are the pick action */}
+                        <div className="rounded-lg border border-slate-700 bg-slate-800 overflow-hidden">
+                          <div className="flex items-center justify-between border-b border-slate-700 px-3 py-2">
+                            <span className="text-[10px] font-semibold uppercase tracking-widest text-ht-fg-muted">Tap to pick</span>
+                            <span className="text-sm font-semibold text-slate-300 sm:text-base">
+                              {formatLocalStartTime(game.startsAt)}
+                            </span>
+                          </div>
+                          <div className="divide-y divide-slate-700">
+                            <button
+                              type="button"
+                              aria-disabled={disableAwaySelection}
+                              onClick={() => {
+                                if (disableAwaySelection) {
+                                  if (!awaySelected && !homeSelected && pickCount >= PICKEM_PICK_LIMIT) {
+                                    setSubmitMessage(`Pick limit reached (${PICKEM_PICK_LIMIT}/${PICKEM_PICK_LIMIT}). Remove one pick to change your slate.`);
                                     popIdRef.current += 1;
-                                    setLimitEchoAnim({ id: popIdRef.current });
-                                  }, 170);
-                                  setLimitPulse(false);
-                                  window.requestAnimationFrame(() => setLimitPulse(true));
-                                  window.setTimeout(() => setLimitPulse(false), 900);
+                                    setPopAnim({ count: PICKEM_PICK_LIMIT, shake: true, id: popIdRef.current });
+                                    window.setTimeout(() => {
+                                      popIdRef.current += 1;
+                                      setLimitEchoAnim({ id: popIdRef.current });
+                                    }, 170);
+                                    setLimitPulse(false);
+                                    window.requestAnimationFrame(() => setLimitPulse(true));
+                                    window.setTimeout(() => setLimitPulse(false), 900);
+                                  }
+                                  return;
                                 }
-                                return;
-                              }
-                              if (game.isLocked) {
-                                setSubmitMessage("This game is locked because it has already started.");
-                                return;
-                              }
-                              void submitPick(game, game.awayTeam);
-                            }}
-                            style={{ touchAction: "manipulation" }}
-                            className={`tp-clean-button w-full grid grid-cols-[auto_1fr_auto] items-center gap-3 px-3 py-3.5 text-left transition-all sm:py-4 ${
-                              disableAwaySelection ? "cursor-not-allowed opacity-40" : ""
-                            } ${
-                              awaySelected
-                                ? "bg-cyan-500/15"
-                                : "hover:bg-slate-700/50"
-                            } ${pickPulseByGameId[game.id] === game.awayTeam ? "scale-[1.01] shadow-[inset_0_0_0_2px_rgba(34,211,238,0.3)]" : ""}`}
-                          >
-                            <span className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${awaySelected ? "border-cyan-400 bg-cyan-400" : "border-slate-600 bg-transparent"}`}>
-                              {awaySelected ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 text-slate-950" aria-hidden="true">
-                                  <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-                                </svg>
-                              ) : null}
-                            </span>
-                            <span className={`text-sm font-bold sm:text-base ${awaySelected ? "text-cyan-100" : "text-slate-200"}`}>{game.awayTeam}</span>
-                            <span className={`text-base font-black tabular-nums sm:text-lg ${awaySelected ? "text-cyan-200" : "text-slate-400"}`}>{getDisplayedScoreCell(game, game.awayTeam, game.awayScore)}</span>
-                          </button>
-                          <button
-                            type="button"
-                            aria-disabled={disableHomeSelection}
-                            onClick={() => {
-                              if (disableHomeSelection) {
-                                if (!awaySelected && !homeSelected && pickCount >= PICKEM_PICK_LIMIT) {
-                                  setSubmitMessage(`Pick limit reached (${PICKEM_PICK_LIMIT}/${PICKEM_PICK_LIMIT}). Remove one pick to change your slate.`);
-                                  popIdRef.current += 1;
-                                  setPopAnim({ count: PICKEM_PICK_LIMIT, shake: true, id: popIdRef.current });
-                                  window.setTimeout(() => {
+                                if (game.isLocked) {
+                                  setSubmitMessage("This game is locked because it has already started.");
+                                  return;
+                                }
+                                void submitPick(game, game.awayTeam);
+                              }}
+                              style={{ touchAction: "manipulation" }}
+                              className={`tp-clean-button w-full grid grid-cols-[auto_1fr_auto] items-center gap-3 px-3 py-3.5 text-left transition-all sm:py-4 ${
+                                disableAwaySelection ? "cursor-not-allowed opacity-40" : ""
+                              } ${
+                                awaySelected
+                                  ? "bg-cyan-500/15"
+                                  : "hover:bg-slate-700/50"
+                              } ${pickPulseByGameId[game.id] === game.awayTeam ? "scale-[1.01] shadow-[inset_0_0_0_2px_rgba(34,211,238,0.3)]" : ""}`}
+                            >
+                              <span className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${awaySelected ? "border-cyan-400 bg-cyan-400" : "border-slate-600 bg-transparent"}`}>
+                                {awaySelected ? (
+                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 text-slate-950" aria-hidden="true">
+                                    <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                                  </svg>
+                                ) : null}
+                              </span>
+                              <span className={`text-sm font-bold sm:text-base ${awaySelected ? "text-cyan-100" : "text-slate-200"}`}>{game.awayTeam}</span>
+                              <span className={`text-base font-black tabular-nums sm:text-lg ${awaySelected ? "text-cyan-200" : "text-slate-400"}`}>{getDisplayedScoreCell(game, game.awayTeam, game.awayScore)}</span>
+                            </button>
+                            <button
+                              type="button"
+                              aria-disabled={disableHomeSelection}
+                              onClick={() => {
+                                if (disableHomeSelection) {
+                                  if (!awaySelected && !homeSelected && pickCount >= PICKEM_PICK_LIMIT) {
+                                    setSubmitMessage(`Pick limit reached (${PICKEM_PICK_LIMIT}/${PICKEM_PICK_LIMIT}). Remove one pick to change your slate.`);
                                     popIdRef.current += 1;
-                                    setLimitEchoAnim({ id: popIdRef.current });
-                                  }, 170);
-                                  setLimitPulse(false);
-                                  window.requestAnimationFrame(() => setLimitPulse(true));
-                                  window.setTimeout(() => setLimitPulse(false), 900);
+                                    setPopAnim({ count: PICKEM_PICK_LIMIT, shake: true, id: popIdRef.current });
+                                    window.setTimeout(() => {
+                                      popIdRef.current += 1;
+                                      setLimitEchoAnim({ id: popIdRef.current });
+                                    }, 170);
+                                    setLimitPulse(false);
+                                    window.requestAnimationFrame(() => setLimitPulse(true));
+                                    window.setTimeout(() => setLimitPulse(false), 900);
+                                  }
+                                  return;
                                 }
-                                return;
-                              }
-                              if (game.isLocked) {
-                                setSubmitMessage("This game is locked because it has already started.");
-                                return;
-                              }
-                              void submitPick(game, game.homeTeam);
-                            }}
-                            style={{ touchAction: "manipulation" }}
-                            className={`tp-clean-button w-full grid grid-cols-[auto_1fr_auto] items-center gap-3 px-3 py-3.5 text-left transition-all sm:py-4 ${
-                              disableHomeSelection ? "cursor-not-allowed opacity-40" : ""
-                            } ${
-                              homeSelected
-                                ? "bg-cyan-500/15"
-                                : "hover:bg-slate-700/50"
-                            } ${pickPulseByGameId[game.id] === game.homeTeam ? "scale-[1.01] shadow-[inset_0_0_0_2px_rgba(34,211,238,0.3)]" : ""}`}
-                          >
-                            <span className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${homeSelected ? "border-cyan-400 bg-cyan-400" : "border-slate-600 bg-transparent"}`}>
-                              {homeSelected ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 text-slate-950" aria-hidden="true">
-                                  <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-                                </svg>
-                              ) : null}
-                            </span>
-                            <span className={`text-sm font-bold sm:text-base ${homeSelected ? "text-cyan-100" : "text-slate-200"}`}>{game.homeTeam}</span>
-                            <span className={`text-base font-black tabular-nums sm:text-lg ${homeSelected ? "text-cyan-200" : "text-slate-400"}`}>{getDisplayedScoreCell(game, game.homeTeam, game.homeScore)}</span>
-                          </button>
+                                if (game.isLocked) {
+                                  setSubmitMessage("This game is locked because it has already started.");
+                                  return;
+                                }
+                                void submitPick(game, game.homeTeam);
+                              }}
+                              style={{ touchAction: "manipulation" }}
+                              className={`tp-clean-button w-full grid grid-cols-[auto_1fr_auto] items-center gap-3 px-3 py-3.5 text-left transition-all sm:py-4 ${
+                                disableHomeSelection ? "cursor-not-allowed opacity-40" : ""
+                              } ${
+                                homeSelected
+                                  ? "bg-cyan-500/15"
+                                  : "hover:bg-slate-700/50"
+                              } ${pickPulseByGameId[game.id] === game.homeTeam ? "scale-[1.01] shadow-[inset_0_0_0_2px_rgba(34,211,238,0.3)]" : ""}`}
+                            >
+                              <span className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${homeSelected ? "border-cyan-400 bg-cyan-400" : "border-slate-600 bg-transparent"}`}>
+                                {homeSelected ? (
+                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 text-slate-950" aria-hidden="true">
+                                    <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                                  </svg>
+                                ) : null}
+                              </span>
+                              <span className={`text-sm font-bold sm:text-base ${homeSelected ? "text-cyan-100" : "text-slate-200"}`}>{game.homeTeam}</span>
+                              <span className={`text-base font-black tabular-nums sm:text-lg ${homeSelected ? "text-cyan-200" : "text-slate-400"}`}>{getDisplayedScoreCell(game, game.homeTeam, game.homeScore)}</span>
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                      {displayedPickTeam ? (
-                        <p className="mt-2 text-[11px] font-black uppercase tracking-[0.08em] text-cyan-400">
-                          Pick locked in
-                        </p>
-                      ) : null}
-
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        {game.status === "live" ? (
-                          <>
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-600 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest text-white">
-                              <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-                              Live
-                            </span>
-                            {game.periodLabel ? (
-                              <span className="text-[11px] font-semibold text-slate-500">{game.periodLabel}</span>
-                            ) : null}
-                          </>
-                        ) : game.status === "final" ? (
-                          <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest text-slate-600">
-                            Final
-                          </span>
-                        ) : (
-                          <span className="text-[11px] font-medium text-slate-500">Picks open</span>
-                        )}
-                        {game.isLocked && game.status === "live" ? (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-700">
-                            <span aria-hidden="true">🔒</span> Picks locked
-                          </span>
+                        {displayedPickTeam ? (
+                          <p className="mt-2 text-[11px] font-black uppercase tracking-[0.08em] text-cyan-400">
+                            Pick locked in
+                          </p>
                         ) : null}
-                      </div>
 
-                      {resultLabel(game) ? (
-                        <p
-                          className={`mt-1 text-xs font-semibold ${
-                            game.userPickStatus === "won"
-                              ? "text-emerald-400"
-                              : game.userPickStatus === "lost"
-                              ? "text-rose-400"
-                              : "text-slate-500"
-                          }`}
-                        >
-                          {resultLabel(game)}
-                        </p>
-                      ) : null}
-                      {game.userPickStatus === "pending" ? (
-                        <p className="mt-1 text-xs font-semibold text-slate-500">Pick submitted. Awaiting final result.</p>
-                      ) : null}
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          {game.status === "live" ? (
+                            <>
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-600 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest text-white">
+                                <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                                Live
+                              </span>
+                              {game.periodLabel ? (
+                                <span className="text-[11px] font-semibold text-ht-fg-muted">{game.periodLabel}</span>
+                              ) : null}
+                            </>
+                          ) : game.status === "final" ? (
+                            <span className="inline-flex items-center rounded-full border border-ht-border-soft bg-ht-elevated-2 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest text-ht-fg-muted">
+                              Final
+                            </span>
+                          ) : (
+                            <span className="text-[11px] font-medium text-ht-fg-muted">Picks open</span>
+                          )}
+                          {game.isLocked && game.status === "live" ? (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/10 px-2 py-0.5 text-[11px] font-bold text-rose-400">
+                              <span aria-hidden="true">🔒</span> Picks locked
+                            </span>
+                          ) : null}
+                        </div>
 
-                      {game.userPickStatus === "won" && !game.userPickRewardClaimedAt ? (
-                        <p className="mt-2 text-xs font-semibold text-cyan-700">
-                          Settled correct pick. Points are available in your Points Bank.
-                        </p>
+                        {resultLabel(game) ? (
+                          <p
+                            className={`mt-1 text-xs font-semibold ${
+                              game.userPickStatus === "won"
+                                ? "text-emerald-400"
+                                : game.userPickStatus === "lost"
+                                ? "text-rose-400"
+                                : "text-ht-fg-muted"
+                            }`}
+                          >
+                            {resultLabel(game)}
+                          </p>
+                        ) : null}
+                        {game.userPickStatus === "pending" ? (
+                          <p className="mt-1 text-xs font-semibold text-ht-fg-muted">Pick submitted. Awaiting final result.</p>
+                        ) : null}
+
+                        {game.userPickStatus === "won" && !game.userPickRewardClaimedAt ? (
+                          <p className="mt-2 text-xs font-semibold text-ht-cyan-400">
+                            Settled correct pick. Points are available in your Points Bank.
+                          </p>
+                        ) : null}
+                        {game.userPickStatus === "won" && game.userPickRewardClaimedAt ? (
+                          <p className="mt-2 text-xs font-semibold text-ht-cyan-400">
+                            Points collected via Points Bank.
+                          </p>
+                        ) : null}
+                      </li>
+                      {shouldRenderAdBreak ? (
+                        <InlineSlotAdClient
+                          slot={PICKEM_INLINE_SLOTS[sequenceIndex] ?? "pickem-inline-cards-1-5"}
+                          venueId={venueId}
+                          pageKey="pickem"
+                          adType="inline"
+                          displayTrigger="on-load"
+                          placementKey="pickem-inline"
+                          sequenceIndex={sequenceIndex}
+                          showPlaceholder
+                        />
                       ) : null}
-                      {game.userPickStatus === "won" && game.userPickRewardClaimedAt ? (
-                        <p className="mt-2 text-xs font-semibold text-cyan-700">
-                          Points collected via Points Bank.
-                        </p>
-                      ) : null}
-                    </li>
+                    </Fragment>
                   );
                 })}
               </ul>
@@ -1364,15 +1399,6 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           ))}
         </div>
       )}
-
-      <InlineSlotAdClient
-        slot="leaderboard-sidebar"
-        venueId={venueId}
-        pageKey="pickem"
-        adType="inline"
-        displayTrigger="on-scroll"
-        placementKey="pickem-inline"
-      />
 
       {isMounted && (popAnim || multiplierAnim || limitEchoAnim)
         ? createPortal(

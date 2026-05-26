@@ -1,0 +1,43 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--ht-canvas);color:var(--ht-fg-primary);font-family:var(--ht-font-body)}
+  .card{box-sizing:border-box;width:700px;padding:22px;display:flex;flex-direction:column;gap:14px}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .lab{font-weight:900;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ht-cyan-300);min-width:90px}
+  button{
+    font:700 14px/1.2 var(--ht-font-body);border:1px solid rgba(255,255,255,.12);
+    border-radius:12px;padding:12px 18px;cursor:pointer;color:var(--ht-fg-primary);
+    transition:all .15s;background:transparent;
+  }
+  .primary{background:var(--ht-cyan-400);color:#0f172a;font-weight:900}
+  .answer{background:var(--ht-emerald-500);color:#0f172a;font-weight:900;border-radius:14px}
+  .lock{background:var(--ht-emerald-600);color:#0f172a;font-weight:900;border-radius:14px;cursor:default;opacity:.95}
+  .ghost{background:rgba(34,211,238,.12);color:var(--ht-cyan-200);border-color:rgba(34,211,238,.40)}
+  .disabled{opacity:.5;cursor:not-allowed}
+  .exit{
+    background:linear-gradient(to right,#a93d3a,#c8573e,#e9784e);
+    border:1px solid #1c2b3a;color:#fff7ea;border-radius:9999px;
+    min-height:44px;padding:0 18px;display:inline-flex;align-items:center;gap:10px;
+    box-shadow:0 1px 3px rgba(28,43,58,.35);font-weight:700;
+  }
+  .exit .arrow{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(255,247,234,.20);font-size:12px}
+  .pressed{transform:translateY(1px)}
+</style></head><body><div class="card">
+  <div class="row"><span class="lab">Primary</span>
+    <button class="primary">Join Live Trivia!</button>
+    <button class="primary pressed">Pressed</button>
+    <button class="primary disabled">Disabled</button>
+  </div>
+  <div class="row"><span class="lab">Submit / Locked</span>
+    <button class="answer">Submit</button>
+    <button class="lock">Answer Locked!</button>
+  </div>
+  <div class="row"><span class="lab">Ghost / Secondary</span>
+    <button class="ghost">← Back to Home Page</button>
+    <button>Skip</button>
+  </div>
+  <div class="row"><span class="lab">Exit pill</span>
+    <button class="exit"><span class="arrow">←</span>Back to Venue</button>
+    <button class="exit">Close</button>
+  </div>
+</div></body></html>

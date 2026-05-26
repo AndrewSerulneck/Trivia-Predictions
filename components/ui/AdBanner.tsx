@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { Advertisement } from "@/types";
 import type { AdPageKey } from "@/types";
 import { getVenueId } from "@/lib/storage";
+import { lookupSlotId } from "@/lib/adSlotRegistry";
 
 const IMPRESSION_THROTTLE_MS = 1000 * 60 * 30;
 
@@ -15,8 +16,11 @@ function resolvePageKey(pathname: string | null): AdPageKey | undefined {
   if (pathname.startsWith("/venue/")) {
     return "venue";
   }
+  if (pathname.startsWith("/trivia/live")) {
+    return "live-trivia";
+  }
   if (pathname.startsWith("/trivia")) {
-    return "trivia";
+    return "speed-trivia";
   }
   if (pathname.startsWith("/bingo")) {
     return "sports-bingo";
@@ -67,6 +71,8 @@ export function AdBanner({ ad, variant = "default" }: { ad: Advertisement; varia
   }, [ad.id, pageKey, venueId]);
 
   const isAdhesion = variant === "adhesion";
+  const slotId = lookupSlotId(ad.pageKey, ad.slot, ad.displayTrigger, ad.roundNumber ?? undefined);
+  const slotLabel = slotId ?? ad.slot;
 
   const clickParams = new URLSearchParams({ id: ad.id });
   if (pageKey) {
@@ -80,13 +86,18 @@ export function AdBanner({ ad, variant = "default" }: { ad: Advertisement; varia
     <aside
       className={
         isAdhesion
-          ? "rounded-xl border border-slate-300 bg-white/95 p-2 shadow-[0_8px_24px_rgba(15,23,42,0.22)] backdrop-blur"
-          : "rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+          ? "rounded-ht-xl border border-ht-border-soft bg-ht-elevated/95 p-2 shadow-[0_8px_24px_rgba(15,23,42,0.22)] backdrop-blur"
+          : "rounded-ht-xl border border-ht-border-hairline bg-ht-elevated p-3 shadow-ht-card"
       }
     >
-      <p className={isAdhesion ? "mb-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500" : "mb-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500"}>
-        Sponsored
-      </p>
+      <div className={isAdhesion ? "mb-1 flex items-center justify-between" : "mb-2 flex items-center justify-between"}>
+        <p className={isAdhesion ? "text-[9px] font-semibold uppercase tracking-wide text-ht-fg-muted" : "text-[10px] font-semibold uppercase tracking-wide text-ht-fg-muted"}>
+          Sponsored
+        </p>
+        <span className="rounded bg-indigo-500/15 px-1.5 py-0.5 font-mono text-[10px] font-bold text-indigo-300">
+          {slotLabel}
+        </span>
+      </div>
       <a href={`/api/ads/click?${clickParams.toString()}`} target="_blank" rel="noreferrer noopener" className="block">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -96,8 +107,8 @@ export function AdBanner({ ad, variant = "default" }: { ad: Advertisement; varia
           height={ad.height}
           className={
             isAdhesion
-              ? "h-auto max-h-[64px] w-full rounded-md border border-slate-100 object-contain"
-              : "h-auto w-full rounded-md border border-slate-100 object-cover"
+              ? "h-auto max-h-[64px] w-full rounded-md border border-ht-border-hairline object-contain"
+              : "h-auto w-full rounded-md border border-ht-border-hairline object-cover"
           }
         />
       </a>

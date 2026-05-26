@@ -31,16 +31,23 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
 
   const checkSession = useCallback(async () => {
     setErrorMessage("");
-    if (!supabase) {
-      setErrorMessage("Supabase client is not available.");
-      setState("error");
-      setAuthInitialized(true);
-      return;
-    }
     try {
+      const adminSessionResponse = await fetch("/api/admin/session", { cache: "no-store" });
+      if (adminSessionResponse.ok) {
+        // Cookie-backed admin auth is authoritative for admin console access.
+        setAccessToken("admin-cookie-session");
+        return;
+      }
+      if (!supabase) {
+        setErrorMessage("Supabase client is not available.");
+        setState("error");
+        return;
+      }
       const { data } = await supabase.auth.getSession();
       if (data.session?.access_token) {
         setAccessToken(data.session.access_token);
+      } else {
+        setAccessToken("");
       }
     } catch (e: any) {
       setErrorMessage(e.message);
@@ -52,6 +59,23 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
 
   useEffect(() => {
     void checkSession();
+  }, [checkSession]);
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (!document.hidden) {
+        void checkSession();
+      }
+    };
+    const onFocus = () => {
+      void checkSession();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("focus", onFocus);
+    };
   }, [checkSession]);
 
   const bootstrapAdmin = async () => {
@@ -68,8 +92,18 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
     if (error) {
       setAdminLoginMessage(error.message);
     } else {
-      setAdminLoginMessage("Logged in successfully. You can now use the admin panel.");
-      void checkSession();
+      const response = await fetch("/api/admin/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: adminLoginUsername, password: adminLoginPassword }),
+      });
+      const payload = (await response.json()) as { ok: boolean; error?: string };
+      if (!response.ok || !payload.ok) {
+        setAdminLoginMessage(payload.error ?? "Failed to create admin session.");
+      } else {
+        setAdminLoginMessage("Logged in successfully. You can now use the admin panel.");
+        void checkSession();
+      }
     }
     setBootstrappingAdmin(false);
   };

@@ -10,8 +10,13 @@ function getVenueIdFromPath(pathname: string): string {
   return match?.[1] ? decodeURIComponent(match[1]).trim() : "";
 }
 
+function isJoinRoute(pathname: string): boolean {
+  return pathname === "/" || pathname === "/join";
+}
+
 function isInSessionGameRoute(pathname: string): boolean {
   return (
+    pathname.startsWith("/admin") ||
     pathname.startsWith("/trivia") ||
     pathname.startsWith("/predictions") ||
     pathname.startsWith("/pickem") ||
@@ -64,6 +69,10 @@ export function AuthNavigationGuard() {
     }
 
     const currentPath = pathname ?? "/";
+    // Admin is protected by dedicated admin auth; never apply venue/session redirects here.
+    if (currentPath.startsWith("/admin")) {
+      return;
+    }
     const query = searchParams?.toString() ?? "";
     const currentUrl = query ? `${currentPath}?${query}` : currentPath;
     if (lastRedirectRef.current === currentUrl) {
@@ -75,6 +84,12 @@ export function AuthNavigationGuard() {
     const enforcedVenueId = (lockedVenueId || state.venueId || "").trim();
     if (state.tokenVerified && enforcedVenueId && lockedVenueId !== enforcedVenueId) {
       setSelectedVenueLock(enforcedVenueId);
+    }
+
+    // Keep join/login surfaces stable. Do not auto-redirect away from "/" or
+    // "/join" based on background auth/session refreshes.
+    if (isJoinRoute(currentPath)) {
+      return;
     }
 
     if (state.tokenVerified && enforcedVenueId) {
@@ -121,7 +136,7 @@ export function AuthNavigationGuard() {
     }
 
     const requestedVenueId = (searchParams?.get("v") ?? "").trim();
-    const isJoinFlow = currentPath === "/" || currentPath === "/join";
+    const isJoinFlow = isJoinRoute(currentPath);
     if (isJoinFlow && requestedVenueId && state.tokenVerified && state.venueId === requestedVenueId) {
       const target = `/venue/${encodeURIComponent(requestedVenueId)}`;
       lastRedirectRef.current = target;

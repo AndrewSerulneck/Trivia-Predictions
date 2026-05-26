@@ -149,7 +149,7 @@ export function PrizeWalletPanel() {
 
   if (!venueId) {
     return (
-      <div className="rounded-2xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+      <div className="rounded-ht-2xl border border-amber-400/40 bg-amber-500/10 p-3 text-sm text-amber-300">
         Join a venue to view weekly prizes and your prize wallet.
       </div>
     );
@@ -161,62 +161,62 @@ export function PrizeWalletPanel() {
 
   return (
     <div className="space-y-4">
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Weekly Prize</h2>
-        <p className="mt-1 text-xs text-slate-600">
+      <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
+        <h2 className="text-lg font-semibold text-ht-fg-primary">Weekly Prize</h2>
+        <p className="mt-1 text-xs text-ht-fg-muted">
           Compete through the end of the week to win this venue reward.
         </p>
-        <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3">
-          <p className="text-sm font-semibold text-amber-900">{weeklyPrize?.prizeTitle ?? "Weekly Venue Champion Prize"}</p>
-          <p className="mt-1 text-xs text-amber-800">
+        <div className="mt-3 rounded-ht-lg border border-amber-400/40 bg-amber-500/10 p-3">
+          <p className="text-sm font-semibold text-amber-300">{weeklyPrize?.prizeTitle ?? "Weekly Venue Champion Prize"}</p>
+          <p className="mt-1 text-xs text-amber-400/80">
             {weeklyPrize?.prizeDescription ??
               "Top the leaderboard by week end to become this venue's champion and redeem your prize."}
           </p>
           {weeklyPrize && weeklyPrize.rewardPoints > 0 ? (
-            <p className="mt-2 text-xs font-semibold text-amber-900">Bonus reward: +{weeklyPrize.rewardPoints} points</p>
+            <p className="mt-2 text-xs font-semibold text-amber-300">Bonus reward: +{weeklyPrize.rewardPoints} points</p>
           ) : null}
-          {weekStart ? <p className="mt-2 text-[11px] text-amber-700">Week of {formatLocalDate(weekStart)}</p> : null}
+          {weekStart ? <p className="mt-2 text-[11px] text-amber-400/70">Week of {formatLocalDate(weekStart)}</p> : null}
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h3 className="text-base font-semibold text-slate-900">Prize Wallet</h3>
-        <p className="mt-1 text-sm text-slate-700">
+      <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
+        <h3 className="text-base font-semibold text-ht-fg-primary">Prize Wallet</h3>
+        <p className="mt-1 text-sm text-ht-fg-secondary">
           Awarded: <span className="font-semibold">{awardedWins.length}</span> · Claimed:{" "}
           <span className="font-semibold">{claimedWins.length}</span>
         </p>
 
         {statusMessage ? (
-          <p className="mt-3 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
+          <p className="mt-3 rounded-ht-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-400">
             {statusMessage}
           </p>
         ) : null}
         {errorMessage ? (
-          <p className="mt-3 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800">
+          <p className="mt-3 rounded-ht-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-400">
             {errorMessage}
           </p>
         ) : null}
 
         {wins.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-600">No prize records yet. Win the weekly challenge to earn your first prize.</p>
+          <p className="mt-3 text-sm text-ht-fg-muted">No prize records yet. Win the weekly challenge to earn your first prize.</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {wins.map((win) => (
-              <li key={win.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <li key={win.id} className="rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{win.prizeTitle}</p>
+                    <p className="text-sm font-semibold text-ht-fg-primary">{win.prizeTitle}</p>
                     {win.prizeDescription ? (
-                      <p className="mt-1 text-xs text-slate-700">{win.prizeDescription}</p>
+                      <p className="mt-1 text-xs text-ht-fg-secondary">{win.prizeDescription}</p>
                     ) : null}
-                    <p className="mt-1 text-[11px] text-slate-500">Awarded {formatLocalDate(win.awardedAt)}</p>
+                    <p className="mt-1 text-[11px] text-ht-fg-muted">Awarded {formatLocalDate(win.awardedAt)}</p>
                     {win.rewardPoints > 0 ? (
-                      <p className="mt-1 text-xs font-semibold text-slate-800">Reward points: +{win.rewardPoints}</p>
+                      <p className="mt-1 text-xs font-semibold text-ht-fg-secondary">Reward points: +{win.rewardPoints}</p>
                     ) : null}
                   </div>
                   <span
                     className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                      win.status === "claimed" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-900"
+                      win.status === "claimed" ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-300"
                     }`}
                   >
                     {win.status === "claimed" ? "Claimed" : "Awarded"}
@@ -231,7 +231,7 @@ export function PrizeWalletPanel() {
                       const rect = event.currentTarget.getBoundingClientRect();
                       void claimPrize(win, rect);
                     }}
-                    className="tp-clean-button mt-2 rounded-lg border border-indigo-500 bg-indigo-100 px-2 py-1 text-xs font-semibold text-indigo-900 disabled:opacity-60"
+                    className="tp-clean-button mt-2 rounded-ht-md border border-indigo-500/50 bg-indigo-500/15 px-2 py-1 text-xs font-semibold text-indigo-300 disabled:opacity-60"
                   >
                     {claimingId === win.id ? "Claiming..." : "Claim Prize"}
                   </button>

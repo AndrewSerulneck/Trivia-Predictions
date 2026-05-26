@@ -124,20 +124,20 @@ export function SportsBingoSelectGame() {
   return (
     <div className="space-y-4">
       {errorMessage ? (
-        <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">{errorMessage}</div>
+        <div className="rounded-ht-md border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-400">{errorMessage}</div>
       ) : null}
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Step 2 of 3</p>
-        <h2 className="mt-1 text-lg font-semibold text-slate-900">Choose A Game</h2>
-        <p className="mt-1 text-sm text-slate-700">Showing upcoming {sportLabel} games only.</p>
+      <div className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ht-fg-muted">Step 2 of 3</p>
+        <h2 className="mt-1 text-lg font-semibold text-ht-fg-primary">Choose A Game</h2>
+        <p className="mt-1 text-sm text-ht-fg-secondary">Showing upcoming {sportLabel} games only.</p>
 
         {loading ? (
           <div className="mt-3">
             <BouncingBallLoader size="sm" label="Loading games..." />
           </div>
         ) : games.length === 0 ? (
-          <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          <div className="mt-3 rounded-ht-md border border-amber-400/40 bg-amber-500/10 p-3 text-sm text-amber-300">
             No upcoming games are available right now.
           </div>
         ) : (
@@ -157,23 +157,23 @@ export function SportsBingoSelectGame() {
                     );
                   }}
                   disabled={unavailable}
-                  className={`w-full rounded-lg border p-3 text-left transition-all ${
+                  className={`w-full rounded-ht-lg border p-3 text-left transition-all ${
                     unavailable
-                      ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-500"
-                      : "border-slate-200 bg-white hover:border-slate-300"
+                      ? "cursor-not-allowed border-ht-border-hairline bg-ht-surface/50 text-ht-fg-muted"
+                      : "border-ht-border-hairline bg-ht-surface hover:border-ht-border-soft hover:bg-ht-elevated"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-semibold text-slate-900">{game.awayTeam} vs {game.homeTeam}</p>
+                    <p className="text-sm font-semibold text-ht-fg-primary">{game.awayTeam} vs {game.homeTeam}</p>
                     {unavailable ? (
-                      <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-600">
+                      <span className="rounded-full bg-ht-elevated px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-ht-fg-muted">
                         Unavailable
                       </span>
                     ) : null}
                   </div>
-                  <p className="mt-1 text-xs text-slate-600">Starts {formatLocalDateTime(game.startsAt)}</p>
+                  <p className="mt-1 text-xs text-ht-fg-muted">Starts {formatLocalDateTime(game.startsAt)}</p>
                   {unavailable ? (
-                    <p className="mt-1 text-[11px] text-slate-500">You already have an active Bingo card for this game.</p>
+                    <p className="mt-1 text-[11px] text-ht-fg-muted">You already have an active Bingo card for this game.</p>
                   ) : null}
                 </button>
               );

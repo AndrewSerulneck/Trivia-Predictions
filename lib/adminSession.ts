@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const ADMIN_SESSION_COOKIE = "admin_session";
+export const DEFAULT_ADMIN_TTL = 60 * 60 * 24;
 
 type AdminSessionPayload = {
   u: string;
@@ -28,7 +29,7 @@ function sign(input: string, secret: string): string {
   return createHmac("sha256", secret).update(input).digest("base64url");
 }
 
-export function createAdminSessionToken(username: string, ttlSeconds = 60 * 60 * 12): string | null {
+export function createAdminSessionToken(username: string, ttlSeconds = DEFAULT_ADMIN_TTL): string | null {
   const secret = getSessionSecret();
   if (!secret) return null;
 
@@ -39,6 +40,13 @@ export function createAdminSessionToken(username: string, ttlSeconds = 60 * 60 *
   const encodedPayload = encodeBase64Url(JSON.stringify(payload));
   const signature = sign(encodedPayload, secret);
   return `${encodedPayload}.${signature}`;
+}
+
+export function createAdminSessionCookie(username: string, ttlSeconds = DEFAULT_ADMIN_TTL): string | null {
+  const token = createAdminSessionToken(username, ttlSeconds);
+  if (!token) return null;
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  return `${ADMIN_SESSION_COOKIE}=${token}; Path=/; Max-Age=${Math.max(1, Math.round(ttlSeconds))}; HttpOnly; SameSite=Lax${secure}`;
 }
 
 export function validateAdminSessionToken(token: string, expectedUsername: string): boolean {

@@ -31,11 +31,11 @@ export function PointsBank(props: {
   const statusLine = pendingPicks > 0 ? "Some picks are still pending." : "All current picks are settled.";
 
   return (
-    <section className="mt-3 rounded-2xl border border-cyan-300/70 bg-cyan-50/90 p-3 shadow-sm">
+    <section className="mt-3 rounded-ht-2xl border border-ht-cyan-600/40 bg-ht-elevated p-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-cyan-700">Points Bank</p>
-          <p className="text-xs font-semibold text-slate-700">{statusLine}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-ht-cyan-400">Points Bank</p>
+          <p className="text-xs font-semibold text-ht-fg-secondary">{statusLine}</p>
         </div>
         <button
           type="button"
@@ -43,7 +43,7 @@ export function PointsBank(props: {
           onClick={props.onCollect}
           disabled={props.collecting || props.disabled || pendingPoints <= 0}
           title={statusLine}
-          className="tp-clean-button relative inline-flex min-h-[44px] items-center rounded-full border border-cyan-300 bg-gradient-to-r from-cyan-100 via-sky-100 to-indigo-100 px-4 py-2 text-xs font-semibold text-slate-800 shadow-[0_6px_14px_rgba(56,189,248,0.22)] transition-all hover:brightness-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+          className="tp-clean-button relative inline-flex min-h-[44px] items-center rounded-full border border-ht-cyan-600/50 bg-gradient-to-r from-cyan-900 via-sky-900 to-indigo-900 px-4 py-2 text-xs font-semibold text-cyan-200 shadow-[0_6px_14px_rgba(6,182,212,0.18)] transition-all hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {props.collecting ? "Collecting..." : collectLabel}
         </button>

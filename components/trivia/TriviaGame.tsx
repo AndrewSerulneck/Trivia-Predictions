@@ -1274,13 +1274,13 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     return (
       <div className="space-y-4 rounded-md border border-cyan-200/45 bg-slate-950/35 p-5 text-sm text-cyan-50 backdrop-blur-sm">
         <div className="relative mx-auto h-20 w-20">
-          <div className="absolute inset-0 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
+          <div className="absolute inset-0 animate-spin rounded-full border-4 border-ht-border-soft border-t-ht-fg-primary" />
           <div className="absolute inset-2 flex items-center justify-center rounded-full bg-slate-900 text-xs font-black tracking-[0.2em] text-white">
             HC
           </div>
         </div>
         <div className="text-center">
-          <p className="text-lg font-semibold text-slate-900">Hightop Challenge</p>
+          <p className="text-lg font-semibold text-ht-fg-primary">Hightop Challenge</p>
           <p>Loading trivia questions...</p>
         </div>
       </div>
@@ -1289,7 +1289,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
   if (loadError) {
     return (
-      <div className="rounded-md border border-rose-300 bg-rose-50 p-4 text-sm text-rose-700">
+      <div className="rounded-ht-md border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-400">
         {loadError}
       </div>
     );
@@ -1313,9 +1313,9 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
             <div className="rounded-2xl border border-cyan-200/55 bg-cyan-900/35 p-2">
               <p className="text-xs uppercase text-cyan-100/90">Round reward</p>
               <div className="flex items-center gap-2">
-                <p className="text-lg font-bold text-emerald-700">+{pointsWon} points</p>
+                <p className="text-lg font-bold text-emerald-400">+{pointsWon} points</p>
                 {roundPointsAwarded > correctAnswers * POINTS_PER_CORRECT ? (
-                  <span className="inline-flex items-center rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-900">
+                  <span className="inline-flex items-center rounded-full bg-amber-500/25 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-300 border border-amber-400/40">
                     ⚡ Challenge
                   </span>
                 ) : null}
@@ -1337,7 +1337,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
               void startNextRound();
             }}
             disabled={isPreparingNextRound || triviaQuotaLocked}
-            className={`${BUTTON_POP_CLASS} inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border border-emerald-300 bg-gradient-to-r from-emerald-700 to-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald-200 disabled:opacity-60`}
+            className={`${BUTTON_POP_CLASS} inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border border-emerald-500/40 bg-gradient-to-r from-emerald-700 to-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald-900/40 disabled:opacity-60`}
           >
             {isPreparingNextRound
               ? "Loading next round..."
@@ -1376,7 +1376,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     return (
       <div className="space-y-2 rounded-md border border-cyan-200/45 bg-slate-950/38 p-3 text-base text-cyan-50 backdrop-blur-sm sm:space-y-3 sm:p-4">
         {roundEndedMessage ? (
-          <p className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+          <p className="rounded-ht-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm font-semibold text-rose-400">
             {roundEndedMessage}
           </p>
         ) : null}

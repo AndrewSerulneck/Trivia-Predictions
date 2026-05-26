@@ -32,11 +32,11 @@ function formatStatus(status: PickEmPick["status"]): string {
 }
 
 function statusClass(status: PickEmPick["status"]): string {
-  if (status === "won") return "bg-emerald-100 text-emerald-800";
-  if (status === "lost") return "bg-rose-100 text-rose-800";
-  if (status === "push") return "bg-sky-100 text-sky-800";
-  if (status === "canceled") return "bg-slate-200 text-slate-700";
-  return "bg-amber-100 text-amber-800";
+  if (status === "won") return "bg-emerald-500/15 text-emerald-400";
+  if (status === "lost") return "bg-rose-500/15 text-rose-400";
+  if (status === "push") return "bg-sky-500/15 text-sky-300";
+  if (status === "canceled") return "bg-ht-elevated text-ht-fg-muted";
+  return "bg-amber-500/15 text-amber-300";
 }
 
 function formatLocalDateTime(iso: string): string {
@@ -105,35 +105,35 @@ export function PickEmRecentPicks() {
         gameKey="pickem"
         shouldDisplay={Boolean(userId) && !loading && activePickCount === 0}
       />
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-base font-semibold text-slate-900">Your Pick &apos;Em Picks</h3>
+          <h3 className="text-base font-semibold text-ht-fg-primary">Your Pick &apos;Em Picks</h3>
         </div>
 
         {errorMessage ? (
-          <p className="mt-2 text-sm text-rose-700">{errorMessage}</p>
+          <p className="mt-2 text-sm text-rose-400">{errorMessage}</p>
         ) : loading ? (
           <BouncingBallLoader size="sm" label="Loading your picks..." />
         ) : recentPicks.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-600">No picks yet. Choose a sport above to start playing.</p>
+          <p className="mt-2 text-sm text-ht-fg-muted">No picks yet. Choose a sport above to start playing.</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {recentPicks.map((pick) => (
-              <li key={pick.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <li key={pick.id} className="rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-slate-900">{pick.gameLabel}</p>
+                  <p className="text-sm font-semibold text-ht-fg-primary">{pick.gameLabel}</p>
                   <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusClass(pick.status)}`}>
                     {formatStatus(pick.status)}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-slate-700">
+                <p className="mt-1 text-xs text-ht-fg-secondary">
                   Picked: <span className="font-semibold">{pick.selectedTeam}</span>
                 </p>
-                <p className="mt-1 text-xs text-slate-600">Game start: {formatLocalDateTime(pick.startsAt)}</p>
+                <p className="mt-1 text-xs text-ht-fg-muted">Game start: {formatLocalDateTime(pick.startsAt)}</p>
                 {pick.status === "pending" ? (
                   <Link
                     href={`/pickem?sport=${encodeURIComponent(pick.sportSlug)}`}
-                    className="mt-2 inline-flex text-xs font-semibold text-blue-700 underline"
+                    className="mt-2 inline-flex text-xs font-semibold text-ht-cyan-400 underline"
                   >
                     Open this sport
                   </Link>

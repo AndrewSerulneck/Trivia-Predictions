@@ -63,8 +63,8 @@ function formatSigned(value: number): string {
 function metricRow(label: string, value: string | number) {
   return (
     <div className="flex items-center justify-between gap-3 text-sm">
-      <span className="text-slate-600">{label}</span>
-      <span className="font-semibold text-slate-900">{value}</span>
+      <span className="text-ht-fg-muted">{label}</span>
+      <span className="font-semibold text-ht-fg-primary">{value}</span>
     </div>
   );
 }
@@ -127,7 +127,7 @@ export function CareerStatsPanel() {
 
   if (!userId) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+      <div className="rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-4 text-sm text-ht-fg-secondary">
         Join a venue to view your career stats.
       </div>
     );
@@ -139,7 +139,7 @@ export function CareerStatsPanel() {
 
   if (errorMessage) {
     return (
-      <div className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-700">
+      <div className="rounded-ht-lg border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-400">
         {errorMessage}
       </div>
     );
@@ -147,7 +147,7 @@ export function CareerStatsPanel() {
 
   if (!stats) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+      <div className="rounded-ht-lg border border-ht-border-hairline bg-ht-surface p-4 text-sm text-ht-fg-secondary">
         No career stats found yet.
       </div>
     );
@@ -155,15 +155,15 @@ export function CareerStatsPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Career Stats</h2>
-        <p className="mt-1 text-xs text-slate-500">
+      <div className="rounded-ht-lg border border-ht-border-hairline bg-ht-elevated p-4">
+        <h2 className="text-lg font-semibold text-ht-fg-primary">Career Stats</h2>
+        <p className="mt-1 text-xs text-ht-fg-muted">
           Last updated {new Date(stats.generatedAt).toLocaleString()}
         </p>
       </div>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h3 className="text-base font-semibold text-slate-900">Trivia</h3>
+      <section className="rounded-ht-lg border border-ht-border-hairline bg-ht-elevated p-4">
+        <h3 className="text-base font-semibold text-ht-fg-primary">Trivia</h3>
         <div className="mt-3 space-y-2">
           {metricRow("Questions answered", stats.trivia.totalAnswered)}
           {metricRow("Correct", stats.trivia.correct)}
@@ -172,8 +172,8 @@ export function CareerStatsPanel() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h3 className="text-base font-semibold text-slate-900">Bingo</h3>
+      <section className="rounded-ht-lg border border-ht-border-hairline bg-ht-elevated p-4">
+        <h3 className="text-base font-semibold text-ht-fg-primary">Bingo</h3>
         <div className="mt-3 space-y-2">
           {metricRow("Total boards", stats.bingo.totalBoards)}
           {metricRow("Active", stats.bingo.active)}
@@ -185,8 +185,8 @@ export function CareerStatsPanel() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-  <h3 className="text-base font-semibold text-slate-900">Pick &apos;Em</h3>
+      <section className="rounded-ht-lg border border-ht-border-hairline bg-ht-elevated p-4">
+  <h3 className="text-base font-semibold text-ht-fg-primary">Pick &apos;Em</h3>
         <div className="mt-3 space-y-2">
           {metricRow("Total picks", stats.pickem.totalPicks)}
           {metricRow("Pending", stats.pickem.pending)}
@@ -199,8 +199,8 @@ export function CareerStatsPanel() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h3 className="text-base font-semibold text-slate-900">Fantasy</h3>
+      <section className="rounded-ht-lg border border-ht-border-hairline bg-ht-elevated p-4">
+        <h3 className="text-base font-semibold text-ht-fg-primary">Fantasy</h3>
         <div className="mt-3 space-y-2">
           {metricRow("Total lineups", stats.fantasy.totalLineups)}
           {metricRow("Pending", stats.fantasy.pending)}

@@ -77,9 +77,8 @@ export function AppShell({ children, legalNotice }: AppShellProps) {
     >
       {!isAdmin && !isFullscreen ? (
         <>
-          <div className="pointer-events-none absolute -top-20 right-0 h-52 w-52 rounded-full bg-orange-300/40 blur-3xl" />
-          <div className="pointer-events-none absolute top-24 left-0 h-44 w-44 rounded-full bg-red-300/30 blur-3xl" />
-          <div className="pointer-events-none absolute bottom-16 right-4 h-36 w-36 rounded-full bg-amber-200/35 blur-3xl" />
+          <div className="pointer-events-none absolute -top-20 right-0 h-52 w-52 rounded-full bg-cyan-500/8 blur-3xl" />
+          <div className="pointer-events-none absolute top-24 left-0 h-44 w-44 rounded-full bg-violet-500/6 blur-3xl" />
         </>
       ) : null}
 
@@ -87,7 +86,7 @@ export function AppShell({ children, legalNotice }: AppShellProps) {
         <main className={isAdmin ? "h-full min-h-0" : "min-h-0"}>{children}</main>
       </Suspense>
       {!isAdmin && !isFullscreen ? (
-        <footer className="tp-comic-card tp-legal-card relative z-10 px-3 py-2 text-center text-xs leading-relaxed text-slate-700 break-words">
+        <footer className="relative z-10 border-t border-ht-border-hairline bg-ht-surface px-3 py-2 text-center text-xs leading-relaxed text-ht-fg-muted break-words">
           {legalNotice}
         </footer>
       ) : null}

@@ -23,6 +23,8 @@ type TriviaScheduleRow = {
   title: string;
   start_time: string;
   timezone: string;
+  recurring_type: "none" | "daily" | "weekly" | "monthly" | "yearly" | null;
+  recurring_days: string[] | null;
   num_rounds: number;
   venue_id: string | null;
   intermission_ad_delay_seconds: number | null;
@@ -154,6 +156,96 @@ function toSafeVenueId(value: string): string {
   return String(value ?? "").trim();
 }
 
+const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+const WEEKDAY_BY_SHORT: Record<string, (typeof WEEKDAY_KEYS)[number]> = {
+  sun: "sun",
+  mon: "mon",
+  tue: "tue",
+  wed: "wed",
+  thu: "thu",
+  fri: "fri",
+  sat: "sat",
+};
+
+function normalizeRecurringType(value: string | null | undefined): "none" | "daily" | "weekly" | "monthly" | "yearly" {
+  return value === "daily" || value === "weekly" || value === "monthly" || value === "yearly" ? value : "none";
+}
+
+function normalizeRecurringDays(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const normalized = value
+    .map((entry) => String(entry ?? "").trim().toLowerCase())
+    .filter((entry): entry is (typeof WEEKDAY_KEYS)[number] =>
+      WEEKDAY_KEYS.includes(entry as (typeof WEEKDAY_KEYS)[number])
+    );
+  return Array.from(new Set(normalized));
+}
+
+function isMissingRecurringColumnsError(message: string | undefined): boolean {
+  const normalized = String(message ?? "").toLowerCase();
+  const mentionsRecurringColumn =
+    normalized.includes("recurring_type") || normalized.includes("recurring_days");
+  return mentionsRecurringColumn && (normalized.includes("does not exist") || normalized.includes("schema cache"));
+}
+
+function getTimeZoneParts(date: Date, timeZone: string): {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+  weekday: (typeof WEEKDAY_KEYS)[number];
+} {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+  const parts = formatter.formatToParts(date);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  const weekday = WEEKDAY_BY_SHORT[String(values.weekday ?? "").slice(0, 3).toLowerCase()] ?? "sun";
+  return {
+    year: Number(values.year),
+    month: Number(values.month),
+    day: Number(values.day),
+    hour: Number(values.hour),
+    minute: Number(values.minute),
+    second: Number(values.second),
+    weekday,
+  };
+}
+
+function getTimeZoneOffsetMs(date: Date, timeZone: string): number {
+  const parts = getTimeZoneParts(date, timeZone);
+  const asUtc = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);
+  return asUtc - date.getTime();
+}
+
+function zonedDateTimeToUtcMs(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+  second: number,
+  timeZone: string
+): number {
+  const localUtcMs = Date.UTC(year, month - 1, day, hour, minute, second);
+  let guessMs = localUtcMs;
+  for (let i = 0; i < 3; i += 1) {
+    const offset = getTimeZoneOffsetMs(new Date(guessMs), timeZone);
+    guessMs = localUtcMs - offset;
+  }
+  return guessMs;
+}
+
 function isUuidLike(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
@@ -218,46 +310,97 @@ async function findRelevantSchedules(nowIso: string, venueIdRaw: string): Promis
     return { active: null, upcoming: null };
   }
 
-  const [recentResult, upcomingResult] = await Promise.all([
-    supabaseAdmin
-      .from("trivia_schedules")
-      .select("id, title, start_time, timezone, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled")
-      .eq("venue_id", venueId)
-      .lte("start_time", nowIso)
-      .order("start_time", { ascending: false })
-      .limit(40),
-    supabaseAdmin
-      .from("trivia_schedules")
-      .select("id, title, start_time, timezone, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled")
-      .eq("venue_id", venueId)
-      .gt("start_time", nowIso)
-      .order("start_time", { ascending: true })
-      .limit(1),
-  ]);
+  const withRecurring = await supabaseAdmin
+    .from("trivia_schedules")
+    .select("id, title, start_time, timezone, recurring_type, recurring_days, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled")
+    .eq("venue_id", venueId)
+    .order("start_time", { ascending: false })
+    .limit(200);
 
-  if (recentResult.error) {
-    throw new Error(recentResult.error.message || "Failed to load recent Live Showdown schedules.");
-  }
-  if (upcomingResult.error) {
-    throw new Error(upcomingResult.error.message || "Failed to load upcoming Live Showdown schedules.");
+  let rows: TriviaScheduleRow[] = [];
+  if (withRecurring.error && isMissingRecurringColumnsError(withRecurring.error.message)) {
+    const legacy = await supabaseAdmin
+      .from("trivia_schedules")
+      .select("id, title, start_time, timezone, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled")
+      .eq("venue_id", venueId)
+      .order("start_time", { ascending: false })
+      .limit(200);
+    if (legacy.error) {
+      throw new Error(legacy.error.message || "Failed to load Live Showdown schedules.");
+    }
+    rows = ((legacy.data ?? []) as Array<Omit<TriviaScheduleRow, "recurring_type" | "recurring_days">>).map((row) => ({
+      ...row,
+      recurring_type: "none",
+      recurring_days: null,
+    }));
+  } else if (withRecurring.error) {
+    throw new Error(withRecurring.error.message || "Failed to load Live Showdown schedules.");
+  } else {
+    rows = (withRecurring.data ?? []) as TriviaScheduleRow[];
   }
 
   const nowMs = Date.parse(nowIso);
-  const recentRows = (recentResult.data ?? []) as TriviaScheduleRow[];
-  let active: TriviaScheduleRow | null = null;
+  const dayMs = 24 * 60 * 60 * 1000;
+  let activeCandidate: { row: TriviaScheduleRow; startMs: number } | null = null;
+  let upcomingCandidate: { row: TriviaScheduleRow; startMs: number } | null = null;
 
-  for (const row of recentRows) {
-    const startMs = Date.parse(String(row.start_time ?? ""));
-    if (!Number.isFinite(startMs)) continue;
+  for (const row of rows) {
+    const baseStartMs = Date.parse(String(row.start_time ?? ""));
+    if (!Number.isFinite(baseStartMs)) continue;
     const rounds = clampRounds(Number(row.num_rounds));
-    const endMs = startMs + rounds * ROUND_MS;
-    if (nowMs >= startMs && nowMs < endMs) {
-      active = row;
-      break;
+    const recurringType = normalizeRecurringType(row.recurring_type);
+    const rowTimezone = String(row.timezone ?? "America/New_York").trim() || "America/New_York";
+
+    if (recurringType !== "weekly") {
+      const endMs = baseStartMs + rounds * ROUND_MS;
+      if (nowMs >= baseStartMs && nowMs < endMs) {
+        if (!activeCandidate || baseStartMs > activeCandidate.startMs) {
+          activeCandidate = { row, startMs: baseStartMs };
+        }
+      } else if (baseStartMs > nowMs) {
+        if (!upcomingCandidate || baseStartMs < upcomingCandidate.startMs) {
+          upcomingCandidate = { row, startMs: baseStartMs };
+        }
+      }
+      continue;
+    }
+
+    const baseStartParts = getTimeZoneParts(new Date(baseStartMs), rowTimezone);
+    const recurringDays = normalizeRecurringDays(row.recurring_days);
+    const effectiveDays = recurringDays.length > 0 ? recurringDays : [baseStartParts.weekday];
+
+    for (let offset = -7; offset <= 14; offset += 1) {
+      const dayProbe = getTimeZoneParts(new Date(nowMs + offset * dayMs), rowTimezone);
+      if (!effectiveDays.includes(dayProbe.weekday)) continue;
+      const occurrenceMs = zonedDateTimeToUtcMs(
+        dayProbe.year,
+        dayProbe.month,
+        dayProbe.day,
+        baseStartParts.hour,
+        baseStartParts.minute,
+        baseStartParts.second,
+        rowTimezone
+      );
+      if (occurrenceMs < baseStartMs) continue;
+      const endMs = occurrenceMs + rounds * ROUND_MS;
+      if (nowMs >= occurrenceMs && nowMs < endMs) {
+        if (!activeCandidate || occurrenceMs > activeCandidate.startMs) {
+          activeCandidate = { row, startMs: occurrenceMs };
+        }
+      } else if (occurrenceMs > nowMs) {
+        if (!upcomingCandidate || occurrenceMs < upcomingCandidate.startMs) {
+          upcomingCandidate = { row, startMs: occurrenceMs };
+        }
+      }
     }
   }
 
-  const upcoming = ((upcomingResult.data ?? [])[0] as TriviaScheduleRow | undefined) ?? null;
+  const active = activeCandidate
+    ? { ...activeCandidate.row, start_time: new Date(activeCandidate.startMs).toISOString() }
+    : null;
+  const upcoming = upcomingCandidate
+    ? { ...upcomingCandidate.row, start_time: new Date(upcomingCandidate.startMs).toISOString() }
+    : null;
   return { active, upcoming };
 }
 

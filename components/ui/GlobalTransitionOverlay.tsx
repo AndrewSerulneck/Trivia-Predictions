@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { usePathname } from "next/navigation";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 
 type GlobalTransitionShowDetail = {
@@ -24,6 +25,7 @@ function pathMatches(expectedPath: string, candidatePath: string): boolean {
 }
 
 export function GlobalTransitionOverlay() {
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const targetPathRef = useRef<string>("");
@@ -108,6 +110,12 @@ export function GlobalTransitionOverlay() {
     }
 
     const onShow = (event: Event) => {
+      const currentPath = window.location.pathname;
+      if (currentPath === "/" || currentPath === "/join") {
+        // Join/login should never be left covered by transition state.
+        window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
+        return;
+      }
       const detail = (event as CustomEvent<GlobalTransitionShowDetail | undefined>).detail;
       targetPathRef.current = String(detail?.targetPath ?? "").trim();
       clearSafetyTimers();
@@ -128,6 +136,8 @@ export function GlobalTransitionOverlay() {
         if (!visibleRef.current || isFadingOutRef.current) {
           return;
         }
+        // Pair "show" with an explicit hide signal before final fade.
+        window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
         startFadeOut();
       }, OVERLAY_HARD_TIMEOUT_MS);
     };
@@ -166,6 +176,18 @@ export function GlobalTransitionOverlay() {
       clearSafetyTimers();
     };
   }, [clearSafetyTimers, startFadeOut]);
+
+  useEffect(() => {
+    if (!visible) return;
+    if (pathname === "/" || pathname === "/join") {
+      const timeoutId = window.setTimeout(() => {
+        startFadeOut();
+      }, 0);
+      return () => {
+        window.clearTimeout(timeoutId);
+      };
+    }
+  }, [pathname, startFadeOut, visible]);
 
   const shouldRender = visible;
   const overlayLabel = useMemo(() => "Hightop Challenge: Game On", []);

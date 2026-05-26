@@ -4,13 +4,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getUserId } from "@/lib/storage";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { Fragment } from "react";
-import type { LeaderboardEntry } from "@/types";
+import type { AdSlot, LeaderboardEntry } from "@/types";
 
 type LeaderboardPayload = {
   ok: boolean;
   entries?: LeaderboardEntry[];
   currentUserRank?: number | null;
   error?: string;
+};
+
+const VENUE_LEADERBOARD_SLOTS: Record<number, AdSlot> = {
+  1: "venue-leaderboard-rows-1-10",
+  2: "venue-leaderboard-rows-11-20",
+  3: "venue-leaderboard-rows-21-30",
+  4: "venue-leaderboard-rows-31-40",
+  5: "venue-leaderboard-rows-41-50",
 };
 
 function areEntriesEqual(a: LeaderboardEntry[], b: LeaderboardEntry[]): boolean {
@@ -134,7 +142,7 @@ export function LeaderboardTable({
 
   if (isLoading && entries.length === 0) {
     return (
-      <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+      <div className="rounded-ht-md border border-ht-border-hairline bg-ht-elevated p-4 text-sm text-ht-fg-muted">
         Loading leaderboard...
       </div>
     );
@@ -142,7 +150,7 @@ export function LeaderboardTable({
 
   if (entries.length === 0) {
     return (
-      <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+      <div className="rounded-ht-md border border-ht-border-hairline bg-ht-elevated p-4 text-sm text-ht-fg-muted">
         No users ranked yet for this venue.
       </div>
     );
@@ -151,45 +159,39 @@ export function LeaderboardTable({
   return (
     <div className="space-y-2">
       {errorMessage ? (
-        <div className="flex items-center justify-between gap-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900">
+        <div className="flex items-center justify-between gap-2 rounded-ht-md border border-amber-400/40 bg-amber-500/10 p-2 text-xs text-amber-300">
           <span>{errorMessage}</span>
           <button
             type="button"
             onClick={() => void load()}
-            className="rounded border border-amber-400 bg-white px-2 py-1 font-semibold text-amber-900"
+            className="rounded-ht-sm border border-amber-400/40 bg-ht-elevated px-2 py-1 font-semibold text-amber-300"
           >
             Retry
           </button>
         </div>
       ) : null}
       {currentUserRank ? (
-        <div className="inline-flex rounded-xl border-2 border-[#3b2412] bg-[#1f5136] px-3 py-1.5 shadow-[0_2px_0_rgba(0,0,0,0.25)]">
-          <p className="text-base font-semibold text-[#ecf8f1] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">
+        <div className="inline-flex rounded-ht-pill border border-amber-400/40 bg-amber-500/10 px-3 py-1.5">
+          <p className="text-base font-semibold text-amber-300">
             Your current rank: <strong>#{currentUserRank}</strong>
           </p>
         </div>
       ) : null}
-      <div className="overflow-x-auto rounded-2xl border-4 border-[#3b2412] bg-[#4a2e18] p-1 shadow-[0_10px_20px_rgba(15,23,42,0.32),inset_0_0_0_2px_rgba(255,255,255,0.08)]">
-        <table
-          className="w-full table-fixed divide-y divide-white/15 text-sm text-[#f3fff8]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 20% 16%, rgba(255,255,255,0.07) 0, rgba(255,255,255,0) 32%), radial-gradient(circle at 78% 82%, rgba(255,255,255,0.05) 0, rgba(255,255,255,0) 34%), linear-gradient(180deg, #245f41 0%, #1f5136 100%)",
-          }}
-        >
+      <div className="overflow-x-auto rounded-ht-xl border border-ht-border-soft bg-ht-surface shadow-ht-card">
+        <table className="w-full table-fixed divide-y divide-ht-border-hairline text-sm text-ht-fg-secondary">
           <colgroup>
             <col style={{ width: "20%" }} />
             <col style={{ width: "56%" }} />
             <col style={{ width: "24%" }} />
           </colgroup>
-          <thead className="bg-[#275f41] text-left text-[#f8fff8]">
+          <thead className="bg-ht-elevated text-left text-ht-fg-primary border-b border-ht-border-soft">
             <tr>
-              <th className="px-3 py-2 text-lg font-semibold [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">Rank</th>
-              <th className="px-3 py-2 text-lg font-semibold [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">Username</th>
-              <th className="px-3 py-2 text-right text-lg font-semibold [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">Points</th>
+              <th className="px-3 py-2 text-sm font-black tracking-wide uppercase" style={{ color: "var(--ht-amber-500)", letterSpacing: "var(--ht-track-eyebrow)" }}>Rank</th>
+              <th className="px-3 py-2 text-sm font-black tracking-wide uppercase" style={{ color: "var(--ht-amber-500)", letterSpacing: "var(--ht-track-eyebrow)" }}>Username</th>
+              <th className="px-3 py-2 text-right text-sm font-black tracking-wide uppercase" style={{ color: "var(--ht-amber-500)", letterSpacing: "var(--ht-track-eyebrow)" }}>Points</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/10 bg-transparent">
+          <tbody className="divide-y divide-ht-border-hairline bg-transparent">
             {entries.map((entry, index) => {
               const isCurrentUser = currentUserId && entry.userId === currentUserId;
               const shouldRenderAdBreak = (index + 1) % 10 === 0;
@@ -201,46 +203,46 @@ export function LeaderboardTable({
                   <tr
                     className={
                       isCurrentUser
-                        ? "bg-[#4a8766]/72"
+                        ? "bg-amber-500/12"
                         : isTopThree
-                        ? "bg-[#417b5a]/58"
-                        : "bg-[#2e6647]/32"
+                        ? "bg-ht-elevated/50"
+                        : ""
                     }
                   >
                     <td className="px-3 py-2">
                       <span
-                        className={`inline-flex min-w-[2.45rem] items-center justify-center rounded-full border px-2 py-0.5 text-base font-semibold [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.45)] ${
+                        className={`inline-flex min-w-[2.45rem] items-center justify-center rounded-ht-pill border px-2 py-0.5 text-sm font-bold ht-tabular ${
                           entry.rank === 1
-                            ? "border-amber-200 bg-amber-100/30 text-amber-50"
+                            ? "border-amber-400/60 bg-amber-500/20 text-amber-300"
                             : entry.rank === 2
-                            ? "border-slate-200 bg-slate-100/25 text-slate-100"
+                            ? "border-slate-400/50 bg-slate-500/20 text-slate-300"
                             : entry.rank === 3
-                            ? "border-orange-200 bg-orange-100/25 text-orange-100"
-                            : "border-white/40 bg-white/10 text-[#f6fff8]"
+                            ? "border-orange-400/50 bg-orange-500/20 text-orange-300"
+                            : "border-ht-border-hairline bg-ht-elevated text-ht-fg-muted"
                         }`}
                       >
                         {rankBadge(entry.rank)}
                       </span>
                     </td>
                     <td className="px-3 py-2">
-                      <span className="block truncate align-middle text-xl [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.45)]">
+                      <span className="block truncate align-middle text-base font-semibold text-ht-fg-primary">
                         {entry.username}
                       </span>
                       {isCurrentUser ? (
-                        <span className="ml-2 rounded-full border border-white/55 bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white">
+                        <span className="ml-2 rounded-ht-pill border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-300">
                           You
                         </span>
                       ) : null}
                     </td>
-                    <td className="px-3 py-2 text-right text-xl font-semibold text-[#f6fff8] [font-family:'Kalam',cursive] [text-shadow:0_1px_0_rgba(0,0,0,0.45)]">
+                    <td className="px-3 py-2 text-right text-base font-bold text-ht-fg-primary ht-tabular">
                       {entry.points}
                     </td>
                   </tr>
                   {shouldRenderAdBreak ? (
-                    <tr className="bg-[#275f41]/85">
+                    <tr className="bg-ht-elevated/40">
                       <td colSpan={3} className="px-3 py-3">
                         <InlineSlotAdClient
-                          slot="leaderboard-sidebar"
+                          slot={VENUE_LEADERBOARD_SLOTS[sequenceIndex] ?? "venue-leaderboard-rows-1-10"}
                           venueId={venueId}
                           pageKey="venue"
                           adType="inline"
@@ -256,10 +258,10 @@ export function LeaderboardTable({
               );
             })}
             {entries.length < 15 ? (
-              <tr className="bg-[#275f41]/85">
+              <tr className="bg-ht-elevated/40">
                 <td colSpan={3} className="px-3 py-3">
                   <InlineSlotAdClient
-                    slot="leaderboard-sidebar"
+                    slot={VENUE_LEADERBOARD_SLOTS[1] ?? "venue-leaderboard-rows-1-10"}
                     venueId={venueId}
                     pageKey="venue"
                     adType="inline"

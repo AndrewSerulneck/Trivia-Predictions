@@ -229,7 +229,7 @@ export function NotificationBell() {
         id="tp-notification-bell"
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="tp-clean-button relative inline-flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-r from-[#f9f1e6] to-[#f5ddbf] text-base font-semibold text-[#1c2b3a] hover:from-[#fff6ea] hover:to-[#f9e3c8]"
+        className="relative inline-flex h-9 w-9 items-center justify-center rounded-ht-sm border border-ht-border-soft bg-ht-elevated text-base font-semibold text-ht-fg-primary hover:opacity-80 transition-opacity"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={unreadCount > 0 ? `${unreadCount} unread alerts` : "Open alerts"}
@@ -244,24 +244,24 @@ export function NotificationBell() {
 
       {open ? (
         <div
-          className="fixed z-30 overflow-hidden rounded-xl border border-[#d8c4aa] bg-gradient-to-b from-[#fffaf4] to-white shadow-[0_16px_34px_rgba(28,43,58,0.2)]"
+          className="fixed z-30 overflow-hidden rounded-ht-lg border border-ht-border-soft bg-ht-surface shadow-ht-modal"
           style={
             menuPosition
               ? { top: `${menuPosition.top}px`, left: `${menuPosition.left}px`, width: `${menuPosition.width}px` }
               : undefined
           }
         >
-          <div className="flex items-center justify-between border-b border-[#eadbcc] bg-[#fdf3e7] px-4 py-3">
+          <div className="flex items-center justify-between border-b border-ht-border-hairline bg-ht-elevated px-4 py-3">
             <div>
-              <p className="text-sm font-semibold text-[#1c2b3a]">Notifications</p>
-              <p className="text-[11px] text-[#6b7280]">Recent account and game updates</p>
+              <p className="text-sm font-semibold text-ht-fg-primary">Notifications</p>
+              <p className="text-[11px] text-ht-fg-muted">Recent account and game updates</p>
             </div>
             <button
               type="button"
               onClick={() => {
                 void markRead();
               }}
-              className="tp-clean-button shrink-0 rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-[#1c2b3a] hover:bg-[#fff8ef]"
+              className="shrink-0 rounded-ht-sm border border-ht-border-soft bg-ht-elevated-2 px-3 py-1.5 text-xs font-semibold text-ht-fg-secondary hover:opacity-80 transition-opacity"
             >
               Mark all read
             </button>
@@ -271,8 +271,8 @@ export function NotificationBell() {
               <p className="text-2xl" aria-hidden="true">
                 🔕
               </p>
-              <p className="text-sm font-semibold text-[#1c2b3a]">You&apos;re all caught up</p>
-              <p className="text-xs text-slate-600">
+              <p className="text-sm font-semibold text-ht-fg-primary">You&apos;re all caught up</p>
+              <p className="text-xs text-ht-fg-muted">
                 This is where we let you know if your predictions were correct.
               </p>
             </div>
@@ -281,8 +281,8 @@ export function NotificationBell() {
               {items.map((item) => (
                 <li
                   key={item.id}
-                  className={`rounded-lg border p-3 text-xs shadow-sm ${
-                    item.read ? "border-[#eadbcc] bg-white text-slate-600" : "border-[#d5e4f3] bg-[#f3f8ff] text-slate-800"
+                  className={`rounded-ht-md border p-3 text-xs ${
+                    item.read ? "border-ht-border-hairline bg-ht-elevated/30 text-ht-fg-muted" : "border-ht-cyan-600/40 bg-ht-elevated text-ht-fg-secondary"
                   }`}
                 >
                   <button
@@ -297,7 +297,7 @@ export function NotificationBell() {
                     <p>{item.message}</p>
                     <div className="mt-1 flex items-center justify-between">
                       <span>{new Date(item.createdAt).toLocaleString()}</span>
-                      <span className="rounded-md bg-white px-2 py-1 font-semibold text-blue-700">View</span>
+                      <span className="rounded-ht-sm bg-ht-elevated-2 px-2 py-1 font-semibold text-ht-cyan-400">View</span>
                     </div>
                   </button>
                 </li>

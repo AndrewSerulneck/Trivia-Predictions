@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hightop Challenge — UI Kit</title>
+<link rel="stylesheet" href="../../colors_and_type.css" />
+<style>
+  html, body {
+    margin: 0; min-height: 100vh; background: var(--ht-canvas);
+    font-family: var(--ht-font-body); color: var(--ht-fg-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    min-height: 100vh; padding: 32px 24px 56px;
+    display: flex; flex-direction: column; align-items: center; gap: 24px;
+    background:
+      radial-gradient(60% 50% at 50% 0%, rgba(34, 211, 238, 0.10), transparent 70%),
+      var(--ht-canvas);
+  }
+  .page-head {
+    width: 100%; max-width: 980px; display: flex; align-items: center;
+    justify-content: space-between; gap: 16px;
+  }
+  .page-head h1 {
+    margin: 0; font-family: var(--ht-font-display); font-size: 28px;
+    letter-spacing: 0.04em; text-transform: uppercase; color: var(--ht-fg-primary);
+  }
+  .page-head .sub { color: var(--ht-fg-muted); font-weight: 600; font-size: 13px;
+                    line-height: 1.45; max-width: 460px; }
+  .switcher {
+    display: flex; gap: 6px; flex-wrap: wrap; padding: 6px;
+    background: var(--ht-surface); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 9999px;
+  }
+  .switcher button {
+    background: transparent; border: none; color: var(--ht-fg-muted);
+    font-family: var(--ht-font-body); font-weight: 800; font-size: 12px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 8px 14px; border-radius: 9999px; cursor: pointer;
+    transition: all 150ms ease;
+  }
+  .switcher button.active {
+    color: #0f172a; background: var(--ht-cyan-400);
+  }
+  .switcher button:hover:not(.active) { color: var(--ht-fg-primary); }
+  .hint {
+    color: var(--ht-fg-muted); font-size: 11.5px; font-weight: 700;
+    letter-spacing: 0.04em; text-align: center; max-width: 540px;
+  }
+  .hint code { font-family: var(--ht-font-mono); color: var(--ht-cyan-300); font-weight: 700; }
+
+  .stage { display: flex; justify-content: center; }
+
+  @keyframes ht-pulse {
+    0%, 100% { opacity: 0.4; }
+    50%      { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="components.jsx"></script>
+<script type="text/babel" src="screens.jsx"></script>
+<script type="text/babel" src="more-screens.jsx"></script>
+
+<script type="text/babel">
+// Hightop Challenge UI kit — interactive click-through.
+// The venue page is the heart of the product: a swipable 3-tab carousel
+// (Games · Leaderboard · Challenges). Game landing & live gameplay are
+// full-takeover surfaces that lift out of the carousel entirely.
+
+const RULES_BY_GAME = {
+  trivia: [
+    "15 questions per round",
+    "15 seconds per question",
+    "3 rounds per hour",
+    "2 points per correct answer",
+  ],
+  live_trivia: [
+    "Synchronized Live Venue Play",
+    "30-second write-in answer windows",
+    "Server-timed rounds with screen-lock forfeits on tab/browser switches",
+    "2 points per correct answer",
+  ],
+  bingo: [
+    "Bingo cards feature specific player stats and game scores",
+    "Watch live as squares update in real-time.",
+    "Up to 4 active boards at a time",
+    "50 points for boards that hit Bingo",
+    'Click "Collect Points" to claim your reward',
+  ],
+  pickem: [
+    "Think you can pick today's winners? Prove it.",
+    "10 picks total",
+    "10 points per correct pick",
+    "7 correct picks wins double",
+    "10 correct picks wins triple",
+  ],
+  fantasy: [
+    "Build one NBA lineup with players from today's games",
+    "Only players in games that have not started yet are eligible",
+    "Fantasy scores are updated in real time once games begin",
+  ],
+};
+
+// Surface = which top-level surface the user is on.
+//   "join"      — anonymous join flow
+//   "venue"     — the 3-tab venue page (Games / Leaderboard / Challenges)
+//   "landing"   — full-takeover game landing
+//   "live"      — full-takeover live trivia gameplay (answering / reveal / intermission)
+//   "bingo"     — full-takeover live bingo board
+//   "activity"  — your activity timeline & career stats (from hamburger drawer)
+//   "postgame"  — game-over celebration & breakdown
+const TOPLEVEL = [
+  { key: "join",     label: "Join" },
+  { key: "venue",    label: "Venue (3 tabs)" },
+  { key: "landing",  label: "Game Landing" },
+  { key: "live",     label: "Live Showdown" },
+  { key: "bingo",    label: "Bingo Board" },
+  { key: "activity", label: "Activity" },
+  { key: "postgame", label: "Post-game" },
+];
+
+function App() {
+  const [surface, setSurface]   = React.useState("venue");
+  const [tab, setTab]           = React.useState("games");
+  const [game, setGame]         = React.useState("live_trivia");
+  const [menuOpen, setMenuOpen] = React.useState(false);
+
+  const onPickGame = (gk) => {
+    setGame(gk); setMenuOpen(false);
+    if (gk === "bingo") { setSurface("bingo"); return; }
+    setSurface("landing");
+  };
+  const onPlay = () => {
+    setMenuOpen(false);
+    if (game === "bingo") setSurface("bingo");
+    else setSurface("live");
+  };
+
+  const tabIndex = ["games", "leaders", "challenges"].indexOf(tab);
+  const setTabByIndex = (i) => setTab(["games", "leaders", "challenges"][i]);
+
+  // Drawer's onNavigate dispatches drawer-item keys to surfaces. The drawer
+  // items mirror components/ui/LeftHamburgerMenu.tsx in the live codebase.
+  const handleDrawerNav = (key) => {
+    setMenuOpen(false);
+    if (key === "active-games")  { setSurface("activity"); return; }    // "Career Stats"
+    if (key === "faqs")          { setSurface("venue"); return; }       // stub
+    if (key === "advertise")     { setSurface("venue"); return; }       // stub
+    if (key === "redeem-prizes") { setSurface("venue"); return; }       // stub
+  };
+
+  const navigate = (k) => {
+    if (k === "hub" || k === "venue") { setSurface("venue"); setMenuOpen(false); return; }
+    if (k === "postgame") { setSurface("postgame"); return; }
+    if (k === "activity") { setSurface("activity"); return; }
+  };
+
+  // Render the active surface (without phone chrome — that's the outer wrapper's job).
+  const renderSurface = () => {
+    if (surface === "join")     return <JoinScreen navigate={navigate}/>;
+    if (surface === "landing")  return <GameLanding gameKey={game} rules={RULES_BY_GAME[game]} navigate={navigate} onPlay={onPlay}/>;
+    if (surface === "live")     return <LiveShowdown navigate={navigate}/>;
+    if (surface === "bingo")    return <BingoBoardScreen navigate={navigate}/>;
+    if (surface === "activity") return <ActivityScreen navigate={navigate}/>;
+    if (surface === "postgame") return <LivePostGameScreen navigate={navigate}/>;
+    // surface === "venue"
+    return (
+      <>
+        <TopBar title="The Local Tavern" onMenu={() => setMenuOpen(true)} onBell={() => {}}/>
+        <VenueSwitcher active={tab} onSelect={setTab}/>
+        <VenueCarousel activeIndex={tabIndex} onIndexChange={setTabByIndex}>
+          <VenueHub navigate={navigate} onGame={onPickGame}/>
+          <Leaderboard navigate={navigate}/>
+          <ChallengesScreen navigate={navigate}/>
+        </VenueCarousel>
+      </>
+    );
+  };
+
+  return (
+    <div className="page">
+      <div className="page-head">
+        <div>
+          <h1>Hightop Challenge · UI Kit</h1>
+          <div className="sub">
+            Seven surfaces. The venue page is a 3-tab swipable carousel; the hamburger
+            (☰ top-left of the venue) opens a left drawer to reach Activity and other "You"
+            surfaces. Game Landing, Live Showdown, Bingo Board, and Post-game are
+            full-takeover screens that lift out of the carousel entirely.
+          </div>
+        </div>
+        <div className="switcher">
+          {TOPLEVEL.map(s => (
+            <button key={s.key}
+                    className={surface === s.key ? "active" : ""}
+                    onClick={() => { setSurface(s.key); setMenuOpen(false); }}>{s.label}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="stage">
+        <IOSDevice color="midnight">
+          <IOSStatusBar dark time="9:41" />
+          <div style={{
+            position: "relative",
+            display: "flex", flexDirection: "column",
+            background: "var(--ht-canvas)", color: "var(--ht-fg-primary)",
+            flex: 1, minHeight: 0, overflow: "hidden",
+          }}>
+            {renderSurface()}
+            {/* Hamburger drawer overlays whichever surface is active. */}
+            <HamburgerDrawer open={menuOpen} onClose={() => setMenuOpen(false)}
+                             current={surface === "activity" ? "active-games" : undefined}
+                             onNavigate={handleDrawerNav}/>
+          </div>
+        </IOSDevice>
+      </div>
+
+      <div className="hint">
+        Tip: when you're on the <code>Venue (3 tabs)</code> surface, drag the panel
+        horizontally to swipe between Games, Leaderboard, and Challenges — or click
+        the tab pill. Tap the <code>☰</code> top-left to open the hamburger drawer.
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

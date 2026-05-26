@@ -55,7 +55,7 @@ export function BouncingBallLoader({
       <div className="pointer-events-none fixed inset-0 z-[2400] flex h-screen w-screen items-center justify-center bg-[#030712]">
         <div className={`flex flex-col items-center justify-center ${gap} px-6 text-center`}>
           {ball}
-          <p className={`${textSize} font-black tracking-[0.05em] text-white [font-family:'Kalam','Bree_Serif','Nunito',cursive]`}>
+          <p className={`${textSize} font-black tracking-[0.05em] text-white [font-family:'Bree_Serif','Nunito',serif]`}>
             {label}
           </p>
         </div>
@@ -67,7 +67,7 @@ export function BouncingBallLoader({
     return (
       <div className={`flex flex-col items-center justify-center ${gap} px-6 text-center`}>
         {ball}
-        <p className={`${textSize} font-black tracking-[0.05em] text-white [font-family:'Kalam','Bree_Serif','Nunito',cursive]`}>
+        <p className={`${textSize} font-black tracking-[0.05em] text-white [font-family:'Bree_Serif','Nunito',serif]`}>
           {label}
         </p>
       </div>
@@ -75,9 +75,9 @@ export function BouncingBallLoader({
   }
 
   return (
-    <div className={`flex flex-col items-center justify-center ${gap} rounded-xl border border-orange-200 bg-gradient-to-b from-orange-50 to-amber-50 px-4 py-6`}>
+    <div className={`flex flex-col items-center justify-center ${gap} rounded-ht-xl border border-ht-border-hairline bg-ht-elevated px-4 py-6`}>
       {ball}
-      <p className={`${textSize} font-semibold tracking-[0.08em] text-slate-700`}>{label}</p>
+      <p className={`${textSize} font-semibold tracking-[0.08em] text-ht-fg-muted`}>{label}</p>
     </div>
   );
 }

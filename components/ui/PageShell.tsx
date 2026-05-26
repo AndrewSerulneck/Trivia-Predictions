@@ -24,12 +24,13 @@ export function PageShell({
   lockViewport = false,
 }: PageShellProps) {
   const useCompactTopNav = !showBranding;
+  const hasCompactHeaderContent = showUserStatus || showPageTitle;
   const mainClass = noContainer
     ? lockViewport
       ? "min-h-0 flex-1 overflow-hidden p-0"
       : "min-h-0 flex-1 overflow-x-hidden overflow-y-visible p-0"
-    : "tp-comic-card min-h-0 flex-1 overflow-x-hidden overflow-y-visible p-3 sm:p-4 text-base";
-  const compactHeaderSpacerClass = useCompactTopNav
+    : "bg-ht-surface border border-ht-border-hairline rounded-ht-2xl min-h-0 flex-1 overflow-x-hidden overflow-y-visible p-3 sm:p-4 text-base";
+  const compactHeaderSpacerClass = useCompactTopNav && hasCompactHeaderContent
     ? showUserStatus
       ? showPageTitle
         ? "h-[calc(env(safe-area-inset-top)+5.35rem)] sm:h-[calc(env(safe-area-inset-top)+6.4rem)]"
@@ -52,19 +53,21 @@ export function PageShell({
   return (
     <div className={`tp-page-shell flex flex-col ${shellHeightClass} ${shellGapClass}`} style={shellStyle}>
       {useCompactTopNav ? (
-        <header className="tp-page-header tp-page-header-compact fixed inset-x-0 top-0 z-[1000] w-full max-w-none overflow-visible px-0 pb-0 pt-0">
-          <div className="w-full max-w-none box-border px-0 pt-[max(env(safe-area-inset-top),0px)]">
-            {showUserStatus ? <LeftHamburgerMenu showAlerts={showAlerts} /> : null}
-            {showPageTitle ? (
-              <div
-                className={`${showUserStatus ? "mt-1" : ""} mx-0 rounded-none border border-slate-900/20 bg-[#fff7ea]/92 px-2 py-1 text-center text-xs text-slate-800 shadow-sm`}
-              >
-                <span className="font-semibold">{title}</span>
-                {description ? <span className="font-medium">: {description}</span> : null}
-              </div>
-            ) : null}
-          </div>
-        </header>
+        hasCompactHeaderContent ? (
+          <header className="tp-page-header tp-page-header-compact fixed inset-x-0 top-0 z-[1000] w-full max-w-none overflow-visible px-0 pb-0 pt-0">
+            <div className="w-full max-w-none box-border px-0 pt-[max(env(safe-area-inset-top),0px)]">
+              {showUserStatus ? <LeftHamburgerMenu showAlerts={showAlerts} /> : null}
+              {showPageTitle ? (
+                <div
+                  className={`${showUserStatus ? "mt-1" : ""} mx-0 rounded-none border-b border-ht-border-hairline bg-ht-elevated/95 px-2 py-1 text-center text-xs text-ht-fg-muted backdrop-blur`}
+                >
+                  <span className="font-semibold">{title}</span>
+                  {description ? <span className="font-medium">: {description}</span> : null}
+                </div>
+              ) : null}
+            </div>
+          </header>
+        ) : null
       ) : (
         <header
           className={`tp-page-header sticky top-0 z-20 p-0 overflow-visible${lockViewport ? " transition-[height] duration-150 ease-out" : " h-[13rem] sm:h-[16.5rem] md:h-[19rem]"}`}
@@ -81,7 +84,7 @@ export function PageShell({
         </header>
       )}
 
-      {useCompactTopNav ? <div aria-hidden className={`w-full shrink-0 ${compactHeaderSpacerClass}`} /> : null}
+      {useCompactTopNav && hasCompactHeaderContent ? <div aria-hidden className={`w-full shrink-0 ${compactHeaderSpacerClass}`} /> : null}
 
       <main className={`tp-page-main min-w-0 ${mainClass}`}>
         {noContainer ? (

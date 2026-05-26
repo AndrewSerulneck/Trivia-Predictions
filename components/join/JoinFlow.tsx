@@ -321,7 +321,7 @@ const UsernameStep = memo(function UsernameStep({
           Your Username
         </p>
         <h1 className="text-2xl font-black text-white">What&apos;s your username?</h1>
-        <p className="mt-1 text-sm font-semibold text-slate-400">
+        <p className="mt-1 text-sm font-semibold text-ht-fg-muted">
           If you&apos;ve never played before, make one up!
         </p>
       </div>
@@ -375,7 +375,7 @@ const UsernameStep = memo(function UsernameStep({
       </div>
 
       {locationLoading ? (
-        <p className="text-xs text-slate-500">Verifying your location...</p>
+        <p className="text-xs text-ht-fg-muted">Verifying your location...</p>
       ) : null}
     </motion.div>
   );
@@ -429,7 +429,7 @@ const PinStep = memo(function PinStep({
           Your PIN
         </p>
         <h1 className="text-2xl font-black text-white">What&apos;s your PIN?</h1>
-        <p className="mt-1 text-sm font-semibold text-slate-400">
+        <p className="mt-1 text-sm font-semibold text-ht-fg-muted">
           Returning? Use your last PIN. New? Pick 4 digits you&apos;ll remember.
         </p>
       </div>
@@ -452,7 +452,7 @@ const PinStep = memo(function PinStep({
       </div>
 
       {isAuthLoading ? (
-        <p className="animate-pulse text-sm text-slate-400">{loadingPhrase}</p>
+        <p className="animate-pulse text-sm text-ht-fg-muted">{loadingPhrase}</p>
       ) : errorMessage ? (
         <div className="rounded-xl border border-rose-400/60 bg-rose-950/30 p-3 text-sm text-rose-200">
           {errorMessage}
@@ -535,6 +535,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const pinFocusTimerRef = useRef<number | null>(null);
   const pinSubmittingRef = useRef(false);
   const createProfileRef = useRef<((pinOverride?: string) => Promise<void>) | null>(null);
+  const hasSuccessfulInitialRenderRef = useRef(false);
 
   useEffect(() => {
     const load = async () => {
@@ -543,12 +544,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         return;
       }
 
-      setStatus("loading");
-      setErrorMessage("");
-      setLocationVerified(false);
-      setLastLocationVerifiedAt(null);
-      setDistanceMeters(null);
-      setLocationNotice("Verifying your location...");
+      // Preserve a stable join UI after first successful initialization.
+      // Background refreshes should not blank the panel/state.
+      if (!hasSuccessfulInitialRenderRef.current) {
+        setStatus("loading");
+        setErrorMessage("");
+        setLocationVerified(false);
+        setLastLocationVerifiedAt(null);
+        setDistanceMeters(null);
+        setLocationNotice("Verifying your location...");
+      }
       autoVerificationAttemptedRef.current = false;
 
       try {
@@ -563,6 +568,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           setVenueList(venues);
           setActivePanel("venue-list");
           setStatus("ready");
+          hasSuccessfulInitialRenderRef.current = true;
 
           if (DISABLE_GEOFENCE_FOR_TESTING) {
             setLocationVerified(true);
@@ -620,6 +626,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         setVenue(venueData);
         setActivePanel("venue-login");
         setStatus("ready");
+        hasSuccessfulInitialRenderRef.current = true;
 
         if (!isSupabaseConfigured) {
           setErrorMessage(
@@ -673,6 +680,12 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           setLocationNotice("");
         }
       } catch (error) {
+        if (hasSuccessfulInitialRenderRef.current) {
+          // Keep current panel/list visible and only surface a non-blocking error.
+          setStatus("ready");
+          setErrorMessage(getErrorMessage(error, "Failed to refresh venue data. Please retry if needed."));
+          return;
+        }
         setStatus("error");
         setErrorMessage(getErrorMessage(error, "Failed to initialize join flow."));
       }
@@ -1520,9 +1533,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                                 Choose Your Venue
                               </p>
                               {locationLoading ? (
-                                <p className="text-xs text-slate-500">Finding nearby venues...</p>
+                                <p className="text-xs text-ht-fg-muted">Finding nearby venues...</p>
                               ) : locationNotice ? (
-                                <p className="text-xs text-slate-500">{locationNotice}</p>
+                                <p className="text-xs text-ht-fg-muted">{locationNotice}</p>
                               ) : null}
                             </div>
                             <ul className="space-y-2">
@@ -1537,7 +1550,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                               ))}
                             </ul>
                             <InlineSlotAdClient
-                              slot="leaderboard-sidebar"
+                              slot="inline-content"
                               venueId={venueParam || undefined}
                               pageKey="join"
                               adType="inline"
@@ -1552,11 +1565,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                           <div className="space-y-3 rounded-xl border border-slate-700 bg-slate-800/50 p-4">
                             <p className="font-semibold text-white">Nearby venues only</p>
                             {locationLoading ? (
-                              <p className="text-sm text-slate-400">Checking your location to find venues in range...</p>
+                              <p className="text-sm text-ht-fg-muted">Checking your location to find venues in range...</p>
                             ) : locationNotice ? (
-                              <p className="text-sm text-slate-400">{locationNotice}</p>
+                              <p className="text-sm text-ht-fg-muted">{locationNotice}</p>
                             ) : (
-                              <p className="text-sm text-slate-400">No venue is currently in range from your location.</p>
+                              <p className="text-sm text-ht-fg-muted">No venue is currently in range from your location.</p>
                             )}
                             <button
                               type="button"

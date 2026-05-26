@@ -3,7 +3,7 @@ import { getAdById, recordAdClick } from "@/lib/ads";
 import type { AdPageKey } from "@/types";
 
 function isAdPageKey(value: string): value is AdPageKey {
-  return ["global", "join", "venue", "trivia", "sports-bingo", "pickem", "fantasy"].includes(value);
+  return ["global", "join", "venue", "trivia", "speed-trivia", "live-trivia", "sports-bingo", "pickem", "fantasy"].includes(value);
 }
 
 export async function GET(request: Request) {

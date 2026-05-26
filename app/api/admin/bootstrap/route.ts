@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { findMatchingAdminCredential, getConfiguredAdminCredentials } from "@/lib/adminCredentials";
-import { ADMIN_SESSION_COOKIE, createAdminSessionToken } from "@/lib/adminSession";
+import { createAdminSessionCookie } from "@/lib/adminSession";
 
 export async function POST(request: Request) {
   const configuredCredentials = getConfiguredAdminCredentials();
@@ -17,19 +17,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Invalid admin login credentials." }, { status: 403 });
   }
 
-  const sessionToken = createAdminSessionToken(matchedCredential.username);
-  if (!sessionToken) {
+  const setCookieValue = createAdminSessionCookie(matchedCredential.username);
+  if (!setCookieValue) {
     return NextResponse.json({ ok: false, error: "Failed to create admin session." }, { status: 500 });
   }
 
   const response = NextResponse.json({ ok: true });
-  response.cookies.set({
-    name: ADMIN_SESSION_COOKIE,
-    value: sessionToken,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-  });
+  response.headers.append("Set-Cookie", setCookieValue);
   return response;
 }

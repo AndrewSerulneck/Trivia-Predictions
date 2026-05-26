@@ -163,8 +163,10 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
 
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [applyingPlaceholder, setApplyingPlaceholder] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [placeholderApplySummary, setPlaceholderApplySummary] = useState("");
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editingAdId, setEditingAdId] = useState<string | null>(null);
@@ -372,6 +374,7 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
   function startEdit(ad: Advertisement) {
     setEditingAdId(ad.id);
     setEditingDraft(draftFromAdvertisement(ad));
+    setPlaceholderApplySummary("");
     setError("");
     setSuccess("");
   }
@@ -379,6 +382,7 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
   function cancelEdit() {
     setEditingAdId(null);
     setEditingDraft(null);
+    setPlaceholderApplySummary("");
   }
 
   async function uploadImageForEditor(file: File) {
@@ -433,11 +437,71 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
       setSuccess("Advertisement updated.");
       setEditingAdId(null);
       setEditingDraft(null);
+      setPlaceholderApplySummary("");
       await fetchAds();
     } catch (err) {
       setError(getErrorMessage(err, "Failed to update advertisement."));
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function applyPlaceholderFromEditor() {
+    if (!editingAdId || !editingDraft) return;
+    if (!editingDraft.isPlaceholder) {
+      setError("Mark this ad as Placeholder before applying to all inline slots.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "This will create placeholder ads in any inline slots that currently have no placeholder. This will NOT overwrite or delete existing ads. Proceed?"
+    );
+    if (!confirmed) return;
+
+    setApplyingPlaceholder(true);
+    setError("");
+    setSuccess("");
+    setPlaceholderApplySummary("");
+
+    try {
+      const response = await fetch("/api/admin?resource=apply-placeholder-inline", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ templateAdId: editingAdId }),
+      });
+      const body = (await response.json()) as {
+        ok: boolean;
+        created?: number;
+        skipped?: number;
+        errors?: Array<{ slotId: string; pageKey: string; error: string }>;
+        error?: string;
+      };
+      if (!response.ok || !body.ok) {
+        throw new Error(body.error ?? "Failed to apply placeholders.");
+      }
+
+      const created = Number(body.created ?? 0);
+      const skipped = Number(body.skipped ?? 0);
+      const errors = Array.isArray(body.errors) ? body.errors : [];
+      const errorPreview = errors
+        .slice(0, 5)
+        .map((entry) => `${entry.slotId}/${entry.pageKey}: ${entry.error}`)
+        .join(" | ");
+
+      setPlaceholderApplySummary(
+        `Created ${created} placeholders. Skipped ${skipped} slots. Errors ${errors.length}${
+          errorPreview ? ` (${errorPreview})` : ""
+        }.`
+      );
+      setSuccess(`Created ${created} placeholders. Skipped ${skipped}.`);
+      if (errors.length > 0) {
+        setError(`Some slots failed: ${errorPreview}`);
+      }
+      await fetchAds();
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to apply placeholders."));
+    } finally {
+      setApplyingPlaceholder(false);
     }
   }
 
@@ -759,7 +823,12 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
                                   setError("");
                                 }}
                                 venues={venues}
-                                disabled={busy || uploadingForAdId === ad.id}
+                                disabled={busy || applyingPlaceholder || uploadingForAdId === ad.id}
+                                onApplyPlaceholderToAllInlineSlots={
+                                  editingDraft.isPlaceholder ? applyPlaceholderFromEditor : undefined
+                                }
+                                applyingPlaceholderToAllInlineSlots={applyingPlaceholder}
+                                placeholderApplySummary={placeholderApplySummary}
                               />
 
                               <div className="mt-4 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
@@ -767,10 +836,10 @@ export function AdsListSection({ venues }: AdsListSectionProps) {
                                   onClick={() => {
                                     void saveEdit();
                                   }}
-                                  disabled={busy || uploadingForAdId === ad.id}
+                                  disabled={busy || applyingPlaceholder || uploadingForAdId === ad.id}
                                   className="min-h-[44px] rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
                                 >
-                                  {busy ? "Saving..." : "Save Changes"}
+                                  {busy ? "Saving..." : applyingPlaceholder ? "Applying..." : "Save Changes"}
                                 </button>
                                 <button
                                   onClick={cancelEdit}
