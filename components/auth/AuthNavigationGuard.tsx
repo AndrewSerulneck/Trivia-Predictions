@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { getSelectedVenueLock, setSelectedVenueLock } from "@/lib/authFastPath";
+import { logAuthIncident } from "@/lib/authIncidentDebug";
 
 function getVenueIdFromPath(pathname: string): string {
   const match = pathname.match(/^\/venue\/([^/?#]+)/i);
@@ -65,6 +66,9 @@ export function AuthNavigationGuard() {
     // cookie and localStorage writes may not have propagated to the new page yet.
     const entryAtRaw = Number(searchParams?.get("entryAt") ?? "");
     if (Number.isFinite(entryAtRaw) && Date.now() - entryAtRaw <= 10_000) {
+      logAuthIncident("auth-guard", "pause-for-fresh-entry-handoff", {
+        currentPath: pathname ?? "/",
+      });
       return;
     }
 
@@ -89,12 +93,22 @@ export function AuthNavigationGuard() {
     // Keep join/login surfaces stable. Do not auto-redirect away from "/" or
     // "/join" based on background auth/session refreshes.
     if (isJoinRoute(currentPath)) {
+      logAuthIncident("auth-guard", "join-route-stable-no-redirect", {
+        currentPath,
+        tokenVerified: state.tokenVerified,
+        venueId: state.venueId,
+      });
       return;
     }
 
     if (state.tokenVerified && enforcedVenueId) {
       if (!venueIdFromPath && !isInSessionGameRoute(currentPath)) {
         const target = `/venue/${encodeURIComponent(enforcedVenueId)}`;
+        logAuthIncident("auth-guard", "redirect-no-venue-in-path", {
+          currentPath,
+          target,
+          enforcedVenueId,
+        });
         console.warn(`[AuthNavigationGuard] Redirecting to venue home: no venue in path at '${currentPath}'`);
         lastRedirectRef.current = target;
         router.replace(target);
@@ -102,6 +116,12 @@ export function AuthNavigationGuard() {
       }
       if (venueIdFromPath && venueIdFromPath !== enforcedVenueId) {
         const target = `/venue/${encodeURIComponent(enforcedVenueId)}`;
+        logAuthIncident("auth-guard", "redirect-venue-mismatch", {
+          currentPath,
+          venueIdFromPath,
+          target,
+          enforcedVenueId,
+        });
         console.warn(`[AuthNavigationGuard] Redirecting: path venue '${venueIdFromPath}' !== enforced '${enforcedVenueId}'`);
         lastRedirectRef.current = target;
         router.replace(target);
@@ -113,6 +133,12 @@ export function AuthNavigationGuard() {
       if (state.tokenVerified) {
         if (enforcedVenueId && enforcedVenueId !== venueIdFromPath) {
           const target = `/?v=${encodeURIComponent(venueIdFromPath)}`;
+          logAuthIncident("auth-guard", "redirect-to-join-venue-mismatch", {
+            currentPath,
+            venueIdFromPath,
+            enforcedVenueId,
+            target,
+          });
           console.warn(`[AuthNavigationGuard] Redirecting to join: venue mismatch '${venueIdFromPath}' vs enforced '${enforcedVenueId}'`);
           lastRedirectRef.current = target;
           router.replace(target);
@@ -129,6 +155,11 @@ export function AuthNavigationGuard() {
         return;
       }
       const fallback = `/?v=${encodeURIComponent(venueIdFromPath)}`;
+      logAuthIncident("auth-guard", "redirect-to-login-unverified-venue-path", {
+        currentPath,
+        venueIdFromPath,
+        fallback,
+      });
       console.warn(`[AuthNavigationGuard] Redirecting to login: unverified session on venue path '${venueIdFromPath}'`);
       lastRedirectRef.current = fallback;
       router.replace(fallback);
@@ -139,6 +170,11 @@ export function AuthNavigationGuard() {
     const isJoinFlow = isJoinRoute(currentPath);
     if (isJoinFlow && requestedVenueId && state.tokenVerified && state.venueId === requestedVenueId) {
       const target = `/venue/${encodeURIComponent(requestedVenueId)}`;
+      logAuthIncident("auth-guard", "redirect-from-join-to-verified-venue", {
+        currentPath,
+        requestedVenueId,
+        target,
+      });
       lastRedirectRef.current = target;
       router.replace(target);
     }

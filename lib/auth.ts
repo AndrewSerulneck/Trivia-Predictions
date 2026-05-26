@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { logAuthIncident } from "@/lib/authIncidentDebug";
 import type { User } from "@/types";
 
 type UserProfileRow = {
@@ -44,12 +45,18 @@ export function validatePin(pin: string): boolean {
   return /^\d{4}$/.test(pin.trim());
 }
 
-async function getCurrentAuthUserId(): Promise<string | null> {
+async function getCurrentAuthUserId(traceId?: string): Promise<string | null> {
   if (!supabase) {
+    logAuthIncident("auth-helper", "auth-user-lookup-skipped", {
+      traceId: traceId ?? null,
+      reason: "supabase-unconfigured",
+    });
     return null;
   }
 
   let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
+  const startedAt = Date.now();
+  logAuthIncident("auth-helper", "auth-user-lookup-start", { traceId: traceId ?? null });
   try {
     const result = await Promise.race([
       supabase.auth.getUser().catch(() => ({ data: { user: null } })),
@@ -60,8 +67,18 @@ async function getCurrentAuthUserId(): Promise<string | null> {
       }),
     ]);
 
-    return result.data.user?.id ?? null;
+    const authUserId = result.data.user?.id ?? null;
+    logAuthIncident("auth-helper", "auth-user-lookup-finish", {
+      traceId: traceId ?? null,
+      authUserFound: Boolean(authUserId),
+      elapsedMs: Date.now() - startedAt,
+    });
+    return authUserId;
   } catch {
+    logAuthIncident("auth-helper", "auth-user-lookup-error", {
+      traceId: traceId ?? null,
+      elapsedMs: Date.now() - startedAt,
+    });
     return null;
   } finally {
     if (timeoutId !== null) {
@@ -110,6 +127,7 @@ export async function createUserProfile(params: {
   pin: string;
   signal?: AbortSignal;
   selectedVenueId?: string;
+  traceId?: string;
 }): Promise<User> {
   if (!supabase || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
     console.error("[Auth] Environment Config Error: Supabase URL missing.");
@@ -126,7 +144,14 @@ export async function createUserProfile(params: {
   }
 
   const selectedVenueId = String(params.selectedVenueId ?? params.venueId).trim();
-  const authUserId = await getCurrentAuthUserId();
+  const traceId = String(params.traceId ?? "").trim() || null;
+  logAuthIncident("auth-helper", "create-user-profile-start", {
+    traceId,
+    venueId: params.venueId,
+    selectedVenueId,
+    username,
+  });
+  const authUserId = await getCurrentAuthUserId(traceId ?? undefined);
   const timeoutController = new AbortController();
   const timeoutId = globalThis.setTimeout(() => {
     timeoutController.abort();
@@ -137,12 +162,18 @@ export async function createUserProfile(params: {
   };
   externalSignal?.addEventListener("abort", forwardAbort, { once: true });
   let response: Response;
+  const requestStartedAt = Date.now();
+  logAuthIncident("auth-helper", "join-profile-fetch-start", {
+    traceId,
+    venueId: params.venueId,
+  });
   try {
     response = await fetch("/api/join/profile", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-Selected-Venue-Id": selectedVenueId,
+        ...(traceId ? { "X-Auth-Trace-Id": traceId } : {}),
       },
       body: JSON.stringify({
         username,
@@ -155,11 +186,22 @@ export async function createUserProfile(params: {
     });
   } catch (error) {
     if (isAbortError(error)) {
+      logAuthIncident("auth-helper", "join-profile-fetch-abort", {
+        traceId,
+        venueId: params.venueId,
+        elapsedMs: Date.now() - requestStartedAt,
+        externalAborted: Boolean(externalSignal?.aborted),
+      });
       if (externalSignal?.aborted) {
         throw new Error("Login request was canceled.");
       }
       throw new Error("Join request timed out. Please try again.");
     }
+    logAuthIncident("auth-helper", "join-profile-fetch-error", {
+      traceId,
+      venueId: params.venueId,
+      elapsedMs: Date.now() - requestStartedAt,
+    });
     throw error;
   } finally {
     globalThis.clearTimeout(timeoutId);
@@ -177,6 +219,13 @@ export async function createUserProfile(params: {
   } catch {
     payload = {};
   }
+  logAuthIncident("auth-helper", "join-profile-fetch-finish", {
+    traceId,
+    venueId: params.venueId,
+    status: response.status,
+    ok: Boolean(response.ok && payload.ok && payload.user),
+    elapsedMs: Date.now() - requestStartedAt,
+  });
   if (!response.ok || !payload.ok || !payload.user) {
     console.error("[Auth] Profile Create Failed", {
       status: response.status,

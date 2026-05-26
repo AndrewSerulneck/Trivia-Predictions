@@ -44,6 +44,7 @@ import type { Venue } from "@/types";
 import { getVenueDisplayName, getVenueVisual as getVenueVisualFromConfig } from "@/lib/venueDisplay";
 import { APP_PAGE_NAMES } from "@/lib/pageNames";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
+import { logAuthIncident } from "@/lib/authIncidentDebug";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
 type JoinPanel = "venue-list" | "venue-login";
@@ -932,15 +933,34 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const handleSubmitPinStep = useCallback(
     (pinOverride?: string) => {
       const candidatePin = String(pinOverride ?? pin).replace(/\D/g, "").slice(0, 4);
+      logAuthIncident("join-flow", "pin-submit-attempt", {
+        venueId: venue?.id ?? null,
+        loginStep,
+        pinLength: candidatePin.length,
+        alreadySubmitting: pinSubmittingRef.current,
+      });
       if (loginStep !== "pin" || !validatePin(candidatePin) || pinSubmittingRef.current) {
+        logAuthIncident("join-flow", "pin-submit-blocked", {
+          venueId: venue?.id ?? null,
+          loginStep,
+          pinLength: candidatePin.length,
+          alreadySubmitting: pinSubmittingRef.current,
+        });
         return;
       }
       pinSubmittingRef.current = true;
+      logAuthIncident("join-flow", "pin-submit-dispatched", {
+        venueId: venue?.id ?? null,
+        pinLength: candidatePin.length,
+      });
       void createProfileRef.current?.(candidatePin).finally(() => {
         pinSubmittingRef.current = false;
+        logAuthIncident("join-flow", "pin-submit-finished", {
+          venueId: venue?.id ?? null,
+        });
       });
     },
-    [loginStep, pin]
+    [loginStep, pin, venue?.id]
   );
 
   useEffect(() => {
@@ -1252,6 +1272,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const createProfile = async (pinOverride?: string) => {
     const effectivePin = pinOverride ?? pin;
     if (!venue) return;
+    const submitStartedAt = Date.now();
     setErrorMessage("");
     setConnectionRetryMessage("");
     setLoadingPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
@@ -1283,6 +1304,14 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
     const attemptId = loginAttemptIdRef.current + 1;
     loginAttemptIdRef.current = attemptId;
+    const traceId = `join-${attemptId}-${submitStartedAt}`;
+    logAuthIncident("join-flow", "create-profile-start", {
+      traceId,
+      attemptId,
+      venueId: venue.id,
+      username,
+      locationVerified,
+    });
 
     const loginController = beginAuthRequest();
     loginAbortRef.current = loginController;
@@ -1302,6 +1331,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       if (loginAbortRef.current) {
         loginAbortRef.current.abort();
       }
+      logAuthIncident("join-flow", "create-profile-watchdog-timeout", {
+        attemptId,
+        venueId: venue.id,
+        timeoutMs: LOGIN_WATCHDOG_TIMEOUT_MS,
+      });
       setConnectionRetryMessage(
         "Connection is slow. Your venue is still selected — tap Enter Game to retry."
       );
@@ -1318,6 +1352,14 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         selectedVenueId: venue.id,
         pin: effectivePin,
         signal: loginController.signal,
+        traceId,
+      });
+      logAuthIncident("join-flow", "create-user-profile-success", {
+        traceId,
+        attemptId,
+        venueId: venue.id,
+        userId: user.id,
+        elapsedMs: Date.now() - submitStartedAt,
       });
 
       if (loginAttemptIdRef.current !== attemptId || loginController.signal.aborted) {
@@ -1342,6 +1384,13 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       const hardTarget = `/venue/${encodeURIComponent(venue.id)}?entryUser=${encodeURIComponent(
         user.id
       )}&entryVenue=${encodeURIComponent(venue.id)}&entryAt=${Date.now()}`;
+      logAuthIncident("join-flow", "redirect-to-venue", {
+        traceId,
+        attemptId,
+        venueId: venue.id,
+        target: hardTarget,
+        elapsedMs: Date.now() - submitStartedAt,
+      });
       void signInAnonymously().catch(() => {});
       window.location.assign(hardTarget);
       void preflightVenueHomeCriticalData({
@@ -1362,6 +1411,13 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       }
       setAuthLoginState("error");
       const message = getErrorMessage(error, "Failed to create profile.");
+      logAuthIncident("join-flow", "create-profile-error", {
+        traceId,
+        attemptId,
+        venueId: venue.id,
+        message,
+        elapsedMs: Date.now() - submitStartedAt,
+      });
       if (message === "Join request timed out. Please try again.") {
         setConnectionRetryMessage(
           "Connection is slow. Venue is still selected, and you can retry now without starting over."

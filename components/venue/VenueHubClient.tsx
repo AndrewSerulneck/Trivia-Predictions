@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { Venue, LeaderboardEntry } from "@/types";
 import { getUserId, getUsername, getVenueId, saveUserId, saveVenueId, clearVenueSession } from "@/lib/storage";
 import { clearLoginInProgress } from "@/lib/authFastPath";
+import { logAuthIncident } from "@/lib/authIncidentDebug";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
 import { writeWarmTriviaCache, writeWarmPredictionsCache } from "@/lib/warmupCache";
 import {
@@ -691,14 +692,26 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   useEffect(() => {
     // entryHandoffRef is set by the bootstrap effect above, which runs first.
     // Skip the redirect guard entirely when the user just came through the join flow.
-    if (entryHandoffRef.current) return;
+    if (entryHandoffRef.current) {
+      logAuthIncident("venue-hub-guard", "skip-redirect-guard-entry-handoff", { venueId: venue.id });
+      return;
+    }
     if (hasRecentVenueHomeRouteIntent({ venueId: venue.id, maxAgeMs: 30000 })) {
+      logAuthIncident("venue-hub-guard", "skip-redirect-guard-recent-intent", { venueId: venue.id });
       return;
     }
     const storedUserId = (getUserId() ?? "").trim();
     const storedVenueId = (getVenueId() ?? "").trim();
     if (storedUserId) {
-      if (storedVenueId && storedVenueId !== venue.id) router.replace(`/?v=${venue.id}`);
+      if (storedVenueId && storedVenueId !== venue.id) {
+        const target = `/?v=${venue.id}`;
+        logAuthIncident("venue-hub-guard", "redirect-stored-venue-mismatch", {
+          venueId: venue.id,
+          storedVenueId,
+          target,
+        });
+        router.replace(target);
+      }
       return;
     }
     // On slow connections the entryAt URL param may still be present at mount
@@ -715,12 +728,27 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       const lateUserId = (getUserId() ?? "").trim();
       const lateVenueId = (getVenueId() ?? "").trim();
       if (lateUserId) {
-        if (lateVenueId && lateVenueId !== venue.id) router.replace(`/?v=${venue.id}`);
+        if (lateVenueId && lateVenueId !== venue.id) {
+          const target = `/?v=${venue.id}`;
+          logAuthIncident("venue-hub-guard", "redirect-late-venue-mismatch", {
+            venueId: venue.id,
+            lateVenueId,
+            target,
+          });
+          router.replace(target);
+        }
         return;
       }
       if (!hasUserTokenInCookie()) {
+        const target = `/?v=${venue.id}`;
+        logAuthIncident("venue-hub-guard", "redirect-missing-user-cookie", {
+          venueId: venue.id,
+          redirectDelay,
+          isLoginTransition,
+          target,
+        });
         console.warn(`[VenueHub] Redirecting to login: no user token found after ${redirectDelay}ms guard (loginTransition=${isLoginTransition})`);
-        router.replace(`/?v=${venue.id}`);
+        router.replace(target);
       }
     }, redirectDelay);
     return () => window.clearTimeout(timer);
@@ -1142,8 +1170,16 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         const localVenueId = (getVenueId() ?? "").trim();
         if (!localUserId || !localVenueId || localVenueId !== venue.id || !hasUserTokenInCookie()) {
           if (!cancelled) {
+            const target = `/?v=${encodeURIComponent(venue.id)}`;
+            logAuthIncident("venue-hub-guard", "redirect-arrival-missing-identity", {
+              venueId: venue.id,
+              hasLocalUser: Boolean(localUserId),
+              localVenueMatches: localVenueId === venue.id,
+              hasCookie: hasUserTokenInCookie(),
+              target,
+            });
             console.warn(`[VenueHub] Redirecting to login during arrival: missing identity (userId=${!!localUserId}, venueMatch=${localVenueId === venue.id}, cookie=${hasUserTokenInCookie()})`);
-            router.replace(`/?v=${encodeURIComponent(venue.id)}`);
+            router.replace(target);
           }
           return;
         }
@@ -1214,7 +1250,15 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         return;
       }
       clearVenueSession();
-      router.replace(`/?v=${encodeURIComponent(venue.id)}`);
+      const target = `/?v=${encodeURIComponent(venue.id)}`;
+      logAuthIncident("venue-hub-guard", "redirect-arrival-watchdog-reset", {
+        venueId: venue.id,
+        recoveryAttempts,
+        hasUserId: Boolean(userId),
+        venueMatches: venueId === venue.id,
+        target,
+      });
+      router.replace(target);
     }, ARRIVAL_WATCHDOG_TIMEOUT_MS);
     return () => {
       window.clearTimeout(timer);

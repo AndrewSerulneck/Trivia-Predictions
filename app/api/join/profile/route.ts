@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { DEFAULT_VENUE_BY_ID } from "@/lib/defaultVenues";
+import { logAuthIncident } from "@/lib/authIncidentDebug";
 
 type CreateProfileBody = {
   username?: string;
@@ -73,6 +74,15 @@ export async function POST(request: Request) {
   const selectedVenueId = selectedVenueFromBody || selectedVenueFromHeader || venueId;
   const authUserId = normalizeAuthUserId(body.authUserId);
   const pin = normalizePin(body.pin ?? "");
+  const traceId = String(request.headers.get("x-auth-trace-id") ?? "").trim() || null;
+  const startedAt = Date.now();
+  logAuthIncident("join-profile-route", "post-start", {
+    traceId,
+    username,
+    venueId,
+    selectedVenueId,
+    hasAuthUserId: Boolean(authUserId),
+  });
 
   if (!username) {
     return NextResponse.json({ ok: false, error: "Username is required." }, { status: 400 });
@@ -81,6 +91,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Venue is required." }, { status: 400 });
   }
   if (selectedVenueId && selectedVenueId !== venueId) {
+    logAuthIncident("join-profile-route", "post-reject-venue-mismatch", {
+      traceId,
+      username,
+      venueId,
+      selectedVenueId,
+    });
     return NextResponse.json({ ok: false, error: "Venue selection mismatch. Please retry login." }, { status: 409 });
   }
   if (!/^\d{4}$/.test(pin)) {
@@ -122,7 +138,7 @@ export async function POST(request: Request) {
   const withPinColumns = await supabaseAdmin
     .from("users")
     .select("id, auth_id, username, venue_id, points, pin_salt, pin_hash, created_at")
-    .ilike("username", username)
+    .eq("username", username)
     .eq("venue_id", venueId)
     .limit(1);
   if (withPinColumns.error) {
@@ -133,7 +149,7 @@ export async function POST(request: Request) {
     const fallbackQuery = await supabaseAdmin
       .from("users")
       .select("id, auth_id, username, venue_id, points, created_at")
-      .ilike("username", username)
+      .eq("username", username)
       .eq("venue_id", venueId)
       .limit(1);
     if (fallbackQuery.error) {
@@ -145,6 +161,13 @@ export async function POST(request: Request) {
   }
   const existingUser = (existingByUsername?.[0] ?? null) as UserRow | null;
   if (existingUser) {
+    logAuthIncident("join-profile-route", "post-existing-user-found", {
+      traceId,
+      username,
+      venueId,
+      userId: existingUser.id,
+      elapsedMs: Date.now() - startedAt,
+    });
     if (pinColumnsAvailable) {
       const existingSalt = (existingUser.pin_salt ?? "").trim();
       const existingHash = (existingUser.pin_hash ?? "").trim();
@@ -152,6 +175,13 @@ export async function POST(request: Request) {
       if (existingSalt && existingHash) {
         const isValidPin = verifyPin(pin, existingSalt, existingHash);
         if (!isValidPin) {
+          logAuthIncident("join-profile-route", "post-reject-incorrect-pin", {
+            traceId,
+            username,
+            venueId,
+            userId: existingUser.id,
+            elapsedMs: Date.now() - startedAt,
+          });
           return NextResponse.json({ ok: false, error: "Incorrect PIN." }, { status: 401 });
         }
       } else {
@@ -232,11 +262,24 @@ export async function POST(request: Request) {
       );
     }
     if (code === "23505") {
+      logAuthIncident("join-profile-route", "post-reject-username-conflict", {
+        traceId,
+        username,
+        venueId,
+        elapsedMs: Date.now() - startedAt,
+      });
       return NextResponse.json({ ok: false, error: "That username is already taken." }, { status: 409 });
     }
     return NextResponse.json({ ok: false, error: error?.message ?? "Failed to create profile." }, { status: 500 });
   }
 
+  logAuthIncident("join-profile-route", "post-created-user", {
+    traceId,
+    username,
+    venueId,
+    userId: data.id,
+    elapsedMs: Date.now() - startedAt,
+  });
   return NextResponse.json({
     ok: true,
     user: {
@@ -269,7 +312,7 @@ export async function GET(request: Request) {
   const query = await supabaseAdmin
     .from("users")
     .select("id, pin_salt, pin_hash")
-    .ilike("username", username)
+    .eq("username", username)
     .eq("venue_id", venueId)
     .limit(1);
 
@@ -278,7 +321,7 @@ export async function GET(request: Request) {
       const fallback = await supabaseAdmin
         .from("users")
         .select("id")
-        .ilike("username", username)
+        .eq("username", username)
         .eq("venue_id", venueId)
         .limit(1);
       if (fallback.error) {
