@@ -62,11 +62,32 @@ function formatSigned(value: number): string {
 
 function metricRow(label: string, value: string | number) {
   return (
-    <div className="flex items-center justify-between gap-3 text-sm">
-      <span className="text-ht-fg-muted">{label}</span>
-      <span className="font-semibold text-ht-fg-primary">{value}</span>
+    <div className="flex items-center justify-between gap-3 py-1.5 border-b border-slate-800 last:border-0">
+      <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">{label}</span>
+      <span className="text-sm font-black tabular-nums text-slate-100">{value}</span>
     </div>
   );
+}
+
+function statCell(value: string | number, label: string) {
+  return (
+    <div className="rounded-xl bg-slate-800/60 p-3">
+      <div className="text-2xl font-black tabular-nums text-slate-50">{value}</div>
+      <div className="mt-0.5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 leading-tight">{label}</div>
+    </div>
+  );
+}
+
+function progressBar(pct: number, color = "bg-cyan-500") {
+  return (
+    <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
+      <div className={`h-full rounded-full ${color} transition-all duration-500`} style={{ width: `${Math.min(100, Math.max(0, pct))}%` }} />
+    </div>
+  );
+}
+
+function sectionHeader(label: string) {
+  return <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-cyan-400">{label}</p>;
 }
 
 export function CareerStatsPanel() {
@@ -153,69 +174,110 @@ export function CareerStatsPanel() {
     );
   }
 
+  const overallWinRate =
+    stats.bingo.totalBoards + stats.pickem.totalPicks > 0
+      ? Math.round(
+          ((stats.bingo.won + stats.pickem.won) /
+            (stats.bingo.totalBoards + stats.pickem.totalPicks)) *
+            100
+        )
+      : 0;
+
   return (
-    <div className="space-y-4">
-      <div className="rounded-ht-lg border border-ht-border-hairline bg-ht-elevated p-4">
-        <h2 className="text-lg font-semibold text-ht-fg-primary">Career Stats</h2>
-        <p className="mt-1 text-xs text-ht-fg-muted">
-          Last updated {new Date(stats.generatedAt).toLocaleString()}
-        </p>
+    <div className="space-y-3">
+      {/* Overview card — matches mockup 2×2 grid layout */}
+      <div className="rounded-2xl border border-cyan-400/20 bg-[#111827] p-4">
+        {sectionHeader("Career Stats")}
+        <div className="grid grid-cols-2 gap-2">
+          {statCell(
+            stats.fantasy.bestScore > 0 ? Math.round(stats.fantasy.bestScore) : stats.trivia.correct,
+            stats.fantasy.bestScore > 0 ? "Top Points · Single Game" : "Correct Answers"
+          )}
+          {statCell(
+            stats.bingo.totalClaimedPoints + stats.pickem.totalClaimedPoints + stats.fantasy.totalClaimedPoints,
+            "All-Time Points"
+          )}
+          {statCell(
+            `${stats.trivia.accuracyPct.toFixed(0)}%`,
+            "Live Trivia Correct Rate"
+          )}
+          {statCell(stats.bingo.won, "Boards Bingo'd")}
+        </div>
+        <div className="mt-3">
+          <div className="mb-1.5 flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">Win Rate · Last 50</span>
+            <span className="text-[10px] font-black tabular-nums text-slate-300">{overallWinRate}%</span>
+          </div>
+          {progressBar(overallWinRate)}
+        </div>
       </div>
 
-      <section className="rounded-ht-lg border border-ht-border-hairline bg-ht-elevated p-4">
-        <h3 className="text-base font-semibold text-ht-fg-primary">Trivia</h3>
-        <div className="mt-3 space-y-2">
-          {metricRow("Questions answered", stats.trivia.totalAnswered)}
-          {metricRow("Correct", stats.trivia.correct)}
-          {metricRow("Incorrect", stats.trivia.incorrect)}
-          {metricRow("Accuracy", `${stats.trivia.accuracyPct.toFixed(1)}%`)}
+      {/* Trivia */}
+      <div className="rounded-2xl border border-cyan-400/20 bg-[#111827] p-4">
+        {sectionHeader("Trivia")}
+        {metricRow("Questions answered", stats.trivia.totalAnswered)}
+        {metricRow("Correct", stats.trivia.correct)}
+        {metricRow("Incorrect", stats.trivia.incorrect)}
+        <div className="mt-2">
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">Accuracy</span>
+            <span className="text-[10px] font-black tabular-nums text-slate-300">{stats.trivia.accuracyPct.toFixed(1)}%</span>
+          </div>
+          {progressBar(stats.trivia.accuracyPct, "bg-cyan-500")}
         </div>
-      </section>
+      </div>
 
-      <section className="rounded-ht-lg border border-ht-border-hairline bg-ht-elevated p-4">
-        <h3 className="text-base font-semibold text-ht-fg-primary">Bingo</h3>
-        <div className="mt-3 space-y-2">
-          {metricRow("Total boards", stats.bingo.totalBoards)}
-          {metricRow("Active", stats.bingo.active)}
-          {metricRow("Won", stats.bingo.won)}
-          {metricRow("Lost", stats.bingo.lost)}
-          {metricRow("Canceled", stats.bingo.canceled)}
-          {metricRow("Win rate", `${stats.bingo.winRatePct.toFixed(1)}%`)}
-          {metricRow("Claimed points", stats.bingo.totalClaimedPoints)}
+      {/* Bingo */}
+      <div className="rounded-2xl border border-amber-400/20 bg-[#111827] p-4">
+        {sectionHeader("Bingo")}
+        {metricRow("Total boards", stats.bingo.totalBoards)}
+        {metricRow("Won", stats.bingo.won)}
+        {metricRow("Lost", stats.bingo.lost)}
+        {stats.bingo.canceled > 0 ? metricRow("Canceled", stats.bingo.canceled) : null}
+        {metricRow("Claimed points", stats.bingo.totalClaimedPoints)}
+        <div className="mt-2">
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">Win Rate</span>
+            <span className="text-[10px] font-black tabular-nums text-slate-300">{stats.bingo.winRatePct.toFixed(1)}%</span>
+          </div>
+          {progressBar(stats.bingo.winRatePct, "bg-amber-500")}
         </div>
-      </section>
+      </div>
 
-      <section className="rounded-ht-lg border border-ht-border-hairline bg-ht-elevated p-4">
-  <h3 className="text-base font-semibold text-ht-fg-primary">Pick &apos;Em</h3>
-        <div className="mt-3 space-y-2">
-          {metricRow("Total picks", stats.pickem.totalPicks)}
-          {metricRow("Pending", stats.pickem.pending)}
-          {metricRow("Won", stats.pickem.won)}
-          {metricRow("Lost", stats.pickem.lost)}
-          {metricRow("Push", stats.pickem.push)}
-          {metricRow("Canceled", stats.pickem.canceled)}
-          {metricRow("Win rate", `${stats.pickem.winRatePct.toFixed(1)}%`)}
-          {metricRow("Claimed points", stats.pickem.totalClaimedPoints)}
+      {/* Pick 'Em */}
+      <div className="rounded-2xl border border-violet-400/20 bg-[#111827] p-4">
+        {sectionHeader("Pick 'Em")}
+        {metricRow("Total picks", stats.pickem.totalPicks)}
+        {metricRow("Won", stats.pickem.won)}
+        {metricRow("Lost", stats.pickem.lost)}
+        {stats.pickem.push > 0 ? metricRow("Push", stats.pickem.push) : null}
+        {stats.pickem.canceled > 0 ? metricRow("Canceled", stats.pickem.canceled) : null}
+        {metricRow("Claimed points", stats.pickem.totalClaimedPoints)}
+        <div className="mt-2">
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">Win Rate</span>
+            <span className="text-[10px] font-black tabular-nums text-slate-300">{stats.pickem.winRatePct.toFixed(1)}%</span>
+          </div>
+          {progressBar(stats.pickem.winRatePct, "bg-violet-500")}
         </div>
-      </section>
+      </div>
 
-      <section className="rounded-ht-lg border border-ht-border-hairline bg-ht-elevated p-4">
-        <h3 className="text-base font-semibold text-ht-fg-primary">Fantasy</h3>
-        <div className="mt-3 space-y-2">
-          {metricRow("Total lineups", stats.fantasy.totalLineups)}
-          {metricRow("Pending", stats.fantasy.pending)}
-          {metricRow("Live", stats.fantasy.live)}
-          {metricRow("Final", stats.fantasy.final)}
-          {metricRow("Canceled", stats.fantasy.canceled)}
-          {metricRow("Best score", stats.fantasy.bestScore.toFixed(2))}
-          {metricRow("Your average score", stats.fantasy.averageScore.toFixed(2))}
-          {metricRow("Venue average", stats.fantasy.venueAverageScore.toFixed(2))}
-          {metricRow("Global average", stats.fantasy.globalAverageScore.toFixed(2))}
-          {metricRow("Vs venue average", formatSigned(stats.fantasy.vsVenueAverage))}
-          {metricRow("Vs global average", formatSigned(stats.fantasy.vsGlobalAverage))}
-          {metricRow("Claimed points", stats.fantasy.totalClaimedPoints)}
-        </div>
-      </section>
+      {/* Fantasy */}
+      <div className="rounded-2xl border border-violet-400/20 bg-[#111827] p-4">
+        {sectionHeader("Fantasy")}
+        {metricRow("Total lineups", stats.fantasy.totalLineups)}
+        {stats.fantasy.live > 0 ? metricRow("Live", stats.fantasy.live) : null}
+        {metricRow("Best score", Math.round(stats.fantasy.bestScore))}
+        {metricRow("Your avg score", stats.fantasy.averageScore.toFixed(1))}
+        {metricRow("Venue avg", stats.fantasy.venueAverageScore.toFixed(1))}
+        {metricRow("vs Venue avg", formatSigned(stats.fantasy.vsVenueAverage))}
+        {metricRow("vs Global avg", formatSigned(stats.fantasy.vsGlobalAverage))}
+        {metricRow("Claimed points", stats.fantasy.totalClaimedPoints)}
+      </div>
+
+      <p className="px-1 text-[10px] text-slate-600">
+        Updated {new Date(stats.generatedAt).toLocaleString()}
+      </p>
     </div>
   );
 }

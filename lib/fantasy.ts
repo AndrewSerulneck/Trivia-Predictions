@@ -1770,7 +1770,7 @@ async function isFantasyEntryRosterLocked(entry: FantasyEntryRow, tzOffsetMinute
   const teamSeasonPairs = new Map<string, { teamId: number; season: number | null; started: boolean }>();
   for (const row of rowsById.values()) {
     const season = getApiSportsGameSeason(row);
-    const started = isApiSportsGameStarted(row);
+    const started = isLiveOrFinalGameStatus(getApiSportsGameStatusShort(row));
     const homeTeamId = getApiSportsGameTeamId(row, "home");
     const awayTeamId = getApiSportsGameTeamId(row, "away");
     if (homeTeamId) {
@@ -1815,7 +1815,7 @@ async function isFantasyEntryRosterLocked(entry: FantasyEntryRow, tzOffsetMinute
         if (!Number.isFinite(playerId) || playerId <= 0 || !rosteredPlayerIds.has(playerId)) {
           continue;
         }
-        if (isStartedGameStatus(status)) {
+        if (isLiveOrFinalGameStatus(status)) {
           return true;
         }
       }
@@ -2448,7 +2448,15 @@ function isStartedGameStatus(value: string): boolean {
   if (status === "NOT STARTED" || status === "SCHEDULED" || status === "PREGAME" || status === "PRE-GAME") {
     return false;
   }
-  return isInProgressGameStatus(status);
+  return isLiveOrFinalGameStatus(status);
+}
+
+function isLiveOrFinalGameStatus(value: string): boolean {
+  const status = String(value ?? "").trim().toUpperCase();
+  if (!status) {
+    return false;
+  }
+  return isFinalGameStatus(status) || isInProgressGameStatus(status);
 }
 
 async function loadRecentLivePlayerStatsRows(): Promise<LivePlayerStatRow[]> {

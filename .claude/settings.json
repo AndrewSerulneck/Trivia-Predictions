@@ -21,7 +21,8 @@
       "Bash(supabase status *)",
       "Bash(supabase projects *)",
       "Bash(find /Users/anthropic/Documents/Trivia-Predictions/scripts -type f 2>/dev/null || echo \"No scripts directory found\")",
-      "Read(//Users/anthropic/Documents/Trivia-Predictions/**)"
+      "Read(//Users/anthropic/Documents/Trivia-Predictions/**)",
+      "Bash(npx next *)"
     ]
   }
 }

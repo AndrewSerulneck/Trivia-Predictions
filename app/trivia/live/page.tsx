@@ -153,7 +153,43 @@ export default function LiveShowdownPage() {
     if (!state?.isGameActive || !state.scheduleId || !state.currentRound || !state.currentQuestionIndex) return "";
     return `${state.scheduleId}:${state.currentRound}:${state.currentQuestionIndex}`;
   }, [state]);
-  const isPreGameLobby = Boolean(hasOnboarded && (!state?.isGameActive || state?.activePhase === "pre_game"));
+
+  const isPostGame = Boolean(
+    hasOnboarded &&
+    !state?.isGameActive &&
+    Object.keys(participatingQuestionKeys).length > 0
+  );
+
+  const postGameStats = useMemo(() => {
+    const keys = Object.keys(participatingQuestionKeys);
+    if (keys.length === 0) return null;
+    let correct = 0;
+    let streak = 0;
+    let bestStreak = 0;
+    const byRound: Record<number, { correct: number; total: number }> = {};
+    for (const key of keys) {
+      const parts = key.split(":");
+      const round = Number(parts[parts.length - 2]);
+      const result = resultByKey[key];
+      const isCorrect = Boolean(result?.isCorrect) && !result?.forfeited;
+      if (isCorrect) { correct++; streak++; bestStreak = Math.max(bestStreak, streak); }
+      else { streak = 0; }
+      if (Number.isFinite(round)) {
+        byRound[round] = byRound[round] ?? { correct: 0, total: 0 };
+        byRound[round].total++;
+        if (isCorrect) byRound[round].correct++;
+      }
+    }
+    return {
+      total: keys.length,
+      correct,
+      correctRate: keys.length > 0 ? Math.round((correct / keys.length) * 100) : 0,
+      bestStreak,
+      byRound,
+    };
+  }, [participatingQuestionKeys, resultByKey]);
+
+  const isPreGameLobby = Boolean(hasOnboarded && !isPostGame && (!state?.isGameActive || state?.activePhase === "pre_game"));
   const isSpectatingActiveBlock = Boolean(
     hasOnboarded &&
       spectatingBlockKey &&
@@ -791,6 +827,109 @@ export default function LiveShowdownPage() {
               Join Live Trivia!
             </button>
           </>
+        ) : isPostGame && postGameStats ? (
+          /* ── Post-game results screen ── */
+          <div className="space-y-3">
+            {/* Champion / Game Over banner */}
+            <div
+              className="flex items-center gap-3 rounded-2xl px-4 py-4"
+              style={{ background: "linear-gradient(135deg, #1c1400, #2d1f00)", border: "1px solid rgba(251,191,36,0.35)" }}
+            >
+              {/* Star icon badge */}
+              <div
+                className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
+                style={{ background: "linear-gradient(135deg, #78350f, #b45309, #f59e0b)", border: "2px solid rgba(251,191,36,0.5)" }}
+                aria-hidden="true"
+              >
+                ⭐
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-500">Game Over</p>
+                <p className="truncate text-base font-black leading-tight text-white">
+                  {state.scheduleTitle ?? "Live Showdown"}
+                </p>
+                {state.totalRounds ? (
+                  <p className="text-[11px] text-slate-500">
+                    {state.totalRounds} round{state.totalRounds !== 1 ? "s" : ""}
+                  </p>
+                ) : null}
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-3xl font-black tabular-nums leading-none text-amber-300">
+                  {postGameStats.correct * 10}
+                </p>
+                <p className="text-[9px] font-black uppercase tracking-[0.12em] text-amber-600">Points</p>
+              </div>
+            </div>
+
+            {/* Round-by-round breakdown */}
+            {Object.keys(postGameStats.byRound).length > 0 ? (
+              <div
+                className="rounded-2xl px-4 py-4"
+                style={{ background: "#111827", border: "1px solid rgba(51,65,85,0.7)" }}
+              >
+                <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
+                  Your Round-by-Round
+                </p>
+                <div className="space-y-4">
+                  {Object.entries(postGameStats.byRound)
+                    .sort(([a], [b]) => Number(a) - Number(b))
+                    .map(([roundNum, data]) => {
+                      const score = data.correct * 10;
+                      const pct = data.total > 0 ? (data.correct / data.total) * 100 : 0;
+                      const barBg =
+                        pct >= 70
+                          ? "linear-gradient(90deg, #10b981, #34d399)"
+                          : pct >= 40
+                          ? "linear-gradient(90deg, #0891b2, #22d3ee)"
+                          : "linear-gradient(90deg, #be123c, #f43f5e)";
+                      return (
+                        <div key={roundNum}>
+                          <div className="mb-1.5 flex items-baseline justify-between">
+                            <span className="text-sm font-black text-slate-200">Round {roundNum}</span>
+                            <span className="text-xl font-black tabular-nums text-slate-100">{score}</span>
+                          </div>
+                          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
+                            <div
+                              className="h-full rounded-full transition-all duration-700"
+                              style={{ width: `${pct}%`, background: barBg }}
+                            />
+                          </div>
+                          <p className="mt-1 text-[11px] text-slate-600">
+                            {data.correct} of {data.total} correct
+                          </p>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            ) : null}
+
+            {/* Stat pills */}
+            <div className="grid grid-cols-3 gap-2">
+              <div
+                className="flex flex-col items-center rounded-2xl py-3"
+                style={{ background: "rgba(5,150,105,0.15)", border: "1px solid rgba(52,211,153,0.3)" }}
+              >
+                <span className="text-xl font-black tabular-nums text-emerald-300">{postGameStats.correctRate}%</span>
+                <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-emerald-600">Correct Rate</span>
+              </div>
+              <div
+                className="flex flex-col items-center rounded-2xl py-3"
+                style={{ background: "rgba(8,145,178,0.15)", border: "1px solid rgba(34,211,238,0.3)" }}
+              >
+                <span className="text-xl font-black tabular-nums text-cyan-300">{postGameStats.total}</span>
+                <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-cyan-600">Answered</span>
+              </div>
+              <div
+                className="flex flex-col items-center rounded-2xl py-3"
+                style={{ background: "rgba(120,53,15,0.2)", border: "1px solid rgba(251,191,36,0.3)" }}
+              >
+                <span className="text-xl font-black tabular-nums text-amber-300">×{postGameStats.bestStreak}</span>
+                <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-amber-600">Best Streak</span>
+              </div>
+            </div>
+          </div>
         ) : isPreGameLobby ? (
           <>
             <section className="rounded-2xl border-2 border-cyan-300 bg-cyan-500/15 p-4 text-center">
@@ -909,27 +1048,70 @@ export default function LiveShowdownPage() {
             ) : null}
           </section>
         ) : (
-          <section className="rounded-2xl border border-fuchsia-400/60 bg-slate-900 p-4 text-center">
-            <p className="text-base font-black uppercase tracking-[0.14em] text-fuchsia-300">Intermission</p>
-            <p className="mt-2 text-3xl font-black tracking-tight text-fuchsia-100">
-              {typeof state.upcomingRoundNumber === "number"
-                ? `Break time! Round ${state.upcomingRoundNumber} begins in ${formatMmSs(state.secondsRemaining)}.`
-                : `Break time! Next round begins in ${formatMmSs(state.secondsRemaining)}.`}
-            </p>
-            {state.upcomingRoundCategory ? (
-              <p className="mt-3 rounded-xl border border-amber-300/50 bg-amber-950/35 p-3 text-base font-bold text-amber-100">
-                Up next category: {state.upcomingRoundCategory}
-              </p>
+          /* ── Round break / intermission ── */
+          <section className="space-y-4">
+            {/* Header: round label + title + break countdown (no card border — sits on page bg) */}
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-fuchsia-400">
+                  {typeof state.currentRound === "number" && state.totalRounds
+                    ? `Round ${state.currentRound} of ${state.totalRounds} · Intermission`
+                    : "Intermission"}
+                </p>
+                <p className="mt-1 text-[1.75rem] font-black leading-tight text-white">
+                  Next round begins in
+                </p>
+              </div>
+              <div className="shrink-0 pt-0.5 text-right">
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-amber-500">Break</p>
+                <p className="text-3xl font-black tabular-nums leading-none text-amber-300">
+                  {formatMmSs(state.secondsRemaining)}
+                </p>
+              </div>
+            </div>
+
+            {/* Round category tabs */}
+            {(typeof state.currentRound === "number" || typeof state.upcomingRoundNumber === "number") ? (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {typeof state.currentRound === "number" ? (
+                  <div className="flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">
+                    R{state.currentRound}
+                    {state.currentRoundCategory ? <span className="ml-1 text-slate-500">· {state.currentRoundCategory}</span> : null}
+                  </div>
+                ) : null}
+                {typeof state.upcomingRoundNumber === "number" ? (
+                  <div
+                    className="flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-black uppercase tracking-[0.1em] text-fuchsia-200"
+                    style={{ borderColor: "rgba(168,85,247,0.6)", background: "rgba(88,28,135,0.35)" }}
+                  >
+                    R{state.upcomingRoundNumber}
+                    {state.upcomingRoundCategory ? <span className="ml-1">· {state.upcomingRoundCategory} ↑</span> : null}
+                  </div>
+                ) : null}
+              </div>
             ) : null}
+
+            {/* Divider */}
+            <div className="h-px w-full bg-slate-800" />
+
+            {/* Last revealed answer */}
             {state.revealedAnswer ? (
-              <p className="mt-3 rounded-xl border border-fuchsia-300/50 bg-fuchsia-950/40 p-3 text-sm font-semibold">
-                Last answer: {state.revealedAnswer}
-              </p>
+              <div
+                className="rounded-xl px-4 py-3 text-sm font-bold"
+                style={{ background: "rgba(112,26,117,0.25)", border: "1px solid rgba(192,38,211,0.3)", color: "#f0abfc" }}
+              >
+                Correct answer: <span className="font-black">{state.revealedAnswer}</span>
+              </div>
             ) : null}
+
+            {/* Emcee announcement */}
             {state.emceeAnnouncement ? (
-              <p className="mt-3 rounded-xl border border-amber-300/70 bg-amber-950/50 p-3 text-sm font-bold text-amber-100">
-                Emcee: {state.emceeAnnouncement}
-              </p>
+              <div
+                className="rounded-xl px-4 py-3 text-sm font-bold"
+                style={{ background: "rgba(120,53,15,0.3)", border: "1px solid rgba(245,158,11,0.35)", color: "#fde68a" }}
+              >
+                {state.emceeAnnouncement}
+              </div>
             ) : null}
           </section>
         )}
@@ -951,9 +1133,13 @@ export default function LiveShowdownPage() {
           <button
             type="button"
             onClick={() => void goHome()}
-            className="tp-clean-button w-full rounded-xl border border-cyan-300/40 bg-cyan-100/10 px-3 py-3 text-sm font-semibold text-cyan-200 hover:bg-cyan-100/20"
+            className={`tp-clean-button w-full rounded-xl px-3 py-3 text-sm font-semibold ${
+              isPostGame
+                ? "border-0 bg-rose-500 text-white hover:bg-rose-600"
+                : "border border-cyan-300/40 bg-cyan-100/10 text-cyan-200 hover:bg-cyan-100/20"
+            }`}
           >
-            ← Back to Home Page
+            ← Back to venue
           </button>
         </div>
       ) : null}

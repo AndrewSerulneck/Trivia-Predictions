@@ -113,7 +113,7 @@ const GAME_CARD_SHEEN_BY_KEY: Record<VenueGameKey, boolean> = {
 };
 
 const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
-  trivia: ["Hightop", "Trivia™"],
+  trivia: ["Hightop", "Speed Trivia"],
   live_trivia: ["Hightop", "Live Trivia"],
   bingo: ["Hightop", "Bingo™"],
   pickem: ["Hightop", "Pick 'Em™"],
@@ -413,6 +413,43 @@ function TrophyGlyph({ className = "h-10 w-10" }: { className?: string }) {
   );
 }
 
+function SpeedTriviaGlyph({ className = "h-10 w-10" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
+      <polygon
+        points="38,4 16,36 30,36 26,60 48,28 34,28"
+        fill="#fbbf24"
+        stroke="#78350f"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <polygon
+        points="38,4 16,36 30,36 26,60 48,28 34,28"
+        fill="none"
+        stroke="#fef08a"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        opacity="0.6"
+      />
+    </svg>
+  );
+}
+
+function LiveTriviaGlyph({ className = "h-10 w-10" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
+      <path
+        d="M32 18c7 0 12 4.5 12 10 0 3.5-2.5 6.5-5.5 8.5-2.5 1.5-3.5 3-3.5 6.5"
+        stroke="white"
+        strokeWidth="5.5"
+        fill="none"
+        strokeLinecap="round"
+      />
+      <circle cx="35" cy="49.5" r="3.5" fill="white" />
+    </svg>
+  );
+}
+
 function GameGlyph({ gameKey }: { gameKey: VenueGameKey }) {
   if (gameKey === "trivia") return <TriviaGlyph />;
   if (gameKey === "live_trivia") return <TriviaGlyph />;
@@ -420,6 +457,82 @@ function GameGlyph({ gameKey }: { gameKey: VenueGameKey }) {
   if (gameKey === "pickem") return <PickEmGlyph />;
   if (gameKey === "fantasy") return <FantasyGlyph />;
   return <TriviaGlyph />;
+}
+
+type ChallengeGameType = "live_trivia" | "trivia" | "bingo" | "pickem" | "fantasy" | "unknown";
+
+function inferChallengeGameType(name: string): ChallengeGameType {
+  const lower = name.toLowerCase();
+  if (lower.includes("live trivia") || lower.includes("live showdown") || lower.includes("showdown")) return "live_trivia";
+  if (lower.includes("speed trivia") || lower.includes("trivia")) return "trivia";
+  if (lower.includes("bingo")) return "bingo";
+  if (lower.includes("pick") || lower.includes("pick 'em") || lower.includes("pickem")) return "pickem";
+  if (lower.includes("fantasy")) return "fantasy";
+  return "unknown";
+}
+
+const CHALLENGE_ICON_STYLE: Record<
+  ChallengeGameType,
+  { badgeBg: string; borderColor: string; barGradient: string; cardAccent: string }
+> = {
+  // Dark navy → blue, white ? mark — matches Live Trivia badge in mockup
+  live_trivia: {
+    badgeBg: "linear-gradient(145deg, #0c1445, #1d4ed8, #3b82f6)",
+    borderColor: "rgba(59,130,246,0.55)",
+    barGradient: "linear-gradient(90deg, #0891b2, #22d3ee)",
+    cardAccent: "rgba(59,130,246,0.25)",
+  },
+  // Very dark bg, bright amber lightning bolt — matches Speed Trivia badge in mockup
+  trivia: {
+    badgeBg: "linear-gradient(145deg, #0d0900, #1a1200, #261900)",
+    borderColor: "rgba(251,191,36,0.55)",
+    barGradient: "linear-gradient(90deg, #d97706, #fbbf24, #84cc16)",
+    cardAccent: "rgba(251,191,36,0.2)",
+  },
+  // Orange gradient — Bingo
+  bingo: {
+    badgeBg: "linear-gradient(145deg, #7c2d12, #c2410c, #f97316)",
+    borderColor: "rgba(249,115,22,0.55)",
+    barGradient: "linear-gradient(90deg, #ea580c, #fb923c)",
+    cardAccent: "rgba(249,115,22,0.2)",
+  },
+  // Amber/yellow gradient badge, fuchsia/purple progress — matches Pick 'Em badge in mockup
+  pickem: {
+    badgeBg: "linear-gradient(145deg, #78350f, #b45309, #f59e0b)",
+    borderColor: "rgba(245,158,11,0.55)",
+    barGradient: "linear-gradient(90deg, #7c3aed, #a855f7, #ec4899)",
+    cardAccent: "rgba(245,158,11,0.2)",
+  },
+  // Purple badge, purple→emerald progress — matches Fantasy badge in mockup
+  fantasy: {
+    badgeBg: "linear-gradient(145deg, #2d1b69, #4c1d95, #6d28d9)",
+    borderColor: "rgba(109,40,217,0.55)",
+    barGradient: "linear-gradient(90deg, #7c3aed, #8b5cf6, #10b981)",
+    cardAccent: "rgba(109,40,217,0.25)",
+  },
+  unknown: {
+    badgeBg: "linear-gradient(145deg, #0f766e, #0891b2, #22d3ee)",
+    borderColor: "rgba(34,211,238,0.45)",
+    barGradient: "linear-gradient(90deg, #0891b2, #22d3ee)",
+    cardAccent: "rgba(34,211,238,0.15)",
+  },
+};
+
+function ChallengeIconBadge({ gameType }: { gameType: ChallengeGameType }) {
+  const s = CHALLENGE_ICON_STYLE[gameType];
+  return (
+    <div
+      className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-lg"
+      style={{ background: s.badgeBg, border: `2px solid ${s.borderColor}` }}
+    >
+      {gameType === "live_trivia" ? <LiveTriviaGlyph className="h-8 w-8" /> : null}
+      {gameType === "trivia" ? <SpeedTriviaGlyph className="h-8 w-8" /> : null}
+      {gameType === "bingo" ? <BingoGlyph className="h-8 w-8" /> : null}
+      {gameType === "pickem" ? <PickEmGlyph className="h-8 w-8" /> : null}
+      {gameType === "fantasy" ? <FantasyGlyph className="h-8 w-8" /> : null}
+      {gameType === "unknown" ? <TrophyGlyph className="h-8 w-8" /> : null}
+    </div>
+  );
 }
 
 function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; initialEntries?: LeaderboardEntry[] }) {
@@ -1179,7 +1292,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     if (!homeRevealComplete) return;
     if (!contentReady) return;
     const deferTimer = window.setTimeout(() => {
-      void loadChallengeCampaigns({ silent: true });
+      void loadChallengeCampaigns();
       void loadLiveTriviaStatus();
     }, 100);
     return () => window.clearTimeout(deferTimer);
@@ -1485,7 +1598,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                       style={{ backgroundImage: VENUE_HUB_TILE_GRADIENT_BY_KEY[card.key] }}
                     >
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_14%,rgba(255,255,255,0.35)_0%,rgba(255,255,255,0.12)_40%,rgba(255,255,255,0)_72%)]" />
-                      <div className="relative flex min-h-[152px] flex-col gap-3 p-4">
+                      <div className="relative flex min-h-[190px] flex-col gap-3 p-4">
                         <div className="flex items-start justify-between gap-3">
                           <div
                             className="text-[2rem] font-black uppercase leading-[0.95] text-white"
@@ -1570,18 +1683,30 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         <section className="venue-screen m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">
             <div className={`venue-home-panel-content w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-3 pt-1 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>
             <div className="mx-auto w-full max-w-[26rem] space-y-3">
-              <div className="rounded-2xl border border-cyan-400/30 bg-slate-900 p-4">
-                <p className="mb-3 text-sm font-black uppercase tracking-[0.14em] text-cyan-300">Challenges</p>
+              <div>
+                <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-cyan-400">
+                  {isChallengesLoading
+                    ? "Challenges"
+                    : challengeCards.length > 0
+                    ? `Active · ${challengeCards.length} Challenge${challengeCards.length !== 1 ? "s" : ""}`
+                    : "Challenges"}
+                </p>
                 <div className="space-y-2">
                   {isChallengesLoading ? (
-                    <div className="space-y-2 rounded-xl border border-slate-700 bg-slate-800/50 p-3">
-                      <div className="h-4 w-32 animate-pulse rounded bg-slate-700" />
-                      <div className="h-3 w-full animate-pulse rounded bg-slate-700/70" />
+                    <div className="space-y-3 rounded-2xl border border-slate-700/60 bg-slate-800/40 p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-14 w-14 animate-pulse rounded-2xl bg-slate-700" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-3.5 w-40 animate-pulse rounded bg-slate-700" />
+                          <div className="h-2 w-full animate-pulse rounded bg-slate-700/70" />
+                          <div className="h-2 w-24 animate-pulse rounded bg-slate-700/50" />
+                        </div>
+                      </div>
                     </div>
                   ) : null}
 
                   {!isChallengesLoading && challengeCards.length === 0 ? (
-                    <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-3 text-center text-sm font-semibold text-slate-400">
+                    <div className="rounded-2xl border border-slate-700/60 bg-slate-800/40 p-4 text-center text-sm font-semibold text-slate-500">
                       No active challenges for this venue yet.
                     </div>
                   ) : null}
@@ -1595,6 +1720,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                     const canOpenRules = !isWon;
                     const canOpenRedeem = isWinner;
                     const isBusy = pendingChallengeRedeemId === challenge.id;
+                    const gameType = inferChallengeGameType(challenge.name);
+                    const iconStyle = CHALLENGE_ICON_STYLE[gameType];
                     return (
                       <button
                         key={challenge.id}
@@ -1610,63 +1737,56 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                         }}
                         disabled={!canOpenRules && !canOpenRedeem}
                         aria-disabled={!canOpenRules && !canOpenRedeem}
-                        className={`relative flex min-h-[122px] w-full items-center gap-3 overflow-hidden rounded-[1.2rem] border-[3px] border-ht-border-strong p-3 text-left shadow-[0_8px_0_rgba(15,23,42,0.35)] ${
-                          isWinner
-                            ? "bg-[linear-gradient(146deg,#1d4ed8_0%,#2563eb_48%,#38bdf8_100%)]"
-                            : "bg-[linear-gradient(146deg,#0f766e_0%,#06b6d4_50%,#22d3ee_100%)]"
-                        } ${!canOpenRules && !canOpenRedeem ? "cursor-default opacity-95" : ""}`}
+                        className={`relative flex w-full items-center gap-3 overflow-hidden rounded-2xl p-3 text-left transition-opacity ${
+                          !canOpenRules && !canOpenRedeem ? "cursor-default opacity-60" : "hover:opacity-90"
+                        }`}
+                        style={{
+                          background: isWinner ? "linear-gradient(135deg, #1c1400, #2d1f00)" : "#111827",
+                          border: `1.5px solid ${isWinner ? "rgba(251,191,36,0.4)" : iconStyle.cardAccent}`,
+                        }}
                       >
-                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_86%_10%,rgba(254,240,138,0.35)_0%,rgba(254,240,138,0)_34%)]" />
-                        <div
-                          className="challenge-card-icon relative inline-flex aspect-square w-[28%] min-w-[72px] max-w-[92px] shrink-0 items-center justify-center overflow-visible rounded-xl border-0 bg-transparent shadow-none"
-                          style={{ background: "none" }}
-                        >
-                          {challenge.imageUrl ? (
-                            <div
-                              className="h-full w-full pointer-events-none"
-                              role="img"
-                              aria-label={challenge.name}
-                              style={{
-                                backgroundImage: `url(${challenge.imageUrl})`,
-                                backgroundSize: challenge.imageFit === "contain" ? "contain" : "cover",
-                                backgroundPosition: `${Math.max(0, Math.min(100, Number(challenge.imageFocusX ?? 50)))}% ${Math.max(0, Math.min(100, Number(challenge.imageFocusY ?? 50)))}%`,
-                                backgroundRepeat: "no-repeat",
-                                backgroundColor: "transparent",
-                                transform: `scale(${Math.max(0.6, Math.min(2.5, Number(challenge.imageScale ?? 1)))})`,
-                                transformOrigin: "center",
-                              }}
-                            />
-                          ) : (
-                            <TrophyGlyph className="h-10 w-10 scale-[3.6]" />
-                          )}
-                        </div>
-                        <div className="relative min-w-0 flex-1">
-                          <div className="truncate text-sm font-black uppercase tracking-[0.08em] text-cyan-50">{challenge.name}</div>
+                        {/* Status badge — top right */}
+                        {isWon && isWinner ? (
+                          <span className="absolute right-3 top-3 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-amber-300"
+                            style={{ background: "rgba(251,191,36,0.18)", border: "1px solid rgba(251,191,36,0.3)" }}>
+                            You Won
+                          </span>
+                        ) : isWon ? (
+                          <span className="absolute right-3 top-3 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-slate-400"
+                            style={{ background: "rgba(51,65,85,0.5)", border: "1px solid rgba(71,85,105,0.5)" }}>
+                            Claimed
+                          </span>
+                        ) : null}
+
+                        {/* Game-type badge — no imageUrl overlay */}
+                        <ChallengeIconBadge gameType={gameType} />
+
+                        <div className="relative min-w-0 flex-1 pr-16">
+                          <div className="truncate text-sm font-black leading-snug text-slate-100">
+                            {challenge.name}
+                          </div>
                           {isWon && isWinner ? (
-                            <div className="mt-2">
-                              <div className="text-[11px] font-black uppercase tracking-[0.09em] text-amber-100">
-                                Congratulations! You won the {challenge.name}!
-                              </div>
-                              <div className="mt-2 inline-flex min-h-[38px] items-center rounded-full border border-amber-400/50 bg-amber-500/20 px-3 text-xs font-black uppercase tracking-[0.08em] text-amber-300">
-                                {isBusy ? "Opening..." : challenge.prizeClaimedAt ? "Prize Claimed" : "Claim Prize"}
-                              </div>
+                            <div className="mt-2 inline-flex items-center rounded-full px-2.5 py-1 text-xs font-black uppercase tracking-[0.08em] text-amber-300"
+                              style={{ border: "1px solid rgba(251,191,36,0.35)", background: "rgba(251,191,36,0.12)" }}>
+                              {isBusy ? "Opening…" : challenge.prizeClaimedAt ? "Prize Claimed" : "→ Tap to Claim"}
                             </div>
                           ) : isWon ? (
-                            <div className="mt-2">
-                              <div className="inline-flex rounded-full border border-slate-950/30 bg-slate-900/35 px-2 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-cyan-50">
-                                Challenge Closed
-                              </div>
-                              <div className="mt-2 text-xs font-black text-amber-100">
-                                Winner: <span className="text-amber-300">{challenge.winnerUsername ?? "Champion"}</span>
-                              </div>
+                            <div className="mt-1 text-xs text-slate-500">
+                              Won by <span className="text-slate-400">{challenge.winnerUsername ?? "Champion"}</span>
                             </div>
                           ) : (
                             <>
-                              <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-slate-950/35">
-                                <div className="h-full rounded-full bg-amber-300 transition-all duration-300" style={{ width: `${percent}%` }} />
+                              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-800/80">
+                                <div
+                                  className="h-full rounded-full transition-all duration-500"
+                                  style={{
+                                    width: `${percent}%`,
+                                    background: iconStyle.barGradient,
+                                  }}
+                                />
                               </div>
-                              <div className="mt-1 text-[11px] font-semibold text-cyan-50/95">
-                                {progress} / {target} points
+                              <div className="mt-1 text-[11px] font-semibold text-slate-500">
+                                {progress.toLocaleString()} / {target.toLocaleString()} pts
                               </div>
                             </>
                           )}
@@ -1685,6 +1805,18 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                     </button>
                   ) : null}
                 </div>
+
+                {/* HOW CHALLENGES WORK */}
+                {!isChallengesLoading ? (
+                  <div className="mt-4 border-t border-slate-800 pt-4">
+                    <p className="mb-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
+                      How Challenges Work
+                    </p>
+                    <p className="text-[12px] leading-relaxed text-slate-600">
+                      Challenges are admin-set achievements at this venue. Be the first to hit the target while playing the right game during the right time window — win the coupon.
+                    </p>
+                  </div>
+                ) : null}
               </div>
             </div>
             </div>

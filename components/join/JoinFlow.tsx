@@ -1,8 +1,6 @@
 "use client";
 
-import Image from "next/image";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { PageShell } from "@/components/ui/PageShell";
@@ -221,63 +219,42 @@ const VenueListItem = memo(function VenueListItem({ venue, index, isPending, onS
   );
 });
 
-const LIGHTS_MAX_WIDTH = 860;
-const LIGHTS_ASPECT_RATIO = 1.0;
-
-function getLightsSize(viewportWidth: number) {
-  const width = Math.min(LIGHTS_MAX_WIDTH, Math.max(440, Math.round(viewportWidth * 1.65)));
-  const height = Math.round(LIGHTS_ASPECT_RATIO * width);
-  return { width, height };
-}
-
-const JoinHeaderLights = () => {
-  const [viewport, setViewport] = useState({ width: 0, height: 0 });
-  const [hydrated, setHydrated] = useState(false);
-  const lightsSize = getLightsSize(viewport.width || 390);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const nextViewport = { width: window.innerWidth, height: window.innerHeight };
-    setViewport(nextViewport);
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated || typeof window === "undefined") return;
-    const handleResize = () => {
-      const nextViewport = { width: window.innerWidth, height: window.innerHeight };
-      setViewport(nextViewport);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [hydrated]);
-
-  if (!hydrated || typeof document === "undefined") return null;
-
-  return createPortal(
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-[1200]">
+function HightopNeonLogo() {
+  return (
+    <div className="flex flex-col items-center py-6 select-none" aria-label="Hightop Challenge">
       <div
-        role="presentation"
-        className="absolute left-1/2 top-0 select-none"
+        className="font-['Bree_Serif',Georgia,serif] text-[2.75rem] font-normal leading-none tracking-[0.12em] uppercase"
+        aria-hidden="true"
         style={{
-          width: `${lightsSize.width}px`,
-          height: `${lightsSize.height}px`,
-          transform: `translate(-50%, -${Math.round(lightsSize.height * 0.31)}px)`,
+          color: "#a5f3fc",
+          textShadow:
+            "0 0 4px #a5f3fc, 0 0 12px #22d3ee, 0 0 28px #06b6d4, 0 0 48px #0891b2",
         }}
       >
-        <Image
-          src="/brand/stadium-lights-overlay-processed.png"
-          alt="Stadium lights overlay"
-          draggable={false}
-          width={lightsSize.width}
-          height={lightsSize.height}
-          className="h-full w-full object-contain opacity-80 [mix-blend-mode:screen] [mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.95)_0%,rgba(0,0,0,0.82)_30%,rgba(0,0,0,0.5)_62%,rgba(0,0,0,0.18)_82%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.95)_0%,rgba(0,0,0,0.82)_30%,rgba(0,0,0,0.5)_62%,rgba(0,0,0,0.18)_82%,transparent_100%)]"
-        />
+        Hightop
       </div>
-    </div>,
-    document.body
+      <div
+        className="my-2 h-px w-32 rounded-full"
+        aria-hidden="true"
+        style={{
+          background: "linear-gradient(90deg, transparent, #fbbf24, #fde68a, #fbbf24, transparent)",
+          boxShadow: "0 0 8px #f59e0b, 0 0 18px #d97706",
+        }}
+      />
+      <div
+        className="font-['Bree_Serif',Georgia,serif] text-[2.75rem] font-normal leading-none tracking-[0.12em] uppercase"
+        aria-hidden="true"
+        style={{
+          color: "#d8b4fe",
+          textShadow:
+            "0 0 4px #d8b4fe, 0 0 12px #a855f7, 0 0 28px #7c3aed, 0 0 48px #6d28d9",
+        }}
+      >
+        Challenge
+      </div>
+    </div>
   );
-};
+}
 
 type UsernameStepProps = {
   direction: 1 | -1;
@@ -1416,18 +1393,18 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   };
 
   return (
-    <>
-      <JoinHeaderLights />
-      <PageShell
+    <PageShell
         title={APP_PAGE_NAMES.join}
-        showBranding
         showAlerts={false}
+        showPageTitle={false}
+        showUserStatus={false}
         lockViewport
         noContainer
       >
         <div className="flex h-full flex-col overflow-hidden">
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(1.25rem,env(safe-area-inset-bottom))]">
             <div className="mx-auto w-full max-w-md px-4 py-5">
+              <HightopNeonLogo />
 
               {/* Dark join card */}
               <div className="rounded-3xl border border-cyan-400/40 bg-slate-900 p-6">
@@ -1591,7 +1568,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             </div>
           </div>
         </div>
-      </PageShell>
-    </>
+  </PageShell>
   );
 }

@@ -611,6 +611,10 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
   const [claimingEntryId, setClaimingEntryId] = useState("");
   const [isCollectingAllFantasy, setIsCollectingAllFantasy] = useState(false);
   const [hasLocalLineupDraft, setHasLocalLineupDraft] = useState(false);
+  const [draftSubmissionAttempted, setDraftSubmissionAttempted] = useState(false);
+  const [justSubmittedRoster, setJustSubmittedRoster] = useState(false);
+  const [lastSubmissionTime, setLastSubmissionTime] = useState<number | null>(null);
+  const [submissionAnimationComplete, setSubmissionAnimationComplete] = useState(false);
   const [highlightedPlayerIds, setHighlightedPlayerIds] = useState<string[]>([]);
   const [totalScorePopTick, setTotalScorePopTick] = useState(0);
   const [playerPopTickById, setPlayerPopTickById] = useState<Record<string, number>>({});
@@ -642,6 +646,25 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
   const fantasyHighlightResetTimerRef = useRef<number | null>(null);
   const geofencePauseRef = useRef(false);
   const requiredLineupSize = FANTASY_LINEUP_SIZE_BY_SPORT[selectedSport] ?? 5;
+  const draftStorageKey = useMemo(
+    () => (userId && selectedGameId ? `fantasy_draft_${userId}_${selectedGameId}` : ""),
+    [selectedGameId, userId]
+  );
+
+  const clearDraftStorage = useCallback(() => {
+    if (!draftStorageKey) {
+      return;
+    }
+    try {
+      localStorage.removeItem(draftStorageKey);
+    } catch {
+      // ignore storage quota or permission errors
+    }
+  }, [draftStorageKey]);
+
+  const isDuplicateSlateEntryError = useCallback((message: string) => {
+    return message.toLowerCase().includes("already have an entry for this daily slate");
+  }, []);
 
   useEffect(() => {
     setSelectedSport(defaultSport);
@@ -657,6 +680,24 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
   }, [isGeofencePaused]);
 
   useEffect(() => { setIsMounted(true); }, []);
+
+  useEffect(() => {
+    if (!lastSubmissionTime) {
+      return;
+    }
+    setSubmissionAnimationComplete(false);
+    const fadeTimer = window.setTimeout(() => {
+      setSubmissionAnimationComplete(true);
+    }, 2300);
+    const clearTimer = window.setTimeout(() => {
+      setLastSubmissionTime(null);
+      setSubmissionAnimationComplete(false);
+    }, 3000);
+    return () => {
+      window.clearTimeout(fadeTimer);
+      window.clearTimeout(clearTimer);
+    };
+  }, [lastSubmissionTime]);
 
   useEffect(() => {
     if (!venueId || DISABLE_GEOFENCE_FOR_TESTING) {
@@ -737,7 +778,7 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
     if (!userId) {
       setEntries([]);
       setLoadingEntries(false);
-      return;
+      return [] as FantasyEntry[];
     }
 
     if (showLoading) {
@@ -755,8 +796,8 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
       if (!payload.ok) {
         throw new Error(payload.error ?? "Failed to load fantasy entries.");
       }
+      const incoming = payload.entries ?? [];
       setEntries((previous) => {
-        const incoming = payload.entries ?? [];
         if (!geofencePauseRef.current) {
           return incoming;
         }
@@ -774,9 +815,11 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
           return entry;
         });
       });
+      return incoming;
     } catch (error) {
       setEntries([]);
       setErrorMessage(error instanceof Error ? error.message : "Failed to load fantasy entries.");
+      return [] as FantasyEntry[];
     } finally {
       setLoadingEntries(false);
     }
@@ -908,6 +951,9 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
     setFilterTeam("all");
     setVisibleCount(25);
     setHasStartedGame(false);
+    setHasLocalLineupDraft(false);
+    setDraftSubmissionAttempted(false);
+    setJustSubmittedRoster(false);
     setIsLoadingPool(true);
     hasRestoredDraftRef.current = false;
   }, [selectedGameId]);
@@ -967,6 +1013,7 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
     }
     return map;
   }, [playerPool]);
+  const hasResolvedEntries = !loadingEntries;
   const canEditExistingEntryLineup = useMemo(() => {
     if (!existingEntryForSelectedGame) {
       return false;
@@ -982,27 +1029,25 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
 
   // Persist in-progress draft to localStorage on every selection change
   useEffect(() => {
-    if (!userId || !selectedGameId || !hasStartedGame || existingEntryForSelectedGame) return;
-    const key = `fantasy_draft_${userId}_${selectedGameId}`;
+    if (!hasStartedGame || existingEntryForSelectedGame || !draftStorageKey) return;
     try {
       if (selectedPlayers.length > 0) {
-        localStorage.setItem(key, JSON.stringify(selectedPlayers));
+        localStorage.setItem(draftStorageKey, JSON.stringify(selectedPlayers));
       } else {
-        localStorage.removeItem(key);
+        localStorage.removeItem(draftStorageKey);
       }
     } catch {
       // ignore storage quota or permission errors
     }
-  }, [selectedPlayers, userId, selectedGameId, hasStartedGame, existingEntryForSelectedGame]);
+  }, [draftStorageKey, existingEntryForSelectedGame, hasStartedGame, selectedPlayers]);
 
   // Restore draft from localStorage once the player pool loads
   useEffect(() => {
     if (hasRestoredDraftRef.current) return;
-    if (!hasStartedGame || !userId || !selectedGameId || existingEntryForSelectedGame) return;
+    if (!hasResolvedEntries || !hasStartedGame || !draftStorageKey || existingEntryForSelectedGame || draftSubmissionAttempted) return;
     if (playerPool.length === 0) return;
-    const key = `fantasy_draft_${userId}_${selectedGameId}`;
     try {
-      const saved = localStorage.getItem(key);
+      const saved = localStorage.getItem(draftStorageKey);
       if (!saved) return;
       const parsed: unknown = JSON.parse(saved);
       if (!Array.isArray(parsed) || parsed.length === 0) return;
@@ -1017,7 +1062,16 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
       // ignore parse or storage errors
     }
     hasRestoredDraftRef.current = true;
-  }, [hasStartedGame, userId, selectedGameId, existingEntryForSelectedGame, playerPool, playerPoolKeys, requiredLineupSize]);
+  }, [
+    draftStorageKey,
+    draftSubmissionAttempted,
+    existingEntryForSelectedGame,
+    hasResolvedEntries,
+    hasStartedGame,
+    playerPool,
+    playerPoolKeys,
+    requiredLineupSize,
+  ]);
 
   const sportGames = useMemo(
     () =>
@@ -1206,7 +1260,6 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
     () => Boolean(trackedEntry && trackedEntry.status === "final" && !trackedEntry.rewardClaimedAt && trackedEntryClaimablePoints > 0),
     [trackedEntry, trackedEntryClaimablePoints]
   );
-  const hasResolvedEntries = !loadingEntries;
   const trackedEntryStartsAtMs = useMemo(() => Date.parse(String(trackedEntry?.startsAt ?? "").trim()), [trackedEntry]);
   const trackedEntryPreTipoff = useMemo(
     () => Boolean(Number.isFinite(trackedEntryStartsAtMs) && Date.now() < trackedEntryStartsAtMs),
@@ -1318,14 +1371,14 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
   }, [selectedGameId]);
 
   useEffect(() => {
-    if (!existingEntryForSelectedGame || !canEditExistingEntryLineup) {
+    if (!existingEntryForSelectedGame) {
       return;
     }
-    if (hasLocalLineupDraft) {
+    if (hasLocalLineupDraft && canEditExistingEntryLineup && isEditingRoster) {
       return;
     }
     setSelectedPlayers(existingEntryForSelectedGame.lineup);
-  }, [canEditExistingEntryLineup, existingEntryForSelectedGame, hasLocalLineupDraft]);
+  }, [canEditExistingEntryLineup, existingEntryForSelectedGame, hasLocalLineupDraft, isEditingRoster]);
 
   useEffect(() => {
     return () => {
@@ -1597,6 +1650,7 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
   }, [hasLiveEntry, loadEntries, loadGames, loadSelectedGameDetails, nextPendingEntryStartMs, userId]);
 
   const togglePlayer = useCallback((playerName: string) => {
+    setJustSubmittedRoster(false);
     setHasLocalLineupDraft(true);
     setSelectedPlayers((current) => {
       if (current.includes(playerName)) {
@@ -1610,6 +1664,7 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
   }, [requiredLineupSize]);
 
   const removeSelectedPlayer = useCallback((playerName: string) => {
+    setJustSubmittedRoster(false);
     setHasLocalLineupDraft(true);
     setSelectedPlayers((current) => current.filter((name) => name !== playerName));
   }, []);
@@ -1622,6 +1677,7 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
     });
     setHasStartedGame(false);
     setSelectedPlayers([]);
+    setJustSubmittedRoster(false);
   }, []);
 
   const navigateToNextDay = useCallback(() => {
@@ -1633,14 +1689,16 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
     });
     setHasStartedGame(false);
     setSelectedPlayers([]);
+    setJustSubmittedRoster(false);
   }, [serverTodayDate]);
 
-  const persistLineup = useCallback(async (lineup: string[]) => {
+  const persistLineup = useCallback(async (lineup: string[], hadExistingEntryBeforeSubmit: boolean) => {
     if (!userId || !venueId || !selectedGameId || lineup.length !== requiredLineupSize) {
       return false;
     }
 
     setSubmitting(true);
+    setStatusMessage("");
     setErrorMessage("");
 
     try {
@@ -1659,7 +1717,35 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
 
       const payload = (await response.json()) as { ok: boolean; error?: string };
       if (!payload.ok) {
-        throw new Error(payload.error ?? "Failed to submit fantasy lineup.");
+        const message = payload.error ?? "Failed to submit fantasy lineup.";
+        if (isDuplicateSlateEntryError(message)) {
+          clearDraftStorage();
+          setHasLocalLineupDraft(false);
+          setIsEditingRoster(false);
+          const refreshedEntries = await loadEntries(true);
+          await loadSelectedGameDetails();
+          const matchedEntry = refreshedEntries.find((entry) => {
+            if (!selectedEntrySportKey) {
+              return false;
+            }
+            return entry.sportKey === selectedEntrySportKey && entry.gameId === selectedGameId;
+          });
+          if (matchedEntry && hadExistingEntryBeforeSubmit) {
+            setSelectedPlayers(matchedEntry.lineup);
+          }
+          if (hadExistingEntryBeforeSubmit) {
+            setStatusMessage("Roster already submitted for this date. Click 'Edit Roster' to modify it.");
+            setJustSubmittedRoster(false);
+            return false;
+          }
+          setStatusMessage("Roster submitted successfully. Live scoring will update automatically.");
+          setLastSubmissionTime(Date.now());
+          setDraftSubmissionAttempted(false);
+          setJustSubmittedRoster(true);
+          setSelectedPlayers(matchedEntry?.lineup ?? lineup);
+          return true;
+        }
+        throw new Error(message);
       }
 
       setStatusMessage(
@@ -1667,16 +1753,34 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
           ? "Roster updated successfully."
           : "Roster submitted successfully. Live scoring will update automatically."
       );
+      setLastSubmissionTime(Date.now());
       setHasLocalLineupDraft(false);
+      setDraftSubmissionAttempted(false);
+      setJustSubmittedRoster(true);
+      clearDraftStorage();
+      setSelectedPlayers(lineup);
       await Promise.all([loadEntries(true), loadSelectedGameDetails()]);
       return true;
     } catch (error) {
+      setDraftSubmissionAttempted(false);
+      setJustSubmittedRoster(false);
       setErrorMessage(error instanceof Error ? error.message : "Failed to save fantasy lineup.");
       return false;
     } finally {
       setSubmitting(false);
     }
-  }, [existingEntryForSelectedGame, loadEntries, loadSelectedGameDetails, requiredLineupSize, selectedGameId, userId, venueId]);
+  }, [
+    clearDraftStorage,
+    existingEntryForSelectedGame,
+    isDuplicateSlateEntryError,
+    loadEntries,
+    loadSelectedGameDetails,
+    requiredLineupSize,
+    selectedEntrySportKey,
+    selectedGameId,
+    userId,
+    venueId,
+  ]);
 
   useEffect(() => {
     if (!(selectedGameId && hasResolvedEntries && ((hasStartedGame && !existingEntryForSelectedGame) || canEditExistingEntryLineup))) {
@@ -1710,7 +1814,8 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
   ]);
 
   const handleSubmitRoster = useCallback(async () => {
-    const didSave = await persistLineup(selectedPlayers);
+    setDraftSubmissionAttempted(true);
+    const didSave = await persistLineup(selectedPlayers, Boolean(existingEntryForSelectedGame));
     if (didSave && existingEntryForSelectedGame) {
       setIsEditingRoster(false);
     }
@@ -1948,7 +2053,9 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
     selectedGameId &&
     hasResolvedEntries &&
     !isPastSelectedDate &&
-    ((hasStartedGame && !existingEntryForSelectedGame) || (canEditExistingEntryLineup && isEditingRoster));
+    ((hasStartedGame && !existingEntryForSelectedGame) || Boolean(existingEntryForSelectedGame) || (canEditExistingEntryLineup && isEditingRoster));
+  const isSubmittedRosterView = (Boolean(existingEntryForSelectedGame) || justSubmittedRoster) && !isEditingRoster;
+  const canModifyRosterSelections = !isSubmittedRosterView;
 
   return (
     <div className="tp-fantasy-compact min-h-[100dvh] touch-pan-y space-y-3">
@@ -2169,6 +2276,39 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
         </p>
       ) : null}
 
+      <AnimatePresence initial={false}>
+        {lastSubmissionTime ? (
+          <motion.div
+            key={lastSubmissionTime}
+            initial={{ opacity: 0, scale: 0.94, y: -8 }}
+            animate={
+              submissionAnimationComplete
+                ? { opacity: 0, scale: 0.98, y: -4 }
+                : { opacity: 1, scale: 1, y: 0 }
+            }
+            exit={{ opacity: 0, scale: 0.98, y: -4 }}
+            transition={{ duration: submissionAnimationComplete ? 0.65 : 0.3, ease: "easeOut" }}
+            className="fixed bottom-6 left-1/2 z-[2400] w-[min(92vw,28rem)] -translate-x-1/2 rounded-xl border border-emerald-400/60 bg-emerald-500/20 px-3 py-3 shadow-[0_14px_32px_rgba(16,185,129,0.35)]"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="flex items-center justify-center gap-2">
+              <motion.span
+                initial={{ scale: 0.7, rotate: -12 }}
+                animate={{ scale: [0.7, 1.15, 1], rotate: [0, 5, 0] }}
+                transition={{ duration: 0.45, ease: "easeOut" }}
+                className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-emerald-300/70 bg-emerald-500/25 text-emerald-300"
+              >
+                ✓
+              </motion.span>
+              <span className="text-sm font-bold text-emerald-300">
+                {existingEntryForSelectedGame ? "Roster Updated" : "Roster Locked In"}
+              </span>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
       {errorMessage ? (
         <p className="rounded-lg border border-rose-400/40 bg-rose-950/30 px-3 py-2 text-xs font-semibold text-rose-300">
           {errorMessage}
@@ -2194,6 +2334,7 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
                 <button
                   type="button"
                   onClick={() => {
+                    setJustSubmittedRoster(false);
                     setIsEditingRoster(true);
                   }}
                   className="tp-clean-button rounded-lg border border-violet-400/60 bg-violet-950/30 px-3 py-1.5 text-xs font-semibold text-violet-300"
@@ -2452,11 +2593,29 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
           {/* ── Live Roster Preview ── */}
           <div className="mt-3 rounded-ht-xl border border-indigo-400/40 bg-ht-surface px-3 py-3">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-[11px] font-black uppercase tracking-[0.1em] text-indigo-300">
-                My Roster
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-[11px] font-black uppercase tracking-[0.1em] text-indigo-300">
+                  My Roster
+                </p>
+                {isSubmittedRosterView && canEditExistingEntryLineup ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setJustSubmittedRoster(false);
+                      setIsEditingRoster(true);
+                    }}
+                    className="tp-clean-button rounded-full border border-indigo-400/60 bg-indigo-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-indigo-300"
+                  >
+                    Edit roster
+                  </button>
+                ) : null}
+              </div>
               {submitting ? (
                 <span className="text-[10px] font-semibold text-ht-fg-muted">Saving…</span>
+              ) : isSubmittedRosterView ? (
+                <span className="text-[10px] font-bold text-emerald-400">
+                  {canEditExistingEntryLineup ? "Roster submitted" : "Roster locked"}
+                </span>
               ) : selectedPlayers.length === requiredLineupSize ? (
                 <span className="text-[10px] font-bold text-emerald-400">
                   Ready to {existingEntryForSelectedGame ? "update" : "submit"}
@@ -2473,14 +2632,16 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
                 return (
                   <li key={name} className="flex items-center justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => removeSelectedPlayer(name)}
-                        className="tp-clean-button inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-rose-500 bg-rose-500 text-[12px] font-black leading-none text-white active:scale-90"
-                        aria-label={`Remove ${name}`}
-                      >
-                        −
-                      </button>
+                      {canModifyRosterSelections ? (
+                        <button
+                          type="button"
+                          onClick={() => removeSelectedPlayer(name)}
+                          className="tp-clean-button inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-rose-500 bg-rose-500 text-[12px] font-black leading-none text-white active:scale-90"
+                          aria-label={`Remove ${name}`}
+                        >
+                          −
+                        </button>
+                      ) : null}
                       <PlayerHeadshot
                         src={playerPoolHeadshotByName.get(normalizePlayerKey(name)) ?? null}
                         name={name}
@@ -2518,13 +2679,40 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
               {Array.from({ length: requiredLineupSize - selectedPlayers.length }).map((_, i) => (
                 <li key={`empty-${i}`} className="flex items-center gap-2 opacity-40">
                   <div className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-dashed border-slate-400" />
-                  <span className="text-xs text-ht-fg-muted">Pick a player below…</span>
+                  <span className="text-xs text-ht-fg-muted">
+                    {canModifyRosterSelections ? "Pick a player below…" : "Empty slot"}
+                  </span>
                 </li>
               ))}
             </ul>
+            {canModifyRosterSelections ? (
+              <>
+                {submitting ? (
+                  <p className="mt-3 text-xs font-semibold leading-relaxed text-ht-fg-muted">Saving lineup…</p>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => void handleSubmitRoster()}
+                  disabled={submitting || selectedPlayers.length !== requiredLineupSize}
+                  className="tp-clean-button mt-3 w-full rounded-xl border border-indigo-500 bg-gradient-to-r from-[#5b2ca5] via-[#7b3fd6] to-[#8f4de8] px-3 py-3 text-sm font-bold text-white shadow-sm active:scale-95 disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  {existingEntryForSelectedGame ? "Update roster" : "Submit roster"}
+                </button>
+                <p className="mt-2 text-[11px] font-medium text-ht-fg-muted">
+                  Your lineup is saved only when you tap {existingEntryForSelectedGame ? "Update roster" : "Submit roster"}.
+                </p>
+              </>
+            ) : (
+              <p className="mt-3 text-[11px] font-medium text-ht-fg-muted">
+                {canEditExistingEntryLineup
+                  ? "Roster is locked in. Tap Edit roster to make changes before tipoff."
+                  : "Roster is locked because games have already started."}
+              </p>
+            )}
           </div>
 
           {/* ── Sort + Filter controls ── */}
+          {canModifyRosterSelections ? (
           <div className="mt-3 space-y-2">
             {/* Sort toggles */}
             <div className="flex flex-wrap gap-1.5">
@@ -2567,109 +2755,100 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
               </select>
             </div>
           </div>
+          ) : null}
 
           {/* ── Player pool ── */}
-          {availablePlayerPool.length === 0 ? (
-            <div className="mt-3">
-              {sportGames.length > 0 ? (
-                <BasketballLoader label="Loading today's eligible players…" />
-              ) : (
-                <p className="text-sm text-ht-fg-muted">No players available for this date.</p>
-              )}
-            </div>
-          ) : sortedFilteredPool.length === 0 ? (
-            <p className="mt-3 text-sm text-ht-fg-muted">No players match the current filter.</p>
-          ) : (
+          {canModifyRosterSelections ? (
             <>
-              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {sortedFilteredPool.slice(0, visibleCount).map((item) => {
-                  const isSelected = selectedPlayerKeySet.has(normalizePlayerKey(item.playerName));
-                  const isFull = selectedPlayers.length >= requiredLineupSize;
-                  return (
+              {availablePlayerPool.length === 0 ? (
+                <div className="mt-3">
+                  {sportGames.length > 0 ? (
+                    <BasketballLoader label="Loading today's eligible players…" />
+                  ) : (
+                    <p className="text-sm text-ht-fg-muted">No players available for this date.</p>
+                  )}
+                </div>
+              ) : sortedFilteredPool.length === 0 ? (
+                <p className="mt-3 text-sm text-ht-fg-muted">No players match the current filter.</p>
+              ) : (
+                <>
+                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {sortedFilteredPool.slice(0, visibleCount).map((item) => {
+                      const isSelected = selectedPlayerKeySet.has(normalizePlayerKey(item.playerName));
+                      const isFull = selectedPlayers.length >= requiredLineupSize;
+                      return (
+                        <button
+                          key={item.playerName}
+                          type="button"
+                          disabled={isFull && !isSelected}
+                          onClick={() => togglePlayer(item.playerName)}
+                          className={`tp-clean-button rounded-lg border px-3 py-2 text-left transition-colors disabled:opacity-50 ${
+                            isSelected
+                              ? "border-emerald-500/50 bg-emerald-500/10"
+                              : "border-ht-border-soft bg-ht-elevated hover:border-indigo-400/60"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <PlayerHeadshot
+                              src={item.headshotUrl || FALLBACK_HEADSHOT_SRC}
+                              name={item.playerName}
+                              sizeClass="h-9 w-9 shrink-0"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold text-ht-fg-primary">{item.playerName}</p>
+                              {(item.position || item.team) ? (
+                                <p className="text-[10px] font-semibold text-ht-fg-muted">
+                                  {[item.position, item.team].filter(Boolean).join(" · ")}
+                                </p>
+                              ) : null}
+                            </div>
+                            <div className="flex shrink-0 flex-col items-end gap-0.5">
+                              {(() => {
+                                const displayProjection =
+                                  item.projectedLine !== null && item.projectedLine !== undefined
+                                    ? Math.round(Number(item.projectedLine))
+                                    : 0;
+                                return (
+                                  <span
+                                    className={`text-xs font-black tabular-nums ${
+                                      isSelected
+                                        ? "text-emerald-400"
+                                        : displayProjection > 0
+                                        ? "text-indigo-300"
+                                        : "text-ht-fg-muted"
+                                    }`}
+                                  >
+                                    Projected: {displayProjection} pts
+                                  </span>
+                                );
+                              })()}
+                              {isSelected ? (
+                                <span className="rounded-full border border-emerald-500/40 bg-emerald-500/15 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-emerald-400">
+                                  Added
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Load More */}
+                  {visibleCount < sortedFilteredPool.length ? (
                     <button
-                      key={item.playerName}
                       type="button"
-                      disabled={isFull && !isSelected}
-                      onClick={() => togglePlayer(item.playerName)}
-                      className={`tp-clean-button rounded-lg border px-3 py-2 text-left transition-colors disabled:opacity-50 ${
-                        isSelected
-                          ? "border-emerald-500/50 bg-emerald-500/10"
-                          : "border-ht-border-soft bg-ht-elevated hover:border-indigo-400/60"
-                      }`}
+                      onClick={() => setVisibleCount((n) => n + 25)}
+                      className="tp-clean-button mt-3 w-full rounded-lg border border-indigo-400/40 bg-indigo-500/10 py-2 text-xs font-semibold text-indigo-300 hover:border-indigo-400/60"
                     >
-                      <div className="flex items-center gap-2">
-                        <PlayerHeadshot
-                          src={item.headshotUrl || FALLBACK_HEADSHOT_SRC}
-                          name={item.playerName}
-                          sizeClass="h-9 w-9 shrink-0"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-ht-fg-primary">{item.playerName}</p>
-                          {(item.position || item.team) ? (
-                            <p className="text-[10px] font-semibold text-ht-fg-muted">
-                              {[item.position, item.team].filter(Boolean).join(" · ")}
-                            </p>
-                          ) : null}
-                        </div>
-                        <div className="flex shrink-0 flex-col items-end gap-0.5">
-                          {(() => {
-                            const displayProjection =
-                              item.projectedLine !== null && item.projectedLine !== undefined
-                                ? Math.round(Number(item.projectedLine))
-                                : 0;
-                            return (
-                              <span
-                                className={`text-xs font-black tabular-nums ${
-                                  isSelected
-                                    ? "text-emerald-400"
-                                    : displayProjection > 0
-                                    ? "text-indigo-300"
-                                    : "text-ht-fg-muted"
-                                }`}
-                              >
-                                Projected: {displayProjection} pts
-                              </span>
-                            );
-                          })()}
-                          {isSelected ? (
-                            <span className="rounded-full border border-emerald-500/40 bg-emerald-500/15 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-emerald-400">
-                              Added
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
+                      Load more · {sortedFilteredPool.length - visibleCount} remaining
                     </button>
-                  );
-                })}
-              </div>
-
-              {/* Load More */}
-              {visibleCount < sortedFilteredPool.length ? (
-                <button
-                  type="button"
-                  onClick={() => setVisibleCount((n) => n + 25)}
-                  className="tp-clean-button mt-3 w-full rounded-lg border border-indigo-400/40 bg-indigo-500/10 py-2 text-xs font-semibold text-indigo-300 hover:border-indigo-400/60"
-                >
-                  Load more · {sortedFilteredPool.length - visibleCount} remaining
-                </button>
-              ) : null}
+                  ) : null}
+                </>
+              )}
             </>
-          )}
-
-          {submitting ? (
-            <p className="mt-3 text-xs font-semibold leading-relaxed text-ht-fg-muted">Saving lineup…</p>
           ) : null}
-          <button
-            type="button"
-            onClick={() => void handleSubmitRoster()}
-            disabled={submitting || selectedPlayers.length !== requiredLineupSize}
-            className="tp-clean-button mt-3 w-full rounded-xl border border-indigo-500 bg-gradient-to-r from-[#5b2ca5] via-[#7b3fd6] to-[#8f4de8] px-3 py-3 text-sm font-bold text-white shadow-sm active:scale-95 disabled:cursor-not-allowed disabled:opacity-45"
-          >
-            {existingEntryForSelectedGame ? "Update roster" : "Submit roster"}
-          </button>
-          <p className="mt-2 text-[11px] font-medium text-ht-fg-muted">
-            Your lineup is saved only when you tap {existingEntryForSelectedGame ? "Update roster" : "Submit roster"}.
-          </p>
+
         </section>
       ) : null}
 

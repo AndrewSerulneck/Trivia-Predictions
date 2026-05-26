@@ -244,66 +244,93 @@ export function NotificationBell() {
 
       {open ? (
         <div
-          className="fixed z-30 overflow-hidden rounded-ht-lg border border-ht-border-soft bg-ht-surface shadow-ht-modal"
+          className="fixed z-30 overflow-hidden rounded-ht-lg border border-ht-border-soft bg-[#111827] shadow-ht-modal"
           style={
             menuPosition
               ? { top: `${menuPosition.top}px`, left: `${menuPosition.left}px`, width: `${menuPosition.width}px` }
               : undefined
           }
         >
-          <div className="flex items-center justify-between border-b border-ht-border-hairline bg-ht-elevated px-4 py-3">
-            <div>
-              <p className="text-sm font-semibold text-ht-fg-primary">Notifications</p>
-              <p className="text-[11px] text-ht-fg-muted">Recent account and game updates</p>
+          <div className="px-4 pt-4 pb-2">
+            <p className="text-[11px] font-black uppercase tracking-[0.14em] text-cyan-400">Recent Activity</p>
+          </div>
+          {items.length === 0 ? (
+            <div className="space-y-1 px-4 py-5 text-center">
+              <p className="text-sm font-semibold text-slate-300">No recent activity yet</p>
+              <p className="text-xs text-slate-500">
+                Game results and points will appear here.
+              </p>
             </div>
+          ) : (
+            <ul className="max-h-80 overflow-y-auto divide-y divide-slate-800">
+              {items.map((item) => {
+                const points = extractPointsFromMessage(item.message);
+                const isPositive = points > 0;
+                const isError =
+                  item.type === "error" ||
+                  item.message.toLowerCase().includes("wrong") ||
+                  item.message.toLowerCase().includes("incorrect") ||
+                  item.message.toLowerCase().includes("missed");
+                const dotColor = isError
+                  ? "bg-rose-500"
+                  : item.type === "success" || isPositive
+                  ? "bg-emerald-400"
+                  : "bg-cyan-400";
+                const minutesAgo = Math.floor(
+                  (Date.now() - new Date(item.createdAt).getTime()) / 60000
+                );
+                const timeLabel =
+                  minutesAgo < 1
+                    ? "Just now"
+                    : minutesAgo < 60
+                    ? `${minutesAgo} min ago`
+                    : `${Math.floor(minutesAgo / 60)} hr ago`;
+                return (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void markRead(item.id);
+                        setOpen(false);
+                        router.push(resolveNotificationHref(item.message));
+                      }}
+                      className="tp-clean-button flex w-full items-start gap-3 px-4 py-3 hover:bg-slate-800/60 transition-colors"
+                    >
+                      <span className={`mt-[5px] h-2 w-2 shrink-0 rounded-full ${dotColor}`} aria-hidden="true" />
+                      <span className="min-w-0 flex-1 text-left">
+                        <span className={`block text-sm leading-snug ${item.read ? "text-slate-400" : "text-slate-100"}`}>
+                          {item.message}
+                        </span>
+                        <span className="mt-0.5 block text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">
+                          {timeLabel}
+                        </span>
+                      </span>
+                      <span
+                        className={`shrink-0 text-sm font-black tabular-nums ${
+                          isPositive
+                            ? "text-emerald-400"
+                            : isError
+                            ? "text-rose-400"
+                            : "text-slate-500"
+                        }`}
+                      >
+                        {isPositive ? `+${points}` : isError ? "0" : "—"}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <div className="border-t border-slate-800 px-4 py-2.5">
             <button
               type="button"
-              onClick={() => {
-                void markRead();
-              }}
-              className="shrink-0 rounded-ht-sm border border-ht-border-soft bg-ht-elevated-2 px-3 py-1.5 text-xs font-semibold text-ht-fg-secondary hover:opacity-80 transition-opacity"
+              onClick={() => { void markRead(); }}
+              className="tp-clean-button text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-slate-300 transition-colors"
             >
               Mark all read
             </button>
           </div>
-          {items.length === 0 ? (
-            <div className="space-y-1 px-4 py-6 text-center">
-              <p className="text-2xl" aria-hidden="true">
-                🔕
-              </p>
-              <p className="text-sm font-semibold text-ht-fg-primary">You&apos;re all caught up</p>
-              <p className="text-xs text-ht-fg-muted">
-                This is where we let you know if your predictions were correct.
-              </p>
-            </div>
-          ) : (
-            <ul className="max-h-80 space-y-2 overflow-y-auto p-3">
-              {items.map((item) => (
-                <li
-                  key={item.id}
-                  className={`rounded-ht-md border p-3 text-xs ${
-                    item.read ? "border-ht-border-hairline bg-ht-elevated/30 text-ht-fg-muted" : "border-ht-cyan-600/40 bg-ht-elevated text-ht-fg-secondary"
-                  }`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void markRead(item.id);
-                      setOpen(false);
-                      router.push(resolveNotificationHref(item.message));
-                    }}
-                    className="tp-clean-button w-full text-left"
-                  >
-                    <p>{item.message}</p>
-                    <div className="mt-1 flex items-center justify-between">
-                      <span>{new Date(item.createdAt).toLocaleString()}</span>
-                      <span className="rounded-ht-sm bg-ht-elevated-2 px-2 py-1 font-semibold text-ht-cyan-400">View</span>
-                    </div>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
       ) : null}
     </div>

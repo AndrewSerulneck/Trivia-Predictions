@@ -1,5 +1,5 @@
 ---
-name: prompt-architect
+name: codebitch
 description: Audits the codebase to draft highly optimized prompts for external, powerful coding models.
 tools:
   - search/codebase
