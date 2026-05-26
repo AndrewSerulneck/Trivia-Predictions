@@ -63,10 +63,6 @@ export const AD_SLOT_REGISTRY: SlotRegistryEntry[] = [
   { id: "068", label: "Live Trivia Inline (Lobby)",  pageKey: "live-trivia",  slot: "inline-content",                 trigger: "on-load"  },
   // PICK 'EM - 6 SPECIFIC INLINE SLOTS
   { id: "071", label: "Pick 'Em Inline (Cards 1-5)",   pageKey: "pickem",       slot: "pickem-inline-cards-1-5",        trigger: "on-load"  },
-    
-  D. Render confirmation animation in the "My Roster" section:
-  
-  Add this after the "My Roster" box, or overlay it on the button:
   { id: "072", label: "Pick 'Em Inline (Cards 6-10)",  pageKey: "pickem",       slot: "pickem-inline-cards-6-10",       trigger: "on-load"  },
   { id: "073", label: "Pick 'Em Inline (Cards 11-15)", pageKey: "pickem",       slot: "pickem-inline-cards-11-15",      trigger: "on-load"  },
   { id: "074", label: "Pick 'Em Inline (Cards 16-20)", pageKey: "pickem",       slot: "pickem-inline-cards-16-20",      trigger: "on-load"  },
