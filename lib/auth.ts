@@ -11,6 +11,7 @@ type UserProfileRow = {
 };
 
 const JOIN_PROFILE_REQUEST_TIMEOUT_MS = 25000;
+const AUTH_USER_LOOKUP_TIMEOUT_MS = 1200;
 
 function mapUserProfileRow(row: UserProfileRow): User {
   return {
@@ -41,6 +42,32 @@ export function validateUsername(username: string): boolean {
 
 export function validatePin(pin: string): boolean {
   return /^\d{4}$/.test(pin.trim());
+}
+
+async function getCurrentAuthUserId(): Promise<string | null> {
+  if (!supabase) {
+    return null;
+  }
+
+  let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
+  try {
+    const result = await Promise.race([
+      supabase.auth.getUser().catch(() => ({ data: { user: null } })),
+      new Promise<{ data: { user: null } }>((resolve) => {
+        timeoutId = globalThis.setTimeout(() => {
+          resolve({ data: { user: null } });
+        }, AUTH_USER_LOOKUP_TIMEOUT_MS);
+      }),
+    ]);
+
+    return result.data.user?.id ?? null;
+  } catch {
+    return null;
+  } finally {
+    if (timeoutId !== null) {
+      globalThis.clearTimeout(timeoutId);
+    }
+  }
 }
 
 export async function signInAnonymously(): Promise<void> {
@@ -99,9 +126,7 @@ export async function createUserProfile(params: {
   }
 
   const selectedVenueId = String(params.selectedVenueId ?? params.venueId).trim();
-  const authUserId = supabase
-    ? (await supabase.auth.getUser().catch(() => ({ data: { user: null } })))?.data?.user?.id ?? null
-    : null;
+  const authUserId = await getCurrentAuthUserId();
   const timeoutController = new AbortController();
   const timeoutId = globalThis.setTimeout(() => {
     timeoutController.abort();

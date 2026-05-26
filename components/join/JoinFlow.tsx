@@ -1309,16 +1309,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
     let didNavigate = false;
     try {
-      const [, user] = await Promise.all([
-        signOut().catch(() => {}),
-        createUserProfile({
-          username,
-          venueId: venue.id,
-          selectedVenueId: venue.id,
-          pin: effectivePin,
-          signal: loginController.signal,
-        }),
-      ]);
+      // Never block PIN login on Supabase auth sign-out latency.
+      void signOut().catch(() => {});
+
+      const user = await createUserProfile({
+        username,
+        venueId: venue.id,
+        selectedVenueId: venue.id,
+        pin: effectivePin,
+        signal: loginController.signal,
+      });
 
       if (loginAttemptIdRef.current !== attemptId || loginController.signal.aborted) {
         return;
