@@ -47,6 +47,7 @@ import { APP_PAGE_NAMES } from "@/lib/pageNames";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
 import { normalizePin } from "@/lib/pin";
+import { getPasskeyClientMessage } from "@/lib/passkeyErrors";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
 type JoinPanel = "venue-list" | "venue-login";
@@ -79,7 +80,9 @@ type FantasyBadgePayload = {
 type PasskeyAuthOptionsPayload = {
   ok?: boolean;
   error?: string;
+  errorCode?: string;
   reason?: string;
+  reasonCode?: string;
   requiresPinFallback?: boolean;
   challengeId?: string;
   options?: Parameters<typeof startAuthentication>[0]["optionsJSON"];
@@ -89,12 +92,14 @@ type PasskeyAuthOptionsPayload = {
 type PasskeyAuthVerifyPayload = {
   ok?: boolean;
   error?: string;
+  errorCode?: string;
   user?: User;
 };
 
 type PasskeyRegisterOptionsPayload = {
   ok?: boolean;
   error?: string;
+  errorCode?: string;
   challengeId?: string;
   options?: Parameters<typeof startRegistration>[0]["optionsJSON"];
   user?: User;
@@ -103,6 +108,7 @@ type PasskeyRegisterOptionsPayload = {
 type PasskeyRegisterVerifyPayload = {
   ok?: boolean;
   error?: string;
+  errorCode?: string;
   verified?: boolean;
 };
 
@@ -1038,12 +1044,12 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
         const optionsPayload = (await optionsResponse.json().catch(() => null)) as PasskeyAuthOptionsPayload | null;
         if (!optionsResponse.ok || !optionsPayload?.ok) {
-          fallbackToPin("Passkey sign-in wasn't available. Use your PIN to continue.");
+          fallbackToPin(getPasskeyClientMessage(optionsPayload?.errorCode, "Passkey sign-in wasn't available. Use your PIN to continue."));
           return;
         }
 
         if (optionsPayload.requiresPinFallback || !optionsPayload.options || !optionsPayload.challengeId) {
-          fallbackToPin("No passkey found on this device. Use your PIN to continue.");
+          fallbackToPin(getPasskeyClientMessage(optionsPayload.reasonCode, "No passkey found on this device. Use your PIN to continue."));
           return;
         }
 
@@ -1065,7 +1071,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
         const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyAuthVerifyPayload | null;
         if (!verifyResponse.ok || !verifyPayload?.ok || !verifyPayload.user?.id) {
-          fallbackToPin("Passkey verification failed. Use your PIN to continue.");
+          fallbackToPin(getPasskeyClientMessage(verifyPayload?.errorCode, "Passkey verification failed. Use your PIN to continue."));
           return;
         }
 
@@ -1519,14 +1525,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         return;
       }
 
-      passkeyRegistrationPromptedRef.current = true;
-      const shouldRegister = window.confirm(
-        "Enable Face ID / Touch ID (or device PIN) for faster login next time?"
-      );
-      if (!shouldRegister) {
-        return;
-      }
-
       try {
         const optionsResponse = await fetch("/api/auth/passkey/register/options", {
           method: "POST",
@@ -1541,9 +1539,22 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         });
         const optionsPayload = (await optionsResponse.json().catch(() => null)) as PasskeyRegisterOptionsPayload | null;
         if (!optionsResponse.ok || !optionsPayload?.ok || !optionsPayload.options || !optionsPayload.challengeId) {
+          console.info("[Passkey] Registration options failed", {
+            code: optionsPayload?.errorCode,
+            message: optionsPayload?.error,
+          });
           return;
         }
 
+        passkeyRegistrationPromptedRef.current = true;
+        const shouldRegister = window.confirm(
+          "Enable Face ID / Touch ID (or device PIN) for faster login next time?"
+        );
+        if (!shouldRegister) {
+          return;
+        }
+
+        // Call WebAuthn immediately after the confirm click to preserve Safari/iOS user-activation requirements.
         const registrationResponse = await startRegistration({
           optionsJSON: optionsPayload.options,
         });
@@ -1562,10 +1573,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         });
         const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyRegisterVerifyPayload | null;
         if (!verifyResponse.ok || !verifyPayload?.ok) {
+          console.info("[Passkey] Registration verify failed", {
+            code: verifyPayload?.errorCode,
+            message: verifyPayload?.error ?? verifyResponse.status,
+          });
           return;
         }
-      } catch {
+      } catch (error) {
         // Best effort only: PIN auth is already successful, so we never block navigation.
+        const message = getErrorMessage(error, "Passkey setup did not start.");
+        console.info("[Passkey] Registration prompt failed", message);
       }
     },
     [venue]

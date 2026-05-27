@@ -133,12 +133,14 @@ describe("passkey auth API routes", () => {
       ok: boolean;
       requiresPinFallback?: boolean;
       reason?: string;
+      reasonCode?: string;
     };
 
     expect(response.status).toBe(200);
     expect(body.ok).toBe(true);
     expect(body.requiresPinFallback).toBe(true);
     expect(body.reason).toBe("no-passkeys");
+    expect(body.reasonCode).toBe("NO_PASSKEYS");
   });
 
   it("returns authentication options when passkeys are present", async () => {
@@ -311,11 +313,12 @@ describe("passkey auth API routes", () => {
         }),
       })
     );
-    const body = (await response.json()) as { ok: boolean; error?: string };
+    const body = (await response.json()) as { ok: boolean; error?: string; errorCode?: string };
 
     expect(response.status).toBe(401);
     expect(body.ok).toBe(false);
     expect(body.error).toContain("Authentication failed");
+    expect(body.errorCode).toBe("VERIFICATION_FAILED");
   });
 
   it("stores credential after successful registration verify", async () => {

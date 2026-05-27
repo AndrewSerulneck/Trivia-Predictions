@@ -2,6 +2,7 @@ import { verifyRegistrationResponse } from "@simplewebauthn/server";
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import type { PasskeyErrorCode } from "@/lib/passkeyErrors";
 import {
   encodePublicKeyToBase64Url,
   extractChallengeFromResponse,
@@ -25,12 +26,16 @@ type RegisterVerifyBody = {
   deviceLabel?: string;
 };
 
+function passkeyError(status: number, errorCode: PasskeyErrorCode, error: string) {
+  return NextResponse.json({ ok: false, errorCode, error }, { status });
+}
+
 export async function POST(request: Request) {
   if (!isPasskeyFeatureEnabled()) {
-    return NextResponse.json({ ok: false, error: "Passkeys are currently disabled." }, { status: 503 });
+    return passkeyError(503, "PASSKEY_DISABLED", "Passkeys are currently disabled.");
   }
   if (!supabaseAdmin) {
-    return NextResponse.json({ ok: false, error: "Supabase admin client is not configured." }, { status: 500 });
+    return passkeyError(500, "SERVER_MISCONFIG", "Supabase admin client is not configured.");
   }
 
   try {
@@ -41,7 +46,7 @@ export async function POST(request: Request) {
     const userIdFromBody = sanitizeUserId(body.userId);
 
     if (!challengeId || !response) {
-      return NextResponse.json({ ok: false, error: "challengeId and response are required." }, { status: 400 });
+      return passkeyError(400, "INVALID_REQUEST", "challengeId and response are required.");
     }
 
     const challenge = await getActiveChallengeById(supabaseAdmin, {
@@ -50,13 +55,13 @@ export async function POST(request: Request) {
     });
 
     if (!challenge) {
-      return NextResponse.json({ ok: false, error: "Registration challenge is missing or expired." }, { status: 409 });
+      return passkeyError(409, "CHALLENGE_EXPIRED", "Registration challenge is missing or expired.");
     }
     if (!challenge.user_id) {
-      return NextResponse.json({ ok: false, error: "Challenge is not linked to a user." }, { status: 409 });
+      return passkeyError(409, "CHALLENGE_USER_MISMATCH", "Challenge is not linked to a user.");
     }
     if (userIdFromBody && challenge.user_id !== userIdFromBody) {
-      return NextResponse.json({ ok: false, error: "Challenge user mismatch." }, { status: 409 });
+      return passkeyError(409, "CHALLENGE_USER_MISMATCH", "Challenge user mismatch.");
     }
 
     const verification = await verifyRegistrationResponse({
@@ -68,20 +73,20 @@ export async function POST(request: Request) {
     });
 
     if (!verification.verified || !verification.registrationInfo) {
-      return NextResponse.json({ ok: false, error: "Passkey registration could not be verified." }, { status: 401 });
+      return passkeyError(401, "VERIFICATION_FAILED", "Passkey registration could not be verified.");
     }
 
     const user = venueId
       ? await findUserByIdAndVenue(supabaseAdmin, { userId: challenge.user_id, venueId })
       : null;
     if (!user && venueId) {
-      return NextResponse.json({ ok: false, error: "User profile for the selected venue was not found." }, { status: 404 });
+      return passkeyError(404, "USER_NOT_FOUND", "User profile for the selected venue was not found.");
     }
 
     const { credential, credentialBackedUp, credentialDeviceType, aaguid } = verification.registrationInfo;
     const resolvedChallenge = extractChallengeFromResponse(response);
     if (resolvedChallenge !== challenge.challenge_b64url) {
-      return NextResponse.json({ ok: false, error: "Challenge verification failed." }, { status: 401 });
+      return passkeyError(401, "CHALLENGE_USER_MISMATCH", "Challenge verification failed.");
     }
 
     const upsert = await supabaseAdmin
@@ -105,7 +110,7 @@ export async function POST(request: Request) {
       );
 
     if (upsert.error) {
-      return NextResponse.json({ ok: false, error: upsert.error.message }, { status: 500 });
+      return passkeyError(500, "UNKNOWN", upsert.error.message);
     }
 
     await markChallengeUsed(supabaseAdmin, challenge.id);
@@ -117,12 +122,10 @@ export async function POST(request: Request) {
       user: user ? mapUserForResponse(user) : null,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: error instanceof Error ? error.message : "Failed to verify passkey registration.",
-      },
-      { status: 400 }
+    return passkeyError(
+      400,
+      "UNKNOWN",
+      error instanceof Error ? error.message : "Failed to verify passkey registration."
     );
   }
 }

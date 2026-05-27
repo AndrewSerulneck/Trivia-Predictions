@@ -1,6 +1,7 @@
 import { generateRegistrationOptions } from "@simplewebauthn/server";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import type { PasskeyErrorCode } from "@/lib/passkeyErrors";
 import {
   chooseUserAndVenueFromRequest,
   createChallenge,
@@ -24,17 +25,36 @@ type RegisterOptionsBody = {
   venueId?: string;
 };
 
+function passkeyError(status: number, errorCode: PasskeyErrorCode, error: string) {
+  return NextResponse.json({ ok: false, errorCode, error }, { status });
+}
+
 export async function POST(request: Request) {
   if (!isPasskeyFeatureEnabled()) {
-    return NextResponse.json({ ok: false, error: "Passkeys are currently disabled." }, { status: 503 });
+    return passkeyError(503, "PASSKEY_DISABLED", "Passkeys are currently disabled.");
   }
   if (!supabaseAdmin) {
-    return NextResponse.json({ ok: false, error: "Supabase admin client is not configured." }, { status: 500 });
+    return passkeyError(500, "SERVER_MISCONFIG", "Supabase admin client is not configured.");
   }
 
   try {
     const body = (await request.json().catch(() => ({}))) as RegisterOptionsBody;
-    const { origin, rpId } = resolveAllowedOriginAndRpId(request);
+    let origin = "";
+    let rpId = "";
+    try {
+      const resolved = resolveAllowedOriginAndRpId(request);
+      origin = resolved.origin;
+      rpId = resolved.rpId;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Origin is not allowed for WebAuthn.";
+      if (message.includes("Origin is not allowed")) {
+        return passkeyError(400, "ORIGIN_NOT_ALLOWED", message);
+      }
+      if (message.includes("RP ID is not allowed")) {
+        return passkeyError(400, "RP_ID_NOT_ALLOWED", message);
+      }
+      return passkeyError(400, "INVALID_REQUEST", message);
+    }
 
     const username = normalizeUsername(String(body.username ?? ""));
     const venueIdFromBody = normalizeVenueId(String(body.venueId ?? ""));
@@ -53,10 +73,7 @@ export async function POST(request: Request) {
     }
 
     if (!user) {
-      return NextResponse.json(
-        { ok: false, error: "User profile was not found for passkey registration." },
-        { status: 404 }
-      );
+      return passkeyError(404, "USER_NOT_FOUND", "User profile was not found for passkey registration.");
     }
 
     const existingPasskeys = await listPasskeysForUser(supabaseAdmin, user.id);
@@ -93,9 +110,10 @@ export async function POST(request: Request) {
       user: mapUserForResponse(user),
     });
   } catch (error) {
-    return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "Failed to generate passkey registration options." },
-      { status: 400 }
+    return passkeyError(
+      400,
+      "UNKNOWN",
+      error instanceof Error ? error.message : "Failed to generate passkey registration options."
     );
   }
 }

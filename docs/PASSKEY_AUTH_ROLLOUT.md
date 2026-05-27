@@ -75,6 +75,9 @@ The smoke script validates:
    - new username works with case-insensitive match
 7. Confirm points remain unchanged for venue/business-scoped behavior.
 
+For broad compatibility sign-off, run:
+- `docs/PASSKEY_CROSS_DEVICE_MATRIX.md`
+
 ## Incident Notes
 - If users see `Origin is not allowed for WebAuthn`, check `WEBAUTHN_*ORIGIN*` values and reverse proxy forwarded headers.
 - If passkey verify fails repeatedly, inspect `webauthn_challenges` expiry/used flags and ensure one-time challenge use.

@@ -3,11 +3,13 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { browserSupportsWebAuthn, startRegistration, WebAuthnError } from "@simplewebauthn/browser";
 import type { Venue, LeaderboardEntry } from "@/types";
 import { getUserId, getUsername, getVenueId, saveUserId, saveVenueId, clearVenueSession } from "@/lib/storage";
 import { clearLoginInProgress } from "@/lib/authFastPath";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
+import { getPasskeyClientMessage } from "@/lib/passkeyErrors";
 import { writeWarmTriviaCache, writeWarmPredictionsCache } from "@/lib/warmupCache";
 import {
   consumeVenueHomeBootstrap,
@@ -48,6 +50,21 @@ type UserSummaryPayload = {
     points?: number;
     venueId?: string;
   } | null;
+};
+
+type PasskeyRegisterOptionsPayload = {
+  ok?: boolean;
+  error?: string;
+  errorCode?: string;
+  challengeId?: string;
+  options?: Parameters<typeof startRegistration>[0]["optionsJSON"];
+};
+
+type PasskeyRegisterVerifyPayload = {
+  ok?: boolean;
+  error?: string;
+  errorCode?: string;
+  verified?: boolean;
 };
 
 type ChallengeCampaignCard = {
@@ -308,6 +325,21 @@ function isActiveMenuPath(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function isPasskeyUserCancel(error: unknown): boolean {
+  if (!error) return false;
+  if (error instanceof DOMException) {
+    return error.name === "NotAllowedError" || error.name === "AbortError";
+  }
+  if (error instanceof WebAuthnError) {
+    return error.code === "ERROR_CEREMONY_ABORTED";
+  }
+  if (typeof error === "object" && error && "name" in error) {
+    const name = String((error as { name?: unknown }).name ?? "");
+    return name === "NotAllowedError" || name === "AbortError";
+  }
+  return false;
+}
+
 function hasFreshBootstrapTriviaQuota(snapshot: VenueHomeBootstrapSnapshot | null): boolean {
   if (!snapshot?.triviaQuota) {
     return false;
@@ -561,6 +593,9 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuUsername, setMenuUsername] = useState("");
   const [menuPoints, setMenuPoints] = useState(0);
+  const [isPasskeySetupLoading, setIsPasskeySetupLoading] = useState(false);
+  const [passkeySetupMessage, setPasskeySetupMessage] = useState("");
+  const [passkeySetupError, setPasskeySetupError] = useState("");
   const [isBadgeLoading, setIsBadgeLoading] = useState(true);
   const [badgeError, setBadgeError] = useState("");
   const [liveTriviaStatus, setLiveTriviaStatus] = useState<{ live: boolean; label: string; nextStartAtMs?: number | null }>({ live: false, label: "" });
@@ -907,6 +942,112 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     }
     setMenuPoints(nextPoints);
   }, []);
+
+  const handlePasskeySetup = useCallback(async () => {
+    setPasskeySetupError("");
+    setPasskeySetupMessage("");
+
+    if (!browserSupportsWebAuthn()) {
+      setPasskeySetupError("This browser does not support passkey setup.");
+      return;
+    }
+
+    const userId = (getUserId() ?? "").trim();
+    const venueId = venue.id;
+    const username = (getUsername() ?? menuUsername).trim();
+    if (!userId || !venueId || !username) {
+      setPasskeySetupError("Please sign in again before setting up a passkey.");
+      return;
+    }
+
+    setIsPasskeySetupLoading(true);
+    const userAgent = typeof navigator !== "undefined" ? navigator.userAgent : "";
+    logAuthIncident("venue-passkey", "setup-start", {
+      venueId,
+      userId,
+      username,
+      userAgent,
+    });
+
+    try {
+      const optionsResponse = await fetch("/api/auth/passkey/register/options", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          venueId,
+          username,
+        }),
+      });
+      const optionsPayload = (await optionsResponse.json().catch(() => null)) as PasskeyRegisterOptionsPayload | null;
+      if (!optionsResponse.ok || !optionsPayload?.ok || !optionsPayload.options || !optionsPayload.challengeId) {
+        const mappedMessage = getPasskeyClientMessage(
+          optionsPayload?.errorCode,
+          optionsPayload?.error || "Passkey setup could not be started."
+        );
+        setPasskeySetupError(mappedMessage);
+        logAuthIncident("venue-passkey", "setup-options-failed", {
+          venueId,
+          userId,
+          code: optionsPayload?.errorCode ?? null,
+          message: optionsPayload?.error ?? null,
+        });
+        return;
+      }
+
+      const registrationResponse = await startRegistration({
+        optionsJSON: optionsPayload.options,
+      });
+
+      const verifyResponse = await fetch("/api/auth/passkey/register/verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          challengeId: optionsPayload.challengeId,
+          response: registrationResponse,
+          userId,
+          venueId,
+        }),
+      });
+      const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyRegisterVerifyPayload | null;
+      if (!verifyResponse.ok || !verifyPayload?.ok) {
+        const mappedMessage = getPasskeyClientMessage(
+          verifyPayload?.errorCode,
+          verifyPayload?.error || "Passkey setup verification failed."
+        );
+        setPasskeySetupError(mappedMessage);
+        logAuthIncident("venue-passkey", "setup-verify-failed", {
+          venueId,
+          userId,
+          code: verifyPayload?.errorCode ?? null,
+          message: verifyPayload?.error ?? null,
+        });
+        return;
+      }
+
+      setPasskeySetupMessage("Passkey enabled. Next login can use Face ID, Touch ID, or device PIN.");
+      logAuthIncident("venue-passkey", "setup-success", { venueId, userId });
+    } catch (error) {
+      if (isPasskeyUserCancel(error)) {
+        setPasskeySetupError("Passkey setup was canceled.");
+        logAuthIncident("venue-passkey", "setup-canceled", { venueId, userId });
+      } else {
+        const fallback = error instanceof Error ? error.message : "Passkey setup failed.";
+        setPasskeySetupError(getPasskeyClientMessage(undefined, fallback));
+        logAuthIncident("venue-passkey", "setup-error", {
+          venueId,
+          userId,
+          message: fallback,
+        });
+      }
+    } finally {
+      setIsPasskeySetupLoading(false);
+    }
+  }, [menuUsername, venue.id]);
 
   const loadHomeBadges = useCallback(async (options?: { silent?: boolean }) => {
     const silent = Boolean(options?.silent);
@@ -1922,6 +2063,31 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 </p>
               </div>
             </div>
+          </div>
+
+          <div className="mb-5 rounded-ht-lg border border-ht-border-hairline bg-ht-elevated/50 p-3">
+            <div className="text-sm font-black text-ht-fg-primary">Passkey Login</div>
+            <p className="mt-1 text-xs text-ht-fg-muted">
+              Enable one-tap Face ID, Touch ID, or device PIN login on this device.
+            </p>
+            <button
+              type="button"
+              onClick={() => void handlePasskeySetup()}
+              disabled={isPasskeySetupLoading}
+              className="mt-3 inline-flex min-h-[40px] w-full items-center justify-center rounded-xl border border-cyan-400/50 bg-cyan-400/15 px-3 py-2 text-sm font-black text-cyan-200 disabled:opacity-50"
+            >
+              {isPasskeySetupLoading ? "Setting up passkey..." : "Set Up Passkey"}
+            </button>
+            {passkeySetupError ? (
+              <p className="mt-2 rounded-lg border border-rose-400/50 bg-rose-900/30 px-2 py-1 text-xs text-rose-200">
+                {passkeySetupError}
+              </p>
+            ) : null}
+            {passkeySetupMessage ? (
+              <p className="mt-2 rounded-lg border border-emerald-400/50 bg-emerald-900/30 px-2 py-1 text-xs text-emerald-200">
+                {passkeySetupMessage}
+              </p>
+            ) : null}
           </div>
 
           <nav aria-label="Primary navigation">
