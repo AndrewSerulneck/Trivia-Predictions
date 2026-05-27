@@ -182,6 +182,21 @@ function isPasskeyUnavailable(error: unknown): boolean {
   return false;
 }
 
+// Codes that are server-config or environment issues — fall back to PIN silently
+// without showing a confusing technical message to the user.
+const SILENT_PASSKEY_FALLBACK_CODES = new Set([
+  "ORIGIN_NOT_ALLOWED",
+  "RP_ID_NOT_ALLOWED",
+  "SERVER_MISCONFIG",
+  "PASSKEY_DISABLED",
+]);
+
+function isSilentPasskeyFallbackCode(code: string | undefined): boolean {
+  return SILENT_PASSKEY_FALLBACK_CODES.has(String(code ?? "").trim());
+}
+
+const PASSKEY_ENROLLMENT_STORAGE_KEY = "tp_passkey_enrolled";
+
 const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig(venue, index);
 
 const ACCESS_DISTANCE_METERS = 200;
@@ -373,7 +388,7 @@ const UsernameStep = memo(function UsernameStep({
         </p>
         <h1 className="text-2xl font-black text-white">What&apos;s your username?</h1>
         <p className="mt-1 text-sm font-semibold text-ht-fg-muted">
-          We&apos;ll try passkey first. If unavailable, you can use your 4-digit PIN.
+          If this is your first time playing, make one up!
         </p>
       </div>
 
@@ -441,7 +456,6 @@ type PinStepProps = {
   loadingPhrase: string;
   errorMessage: string;
   connectionRetryMessage: string;
-  pinFallbackMessage: string;
   blockedReason: string;
   pinContainerRef: React.RefObject<HTMLDivElement | null>;
   onBack: () => void;
@@ -459,7 +473,6 @@ const PinStep = memo(function PinStep({
   loadingPhrase,
   errorMessage,
   connectionRetryMessage,
-  pinFallbackMessage,
   blockedReason,
   pinContainerRef,
   onBack,
@@ -514,10 +527,6 @@ const PinStep = memo(function PinStep({
         <div className="rounded-xl border border-rose-400/60 bg-rose-950/30 p-3 text-sm text-rose-200">
           {errorMessage}
         </div>
-      ) : pinFallbackMessage ? (
-        <div className="rounded-xl border border-cyan-400/40 bg-cyan-950/30 p-3 text-sm text-cyan-200">
-          {pinFallbackMessage}
-        </div>
       ) : connectionRetryMessage ? (
         <div className="rounded-xl border border-amber-400/40 bg-amber-950/30 p-3 text-sm text-amber-200">
           {connectionRetryMessage}
@@ -550,6 +559,50 @@ const PinStep = memo(function PinStep({
   );
 });
 
+type PasskeyEnrollmentStepData = {
+  user: User;
+  challengeId: string;
+  options: Parameters<typeof startRegistration>[0]["optionsJSON"];
+  venueTarget: string;
+};
+
+type PasskeyEnrollmentPromptProps = {
+  onSetUp: () => void;
+  onSkip: () => void;
+};
+
+function PasskeyEnrollmentPrompt({ onSetUp, onSkip }: PasskeyEnrollmentPromptProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+      <div className="w-full max-w-sm rounded-3xl border border-cyan-400/40 bg-slate-900 p-6 space-y-5">
+        <div className="text-center space-y-2">
+          <div className="text-4xl select-none">🔑</div>
+          <h2 className="text-xl font-black text-white">Log in faster next time</h2>
+          <p className="text-sm text-ht-fg-muted leading-relaxed">
+            Use Face ID, Touch ID, or your device PIN instead of your 4-digit code next time.
+          </p>
+        </div>
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={onSetUp}
+            className="tp-clean-button inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+          >
+            Set Up →
+          </button>
+          <button
+            type="button"
+            onClick={onSkip}
+            className="tp-clean-button inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-transparent py-2 px-6 text-sm font-semibold text-ht-fg-muted transition-all active:opacity-70 focus-visible:outline-none"
+          >
+            Skip for now
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -570,14 +623,12 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [panelDirection, setPanelDirection] = useState<1 | -1>(1);
   const [activePanel, setActivePanel] = useState<JoinPanel>(venueParam ? "venue-login" : "venue-list");
-  const [isScanningQr, setIsScanningQr] = useState(false);
-  const [scanNotice, setScanNotice] = useState("");
   const [isOptimisticallyEntering, setIsOptimisticallyEntering] = useState(false);
+  const [passkeyEnrollmentStep, setPasskeyEnrollmentStep] = useState<PasskeyEnrollmentStepData | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [isPasskeyAttempting, setIsPasskeyAttempting] = useState(false);
   const [authLoginState, setAuthLoginState] = useState<AuthLoginState>("idle");
   const [connectionRetryMessage, setConnectionRetryMessage] = useState("");
-  const [pinFallbackMessage, setPinFallbackMessage] = useState("");
   const [pendingVenueSelectionId, setPendingVenueSelectionId] = useState<string | null>(null);
   const [loginStep, setLoginStep] = useState<"username" | "pin">("username");
   const [loginStepDirection, setLoginStepDirection] = useState<1 | -1>(1);
@@ -590,10 +641,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const loginAbortRef = useRef<AbortController | null>(null);
   const loginWatchdogRef = useRef<number | null>(null);
   const navigationFallbackRef = useRef<number | null>(null);
-  const scanVideoRef = useRef<HTMLVideoElement | null>(null);
-  const scanStreamRef = useRef<MediaStream | null>(null);
-  const scanRafRef = useRef<number | null>(null);
-  const scanCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const usernameInputRef = useRef<HTMLInputElement>(null);
   const pinInputRef = useRef<HTMLInputElement>(null);
   const pinContainerRef = useRef<HTMLDivElement>(null);
@@ -931,7 +978,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setVenue(selectedVenue);
       setErrorMessage("");
       setConnectionRetryMessage("");
-      setPinFallbackMessage("");
       setUsername("");
       setPin("");
       setIsTransitioning(false);
@@ -957,7 +1003,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     setVenue(null);
     setErrorMessage("");
     setConnectionRetryMessage("");
-    setPinFallbackMessage("");
     setPin("");
     setIsTransitioning(false);
     setIsOptimisticallyEntering(false);
@@ -965,7 +1010,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   }, []);
 
   const transitionToPinStep = useCallback(
-    (usernameValue: string, fallbackMessage = "") => {
+    (usernameValue: string) => {
       if (!validateUsername(usernameValue)) {
         setErrorMessage("Please enter a valid username.");
         return;
@@ -974,7 +1019,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setUsername(normalizedUsername);
       setErrorMessage("");
       setConnectionRetryMessage("");
-      setPinFallbackMessage(fallbackMessage);
       setPin("");
       setIsAdvancingToPin(true);
       setLoginStepDirection(1);
@@ -1017,12 +1061,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setUsername(normalizedUsername);
       setErrorMessage("");
       setConnectionRetryMessage("");
-      setPinFallbackMessage("");
       setIsPasskeyAttempting(true);
       setIsAdvancingToPin(true);
 
-      const fallbackToPin = (message: string) => {
-        transitionToPinStep(normalizedUsername, message);
+      const fallbackToPin = (_message?: string) => {
+        transitionToPinStep(normalizedUsername);
       };
 
       try {
@@ -1044,7 +1087,14 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
         const optionsPayload = (await optionsResponse.json().catch(() => null)) as PasskeyAuthOptionsPayload | null;
         if (!optionsResponse.ok || !optionsPayload?.ok) {
-          fallbackToPin(getPasskeyClientMessage(optionsPayload?.errorCode, "Passkey sign-in wasn't available. Use your PIN to continue."));
+          const code = optionsPayload?.errorCode;
+          if (isSilentPasskeyFallbackCode(code)) {
+            // Server config / environment issue — fall back to PIN with no user-visible message.
+            if (code) console.warn("[Passkey] Auth options silent fallback:", code);
+            fallbackToPin("");
+          } else {
+            fallbackToPin(getPasskeyClientMessage(code, "Passkey sign-in wasn't available. Use your PIN to continue."));
+          }
           return;
         }
 
@@ -1149,7 +1199,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     setIsReturningUserForVenue(false);
     setErrorMessage("");
     setConnectionRetryMessage("");
-    setPinFallbackMessage("");
   }, []);
   const handleSubmitPinStep = useCallback(
     (pinOverride?: string) => {
@@ -1172,7 +1221,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       }
       if (!validatePin(candidatePin)) {
         setConnectionRetryMessage("");
-        setPinFallbackMessage("");
         setErrorMessage(INVALID_PIN_MESSAGE);
         setIsPinShaking(true);
         return;
@@ -1238,171 +1286,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     }
     router.push("/admin");
   }, [router]);
-
-  const stopScanLoop = useCallback(() => {
-    if (scanRafRef.current) {
-      window.cancelAnimationFrame(scanRafRef.current);
-      scanRafRef.current = null;
-    }
-    if (scanStreamRef.current) {
-      for (const track of scanStreamRef.current.getTracks()) {
-        track.stop();
-      }
-      scanStreamRef.current = null;
-    }
-    if (scanVideoRef.current) {
-      scanVideoRef.current.srcObject = null;
-    }
-    scanCanvasRef.current = null;
-  }, []);
-
-  const routeFromQrPayload = useCallback(
-    (value: string): boolean => {
-      const raw = value.trim();
-      if (!raw) {
-        return false;
-      }
-
-      if (/^venue-[a-z0-9-]+$/i.test(raw)) {
-        router.push(`/?v=${encodeURIComponent(raw)}`);
-        return true;
-      }
-
-      try {
-        const parsed = new URL(raw, window.location.origin);
-        const venueQuery = parsed.searchParams.get("v")?.trim();
-        if (venueQuery) {
-          router.push(`/?v=${encodeURIComponent(venueQuery)}`);
-          return true;
-        }
-        const venuePathMatch = parsed.pathname.match(/^\/venue\/([^/?#]+)/i);
-        if (venuePathMatch?.[1]) {
-          router.push(`/?v=${encodeURIComponent(venuePathMatch[1])}`);
-          return true;
-        }
-      } catch {
-        return false;
-      }
-
-      return false;
-    },
-    [router]
-  );
-
-  const startQrScan = useCallback(async () => {
-    if (typeof window === "undefined" || typeof navigator === "undefined") {
-      return;
-    }
-    setScanNotice("");
-    setIsScanningQr(true);
-    stopScanLoop();
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: "environment" },
-        },
-        audio: false,
-      });
-      scanStreamRef.current = stream;
-      let mountAttempts = 0;
-      while (!scanVideoRef.current && mountAttempts < 12) {
-        await new Promise<void>((resolve) => {
-          window.requestAnimationFrame(() => resolve());
-        });
-        mountAttempts += 1;
-      }
-      if (!scanVideoRef.current) {
-        setScanNotice("Unable to initialize camera preview. Please try again.");
-        setIsScanningQr(false);
-        stopScanLoop();
-        return;
-      }
-
-      scanVideoRef.current.srcObject = stream;
-      await scanVideoRef.current.play();
-
-      const BarcodeDetectorCtor = (
-        window as unknown as { BarcodeDetector?: new (options?: { formats?: string[] }) => { detect: (source: ImageBitmapSource) => Promise<Array<{ rawValue?: string }>> } }
-      ).BarcodeDetector;
-
-      const detector = BarcodeDetectorCtor ? new BarcodeDetectorCtor({ formats: ["qr_code"] }) : null;
-      const useBarcodeDetector = Boolean(BarcodeDetectorCtor);
-      if (!useBarcodeDetector) {
-        setScanNotice("Using compatibility scan mode.");
-      }
-      let jsQrDecode: ((data: Uint8ClampedArray, width: number, height: number, options?: { inversionAttempts?: "attemptBoth" | "dontInvert" | "onlyInvert" }) => { data?: string } | null) | null = null;
-
-      const tick = async () => {
-        const video = scanVideoRef.current;
-        if (!video || video.readyState < 2) {
-          scanRafRef.current = window.requestAnimationFrame(() => {
-            void tick();
-          });
-          return;
-        }
-
-        try {
-          let rawValue = "";
-          if (useBarcodeDetector) {
-            const codes = await detector!.detect(video);
-            rawValue = codes[0]?.rawValue?.trim() ?? "";
-          } else {
-            const frameWidth = Math.max(1, Math.floor(video.videoWidth || 0));
-            const frameHeight = Math.max(1, Math.floor(video.videoHeight || 0));
-            if (frameWidth > 1 && frameHeight > 1) {
-              if (!jsQrDecode) {
-                const jsQrModule = await import("jsqr");
-                jsQrDecode = jsQrModule.default;
-              }
-              if (!scanCanvasRef.current) {
-                scanCanvasRef.current = document.createElement("canvas");
-              }
-              const canvas = scanCanvasRef.current;
-              if (canvas.width !== frameWidth || canvas.height !== frameHeight) {
-                canvas.width = frameWidth;
-                canvas.height = frameHeight;
-              }
-              const context = canvas.getContext("2d", { willReadFrequently: true });
-              if (context) {
-                context.drawImage(video, 0, 0, frameWidth, frameHeight);
-                const imageData = context.getImageData(0, 0, frameWidth, frameHeight);
-                const code = jsQrDecode?.(imageData.data, frameWidth, frameHeight, {
-                  inversionAttempts: "attemptBoth",
-                });
-                rawValue = code?.data?.trim() ?? "";
-              }
-            }
-          }
-          if (rawValue && routeFromQrPayload(rawValue)) {
-            setIsScanningQr(false);
-            stopScanLoop();
-            return;
-          }
-        } catch {
-          // Ignore transient decode misses and continue scanning.
-        }
-
-        scanRafRef.current = window.requestAnimationFrame(() => {
-          void tick();
-        });
-      };
-
-      scanRafRef.current = window.requestAnimationFrame(() => {
-        void tick();
-      });
-    } catch {
-      setScanNotice("Camera unavailable. You can still join by selecting a venue below.");
-      setIsScanningQr(false);
-      stopScanLoop();
-    }
-  }, [routeFromQrPayload, stopScanLoop]);
-
-  useEffect(() => {
-    return () => {
-      stopScanLoop();
-    };
-  }, [stopScanLoop]);
 
   useEffect(() => {
     return () => {
@@ -1516,77 +1399,46 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     []
   );
 
-  const promptPasskeyEnrollmentAfterPin = useCallback(
-    async (user: User) => {
-      if (!venue || passkeyRegistrationPromptedRef.current) {
-        return;
+  // Called when the user taps "Set Up →" in the passkey enrollment overlay.
+  // This fires directly from a button click so iOS/Safari user-activation is preserved
+  // when startRegistration() is called — no async work happens before it.
+  const handlePasskeyEnrollSetUp = useCallback(async () => {
+    if (!passkeyEnrollmentStep) return;
+    const { challengeId, options, user, venueTarget } = passkeyEnrollmentStep;
+    try {
+      const registrationResponse = await startRegistration({ optionsJSON: options });
+      const verifyResponse = await fetch("/api/auth/passkey/register/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          challengeId,
+          response: registrationResponse,
+          userId: user.id,
+          venueId: venue?.id,
+        }),
+      });
+      const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyRegisterVerifyPayload | null;
+      if (verifyResponse.ok && verifyPayload?.ok) {
+        try { localStorage.setItem(PASSKEY_ENROLLMENT_STORAGE_KEY, "1"); } catch { /* non-critical */ }
+      } else {
+        console.info("[Passkey] Enrollment verify failed", { code: verifyPayload?.errorCode });
       }
-      if (!browserSupportsWebAuthn()) {
-        return;
+    } catch (error) {
+      // User canceled or device unavailable — still navigate.
+      if (!isPasskeyUserCancel(error)) {
+        console.info("[Passkey] Enrollment setup failed:", getErrorMessage(error, "unknown"));
       }
+    } finally {
+      window.location.assign(venueTarget);
+    }
+  }, [passkeyEnrollmentStep, venue?.id]);
 
-      try {
-        const optionsResponse = await fetch("/api/auth/passkey/register/options", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: user.id,
-            venueId: venue.id,
-            username: user.username,
-          }),
-        });
-        const optionsPayload = (await optionsResponse.json().catch(() => null)) as PasskeyRegisterOptionsPayload | null;
-        if (!optionsResponse.ok || !optionsPayload?.ok || !optionsPayload.options || !optionsPayload.challengeId) {
-          console.info("[Passkey] Registration options failed", {
-            code: optionsPayload?.errorCode,
-            message: optionsPayload?.error,
-          });
-          return;
-        }
-
-        passkeyRegistrationPromptedRef.current = true;
-        const shouldRegister = window.confirm(
-          "Enable Face ID / Touch ID (or device PIN) for faster login next time?"
-        );
-        if (!shouldRegister) {
-          return;
-        }
-
-        // Call WebAuthn immediately after the confirm click to preserve Safari/iOS user-activation requirements.
-        const registrationResponse = await startRegistration({
-          optionsJSON: optionsPayload.options,
-        });
-
-        const verifyResponse = await fetch("/api/auth/passkey/register/verify", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            challengeId: optionsPayload.challengeId,
-            response: registrationResponse,
-            userId: user.id,
-            venueId: venue.id,
-          }),
-        });
-        const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyRegisterVerifyPayload | null;
-        if (!verifyResponse.ok || !verifyPayload?.ok) {
-          console.info("[Passkey] Registration verify failed", {
-            code: verifyPayload?.errorCode,
-            message: verifyPayload?.error ?? verifyResponse.status,
-          });
-          return;
-        }
-      } catch (error) {
-        // Best effort only: PIN auth is already successful, so we never block navigation.
-        const message = getErrorMessage(error, "Passkey setup did not start.");
-        console.info("[Passkey] Registration prompt failed", message);
-      }
-    },
-    [venue]
-  );
+  const handlePasskeyEnrollSkip = useCallback(() => {
+    if (!passkeyEnrollmentStep) return;
+    // Remember the skip so we don't ask again this session.
+    passkeyRegistrationPromptedRef.current = true;
+    window.location.assign(passkeyEnrollmentStep.venueTarget);
+  }, [passkeyEnrollmentStep]);
 
   async function createProfile(pinOverride?: string) {
     const effectivePin = normalizePin(String(pinOverride ?? getCurrentPinCandidate()));
@@ -1594,7 +1446,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     const submitStartedAt = Date.now();
     setErrorMessage("");
     setConnectionRetryMessage("");
-    setPinFallbackMessage("");
     setLoadingPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
     if (!validateUsername(username)) {
       setErrorMessage("Username is required.");
@@ -1689,7 +1540,29 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         throw new Error("Session venue mismatch detected. Please try again.");
       }
 
-      await promptPasskeyEnrollmentAfterPin(user);
+      // Fetch passkey enrollment options now (before any UI) so the button click
+      // can call startRegistration() directly with no async gap — required for iOS.
+      let enrollmentOptions: PasskeyRegisterOptionsPayload | null = null;
+      if (!passkeyRegistrationPromptedRef.current && browserSupportsWebAuthn()) {
+        const alreadyEnrolled = (() => {
+          try { return Boolean(localStorage.getItem(PASSKEY_ENROLLMENT_STORAGE_KEY)); } catch { return false; }
+        })();
+        if (!alreadyEnrolled) {
+          try {
+            const optRes = await fetch("/api/auth/passkey/register/options", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId: user.id, venueId: venue.id, username: user.username }),
+            });
+            const optPayload = (await optRes.json().catch(() => null)) as PasskeyRegisterOptionsPayload | null;
+            if (optRes.ok && optPayload?.ok && optPayload.options && optPayload.challengeId) {
+              enrollmentOptions = optPayload;
+            } else if (optPayload?.errorCode && !isSilentPasskeyFallbackCode(optPayload.errorCode)) {
+              console.warn("[Passkey] Enrollment options failed:", optPayload.errorCode);
+            }
+          } catch { /* non-critical */ }
+        }
+      }
 
       hardClearAuthAndCachePreserveVenue(venue.id);
       saveVenueId(venue.id);
@@ -1701,8 +1574,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setVenueHomeRouteIntent({ venueId: venue.id });
       setVenueHomeEntryHandoff({ venueId: venue.id, userId: user.id });
 
-      setAuthLoginState("navigating");
-      didNavigate = true;
       const hardTarget = `/venue/${encodeURIComponent(venue.id)}?entryUser=${encodeURIComponent(
         user.id
       )}&entryVenue=${encodeURIComponent(venue.id)}&entryAt=${Date.now()}`;
@@ -1714,13 +1585,28 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         elapsedMs: Date.now() - submitStartedAt,
       });
       void signInAnonymously().catch(() => {});
-      window.location.assign(hardTarget);
       void preflightVenueHomeCriticalData({
         userId: user.id,
         venueId: venue.id,
         signal: loginController.signal,
       }).catch(() => {});
       void preloadVenueHome(venue, user.id).catch(() => {});
+
+      setAuthLoginState("navigating");
+      didNavigate = true;
+
+      if (enrollmentOptions?.options && enrollmentOptions.challengeId) {
+        // Show the passkey enrollment overlay — PasskeyEnrollmentPrompt handles navigation.
+        passkeyRegistrationPromptedRef.current = true;
+        setPasskeyEnrollmentStep({
+          user,
+          challengeId: enrollmentOptions.challengeId,
+          options: enrollmentOptions.options,
+          venueTarget: hardTarget,
+        });
+      } else {
+        window.location.assign(hardTarget);
+      }
     } catch (error) {
       if (loginAttemptIdRef.current !== attemptId) {
         return;
@@ -1740,7 +1626,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         setIsPinShaking(true);
         setPin("");
         setConnectionRetryMessage("");
-        setPinFallbackMessage("");
       }
       logAuthIncident("join-flow", "create-profile-error", {
         traceId,
@@ -1785,12 +1670,15 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         showAlerts={false}
         showPageTitle={false}
         showUserStatus={false}
-        lockViewport
         noContainer
       >
-        <div className="flex h-full flex-col overflow-hidden">
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-            <div className="mx-auto w-full max-w-md px-4 py-5">
+        {passkeyEnrollmentStep && (
+          <PasskeyEnrollmentPrompt
+            onSetUp={handlePasskeyEnrollSetUp}
+            onSkip={handlePasskeyEnrollSkip}
+          />
+        )}
+        <div className="mx-auto w-full max-w-md px-4 pt-5 pb-[max(2rem,env(safe-area-inset-bottom))]">
               <HightopNeonLogo />
 
               {/* Dark join card */}
@@ -1812,7 +1700,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                         className="relative"
                       >
                         {/* Venue name context label */}
-                        <p className="mb-5 text-sm font-black uppercase tracking-[0.14em] text-cyan-300">
+                        <p className="mb-5 text-xl font-black uppercase tracking-[0.12em]"
+                          style={{ color: "#fbbf24", textShadow: "0 0 10px #f59e0b, 0 0 24px #d97706" }}>
                           {getVenueDisplayName(venue)}
                         </p>
 
@@ -1877,7 +1766,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                               loadingPhrase={loadingPhrase}
                               errorMessage={errorMessage}
                               connectionRetryMessage={connectionRetryMessage}
-                              pinFallbackMessage={pinFallbackMessage}
                               blockedReason={blockedReason}
                               pinContainerRef={pinContainerRef}
                               onBack={handleBackFromPin}
@@ -1969,8 +1857,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
               </div>
             </div>
-          </div>
-        </div>
   </PageShell>
   );
 }

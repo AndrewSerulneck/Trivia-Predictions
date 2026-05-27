@@ -83,7 +83,7 @@ export function AppShell({ children, legalNotice }: AppShellProps) {
       ) : null}
 
       <Suspense fallback={null}>
-        <main className={isAdmin ? "h-full min-h-0" : "flex-1 min-h-[100lvh]"}>{children}</main>
+        <main className={isAdmin ? "h-full min-h-0" : "flex-1"}>{children}</main>
       </Suspense>
       {!isAdmin && !isFullscreen ? (
         <footer className="relative z-10 border-t border-ht-border-hairline bg-ht-surface px-3 py-2 text-center text-xs leading-relaxed text-ht-fg-muted break-words">
