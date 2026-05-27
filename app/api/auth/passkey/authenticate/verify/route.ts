@@ -27,6 +27,7 @@ type AuthenticateVerifyBody = {
 };
 
 type PasskeyRow = {
+  user_id: string;
   credential_id_b64url: string;
   public_key_b64url: string;
   sign_count: number;
@@ -61,7 +62,10 @@ export async function POST(request: Request) {
       challengeId,
       flowType: "authentication",
     });
-    if (!challenge || !challenge.user_id) {
+    // Note: challenge.user_id may legitimately be null for the discoverable-credential
+    // flow (no username supplied at options time). We resolve the user from the
+    // credential_id returned by the device instead.
+    if (!challenge) {
       return passkeyError(401, "CHALLENGE_EXPIRED", getGenericAuthFailureMessage());
     }
 
@@ -70,18 +74,39 @@ export async function POST(request: Request) {
       return passkeyError(401, "INVALID_REQUEST", getGenericAuthFailureMessage());
     }
 
-    const credentialQuery = await supabaseAdmin
-      .from("user_passkeys")
-      .select("credential_id_b64url, public_key_b64url, sign_count, transports, device_type, backed_up")
-      .eq("user_id", challenge.user_id)
-      .eq("credential_id_b64url", credentialId)
-      .maybeSingle<PasskeyRow>();
+    // ── Look up the stored credential ─────────────────────────────────────────
+    // Non-discoverable: filter by both user_id and credential_id (stricter).
+    // Discoverable (user_id=null on challenge): find by credential_id alone and
+    // resolve the user_id from the passkey row itself.
+    let storedCredential: PasskeyRow | null = null;
 
-    if (credentialQuery.error) {
-      return passkeyError(500, "UNKNOWN", credentialQuery.error.message);
+    if (challenge.user_id) {
+      const credentialQuery = await supabaseAdmin
+        .from("user_passkeys")
+        .select("user_id, credential_id_b64url, public_key_b64url, sign_count, transports, device_type, backed_up")
+        .eq("user_id", challenge.user_id)
+        .eq("credential_id_b64url", credentialId)
+        .maybeSingle<PasskeyRow>();
+      if (credentialQuery.error) {
+        return passkeyError(500, "UNKNOWN", credentialQuery.error.message);
+      }
+      storedCredential = credentialQuery.data;
+    } else {
+      // Discoverable flow — credential_id is globally unique so no user filter needed.
+      const credentialQuery = await supabaseAdmin
+        .from("user_passkeys")
+        .select("user_id, credential_id_b64url, public_key_b64url, sign_count, transports, device_type, backed_up")
+        .eq("credential_id_b64url", credentialId)
+        .maybeSingle<PasskeyRow>();
+      if (credentialQuery.error) {
+        return passkeyError(500, "UNKNOWN", credentialQuery.error.message);
+      }
+      storedCredential = credentialQuery.data;
     }
-    const storedCredential = credentialQuery.data;
-    if (!storedCredential) {
+
+    const resolvedUserId = challenge.user_id ?? storedCredential?.user_id ?? null;
+
+    if (!storedCredential || !resolvedUserId) {
       return passkeyError(401, "CREDENTIAL_NOT_FOUND", getGenericAuthFailureMessage());
     }
 
@@ -117,7 +142,7 @@ export async function POST(request: Request) {
         device_type: verification.authenticationInfo.credentialDeviceType,
         last_used_at: new Date().toISOString(),
       })
-      .eq("user_id", challenge.user_id)
+      .eq("user_id", resolvedUserId)
       .eq("credential_id_b64url", storedCredential.credential_id_b64url);
 
     if (updateCredential.error) {
@@ -127,13 +152,13 @@ export async function POST(request: Request) {
     await markChallengeUsed(supabaseAdmin, challenge.id);
 
     const user = venueId
-      ? await findUserByIdAndVenue(supabaseAdmin, { userId: challenge.user_id, venueId })
+      ? await findUserByIdAndVenue(supabaseAdmin, { userId: resolvedUserId, venueId })
       : null;
 
     return NextResponse.json({
       ok: true,
       verified: true,
-      user: user ? mapUserForResponse(user) : { id: challenge.user_id },
+      user: user ? mapUserForResponse(user) : { id: resolvedUserId },
       next: {
         method: "passkey",
       },

@@ -561,8 +561,9 @@ const PinStep = memo(function PinStep({
 
 type PasskeyEnrollmentStepData = {
   user: User;
-  challengeId: string;
-  options: Parameters<typeof startRegistration>[0]["optionsJSON"];
+  // null when the options fetch failed — prompt still shows but Set Up fails gracefully
+  challengeId: string | null;
+  options: Parameters<typeof startRegistration>[0]["optionsJSON"] | null;
   venueTarget: string;
 };
 
@@ -575,11 +576,15 @@ function PasskeyEnrollmentPrompt({ onSetUp, onSkip }: PasskeyEnrollmentPromptPro
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
       <div className="w-full max-w-sm rounded-3xl border border-cyan-400/40 bg-slate-900 p-6 space-y-5">
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-3">
           <div className="text-4xl select-none">🔑</div>
-          <h2 className="text-xl font-black text-white">Log in faster next time</h2>
+          <h2 className="text-xl font-black text-white">Never remember your PIN again</h2>
+          <p className="text-sm leading-relaxed"
+            style={{ color: "#fbbf24" }}>
+            Setting up a passkey now means you don&apos;t have to remember your PIN later!
+          </p>
           <p className="text-sm text-ht-fg-muted leading-relaxed">
-            Use Face ID, Touch ID, or your device PIN instead of your 4-digit code next time.
+            Use Face ID, Touch ID, or your device PIN to log in instantly next time.
           </p>
         </div>
         <div className="flex flex-col gap-3">
@@ -588,14 +593,14 @@ function PasskeyEnrollmentPrompt({ onSetUp, onSkip }: PasskeyEnrollmentPromptPro
             onClick={onSetUp}
             className="tp-clean-button inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
           >
-            Set Up →
+            Set Up Passkey →
           </button>
           <button
             type="button"
             onClick={onSkip}
             className="tp-clean-button inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-transparent py-2 px-6 text-sm font-semibold text-ht-fg-muted transition-all active:opacity-70 focus-visible:outline-none"
           >
-            Skip for now
+            I&apos;ll remember my PIN — skip
           </button>
         </div>
       </div>
@@ -627,6 +632,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [passkeyEnrollmentStep, setPasskeyEnrollmentStep] = useState<PasskeyEnrollmentStepData | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [isPasskeyAttempting, setIsPasskeyAttempting] = useState(false);
+  // Discoverable-passkey button: "idle" → "loading" (prefetch) → "ready" | "unavailable"
+  const [discoverablePasskeyState, setDiscoverablePasskeyState] = useState<"idle" | "loading" | "ready" | "unavailable">("idle");
+  const [isDiscoverablePasskeyLoading, setIsDiscoverablePasskeyLoading] = useState(false);
   const [authLoginState, setAuthLoginState] = useState<AuthLoginState>("idle");
   const [connectionRetryMessage, setConnectionRetryMessage] = useState("");
   const [pendingVenueSelectionId, setPendingVenueSelectionId] = useState<string | null>(null);
@@ -649,6 +657,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const pinSubmittingRef = useRef(false);
   const passkeyRegistrationPromptedRef = useRef(false);
   const hasSuccessfulInitialRenderRef = useRef(false);
+  const discoverableOptionsRef = useRef<{
+    challengeId: string;
+    options: Parameters<typeof startAuthentication>[0]["optionsJSON"];
+  } | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -1307,6 +1319,52 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     return () => window.clearTimeout(t);
   }, [activePanel, loginStep]);
 
+  // Pre-fetch discoverable-passkey options so the Sign-in button can call
+  // startAuthentication() synchronously on click (iOS Safari user-activation).
+  useEffect(() => {
+    if (activePanel !== "venue-login" || !venue || !browserSupportsWebAuthn()) {
+      setDiscoverablePasskeyState("unavailable");
+      discoverableOptionsRef.current = null;
+      return;
+    }
+
+    setDiscoverablePasskeyState("loading");
+    discoverableOptionsRef.current = null;
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 6000);
+
+    fetch("/api/auth/passkey/authenticate/options", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ venueId: venue.id }),
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        const payload = (await res.json().catch(() => null)) as PasskeyAuthOptionsPayload | null;
+        if (res.ok && payload?.ok && payload.options && payload.challengeId) {
+          discoverableOptionsRef.current = {
+            challengeId: payload.challengeId,
+            options: payload.options,
+          };
+          setDiscoverablePasskeyState("ready");
+        } else {
+          setDiscoverablePasskeyState("unavailable");
+        }
+      })
+      .catch(() => {
+        setDiscoverablePasskeyState("unavailable");
+      })
+      .finally(() => {
+        window.clearTimeout(timeoutId);
+      });
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [activePanel, venue]);
+
   useEffect(() => {
     return () => { if (shakeTimerRef.current) window.clearTimeout(shakeTimerRef.current); };
   }, []);
@@ -1399,12 +1457,105 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     []
   );
 
+  // Called when the user taps "Sign in with Face ID / Touch ID" on the venue-login panel.
+  // Options are pre-fetched in a useEffect so startAuthentication() fires immediately
+  // from the button click — satisfying iOS Safari's user-activation requirement.
+  const handleDiscoverablePasskeySignIn = useCallback(async () => {
+    const stored = discoverableOptionsRef.current;
+    if (!stored || !venue || isDiscoverablePasskeyLoading) return;
+
+    setIsDiscoverablePasskeyLoading(true);
+    try {
+      const assertionResponse = await startAuthentication({ optionsJSON: stored.options });
+
+      const verifyResponse = await fetch("/api/auth/passkey/authenticate/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          challengeId: stored.challengeId,
+          response: assertionResponse,
+          venueId: venue.id,
+        }),
+      });
+
+      const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyAuthVerifyPayload | null;
+
+      // Verify must return a full user (id + username + venueId). If the passkey is
+      // registered to a user at a different venue the lookup returns {id} only.
+      const verifiedUser = verifyPayload?.user;
+      const hasFullUser =
+        verifyResponse.ok &&
+        verifyPayload?.ok &&
+        verifiedUser &&
+        "username" in verifiedUser &&
+        "venueId" in verifiedUser &&
+        String((verifiedUser as { venueId?: string }).venueId ?? "").trim() === venue.id;
+
+      if (!hasFullUser) {
+        // Credential not found for this venue — fall back silently to username/PIN
+        discoverableOptionsRef.current = null;
+        setDiscoverablePasskeyState("unavailable");
+        return;
+      }
+
+      if (!DISABLE_GEOFENCE_FOR_TESTING && !locationVerified) {
+        setErrorMessage("Verify your location before entering the venue.");
+        return;
+      }
+
+      const user = verifiedUser as { id: string; username: string; venueId: string };
+      hardClearAuthAndCachePreserveVenue(venue.id);
+      saveVenueId(venue.id);
+      saveUsername(user.username);
+      saveUserId(user.id);
+      setSelectedVenueLock(venue.id);
+      setLoginInProgress(venue.id);
+      refreshAuthSession();
+      setVenueHomeRouteIntent({ venueId: venue.id });
+      setVenueHomeEntryHandoff({ venueId: venue.id, userId: user.id });
+      setAuthLoginState("navigating");
+      setStatus("saving");
+      setIsTransitioning(true);
+      setIsOptimisticallyEntering(true);
+      const hardTarget = `/venue/${encodeURIComponent(venue.id)}?entryUser=${encodeURIComponent(
+        user.id
+      )}&entryVenue=${encodeURIComponent(venue.id)}&entryAt=${Date.now()}`;
+      void signInAnonymously().catch(() => {});
+      window.location.assign(hardTarget);
+    } catch (error) {
+      if (isPasskeyUserCancel(error)) {
+        // User dismissed the biometric prompt — do nothing, form stays visible
+        return;
+      }
+      if (isPasskeyUnavailable(error)) {
+        discoverableOptionsRef.current = null;
+        setDiscoverablePasskeyState("unavailable");
+        return;
+      }
+      // Unknown error — hide the button and let them use username/PIN
+      discoverableOptionsRef.current = null;
+      setDiscoverablePasskeyState("unavailable");
+    } finally {
+      setIsDiscoverablePasskeyLoading(false);
+    }
+  }, [
+    venue,
+    isDiscoverablePasskeyLoading,
+    locationVerified,
+    refreshAuthSession,
+  ]);
+
   // Called when the user taps "Set Up →" in the passkey enrollment overlay.
   // This fires directly from a button click so iOS/Safari user-activation is preserved
   // when startRegistration() is called — no async work happens before it.
   const handlePasskeyEnrollSetUp = useCallback(async () => {
     if (!passkeyEnrollmentStep) return;
     const { challengeId, options, user, venueTarget } = passkeyEnrollmentStep;
+    // Options unavailable (server not configured yet) — navigate without enrolling.
+    if (!options || !challengeId) {
+      window.location.assign(venueTarget);
+      return;
+    }
     try {
       const registrationResponse = await startRegistration({ optionsJSON: options });
       const verifyResponse = await fetch("/api/auth/passkey/register/verify", {
@@ -1540,28 +1691,34 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         throw new Error("Session venue mismatch detected. Please try again.");
       }
 
-      // Fetch passkey enrollment options now (before any UI) so the button click
-      // can call startRegistration() directly with no async gap — required for iOS.
+      // Determine whether to show the passkey enrollment prompt.
+      // We always show it for unenrolled users who support WebAuthn — even if the
+      // options fetch fails (options will be null and Set Up navigates gracefully).
+      const alreadyEnrolled = (() => {
+        try { return Boolean(localStorage.getItem(PASSKEY_ENROLLMENT_STORAGE_KEY)); } catch { return false; }
+      })();
+      const shouldPromptPasskey =
+        !alreadyEnrolled &&
+        !passkeyRegistrationPromptedRef.current &&
+        browserSupportsWebAuthn();
+
+      // Pre-fetch options so the "Set Up" button click can call startRegistration()
+      // with no async gap — required for iOS Safari user-activation.
       let enrollmentOptions: PasskeyRegisterOptionsPayload | null = null;
-      if (!passkeyRegistrationPromptedRef.current && browserSupportsWebAuthn()) {
-        const alreadyEnrolled = (() => {
-          try { return Boolean(localStorage.getItem(PASSKEY_ENROLLMENT_STORAGE_KEY)); } catch { return false; }
-        })();
-        if (!alreadyEnrolled) {
-          try {
-            const optRes = await fetch("/api/auth/passkey/register/options", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ userId: user.id, venueId: venue.id, username: user.username }),
-            });
-            const optPayload = (await optRes.json().catch(() => null)) as PasskeyRegisterOptionsPayload | null;
-            if (optRes.ok && optPayload?.ok && optPayload.options && optPayload.challengeId) {
-              enrollmentOptions = optPayload;
-            } else if (optPayload?.errorCode && !isSilentPasskeyFallbackCode(optPayload.errorCode)) {
-              console.warn("[Passkey] Enrollment options failed:", optPayload.errorCode);
-            }
-          } catch { /* non-critical */ }
-        }
+      if (shouldPromptPasskey) {
+        try {
+          const optRes = await fetch("/api/auth/passkey/register/options", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: user.id, venueId: venue.id, username: user.username }),
+          });
+          const optPayload = (await optRes.json().catch(() => null)) as PasskeyRegisterOptionsPayload | null;
+          if (optRes.ok && optPayload?.ok && optPayload.options && optPayload.challengeId) {
+            enrollmentOptions = optPayload;
+          } else if (optPayload?.errorCode && !isSilentPasskeyFallbackCode(optPayload.errorCode)) {
+            console.warn("[Passkey] Enrollment options failed:", optPayload.errorCode);
+          }
+        } catch { /* non-critical — prompt still shows, Set Up falls back gracefully */ }
       }
 
       hardClearAuthAndCachePreserveVenue(venue.id);
@@ -1595,13 +1752,14 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setAuthLoginState("navigating");
       didNavigate = true;
 
-      if (enrollmentOptions?.options && enrollmentOptions.challengeId) {
+      if (shouldPromptPasskey) {
         // Show the passkey enrollment overlay — PasskeyEnrollmentPrompt handles navigation.
+        // options/challengeId may be null if the fetch failed; the handler navigates gracefully.
         passkeyRegistrationPromptedRef.current = true;
         setPasskeyEnrollmentStep({
           user,
-          challengeId: enrollmentOptions.challengeId,
-          options: enrollmentOptions.options,
+          challengeId: enrollmentOptions?.challengeId ?? null,
+          options: enrollmentOptions?.options ?? null,
           venueTarget: hardTarget,
         });
       } else {
@@ -1704,6 +1862,33 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                           style={{ color: "#fbbf24", textShadow: "0 0 10px #f59e0b, 0 0 24px #d97706" }}>
                           {getVenueDisplayName(venue)}
                         </p>
+
+                        {/* Discoverable-passkey sign-in button — only shown once options
+                            are pre-fetched and on the username step (not during PIN entry). */}
+                        {loginStep === "username" && discoverablePasskeyState === "ready" && (
+                          <div className="mb-5">
+                            <button
+                              type="button"
+                              onClick={handleDiscoverablePasskeySignIn}
+                              disabled={isDiscoverablePasskeyLoading || isAuthLoading}
+                              className="tp-clean-button inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl border border-cyan-400/40 bg-slate-800/80 py-3 px-6 text-base font-black text-white transition-all active:translate-y-[1px] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+                            >
+                              {isDiscoverablePasskeyLoading ? (
+                                <span className="animate-pulse">Authenticating…</span>
+                              ) : (
+                                <>
+                                  <span aria-hidden="true" className="text-lg">🔑</span>
+                                  Sign in with Face ID / Touch ID
+                                </>
+                              )}
+                            </button>
+                            <div className="mt-5 flex items-center gap-3">
+                              <div className="flex-1 h-px bg-slate-700" />
+                              <span className="text-xs font-semibold uppercase tracking-widest text-ht-fg-muted">or</span>
+                              <div className="flex-1 h-px bg-slate-700" />
+                            </div>
+                          </div>
+                        )}
 
                         {/* Keep input mounted for reliable mobile keypad behavior, but visually hide it. */}
                         <input

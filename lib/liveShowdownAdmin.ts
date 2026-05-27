@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 const QUESTIONS_PER_ROUND = 15;
 const QUESTION_BLOCK_MS = 60_000;
 const ROUND_MS = 20 * 60_000;
+const BLOCKED_LIVE_SHOWDOWN_CATEGORIES = new Set(["fantasy epics"]);
 
 type LiveShowdownQuestionRow = {
   id: string;
@@ -143,6 +144,11 @@ function normalizeCategory(value: string | null | undefined): string {
   return normalized || "General";
 }
 
+function isBlockedLiveShowdownCategory(category: string | null | undefined): boolean {
+  const normalized = normalizeCategory(category).toLowerCase();
+  return BLOCKED_LIVE_SHOWDOWN_CATEGORIES.has(normalized);
+}
+
 function shuffleInPlace<T>(list: T[]): T[] {
   for (let i = list.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -196,26 +202,6 @@ function zonedDateTimeToUtcIso(dateValue: string, timeValue: string, timeZone: s
   return new Date(guessMs).toISOString();
 }
 
-// Shuffles a copy and deinterleaves it so no two consecutive entries are identical.
-// Used to ensure adjacent rounds never share the same category.
-function buildCategoryRotation(categorySlots: string[]): string[] {
-  const shuffled = shuffleInPlace([...categorySlots]);
-  const result: string[] = [];
-  const remaining = [...shuffled];
-  while (remaining.length > 0) {
-    const lastAssigned = result[result.length - 1];
-    const idx = remaining.findIndex((item) => item !== lastAssigned);
-    if (idx === -1) {
-      // All remaining are the same category — append as-is.
-      result.push(...remaining);
-      break;
-    }
-    result.push(remaining[idx]!);
-    remaining.splice(idx, 1);
-  }
-  return result;
-}
-
 async function buildLiveShowdownQuestionMatrix(numRounds: number): Promise<string[]> {
   const admin = getAdminClient();
   const totalNeeded = numRounds * QUESTIONS_PER_ROUND;
@@ -244,6 +230,9 @@ async function buildLiveShowdownQuestionMatrix(numRounds: number): Promise<strin
   // Build per-category buckets; shuffle each bucket for variety within the category.
   const byCategory = new Map<string, EligibleRow[]>();
   for (const row of rows) {
+    if (isBlockedLiveShowdownCategory(row.category)) {
+      continue;
+    }
     const cat = normalizeCategory(row.category);
     const list = byCategory.get(cat) ?? [];
     list.push(row);
@@ -253,17 +242,26 @@ async function buildLiveShowdownQuestionMatrix(numRounds: number): Promise<strin
     shuffleInPlace(list);
   }
 
-  // Build a category rotation: each category gets one slot per full QUESTIONS_PER_ROUND
-  // it can provide, then the whole list is shuffled and deinterleaved so consecutive
-  // rounds always have different categories.
-  const categorySlots: string[] = [];
-  for (const [cat, list] of byCategory.entries()) {
-    const slots = Math.floor(list.length / QUESTIONS_PER_ROUND);
-    for (let i = 0; i < slots; i += 1) {
-      categorySlots.push(cat);
-    }
+  // Only categories that can fully support one round are eligible.
+  // Contract: each round must use a distinct category (no repeats in a game).
+  const eligibleRoundCategories = Array.from(byCategory.entries())
+    .filter(([, list]) => list.length >= QUESTIONS_PER_ROUND)
+    .map(([cat]) => cat);
+  if (eligibleRoundCategories.length === 0) {
+    throw new Error("No eligible Live Showdown categories are available for seeding.");
   }
-  const categoryRotation = buildCategoryRotation(categorySlots);
+  // Prefer no repeats: consume every available category once before any repeat.
+  const selectedRoundCategories: string[] = [];
+  const firstCycle = shuffleInPlace([...eligibleRoundCategories]);
+  let cycle = [...firstCycle];
+  while (selectedRoundCategories.length < numRounds) {
+    if (cycle.length === 0) {
+      cycle = shuffleInPlace([...eligibleRoundCategories]);
+    }
+    const next = cycle.shift();
+    if (!next) break;
+    selectedRoundCategories.push(next);
+  }
 
   const used = new Set<string>();
 
@@ -274,7 +272,8 @@ async function buildLiveShowdownQuestionMatrix(numRounds: number): Promise<strin
     source: EligibleRow[],
     count: number,
     category: string | undefined,
-    numericUsed: { value: number }
+    numericUsed: { value: number },
+    enforceNumericLimit = true
   ): string[] => {
     const picked: string[] = [];
     for (const row of source) {
@@ -282,7 +281,7 @@ async function buildLiveShowdownQuestionMatrix(numRounds: number): Promise<strin
       if (used.has(row.slug)) continue;
       if (category !== undefined && normalizeCategory(row.category) !== category) continue;
       const isNumeric = isStandaloneNumeric(getCorrectAnswer(row));
-      if (isNumeric && numericUsed.value >= 1) continue;
+      if (enforceNumericLimit && isNumeric && numericUsed.value >= 1) continue;
       used.add(row.slug);
       picked.push(row.slug);
       if (isNumeric) numericUsed.value += 1;
@@ -293,11 +292,7 @@ async function buildLiveShowdownQuestionMatrix(numRounds: number): Promise<strin
   const rounds: string[][] = [];
 
   for (let round = 1; round <= numRounds; round += 1) {
-    // Rotate through the pre-shuffled category list; cycle if there are more rounds than slots.
-    const preferredCategory =
-      categoryRotation.length > 0
-        ? (categoryRotation[(round - 1) % categoryRotation.length] ?? null)
-        : null;
+    const preferredCategory = selectedRoundCategories[round - 1] ?? null;
 
     const roundSlugs: string[] = [];
     const numericUsed = { value: 0 };
@@ -314,28 +309,22 @@ async function buildLiveShowdownQuestionMatrix(numRounds: number): Promise<strin
       // 3. Any question from preferred category (broadest fallback within category).
       if (roundSlugs.length < QUESTIONS_PER_ROUND) {
         const catAll = byCategory.get(preferredCategory) ?? [];
-        roundSlugs.push(...takeFrom(catAll, QUESTIONS_PER_ROUND - roundSlugs.length, undefined, numericUsed));
+        roundSlugs.push(
+          ...takeFrom(catAll, QUESTIONS_PER_ROUND - roundSlugs.length, preferredCategory, numericUsed)
+        );
       }
-    }
-
-    // Global fallback passes — used when preferred category is exhausted or unavailable.
-    if (roundSlugs.length < QUESTIONS_PER_ROUND) {
-      roundSlugs.push(...takeFrom(liveEligible, QUESTIONS_PER_ROUND - roundSlugs.length, undefined, numericUsed));
-    }
-    if (roundSlugs.length < QUESTIONS_PER_ROUND) {
-      roundSlugs.push(...takeFrom(anytimeEligible, QUESTIONS_PER_ROUND - roundSlugs.length, undefined, numericUsed));
-    }
-    if (roundSlugs.length < QUESTIONS_PER_ROUND) {
-      const needed = QUESTIONS_PER_ROUND - roundSlugs.length;
-      roundSlugs.push(...takeFrom(rows, needed, undefined, numericUsed));
-      console.warn(
-        `[Live Showdown] Round ${round}: used broad fallback rows outside strict answer filter to fill ${needed} slot(s).`
-      );
+      // 4. Final in-category fallback without closest-guess cap to guarantee fill.
+      if (roundSlugs.length < QUESTIONS_PER_ROUND) {
+        const catAll = byCategory.get(preferredCategory) ?? [];
+        roundSlugs.push(
+          ...takeFrom(catAll, QUESTIONS_PER_ROUND - roundSlugs.length, preferredCategory, numericUsed, false)
+        );
+      }
     }
 
     if (roundSlugs.length < QUESTIONS_PER_ROUND) {
       throw new Error(
-        `Unable to fill round ${round}; only ${roundSlugs.length}/${QUESTIONS_PER_ROUND} questions available after all fallback passes.`
+        `Unable to fill round ${round} for category "${preferredCategory}"; only ${roundSlugs.length}/${QUESTIONS_PER_ROUND} questions available.`
       );
     }
 
