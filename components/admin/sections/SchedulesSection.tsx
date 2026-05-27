@@ -83,7 +83,7 @@ type SchedulesSectionProps = {
   venues: Venue[];
 };
 
-type ViewMode = "list" | "create";
+type ViewMode = "list" | "create" | "edit";
 type SortField = "title" | "venue" | "rounds" | "timezone" | "city" | "state";
 type SortDirection = "asc" | "desc";
 
@@ -114,6 +114,7 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
   const [formLobbyAdEnabled, setFormLobbyAdEnabled] = useState(true);
   const [createBusy, setCreateBusy] = useState(false);
   const [createError, setCreateError] = useState("");
+  const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
 
   const fetchSchedules = useCallback(async (targetPage: number) => {
     setLoading(true);
@@ -269,6 +270,84 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
     }
   }
 
+  function openEditForm(s: AdminLiveShowdownSchedule) {
+    const startDate = new Date(s.startTime);
+    const localDate = startDate.toLocaleDateString("en-CA", { timeZone: s.timezone }); // YYYY-MM-DD
+    const localTime = startDate.toLocaleTimeString("en-US", {
+      timeZone: s.timezone,
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    setEditingScheduleId(s.id);
+    setFormTitle(s.title);
+    setFormDate(localDate);
+    setFormTime(localTime);
+    setFormTz(s.timezone);
+    setFormRecurringType(s.recurringType);
+    setFormRecurringDays(s.recurringDays ?? []);
+    setFormRounds(String(s.numRounds));
+    setFormVenueId(s.venueId ?? venues[0]?.id ?? "");
+    setFormIntermissionDelay(String(s.intermissionAdDelaySeconds));
+    setFormLobbyAdEnabled(s.lobbyAdEnabled);
+    setCreateError("");
+    setMode("edit");
+  }
+
+  async function handleUpdate() {
+    if (!editingScheduleId) return;
+    if (!formTitle.trim()) { setCreateError("Title is required."); return; }
+    if (!formDate) { setCreateError("Date is required."); return; }
+    if (!formTime) { setCreateError("Start time is required."); return; }
+    if (!formVenueId) { setCreateError("Venue is required."); return; }
+    const numRounds = parseInt(formRounds, 10);
+    if (isNaN(numRounds) || numRounds < 1 || numRounds > 24) {
+      setCreateError("Rounds must be between 1 and 24.");
+      return;
+    }
+    const intermissionAdDelaySeconds = parseInt(formIntermissionDelay, 10);
+    if (Number.isNaN(intermissionAdDelaySeconds) || intermissionAdDelaySeconds < 0 || intermissionAdDelaySeconds > 300) {
+      setCreateError("Intermission ad delay must be between 0 and 300 seconds.");
+      return;
+    }
+    if (formRecurringType === "weekly" && formRecurringDays.length === 0) {
+      setCreateError("Select at least one day for weekly recurring schedules.");
+      return;
+    }
+    setCreateBusy(true);
+    setCreateError("");
+    try {
+      const res = await fetch("/api/admin", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resource: "live-showdown-schedules",
+          id: editingScheduleId,
+          title: formTitle.trim(),
+          targetDate: formDate,
+          startTime: formTime,
+          timezone: formTz,
+          recurringType: formRecurringType,
+          recurringDays: formRecurringType === "weekly" ? formRecurringDays : [],
+          numRounds,
+          venueId: formVenueId,
+          intermissionAdDelaySeconds,
+          lobbyAdEnabled: formLobbyAdEnabled,
+        }),
+      });
+      const payload = (await res.json()) as { ok: boolean; error?: string };
+      if (!payload.ok) throw new Error(payload.error ?? "Failed to update schedule.");
+      resetCreateForm();
+      setEditingScheduleId(null);
+      setMode("list");
+      await fetchSchedules(page);
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : "Failed to update schedule.");
+    } finally {
+      setCreateBusy(false);
+    }
+  }
+
   // ── Derived data (must be before any early return) ───────────────────────
 
   const venueById = useMemo(() => new Map(venues.map((v) => [v.id, v])), [venues]);
@@ -329,7 +408,8 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
 
   // ── Create form render ────────────────────────────────────────────────────
 
-  if (mode === "create") {
+  if (mode === "create" || mode === "edit") {
+    const isEditMode = mode === "edit";
     const field =
       "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200";
     const lbl = "mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600";
@@ -337,9 +417,11 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
     return (
       <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-slate-900">Schedule Live Trivia</h2>
+          <h2 className="text-base font-semibold text-slate-900">
+            {isEditMode ? "Edit Live Trivia Session" : "Schedule Live Trivia"}
+          </h2>
           <button
-            onClick={() => { resetCreateForm(); setMode("list"); }}
+            onClick={() => { resetCreateForm(); setEditingScheduleId(null); setMode("list"); }}
             className="text-sm text-slate-500 hover:text-slate-800"
           >
             ← Back to list
@@ -489,14 +571,16 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
 
         <div className="mt-6 flex gap-3">
           <button
-            onClick={handleCreate}
+            onClick={isEditMode ? handleUpdate : handleCreate}
             disabled={createBusy}
             className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
           >
-            {createBusy ? "Creating…" : "Schedule Session"}
+            {createBusy
+              ? isEditMode ? "Saving…" : "Creating…"
+              : isEditMode ? "Save Changes" : "Schedule Session"}
           </button>
           <button
-            onClick={() => { resetCreateForm(); setMode("list"); }}
+            onClick={() => { resetCreateForm(); setEditingScheduleId(null); setMode("list"); }}
             disabled={createBusy}
             className="rounded-lg border border-slate-300 px-5 py-2 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50"
           >
@@ -670,12 +754,20 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
                         )}
                       </td>
                       <td className={`${TD} text-right`}>
-                        <button
-                          onClick={() => deleteSchedule(s.id, s.title)}
-                          className="rounded border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50"
-                        >
-                          Delete
-                        </button>
+                        <div className="inline-flex gap-2">
+                          <button
+                            onClick={() => openEditForm(s)}
+                            className="rounded border border-indigo-200 px-2 py-1 text-xs text-indigo-600 hover:bg-indigo-50"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => deleteSchedule(s.id, s.title)}
+                            className="rounded border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

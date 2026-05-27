@@ -351,7 +351,44 @@ async function findRelevantSchedules(nowIso: string, venueIdRaw: string): Promis
     const recurringType = normalizeRecurringType(row.recurring_type);
     const rowTimezone = String(row.timezone ?? "America/New_York").trim() || "America/New_York";
 
-    if (recurringType !== "weekly") {
+    if (recurringType === "daily" || recurringType === "weekly") {
+      const baseStartParts = getTimeZoneParts(new Date(baseStartMs), rowTimezone);
+      const recurringDays = normalizeRecurringDays(row.recurring_days);
+      const effectiveDays =
+        recurringType === "daily"
+          ? WEEKDAY_KEYS
+          : recurringDays.length > 0
+          ? recurringDays
+          : [baseStartParts.weekday];
+
+      for (let offset = -7; offset <= 14; offset += 1) {
+        const dayProbe = getTimeZoneParts(new Date(nowMs + offset * dayMs), rowTimezone);
+        if (!effectiveDays.includes(dayProbe.weekday)) continue;
+        const occurrenceMs = zonedDateTimeToUtcMs(
+          dayProbe.year,
+          dayProbe.month,
+          dayProbe.day,
+          baseStartParts.hour,
+          baseStartParts.minute,
+          baseStartParts.second,
+          rowTimezone
+        );
+        if (occurrenceMs < baseStartMs) continue;
+        const endMs = occurrenceMs + rounds * ROUND_MS;
+        if (nowMs >= occurrenceMs && nowMs < endMs) {
+          if (!activeCandidate || occurrenceMs > activeCandidate.startMs) {
+            activeCandidate = { row, startMs: occurrenceMs };
+          }
+        } else if (occurrenceMs > nowMs) {
+          if (!upcomingCandidate || occurrenceMs < upcomingCandidate.startMs) {
+            upcomingCandidate = { row, startMs: occurrenceMs };
+          }
+        }
+      }
+      continue;
+    }
+
+  if (recurringType === "none" || recurringType === "monthly" || recurringType === "yearly") {
       const endMs = baseStartMs + rounds * ROUND_MS;
       if (nowMs >= baseStartMs && nowMs < endMs) {
         if (!activeCandidate || baseStartMs > activeCandidate.startMs) {

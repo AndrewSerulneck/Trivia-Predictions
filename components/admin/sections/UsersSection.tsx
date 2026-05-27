@@ -183,7 +183,7 @@ export function UsersSection({ venues }: UsersSectionProps) {
           <select
             value={selectedVenueId}
             onChange={(e) => setSelectedVenueId(e.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            className="rounded-lg border border-slate-300 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
           >
             {venues.map((v) => (
               <option key={v.id} value={v.id}>

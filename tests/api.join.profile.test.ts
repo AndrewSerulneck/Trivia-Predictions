@@ -80,7 +80,7 @@ describe("/api/join/profile", () => {
     expect(response.status).toBe(200);
     expect(body.ok).toBe(true);
     expect(body.user?.id).toBe("u-1");
-    expect(usersSelect.eq).toHaveBeenCalledWith("username", "ace_1");
+    expect(usersSelect.eq).toHaveBeenCalledWith("username_normalized", "ace_1");
     expect(usersSelect.eq).toHaveBeenCalledWith("venue_id", "venue-qa");
     expect(usersSelect.ilike).not.toHaveBeenCalled();
   });
@@ -150,7 +150,7 @@ describe("/api/join/profile", () => {
 
   it("GET reports returning user only when exact username row has PIN", async () => {
     const usersSelect = buildSelectChain({
-      data: [{ id: "u-4", pin_salt: "salt", pin_hash: "hash" }],
+      data: [{ id: "u-4", username: "Exact_User", pin_salt: "salt", pin_hash: "hash" }],
       error: null,
     });
 
@@ -171,7 +171,7 @@ describe("/api/join/profile", () => {
     expect(body.exists).toBe(true);
     expect(body.hasPin).toBe(true);
     expect(body.isReturningUser).toBe(true);
-    expect(usersSelect.eq).toHaveBeenCalledWith("username", "Exact_User");
+    expect(usersSelect.eq).toHaveBeenCalledWith("username_normalized", "exact_user");
     expect(usersSelect.eq).toHaveBeenCalledWith("venue_id", "venue-z");
     expect(usersSelect.ilike).not.toHaveBeenCalled();
   });

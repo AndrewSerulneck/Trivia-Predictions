@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { CoinFXCanvas } from "@/components/ui/CoinFXCanvas";
-import { getUserId, getUsername, getVenueId } from "@/lib/storage";
+import { getUserId, getUsername, getVenueId, saveUsername } from "@/lib/storage";
 import { setScrollLock } from "@/lib/scrollLock";
 
 type SummaryPayload = {
@@ -13,6 +13,19 @@ type SummaryPayload = {
     points: number;
     venueId: string;
   } | null;
+};
+
+type UsernameUpdatePayload = {
+  ok?: boolean;
+  error?: string;
+  retryAfterSeconds?: number;
+  user?: {
+    id: string;
+    username: string;
+    venueId: string;
+    points: number;
+    createdAt?: string;
+  };
 };
 
 type LeftHamburgerMenuProps = {
@@ -107,6 +120,12 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
   const [pointsBurstVisible, setPointsBurstVisible] = useState(false);
   const [pointsBurstToken, setPointsBurstToken] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUsernameModalOpen, setIsUsernameModalOpen] = useState(false);
+  const [usernameDraft, setUsernameDraft] = useState("");
+  const [currentPinDraft, setCurrentPinDraft] = useState("");
+  const [isUpdatingUsername, setIsUpdatingUsername] = useState(false);
+  const [usernameUpdateMessage, setUsernameUpdateMessage] = useState("");
+  const [usernameUpdateError, setUsernameUpdateError] = useState("");
   const scrollLockOwnerId = useId();
   const storedVenueId = useSyncExternalStore(
     () => () => {},
@@ -267,6 +286,63 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
     }
     priorPointsRef.current = payload.profile.points;
   }, [animateGain, setPointsAndAnimate]);
+
+  const openUsernameModal = useCallback(() => {
+    setUsernameDraft((username || "").trim());
+    setCurrentPinDraft("");
+    setUsernameUpdateError("");
+    setUsernameUpdateMessage("");
+    setIsUsernameModalOpen(true);
+  }, [username]);
+
+  const handleUsernameUpdate = useCallback(async () => {
+    const userId = (getUserId() ?? "").trim();
+    const venueId = (getVenueId() ?? "").trim();
+    const nextUsername = usernameDraft.trim();
+    if (!userId || !venueId) {
+      setUsernameUpdateError("You must be logged in to change your username.");
+      return;
+    }
+    if (!nextUsername) {
+      setUsernameUpdateError("Please enter a new username.");
+      return;
+    }
+
+    setIsUpdatingUsername(true);
+    setUsernameUpdateError("");
+    setUsernameUpdateMessage("");
+    try {
+      const response = await fetch("/api/auth/username/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          venueId,
+          newUsername: nextUsername,
+          currentPin: currentPinDraft.trim() || undefined,
+          reason: "self-service",
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as UsernameUpdatePayload | null;
+      if (!response.ok || !payload?.ok || !payload.user) {
+        setUsernameUpdateError(payload?.error || "Unable to update username.");
+        return;
+      }
+
+      setUsername(payload.user.username);
+      saveUsername(payload.user.username);
+      setUsernameDraft(payload.user.username);
+      setCurrentPinDraft("");
+      setUsernameUpdateMessage("Username updated successfully.");
+      window.dispatchEvent(new CustomEvent("tp:auth-state-changed"));
+    } catch {
+      setUsernameUpdateError("Unable to update username right now.");
+    } finally {
+      setIsUpdatingUsername(false);
+    }
+  }, [currentPinDraft, usernameDraft]);
 
   useEffect(() => {
     if (isJoinRoute) return;
@@ -514,6 +590,20 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
             </button>
           </div>
 
+          <div className="mb-4 rounded-ht-lg border border-ht-border-hairline bg-ht-elevated/50 p-3">
+            <div className="text-sm font-black text-ht-fg-primary">Profile</div>
+            <p className="mt-1 text-xs text-ht-fg-muted">
+              Username is case-insensitive for login. Change display casing or pick a new one.
+            </p>
+            <button
+              type="button"
+              onClick={openUsernameModal}
+              className="mt-3 inline-flex min-h-[40px] w-full items-center justify-center rounded-xl border border-cyan-400/50 bg-cyan-400/15 px-3 py-2 text-sm font-black text-cyan-200"
+            >
+              Change Username
+            </button>
+          </div>
+
           <nav aria-label="Primary navigation">
             <ul className="space-y-3">
               {menuItems.map((item) => {
@@ -543,6 +633,64 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
             </ul>
           </nav>
         </aside>
+
+        {isUsernameModalOpen ? (
+          <div className="absolute inset-0 z-[1300] flex items-center justify-center bg-black/55 px-4">
+            <div className="w-full max-w-sm rounded-2xl border border-ht-border-soft bg-ht-surface p-4 shadow-ht-modal">
+              <div className="mb-3 flex items-center justify-between">
+                <h4 className="text-lg font-black text-ht-fg-primary">Change Username</h4>
+                <button
+                  type="button"
+                  onClick={() => setIsUsernameModalOpen(false)}
+                  className="rounded-md border border-ht-border-soft bg-ht-elevated px-2 py-1 text-xs font-semibold text-ht-fg-muted"
+                >
+                  Close
+                </button>
+              </div>
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-ht-fg-muted">
+                New Username
+              </label>
+              <input
+                type="text"
+                value={usernameDraft}
+                onChange={(event) => setUsernameDraft(event.target.value)}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                className="mb-3 w-full rounded-lg border border-ht-border-soft bg-ht-elevated px-3 py-2 text-sm text-ht-fg-primary outline-none focus:border-cyan-400/50"
+              />
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-ht-fg-muted">
+                Current PIN (for security)
+              </label>
+              <input
+                type="password"
+                inputMode="numeric"
+                maxLength={4}
+                value={currentPinDraft}
+                onChange={(event) => setCurrentPinDraft(event.target.value.replace(/\D/g, "").slice(0, 4))}
+                className="mb-3 w-full rounded-lg border border-ht-border-soft bg-ht-elevated px-3 py-2 text-sm text-ht-fg-primary outline-none focus:border-cyan-400/50"
+              />
+              {usernameUpdateError ? (
+                <p className="mb-2 rounded-lg border border-rose-400/50 bg-rose-900/30 px-2 py-1 text-xs text-rose-200">
+                  {usernameUpdateError}
+                </p>
+              ) : null}
+              {usernameUpdateMessage ? (
+                <p className="mb-2 rounded-lg border border-emerald-400/50 bg-emerald-900/30 px-2 py-1 text-xs text-emerald-200">
+                  {usernameUpdateMessage}
+                </p>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => void handleUsernameUpdate()}
+                disabled={isUpdatingUsername}
+                className="inline-flex min-h-[42px] w-full items-center justify-center rounded-xl bg-cyan-400 px-3 py-2 text-sm font-black text-slate-950 disabled:opacity-50"
+              >
+                {isUpdatingUsername ? "Updating..." : "Save Username"}
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

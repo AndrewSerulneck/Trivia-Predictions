@@ -3,6 +3,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { browserSupportsWebAuthn, startAuthentication, startRegistration, WebAuthnError } from "@simplewebauthn/browser";
 import { PageShell } from "@/components/ui/PageShell";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import {
@@ -40,11 +41,12 @@ import {
   type TriviaQuotaSnapshot,
 } from "@/lib/venueHomeBootstrap";
 import { writeBingoPrefetchCache } from "@/lib/bingoPrefetchCache";
-import type { Venue } from "@/types";
+import type { User, Venue } from "@/types";
 import { getVenueDisplayName, getVenueVisual as getVenueVisualFromConfig } from "@/lib/venueDisplay";
 import { APP_PAGE_NAMES } from "@/lib/pageNames";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
+import { normalizePin } from "@/lib/pin";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
 type JoinPanel = "venue-list" | "venue-login";
@@ -74,6 +76,36 @@ type FantasyBadgePayload = {
   }>;
 };
 
+type PasskeyAuthOptionsPayload = {
+  ok?: boolean;
+  error?: string;
+  reason?: string;
+  requiresPinFallback?: boolean;
+  challengeId?: string;
+  options?: Parameters<typeof startAuthentication>[0]["optionsJSON"];
+  user?: User;
+};
+
+type PasskeyAuthVerifyPayload = {
+  ok?: boolean;
+  error?: string;
+  user?: User;
+};
+
+type PasskeyRegisterOptionsPayload = {
+  ok?: boolean;
+  error?: string;
+  challengeId?: string;
+  options?: Parameters<typeof startRegistration>[0]["optionsJSON"];
+  user?: User;
+};
+
+type PasskeyRegisterVerifyPayload = {
+  ok?: boolean;
+  error?: string;
+  verified?: boolean;
+};
+
 function normalizeBooleanEnv(value: string | undefined, fallback = false): boolean {
   const normalized = String(value ?? "").trim().toLowerCase();
   if (!normalized) {
@@ -91,6 +123,7 @@ function normalizeBooleanEnv(value: string | undefined, fallback = false): boole
 }
 
 const DISABLE_GEOFENCE_FOR_TESTING = normalizeBooleanEnv(process.env.NEXT_PUBLIC_DISABLE_GEOFENCE, false);
+const INVALID_PIN_MESSAGE = "Enter a valid 4-digit PIN.";
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message) return error.message;
@@ -107,6 +140,40 @@ function isLocationPermissionDenied(error: unknown): boolean {
   }
   const maybeCode = (error as { code?: unknown }).code;
   return maybeCode === 1;
+}
+
+function isPasskeyUserCancel(error: unknown): boolean {
+  if (!error) return false;
+  if (error instanceof DOMException) {
+    return error.name === "NotAllowedError" || error.name === "AbortError";
+  }
+  if (error instanceof WebAuthnError) {
+    return error.code === "ERROR_CEREMONY_ABORTED";
+  }
+  if (typeof error === "object" && error && "name" in error) {
+    const name = String((error as { name?: unknown }).name ?? "");
+    return name === "NotAllowedError" || name === "AbortError";
+  }
+  return false;
+}
+
+function isPasskeyUnavailable(error: unknown): boolean {
+  if (!error) return false;
+  if (error instanceof DOMException) {
+    return error.name === "NotSupportedError" || error.name === "InvalidStateError";
+  }
+  if (error instanceof WebAuthnError) {
+    return (
+      error.code === "ERROR_INVALID_DOMAIN" ||
+      error.code === "ERROR_INVALID_RP_ID" ||
+      error.code === "ERROR_AUTHENTICATOR_GENERAL_ERROR"
+    );
+  }
+  if (typeof error === "object" && error && "name" in error) {
+    const name = String((error as { name?: unknown }).name ?? "");
+    return name === "NotSupportedError" || name === "InvalidStateError" || name === "SecurityError";
+  }
+  return false;
 }
 
 const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig(venue, index);
@@ -279,7 +346,7 @@ const UsernameStep = memo(function UsernameStep({
   const [value, setValue] = useState("");
 
   const handleNext = useCallback(() => {
-    if (!value.trim() || isAdvancingToPin) return;
+    if (isAdvancingToPin) return;
     onNext(value);
   }, [value, isAdvancingToPin, onNext]);
 
@@ -300,7 +367,7 @@ const UsernameStep = memo(function UsernameStep({
         </p>
         <h1 className="text-2xl font-black text-white">What&apos;s your username?</h1>
         <p className="mt-1 text-sm font-semibold text-ht-fg-muted">
-          If you&apos;ve never played before, make one up!
+          We&apos;ll try passkey first. If unavailable, you can use your 4-digit PIN.
         </p>
       </div>
 
@@ -368,9 +435,11 @@ type PinStepProps = {
   loadingPhrase: string;
   errorMessage: string;
   connectionRetryMessage: string;
+  pinFallbackMessage: string;
+  blockedReason: string;
   pinContainerRef: React.RefObject<HTMLDivElement | null>;
   onBack: () => void;
-  onSubmit: () => void;
+  onSubmit: (pinOverride?: string) => void;
   onAnimationComplete: () => void;
   onPinContainerClick: () => void;
 };
@@ -384,6 +453,8 @@ const PinStep = memo(function PinStep({
   loadingPhrase,
   errorMessage,
   connectionRetryMessage,
+  pinFallbackMessage,
+  blockedReason,
   pinContainerRef,
   onBack,
   onSubmit,
@@ -420,12 +491,14 @@ const PinStep = memo(function PinStep({
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
-            className={`h-5 w-5 rounded-full border-2 transition-all duration-150 ${
+            className={`flex h-11 w-11 items-center justify-center rounded-xl border-2 transition-all duration-150 ${
               i < pin.length
-                ? "scale-125 border-cyan-400 bg-cyan-400"
+                ? "border-cyan-300 bg-cyan-500/25"
                 : "border-slate-600 bg-transparent"
             }`}
-          />
+          >
+            <span className="text-xl font-black leading-none text-white">{pin[i] ?? ""}</span>
+          </div>
         ))}
       </div>
 
@@ -434,6 +507,10 @@ const PinStep = memo(function PinStep({
       ) : errorMessage ? (
         <div className="rounded-xl border border-rose-400/60 bg-rose-950/30 p-3 text-sm text-rose-200">
           {errorMessage}
+        </div>
+      ) : pinFallbackMessage ? (
+        <div className="rounded-xl border border-cyan-400/40 bg-cyan-950/30 p-3 text-sm text-cyan-200">
+          {pinFallbackMessage}
         </div>
       ) : connectionRetryMessage ? (
         <div className="rounded-xl border border-amber-400/40 bg-amber-950/30 p-3 text-sm text-amber-200">
@@ -453,13 +530,16 @@ const PinStep = memo(function PinStep({
         </button>
         <button
           type="button"
-          onClick={onSubmit}
+          onClick={() => onSubmit()}
           disabled={!canCreate || pin.length !== 4 || isAuthLoading}
           className="tp-clean-button inline-flex min-h-[44px] flex-1 items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
         >
           Enter ↵
         </button>
       </div>
+      {!isAuthLoading && !canCreate && !errorMessage && !connectionRetryMessage ? (
+        <p className="text-xs font-semibold text-amber-300">{blockedReason}</p>
+      ) : null}
     </motion.div>
   );
 });
@@ -488,8 +568,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [scanNotice, setScanNotice] = useState("");
   const [isOptimisticallyEntering, setIsOptimisticallyEntering] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
+  const [isPasskeyAttempting, setIsPasskeyAttempting] = useState(false);
   const [authLoginState, setAuthLoginState] = useState<AuthLoginState>("idle");
   const [connectionRetryMessage, setConnectionRetryMessage] = useState("");
+  const [pinFallbackMessage, setPinFallbackMessage] = useState("");
   const [pendingVenueSelectionId, setPendingVenueSelectionId] = useState<string | null>(null);
   const [loginStep, setLoginStep] = useState<"username" | "pin">("username");
   const [loginStepDirection, setLoginStepDirection] = useState<1 | -1>(1);
@@ -512,7 +594,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const shakeTimerRef = useRef<number | null>(null);
   const pinFocusTimerRef = useRef<number | null>(null);
   const pinSubmittingRef = useRef(false);
-  const createProfileRef = useRef<((pinOverride?: string) => Promise<void>) | null>(null);
+  const passkeyRegistrationPromptedRef = useRef(false);
   const hasSuccessfulInitialRenderRef = useRef(false);
 
   useEffect(() => {
@@ -842,6 +924,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setPendingVenueSelectionId(selectedVenue.id);
       setVenue(selectedVenue);
       setErrorMessage("");
+      setConnectionRetryMessage("");
+      setPinFallbackMessage("");
       setUsername("");
       setPin("");
       setIsTransitioning(false);
@@ -866,43 +950,173 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     setLoginStepDirection(1);
     setVenue(null);
     setErrorMessage("");
+    setConnectionRetryMessage("");
+    setPinFallbackMessage("");
     setPin("");
     setIsTransitioning(false);
     setIsOptimisticallyEntering(false);
     setPendingVenueSelectionId(null);
   }, []);
 
-  const handleGoToPinStep = useCallback((usernameValue: string) => {
-    if (isAdvancingToPin) {
-      return;
-    }
-    if (!validateUsername(usernameValue)) {
-      setErrorMessage("Please enter a valid username.");
-      return;
-    }
-    setUsername(usernameValue);
-    setErrorMessage("");
-    setPin("");
-    setIsAdvancingToPin(true);
-    setLoginStepDirection(1);
-    setLoginStep("pin");
-    setIsReturningUserForVenue(false);
-    pinInputRef.current?.focus();
-    if (venue && validateUsername(usernameValue)) {
-      void fetch(
-        `/api/join/profile?username=${encodeURIComponent(usernameValue.trim())}&venueId=${encodeURIComponent(venue.id)}`,
-        { cache: "no-store" }
-      )
-        .then((response) => response.json().catch(() => null))
-        .then((payload) => {
-          const isReturning = Boolean(payload?.ok && payload?.isReturningUser);
-          setIsReturningUserForVenue(isReturning);
-        })
-        .catch(() => {
-          setIsReturningUserForVenue(false);
+  const transitionToPinStep = useCallback(
+    (usernameValue: string, fallbackMessage = "") => {
+      if (!validateUsername(usernameValue)) {
+        setErrorMessage("Please enter a valid username.");
+        return;
+      }
+      const normalizedUsername = usernameValue.trim();
+      setUsername(normalizedUsername);
+      setErrorMessage("");
+      setConnectionRetryMessage("");
+      setPinFallbackMessage(fallbackMessage);
+      setPin("");
+      setIsAdvancingToPin(true);
+      setLoginStepDirection(1);
+      setLoginStep("pin");
+      setIsReturningUserForVenue(false);
+      pinInputRef.current?.focus();
+      if (venue) {
+        void fetch(
+          `/api/join/profile?username=${encodeURIComponent(normalizedUsername)}&venueId=${encodeURIComponent(venue.id)}`,
+          { cache: "no-store" }
+        )
+          .then((response) => response.json().catch(() => null))
+          .then((payload) => {
+            const isReturning = Boolean(payload?.ok && payload?.isReturningUser);
+            setIsReturningUserForVenue(isReturning);
+          })
+          .catch(() => {
+            setIsReturningUserForVenue(false);
+          });
+      }
+    },
+    [venue]
+  );
+
+  const handleGoToPinStep = useCallback(
+    async (usernameValue: string) => {
+      if (isAdvancingToPin || isPasskeyAttempting) {
+        return;
+      }
+      if (!validateUsername(usernameValue)) {
+        setErrorMessage("Please enter a valid username.");
+        return;
+      }
+      if (!venue) {
+        setErrorMessage("Please select a venue first.");
+        return;
+      }
+
+      const normalizedUsername = usernameValue.trim();
+      setUsername(normalizedUsername);
+      setErrorMessage("");
+      setConnectionRetryMessage("");
+      setPinFallbackMessage("");
+      setIsPasskeyAttempting(true);
+      setIsAdvancingToPin(true);
+
+      const fallbackToPin = (message: string) => {
+        transitionToPinStep(normalizedUsername, message);
+      };
+
+      try {
+        if (!browserSupportsWebAuthn()) {
+          fallbackToPin("Passkey is unavailable on this browser. Use your PIN to continue.");
+          return;
+        }
+
+        const optionsResponse = await fetch("/api/auth/passkey/authenticate/options", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: normalizedUsername,
+            venueId: venue.id,
+          }),
         });
-    }
-  }, [isAdvancingToPin, venue]);
+
+        const optionsPayload = (await optionsResponse.json().catch(() => null)) as PasskeyAuthOptionsPayload | null;
+        if (!optionsResponse.ok || !optionsPayload?.ok) {
+          fallbackToPin("Passkey sign-in wasn't available. Use your PIN to continue.");
+          return;
+        }
+
+        if (optionsPayload.requiresPinFallback || !optionsPayload.options || !optionsPayload.challengeId) {
+          fallbackToPin("No passkey found on this device. Use your PIN to continue.");
+          return;
+        }
+
+        const assertionResponse = await startAuthentication({
+          optionsJSON: optionsPayload.options,
+        });
+
+        const verifyResponse = await fetch("/api/auth/passkey/authenticate/verify", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            challengeId: optionsPayload.challengeId,
+            response: assertionResponse,
+            venueId: venue.id,
+          }),
+        });
+
+        const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyAuthVerifyPayload | null;
+        if (!verifyResponse.ok || !verifyPayload?.ok || !verifyPayload.user?.id) {
+          fallbackToPin("Passkey verification failed. Use your PIN to continue.");
+          return;
+        }
+
+        if (!DISABLE_GEOFENCE_FOR_TESTING && !locationVerified) {
+          setErrorMessage("Verify your location before entering the venue.");
+          fallbackToPin("");
+          return;
+        }
+
+        hardClearAuthAndCachePreserveVenue(venue.id);
+        saveVenueId(venue.id);
+        saveUsername(verifyPayload.user.username);
+        saveUserId(verifyPayload.user.id);
+        setSelectedVenueLock(venue.id);
+        setLoginInProgress(venue.id);
+        refreshAuthSession();
+        setVenueHomeRouteIntent({ venueId: venue.id });
+        setVenueHomeEntryHandoff({ venueId: venue.id, userId: verifyPayload.user.id });
+        setAuthLoginState("navigating");
+        setStatus("saving");
+        setIsTransitioning(true);
+        setIsOptimisticallyEntering(true);
+        const hardTarget = `/venue/${encodeURIComponent(venue.id)}?entryUser=${encodeURIComponent(
+          verifyPayload.user.id
+        )}&entryVenue=${encodeURIComponent(venue.id)}&entryAt=${Date.now()}`;
+        void signInAnonymously().catch(() => {});
+        window.location.assign(hardTarget);
+      } catch (error) {
+        if (isPasskeyUserCancel(error)) {
+          fallbackToPin("Passkey prompt canceled. Use your PIN to continue.");
+          return;
+        }
+        if (isPasskeyUnavailable(error)) {
+          fallbackToPin("Passkey is unavailable on this device right now. Use your PIN to continue.");
+          return;
+        }
+        fallbackToPin("Passkey sign-in failed. Use your PIN to continue.");
+      } finally {
+        setIsPasskeyAttempting(false);
+        setIsAdvancingToPin(false);
+      }
+    },
+    [
+      isAdvancingToPin,
+      isPasskeyAttempting,
+      venue,
+      transitionToPinStep,
+      locationVerified,
+      refreshAuthSession,
+    ]
+  );
 
   const handlePinAnimationComplete = useCallback(() => {
     setIsAdvancingToPin(false);
@@ -911,6 +1125,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const handlePinContainerClick = useCallback(() => {
     pinInputRef.current?.focus();
   }, []);
+
+  const getCurrentPinCandidate = useCallback(() => {
+    const liveValue = pinInputRef.current?.value ?? pin;
+    return normalizePin(String(liveValue ?? ""));
+  }, [pin]);
 
   const handleBackFromPin = useCallback(() => {
     if (pinFocusTimerRef.current) {
@@ -923,23 +1142,20 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     setPin("");
     setIsReturningUserForVenue(false);
     setErrorMessage("");
+    setConnectionRetryMessage("");
+    setPinFallbackMessage("");
   }, []);
-
-  const handlePinDigit = useCallback((value: string) => {
-    const cleaned = value.replace(/\D/g, "").slice(0, 4);
-    setPin(cleaned);
-  }, []);
-
   const handleSubmitPinStep = useCallback(
     (pinOverride?: string) => {
-      const candidatePin = String(pinOverride ?? pin).replace(/\D/g, "").slice(0, 4);
+      const override = typeof pinOverride === "string" ? pinOverride : undefined;
+      const candidatePin = normalizePin(String(override ?? getCurrentPinCandidate()));
       logAuthIncident("join-flow", "pin-submit-attempt", {
         venueId: venue?.id ?? null,
         loginStep,
         pinLength: candidatePin.length,
         alreadySubmitting: pinSubmittingRef.current,
       });
-      if (loginStep !== "pin" || !validatePin(candidatePin) || pinSubmittingRef.current) {
+      if (loginStep !== "pin" || pinSubmittingRef.current) {
         logAuthIncident("join-flow", "pin-submit-blocked", {
           venueId: venue?.id ?? null,
           loginStep,
@@ -948,19 +1164,27 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         });
         return;
       }
+      if (!validatePin(candidatePin)) {
+        setConnectionRetryMessage("");
+        setPinFallbackMessage("");
+        setErrorMessage(INVALID_PIN_MESSAGE);
+        setIsPinShaking(true);
+        return;
+      }
+      setErrorMessage("");
       pinSubmittingRef.current = true;
       logAuthIncident("join-flow", "pin-submit-dispatched", {
         venueId: venue?.id ?? null,
         pinLength: candidatePin.length,
       });
-      void createProfileRef.current?.(candidatePin).finally(() => {
+      void createProfile(candidatePin).finally(() => {
         pinSubmittingRef.current = false;
         logAuthIncident("join-flow", "pin-submit-finished", {
           venueId: venue?.id ?? null,
         });
       });
     },
-    [loginStep, pin, venue?.id]
+    [getCurrentPinCandidate, loginStep, venue?.id, createProfile]
   );
 
   useEffect(() => {
@@ -970,17 +1194,36 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     handleSubmitPinStep(pin);
   }, [handleSubmitPinStep, isReturningUserForVenue, loginStep, pin]);
 
+  useEffect(() => {
+    if (loginStep !== "pin") return;
+    if (pin.length === 4 && errorMessage === INVALID_PIN_MESSAGE) {
+      setErrorMessage("");
+    }
+  }, [errorMessage, loginStep, pin]);
+
   const canCreate = useMemo(() => {
+    const locationOk = DISABLE_GEOFENCE_FOR_TESTING ? true : locationVerified;
     return Boolean(
       isSupabaseConfigured &&
         venue &&
         validateUsername(username) &&
         validatePin(pin) &&
-        locationVerified &&
+        locationOk &&
         !locationLoading &&
         !isTransitioning
     );
   }, [isTransitioning, locationLoading, locationVerified, venue, username, pin]);
+
+  const blockedReason = useMemo(() => {
+    if (!isSupabaseConfigured) return "Login is temporarily unavailable. Please try again shortly.";
+    if (!venue) return "Select a venue to continue.";
+    if (!validateUsername(username)) return "Enter a username to continue.";
+  if (!validatePin(pin)) return INVALID_PIN_MESSAGE;
+    if (!DISABLE_GEOFENCE_FOR_TESTING && locationLoading) return "Verifying your location...";
+    if (!DISABLE_GEOFENCE_FOR_TESTING && !locationVerified) return "Location verification is required to enter.";
+    if (isTransitioning) return "Finishing your login...";
+    return "";
+  }, [isTransitioning, locationLoading, locationVerified, pin, username, venue]);
 
   const openAdminDashboard = useCallback(() => {
     if (typeof window !== "undefined") {
@@ -1187,8 +1430,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     };
   }, []);
 
-  useEffect(() => { createProfileRef.current = createProfile; });
-
   const preloadVenueHome = useCallback(
     async (selectedVenue: Venue, userId: string) => {
       const venueId = selectedVenue.id;
@@ -1269,19 +1510,81 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     []
   );
 
-  const createProfile = async (pinOverride?: string) => {
-    const effectivePin = pinOverride ?? pin;
+  const promptPasskeyEnrollmentAfterPin = useCallback(
+    async (user: User) => {
+      if (!venue || passkeyRegistrationPromptedRef.current) {
+        return;
+      }
+      if (!browserSupportsWebAuthn()) {
+        return;
+      }
+
+      passkeyRegistrationPromptedRef.current = true;
+      const shouldRegister = window.confirm(
+        "Enable Face ID / Touch ID (or device PIN) for faster login next time?"
+      );
+      if (!shouldRegister) {
+        return;
+      }
+
+      try {
+        const optionsResponse = await fetch("/api/auth/passkey/register/options", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: user.id,
+            venueId: venue.id,
+            username: user.username,
+          }),
+        });
+        const optionsPayload = (await optionsResponse.json().catch(() => null)) as PasskeyRegisterOptionsPayload | null;
+        if (!optionsResponse.ok || !optionsPayload?.ok || !optionsPayload.options || !optionsPayload.challengeId) {
+          return;
+        }
+
+        const registrationResponse = await startRegistration({
+          optionsJSON: optionsPayload.options,
+        });
+
+        const verifyResponse = await fetch("/api/auth/passkey/register/verify", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            challengeId: optionsPayload.challengeId,
+            response: registrationResponse,
+            userId: user.id,
+            venueId: venue.id,
+          }),
+        });
+        const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyRegisterVerifyPayload | null;
+        if (!verifyResponse.ok || !verifyPayload?.ok) {
+          return;
+        }
+      } catch {
+        // Best effort only: PIN auth is already successful, so we never block navigation.
+      }
+    },
+    [venue]
+  );
+
+  async function createProfile(pinOverride?: string) {
+    const effectivePin = normalizePin(String(pinOverride ?? getCurrentPinCandidate()));
     if (!venue) return;
     const submitStartedAt = Date.now();
     setErrorMessage("");
     setConnectionRetryMessage("");
+    setPinFallbackMessage("");
     setLoadingPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
     if (!validateUsername(username)) {
       setErrorMessage("Username is required.");
       return;
     }
     if (!validatePin(effectivePin)) {
-      setErrorMessage("PIN must be exactly 4 digits.");
+      setErrorMessage(INVALID_PIN_MESSAGE);
       return;
     }
     if (!DISABLE_GEOFENCE_FOR_TESTING && !locationVerified) {
@@ -1369,6 +1672,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         throw new Error("Session venue mismatch detected. Please try again.");
       }
 
+      await promptPasskeyEnrollmentAfterPin(user);
+
       hardClearAuthAndCachePreserveVenue(venue.id);
       saveVenueId(venue.id);
       saveUsername(user.username);
@@ -1410,7 +1715,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
       }
       setAuthLoginState("error");
-      const message = getErrorMessage(error, "Failed to create profile.");
+      let message = getErrorMessage(error, "Failed to create profile.");
+      if (message === "PIN must be exactly 4 digits.") {
+        message = INVALID_PIN_MESSAGE;
+      }
+      if (message === "Incorrect PIN.") {
+        setIsPinShaking(true);
+        setPin("");
+        setConnectionRetryMessage("");
+        setPinFallbackMessage("");
+      }
       logAuthIncident("join-flow", "create-profile-error", {
         traceId,
         attemptId,
@@ -1485,10 +1799,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                           {getVenueDisplayName(venue)}
                         </p>
 
-                        {/* Hidden PIN input — always mounted so iOS numeric keypad can be focused synchronously from within the user-gesture stack */}
+                        {/* Keep input mounted for reliable mobile keypad behavior, but visually hide it. */}
                         <input
                           ref={pinInputRef}
-                          type="tel"
+                          type="text"
                           inputMode="numeric"
                           enterKeyHint="go"
                           pattern="[0-9]*"
@@ -1497,16 +1811,30 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                           autoComplete="one-time-code"
                           onChange={(e) => {
                             if (loginStep !== "pin") return;
-                            setPin(e.target.value.replace(/\D/g, "").slice(0, 4));
+                            setPin(normalizePin(e.target.value));
                           }}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               e.preventDefault();
                               handleSubmitPinStep();
+                              return;
                             }
+                            if (normalizePin(e.key).length === 1 && pin.length >= 4) {
+                              e.preventDefault();
+                              return;
+                            }
+                          }}
+                          onPaste={(e) => {
+                            if (loginStep !== "pin") return;
+                            const pasted = normalizePin(e.clipboardData.getData("text"));
+                            if (pasted) {
+                              setPin(pasted);
+                            }
+                            e.preventDefault();
                           }}
                           className="absolute h-px w-px overflow-hidden opacity-0"
                           aria-label="4-digit PIN"
+                          placeholder="Enter 4-digit PIN"
                         />
 
                         <AnimatePresence custom={loginStepDirection} mode="wait">
@@ -1532,6 +1860,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                               loadingPhrase={loadingPhrase}
                               errorMessage={errorMessage}
                               connectionRetryMessage={connectionRetryMessage}
+                              pinFallbackMessage={pinFallbackMessage}
+                              blockedReason={blockedReason}
                               pinContainerRef={pinContainerRef}
                               onBack={handleBackFromPin}
                               onSubmit={handleSubmitPinStep}

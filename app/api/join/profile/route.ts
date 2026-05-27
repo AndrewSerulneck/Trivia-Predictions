@@ -3,6 +3,7 @@ import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { DEFAULT_VENUE_BY_ID } from "@/lib/defaultVenues";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
+import { normalizePin as normalizeCanonicalPin } from "@/lib/pin";
 
 type CreateProfileBody = {
   username?: string;
@@ -16,6 +17,7 @@ type UserRow = {
   id: string;
   auth_id: string | null;
   username: string;
+  username_normalized?: string | null;
   venue_id: string;
   points: number;
   pin_salt?: string | null;
@@ -29,7 +31,11 @@ type DbError = {
 };
 
 function normalizePin(pin: string): string {
-  return pin.trim();
+  return normalizeCanonicalPin(pin);
+}
+
+function normalizeUsernameForLookup(username: string): string {
+  return username.trim().toLowerCase();
 }
 
 function hashPin(pin: string, salt: string): string {
@@ -68,6 +74,7 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => ({}))) as CreateProfileBody;
   const username = (body.username ?? "").trim();
+  const usernameNormalized = normalizeUsernameForLookup(username);
   const venueId = (body.venueId ?? "").trim();
   const selectedVenueFromBody = (body.selectedVenueId ?? "").trim();
   const selectedVenueFromHeader = (request.headers.get("x-selected-venue-id") ?? "").trim();
@@ -137,8 +144,8 @@ export async function POST(request: Request) {
   let existingByUsername: UserRow[] | null = null;
   const withPinColumns = await supabaseAdmin
     .from("users")
-    .select("id, auth_id, username, venue_id, points, pin_salt, pin_hash, created_at")
-    .eq("username", username)
+    .select("id, auth_id, username, username_normalized, venue_id, points, pin_salt, pin_hash, created_at")
+    .eq("username_normalized", usernameNormalized)
     .eq("venue_id", venueId)
     .limit(1);
   if (withPinColumns.error) {
@@ -149,13 +156,14 @@ export async function POST(request: Request) {
     const fallbackQuery = await supabaseAdmin
       .from("users")
       .select("id, auth_id, username, venue_id, points, created_at")
-      .eq("username", username)
       .eq("venue_id", venueId)
-      .limit(1);
+      .limit(200);
     if (fallbackQuery.error) {
       return NextResponse.json({ ok: false, error: fallbackQuery.error.message }, { status: 500 });
     }
-    existingByUsername = (fallbackQuery.data ?? []) as UserRow[];
+    existingByUsername = ((fallbackQuery.data ?? []) as UserRow[]).filter(
+      (row) => normalizeUsernameForLookup(row.username) === usernameNormalized
+    );
   } else {
     existingByUsername = (withPinColumns.data ?? []) as UserRow[];
   }
@@ -311,8 +319,8 @@ export async function GET(request: Request) {
 
   const query = await supabaseAdmin
     .from("users")
-    .select("id, pin_salt, pin_hash")
-    .eq("username", username)
+    .select("id, username, pin_salt, pin_hash")
+    .eq("username_normalized", normalizeUsernameForLookup(username))
     .eq("venue_id", venueId)
     .limit(1);
 
@@ -320,14 +328,15 @@ export async function GET(request: Request) {
     if (isMissingPinColumnError(query.error)) {
       const fallback = await supabaseAdmin
         .from("users")
-        .select("id")
-        .eq("username", username)
+        .select("id, username")
         .eq("venue_id", venueId)
-        .limit(1);
+        .limit(200);
       if (fallback.error) {
         return NextResponse.json({ ok: false, error: fallback.error.message }, { status: 500 });
       }
-      const exists = Boolean((fallback.data ?? [])[0]);
+      const exists = ((fallback.data ?? []) as Array<{ id?: string; username?: string | null }>).some(
+        (row) => normalizeUsernameForLookup(String(row.username ?? "")) === normalizeUsernameForLookup(username)
+      );
       return NextResponse.json({ ok: true, exists, hasPin: false, isReturningUser: false });
     }
     return NextResponse.json({ ok: false, error: query.error.message }, { status: 500 });

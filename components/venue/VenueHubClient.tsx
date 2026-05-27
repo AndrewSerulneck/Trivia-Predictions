@@ -1050,7 +1050,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     liveTriviaRequestRef.current = controller;
     const signal = controller.signal;
     try {
-      const venueId = String(getVenueId() ?? "").trim();
+      // Prefer the stored venue ID (respects cross-venue sessions), but fall back to
+      // the prop venue ID so the countdown is always populated for this venue's page
+      // even before the user completes the login / join flow.
+      const storedVenueId = String(getVenueId() ?? "").trim();
+      const venueId = storedVenueId || venue.id;
       const query = venueId ? `?venueId=${encodeURIComponent(venueId)}` : "";
       const payload = await fetchJsonWithTimeout<{
         ok?: boolean;
@@ -1096,7 +1100,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         liveTriviaRequestRef.current = null;
       }
     }
-  }, []);
+  }, [venue.id]);
 
   const runWarmup = useCallback(async () => {
     if (warmupPromiseRef.current) return warmupPromiseRef.current;
@@ -1325,10 +1329,15 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     const onPointsUpdated = () => {
       void loadMenuSummary();
     };
+    const onAuthStateChanged = () => {
+      void loadMenuSummary();
+    };
     window.addEventListener("tp:points-updated", onPointsUpdated);
+    window.addEventListener("tp:auth-state-changed", onAuthStateChanged as EventListener);
     return () => {
       window.clearInterval(interval);
       window.removeEventListener("tp:points-updated", onPointsUpdated);
+      window.removeEventListener("tp:auth-state-changed", onAuthStateChanged as EventListener);
     };
   }, [loadMenuSummary]);
 

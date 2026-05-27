@@ -51,6 +51,7 @@ import {
   forceAdvanceLiveShowdownToNextQuestion,
   listAdminLiveShowdownSchedules,
   resetLiveShowdownAnswersForSchedule,
+  updateAdminLiveShowdownSchedule,
 } from "@/lib/liveShowdownAdmin";
 
 export async function GET(request: Request) {
@@ -918,6 +919,20 @@ export async function PATCH(request: Request) {
           ids: string[];
           questionPool?: "anytime_blitz" | "live_showdown";
           answerFormat?: "multiple_choice" | "write_in" | "numeric" | "true_false";
+        }
+      | {
+          resource: "live-showdown-schedules";
+          id: string;
+          title: string;
+          targetDate: string;
+          startTime: string;
+          timezone: string;
+          recurringType?: CampaignRecurringType;
+          recurringDays?: string[];
+          numRounds: number;
+          venueId: string;
+          intermissionAdDelaySeconds?: number;
+          lobbyAdEnabled?: boolean;
         };
 
     if (body.resource === "trivia") {
@@ -1093,6 +1108,23 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ ok: true, updated });
       }
       return NextResponse.json({ ok: false, error: "Invalid bulk ads action." }, { status: 400 });
+    }
+
+    if (body.resource === "live-showdown-schedules") {
+      const item = await updateAdminLiveShowdownSchedule({
+        id: body.id,
+        title: body.title,
+        targetDate: body.targetDate,
+        startTime: body.startTime,
+        timezone: body.timezone,
+        recurringType: body.recurringType,
+        recurringDays: body.recurringDays,
+        numRounds: body.numRounds,
+        venueId: body.venueId,
+        intermissionAdDelaySeconds: body.intermissionAdDelaySeconds,
+        lobbyAdEnabled: body.lobbyAdEnabled,
+      });
+      return NextResponse.json({ ok: true, item });
     }
 
     return NextResponse.json({ ok: false, error: "Unknown resource." }, { status: 400 });

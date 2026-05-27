@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
+    "auth:smoke": "node scripts/auth-smoke.cjs",
     "trivia:generate": "node --env-file=.env.local scripts/generate-trivia-questions.cjs",
     "trivia:generate:nightly": "node --env-file=.env.local scripts/generate-trivia-nightly.cjs --total 100",
     "trivia:check": "node scripts/import-trivia-questions.cjs --dir data/trivia/categories --live-dir data/live-trivia/categories --check",
@@ -34,6 +35,8 @@
   },
   "homepage": "https://github.com/AndrewSerulneck/Hightop-Challenge#readme",
   "dependencies": {
+    "@simplewebauthn/browser": "^13.3.0",
+    "@simplewebauthn/server": "^13.3.1",
     "@supabase/supabase-js": "^2.95.3",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.38.0",

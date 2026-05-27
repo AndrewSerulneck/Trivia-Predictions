@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
+import { isValidPin, normalizePin } from "@/lib/pin";
 import type { User } from "@/types";
 
 type UserProfileRow = {
@@ -42,7 +43,7 @@ export function validateUsername(username: string): boolean {
 }
 
 export function validatePin(pin: string): boolean {
-  return /^\d{4}$/.test(pin.trim());
+  return isValidPin(pin);
 }
 
 async function getCurrentAuthUserId(traceId?: string): Promise<string | null> {
@@ -135,7 +136,7 @@ export async function createUserProfile(params: {
   }
 
   const username = params.username.trim();
-  const pin = params.pin.trim();
+  const pin = normalizePin(params.pin);
   if (!validateUsername(username)) {
     throw new Error("Username is required.");
   }

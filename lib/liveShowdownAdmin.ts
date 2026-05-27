@@ -533,6 +533,155 @@ export async function resetLiveShowdownAnswersForSchedule(scheduleIdRaw: string)
   return { deleted: Array.isArray(data) ? data.length : 0 };
 }
 
+export async function updateAdminLiveShowdownSchedule(params: {
+  id: string;
+  title: string;
+  targetDate: string;
+  startTime: string;
+  timezone: string;
+  recurringType?: "none" | "daily" | "weekly" | "monthly" | "yearly";
+  recurringDays?: string[];
+  numRounds: number;
+  venueId: string;
+  intermissionAdDelaySeconds?: number;
+  lobbyAdEnabled?: boolean;
+}): Promise<AdminLiveShowdownSchedule> {
+  const admin = getAdminClient();
+
+  const scheduleId = String(params.id ?? "").trim();
+  const title = String(params.title ?? "").trim();
+  const targetDate = String(params.targetDate ?? "").trim();
+  const startTime = String(params.startTime ?? "").trim();
+  const timezone = String(params.timezone ?? "America/New_York").trim() || "America/New_York";
+  const recurringType =
+    params.recurringType === "daily" ||
+    params.recurringType === "weekly" ||
+    params.recurringType === "monthly" ||
+    params.recurringType === "yearly"
+      ? params.recurringType
+      : "none";
+  const recurringDays = normalizeRecurringDays(params.recurringDays);
+  const venueId = String(params.venueId ?? "").trim();
+  const numRounds = clampRounds(Number(params.numRounds));
+  const intermissionAdDelaySeconds = Math.max(
+    0,
+    Math.min(300, Math.floor(Number(params.intermissionAdDelaySeconds ?? 10)))
+  );
+  const lobbyAdEnabled = params.lobbyAdEnabled !== false;
+
+  if (!scheduleId) throw new Error("id is required.");
+  if (!title || !targetDate || !startTime || !venueId) {
+    throw new Error("title, targetDate, startTime, timezone, numRounds, and venueId are required.");
+  }
+  if (recurringType === "weekly" && recurringDays.length === 0) {
+    throw new Error("Weekly recurring schedules require at least one recurring day.");
+  }
+
+  const startTimeIso = zonedDateTimeToUtcIso(targetDate, startTime, timezone);
+
+  // Fetch the existing schedule to check if numRounds changed
+  const { data: existing, error: fetchError } = await admin
+    .from("trivia_schedules")
+    .select("num_rounds")
+    .eq("id", scheduleId)
+    .maybeSingle<{ num_rounds: number }>();
+
+  if (fetchError) {
+    throw new Error(fetchError.message || "Failed to fetch existing schedule.");
+  }
+
+  const oldNumRounds = clampRounds(Number(existing?.num_rounds ?? 1));
+  const roundsChanged = oldNumRounds !== numRounds;
+
+  // If rounds changed, rebuild the question matrix
+  if (roundsChanged) {
+    const newQuestionSlugs = await buildLiveShowdownQuestionMatrix(numRounds);
+
+    // Delete existing session questions
+    const { error: deleteQuestionsError } = await admin
+      .from("trivia_session_questions")
+      .delete()
+      .eq("schedule_id", scheduleId);
+
+    if (deleteQuestionsError) {
+      throw new Error(deleteQuestionsError.message || "Failed to remove old session questions.");
+    }
+
+    // Insert new session questions
+    const sessionRows: Array<{
+      schedule_id: string;
+      question_id: string;
+      round_number: number;
+      question_index: number;
+    }> = [];
+    let cursor = 0;
+    for (let round = 1; round <= numRounds; round += 1) {
+      for (let questionIndex = 1; questionIndex <= QUESTIONS_PER_ROUND; questionIndex += 1) {
+        sessionRows.push({
+          schedule_id: scheduleId,
+          question_id: newQuestionSlugs[cursor]!,
+          round_number: round,
+          question_index: questionIndex,
+        });
+        cursor += 1;
+      }
+    }
+    const { error: insertQuestionsError } = await admin
+      .from("trivia_session_questions")
+      .insert(sessionRows);
+
+    if (insertQuestionsError) {
+      throw new Error(insertQuestionsError.message || "Failed to seed new session questions.");
+    }
+  }
+
+  // Update the schedule row
+  const updateResult = await admin
+    .from("trivia_schedules")
+    .update({
+      title,
+      start_time: startTimeIso,
+      timezone,
+      recurring_type: recurringType,
+      recurring_days: recurringDays,
+      num_rounds: numRounds,
+      venue_id: venueId,
+      intermission_ad_delay_seconds: intermissionAdDelaySeconds,
+      lobby_ad_enabled: lobbyAdEnabled,
+    })
+    .eq("id", scheduleId)
+    .select("id, title, start_time, timezone, recurring_type, recurring_days, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled, created_at, updated_at")
+    .single();
+
+  if (updateResult.error && isMissingRecurringColumnError(updateResult.error.message)) {
+    const legacyUpdate = await admin
+      .from("trivia_schedules")
+      .update({
+        title,
+        start_time: startTimeIso,
+        timezone,
+        num_rounds: numRounds,
+        venue_id: venueId,
+        intermission_ad_delay_seconds: intermissionAdDelaySeconds,
+        lobby_ad_enabled: lobbyAdEnabled,
+      })
+      .eq("id", scheduleId)
+      .select("id, title, start_time, timezone, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled, created_at, updated_at")
+      .single();
+
+    if (legacyUpdate.error || !legacyUpdate.data) {
+      throw new Error(legacyUpdate.error?.message || "Failed to update Live Showdown schedule.");
+    }
+    return mapScheduleRow({ ...(legacyUpdate.data as TriviaScheduleRowLegacy), recurring_type: "none", recurring_days: null });
+  }
+
+  if (updateResult.error || !updateResult.data) {
+    throw new Error(updateResult.error?.message || "Failed to update Live Showdown schedule.");
+  }
+
+  return mapScheduleRow(updateResult.data as TriviaScheduleRow);
+}
+
 export async function deleteAdminLiveShowdownSchedule(scheduleIdRaw: string): Promise<{ deleted: boolean }> {
   const admin = getAdminClient();
   const scheduleId = String(scheduleIdRaw ?? "").trim();

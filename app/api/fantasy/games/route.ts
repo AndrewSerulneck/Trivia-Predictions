@@ -4,6 +4,7 @@ import type { FantasyLeaderboardEntry, FantasyPlayerPoolItem } from "@/lib/fanta
 
 const FANTASY_DAILY_GAME_ID_PREFIX = "nba-daily-";
 const FANTASY_WNBA_DAILY_GAME_ID_PREFIX = "wnba-daily-";
+const FANTASY_MLB_DAILY_GAME_ID_PREFIX = "mlb-daily-";
 const FANTASY_ALLOW_STARTED_DRAFTING_FOR_TESTING =
   String(process.env.FANTASY_ALLOW_STARTED_DRAFTING_FOR_TESTING ?? "")
     .trim()
@@ -19,7 +20,22 @@ function parseDailyGameDateFromId(gameId: string): string | null {
     const rawDate = trimmed.slice(FANTASY_WNBA_DAILY_GAME_ID_PREFIX.length).trim();
     return /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null;
   }
+  if (trimmed.startsWith(FANTASY_MLB_DAILY_GAME_ID_PREFIX)) {
+    const rawDate = trimmed.slice(FANTASY_MLB_DAILY_GAME_ID_PREFIX.length).trim();
+    return /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null;
+  }
   return null;
+}
+
+function resolveDailyGameIdForSport(todayDate: string, sportKey: string | undefined): string {
+  const normalizedSportKey = String(sportKey ?? "").trim().toLowerCase();
+  if (normalizedSportKey.includes("wnba")) {
+    return `${FANTASY_WNBA_DAILY_GAME_ID_PREFIX}${todayDate}`;
+  }
+  if (normalizedSportKey.includes("mlb") || normalizedSportKey.includes("baseball")) {
+    return `${FANTASY_MLB_DAILY_GAME_ID_PREFIX}${todayDate}`;
+  }
+  return `${FANTASY_DAILY_GAME_ID_PREFIX}${todayDate}`;
 }
 
 function normalizePositiveInt(value: string | null, fallback: number): number {
@@ -92,6 +108,7 @@ export async function GET(request: Request) {
 
     const dailyGameId = `${FANTASY_DAILY_GAME_ID_PREFIX}${todayDate}`;
     const wnbaDailyGameId = `${FANTASY_WNBA_DAILY_GAME_ID_PREFIX}${todayDate}`;
+    const mlbDailyGameId = `${FANTASY_MLB_DAILY_GAME_ID_PREFIX}${todayDate}`;
 
     let playerPool: FantasyPlayerPoolItem[] = [];
     if (gameId) {
@@ -108,12 +125,12 @@ export async function GET(request: Request) {
     }
 
     let leaderboard: FantasyLeaderboardEntry[] = [];
-    const leaderboardGameId = gameId || dailyGameId;
+    const leaderboardGameId = gameId || resolveDailyGameIdForSport(todayDate, sportKey);
     if (venueId && leaderboardGameId) {
       leaderboard = await listFantasyLeaderboard({ venueId, gameId: leaderboardGameId, limit: 30 });
     }
 
-    return NextResponse.json({ ok: true, games, playerPool, leaderboard, dailyGameId, wnbaDailyGameId });
+    return NextResponse.json({ ok: true, games, playerPool, leaderboard, dailyGameId, wnbaDailyGameId, mlbDailyGameId });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load fantasy games.";
     return NextResponse.json({ ok: false, error: message }, { status: toClientErrorStatus(message) });

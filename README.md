@@ -87,6 +87,8 @@ You get both from your Supabase project dashboard:
 `Project Settings -> API`.
 
 ## Database Setup (Supabase)
+Agent note: For any Supabase schema/policy/grant change, first review `supabase/SECURE_TABLE_MIGRATION_CHECKLIST.md` and apply that pattern in migrations.
+
 1. In Supabase SQL Editor, run:
    - `supabase/migrations/20260214153000_initial_schema.sql`
 2. Then run:
