@@ -142,6 +142,7 @@ const DISABLE_GEOFENCE_FOR_TESTING = normalizeBooleanEnv(process.env.NEXT_PUBLIC
 const INVALID_PIN_MESSAGE = "Enter a valid 4-digit PIN.";
 const NO_LOCAL_PASSKEY_MESSAGE =
   "We're sorry, we don't have a passkey saved for your device! Please log in using your username and PIN, or create a new account.";
+const LOCAL_PASSKEY_USERNAMES_STORAGE_KEY = "tp_local_passkey_usernames";
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message) return error.message;
@@ -212,6 +213,36 @@ function isSilentPasskeyFallbackCode(code: string | undefined): boolean {
 }
 
 const PASSKEY_ENROLLMENT_STORAGE_KEY = "tp_passkey_enrolled";
+
+function readLocalPasskeyUsernameSet(): Set<string> {
+  try {
+    const raw = localStorage.getItem(LOCAL_PASSKEY_USERNAMES_STORAGE_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.map((entry) => String(entry ?? "").trim().toLowerCase()).filter(Boolean));
+  } catch {
+    return new Set();
+  }
+}
+
+function hasLocalPasskeyForUsername(username: string): boolean {
+  const normalized = String(username ?? "").trim().toLowerCase();
+  if (!normalized) return false;
+  return readLocalPasskeyUsernameSet().has(normalized);
+}
+
+function rememberLocalPasskeyForUsername(username: string): void {
+  const normalized = String(username ?? "").trim().toLowerCase();
+  if (!normalized) return;
+  const next = readLocalPasskeyUsernameSet();
+  next.add(normalized);
+  try {
+    localStorage.setItem(LOCAL_PASSKEY_USERNAMES_STORAGE_KEY, JSON.stringify(Array.from(next)));
+  } catch {
+    // Ignore storage failures.
+  }
+}
 
 const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig(venue, index);
 
@@ -661,13 +692,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [passkeyAuthError, setPasskeyAuthError] = useState("");
   const [isEnrollmentLoading, setIsEnrollmentLoading] = useState(false);
   const [enrollmentError, setEnrollmentError] = useState("");
-  const [accountPasskeyState, setAccountPasskeyState] = useState<"idle" | "loading" | "ready" | "unavailable">("idle");
   const [isAccountPasskeyLoading, setIsAccountPasskeyLoading] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [isPasskeyAttempting, setIsPasskeyAttempting] = useState(false);
-  // Discoverable-passkey button: "idle" → "loading" (prefetch) → "ready" | "unavailable"
-  const [discoverablePasskeyState, setDiscoverablePasskeyState] = useState<"idle" | "loading" | "ready" | "unavailable">("idle");
-  const [isDiscoverablePasskeyLoading, setIsDiscoverablePasskeyLoading] = useState(false);
   const [authLoginState, setAuthLoginState] = useState<AuthLoginState>("idle");
   const [connectionRetryMessage, setConnectionRetryMessage] = useState("");
   const [pendingVenueSelectionId, setPendingVenueSelectionId] = useState<string | null>(null);
@@ -690,14 +717,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const pinSubmittingRef = useRef(false);
   const passkeyRegistrationPromptedRef = useRef(false);
   const hasSuccessfulInitialRenderRef = useRef(false);
-  const discoverableOptionsRef = useRef<{
-    challengeId: string;
-    options: Parameters<typeof startAuthentication>[0]["optionsJSON"];
-  } | null>(null);
-  const accountPasskeyOptionsRef = useRef<{
-    challengeId: string;
-    options: Parameters<typeof startAuthentication>[0]["optionsJSON"];
-  } | null>(null);
   const enrollmentOptionsRef = useRef<{
     challengeId: string;
     options: Parameters<typeof startRegistration>[0]["optionsJSON"];
@@ -1233,6 +1252,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           fallbackToPin("Passkey is unavailable on this browser. Use your PIN to continue.");
           return;
         }
+        if (!hasLocalPasskeyForUsername(normalizedUsername)) {
+          fallbackToPin(NO_LOCAL_PASSKEY_MESSAGE);
+          return;
+        }
 
         const optionsResponse = await fetch("/api/auth/passkey/authenticate/options", {
           method: "POST",
@@ -1294,6 +1317,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         hardClearAuthAndCachePreserveVenue(venue.id);
         saveVenueId(venue.id);
         saveUsername(verifyPayload.user.username);
+        rememberLocalPasskeyForUsername(verifyPayload.user.username);
         saveUserId(verifyPayload.user.id);
         setSelectedVenueLock(venue.id);
         setLoginInProgress(venue.id);
@@ -1467,48 +1491,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     return () => window.clearTimeout(t);
   }, [activePanel, loginStep]);
 
-  // Pre-fetch account-level discoverable passkey options for auth-method-selection panel.
-  // Stored in accountPasskeyOptionsRef so handleAccountPasskeySignIn() can call
-  // startAuthentication() synchronously from the button click (iOS Safari requirement).
-  useEffect(() => {
-    if (activePanel !== "auth-method-selection" || !browserSupportsWebAuthn()) {
-      if (activePanel !== "auth-method-selection") {
-        accountPasskeyOptionsRef.current = null;
-        setAccountPasskeyState("idle");
-      }
-      return;
-    }
-
-    setAccountPasskeyState("loading");
-    accountPasskeyOptionsRef.current = null;
-
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), 6000);
-
-    fetch("/api/auth/passkey/authenticate/options", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
-      signal: controller.signal,
-    })
-      .then(async (res) => {
-        const payload = (await res.json().catch(() => null)) as PasskeyAuthOptionsPayload | null;
-        if (res.ok && payload?.ok && payload.options && payload.challengeId) {
-          accountPasskeyOptionsRef.current = { challengeId: payload.challengeId, options: payload.options };
-          setAccountPasskeyState("ready");
-        } else {
-          setAccountPasskeyState("unavailable");
-        }
-      })
-      .catch(() => { setAccountPasskeyState("unavailable"); })
-      .finally(() => { window.clearTimeout(timeoutId); });
-
-    return () => {
-      controller.abort();
-      window.clearTimeout(timeoutId);
-    };
-  }, [activePanel]);
-
   // Pre-fetch passkey registration options when the enrollment offer panel mounts.
   // Options land in enrollmentOptionsRef before the user clicks "Set Up" so that
   // startRegistration() fires synchronously from the click handler (iOS Safari).
@@ -1555,52 +1537,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     autoVenueResolveAttemptedRef.current = true;
     void resolveAndNavigate(accountId, venue);
   }, [activePanel, accountId, venueParam, venue, resolveAndNavigate]);
-
-  // Pre-fetch discoverable-passkey options so the Sign-in button can call
-  // startAuthentication() synchronously on click (iOS Safari user-activation).
-  useEffect(() => {
-    if (activePanel !== "venue-login" || !venue || !browserSupportsWebAuthn()) {
-      setDiscoverablePasskeyState("unavailable");
-      discoverableOptionsRef.current = null;
-      return;
-    }
-
-    setDiscoverablePasskeyState("loading");
-    discoverableOptionsRef.current = null;
-
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), 6000);
-
-    fetch("/api/auth/passkey/authenticate/options", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ venueId: venue.id }),
-      signal: controller.signal,
-    })
-      .then(async (res) => {
-        const payload = (await res.json().catch(() => null)) as PasskeyAuthOptionsPayload | null;
-        if (res.ok && payload?.ok && payload.options && payload.challengeId) {
-          discoverableOptionsRef.current = {
-            challengeId: payload.challengeId,
-            options: payload.options,
-          };
-          setDiscoverablePasskeyState("ready");
-        } else {
-          setDiscoverablePasskeyState("unavailable");
-        }
-      })
-      .catch(() => {
-        setDiscoverablePasskeyState("unavailable");
-      })
-      .finally(() => {
-        window.clearTimeout(timeoutId);
-      });
-
-    return () => {
-      controller.abort();
-      window.clearTimeout(timeoutId);
-    };
-  }, [activePanel, venue]);
 
   useEffect(() => {
     return () => { if (shakeTimerRef.current) window.clearTimeout(shakeTimerRef.current); };
@@ -1726,8 +1662,13 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         setLoginStep("pin");
       };
 
-      // For account sign-in, try passkey first for the entered username.
+      // For account sign-in, only attempt passkey when this device has previously
+      // enrolled/used a local passkey for the username.
       if (activePanel === "account-sign-in" && browserSupportsWebAuthn()) {
+        if (!hasLocalPasskeyForUsername(normalizedUsername)) {
+          moveToPinStep(NO_LOCAL_PASSKEY_MESSAGE);
+          return;
+        }
         setIsAccountPasskeyLoading(true);
         try {
           const optionsResponse = await fetch("/api/auth/passkey/authenticate/options", {
@@ -1759,6 +1700,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             return;
           }
 
+          rememberLocalPasskeyForUsername(verifyPayload.account.username ?? normalizedUsername);
           saveAccountId(verifyPayload.account.id);
           setAccountIdState(verifyPayload.account.id);
           setAccountUsername(verifyPayload.account.username ?? normalizedUsername);
@@ -1848,58 +1790,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   );
 
   const handleAccountPasskeySignIn = useCallback(async () => {
-    const stored = accountPasskeyOptionsRef.current;
-    if (!stored || isAccountPasskeyLoading) {
-      setPasskeyAuthError(NO_LOCAL_PASSKEY_MESSAGE);
-      setPanelDirection(1);
-      setLoginStep("username");
-      setLoginStepDirection(1);
-      setPin("");
-      setAccountAuthError(NO_LOCAL_PASSKEY_MESSAGE);
-      setActivePanel("account-sign-in");
-      return;
-    }
-
-    setIsAccountPasskeyLoading(true);
+    if (isAccountPasskeyLoading) return;
+    // Never launch a discoverable (username-less) passkey ceremony from this screen.
+    // Route users to username entry so we can enforce local-device passkey-only checks.
     setPasskeyAuthError("");
-
-    try {
-      const assertionResponse = await startAuthentication({ optionsJSON: stored.options });
-
-      const verifyResponse = await fetch("/api/auth/passkey/authenticate/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ challengeId: stored.challengeId, response: assertionResponse }),
-      });
-
-      type AccountVerifyPayload = PasskeyAuthVerifyPayload & { account?: { id: string; username: string } };
-      const verifyPayload = (await verifyResponse.json().catch(() => null)) as AccountVerifyPayload | null;
-
-      if (!verifyResponse.ok || !verifyPayload?.ok) {
-        setPasskeyAuthError(NO_LOCAL_PASSKEY_MESSAGE);
-        return;
-      }
-
-      const resolvedAccountId = verifyPayload.account?.id;
-      const resolvedUsername = verifyPayload.account?.username ?? verifyPayload.user?.username ?? "";
-
-      if (!resolvedAccountId) {
-        setPasskeyAuthError(NO_LOCAL_PASSKEY_MESSAGE);
-        return;
-      }
-
-      saveAccountId(resolvedAccountId);
-      setAccountIdState(resolvedAccountId);
-      setAccountUsername(resolvedUsername);
-      setIsNewAccount(false);
-      setPanelDirection(1);
-      setActivePanel("venue-list");
-    } catch (error) {
-      if (isPasskeyUserCancel(error)) return;
-      setPasskeyAuthError(NO_LOCAL_PASSKEY_MESSAGE);
-    } finally {
-      setIsAccountPasskeyLoading(false);
-    }
+    setPanelDirection(1);
+    setLoginStep("username");
+    setLoginStepDirection(1);
+    setPin("");
+    setAccountAuthError("");
+    setActivePanel("account-sign-in");
   }, [isAccountPasskeyLoading]);
 
   const handleEnrollSetUp = useCallback(async () => {
@@ -1924,6 +1824,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyRegisterVerifyPayload | null;
       if (verifyResponse.ok && verifyPayload?.ok) {
         try { localStorage.setItem(PASSKEY_ENROLLMENT_STORAGE_KEY, "1"); } catch { /* non-critical */ }
+        rememberLocalPasskeyForUsername(accountUsername);
       }
       passkeyRegistrationPromptedRef.current = true;
       setPanelDirection(1);
@@ -1939,7 +1840,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     } finally {
       setIsEnrollmentLoading(false);
     }
-  }, [accountId]);
+  }, [accountId, accountUsername]);
 
   const handleEnrollSkip = useCallback(() => {
     passkeyRegistrationPromptedRef.current = true;
@@ -1948,94 +1849,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   }, []);
 
   // ── End account-first handlers ──────────────────────────────────────────────
-
-  // Called when the user taps "Sign in with Face ID / Touch ID" on the venue-login panel.
-  // Options are pre-fetched in a useEffect so startAuthentication() fires immediately
-  // from the button click — satisfying iOS Safari's user-activation requirement.
-  const handleDiscoverablePasskeySignIn = useCallback(async () => {
-    const stored = discoverableOptionsRef.current;
-    if (!stored || !venue || isDiscoverablePasskeyLoading) return;
-
-    setIsDiscoverablePasskeyLoading(true);
-    try {
-      const assertionResponse = await startAuthentication({ optionsJSON: stored.options });
-
-      const verifyResponse = await fetch("/api/auth/passkey/authenticate/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          challengeId: stored.challengeId,
-          response: assertionResponse,
-          venueId: venue.id,
-        }),
-      });
-
-      const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyAuthVerifyPayload | null;
-
-      // Verify must return a full user (id + username + venueId). If the passkey is
-      // registered to a user at a different venue the lookup returns {id} only.
-      const verifiedUser = verifyPayload?.user;
-      const hasFullUser =
-        verifyResponse.ok &&
-        verifyPayload?.ok &&
-        verifiedUser &&
-        "username" in verifiedUser &&
-        "venueId" in verifiedUser &&
-        String((verifiedUser as { venueId?: string }).venueId ?? "").trim() === venue.id;
-
-      if (!hasFullUser) {
-        // Credential not found for this venue — fall back silently to username/PIN
-        discoverableOptionsRef.current = null;
-        setDiscoverablePasskeyState("unavailable");
-        return;
-      }
-
-      if (!DISABLE_GEOFENCE_FOR_TESTING && !locationVerified) {
-        setErrorMessage("Verify your location before entering the venue.");
-        return;
-      }
-
-      const user = verifiedUser as { id: string; username: string; venueId: string };
-      hardClearAuthAndCachePreserveVenue(venue.id);
-      saveVenueId(venue.id);
-      saveUsername(user.username);
-      saveUserId(user.id);
-      setSelectedVenueLock(venue.id);
-      setLoginInProgress(venue.id);
-      refreshAuthSession();
-      setVenueHomeRouteIntent({ venueId: venue.id });
-      setVenueHomeEntryHandoff({ venueId: venue.id, userId: user.id });
-      setAuthLoginState("navigating");
-      setStatus("saving");
-      setIsTransitioning(true);
-      setIsOptimisticallyEntering(true);
-      const hardTarget = `/venue/${encodeURIComponent(venue.id)}?entryUser=${encodeURIComponent(
-        user.id
-      )}&entryVenue=${encodeURIComponent(venue.id)}&entryAt=${Date.now()}`;
-      void signInAnonymously().catch(() => {});
-      window.location.assign(hardTarget);
-    } catch (error) {
-      if (isPasskeyUserCancel(error)) {
-        // User dismissed the biometric prompt — do nothing, form stays visible
-        return;
-      }
-      if (isPasskeyUnavailable(error)) {
-        discoverableOptionsRef.current = null;
-        setDiscoverablePasskeyState("unavailable");
-        return;
-      }
-      // Unknown error — hide the button and let them use username/PIN
-      discoverableOptionsRef.current = null;
-      setDiscoverablePasskeyState("unavailable");
-    } finally {
-      setIsDiscoverablePasskeyLoading(false);
-    }
-  }, [
-    venue,
-    isDiscoverablePasskeyLoading,
-    locationVerified,
-    refreshAuthSession,
-  ]);
 
   // Called when the user taps "Set Up →" in the passkey enrollment overlay.
   // This fires directly from a button click so iOS/Safari user-activation is preserved
@@ -2063,6 +1876,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyRegisterVerifyPayload | null;
       if (verifyResponse.ok && verifyPayload?.ok) {
         try { localStorage.setItem(PASSKEY_ENROLLMENT_STORAGE_KEY, "1"); } catch { /* non-critical */ }
+        rememberLocalPasskeyForUsername(user.username);
       } else {
         console.info("[Passkey] Enrollment verify failed", { code: verifyPayload?.errorCode });
       }
@@ -2363,14 +2177,12 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                           <button
                             type="button"
                             onClick={handleAccountPasskeySignIn}
-                            disabled={accountPasskeyState === "loading" || isAccountPasskeyLoading}
+                            disabled={isAccountPasskeyLoading}
                             aria-label="Sign in with Face ID or Touch ID"
                             className="tp-clean-button flex h-20 w-20 items-center justify-center rounded-full border border-cyan-400/40 bg-slate-800 text-3xl shadow-sm transition-all active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
                           >
                             {isAccountPasskeyLoading ? (
                               <span className="animate-spin text-xl text-cyan-300">⟳</span>
-                            ) : accountPasskeyState === "loading" ? (
-                              <span className="animate-pulse text-xl">…</span>
                             ) : (
                               "🔑"
                             )}
@@ -2656,31 +2468,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                       style={{ color: "#fbbf24", textShadow: "0 0 10px #f59e0b, 0 0 24px #d97706" }}>
                       {getVenueDisplayName(venue)}
                     </p>
-
-                    {loginStep === "username" && discoverablePasskeyState === "ready" && (
-                      <div className="mb-5">
-                        <button
-                          type="button"
-                          onClick={handleDiscoverablePasskeySignIn}
-                          disabled={isDiscoverablePasskeyLoading || isAuthLoading}
-                          className="tp-clean-button inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl border border-cyan-400/40 bg-slate-800/80 py-3 px-6 text-base font-black text-white transition-all active:translate-y-[1px] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
-                        >
-                          {isDiscoverablePasskeyLoading ? (
-                            <span className="animate-pulse">Authenticating…</span>
-                          ) : (
-                            <>
-                              <span aria-hidden="true" className="text-lg">🔑</span>
-                              Sign in with Face ID / Touch ID
-                            </>
-                          )}
-                        </button>
-                        <div className="mt-5 flex items-center gap-3">
-                          <div className="flex-1 h-px bg-slate-700" />
-                          <span className="text-xs font-semibold uppercase tracking-widest text-ht-fg-muted">or</span>
-                          <div className="flex-1 h-px bg-slate-700" />
-                        </div>
-                      </div>
-                    )}
 
                     <input
                       ref={pinInputRef}
