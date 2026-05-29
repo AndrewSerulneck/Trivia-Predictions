@@ -19,6 +19,7 @@ import {
   normalizeVenueId,
   resolveAllowedOriginAndRpId,
   sanitizeUserId,
+  toWebAuthnUserIdBytes,
   getWebAuthnRpName,
 } from "@/lib/webauthn";
 
@@ -110,10 +111,12 @@ export async function POST(request: Request) {
         const options = await generateRegistrationOptions({
           rpName: getWebAuthnRpName(),
           rpID: rpId,
+          userID: toWebAuthnUserIdBytes(user.id),
           userName: user.username,
           userDisplayName: user.username,
           timeout: 60_000,
           attestationType: "none",
+          preferredAuthenticatorType: "localDevice",
           authenticatorSelection: {
             authenticatorAttachment: "platform",
             residentKey: "required",
@@ -139,10 +142,12 @@ export async function POST(request: Request) {
     const options = await generateRegistrationOptions({
       rpName: getWebAuthnRpName(),
       rpID: rpId,
+      userID: toWebAuthnUserIdBytes(resolvedAccountId),
       userName: displayUsername,
       userDisplayName: displayUsername,
       timeout: 60_000,
       attestationType: "none",
+      preferredAuthenticatorType: "localDevice",
       authenticatorSelection: {
         authenticatorAttachment: "platform",
         residentKey: "required",

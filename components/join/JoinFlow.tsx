@@ -140,6 +140,8 @@ function normalizeBooleanEnv(value: string | undefined, fallback = false): boole
 
 const DISABLE_GEOFENCE_FOR_TESTING = normalizeBooleanEnv(process.env.NEXT_PUBLIC_DISABLE_GEOFENCE, false);
 const INVALID_PIN_MESSAGE = "Enter a valid 4-digit PIN.";
+const NO_LOCAL_PASSKEY_MESSAGE =
+  "We're sorry, we don't have a passkey saved for your device! Please log in using your username and PIN, or create a new account.";
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message) return error.message;
@@ -1168,14 +1170,14 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   }, []);
 
   const transitionToPinStep = useCallback(
-    (usernameValue: string) => {
+    (usernameValue: string, nextErrorMessage?: string) => {
       if (!validateUsername(usernameValue)) {
         setErrorMessage("Please enter a valid username.");
         return;
       }
       const normalizedUsername = usernameValue.trim();
       setUsername(normalizedUsername);
-      setErrorMessage("");
+      setErrorMessage(nextErrorMessage ?? "");
       setConnectionRetryMessage("");
       setPin("");
       setIsAdvancingToPin(true);
@@ -1222,8 +1224,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setIsPasskeyAttempting(true);
       setIsAdvancingToPin(true);
 
-      const fallbackToPin = (_message?: string) => {
-        transitionToPinStep(normalizedUsername);
+      const fallbackToPin = (message?: string) => {
+        transitionToPinStep(normalizedUsername, message);
       };
 
       try {
@@ -1257,7 +1259,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         }
 
         if (optionsPayload.requiresPinFallback || !optionsPayload.options || !optionsPayload.challengeId) {
-          fallbackToPin(getPasskeyClientMessage(optionsPayload.reasonCode, "No passkey found on this device. Use your PIN to continue."));
+          fallbackToPin(getPasskeyClientMessage(optionsPayload.reasonCode, NO_LOCAL_PASSKEY_MESSAGE));
           return;
         }
 
@@ -1279,7 +1281,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
         const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyAuthVerifyPayload | null;
         if (!verifyResponse.ok || !verifyPayload?.ok || !verifyPayload.user?.id) {
-          fallbackToPin(getPasskeyClientMessage(verifyPayload?.errorCode, "Passkey verification failed. Use your PIN to continue."));
+          fallbackToPin(getPasskeyClientMessage(verifyPayload?.errorCode, NO_LOCAL_PASSKEY_MESSAGE));
           return;
         }
 
@@ -1313,10 +1315,10 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           return;
         }
         if (isPasskeyUnavailable(error)) {
-          fallbackToPin("Passkey is unavailable on this device right now. Use your PIN to continue.");
+          fallbackToPin(NO_LOCAL_PASSKEY_MESSAGE);
           return;
         }
-        fallbackToPin("Passkey sign-in failed. Use your PIN to continue.");
+        fallbackToPin(NO_LOCAL_PASSKEY_MESSAGE);
       } finally {
         setIsPasskeyAttempting(false);
         setIsAdvancingToPin(false);
@@ -1705,18 +1707,80 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   }, []);
 
   const handleAccountGoToPinStep = useCallback(
-    (usernameValue: string) => {
+    async (usernameValue: string) => {
+      if (isAccountPasskeyLoading) {
+        return;
+      }
       if (!validateUsername(usernameValue)) {
         setAccountAuthError("Please enter a valid username.");
         return;
       }
-      setUsername(usernameValue.trim());
+      const normalizedUsername = usernameValue.trim();
+      setUsername(normalizedUsername);
       setAccountAuthError("");
-      setPin("");
-      setLoginStepDirection(1);
-      setLoginStep("pin");
+
+      const moveToPinStep = (message?: string) => {
+        setAccountAuthError(message ?? "");
+        setPin("");
+        setLoginStepDirection(1);
+        setLoginStep("pin");
+      };
+
+      // For account sign-in, try passkey first for the entered username.
+      if (activePanel === "account-sign-in" && browserSupportsWebAuthn()) {
+        setIsAccountPasskeyLoading(true);
+        try {
+          const optionsResponse = await fetch("/api/auth/passkey/authenticate/options", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: normalizedUsername }),
+          });
+          const optionsPayload = (await optionsResponse.json().catch(() => null)) as PasskeyAuthOptionsPayload | null;
+          if (!optionsResponse.ok || !optionsPayload?.ok) {
+            moveToPinStep(NO_LOCAL_PASSKEY_MESSAGE);
+            return;
+          }
+          if (optionsPayload.requiresPinFallback || !optionsPayload.options || !optionsPayload.challengeId) {
+            moveToPinStep(getPasskeyClientMessage(optionsPayload.reasonCode, NO_LOCAL_PASSKEY_MESSAGE));
+            return;
+          }
+
+          const assertionResponse = await startAuthentication({ optionsJSON: optionsPayload.options });
+          const verifyResponse = await fetch("/api/auth/passkey/authenticate/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ challengeId: optionsPayload.challengeId, response: assertionResponse }),
+          });
+          type AccountVerifyPayload = PasskeyAuthVerifyPayload & { account?: { id: string; username: string } };
+          const verifyPayload = (await verifyResponse.json().catch(() => null)) as AccountVerifyPayload | null;
+
+          if (!verifyResponse.ok || !verifyPayload?.ok || !verifyPayload.account?.id) {
+            moveToPinStep(getPasskeyClientMessage(verifyPayload?.errorCode, NO_LOCAL_PASSKEY_MESSAGE));
+            return;
+          }
+
+          saveAccountId(verifyPayload.account.id);
+          setAccountIdState(verifyPayload.account.id);
+          setAccountUsername(verifyPayload.account.username ?? normalizedUsername);
+          setIsNewAccount(false);
+          setPanelDirection(1);
+          setActivePanel("venue-list");
+          return;
+        } catch (error) {
+          if (isPasskeyUserCancel(error)) {
+            moveToPinStep("Passkey prompt canceled. Use your PIN to continue.");
+            return;
+          }
+          moveToPinStep(NO_LOCAL_PASSKEY_MESSAGE);
+          return;
+        } finally {
+          setIsAccountPasskeyLoading(false);
+        }
+      }
+
+      moveToPinStep();
     },
-    []
+    [activePanel, isAccountPasskeyLoading]
   );
 
   const handleBackFromAccountPin = useCallback(() => {
@@ -1785,7 +1849,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
   const handleAccountPasskeySignIn = useCallback(async () => {
     const stored = accountPasskeyOptionsRef.current;
-    if (!stored || isAccountPasskeyLoading) return;
+    if (!stored || isAccountPasskeyLoading) {
+      setPasskeyAuthError(NO_LOCAL_PASSKEY_MESSAGE);
+      setPanelDirection(1);
+      setLoginStep("username");
+      setLoginStepDirection(1);
+      setPin("");
+      setAccountAuthError(NO_LOCAL_PASSKEY_MESSAGE);
+      setActivePanel("account-sign-in");
+      return;
+    }
 
     setIsAccountPasskeyLoading(true);
     setPasskeyAuthError("");
@@ -1803,9 +1876,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       const verifyPayload = (await verifyResponse.json().catch(() => null)) as AccountVerifyPayload | null;
 
       if (!verifyResponse.ok || !verifyPayload?.ok) {
-        setPasskeyAuthError(
-          "We do not have a passkey saved for you. If you have an account with us, please click 'Enter Username/PIN'."
-        );
+        setPasskeyAuthError(NO_LOCAL_PASSKEY_MESSAGE);
         return;
       }
 
@@ -1813,9 +1884,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       const resolvedUsername = verifyPayload.account?.username ?? verifyPayload.user?.username ?? "";
 
       if (!resolvedAccountId) {
-        setPasskeyAuthError(
-          "We do not have a passkey saved for you. If you have an account with us, please click 'Enter Username/PIN'."
-        );
+        setPasskeyAuthError(NO_LOCAL_PASSKEY_MESSAGE);
         return;
       }
 
@@ -1827,9 +1896,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setActivePanel("venue-list");
     } catch (error) {
       if (isPasskeyUserCancel(error)) return;
-      setPasskeyAuthError(
-        "We do not have a passkey saved for you. If you have an account with us, please click 'Enter Username/PIN'."
-      );
+      setPasskeyAuthError(NO_LOCAL_PASSKEY_MESSAGE);
     } finally {
       setIsAccountPasskeyLoading(false);
     }

@@ -7,6 +7,7 @@ export type PasskeyErrorCode =
   | "USER_NOT_FOUND"
   | "AUTH_FAILED"
   | "NO_PASSKEYS"
+  | "NO_LOCAL_PASSKEY"
   | "CHALLENGE_EXPIRED"
   | "CHALLENGE_USER_MISMATCH"
   | "CREDENTIAL_NOT_FOUND"
@@ -32,6 +33,8 @@ export function getPasskeyClientMessage(code: string | undefined, fallback: stri
       return "Passkey sign-in failed. Please use your PIN.";
     case "NO_PASSKEYS":
       return "No passkey is enrolled yet. Use your PIN, then set up a passkey.";
+    case "NO_LOCAL_PASSKEY":
+      return "We're sorry, we don't have a passkey saved for your device! Please log in using your username and PIN, or create a new account.";
     case "CHALLENGE_EXPIRED":
       return "Passkey request expired. Please try again.";
     case "CHALLENGE_USER_MISMATCH":

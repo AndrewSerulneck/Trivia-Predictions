@@ -24,6 +24,15 @@ type AuthenticateOptionsBody = {
   venueId?: string;
 };
 
+function toClientDeviceTransports(transports: unknown): ReturnType<typeof getCredentialTransportList> {
+  const parsed = getCredentialTransportList(transports ?? []);
+  // Platform authenticator only (Face ID / Touch ID / device PIN).
+  if (parsed.includes("internal")) {
+    return ["internal"];
+  }
+  return [];
+}
+
 function passkeyError(status: number, errorCode: PasskeyErrorCode, error: string) {
   return NextResponse.json({ ok: false, errorCode, error }, { status });
 }
@@ -59,10 +68,18 @@ export async function POST(request: Request) {
     }
 
     // ── Discoverable-credential flow (no username supplied) ──────────────────
-    // allowCredentials is left empty so the device presents ALL passkeys it holds
-    // for this RP ID. The challenge is stored with account_id = null; the verify
-    // step resolves the account by looking up the returned credential_id.
+    // This app only allows local platform passkeys. Discoverable flows can surface
+    // QR/security-key options when no local credential exists, so we intentionally
+    // route the user to username+PIN in that case.
     const isDiscoverable = !username;
+    if (isDiscoverable) {
+      return NextResponse.json({
+        ok: true,
+        requiresPinFallback: true,
+        reason: "no-local-passkey",
+        reasonCode: "NO_LOCAL_PASSKEY",
+      });
+    }
 
     type AllowCredential = { id: string; transports: ReturnType<typeof getCredentialTransportList> };
     let resolvedAccountId: string | null = null;
@@ -85,10 +102,21 @@ export async function POST(request: Request) {
           });
         }
         resolvedAccountId = account.id;
-        allowCredentials = passkeys.map((passkey) => ({
+        allowCredentials = passkeys
+          .map((passkey) => ({
           id: passkey.credential_id_b64url,
-          transports: getCredentialTransportList(passkey.transports ?? []),
-        }));
+          transports: toClientDeviceTransports(passkey.transports ?? []),
+          }))
+          .filter((credential) => credential.transports.length > 0);
+        if (allowCredentials.length === 0) {
+          return NextResponse.json({
+            ok: true,
+            requiresPinFallback: true,
+            reason: "no-local-passkey",
+            reasonCode: "NO_LOCAL_PASSKEY",
+            account: { id: account.id, username: account.username },
+          });
+        }
       } else if (venueId) {
         // ── Legacy venue-scoped fallback ──────────────────────────────────────
         const user = await findUserByUsernameAndVenue(supabaseAdmin, { username, venueId });
@@ -106,10 +134,21 @@ export async function POST(request: Request) {
           });
         }
         resolvedUserId = user.id;
-        allowCredentials = passkeys.map((passkey) => ({
+        allowCredentials = passkeys
+          .map((passkey) => ({
           id: passkey.credential_id_b64url,
-          transports: getCredentialTransportList(passkey.transports ?? []),
-        }));
+          transports: toClientDeviceTransports(passkey.transports ?? []),
+          }))
+          .filter((credential) => credential.transports.length > 0);
+        if (allowCredentials.length === 0) {
+          return NextResponse.json({
+            ok: true,
+            requiresPinFallback: true,
+            reason: "no-local-passkey",
+            reasonCode: "NO_LOCAL_PASSKEY",
+            user: mapUserForResponse(user),
+          });
+        }
         resolvedUserForResponse = mapUserForResponse(user);
       } else {
         return passkeyError(401, "AUTH_FAILED", getGenericAuthFailureMessage());
@@ -122,6 +161,8 @@ export async function POST(request: Request) {
       userVerification: "required",
       allowCredentials,
     });
+    // Hint browsers toward local device authenticators (Face ID / Touch ID / device PIN).
+    options.hints = ["client-device"];
 
     const challenge = await createChallenge(supabaseAdmin, {
       accountId: resolvedAccountId,
