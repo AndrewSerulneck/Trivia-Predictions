@@ -707,6 +707,28 @@ export async function updateAdminTriviaQuestion(input: {
 
 export async function deleteAdminTriviaQuestion(id: string): Promise<void> {
   assertAdminConfigured();
+
+  // Fetch the slug so we can remove any trivia_session_questions rows that
+  // reference it (FK is on slug with ON DELETE RESTRICT).
+  const { data: question, error: fetchError } = await supabaseAdmin!
+    .from("trivia_questions")
+    .select("slug")
+    .eq("id", id)
+    .single();
+  if (fetchError) {
+    throw new Error(fetchError.message);
+  }
+
+  if (question?.slug) {
+    const { error: sessionQError } = await supabaseAdmin!
+      .from("trivia_session_questions")
+      .delete()
+      .eq("question_id", question.slug);
+    if (sessionQError) {
+      throw new Error(sessionQError.message);
+    }
+  }
+
   const { error } = await supabaseAdmin!.from("trivia_questions").delete().eq("id", id);
   if (error) {
     throw new Error(error.message);
@@ -2913,6 +2935,28 @@ async function deleteTriviaBankQuestionByIdOrSlug(params: {
   };
 
   try {
+    // Remove any trivia_session_questions rows that reference this question's slug
+    // before deleting, since the FK is ON DELETE RESTRICT.
+    const lookupField = isUuidLike(idOrSlug) ? "id" : "slug";
+    const { data: questionRow, error: lookupError } = await supabaseAdmin!
+      .from("trivia_questions")
+      .select("slug")
+      .eq(lookupField, idOrSlug)
+      .maybeSingle();
+    if (lookupError) {
+      throw new Error(lookupError.message ?? "Failed to look up trivia question.");
+    }
+    const slug = (questionRow as { slug?: string } | null)?.slug;
+    if (slug) {
+      const { error: sessionQError } = await supabaseAdmin!
+        .from("trivia_session_questions")
+        .delete()
+        .eq("question_id", slug);
+      if (sessionQError) {
+        throw new Error(sessionQError.message ?? "Failed to remove question from schedules.");
+      }
+    }
+
     const deletedById = isUuidLike(idOrSlug) ? await runDelete("id", idOrSlug) : false;
     if (deletedById) {
       return;
@@ -2933,23 +2977,35 @@ async function deleteTriviaBankQuestionByIdOrSlug(params: {
   }
 }
 
+async function listDistinctTriviaCategories(
+  questionPool: "live_showdown" | "anytime_blitz"
+): Promise<string[]> {
+  assertAdminConfigured();
+  const categories = new Set<string>();
+  const PAGE_SIZE = 1000;
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabaseAdmin!
+      .from("trivia_questions")
+      .select("category")
+      .eq("question_pool", questionPool)
+      .not("category", "is", null)
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) throw new Error(error.message);
+    for (const row of (data ?? []) as Array<{ category: string | null }>) {
+      const category = String(row.category ?? "").trim();
+      if (category) categories.add(category);
+    }
+    if (!data || data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+  return Array.from(categories).sort((a, b) => a.localeCompare(b));
+}
+
 export async function listAllLiveTriviaCategories(): Promise<string[]> {
   try {
-    const result = await listAdminTriviaQuestionsByPool({
-      questionPool: "live_showdown",
-      page: 1,
-      pageSize: 10000,
-    });
-    const categories = new Set<string>();
-    for (const item of result.items) {
-      const category = String(item.category ?? "").trim();
-      if (category) {
-        categories.add(category);
-      }
-    }
-    if (categories.size > 0) {
-      return Array.from(categories).sort((a, b) => a.localeCompare(b));
-    }
+    const categories = await listDistinctTriviaCategories("live_showdown");
+    if (categories.length > 0) return categories;
   } catch (error) {
     logAdminTriviaBankError({ action: "list", questionType: "live", error });
   }
@@ -2963,21 +3019,8 @@ export async function listAllLiveTriviaCategories(): Promise<string[]> {
 
 export async function listAllSpeedTriviaCategories(): Promise<string[]> {
   try {
-    const result = await listAdminTriviaQuestionsByPool({
-      questionPool: "anytime_blitz",
-      page: 1,
-      pageSize: 10000,
-    });
-    const categories = new Set<string>();
-    for (const item of result.items) {
-      const category = String(item.category ?? "").trim();
-      if (category) {
-        categories.add(category);
-      }
-    }
-    if (categories.size > 0) {
-      return Array.from(categories).sort((a, b) => a.localeCompare(b));
-    }
+    const categories = await listDistinctTriviaCategories("anytime_blitz");
+    if (categories.length > 0) return categories;
   } catch (error) {
     logAdminTriviaBankError({ action: "list", questionType: "speed", error });
   }

@@ -993,7 +993,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
             setCurrentUserPoints((value) => (value ?? 0) + pointsAwarded);
             window.dispatchEvent(
               new CustomEvent("tp:points-updated", {
-                detail: { source: "trivia", delta: pointsAwarded, multiplier: multiplierApplied },
+                detail: { source: "speed-trivia", delta: pointsAwarded, multiplier: multiplierApplied },
               })
             );
             if (challengeActive) {
@@ -1259,7 +1259,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
     const targetPath = `/venue/${encodeURIComponent(venueId)}`;
     void runVenueGameReturnTransition({
-      gameKey: "trivia",
+      gameKey: "speed-trivia",
       navigate: () =>
         navigateBackToVenue({
           venuePath: targetPath,

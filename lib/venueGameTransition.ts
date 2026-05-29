@@ -43,7 +43,7 @@ const OPEN_GATE_DURATION_MS = 950;
 const RETURN_GATE_DURATION_MS = 2600;
 
 const FALLBACK_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
-  trivia: "linear-gradient(132deg,#0ea5e9 0%,#2563eb 42%,#7c3aed 100%)",
+  "speed-trivia": "linear-gradient(132deg,#0ea5e9 0%,#2563eb 42%,#7c3aed 100%)",
   live_trivia: "linear-gradient(132deg,#0ea5e9 0%,#2563eb 42%,#7c3aed 100%)",
   bingo: "linear-gradient(128deg,#f97316 0%,#ef4444 48%,#ec4899 100%)",
   pickem: "linear-gradient(134deg,#2563eb 0%,#7c3aed 56%,#ec4899 100%)",

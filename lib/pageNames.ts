@@ -1,7 +1,7 @@
 export const APP_PAGE_NAMES = {
   join: "Join",
   venue: "Venue",
-  trivia: "Trivia",
+  trivia: "Speed Trivia",
   sportsPredictions: "Pick 'Em (Legacy)",
   sportsBingo: "Sports Bingo",
   sportsPickEm: "Sports Pick 'Em",

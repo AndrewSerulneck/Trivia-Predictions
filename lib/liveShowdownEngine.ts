@@ -535,7 +535,7 @@ async function awardTriviaPointsForLiveShowdown(userId: string, basePoints: numb
     const campaignResult = await applyChallengeCampaignPoints({
       userId,
       venueId,
-      gameType: "trivia",
+      gameType: "speed-trivia",
       basePoints,
     }).catch(() => null);
 

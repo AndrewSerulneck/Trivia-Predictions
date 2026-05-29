@@ -978,46 +978,6 @@
       "difficulty": "hard"
     },
     {
-      "slug": "canada-south-of-detroit",
-      "question": "If you travel directly south from downtown Detroit, Michigan, which country do you enter first?",
-      "answer": "Canada",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "state-borders-most",
-      "question": "Which two U.S. states tie for bordering the most other states, with eight borders each?",
-      "answer": "Tennessee and Missouri",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "closest-foreign-capital-to-us",
-      "question": "What is the closest foreign capital city to the contiguous United States?",
-      "answer": "Nassau",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "lowest-point-north-america",
-      "question": "What basin in Death Valley, California, represents the lowest point of elevation in North America?",
-      "answer": "Badwater Basin",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "country-with-most-lakes",
-      "question": "Which country contains more natural lakes than the rest of the world combined?",
-      "answer": "Canada",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "easy"
-    },
-    {
       "slug": "world-deepest-lake",
       "question": "What Siberian lake is the deepest freshwater lake in the world, holding roughly 20% of Earth's unfrozen surface fresh water?",
       "answer": "Lake Baikal",
@@ -1034,25 +994,9 @@
       "difficulty": "easy"
     },
     {
-      "slug": "only-state-bordering-one",
-      "question": "What is the only U.S. state that shares a land border with exactly one other U.S. state?",
-      "answer": "Maine",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "easy"
-    },
-    {
       "slug": "mediterranean-largest-island",
       "question": "What is the largest island located in the Mediterranean Sea?",
       "answer": "Sicily",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "driest-place-on-earth",
-      "question": "What South American desert is widely considered the driest non-polar place on Earth?",
-      "answer": "Atacama Desert",
       "answer_format": "write_in",
       "category": "Geography",
       "difficulty": "easy"
@@ -1082,38 +1026,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "four-corners-states",
-      "question": "What is the only place in the United States where four states meet at a single point?",
-      "answer": "Four Corners Monument",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "largest-landlocked-country",
-      "question": "What Central Asian nation is the largest landlocked country in the world by total land area?",
-      "answer": "Kazakhstan",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "most-populous-island",
-      "question": "What Indonesian island is the most populous island in the world, home to over 140 million people?",
-      "answer": "Java",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "south-american-country-two-coasts",
-      "question": "What is the only country in South America that has coastlines on both the Pacific Ocean and the Caribbean Sea?",
-      "answer": "Colombia",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "medium"
-    },
-    {
       "slug": "country-borders-fourteen-nations",
       "question": "Russia shares land borders with 14 sovereign nations. Which East Asian country ties this record by also bordering exactly 14 nations?",
       "answer": "China",
@@ -1130,36 +1042,12 @@
       "difficulty": "easy"
     },
     {
-      "slug": "longest-continental-mountain-range",
-      "question": "What is the longest continuous continental mountain range in the world, stretching along the western coast of South America?",
-      "answer": "Andes",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "easy"
-    },
-    {
       "slug": "world-longest-highway",
       "question": "What massive network of roads stretches from Alaska down to Argentina, broken only by a 60-mile rainforest gap?",
       "answer": "Pan-American Highway",
       "answer_format": "write_in",
       "category": "Geography",
       "difficulty": "medium"
-    },
-    {
-      "slug": "closest-state-to-africa",
-      "question": "Which U.S. state is geographically closest to the continent of Africa?",
-      "answer": "Maine",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "france-longest-land-border",
-      "question": "Due to its overseas territories, with which South American country does France share its longest continuous land border?",
-      "answer": "Brazil",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "hard"
     },
     {
       "slug": "only-country-in-four-hemispheres",
@@ -1280,22 +1168,6 @@
       "answer_format": "write_in",
       "category": "Geography",
       "difficulty": "medium"
-    },
-    {
-      "slug": "country-with-most-islands",
-      "question": "Which Nordic country officially claims the most islands of any nation in the world, with over 200,000?",
-      "answer": "Sweden",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "equator-crossing-south-america",
-      "question": "The equator crosses through three South American nations: Ecuador, Colombia, and which other large country?",
-      "answer": "Brazil",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "easy"
     },
     {
       "slug": "sea-with-highest-salinity",

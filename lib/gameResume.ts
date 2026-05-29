@@ -112,12 +112,12 @@ async function hasActiveFantasyEntries(userId: string): Promise<boolean> {
 
 export async function hasResumableSession(gameKey: VenueGameKey): Promise<boolean> {
   const userId = (getUserId() ?? "").trim();
-  if (!userId && gameKey !== "trivia") {
+  if (!userId && gameKey !== "speed-trivia") {
     return false;
   }
 
   try {
-    if (gameKey === "trivia") {
+    if (gameKey === "speed-trivia") {
       return hasResumableTriviaSession();
     }
     if (gameKey === "bingo") {

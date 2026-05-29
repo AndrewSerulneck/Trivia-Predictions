@@ -49,7 +49,7 @@ type ChallengeCampaignRedemptionRow = {
   claimed_at: string;
 };
 
-const VALID_GAME_TYPES: ChallengeGameType[] = ["pickem", "fantasy", "trivia", "bingo"];
+const VALID_GAME_TYPES: ChallengeGameType[] = ["pickem", "fantasy", "speed-trivia", "bingo"];
 const VALID_DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 const VALID_IMAGE_FITS: ChallengeImageFitMode[] = ["cover", "contain"];
 

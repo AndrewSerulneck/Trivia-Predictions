@@ -27,12 +27,17 @@ function parseArgs(argv) {
     dir: DEFAULT_DIR,
     liveDir: "",
     checkOnly: false,
+    prune: false,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
     const token = argv[i];
     if (token === "--check") {
       args.checkOnly = true;
+      continue;
+    }
+    if (token === "--prune") {
+      args.prune = true;
       continue;
     }
     if (token === "--file") {
@@ -125,8 +130,18 @@ function readQuestionDir(dirPath) {
   const merged = [];
   for (const file of files) {
     const filePath = path.join(absoluteDirPath, file);
-    const raw = fs.readFileSync(filePath, "utf8");
-    const parsed = JSON.parse(raw);
+    const raw = fs.readFileSync(filePath, "utf8").trim();
+    if (!raw) {
+      console.warn(`Warning: skipping empty file ${file}`);
+      continue;
+    }
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      console.warn(`Warning: skipping malformed JSON in ${file}`);
+      continue;
+    }
     const rows = readCategoryPayload(parsed, filePath);
     merged.push(...rows.map((item) => ({ ...item, __sourceFile: file })));
   }
@@ -148,8 +163,18 @@ function readLiveQuestionDir(dirPath) {
   const merged = [];
   for (const file of files) {
     const filePath = path.join(absoluteDirPath, file);
-    const raw = fs.readFileSync(filePath, "utf8");
-    const parsed = JSON.parse(raw);
+    const raw = fs.readFileSync(filePath, "utf8").trim();
+    if (!raw) {
+      console.warn(`Warning: skipping empty file ${file}`);
+      continue;
+    }
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      console.warn(`Warning: skipping malformed JSON in ${file}`);
+      continue;
+    }
     const rows = readLiveCategoryPayload(parsed, filePath);
     merged.push(...rows.map((item) => ({ ...item, __sourceFile: file })));
   }
@@ -226,7 +251,64 @@ function normalizeAndValidate(questions) {
   return rows;
 }
 
-async function upsertRows(rows) {
+async function pruneStaleRows(supabase, localSlugs, pool) {
+  const PAGE_SIZE = 1000;
+  const dbSlugs = new Set();
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from("trivia_questions")
+      .select("slug")
+      .eq("question_pool", pool)
+      .not("slug", "is", null)
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) throw new Error(`Failed to fetch ${pool} slugs: ${describeError(error)}`);
+    if (!data || data.length === 0) break;
+    for (const row of data) {
+      if (row.slug) dbSlugs.add(row.slug);
+    }
+    if (data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  const stale = [...dbSlugs].filter((slug) => !localSlugs.has(slug));
+  if (stale.length === 0) {
+    console.log(`Prune [${pool}]: no stale questions found.`);
+    return;
+  }
+
+  // Delete in batches to stay within Supabase query-size limits.
+  const BATCH = 200;
+  let pruned = 0;
+  for (let start = 0; start < stale.length; start += BATCH) {
+    const batch = stale.slice(start, start + BATCH);
+
+    // Remove all referencing rows first (FK ON DELETE RESTRICT).
+    const { error: sqError } = await supabase
+      .from("trivia_session_questions")
+      .delete()
+      .in("question_id", batch);
+    if (sqError) throw new Error(`Failed to remove schedule mappings: ${describeError(sqError)}`);
+
+    const { error: answerError } = await supabase
+      .from("live_showdown_answers")
+      .delete()
+      .in("question_id", batch);
+    if (answerError) throw new Error(`Failed to remove live showdown answers: ${describeError(answerError)}`);
+
+    const { error: delError } = await supabase
+      .from("trivia_questions")
+      .delete()
+      .in("slug", batch);
+    if (delError) throw new Error(`Failed to delete stale questions: ${describeError(delError)}`);
+
+    pruned += batch.length;
+  }
+
+  console.log(`Prune [${pool}]: deleted ${pruned} stale question(s).`);
+}
+
+async function upsertRows(rows, { prune = false } = {}) {
   const supabaseUrl = normalizeEnvValue(process.env.NEXT_PUBLIC_SUPABASE_URL);
   const serviceRoleKey = normalizeEnvValue(process.env.SUPABASE_SERVICE_ROLE_KEY);
 
@@ -292,6 +374,13 @@ async function upsertRows(rows) {
 
   if (error) {
     throw new Error(`Count query failed: ${describeError(error)}`);
+  }
+
+  if (prune) {
+    const liveSlugs = new Set(rows.filter((r) => r.question_pool === LIVE_POOL).map((r) => r.slug).filter(Boolean));
+    const speedSlugs = new Set(rows.filter((r) => r.question_pool === ANYTIME_POOL).map((r) => r.slug).filter(Boolean));
+    if (liveSlugs.size > 0) await pruneStaleRows(supabase, liveSlugs, LIVE_POOL);
+    if (speedSlugs.size > 0) await pruneStaleRows(supabase, speedSlugs, ANYTIME_POOL);
   }
 
   await autoFillUpcomingLiveShowdownSchedules(supabase);
@@ -650,7 +739,7 @@ async function main() {
     return;
   }
 
-  await upsertRows(allRows);
+  await upsertRows(allRows, { prune: args.prune });
 }
 
 main().catch((error) => {

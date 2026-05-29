@@ -28,7 +28,7 @@ function formatLocalDateTime(iso: string): string {
 function gameTypeLabel(gameType: ChallengeGameType): string {
   if (gameType === "pickem") return "Hightop Pick 'Em";
   if (gameType === "fantasy") return "Hightop Fantasy";
-  if (gameType === "trivia") return "Hightop Trivia";
+  if (gameType === "speed-trivia") return "Hightop Speed Trivia";
   return "Hightop Sports Bingo";
 }
 
@@ -268,7 +268,7 @@ export function PendingChallengesPanel() {
           >
             <option value="pickem">Hightop Pick &apos;Em</option>
             <option value="fantasy">Hightop Fantasy</option>
-            <option value="trivia">Hightop Trivia</option>
+            <option value="speed-trivia">Hightop Speed Trivia</option>
             <option value="bingo">Hightop Sports Bingo</option>
           </select>
         </div>

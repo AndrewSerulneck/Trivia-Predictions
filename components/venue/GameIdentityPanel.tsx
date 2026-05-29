@@ -3,7 +3,7 @@
 import { VENUE_GAME_CARD_BY_KEY, type VenueGameKey } from "@/lib/venueGameCards";
 
 export const GAME_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
-  trivia:
+  "speed-trivia":
     "bg-[linear-gradient(132deg,#0ea5e9_0%,#2563eb_42%,#7c3aed_100%)]",
   live_trivia:
     "bg-[linear-gradient(132deg,#0ea5e9_0%,#2563eb_42%,#7c3aed_100%)]",
@@ -16,7 +16,7 @@ export const GAME_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
 };
 
 export const GAME_PAGE_THEME_BY_KEY: Record<VenueGameKey, string> = {
-  trivia:
+  "speed-trivia":
     "bg-[linear-gradient(132deg,rgba(14,165,233,0.2)_0%,rgba(37,99,235,0.24)_42%,rgba(124,58,237,0.26)_100%)] border-cyan-200/60",
   live_trivia:
     "bg-[linear-gradient(132deg,rgba(14,165,233,0.2)_0%,rgba(37,99,235,0.24)_42%,rgba(124,58,237,0.26)_100%)] border-cyan-200/60",
@@ -29,7 +29,7 @@ export const GAME_PAGE_THEME_BY_KEY: Record<VenueGameKey, string> = {
 };
 
 export const GAME_IDENTITY_SUBTITLE: Record<VenueGameKey, string> = {
-  trivia: "15-second questions in timed rounds.",
+  "speed-trivia": "15-second questions in timed rounds.",
   live_trivia: "Synchronized live venue play.",
   bingo: "Track player-stat squares in real time.",
   pickem: "Pick winners and climb your venue league.",
@@ -241,7 +241,7 @@ function FantasyArtwork() {
 }
 
 function GameArtwork({ gameKey }: { gameKey: VenueGameKey }) {
-  if (gameKey === "trivia") return <TriviaArtwork />;
+  if (gameKey === "speed-trivia") return <TriviaArtwork />;
   if (gameKey === "bingo") return <BingoArtwork />;
   if (gameKey === "pickem") return <PickEmArtwork />;
   if (gameKey === "fantasy") return <FantasyArtwork />;

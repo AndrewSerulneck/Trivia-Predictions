@@ -1,4 +1,4 @@
-export type VenueGameKey = "trivia" | "live_trivia" | "pickem" | "bingo" | "fantasy";
+export type VenueGameKey = "speed-trivia" | "live_trivia" | "pickem" | "bingo" | "fantasy";
 
 export type VenueGameCardConfig = {
   key: VenueGameKey;
@@ -11,7 +11,7 @@ export type VenueGameCardConfig = {
 
 export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
   {
-    key: "trivia",
+    key: "speed-trivia",
     title: "Hightop Speed Trivia",
     path: "/trivia",
     cardClassName: "bg-blue-600 text-white",
@@ -86,11 +86,11 @@ export const VENUE_GAME_CARD_BY_KEY: Record<VenueGameKey, VenueGameCardConfig> =
   {} as Record<VenueGameKey, VenueGameCardConfig>
 );
 
-export const VENUE_HOME_GAME_KEYS: VenueGameKey[] = ["trivia", "live_trivia", "bingo", "pickem", "fantasy"];
+export const VENUE_HOME_GAME_KEYS: VenueGameKey[] = ["speed-trivia", "live_trivia", "bingo", "pickem", "fantasy"];
 
 export function inferVenueGameKeyFromPath(pathname: string): VenueGameKey | null {
   if (pathname.startsWith("/trivia/live")) return "live_trivia";
-  if (pathname.startsWith("/trivia")) return "trivia";
+  if (pathname.startsWith("/trivia")) return "speed-trivia";
   if (pathname.startsWith("/pickem")) return "pickem";
   if (pathname.startsWith("/bingo")) return "bingo";
   if (pathname.startsWith("/fantasy")) return "fantasy";

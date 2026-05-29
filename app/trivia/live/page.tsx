@@ -81,14 +81,15 @@ type FeedbackState =
   | "unsubmitted_inactive";
 
 const RULE_LINES = [
-  "Players get 30 seconds to type their answers.",
-  "There's 15 seconds between questions.",
+  "30 seconds to type your answer.",
+  "15 seconds between questions.",
   "Correct answers award +10 points.",
-  "Some questions are 'Closest Guess' — the player nearest the correct numeric answer wins 10 points.",
-  "New players can join any time, but do not get points for questions they missed.",
+  "If the answer is a number, and no one gets it right, the closest guess wins 10 points.",
+  "New players can join any time.",
   "Do not close your browser or switch tabs during live play.",
   "If you wish to leave the game, click 'Back to Home Page' any time.",
   "The user with the most points at the end wins a $25 gift certificate.",
+  "Click 'Join Live Trivia!' to enter the lobby."
 ];
 
 function formatCountdown(totalSeconds: number): string {
@@ -781,7 +782,18 @@ export default function LiveShowdownPage() {
     >
       <div className="mx-auto w-full max-w-md flex-1 min-h-0 overflow-y-auto touch-pan-y space-y-4 px-4 pt-4 pb-4">
         <header className="rounded-2xl border border-cyan-400/60 bg-slate-900 p-4">
-          <h1 className="text-3xl font-black tracking-wide text-cyan-300">Live Showdown</h1>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => void goHome()}
+              disabled={isLeaving}
+              aria-label="Back to venue"
+              className="tp-exit-pill tp-clean-button inline-flex h-9 w-9 shrink-0 items-center justify-center text-lg disabled:opacity-50"
+            >
+              ←
+            </button>
+            <h1 className="text-3xl font-black tracking-wide text-cyan-300">Live Showdown</h1>
+          </div>
         </header>
 
         {!hasOnboarded ? (
@@ -1206,21 +1218,6 @@ export default function LiveShowdownPage() {
         {error ? <div className="rounded-xl border border-rose-400/50 bg-rose-950/40 p-3 text-sm">{error}</div> : null}
       </div>
 
-      {!answering ? (
-        <div className="shrink-0 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <button
-            type="button"
-            onClick={() => void goHome()}
-            className={`tp-clean-button w-full rounded-xl px-3 py-3 text-sm font-semibold ${
-              isPostGame
-                ? "border-0 bg-rose-500 text-white hover:bg-rose-600"
-                : "border border-cyan-300/40 bg-cyan-100/10 text-cyan-200 hover:bg-cyan-100/20"
-            }`}
-          >
-            ← Back to venue
-          </button>
-        </div>
-      ) : null}
 
       {hasOnboarded && Boolean(forfeitKey) && Boolean(activeKey) && forfeitKey === activeKey ? (
         <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/75 p-4">

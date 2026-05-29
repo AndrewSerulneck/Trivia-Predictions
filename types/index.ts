@@ -142,7 +142,7 @@ export interface Notification {
   createdAt: string;
 }
 
-export type ChallengeGameType = "pickem" | "fantasy" | "trivia" | "bingo";
+export type ChallengeGameType = "pickem" | "fantasy" | "speed-trivia" | "bingo";
 export type ChallengeStatus =
   | "pending"
   | "accepted"

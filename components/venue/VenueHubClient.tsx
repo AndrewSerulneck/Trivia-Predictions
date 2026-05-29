@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { browserSupportsWebAuthn, startRegistration, WebAuthnError } from "@simplewebauthn/browser";
 import type { Venue, LeaderboardEntry } from "@/types";
-import { getUserId, getUsername, getVenueId, saveUserId, saveVenueId, clearVenueSession } from "@/lib/storage";
+import { getAccountId, getUserId, getUsername, getVenueId, saveUserId, saveVenueId, clearVenueSession } from "@/lib/storage";
 import { clearLoginInProgress } from "@/lib/authFastPath";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
@@ -104,7 +104,7 @@ const GAME_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
   // Live Trivia: smooth broadcast gradient (The Anchor)
   live_trivia: "bg-[linear-gradient(132deg,#06b6d4_0%,#0ea5e9_40%,#2563eb_100%)]",
   // Speed Trivia: near-black navy — neon border provides the accent (The Sprint)
-  trivia:      "bg-[linear-gradient(160deg,#080f1f_0%,#0c1535_100%)]",
+  "speed-trivia": "bg-[linear-gradient(160deg,#080f1f_0%,#0c1535_100%)]",
   // Bingo: solid stadium orange with dark ink bottom edge (The Wild Card)
   bingo:       "bg-[linear-gradient(to_bottom,#ea580c_0%,#ea580c_85%,#1c0400_85%,#1c0400_100%)]",
   // Pick 'Em: dark field with indigo left stripe — head-to-head split (The Rival)
@@ -116,7 +116,7 @@ const GAME_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
 // Per-game button border replaces the universal white/90 border
 const GAME_CARD_BORDER_BY_KEY: Record<VenueGameKey, string> = {
   live_trivia: "!border-cyan-300/70",
-  trivia:      "!border-blue-400",
+  "speed-trivia": "!border-blue-400",
   bingo:       "!border-white/90",
   pickem:      "!border-indigo-400/70",
   fantasy:     "!border-violet-400/50",
@@ -125,14 +125,14 @@ const GAME_CARD_BORDER_BY_KEY: Record<VenueGameKey, string> = {
 // Only Live Trivia and Fantasy get the radial sheen (premium / broadcast); flat-texture games skip it
 const GAME_CARD_SHEEN_BY_KEY: Record<VenueGameKey, boolean> = {
   live_trivia: true,
-  trivia:      false,
+  "speed-trivia": false,
   bingo:       false,
   pickem:      false,
   fantasy:     true,
 };
 
 const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
-  trivia: ["Hightop", "Speed Trivia"],
+  "speed-trivia": ["Hightop", "Speed Trivia"],
   live_trivia: ["Hightop", "Live Trivia"],
   bingo: ["Hightop", "Sports Bingo™"],
   pickem: ["Hightop", "Pick 'Em™"],
@@ -140,19 +140,19 @@ const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
 };
 const VENUE_HUB_TILE_GRADIENT_BY_KEY: Record<VenueGameKey, string> = {
   live_trivia: "linear-gradient(132deg,#06b6d4 0%,#0ea5e9 48%,#2563eb 100%)",
-  trivia: "linear-gradient(132deg,#f59e0b 0%,#f97316 52%,#ea580c 100%)",
+  "speed-trivia": "linear-gradient(132deg,#f59e0b 0%,#f97316 52%,#ea580c 100%)",
   bingo: "linear-gradient(128deg,#10b981 0%,#14b8a6 52%,#0f766e 100%)",
   pickem: "linear-gradient(134deg,#3b82f6 0%,#6366f1 55%,#4f46e5 100%)",
   fantasy: "linear-gradient(134deg,#a855f7 0%,#8b5cf6 52%,#7c3aed 100%)",
 };
 const VENUE_HUB_TILE_SUBTITLE_BY_KEY: Record<VenueGameKey, string> = {
   live_trivia: "Synchronized bar trivia played against everyone else around you. Don't let them see your answers!",
-  trivia: "It's just you versus the clock. 15 seconds per question, 15 questions per round, and 3 rounds per hour. Good luck! ",
+  "speed-trivia": "It's just you versus the clock. 15 seconds per question, 15 questions per round, and 3 rounds per hour. Good luck! ",
   bingo: "Bingo boards align with the games on TV. Watch the game, track your squares in real time, and earn points as the live action unfolds!",
   pickem: "Predict the winners of today's top matchups before the games start. Every correct call gets you one step closer to prizes and discounts!",
   fantasy: "Draft the ultimate roster from the star athletes in today's games. The better they perform, the more points you earn! ",
 };
-const VENUE_HUB_GAME_ORDER: VenueGameKey[] = ["live_trivia", "trivia", "bingo", "pickem", "fantasy"];
+const VENUE_HUB_GAME_ORDER: VenueGameKey[] = ["live_trivia", "speed-trivia", "bingo", "pickem", "fantasy"];
 const VENUE_DRAWER_MENU_ITEMS: VenueMenuItem[] = [
   {
     label: "Career Stats",
@@ -376,7 +376,7 @@ function venueDebugLog(message: string, details?: Record<string, unknown>) {
 }
 
 const GAME_LOCKUP_SRC: Record<VenueGameKey, string> = {
-  trivia: "/brand/speed_trivia_icon.png",
+  "speed-trivia": "/brand/speed_trivia_icon.png",
   live_trivia: "/brand/live_trivia_icon.png",
   bingo: "/brand/bingo_icon.png",
   pickem: "/brand/pickem_icon.png",
@@ -488,7 +488,7 @@ function LiveTriviaGlyph({ className = "h-10 w-10" }: { className?: string }) {
 }
 
 function GameGlyph({ gameKey }: { gameKey: VenueGameKey }) {
-  if (gameKey === "trivia") return <TriviaGlyph />;
+  if (gameKey === "speed-trivia") return <TriviaGlyph />;
   if (gameKey === "live_trivia") return <TriviaGlyph />;
   if (gameKey === "bingo") return <BingoGlyph />;
   if (gameKey === "pickem") return <PickEmGlyph />;
@@ -496,12 +496,12 @@ function GameGlyph({ gameKey }: { gameKey: VenueGameKey }) {
   return <TriviaGlyph />;
 }
 
-type ChallengeGameType = "live_trivia" | "trivia" | "bingo" | "pickem" | "fantasy" | "unknown";
+type ChallengeGameType = "live_trivia" | "speed-trivia" | "bingo" | "pickem" | "fantasy" | "unknown";
 
 function inferChallengeGameType(name: string): ChallengeGameType {
   const lower = name.toLowerCase();
   if (lower.includes("live trivia") || lower.includes("live showdown") || lower.includes("showdown")) return "live_trivia";
-  if (lower.includes("speed trivia") || lower.includes("trivia")) return "trivia";
+  if (lower.includes("speed trivia") || lower.includes("trivia")) return "speed-trivia";
   if (lower.includes("bingo")) return "bingo";
   if (lower.includes("pick") || lower.includes("pick 'em") || lower.includes("pickem")) return "pickem";
   if (lower.includes("fantasy")) return "fantasy";
@@ -520,7 +520,7 @@ const CHALLENGE_ICON_STYLE: Record<
     cardAccent: "rgba(59,130,246,0.25)",
   },
   // Very dark bg, bright amber lightning bolt — matches Speed Trivia badge in mockup
-  trivia: {
+  "speed-trivia": {
     badgeBg: "linear-gradient(145deg, #0d0900, #1a1200, #261900)",
     borderColor: "rgba(251,191,36,0.55)",
     barGradient: "linear-gradient(90deg, #d97706, #fbbf24, #84cc16)",
@@ -563,7 +563,7 @@ function ChallengeIconBadge({ gameType }: { gameType: ChallengeGameType }) {
       style={{ background: s.badgeBg, border: `2px solid ${s.borderColor}` }}
     >
       {gameType === "live_trivia" ? <LiveTriviaGlyph className="h-8 w-8" /> : null}
-      {gameType === "trivia" ? <SpeedTriviaGlyph className="h-8 w-8" /> : null}
+      {gameType === "speed-trivia" ? <SpeedTriviaGlyph className="h-8 w-8" /> : null}
       {gameType === "bingo" ? <BingoGlyph className="h-8 w-8" /> : null}
       {gameType === "pickem" ? <PickEmGlyph className="h-8 w-8" /> : null}
       {gameType === "fantasy" ? <FantasyGlyph className="h-8 w-8" /> : null}
@@ -961,7 +961,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     const userId = (getUserId() ?? "").trim();
     const venueId = venue.id;
     const username = (getUsername() ?? menuUsername).trim();
-    if (!userId || !venueId || !username) {
+    const accountId = (getAccountId() ?? "").trim();
+    if (!userId || !venueId || (!username && !accountId)) {
       setPasskeySetupError("Please sign in again before setting up a passkey.");
       return;
     }
@@ -982,6 +983,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          ...(accountId ? { accountId } : {}),
           userId,
           venueId,
           username,
@@ -1553,7 +1555,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       const destination = VENUE_GAME_CARD_BY_KEY[dest];
       if (!destination) return;
       triggerPulse();
-      if (dest === "trivia") {
+      if (dest === "speed-trivia") {
         // Only block navigation when trivia is already known to be locked.
         // If quota is null (not yet loaded), navigate immediately — the trivia page
         // enforces limits itself. Awaiting a network call here caused the UI to freeze
@@ -1618,8 +1620,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     : nextLiveTriviaCountdownSeconds != null
     ? formatLongCountdown(nextLiveTriviaCountdownSeconds)
     : "--:--:--";
-  const liveSoonMinutes =
-    nextLiveTriviaCountdownSeconds != null ? Math.max(1, Math.ceil(nextLiveTriviaCountdownSeconds / 60)) : null;
+  const showLiveBadge = liveTriviaStatus.live;
   const lobbyButtonShouldPulse =
     liveTriviaStatus.live ||
     (nextLiveTriviaCountdownSeconds != null &&
@@ -1630,14 +1631,10 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     const badges = new Map<VenueGameKey, string>();
     for (const [gameKey, count] of Object.entries(homeBadgeCounts) as Array<[VenueGameKey, number | undefined]>) {
       if (!count || count <= 0) continue;
-      // Don't show live_trivia badge when the game is currently live
-      if (gameKey === "live_trivia" && liveTriviaStatus.live) {
-        continue;
-      }
       badges.set(gameKey, formatBadgeCount(count));
     }
     return badges;
-  }, [homeBadgeCounts, liveTriviaStatus.live]);
+  }, [homeBadgeCounts]);
 
   const selectedChallenge = useMemo(
     () => challengeCards.find((card) => card.id === selectedChallengeId) ?? null,
@@ -1787,8 +1784,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                   const isOpening = pendingDestination === card.key;
                   const badge = visibleBadgeByGame.get(card.key);
                   const isLiveTriviaCard = card.key === "live_trivia";
-                  const isSpeedTriviaCard = card.key === "trivia";
-                  const statusLabel = isLiveTriviaCard && liveTriviaStatus.live ? "Live Now" : null;
+                  const isSpeedTriviaCard = card.key === "speed-trivia";
+                  const statusLabel = isLiveTriviaCard && liveTriviaStatus.live ? "LIVE" : null;
                   return (
                     <button
                       key={card.key}
@@ -1834,6 +1831,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                       {badge ? (
                         <span className="absolute right-2 top-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-black leading-none text-white shadow-[0_2px_8px_rgba(15,23,42,0.45)]">
                           {badge}
+                        </span>
+                      ) : null}
+                      {isLiveTriviaCard && showLiveBadge ? (
+                        <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full border border-rose-300/50 bg-rose-500/15 px-2 py-0.5">
+                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />
+                          <span className="text-[9px] font-black uppercase tracking-[0.14em] text-rose-200">Live</span>
                         </span>
                       ) : null}
                     </button>
@@ -2054,10 +2057,15 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           </div>
 
           <div className="mb-5 rounded-ht-lg border border-cyan-400/45 bg-cyan-400/10 px-4 py-3.5">
-            <div className="flex items-end justify-between gap-3">
-              <p className="min-w-0 truncate text-[1.15rem] font-black leading-tight text-ht-fg-primary">
-                {menuUsername || "Guest"}
-              </p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-[1.15rem] font-black leading-tight text-ht-fg-primary">
+                  {menuUsername || "Guest"}
+                </p>
+                <p className="mt-0.5 truncate text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-cyan-400">
+                  {venueDisplayName}
+                </p>
+              </div>
               <div className="shrink-0 text-right">
                 <p className="text-[0.68rem] font-black uppercase tracking-[0.12em] text-amber-200/85">Points</p>
                 <p

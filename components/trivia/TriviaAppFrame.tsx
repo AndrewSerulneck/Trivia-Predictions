@@ -5,7 +5,7 @@ import { GameLandingExperience } from "@/components/venue/GameLandingExperience"
 
 export function TriviaAppFrame() {
   return (
-    <GameLandingExperience gameKey="trivia" playLabel="Play Trivia">
+    <GameLandingExperience gameKey="speed-trivia" playLabel="Play Trivia">
       <div className="flex h-full min-h-0 flex-col">
         <TriviaGame />
       </div>

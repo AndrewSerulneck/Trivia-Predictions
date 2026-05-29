@@ -363,7 +363,7 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
         setPointsAndAnimate(next);
         animateGain(delta);
         if (
-          custom.detail?.source !== "trivia" &&
+          custom.detail?.source !== "speed-trivia" &&
           custom.detail?.source !== "notifications" &&
           custom.detail?.source !== "bingo-claim" &&
           custom.detail?.source !== "fantasy-claim" &&
