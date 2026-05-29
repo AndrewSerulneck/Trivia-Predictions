@@ -104,6 +104,7 @@ type PasskeyAuthVerifyPayload = {
   error?: string;
   errorCode?: string;
   user?: User;
+  account?: { id: string; username?: string };
 };
 
 type PasskeyRegisterOptionsPayload = {
@@ -1791,15 +1792,66 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
   const handleAccountPasskeySignIn = useCallback(async () => {
     if (isAccountPasskeyLoading) return;
-    // Never launch a discoverable (username-less) passkey ceremony from this screen.
-    // Route users to username entry so we can enforce local-device passkey-only checks.
     setPasskeyAuthError("");
-    setPanelDirection(1);
-    setLoginStep("username");
-    setLoginStepDirection(1);
-    setPin("");
     setAccountAuthError("");
-    setActivePanel("account-sign-in");
+    if (!browserSupportsWebAuthn()) {
+      setPasskeyAuthError(NO_LOCAL_PASSKEY_MESSAGE);
+      return;
+    }
+    setIsAccountPasskeyLoading(true);
+    try {
+      const optionsResponse = await fetch("/api/auth/passkey/authenticate/options", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const optionsPayload = (await optionsResponse.json().catch(() => null)) as PasskeyAuthOptionsPayload | null;
+      if (!optionsResponse.ok || !optionsPayload?.ok) {
+        setPasskeyAuthError(NO_LOCAL_PASSKEY_MESSAGE);
+        return;
+      }
+      if (optionsPayload.requiresPinFallback || !optionsPayload.options || !optionsPayload.challengeId) {
+        setPasskeyAuthError(getPasskeyClientMessage(optionsPayload.reasonCode, NO_LOCAL_PASSKEY_MESSAGE));
+        return;
+      }
+
+      let assertionResponse: Awaited<ReturnType<typeof startAuthentication>>;
+      try {
+        assertionResponse = await startAuthentication({ optionsJSON: optionsPayload.options });
+      } catch (error) {
+        if (isPasskeyUserCancel(error) || isPasskeyUnavailable(error)) {
+          setPasskeyAuthError(NO_LOCAL_PASSKEY_MESSAGE);
+          return;
+        }
+        setPasskeyAuthError(getErrorMessage(error, NO_LOCAL_PASSKEY_MESSAGE));
+        return;
+      }
+
+      const verifyResponse = await fetch("/api/auth/passkey/authenticate/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ challengeId: optionsPayload.challengeId, response: assertionResponse }),
+      });
+      const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyAuthVerifyPayload | null;
+      if (!verifyResponse.ok || !verifyPayload?.ok || !verifyPayload.account?.id) {
+        setPasskeyAuthError(getPasskeyClientMessage(verifyPayload?.errorCode, NO_LOCAL_PASSKEY_MESSAGE));
+        return;
+      }
+
+      const resolvedUsername = verifyPayload.account.username ?? "";
+      if (resolvedUsername) {
+        setAccountUsername(resolvedUsername);
+      }
+      saveAccountId(verifyPayload.account.id);
+      setAccountIdState(verifyPayload.account.id);
+      setIsNewAccount(false);
+      setPanelDirection(1);
+      setActivePanel("venue-list");
+    } catch (error) {
+      setPasskeyAuthError(getErrorMessage(error, NO_LOCAL_PASSKEY_MESSAGE));
+    } finally {
+      setIsAccountPasskeyLoading(false);
+    }
   }, [isAccountPasskeyLoading]);
 
   const handleEnrollSetUp = useCallback(async () => {

@@ -324,8 +324,12 @@ export function decodePublicKeyFromBase64Url(publicKeyB64Url: string): Uint8Arra
   return new Uint8Array(isoBase64URL.toBuffer(publicKeyB64Url));
 }
 
-export function toWebAuthnUserIdBytes(userId: string): Uint8Array {
-  return new Uint8Array(isoUint8Array.fromUTF8String(userId));
+export function toWebAuthnUserIdBytes(userId: string): Uint8Array<ArrayBuffer> {
+  const source = isoUint8Array.fromUTF8String(userId);
+  const buffer = new ArrayBuffer(source.length);
+  const bytes = new Uint8Array(buffer);
+  bytes.set(source);
+  return bytes;
 }
 
 export function getGenericAuthFailureMessage(): string {

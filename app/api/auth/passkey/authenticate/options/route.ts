@@ -68,18 +68,9 @@ export async function POST(request: Request) {
     }
 
     // ── Discoverable-credential flow (no username supplied) ──────────────────
-    // This app only allows local platform passkeys. Discoverable flows can surface
-    // QR/security-key options when no local credential exists, so we intentionally
-    // route the user to username+PIN in that case.
+    // Allow browser-mediated passkey discovery from the Face ID / Touch ID button.
+    // For this flow we generate options with an empty allowCredentials list.
     const isDiscoverable = !username;
-    if (isDiscoverable) {
-      return NextResponse.json({
-        ok: true,
-        requiresPinFallback: true,
-        reason: "no-local-passkey",
-        reasonCode: "NO_LOCAL_PASSKEY",
-      });
-    }
 
     type AllowCredential = { id: string; transports: ReturnType<typeof getCredentialTransportList> };
     let resolvedAccountId: string | null = null;
