@@ -4,10 +4,12 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import type { PasskeyErrorCode } from "@/lib/passkeyErrors";
 import {
   createChallenge,
+  findAccountByUsername,
   findUserByUsernameAndVenue,
   getCredentialTransportList,
   getGenericAuthFailureMessage,
   isPasskeyFeatureEnabled,
+  listPasskeysForAccount,
   listPasskeysForUser,
   mapUserForResponse,
   normalizeUsername,
@@ -58,39 +60,60 @@ export async function POST(request: Request) {
 
     // ── Discoverable-credential flow (no username supplied) ──────────────────
     // allowCredentials is left empty so the device presents ALL passkeys it holds
-    // for this RP ID and the user can pick one without typing their username first.
-    // The challenge is stored with user_id = null; the verify step resolves the
-    // user by looking up the returned credential_id in user_passkeys.
-    const isDiscoverable = !username || !venueId;
+    // for this RP ID. The challenge is stored with account_id = null; the verify
+    // step resolves the account by looking up the returned credential_id.
+    const isDiscoverable = !username;
 
     type AllowCredential = { id: string; transports: ReturnType<typeof getCredentialTransportList> };
+    let resolvedAccountId: string | null = null;
     let resolvedUserId: string | null = null;
     let allowCredentials: AllowCredential[] = [];
     let resolvedUserForResponse: ReturnType<typeof mapUserForResponse> | undefined;
 
     if (!isDiscoverable) {
-      const user = await findUserByUsernameAndVenue(supabaseAdmin, { username, venueId });
-      if (!user) {
+      // ── Account-first lookup (preferred, no venueId required) ──────────────
+      const account = await findAccountByUsername(supabaseAdmin, username);
+      if (account) {
+        const passkeys = await listPasskeysForAccount(supabaseAdmin, account.id);
+        if (passkeys.length === 0) {
+          return NextResponse.json({
+            ok: true,
+            requiresPinFallback: true,
+            reason: "no-passkeys",
+            reasonCode: "NO_PASSKEYS",
+            account: { id: account.id, username: account.username },
+          });
+        }
+        resolvedAccountId = account.id;
+        allowCredentials = passkeys.map((passkey) => ({
+          id: passkey.credential_id_b64url,
+          transports: getCredentialTransportList(passkey.transports ?? []),
+        }));
+      } else if (venueId) {
+        // ── Legacy venue-scoped fallback ──────────────────────────────────────
+        const user = await findUserByUsernameAndVenue(supabaseAdmin, { username, venueId });
+        if (!user) {
+          return passkeyError(401, "AUTH_FAILED", getGenericAuthFailureMessage());
+        }
+        const passkeys = await listPasskeysForUser(supabaseAdmin, user.id);
+        if (passkeys.length === 0) {
+          return NextResponse.json({
+            ok: true,
+            requiresPinFallback: true,
+            reason: "no-passkeys",
+            reasonCode: "NO_PASSKEYS",
+            user: mapUserForResponse(user),
+          });
+        }
+        resolvedUserId = user.id;
+        allowCredentials = passkeys.map((passkey) => ({
+          id: passkey.credential_id_b64url,
+          transports: getCredentialTransportList(passkey.transports ?? []),
+        }));
+        resolvedUserForResponse = mapUserForResponse(user);
+      } else {
         return passkeyError(401, "AUTH_FAILED", getGenericAuthFailureMessage());
       }
-
-      const passkeys = await listPasskeysForUser(supabaseAdmin, user.id);
-      if (passkeys.length === 0) {
-        return NextResponse.json({
-          ok: true,
-          requiresPinFallback: true,
-          reason: "no-passkeys",
-          reasonCode: "NO_PASSKEYS",
-          user: mapUserForResponse(user),
-        });
-      }
-
-      resolvedUserId = user.id;
-      allowCredentials = passkeys.map((passkey) => ({
-        id: passkey.credential_id_b64url,
-        transports: getCredentialTransportList(passkey.transports ?? []),
-      }));
-      resolvedUserForResponse = mapUserForResponse(user);
     }
 
     const options = await generateAuthenticationOptions({
@@ -101,6 +124,7 @@ export async function POST(request: Request) {
     });
 
     const challenge = await createChallenge(supabaseAdmin, {
+      accountId: resolvedAccountId,
       userId: resolvedUserId,
       flowType: "authentication",
       challengeB64Url: options.challenge,

@@ -106,14 +106,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "country-with-most-borders",
-      "question": "Which two countries share the record for bordering the most other nations (14)?",
-      "answer": "Russia and China",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "hard"
-    },
-    {
       "slug": "northernmost-capital-city",
       "question": "Which of these is the northernmost capital city of a sovereign state?",
       "answer": "Reykjavik",
@@ -226,22 +218,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "lowest-point-on-land",
-      "question": "What is the lowest point on the Earth's land surface?",
-      "answer": "The Dead Sea Shore",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "scandinavian-countries-count",
-      "question": "Traditionally, how many countries make up Scandinavia?",
-      "answer": "3",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "medium"
-    },
-    {
       "slug": "largest-city-by-population",
       "question": "Which city is currently considered the most populous metropolitan area in the world?",
       "answer": "Tokyo",
@@ -340,7 +316,7 @@
     {
       "slug": "capital-of-brazil",
       "question": "What is the capital city of Brazil?",
-      "answer": "Bras\u00edlia",
+      "answer": "Brasília",
       "answer_format": "write_in",
       "category": "Geography",
       "difficulty": "easy"
@@ -480,14 +456,6 @@
       "answer_format": "write_in",
       "category": "Geography",
       "difficulty": "medium"
-    },
-    {
-      "slug": "river-danube-capital-cities",
-      "question": "How many national capital cities does the River Danube flow through?",
-      "answer": "4",
-      "answer_format": "write_in",
-      "category": "Geography",
-      "difficulty": "hard"
     },
     {
       "slug": "capital-of-kenya",
@@ -1409,5 +1377,6 @@
       "category": "Geography",
       "difficulty": "hard"
     }
-  ]
+  ],
+  "familiarity": "moderate"
 }

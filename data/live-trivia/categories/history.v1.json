@@ -58,14 +58,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "black-death-century",
-      "question": "In which century did the Black Death peak in Europe?",
-      "answer": "14th",
-      "answer_format": "write_in",
-      "category": "History",
-      "difficulty": "medium"
-    },
-    {
       "slug": "discovery-of-penicillin",
       "question": "Who discovered penicillin in 1928?",
       "answer": "Alexander Fleming",
@@ -100,7 +92,7 @@
     {
       "slug": "aztec-empire-conqueror",
       "question": "Which Spanish conquistador led the expedition that caused the fall of the Aztec Empire?",
-      "answer": "Hern\u00e1n Cort\u00e9s",
+      "answer": "Hernán Cortés",
       "answer_format": "write_in",
       "category": "History",
       "difficulty": "medium"
@@ -192,14 +184,6 @@
       "answer_format": "write_in",
       "category": "History",
       "difficulty": "medium"
-    },
-    {
-      "slug": "mayan-civilization-region",
-      "question": "The Mayan civilization was primarily located in which modern-day region?",
-      "answer": "Central America",
-      "answer_format": "write_in",
-      "category": "History",
-      "difficulty": "easy"
     },
     {
       "slug": "great-fire-of-london-year",
@@ -346,22 +330,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "nelson-mandela-prison-years",
-      "question": "For approximately how many years was Nelson Mandela imprisoned?",
-      "answer": "27",
-      "answer_format": "write_in",
-      "category": "History",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "gutenberg-bible-century",
-      "question": "In which century was the Gutenberg Bible printed?",
-      "answer": "15th",
-      "answer_format": "write_in",
-      "category": "History",
-      "difficulty": "medium"
-    },
-    {
       "slug": "mohandas-gandhi-title",
       "question": "What honorific title, meaning 'Great Soul', was given to Mohandas Gandhi?",
       "answer": "Mahatma",
@@ -384,14 +352,6 @@
       "answer_format": "write_in",
       "category": "History",
       "difficulty": "medium"
-    },
-    {
-      "slug": "war-of-the-roses-houses",
-      "question": "The War of the Roses was fought between which two royal houses?",
-      "answer": "York & Lancaster",
-      "answer_format": "write_in",
-      "category": "History",
-      "difficulty": "hard"
     },
     {
       "slug": "trail-of-tears-president",
@@ -466,14 +426,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "marshall-plan-purpose",
-      "question": "What was the primary goal of the Marshall Plan after WWII?",
-      "answer": "Economic aid to Europe",
-      "answer_format": "write_in",
-      "category": "History",
-      "difficulty": "medium"
-    },
-    {
       "slug": "fall-of-the-bastille-date",
       "question": "On which date is Bastille Day celebrated in France?",
       "answer": "July 14",
@@ -522,14 +474,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "hundred-years-war-belligerents",
-      "question": "The Hundred Years' War was fought primarily between which two countries?",
-      "answer": "England & France",
-      "answer_format": "write_in",
-      "category": "History",
-      "difficulty": "medium"
-    },
-    {
       "slug": "pearl-harbor-attack-year",
       "question": "In which year did the attack on Pearl Harbor occur?",
       "answer": "1941",
@@ -544,14 +488,6 @@
       "answer_format": "write_in",
       "category": "History",
       "difficulty": "medium"
-    },
-    {
-      "slug": "pax-romana-meaning",
-      "question": "What does the term 'Pax Romana' refer to?",
-      "answer": "Roman Peace",
-      "answer_format": "write_in",
-      "category": "History",
-      "difficulty": "easy"
     },
     {
       "slug": "tiananmen-square-protest-year",
@@ -578,14 +514,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "great-wall-of-china-purpose",
-      "question": "What was the primary purpose of the Great Wall of China?",
-      "answer": "Defense against invaders",
-      "answer_format": "write_in",
-      "category": "History",
-      "difficulty": "easy"
-    },
-    {
       "slug": "reign-of-terror-leader",
       "question": "Who was the leading figure during the Reign of Terror in revolutionary France?",
       "answer": "Maximilien Robespierre",
@@ -600,14 +528,6 @@
       "answer_format": "write_in",
       "category": "History",
       "difficulty": "hard"
-    },
-    {
-      "slug": "salem-witch-trials-century",
-      "question": "In which century did the Salem Witch Trials take place?",
-      "answer": "17th",
-      "answer_format": "write_in",
-      "category": "History",
-      "difficulty": "medium"
     },
     {
       "slug": "berlin-wall-construction-year",
@@ -786,14 +706,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "invention-of-the-wheel-civilization",
-      "question": "Which ancient civilization is credited with inventing the wheel?",
-      "answer": "Sumerian",
-      "answer_format": "write_in",
-      "category": "History",
-      "difficulty": "medium"
-    },
-    {
       "slug": "war-of-independence-mexico-start",
       "question": "In what year did the Mexican War of Independence begin?",
       "answer": "1810",
@@ -801,5 +713,6 @@
       "category": "History",
       "difficulty": "hard"
     }
-  ]
+  ],
+  "familiarity": "moderate"
 }

@@ -18,14 +18,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "game-of-thrones-iron-throne-swords",
-      "question": "In 'Game of Thrones', the Iron Throne was forged from the swords of whom?",
-      "answer": "Surrendered Enemies",
-      "answer_format": "write_in",
-      "category": "Pop Culture",
-      "difficulty": "medium"
-    },
-    {
       "slug": "marvel-mcu-first-movie",
       "question": "Which film kicked off the Marvel Cinematic Universe in 2008?",
       "answer": "Iron Man",
@@ -146,14 +138,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "spider-man-no-way-home-cameos",
-      "question": "How many different versions of Peter Parker appear in 'Spider-Man: No Way Home'?",
-      "answer": "3",
-      "answer_format": "write_in",
-      "category": "Pop Culture",
-      "difficulty": "easy"
-    },
-    {
       "slug": "rupauls-drag-race-first-winner",
       "question": "Who was the winner of the very first season of RuPaul's Drag Race?",
       "answer": "BeBe Zahara Benet",
@@ -228,7 +212,7 @@
     {
       "slug": "dune-part-two-paul-atreides",
       "question": "Who plays the character Paul Atreides in Denis Villeneuve's 'Dune' film series?",
-      "answer": "Timoth\u00e9e Chalamet",
+      "answer": "Timothée Chalamet",
       "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
@@ -378,14 +362,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "survivor-season-50-theme",
-      "question": "What is the special milestone theme for the 50th season of the reality show 'Survivor' premiering in 2026?",
-      "answer": "All-Stars / Legends",
-      "answer_format": "write_in",
-      "category": "Pop Culture",
-      "difficulty": "medium"
-    },
-    {
       "slug": "ryan-coogler-sinners-star",
       "question": "Which actor reunites with director Ryan Coogler for the 2025 supernatural thriller 'Sinners'?",
       "answer": "Michael B. Jordan",
@@ -419,7 +395,7 @@
     },
     {
       "slug": "joker-2-lady-gaga-character",
-      "question": "What character did Lady Gaga play opposite Joaquin Phoenix in the 2024 musical sequel 'Joker: Folie \u00e0 Deux'?",
+      "question": "What character did Lady Gaga play opposite Joaquin Phoenix in the 2024 musical sequel 'Joker: Folie à Deux'?",
       "answer": "Harlee 'Lee' Quinzel",
       "answer_format": "write_in",
       "category": "Pop Culture",
@@ -490,14 +466,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "last-of-us-pedro-pascal-viral-nickname",
-      "question": "Which affectionate nickname was widely applied to Pedro Pascal by the internet following his roles in 'The Mandalorian' and 'The Last of Us'?",
-      "answer": "Internet Daddy",
-      "answer_format": "write_in",
-      "category": "Pop Culture",
-      "difficulty": "medium"
-    },
-    {
       "slug": "marvel-robert-downey-jr-doom-return",
       "question": "At the 2024 San Diego Comic-Con, Robert Downey Jr. was revealed to be returning to the MCU as which villain?",
       "answer": "Doctor Doom",
@@ -515,7 +483,7 @@
     },
     {
       "slug": "shogun-hulu-language",
-      "question": "The 2024 Emmy-winning series 'Sh\u014dgun' is primarily performed in which language?",
+      "question": "The 2024 Emmy-winning series 'Shōgun' is primarily performed in which language?",
       "answer": "Japanese",
       "answer_format": "write_in",
       "category": "Pop Culture",
@@ -676,7 +644,7 @@
     {
       "slug": "joker-2-subtitle",
       "question": "What is the official subtitle of the 2024 Joker sequel starring Joaquin Phoenix and Lady Gaga?",
-      "answer": "Folie \u00e0 Deux",
+      "answer": "Folie à Deux",
       "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
@@ -693,14 +661,6 @@
       "slug": "house-of-the-dragon-season-2-conflict",
       "question": "What is the name of the civil war depicted in 'House of the Dragon' Season 2, which aired in 2024?",
       "answer": "The Dance of the Dragons",
-      "answer_format": "write_in",
-      "category": "Pop Culture",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "inside-out-2-new-emotion",
-      "question": "Which new main emotion was introduced in the 2024 Pixar hit 'Inside Out 2'?",
-      "answer": "Anxiety",
       "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
@@ -736,14 +696,6 @@
       "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "hard"
-    },
-    {
-      "slug": "bridgerton-season-3-part-split",
-      "question": "Netflix split the third season of 'Bridgerton' into how many parts in 2024?",
-      "answer": "Two",
-      "answer_format": "write_in",
-      "category": "Pop Culture",
-      "difficulty": "easy"
     },
     {
       "slug": "baby-reindeer-real-life-lawsuit",
@@ -786,14 +738,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "shogun-hulu-limited-series-change",
-      "question": "Despite originally being a limited series, 'Sh\u014dgun' was renewed for how many additional seasons in 2024?",
-      "answer": "Two",
-      "answer_format": "write_in",
-      "category": "Pop Culture",
-      "difficulty": "hard"
-    },
-    {
       "slug": "nosferatu-2024-director",
       "question": "Who directed the late-2024 gothic horror remake 'Nosferatu'?",
       "answer": "Robert Eggers",
@@ -801,5 +745,6 @@
       "category": "Pop Culture",
       "difficulty": "medium"
     }
-  ]
+  ],
+  "familiarity": "mainstream"
 }

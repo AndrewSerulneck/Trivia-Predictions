@@ -50,6 +50,7 @@ type UserSummaryPayload = {
     points?: number;
     venueId?: string;
   } | null;
+  hasPasskey?: boolean;
 };
 
 type PasskeyRegisterOptionsPayload = {
@@ -133,7 +134,7 @@ const GAME_CARD_SHEEN_BY_KEY: Record<VenueGameKey, boolean> = {
 const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
   trivia: ["Hightop", "Speed Trivia"],
   live_trivia: ["Hightop", "Live Trivia"],
-  bingo: ["Hightop", "Bingo™"],
+  bingo: ["Hightop", "Sports Bingo™"],
   pickem: ["Hightop", "Pick 'Em™"],
   fantasy: ["Hightop", "Fantasy™"],
 };
@@ -145,11 +146,11 @@ const VENUE_HUB_TILE_GRADIENT_BY_KEY: Record<VenueGameKey, string> = {
   fantasy: "linear-gradient(134deg,#a855f7 0%,#8b5cf6 52%,#7c3aed 100%)",
 };
 const VENUE_HUB_TILE_SUBTITLE_BY_KEY: Record<VenueGameKey, string> = {
-  live_trivia: "Synchronized live venue play · 30s answers",
-  trivia: "15 questions · 15s each · 3 rounds an hour",
-  bingo: "Player-stat squares fill in real time",
-  pickem: "Pick winners across 5 leagues",
-  fantasy: "Build one lineup against the room",
+  live_trivia: "Synchronized bar trivia played against everyone else around you. Don't let them see your answers!",
+  trivia: "It's just you versus the clock. 15 seconds per question, 15 questions per round, and 3 rounds per hour. Good luck! ",
+  bingo: "Bingo boards align with the games on TV. Watch the game, track your squares in real time, and earn points as the live action unfolds!",
+  pickem: "Predict the winners of today's top matchups before the games start. Every correct call gets you one step closer to prizes and discounts!",
+  fantasy: "Draft the ultimate roster from the star athletes in today's games. The better they perform, the more points you earn! ",
 };
 const VENUE_HUB_GAME_ORDER: VenueGameKey[] = ["live_trivia", "trivia", "bingo", "pickem", "fantasy"];
 const VENUE_DRAWER_MENU_ITEMS: VenueMenuItem[] = [
@@ -326,16 +327,19 @@ function isActiveMenuPath(pathname: string, href: string): boolean {
 }
 
 function isPasskeyUserCancel(error: unknown): boolean {
-  if (!error) return false;
+  if (!error || typeof error !== "object") return false;
+  const err = error as Record<string, unknown>;
+  const name = String(err.name ?? "");
+  const code = String(err.code ?? "");
+  // Name/code checks work across module boundaries (no instanceof required)
+  if (name === "NotAllowedError" || name === "AbortError") return true;
+  if (code === "ERROR_CEREMONY_ABORTED") return true;
+  // instanceof fallbacks when module identity is intact
   if (error instanceof DOMException) {
     return error.name === "NotAllowedError" || error.name === "AbortError";
   }
   if (error instanceof WebAuthnError) {
     return error.code === "ERROR_CEREMONY_ABORTED";
-  }
-  if (typeof error === "object" && error && "name" in error) {
-    const name = String((error as { name?: unknown }).name ?? "");
-    return name === "NotAllowedError" || name === "AbortError";
   }
   return false;
 }
@@ -596,6 +600,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const [isPasskeySetupLoading, setIsPasskeySetupLoading] = useState(false);
   const [passkeySetupMessage, setPasskeySetupMessage] = useState("");
   const [passkeySetupError, setPasskeySetupError] = useState("");
+  const [hasPasskey, setHasPasskey] = useState(false);
   const [isBadgeLoading, setIsBadgeLoading] = useState(true);
   const [badgeError, setBadgeError] = useState("");
   const [liveTriviaStatus, setLiveTriviaStatus] = useState<{ live: boolean; label: string; nextStartAtMs?: number | null }>({ live: false, label: "" });
@@ -941,6 +946,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       setMenuUsername(nextUsername);
     }
     setMenuPoints(nextPoints);
+    setHasPasskey(Boolean(payload.hasPasskey));
   }, []);
 
   const handlePasskeySetup = useCallback(async () => {
@@ -1030,10 +1036,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       }
 
       setPasskeySetupMessage("Passkey enabled. Next login can use Face ID, Touch ID, or device PIN.");
+      setHasPasskey(true);
       logAuthIncident("venue-passkey", "setup-success", { venueId, userId });
     } catch (error) {
       if (isPasskeyUserCancel(error)) {
-        setPasskeySetupError("Passkey setup was canceled.");
+        setPasskeySetupError("");
         logAuthIncident("venue-passkey", "setup-canceled", { venueId, userId });
       } else {
         const fallback = error instanceof Error ? error.message : "Passkey setup failed.";
@@ -1212,7 +1219,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       }
 
       if (payload.state.isGameActive) {
-        setLiveTriviaStatus({ live: true, label: "ROUND IN PROGRESS" });
+        setLiveTriviaStatus({ live: true, label: "Live Now" });
         return;
       }
 
@@ -1607,26 +1614,30 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       ? Math.max(0, Math.floor((liveTriviaStatus.nextStartAtMs - liveCountdownNowMs) / 1000))
       : null;
   const nextLiveTriviaCountdownLabel = liveTriviaStatus.live
-    ? "00:00:00"
+    ? "Live Now"
     : nextLiveTriviaCountdownSeconds != null
     ? formatLongCountdown(nextLiveTriviaCountdownSeconds)
     : "--:--:--";
   const liveSoonMinutes =
     nextLiveTriviaCountdownSeconds != null ? Math.max(1, Math.ceil(nextLiveTriviaCountdownSeconds / 60)) : null;
-  const showLiveBadge =
+  const lobbyButtonShouldPulse =
     liveTriviaStatus.live ||
-    (liveTriviaStatus.nextStartAtMs != null &&
-      liveTriviaStatus.nextStartAtMs > liveCountdownNowMs &&
-      liveTriviaStatus.nextStartAtMs - liveCountdownNowMs <= 10 * 60 * 1000);
+    (nextLiveTriviaCountdownSeconds != null &&
+      nextLiveTriviaCountdownSeconds > 0 &&
+      nextLiveTriviaCountdownSeconds <= 120);
 
   const visibleBadgeByGame = useMemo(() => {
     const badges = new Map<VenueGameKey, string>();
     for (const [gameKey, count] of Object.entries(homeBadgeCounts) as Array<[VenueGameKey, number | undefined]>) {
       if (!count || count <= 0) continue;
+      // Don't show live_trivia badge when the game is currently live
+      if (gameKey === "live_trivia" && liveTriviaStatus.live) {
+        continue;
+      }
       badges.set(gameKey, formatBadgeCount(count));
     }
     return badges;
-  }, [homeBadgeCounts]);
+  }, [homeBadgeCounts, liveTriviaStatus.live]);
 
   const selectedChallenge = useMemo(
     () => challengeCards.find((card) => card.id === selectedChallengeId) ?? null,
@@ -1741,7 +1752,9 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
               <div className="rounded-2xl border border-amber-400/60 bg-ht-surface p-3 shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
                 <div className="flex items-stretch gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-300">Next Live Trivia Showdown In</p>
+                    <p className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-300">
+                      {liveTriviaStatus.live ? "Live Trivia in progress! Join the game now!" : "Next Live Trivia Showdown In"}
+                    </p>
                     <p className="mt-1 font-black tabular-nums text-amber-200 text-[2.2rem] leading-none">
                       {nextLiveTriviaCountdownLabel}
                     </p>
@@ -1756,7 +1769,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                       void goTo("live_trivia", event.currentTarget);
                     }}
                     disabled={pendingDestination !== null}
-                    className="tp-clean-button min-w-[7.2rem] rounded-[12px] border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-lg font-black leading-tight text-cyan-200 shadow-[0_0_0_1px_rgba(34,211,238,0.28)] transition-all hover:bg-cyan-400/15 disabled:opacity-60"
+                    className={`tp-clean-button min-w-[7.2rem] rounded-[12px] border px-4 py-2 text-lg font-black leading-tight transition-all disabled:opacity-60 ${
+                      lobbyButtonShouldPulse
+                        ? "animate-pulse border-rose-300/60 bg-rose-400/20 text-rose-200 shadow-[0_0_0_1px_rgba(252,165,165,0.3)]"
+                        : "border-cyan-400/40 bg-cyan-400/10 text-cyan-200 shadow-[0_0_0_1px_rgba(34,211,238,0.28)] hover:bg-cyan-400/15"
+                    }`}
                   >
                     Enter
                     <br />
@@ -1771,13 +1788,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                   const badge = visibleBadgeByGame.get(card.key);
                   const isLiveTriviaCard = card.key === "live_trivia";
                   const isSpeedTriviaCard = card.key === "trivia";
-                  const statusLabel = isLiveTriviaCard
-                    ? liveTriviaStatus.live
-                      ? "Live Now"
-                      : liveSoonMinutes != null
-                      ? `Live · ${liveSoonMinutes}m`
-                      : "Next Up"
-                    : null;
+                  const statusLabel = isLiveTriviaCard && liveTriviaStatus.live ? "Live Now" : null;
                   return (
                     <button
                       key={card.key}
@@ -1823,12 +1834,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                       {badge ? (
                         <span className="absolute right-2 top-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-black leading-none text-white shadow-[0_2px_8px_rgba(15,23,42,0.45)]">
                           {badge}
-                        </span>
-                      ) : null}
-                      {isLiveTriviaCard && showLiveBadge ? (
-                        <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full border border-rose-300/50 bg-rose-500/15 px-2 py-0.5">
-                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />
-                          <span className="text-[9px] font-black uppercase tracking-[0.14em] text-rose-200">Live</span>
                         </span>
                       ) : null}
                     </button>
@@ -2065,30 +2070,32 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
             </div>
           </div>
 
-          <div className="mb-5 rounded-ht-lg border border-ht-border-hairline bg-ht-elevated/50 p-3">
-            <div className="text-sm font-black text-ht-fg-primary">Passkey Login</div>
-            <p className="mt-1 text-xs text-ht-fg-muted">
-              Enable one-tap Face ID, Touch ID, or device PIN login on this device.
-            </p>
-            <button
-              type="button"
-              onClick={() => void handlePasskeySetup()}
-              disabled={isPasskeySetupLoading}
-              className="mt-3 inline-flex min-h-[40px] w-full items-center justify-center rounded-xl border border-cyan-400/50 bg-cyan-400/15 px-3 py-2 text-sm font-black text-cyan-200 disabled:opacity-50"
-            >
-              {isPasskeySetupLoading ? "Setting up passkey..." : "Set Up Passkey"}
-            </button>
-            {passkeySetupError ? (
-              <p className="mt-2 rounded-lg border border-rose-400/50 bg-rose-900/30 px-2 py-1 text-xs text-rose-200">
-                {passkeySetupError}
+          {!hasPasskey && (
+            <div className="mb-5 rounded-ht-lg border border-ht-border-hairline bg-ht-elevated/50 p-3">
+              <div className="text-sm font-black text-ht-fg-primary">Passkey Login</div>
+              <p className="mt-1 text-xs text-ht-fg-muted">
+                Enable one-tap Face ID, Touch ID, or device PIN login on this device.
               </p>
-            ) : null}
-            {passkeySetupMessage ? (
-              <p className="mt-2 rounded-lg border border-emerald-400/50 bg-emerald-900/30 px-2 py-1 text-xs text-emerald-200">
-                {passkeySetupMessage}
-              </p>
-            ) : null}
-          </div>
+              <button
+                type="button"
+                onClick={() => void handlePasskeySetup()}
+                disabled={isPasskeySetupLoading}
+                className="mt-3 inline-flex min-h-[40px] w-full items-center justify-center rounded-xl border border-cyan-400/50 bg-cyan-400/15 px-3 py-2 text-sm font-black text-cyan-200 disabled:opacity-50"
+              >
+                {isPasskeySetupLoading ? "Setting up passkey..." : "Set Up Passkey"}
+              </button>
+              {passkeySetupError ? (
+                <p className="mt-2 rounded-lg border border-rose-400/50 bg-rose-900/30 px-2 py-1 text-xs text-rose-200">
+                  {passkeySetupError}
+                </p>
+              ) : null}
+              {passkeySetupMessage ? (
+                <p className="mt-2 rounded-lg border border-emerald-400/50 bg-emerald-900/30 px-2 py-1 text-xs text-emerald-200">
+                  {passkeySetupMessage}
+                </p>
+              ) : null}
+            </div>
+          )}
 
           <nav aria-label="Primary navigation">
             <ul className="space-y-3">

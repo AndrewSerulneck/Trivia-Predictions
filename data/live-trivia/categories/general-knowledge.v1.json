@@ -82,14 +82,6 @@
       "difficulty": "hard"
     },
     {
-      "slug": "what-is-the-main-organ-of-the-human-respiratory-system",
-      "question": "What is the main organ of the human respiratory system?",
-      "answer": "Lungs",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
       "slug": "who-invented-the-light-bulb",
       "question": "Who invented the light bulb?",
       "answer": "Thomas Edison",
@@ -104,22 +96,6 @@
       "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
-    },
-    {
-      "slug": "which-fruit-is-famous-for-keeping-the-doctor-away",
-      "question": "Which fruit is famous for keeping the doctor away?",
-      "answer": "Apple",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "which-instrument-has-black-and-white-keys",
-      "question": "Which instrument has black and white keys?",
-      "answer": "Piano",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "medium"
     },
     {
       "slug": "which-fictional-detective-lives-at-221b-baker-street",
@@ -146,44 +122,12 @@
       "difficulty": "hard"
     },
     {
-      "slug": "what-is-a-group-of-lions-called",
-      "question": "What is a group of lions called?",
-      "answer": "Pride",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "what-is-the-hardest-natural-substance-on-earth",
-      "question": "What is the hardest natural substance on Earth?",
-      "answer": "Diamond",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
       "slug": "which-ancient-wonder-was-a-massive-lighthouse",
       "question": "Which ancient wonder was a massive lighthouse?",
       "answer": "Lighthouse of Alexandria",
       "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
-    },
-    {
-      "slug": "what-is-the-primary-color-of-a-ripe-banana",
-      "question": "What is the primary color of a ripe banana?",
-      "answer": "Yellow",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "what-color-is-typically-associated-with-royalty",
-      "question": "What color is typically associated with royalty?",
-      "answer": "Purple",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "easy"
     },
     {
       "slug": "which-famous-tower-is-located-in-paris-france",
@@ -229,14 +173,6 @@
       "slug": "in-which-year-did-the-titanic-sink",
       "question": "In which year did the Titanic sink?",
       "answer": "1912",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "which-vegetable-is-known-for-making-people-cry-when-sliced",
-      "question": "Which vegetable is known for making people cry when sliced?",
-      "answer": "Onion",
       "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
@@ -306,14 +242,6 @@
       "difficulty": "hard"
     },
     {
-      "slug": "what-type-of-animal-is-a-killer-whale",
-      "question": "What type of animal is a 'killer whale'?",
-      "answer": "Dolphin",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
       "slug": "which-country-hosted-the-2016-summer-olympics",
       "question": "Which country hosted the 2016 Summer Olympics?",
       "answer": "Brazil",
@@ -325,22 +253,6 @@
       "slug": "what-is-the-only-letter-in-the-alphabet-not-appearing-in-the-name-of-any-us-state",
       "question": "What is the only letter in the alphabet not appearing in the name of any US state?",
       "answer": "Q",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "what-is-sushi-traditionally-wrapped-in",
-      "question": "What is sushi traditionally wrapped in?",
-      "answer": "Nori",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "which-musical-instrument-is-sometimes-called-the-king-of-instruments",
-      "question": "Which musical instrument is sometimes called the \"king of instruments\"?",
-      "answer": "Organ",
       "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "hard"
@@ -360,14 +272,6 @@
       "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
-    },
-    {
-      "slug": "what-is-the-speed-of-light-in-a-vacuum-approximately",
-      "question": "What is the speed of light in a vacuum, approximately?",
-      "answer": "300,000 km/s",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "medium"
     },
     {
       "slug": "who-wrote-don-quixote",
@@ -405,14 +309,6 @@
       "slug": "which-country-is-famous-for-the-great-barrier-reef",
       "question": "Which country is famous for the Great Barrier Reef?",
       "answer": "Australia",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "what-color-is-formed-when-blue-and-yellow-pigments-are-mixed",
-      "question": "What color is formed when blue and yellow pigments are mixed?",
-      "answer": "Green",
       "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
@@ -490,22 +386,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "what-is-the-name-of-the-device-used-to-measure-earthquakes",
-      "question": "What is the name of the device used to measure earthquakes?",
-      "answer": "Seismograph",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "which-war-was-fought-between-the-north-and-south-regions-of-the-united-states",
-      "question": "Which war was fought between the North and South regions of the United States?",
-      "answer": "Civil War",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
       "slug": "which-ocean-is-the-smallest-and-shallowest-of-the-worlds-five-major-oceans",
       "question": "Which ocean is the smallest and shallowest of the world's five major oceans?",
       "answer": "Arctic Ocean",
@@ -562,14 +442,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "which-animal-lays-eggs-and-is-a-mammal",
-      "question": "Which animal lays eggs and is a mammal?",
-      "answer": "Platypus",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
       "slug": "what-is-the-name-of-the-largest-ocean-on-earth",
       "question": "What is the name of the largest ocean on Earth?",
       "answer": "Pacific",
@@ -594,28 +466,12 @@
       "difficulty": "easy"
     },
     {
-      "slug": "which-fruit-is-known-for-containing-a-lot-of-potassium",
-      "question": "Which fruit is known for containing a lot of potassium?",
-      "answer": "Banana",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
       "slug": "what-is-the-name-of-the-famous-clock-tower-in-london",
       "question": "What is the name of the famous clock tower in London?",
       "answer": "Big Ben",
       "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "easy"
-    },
-    {
-      "slug": "which-ancient-civilization-built-the-pyramids",
-      "question": "Which ancient civilization built the pyramids?",
-      "answer": "Egyptian",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "medium"
     },
     {
       "slug": "which-continent-is-home-to-the-amazon-rainforest",
@@ -629,14 +485,6 @@
       "slug": "what-is-the-name-of-the-fictional-city-where-batman-operates",
       "question": "What is the name of the fictional city where Batman operates?",
       "answer": "Gotham City",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "which-of-these-is-a-primary-color-of-light",
-      "question": "Which of these is a primary color of light?",
-      "answer": "Green",
       "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
@@ -714,14 +562,6 @@
       "difficulty": "hard"
     },
     {
-      "slug": "which-animal-is-known-as-the-king-of-the-jungle",
-      "question": "Which animal is known as the 'king of the jungle'?",
-      "answer": "Lion",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
       "slug": "what-is-the-name-of-the-longest-river-in-the-world",
       "question": "What is the name of the longest river in the world?",
       "answer": "Nile River",
@@ -749,14 +589,6 @@
       "slug": "what-is-the-smallest-country-in-the-world-by-land-area",
       "question": "What is the smallest country in the world by land area?",
       "answer": "Vatican City",
-      "answer_format": "write_in",
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "what-is-the-main-ingredient-in-guacamole",
-      "question": "What is the main ingredient in guacamole?",
-      "answer": "Avocado",
       "answer_format": "write_in",
       "category": "General Knowledge",
       "difficulty": "medium"
@@ -801,5 +633,6 @@
       "category": "General Knowledge",
       "difficulty": "hard"
     }
-  ]
+  ],
+  "familiarity": "mainstream"
 }

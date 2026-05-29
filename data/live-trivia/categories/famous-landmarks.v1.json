@@ -35,8 +35,8 @@
     },
     {
       "slug": "landmark-sagrada-familia",
-      "question": "Designed by the visionary Catalan architect Antoni Gaud\u00ed, this breathtaking, organic-styled basilica in Barcelona has been under continuous construction since 1882.",
-      "answer": "Sagrada Fam\u00edlia",
+      "question": "Designed by the visionary Catalan architect Antoni Gaudí, this breathtaking, organic-styled basilica in Barcelona has been under continuous construction since 1882.",
+      "answer": "Sagrada Família",
       "answer_format": "write_in",
       "category": "Famous Landmarks",
       "difficulty": "medium"
@@ -59,7 +59,7 @@
     },
     {
       "slug": "landmark-statue-of-liberty",
-      "question": "Designed by Fr\u00e9d\u00e9ric-Auguste Bartholdi and dedicated in 1886, this colossal copper sculpture on Liberty Island was a gift from the people of France to the United States.",
+      "question": "Designed by Frédéric-Auguste Bartholdi and dedicated in 1886, this colossal copper sculpture on Liberty Island was a gift from the people of France to the United States.",
       "answer": "Statue of Liberty",
       "answer_format": "write_in",
       "category": "Famous Landmarks",
@@ -83,7 +83,7 @@
     },
     {
       "slug": "landmark-chichen-itza",
-      "question": "Dominated by the massive step-pyramid known as El Castillo, this large pre-Columbian city built by the Maya civilization sits in the Mexican state of Yucat\u00e1n.",
+      "question": "Dominated by the massive step-pyramid known as El Castillo, this large pre-Columbian city built by the Maya civilization sits in the Mexican state of Yucatán.",
       "answer": "Chichen Itza",
       "answer_format": "write_in",
       "category": "Famous Landmarks",
@@ -115,7 +115,7 @@
     },
     {
       "slug": "landmark-sydney-opera-house",
-      "question": "Designed by Danish architect J\u00f8rn Utzon and formally opened in 1973, this Expressionist masterpiece on Bennelong Point features a series of distinctive gleaming white concrete 'shells' resembling sails.",
+      "question": "Designed by Danish architect Jørn Utzon and formally opened in 1973, this Expressionist masterpiece on Bennelong Point features a series of distinctive gleaming white concrete 'shells' resembling sails.",
       "answer": "Sydney Opera House",
       "answer_format": "write_in",
       "category": "Famous Landmarks",
@@ -371,7 +371,7 @@
     },
     {
       "slug": "landmark-arc-de-triomphe",
-      "question": "Commissioned by Napoleon in 1806 following his victory at Austerlitz, this monumental neoclassical arch stands proudly at the center of the Place Charles de Gaulle at the western end of the Champs-\u00c9lys\u00e9es.",
+      "question": "Commissioned by Napoleon in 1806 following his victory at Austerlitz, this monumental neoclassical arch stands proudly at the center of the Place Charles de Gaulle at the western end of the Champs-Élysées.",
       "answer": "Arc de Triomphe",
       "answer_format": "write_in",
       "category": "Famous Landmarks",
@@ -683,7 +683,7 @@
     },
     {
       "slug": "landmark-easy-chichen-itza-rebound",
-      "question": "Located on Mexico's Yucat\u00e1n Peninsula, this ancient Mayan city is dominated by a massive, world-famous step-pyramid known as El Castillo.",
+      "question": "Located on Mexico's Yucatán Peninsula, this ancient Mayan city is dominated by a massive, world-famous step-pyramid known as El Castillo.",
       "answer": "Chichen Itza",
       "answer_format": "write_in",
       "category": "Famous Landmarks",
@@ -819,7 +819,7 @@
     },
     {
       "slug": "landmark-easy-arc-de-triomphe-rebound",
-      "question": "This famous neoclassical triumphal arch stands proudly at the center of a massive traffic roundabout at the western end of the Champs-\u00c9lys\u00e9es in Paris.",
+      "question": "This famous neoclassical triumphal arch stands proudly at the center of a massive traffic roundabout at the western end of the Champs-Élysées in Paris.",
       "answer": "Arc de Triomphe",
       "answer_format": "write_in",
       "category": "Famous Landmarks",
@@ -861,14 +861,6 @@
       "slug": "landmark-easy-panther-parthenon",
       "question": "Dedicated to the goddess Athena, the majestic ruins of this ancient white marble temple dominate the rocky cliffside of the Acropolis in Athens, Greece.",
       "answer": "Parthenon",
-      "answer_format": "write_in",
-      "category": "Famous Landmarks",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "landmark-easy-mt-fuji-shinkansen",
-      "question": "Operating on dedicated tracks at speeds up to 200 mph, this iconic network of high-speed passenger trains serves as a modern technological landmark of Japan.",
-      "answer": "Bullet Train",
       "answer_format": "write_in",
       "category": "Famous Landmarks",
       "difficulty": "easy"
@@ -984,14 +976,7 @@
       "answer_format": "write_in",
       "category": "Famous Landmarks",
       "difficulty": "easy"
-    },
-    {
-      "slug": "landmark-easy-windmills-mykonos",
-      "question": "These iconic, snow-white cylindrical stone windmills with thatched roofs face the sea on the popular Greek island of Mykonos.",
-      "answer": "Windmills of Mykonos",
-      "answer_format": "write_in",
-      "category": "Famous Landmarks",
-      "difficulty": "easy"
     }
-  ]
+  ],
+  "familiarity": "mainstream"
 }

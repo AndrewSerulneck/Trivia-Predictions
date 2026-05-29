@@ -10,10 +10,13 @@ const mocks = vi.hoisted(() => ({
   verifyAuthenticationResponse: vi.fn(),
   chooseUserAndVenueFromRequest: vi.fn(),
   createChallenge: vi.fn(),
+  findAccountByUsername: vi.fn(),
+  findAccountById: vi.fn(),
   findUserByIdAndVenue: vi.fn(),
   findUserByUsernameAndVenue: vi.fn(),
   getCredentialTransportList: vi.fn(),
   isPasskeyFeatureEnabled: vi.fn(),
+  listPasskeysForAccount: vi.fn(),
   listPasskeysForUser: vi.fn(),
   mapUserForResponse: vi.fn(),
   normalizeUsername: vi.fn(),
@@ -46,10 +49,13 @@ vi.mock("@simplewebauthn/server", () => ({
 vi.mock("@/lib/webauthn", () => ({
   chooseUserAndVenueFromRequest: mocks.chooseUserAndVenueFromRequest,
   createChallenge: mocks.createChallenge,
+  findAccountByUsername: mocks.findAccountByUsername,
+  findAccountById: mocks.findAccountById,
   findUserByIdAndVenue: mocks.findUserByIdAndVenue,
   findUserByUsernameAndVenue: mocks.findUserByUsernameAndVenue,
   getCredentialTransportList: mocks.getCredentialTransportList,
   isPasskeyFeatureEnabled: mocks.isPasskeyFeatureEnabled,
+  listPasskeysForAccount: mocks.listPasskeysForAccount,
   listPasskeysForUser: mocks.listPasskeysForUser,
   mapUserForResponse: mocks.mapUserForResponse,
   normalizeUsername: mocks.normalizeUsername,
@@ -95,6 +101,10 @@ describe("passkey auth API routes", () => {
       }
     });
     mocks.isPasskeyFeatureEnabled.mockReturnValue(true);
+    // Default: no global account → tests fall back to venue-scoped lookup.
+    mocks.findAccountByUsername.mockResolvedValue(null);
+    mocks.findAccountById.mockResolvedValue(null);
+    mocks.listPasskeysForAccount.mockResolvedValue([]);
     mocks.normalizeUsername.mockImplementation((value: string) => value.trim());
     mocks.normalizeVenueId.mockImplementation((value: string) => value.trim());
     mocks.resolveAllowedOriginAndRpId.mockReturnValue({

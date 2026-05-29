@@ -6,12 +6,14 @@ import type { PasskeyErrorCode } from "@/lib/passkeyErrors";
 import {
   decodePublicKeyFromBase64Url,
   extractChallengeFromResponse,
+  findAccountById,
   findUserByIdAndVenue,
   getActiveChallengeById,
   getCredentialTransportList,
   getGenericAuthFailureMessage,
   isPasskeyFeatureEnabled,
   markChallengeUsed,
+  mapAccountForResponse,
   mapUserForResponse,
   normalizeVenueId,
   sanitizeCredentialId,
@@ -28,6 +30,7 @@ type AuthenticateVerifyBody = {
 
 type PasskeyRow = {
   user_id: string;
+  account_id: string | null;
   credential_id_b64url: string;
   public_key_b64url: string;
   sign_count: number;
@@ -75,38 +78,47 @@ export async function POST(request: Request) {
     }
 
     // ── Look up the stored credential ─────────────────────────────────────────
-    // Non-discoverable: filter by both user_id and credential_id (stricter).
-    // Discoverable (user_id=null on challenge): find by credential_id alone and
-    // resolve the user_id from the passkey row itself.
+    // Account-first: filter by account_id + credential_id (stricter).
+    // Legacy venue-scoped: filter by user_id + credential_id.
+    // Discoverable (both null on challenge): find by credential_id alone.
     let storedCredential: PasskeyRow | null = null;
+    const selectFields = "user_id, account_id, credential_id_b64url, public_key_b64url, sign_count, transports, device_type, backed_up";
 
-    if (challenge.user_id) {
-      const credentialQuery = await supabaseAdmin
+    if (challenge.account_id) {
+      const q = await supabaseAdmin
         .from("user_passkeys")
-        .select("user_id, credential_id_b64url, public_key_b64url, sign_count, transports, device_type, backed_up")
+        .select(selectFields)
+        .eq("account_id", challenge.account_id)
+        .eq("credential_id_b64url", credentialId)
+        .maybeSingle<PasskeyRow>();
+      if (q.error) return passkeyError(500, "UNKNOWN", q.error.message);
+      storedCredential = q.data;
+    } else if (challenge.user_id) {
+      const q = await supabaseAdmin
+        .from("user_passkeys")
+        .select(selectFields)
         .eq("user_id", challenge.user_id)
         .eq("credential_id_b64url", credentialId)
         .maybeSingle<PasskeyRow>();
-      if (credentialQuery.error) {
-        return passkeyError(500, "UNKNOWN", credentialQuery.error.message);
-      }
-      storedCredential = credentialQuery.data;
+      if (q.error) return passkeyError(500, "UNKNOWN", q.error.message);
+      storedCredential = q.data;
     } else {
-      // Discoverable flow — credential_id is globally unique so no user filter needed.
-      const credentialQuery = await supabaseAdmin
+      // Discoverable flow — credential_id is globally unique.
+      const q = await supabaseAdmin
         .from("user_passkeys")
-        .select("user_id, credential_id_b64url, public_key_b64url, sign_count, transports, device_type, backed_up")
+        .select(selectFields)
         .eq("credential_id_b64url", credentialId)
         .maybeSingle<PasskeyRow>();
-      if (credentialQuery.error) {
-        return passkeyError(500, "UNKNOWN", credentialQuery.error.message);
-      }
-      storedCredential = credentialQuery.data;
+      if (q.error) return passkeyError(500, "UNKNOWN", q.error.message);
+      storedCredential = q.data;
     }
 
-    const resolvedUserId = challenge.user_id ?? storedCredential?.user_id ?? null;
+    const resolvedAccountId =
+      challenge.account_id ?? storedCredential?.account_id ?? null;
+    const resolvedUserId =
+      challenge.user_id ?? storedCredential?.user_id ?? null;
 
-    if (!storedCredential || !resolvedUserId) {
+    if (!storedCredential || (!resolvedAccountId && !resolvedUserId)) {
       return passkeyError(401, "CREDENTIAL_NOT_FOUND", getGenericAuthFailureMessage());
     }
 
@@ -134,6 +146,9 @@ export async function POST(request: Request) {
     }
 
     const newCounter = verification.authenticationInfo.newCounter;
+
+    // credential_id_b64url is globally unique; update by it alone to avoid
+    // stale filters when account_id/user_id have just been migrated.
     const updateCredential = await supabaseAdmin
       .from("user_passkeys")
       .update({
@@ -142,7 +157,6 @@ export async function POST(request: Request) {
         device_type: verification.authenticationInfo.credentialDeviceType,
         last_used_at: new Date().toISOString(),
       })
-      .eq("user_id", resolvedUserId)
       .eq("credential_id_b64url", storedCredential.credential_id_b64url);
 
     if (updateCredential.error) {
@@ -151,7 +165,28 @@ export async function POST(request: Request) {
 
     await markChallengeUsed(supabaseAdmin, challenge.id);
 
-    const user = venueId
+    // Return the richest identity info available.
+    // Account-first: return account info; venue profile is resolved by the client
+    // after venue selection via POST /api/join/profile.
+    if (resolvedAccountId) {
+      const account = await findAccountById(supabaseAdmin, resolvedAccountId);
+      const venueUser = venueId && resolvedUserId
+        ? await findUserByIdAndVenue(supabaseAdmin, { userId: resolvedUserId, venueId })
+        : null;
+
+      return NextResponse.json({
+        ok: true,
+        verified: true,
+        account: account
+          ? { id: account.id, username: account.username, authId: account.auth_id ?? undefined }
+          : { id: resolvedAccountId },
+        ...(venueUser ? { user: mapUserForResponse(venueUser) } : {}),
+        next: { method: "passkey" },
+      });
+    }
+
+    // Legacy: return venue-profile info.
+    const user = venueId && resolvedUserId
       ? await findUserByIdAndVenue(supabaseAdmin, { userId: resolvedUserId, venueId })
       : null;
 
@@ -159,9 +194,7 @@ export async function POST(request: Request) {
       ok: true,
       verified: true,
       user: user ? mapUserForResponse(user) : { id: resolvedUserId },
-      next: {
-        method: "passkey",
-      },
+      next: { method: "passkey" },
     });
   } catch {
     return passkeyError(401, "AUTH_FAILED", getGenericAuthFailureMessage());

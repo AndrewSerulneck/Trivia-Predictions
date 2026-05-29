@@ -2,22 +2,6 @@
   "categoryName": "Classic TV sitcoms",
   "questions": [
     {
-      "slug": "friends-ross-divorce-count",
-      "question": "Over the course of the sitcom Friends, how many times does Ross Geller get legally divorced?",
-      "answer": "3",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "seinfeld-soup-nazi-line",
-      "question": "What four-word catchphrase does the strict kitchen owner shout whenever a customer violates his ordering ordering procedures in Seinfeld?",
-      "answer": "No soup for you",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
       "slug": "himym-barney-playbook-alias",
       "question": "In How I Met Your Mother, what is the title of the legendary notebook Barney Stinson uses to track his complex scams and strategies for picking up women?",
       "answer": "The Playbook",
@@ -37,14 +21,6 @@
       "slug": "the-office-dunder-mifflin-city",
       "question": "In which specific Pennsylvania city is the main branch of the Dunder Mifflin Paper Company located in The Office?",
       "answer": "Scranton",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "friends-pivot-couch-stairwell",
-      "question": "What iconic one-word command does Ross scream repeatedly at Rachel and Chandler while trying to maneuver a couch up a narrow apartment stairwell?",
-      "answer": "Pivot",
       "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
@@ -74,38 +50,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "modern-family-phil-dunphy-profession",
-      "question": "What is the mainstream professional occupation of Phil Dunphy throughout the sitcom Modern Family?",
-      "answer": "Real estate agent",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "seinfeld-george-fake-profession",
-      "question": "What fake professional occupation does George Costanza routinely claim to have whenever he wants to impress someone or lie his way out of a jam?",
-      "answer": "Architect",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "friends-joey-special-food-rule",
-      "question": "What is the aggressive, five-word rule that Joey Tribbiani's friends must follow regarding his dinner plate, famously revealed during a double date?",
-      "answer": "Joey doesn't share food",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "big-bang-theory-sheldon-knock-count",
-      "question": "How many times does Sheldon Cooper systematically knock on a door while repeating a person's name before he considers it acceptable to enter?",
-      "answer": "3",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
       "slug": "himym-marshall-lily-college",
       "question": "Ted, Marshall, and Lily all met and became best friends while attending which specific Connecticut higher education institution?",
       "answer": "Wesleyan University",
@@ -130,14 +74,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "friends-monica-geller-job",
-      "question": "What is Monica Geller's primary professional career and passion throughout the ten seasons of Friends?",
-      "answer": "Chef",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
       "slug": "seinfeld-festivus-holiday-date",
       "question": "On what specific calendar date in December does Frank Costanza's alternative holiday \"Festivus\" officially take place?",
       "answer": "December 23",
@@ -154,44 +90,12 @@
       "difficulty": "medium"
     },
     {
-      "slug": "scrubs-jds-mentor-nickname",
-      "question": "In Scrubs, the intense, fast-talking Dr. Perry Cox refuses to call J.D. by his actual name. What does he call him instead throughout the series?",
-      "answer": "Girls' names",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "schitts-creek-moira-soap-opera",
-      "question": "In Schitt's Creek, Moira Rose is a former daytime soap opera star famous for playing Sunrise Bay character Vivian Blake. What was her character's medical profession?",
-      "answer": "Doctor",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "medium"
-    },
-    {
       "slug": "big-bang-theory-penny-hometown-state",
       "question": "Before moving to Los Angeles to pursue an acting career, Penny grew up on a rural farm in which Midwestern U.S. state?",
       "answer": "Nebraska",
       "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
-    },
-    {
-      "slug": "seinfeld-elaine-benes-father-profession",
-      "question": "In Seinfeld, Elaine's intimidating father Alton Benes makes a memorable appearance in Season 2. What is his acclaimed profession?",
-      "answer": "Author",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "friends-chandler-bing-job-acronym",
-      "question": "Rachel Green gets a question wrong on a trivia game because she doesn't know Chandler's job. While she mistakenly calls him a \"transponster,\" what is his actual field?",
-      "answer": "Statistical analysis and data reconfiguration",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "hard"
     },
     {
       "slug": "himym-slap-bet-total-count",
@@ -210,14 +114,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "the-office-dundie-trophy-shape",
-      "question": "The corporate trophies that Michael Scott hands out at Chili's for the \"Dundie Awards\" feature a plastic figurine of a businessman holding what specific sports equipment?",
-      "answer": "Golf club",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "medium"
-    },
-    {
       "slug": "seinfeld-jerry-car-theft-mechanic",
       "question": "In a famous multi-part Seinfeld episode, Jerry's car is stolen by his highly erratic auto mechanic, played by Brad Garrett. What is the mechanic's first name?",
       "answer": "Tony",
@@ -226,28 +122,12 @@
       "difficulty": "hard"
     },
     {
-      "slug": "himym-ted-mosby-profession",
-      "question": "What is Ted Mosby's primary professional occupation throughout the nine seasons of How I Met Your Mother?",
-      "answer": "Architect",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
       "slug": "big-bang-theory-comic-book-shop-owner",
       "question": "What is the first name of the lonely, down-on-his-luck owner of the local comic book shop that the guys frequent in The Big Bang Theory?",
       "answer": "Stuart",
       "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
-    },
-    {
-      "slug": "parks-and-rec-lil-sebastian-animal",
-      "question": "The entire town of Pawnee, Indiana, falls into a deep state of mourning following the death of Lil Sebastian. What kind of animal was he?",
-      "answer": "Miniature horse",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
     },
     {
       "slug": "brooklyn-nine-nine-jake-peralta-die-hard",
@@ -298,14 +178,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "the-office-jims-prank-encased-in-gelatin",
-      "question": "In the pilot episode of The Office, Jim Halpert pulls his very first on-screen prank on Dwight Schrute by encasing what office supply in yellow Jell-O?",
-      "answer": "Stapler",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
       "slug": "friends-monica-geller-middle-name",
       "question": "While Chandler's middle name is Muriel, what is Monica Geller's middle name, which is briefly revealed during the show?",
       "answer": "E.M.",
@@ -325,14 +197,6 @@
       "slug": "himym-maclarens-pub-basement-laser-tag",
       "question": "What is the name of the fictional neighborhood Irish pub located directly underneath Ted and Marshall's apartment where the gang hangs out?",
       "answer": "MacLaren's Pub",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "big-bang-theory-raj-selective-mutism-cure",
-      "question": "For the first six seasons of The Big Bang Theory, Rajesh Koothrappali suffers from selective mutism that prevents him from speaking to women unless he consumes what?",
-      "answer": "Alcohol",
       "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
@@ -362,22 +226,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "the-good-place-chidi-academic-specialty",
-      "question": "In The Good Place, Chidi Anagonye's severe indecisiveness stems from his living earthly profession as a university professor of what specific academic field?",
-      "answer": "Moral philosophy",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "arrested-development-frozen-banana-stand",
-      "question": "The Bluth family business operates a small, cash-generating retail boardwalk stand in Newport Beach that exclusively sells what frozen treat?",
-      "answer": "Frozen bananas",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
       "slug": "that-70s-show-basement-circle",
       "question": "What is the first name of Eric Forman's formidable, hyper-strict, war-veteran father who constantly threatens to kick Eric's butt?",
       "answer": "Red",
@@ -397,14 +245,6 @@
       "slug": "frasier-kacl-radio-station-city",
       "question": "Dr. Frasier Crane hosts his daily, call-in psychological therapeutic talk show on KACL 780 AM talk radio in which major U.S. city?",
       "answer": "Seattle",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "ted-lasso-biscuit-box-recipient",
-      "question": "In Ted Lasso, Ted wins over his boss Rebecca Welton every morning by baking and bringing her shortbread biscuits in what color small box?",
-      "answer": "Pink",
       "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
@@ -434,14 +274,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "whats-we-do-in-the-shadows-energy-vampire",
-      "question": "In What We Do in the Shadows, Colin Robinson doesn't drink blood; instead, he drains humans and vampires alike by boring them as what specific type of vampire?",
-      "answer": "Energy vampire",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
       "slug": "hacks-deborah-vance-city",
       "question": "In the comedy-drama Hacks, legendary stand-up comic Deborah Vance fights to maintain her decades-long performance residency in which city?",
       "answer": "Las Vegas",
@@ -464,14 +296,6 @@
       "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "hard"
-    },
-    {
-      "slug": "it-crowd-reboot-it-catchphrase",
-      "question": "In the British sitcom The IT Crowd, Roy and Moss systematically answer every technical support phone call with what identical, nine-word question?",
-      "answer": "Have you tried turning it off and on again?",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
     },
     {
       "slug": "derry-girls-catholic-school-setting",
@@ -514,30 +338,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "atlanta-earn-paper-boi-relationship",
-      "question": "In Donald Glover's comedy-drama Atlanta, Earnest \"Earn\" Marks works as the manager for the rising rapper Paper Boi, who is also his what?",
-      "answer": "Cousin",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "pen15-middle-school-grade",
-      "question": "In the cringe-comedy PEN15, adult creators Maya Erskine and Anna Konkle play versions of their 13-year-old selves navigating which specific middle school grade?",
-      "answer": "Seventh grade",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "letterkenny-three-groups",
-      "question": "The fast-talking Canadian sitcom Letterkenny introduces the town's social structure as being split into Hicks, Skids, and what local sports group?",
-      "answer": "Hockey players",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
       "slug": "right-eous-gemstones-megachurch-state",
       "question": "The Righteous Gemstones follows a dysfunctional, world-famous family of televangelists running a network of megachurches based in which Southern U.S. state?",
       "answer": "South Carolina",
@@ -554,14 +354,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "shrinkage-jason-segel-profession",
-      "question": "In the comedy series Shrinking, Jason Segel plays Jimmy Laird, a man who begins telling his clients exactly what he thinks while grieving his wife. What is Jimmy's profession?",
-      "answer": "Therapist",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
       "slug": "insecure-issa-dee-nonprofit",
       "question": "At the start of Issa Rae's Insecure, Issa Dee works at a frustrating, out-of-touch youth non-profit organization named what?",
       "answer": "We Got Y'all",
@@ -576,14 +368,6 @@
       "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
-    },
-    {
-      "slug": "party-down-catering-uniform-color",
-      "question": "The cult comedy Party Down follows a miserable crew of Hollywood hopefuls working for a catering company. What specific color bow tie are they required to wear?",
-      "answer": "Pink",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "hard"
     },
     {
       "slug": "man-seeking-woman-josh-sister",
@@ -634,36 +418,12 @@
       "difficulty": "easy"
     },
     {
-      "slug": "two-and-a-half-men-charlie-harper-profession",
-      "question": "In Two and a Half Men, how does Charlie Harper primarily earn his massive income to afford his Malibu beach house?",
-      "answer": "Writing jingles",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
       "slug": "two-and-a-half-men-sharp-tongued-housekeeper",
       "question": "What is the first name of Charlie's highly cynical, sharp-tongued, and fiercely independent housekeeper?",
       "answer": "Berta",
       "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
-    },
-    {
-      "slug": "two-and-a-half-men-alan-harper-medical-field",
-      "question": "What specific type of medical practitioner is Alan Harper, a profession that Charlie routinely mocks him for?",
-      "answer": "Chiropractor",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "two-and-a-half-men-ashton-kutcher-billionaire",
-      "question": "Following Charlie Harper's sudden departure from the series, billionaire Walden Schmidt buys the Malibu house. How did Walden make his fortune?",
-      "answer": "Internet entrepreneur",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "medium"
     },
     {
       "slug": "modern-family-phil-dunphy-real-estate-rival",
@@ -738,14 +498,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "family-guy-quagmire-professional-pilot",
-      "question": "Peter's hyper-eccentric, hyper-sexual next-door neighbor Glenn Quagmire earns his living working in what professional capacity?",
-      "answer": "Commercial airline pilot",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
       "slug": "family-guy-brian-griffin-prized-possession-car",
       "question": "The highly intellectual family dog Brian Griffin drives a specific, eco-friendly vehicle throughout the series. What make and model is it?",
       "answer": "Toyota Prius",
@@ -771,7 +523,7 @@
     },
     {
       "slug": "arrested-development-tobias-funke-hybrid-profession",
-      "question": "Tobias F\u00fcnke loses his medical license and attempts to combine his skills as an analyst and a therapist into one disastrously named new profession. What is the term?",
+      "question": "Tobias Fünke loses his medical license and attempts to combine his skills as an analyst and a therapist into one disastrously named new profession. What is the term?",
       "answer": "Analrapist",
       "answer_format": "write_in",
       "category": "Classic TV sitcoms",
@@ -794,14 +546,6 @@
       "difficulty": "hard"
     },
     {
-      "slug": "arrested-development-staircase-truck-vehicle",
-      "question": "Following the asset freeze of the Bluth Company, Michael Bluth is forced to drive the family's sole remaining corporate vehicle around southern California. What kind of commercial vehicle is it?",
-      "answer": "Stair car",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
       "slug": "always-sunny-charlie-kelly-favorite-food",
       "question": "Charlie Kelly frequently mentions his absolute favorite food, which he insists on eating raw or boiling with jellybeans. What is this food item?",
       "answer": "Milk steak",
@@ -813,14 +557,6 @@
       "slug": "always-sunny-mac-real-first-name",
       "question": "While universally known simply as \"Mac,\" the character's deeply embarrassing full legal first name is finally revealed in Season 7. What is it?",
       "answer": "Ronald",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "always-sunny-dennis-system-acronym",
-      "question": "Dennis Reynolds outlines his highly manipulative, six-step strategic framework for seducing women. What does the acronym \"D.E.N.N.I.S.\" stand for?",
-      "answer": "Demonstrate value, Engage physically, Nurture dependence, Neglect emotionally, Inspire hope, Separate entirely",
       "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
@@ -842,14 +578,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "i-love-lucy-chocolate-factory-job",
-      "question": "In one of television's most iconic physical comedy scenes, Lucy and Ethel secure temporary jobs wrapping candy at what specific type of factory assembly line?",
-      "answer": "Chocolate factory",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
       "slug": "i-love-lucy-ricky-ricardo-nightclub",
       "question": "Ricky Ricardo works as a prominent orchestra leader and entertainer at which famous fictional New York City nightclub?",
       "answer": "Tropicana",
@@ -858,28 +586,12 @@
       "difficulty": "easy"
     },
     {
-      "slug": "i-love-lucy-vitameatavegamin-alcohol-percentage",
-      "question": "Lucy famously gets completely intoxicated while filming a television commercial for a liquid health supplement named Vitameatavegamin. What is the main chemical reason she gets drunk?",
-      "answer": "It contains 23% alcohol",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "medium"
-    },
-    {
       "slug": "i-love-lucy-ethel-mertz-middle-name",
       "question": "While Fred Mertz's middle name is Hobart, what is his wife Ethel's middle name, which is used to mock her in a few episodes?",
       "answer": "Roberta",
       "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "hard"
-    },
-    {
-      "slug": "i-love-lucy-california-move-reason",
-      "question": "In the later seasons of the series, the Ricardos and Mertzes temporarily pack up and move across the country to California for what specific professional reason?",
-      "answer": "Ricky gets a movie contract",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "medium"
     },
     {
       "slug": "new-girl-winston-bishop-beloved-cat",
@@ -906,44 +618,12 @@
       "difficulty": "medium"
     },
     {
-      "slug": "new-girl-jess-day-yarn-instrument",
-      "question": "Jess Day is an eccentric middle school teacher who frequently breaks into song and carries around what specific small, stringed acoustic musical instrument?",
-      "answer": "Ukulele",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "new-girl-cece-parekh-original-profession",
-      "question": "When Jess first moves into the loft, what is the full-time professional occupation of her best friend Cece Parekh?",
-      "answer": "Fashion model",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
       "slug": "new-girl-coach-real-name-ernie",
       "question": "The athlete and personal trainer roommate universally known as \"Coach\" returns to the loft in later seasons. What is his actual canonical first name?",
       "answer": "Ernie",
       "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "hard"
-    },
-    {
-      "slug": "happy-endings-dave-food-truck-cuisine",
-      "question": "In Happy Endings, Dave Rose opens up a mobile food truck called \"Steak Me Home Tonight.\" What specific type of specialty food item does he serve?",
-      "answer": "Gourmet sliders",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "happy-endings-penny-hartz-catchphrase",
-      "question": "Penny Hartz frequently uses a distinct, shorthand linguistic habit where she abbreviates words by cutting them off mid-syllable. What is her favorite word for describing something amazing?",
-      "answer": "Amah-zing",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
     },
     {
       "slug": "happy-endings-max-blum-college-fraternity",
@@ -970,14 +650,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "always-sunny-mcpoyle-brothers-beverage",
-      "question": "The deeply unsettling, bathrobe-wearing McPoyle brothers are completely obsessed with consuming what specific non-alcoholic beverage?",
-      "answer": "Milk",
-      "answer_format": "write_in",
-      "category": "Classic TV sitcoms",
-      "difficulty": "easy"
-    },
-    {
       "slug": "i-love-lucy-fred-mertz-former-vaudeville",
       "question": "Before becoming the Ricardos' landlord, Fred Mertz spent his early professional life touring the country in what specific entertainment field?",
       "answer": "Vaudeville",
@@ -1001,5 +673,6 @@
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     }
-  ]
+  ],
+  "familiarity": "mainstream"
 }

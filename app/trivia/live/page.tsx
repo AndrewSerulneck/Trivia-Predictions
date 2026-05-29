@@ -147,6 +147,9 @@ export default function LiveShowdownPage() {
     () => Promise.resolve()
   );
   const forfeitEligibleRef = useRef(false);
+  // Tracks whether the user is in any spectating state so submit() and the
+  // forfeit path can gate on it without reading React state from a stale closure.
+  const spectatingRef = useRef(false);
   const answerInputRef = useRef<HTMLInputElement>(null);
 
   const activeKey = useMemo(() => {
@@ -309,7 +312,10 @@ export default function LiveShowdownPage() {
 
   useEffect(() => {
     if (!spectatingBlockKey) return;
-    if (!activeKey || activeKey === spectatingBlockKey) return;
+    // Keep spectating only while the exact same question is still active.
+    // When activeKey goes empty (mid_game_break, game over, etc.) OR a new
+    // question arrives, exit spectating so the correct screen can render.
+    if (activeKey && activeKey === spectatingBlockKey) return;
     setSpectatingBlockKey("");
     setJoinState("active_participant");
   }, [activeKey, spectatingBlockKey]);
@@ -337,7 +343,8 @@ export default function LiveShowdownPage() {
       return;
     }
 
-    if (joinedScheduleRef.current && joinedScheduleRef.current !== state.scheduleId) {
+    if (joinedScheduleRef.current && state.scheduleId && joinedScheduleRef.current !== state.scheduleId) {
+      // A genuinely new game started — clear prior session so keys don't bleed across games.
       joinedScheduleRef.current = "";
       setHasJoinedSession(false);
       setParticipatingQuestionKeys({});
@@ -352,6 +359,9 @@ export default function LiveShowdownPage() {
       document.visibilityState === "visible" &&
       document.hasFocus()
     ) {
+      if (joinedScheduleRef.current !== state.scheduleId) {
+        setParticipatingQuestionKeys({});
+      }
       joinedScheduleRef.current = state.scheduleId;
       setHasJoinedSession(true);
       setJoinState("active_participant");
@@ -458,6 +468,9 @@ export default function LiveShowdownPage() {
 
   const submit = useCallback(
     async (submittedAnswer: string, isForfeit = false) => {
+      // Explicit spectator guard — do not submit answers or forfeits on behalf of spectators.
+      // This is intentional, not just inferred from disabled button state.
+      if (spectatingRef.current) return;
       if (!state?.isGameActive || !state.scheduleId || !state.currentRound || !state.currentQuestionIndex) return;
       const userId = (getUserId() ?? "").trim();
       const venueId = (getVenueId() ?? "").trim();
@@ -519,6 +532,11 @@ export default function LiveShowdownPage() {
   useEffect(() => { activeKeyRef.current = activeKey; }, [activeKey]);
   useEffect(() => { submitRef.current = submit; }, [submit]);
   useEffect(() => {
+    // Covers both the narrow isSpectatingActiveBlock window (activeKey matches) and
+    // the joinState that persists briefly after activeKey goes empty.
+    spectatingRef.current = isSpectatingActiveBlock || joinState === "spectating_active_block";
+  }, [isSpectatingActiveBlock, joinState]);
+  useEffect(() => {
     forfeitEligibleRef.current =
       Boolean(state?.isGameActive) &&
       state?.activePhase === "answering" &&
@@ -527,9 +545,10 @@ export default function LiveShowdownPage() {
       isEngineReady &&
       hasJoinedSession &&
       !isSpectatingActiveBlock &&
+      joinState !== "spectating_active_block" &&
       !isPreGameLobby &&
       forfeitKey !== activeKey;
-  }, [activeKey, forfeitKey, hasJoinedSession, hasOnboarded, isEngineReady, isPreGameLobby, isSpectatingActiveBlock, state]);
+  }, [activeKey, forfeitKey, hasJoinedSession, hasOnboarded, isEngineReady, isPreGameLobby, isSpectatingActiveBlock, joinState, state]);
 
   // Stable visibilitychange listener — registered once on mount, never torn down
   // by poll cycles. All live values are read from refs so the 2-second grace timer
@@ -701,6 +720,7 @@ export default function LiveShowdownPage() {
   const pregameJoinWindowActive =
     !state.isGameActive && Boolean(state.nextSchedule) && state.secondsRemaining > 0 && state.secondsRemaining <= 120;
   const canJoinLobby = state.isGameActive || Boolean(state.nextSchedule);
+  const joinButtonShouldPulse = state.isGameActive || pregameJoinWindowActive;
   const locked = forfeitKey === activeKey || submittedKey === activeKey || !answering;
   const progressPct = answering ? Math.max(0, Math.min(100, (state.secondsRemaining / 30) * 100)) : 0;
   const currentResult = isSpectatingActiveBlock ? undefined : activeKey ? resultByKey[activeKey] : undefined;
@@ -766,25 +786,6 @@ export default function LiveShowdownPage() {
 
         {!hasOnboarded ? (
           <>
-            <section className="rounded-2xl border border-cyan-400/60 bg-slate-900 p-5">
-              <p className="text-sm font-black uppercase tracking-[0.14em] text-cyan-300">Live Trivia Rules</p>
-              <ul className="mt-3 space-y-2 text-xl font-semibold leading-snug text-slate-100">
-                {RULE_LINES.map((rule, index) => {
-                  const visible = index < rulesVisibleCount;
-                  return (
-                    <li
-                      key={rule}
-                      className={`rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-3 transition-all duration-500 ${
-                        visible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
-                      }`}
-                    >
-                      {rule}
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-
             <section className="rounded-2xl border border-amber-400/60 bg-slate-900 p-4 text-center">
               <p className="text-xs uppercase tracking-[0.14em] text-amber-300">Live Trivia Status</p>
               {!state.isGameActive ? (
@@ -819,9 +820,46 @@ export default function LiveShowdownPage() {
                 }
               }}
               className={`tp-clean-button w-full rounded-xl py-10 text-3xl font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-50 ${
-                pregameJoinWindowActive
-                  ? "animate-pulse border-2 border-rose-300 bg-rose-300"
-                  : "bg-cyan-400"
+                joinButtonShouldPulse ? "animate-pulse border-2 border-rose-300 bg-rose-300" : "bg-cyan-400"
+              }`}
+            >
+              Join Live Trivia!
+            </button>
+
+            <section className="rounded-2xl border border-cyan-400/60 bg-slate-900 p-5">
+              <p className="text-sm font-black uppercase tracking-[0.14em] text-cyan-300">Live Trivia Rules</p>
+              <ul className="mt-3 space-y-2 text-xl font-semibold leading-snug text-slate-100">
+                {RULE_LINES.map((rule, index) => {
+                  const visible = index < rulesVisibleCount;
+                  return (
+                    <li
+                      key={rule}
+                      className={`rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-3 transition-all duration-500 ${
+                        visible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+                      }`}
+                    >
+                      {rule}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+
+            <button
+              type="button"
+              disabled={!canJoinLobby}
+              onClick={() => {
+                setHasOnboarded(true);
+                if (state.isGameActive && state.activePhase === "answering" && activeKey) {
+                  setSpectatingBlockKey(activeKey);
+                  setHasJoinedSession(false);
+                  setJoinState("spectating_active_block");
+                } else {
+                  setJoinState("active_participant");
+                }
+              }}
+              className={`tp-clean-button w-full rounded-xl py-10 text-3xl font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-50 ${
+                joinButtonShouldPulse ? "animate-pulse border-2 border-rose-300 bg-rose-300" : "bg-cyan-400"
               }`}
             >
               Join Live Trivia!
@@ -970,11 +1008,51 @@ export default function LiveShowdownPage() {
             </section>
           </>
         ) : isSpectatingActiveBlock || joinState === "spectating_active_block" ? (
-          <section className="rounded-2xl border border-sky-400/60 bg-slate-900 p-4 text-center">
-            <p className="text-xs uppercase tracking-[0.14em] text-sky-300">Spectating Current Question</p>
-            <p className="mt-3 text-lg font-black text-sky-100">
-              Question in progress! You will automatically drop into the action on the next question.
-            </p>
+          <section className="rounded-2xl border border-sky-400/60 bg-slate-900 p-4">
+            <div className="mb-3 rounded-xl border border-sky-400/40 bg-sky-950/40 p-3 text-center">
+              <p className="text-xs uppercase tracking-[0.14em] text-sky-300">Spectating Current Question</p>
+              <p className="mt-1 text-sm font-semibold text-sky-100/90">
+                You will automatically join the action on the next question — no penalty for this one.
+              </p>
+            </div>
+            {state.activeQuestion ? (
+              <>
+                <p className="text-base font-black uppercase tracking-[0.14em] text-slate-400">
+                  Round {state.currentRound} · Question {state.currentQuestionIndex}
+                </p>
+                {state.currentRoundCategory ? (
+                  <p className="mt-1 text-base font-bold uppercase tracking-[0.1em] text-slate-400/80">
+                    Category: {state.currentRoundCategory}
+                  </p>
+                ) : null}
+                {state.activeQuestion.isClosestGuess ? (
+                  <p className="mt-2 inline-block rounded-lg border border-amber-400/40 bg-amber-950/30 px-2 py-1 text-sm font-black uppercase tracking-wide text-amber-300/70">
+                    🎯 Closest Guess — nearest answer wins 10 points
+                  </p>
+                ) : null}
+                <p className="mt-2 text-3xl font-extrabold tracking-tight leading-tight text-slate-300">
+                  {state.activeQuestion.question}
+                </p>
+                <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-slate-800">
+                  <div className="h-full bg-sky-600 transition-all duration-700" style={{ width: `${progressPct}%` }} />
+                </div>
+                <p className="mt-1 text-2xl font-black text-sky-400/70">{state.secondsRemaining}s</p>
+                <input
+                  value=""
+                  disabled
+                  readOnly
+                  placeholder="Answer input disabled for this question"
+                  className="mt-3 w-full cursor-not-allowed rounded-xl border border-slate-700 bg-slate-800/50 px-3 py-3 text-xl font-semibold text-slate-500 opacity-50"
+                />
+                <button
+                  type="button"
+                  disabled
+                  className="tp-clean-button mt-3 w-full cursor-not-allowed rounded-xl bg-slate-700 py-3 text-2xl font-black text-slate-500 opacity-50"
+                >
+                  Submit
+                </button>
+              </>
+            ) : null}
           </section>
         ) : answering ? (
           <section className="rounded-2xl border border-emerald-400/60 bg-slate-900 p-4">

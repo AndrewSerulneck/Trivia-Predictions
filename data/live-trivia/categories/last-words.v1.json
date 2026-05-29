@@ -323,7 +323,7 @@
     },
     {
       "slug": "last-words-person-ludwig-van-beethoven",
-      "question": "What iconic German composer, completely deaf by the end of his life, reportedly received a delivery of vintage wine on his deathbed in 1827 and muttered his final words, \"Pity, pity\u2014too late!\"?",
+      "question": "What iconic German composer, completely deaf by the end of his life, reportedly received a delivery of vintage wine on his deathbed in 1827 and muttered his final words, \"Pity, pity—too late!\"?",
       "answer": "Ludwig van Beethoven",
       "answer_format": "write_in",
       "category": "Famous Last Words",
@@ -331,7 +331,7 @@
     },
     {
       "slug": "last-words-film-dr-strangelove",
-      "question": "What dark satirical war comedy cuts away from an unhinged, wheelchair-bound scientist screaming \"Mein F\u00fchrer! I can walk!\" straight into a montage of nuclear explosions?",
+      "question": "What dark satirical war comedy cuts away from an unhinged, wheelchair-bound scientist screaming \"Mein Führer! I can walk!\" straight into a montage of nuclear explosions?",
       "answer": "Dr. Strangelove",
       "answer_format": "write_in",
       "category": "Famous Last Words",
@@ -523,7 +523,7 @@
     },
     {
       "slug": "last-words-person-elvis-presley",
-      "question": "What iconic King of Rock and Roll reportedly told his fianc\u00e9e Ginger Alden, \"I'm going to the bathroom to read\" right before passing away in 1977?",
+      "question": "What iconic King of Rock and Roll reportedly told his fiancée Ginger Alden, \"I'm going to the bathroom to read\" right before passing away in 1977?",
       "answer": "Elvis Presley",
       "answer_format": "write_in",
       "category": "Famous Last Words",
@@ -539,7 +539,7 @@
     },
     {
       "slug": "last-words-book-one-hundred-years-of-solitude",
-      "question": "What magical realist Gabriel Garc\u00eda M\u00e1rquez masterpiece closes with the lines: \"races condemned to one hundred years of solitude did not have a second opportunity on earth\"?",
+      "question": "What magical realist Gabriel García Márquez masterpiece closes with the lines: \"races condemned to one hundred years of solitude did not have a second opportunity on earth\"?",
       "answer": "One Hundred Years of Solitude",
       "answer_format": "write_in",
       "category": "Famous Last Words",
@@ -740,7 +740,7 @@
     {
       "slug": "last-words-book-les-miserables",
       "question": "What massive Victor Hugo masterpiece concludes its epic story with a poetic stanza describing Jean Valjean's simple grave, ending with the line, \"The night comes on, the day goes by\"?",
-      "answer": "Les Mis\u00e9rables",
+      "answer": "Les Misérables",
       "answer_format": "write_in",
       "category": "Famous Last Words",
       "difficulty": "medium"
@@ -867,7 +867,7 @@
     },
     {
       "slug": "last-words-person-che-guevara",
-      "question": "What Marxist revolutionary fiercely stared down his hesitant executioner Mario Ter\u00e1n in a Bolivian schoolhouse in 1967, shouting his defiant final words: \"Shoot, coward! You are only going to kill a man!\"?",
+      "question": "What Marxist revolutionary fiercely stared down his hesitant executioner Mario Terán in a Bolivian schoolhouse in 1967, shouting his defiant final words: \"Shoot, coward! You are only going to kill a man!\"?",
       "answer": "Che Guevara",
       "answer_format": "write_in",
       "category": "Famous Last Words",
@@ -1001,5 +1001,6 @@
       "category": "Famous Last Words",
       "difficulty": "medium"
     }
-  ]
+  ],
+  "familiarity": "niche"
 }

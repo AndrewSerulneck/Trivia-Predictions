@@ -11,7 +11,7 @@ export default async function PickEmPage({
 
   return (
     <GameLandingExperience gameKey="pickem" playLabel="Play Pick 'Em" showPlayingBackButton={false}>
-      <div className="space-y-3">
+      <div className="space-y-3 rounded-2xl border border-indigo-400/20 bg-slate-950/70 p-2">
         <PickEmGameList initialSportSlug={initialSportSlug} />
       </div>
     </GameLandingExperience>

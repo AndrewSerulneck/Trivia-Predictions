@@ -421,7 +421,7 @@ function renderCompactGrid(
       {Array.from({ length: 25 }).map((_, index) => {
         const square = byIndex.get(index);
         if (!square) {
-          return <div key={index} className="h-10 rounded-md border border-ht-border-hairline bg-ht-surface" />;
+          return <div key={index} className="h-10 rounded-md border border-slate-700/60 bg-slate-800/40" />;
         }
 
         const isFree = Boolean(square.isFree);
@@ -498,7 +498,7 @@ function renderExpandedGrid(
         {Array.from({ length: 25 }).map((_, index) => {
           const square = byIndex.get(index);
           if (!square) {
-            return <div key={index} className="min-h-[72px] rounded-lg border border-ht-border-hairline bg-ht-surface sm:min-h-[82px]" />;
+            return <div key={index} className="min-h-[72px] rounded-lg border border-slate-700/60 bg-slate-800/40 sm:min-h-[82px]" />;
           }
 
           const isFree = Boolean(square.isFree);
@@ -1482,7 +1482,7 @@ export function SportsBingoHome() {
   };
 
   return (
-    <div ref={rootRef} className={`space-y-3 ${isScreenShaking ? "tp-bingo-screen-shake" : ""}`}>
+    <div ref={rootRef} className={`tp-bingo-theme space-y-3 ${isScreenShaking ? "tp-bingo-screen-shake" : ""}`}>
       <VenueEntryRulesPanel
         gameKey="bingo"
         shouldDisplay={Boolean(userId) && !loadingCards && activeCards.length === 0}
@@ -1493,14 +1493,14 @@ export function SportsBingoHome() {
       ) : null}
 
       {unclaimedWonBingoCards.length > 0 ? (
-        <div className="rounded-xl border border-emerald-500/40 bg-[linear-gradient(135deg,#052e16_0%,#064e3b_60%,#065f46_100%)] px-3 py-3 shadow-[0_6px_18px_rgba(5,46,22,0.5)]">
-          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-emerald-300">🎉 Bingo Points Ready</p>
+        <div className="rounded-2xl border border-orange-400/40 bg-orange-950/30 px-3 py-3 shadow-[0_6px_18px_rgba(120,53,15,0.35)]">
+          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-orange-300">🎉 Bingo Points Ready</p>
           <div className="mt-1 flex items-center justify-between gap-3">
             <div>
-              <p className="text-lg font-black leading-none text-white">
+              <p className="text-lg font-black leading-none text-slate-100">
                 {unclaimedWonBingoCards.length} winning board{unclaimedWonBingoCards.length !== 1 ? "s" : ""}
               </p>
-              <p className="mt-0.5 text-[11px] font-semibold text-emerald-300">
+              <p className="mt-0.5 text-[11px] font-semibold text-orange-300">
                 +{totalUnclaimedBingoPoints} pts waiting to collect
               </p>
             </div>
@@ -1509,7 +1509,7 @@ export function SportsBingoHome() {
               data-bingo-collect-all
               onClick={() => void collectAllBingoPoints()}
               disabled={isCollectingAllBingo}
-              className="tp-clean-button inline-flex min-h-[44px] items-center rounded-full border-2 border-emerald-500/60 bg-emerald-500/15 px-4 py-2 text-sm font-black text-emerald-300 shadow-[0_3px_0_rgba(0,0,0,0.25)] transition-all active:scale-95 disabled:opacity-60"
+              className="tp-clean-button inline-flex min-h-[44px] items-center rounded-xl border border-orange-400/60 bg-orange-500/20 px-4 py-2 text-sm font-black text-orange-300 shadow-[0_3px_0_rgba(0,0,0,0.25)] transition-all active:scale-95 disabled:opacity-60"
             >
               {isCollectingAllBingo ? "Collecting..." : "Collect Points"}
             </button>
@@ -1519,7 +1519,7 @@ export function SportsBingoHome() {
 
       {/* Header — BINGO rainbow title + controls */}
       <div className="rounded-2xl border border-orange-400/40 bg-slate-900 p-4">
-        <p className="text-center text-[11px] font-black uppercase tracking-[0.16em] text-orange-400">Hightop Sports</p>
+        <p className="text-center text-[11px] font-black uppercase tracking-[0.16em] text-orange-400">Sports Bingo</p>
         <div className="mb-1 grid grid-cols-5 gap-1">
           {[
             { letter: "B", cls: "text-rose-400" },
@@ -1542,7 +1542,7 @@ export function SportsBingoHome() {
               type="button"
               aria-disabled="true"
               onClick={triggerLimitReachedFeedback}
-              className={`inline-flex min-h-[44px] items-center rounded-full bg-orange-100 px-5 py-2 text-sm font-bold text-orange-400 ${
+              className={`tp-clean-button inline-flex min-h-[44px] items-center rounded-full border border-orange-400/50 bg-orange-950/30 px-5 py-2 text-sm font-bold text-orange-300 ${
                 limitPulse ? "pickem-limit-pulse" : ""
               }`}
             >
@@ -1551,18 +1551,18 @@ export function SportsBingoHome() {
           ) : (
             <Link
               href="/bingo/select-sport"
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-gradient-to-r from-rose-500 via-violet-500 to-cyan-500 px-5 py-2 text-sm font-bold text-white shadow-[0_4px_16px_rgba(139,92,246,0.3)] transition-all active:scale-95"
+              className="tp-clean-button inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-orange-400/60 bg-orange-500/20 px-5 py-2 text-sm font-bold text-orange-300 shadow-[0_4px_16px_rgba(124,45,18,0.25)] transition-all active:scale-95"
             >
               🎲 Generate New Bingo Board
             </Link>
           )}
         </div>
 
-        <div className="mt-3 flex w-full items-center justify-between rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-2 py-1.5">
+        <div className="mt-3 flex w-full items-center justify-between rounded-xl border border-orange-400/40 bg-orange-950/30 px-2 py-1.5">
           <button
             type="button"
             onClick={navigateToPrevDay}
-            className="tp-clean-button relative flex h-7 w-7 items-center justify-center rounded-full text-white/80 transition-all hover:bg-white/15 active:scale-90"
+            className="tp-clean-button relative flex h-7 w-7 items-center justify-center rounded-full border border-orange-400/40 bg-slate-900/70 text-orange-300 transition-all hover:bg-orange-900/40 active:scale-90"
             aria-label="Previous day"
           >
             ◀
@@ -1570,12 +1570,12 @@ export function SportsBingoHome() {
               <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white">!</span>
             ) : null}
           </button>
-          <span className="text-sm font-bold text-white">{getDateLabel(selectedDate, todayDate)}</span>
+          <span className="text-sm font-bold text-slate-200">{getDateLabel(selectedDate, todayDate)}</span>
           <button
             type="button"
             onClick={navigateToNextDay}
             disabled={selectedDate >= todayDate}
-            className="tp-clean-button relative flex h-7 w-7 items-center justify-center rounded-full text-white/80 transition-all hover:bg-white/15 active:scale-90 disabled:opacity-30"
+            className="tp-clean-button relative flex h-7 w-7 items-center justify-center rounded-full border border-orange-400/40 bg-slate-900/70 text-orange-300 transition-all hover:bg-orange-900/40 active:scale-90 disabled:opacity-30"
             aria-label="Next day"
           >
             ▶
@@ -1608,7 +1608,7 @@ export function SportsBingoHome() {
             data-bingo-collect-all
             onClick={() => void collectAllBingoPoints()}
             disabled={unclaimedWonBingoCards.length === 0 || isCollectingAllBingo}
-            className="tp-clean-button flex flex-1 items-center justify-center gap-1 rounded-full border border-[#3a1c72] bg-gradient-to-r from-[#5b2ca5] via-[#7b3fd6] to-[#8f4de8] py-2 text-sm font-bold text-white shadow-sm active:scale-95 disabled:opacity-40"
+            className="tp-clean-button flex flex-1 items-center justify-center gap-1 rounded-xl border border-orange-400/60 bg-orange-500/20 py-2 text-sm font-bold text-orange-300 shadow-sm active:scale-95 disabled:opacity-40"
           >
             {isCollectingAllBingo ? "Collecting..." : "Collect Points"}
           </button>
@@ -1624,8 +1624,8 @@ export function SportsBingoHome() {
             onClick={() => goToScreen(0)}
             className={`tp-clean-button rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.1em] transition-all ${
               activeScreen === 0
-                ? "bg-orange-500 text-white shadow-[0_2px_10px_rgba(234,88,12,0.4)]"
-                : "bg-slate-800 text-orange-400 hover:bg-slate-700"
+                ? "bg-orange-500/20 border border-orange-400/60 text-orange-300 shadow-[0_2px_10px_rgba(234,88,12,0.25)]"
+                : "bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700"
             }`}
           >
             Active Boards
@@ -1636,8 +1636,8 @@ export function SportsBingoHome() {
             onClick={() => goToScreen(isSelectedDateToday ? 1 : 0)}
             className={`tp-clean-button rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.1em] transition-all ${
               (isSelectedDateToday ? activeScreen === 1 : true)
-                ? "bg-amber-500 text-white shadow-[0_2px_10px_rgba(245,158,11,0.4)]"
-                : "bg-slate-800 text-orange-400 hover:bg-slate-700"
+                ? "bg-orange-500/20 border border-orange-400/60 text-orange-300 shadow-[0_2px_10px_rgba(245,158,11,0.25)]"
+                : "bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700"
             }`}
           >
             Scored Boards
@@ -1679,12 +1679,12 @@ export function SportsBingoHome() {
                       style={{ willChange: "transform, opacity" }}
                     />
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-sm font-semibold text-ht-fg-primary">{card.gameLabel}</p>
-                      <span className="rounded-full border border-ht-cyan-600/40 bg-ht-cyan-600/15 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-ht-cyan-400">
+                      <p className="text-sm font-semibold text-slate-200">{card.gameLabel}</p>
+                      <span className="rounded-full border border-cyan-400/40 bg-cyan-500/15 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-cyan-300">
                         Active
                       </span>
                     </div>
-                    <p className="mt-1 text-xs text-ht-fg-muted">Starts {formatLocalDateTime(card.startsAt)}</p>
+                    <p className="mt-1 text-xs text-slate-400">Starts {formatLocalDateTime(card.startsAt)}</p>
                     <div className="mt-2">
                       {renderCompactGrid(card.id, card.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys, glowSquareKeys)}
                     </div>
@@ -1706,11 +1706,11 @@ export function SportsBingoHome() {
 
           {/* Final scores panel */}
           <section className="w-full shrink-0 snap-start pl-3">
-            <h2 className="text-base font-bold text-orange-300">Scored Boards</h2>
+            <h2 className="text-base font-black text-orange-300">Scored Boards</h2>
             {loadingCards ? (
               <LoadingState label="Loading scored boards..." />
             ) : selectedSettledCards.length === 0 ? (
-              <p className="mt-3 text-sm text-orange-700/70">No scored boards yet.</p>
+              <p className="mt-3 rounded-xl border border-orange-400/30 bg-slate-800/50 p-3 text-sm text-slate-400">No scored boards yet.</p>
             ) : (
               <ul className="mt-3 space-y-3">
                 {selectedSettledCards.slice(0, 8).map((card) => {
@@ -1722,13 +1722,13 @@ export function SportsBingoHome() {
                       data-bingo-card-id={card.id}
                       className={`rounded-xl border p-3 shadow-sm transition-all ${
                         showClaimOverlay
-                          ? "cursor-pointer border-emerald-500/60 bg-emerald-500/10 ring-2 ring-emerald-500/40 animate-pulse"
-                          : "border-ht-border-soft bg-ht-elevated"
+                          ? "cursor-pointer border-orange-400/60 bg-orange-500/10 ring-2 ring-orange-400/40 animate-pulse"
+                          : "border-slate-700 bg-slate-900"
                       }`}
                       onClick={showClaimOverlay ? (event) => void claimPoints(card, event.currentTarget) : undefined}
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-ht-fg-primary">{card.gameLabel}</p>
+                        <p className="text-sm font-semibold text-slate-200">{card.gameLabel}</p>
                         <span
                           className={`rounded-full px-2 py-1 text-[11px] font-bold uppercase tracking-[0.08em] ${
                             card.status === "won"
@@ -1741,12 +1741,12 @@ export function SportsBingoHome() {
                           {card.status}
                         </span>
                         {showClaimOverlay ? (
-                          <span className="rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-emerald-400">
+                          <span className="rounded-full border border-orange-400/40 bg-orange-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-orange-300">
                             Tap to Claim
                           </span>
                         ) : null}
                       </div>
-                      <p className="mt-1 text-xs text-ht-fg-muted">
+                      <p className="mt-1 text-xs text-slate-400">
                         {formatLocalDateTime(card.startsAt)} · Hits {summary.hitCount}/25
                         {card.status === "won" ? ` · +${card.rewardPoints} pts` : ""}
                         {card.status === "won" && card.rewardClaimedAt ? " · Claimed" : ""}
@@ -1765,7 +1765,7 @@ export function SportsBingoHome() {
                                     event.stopPropagation();
                                     void claimPoints(card, event.currentTarget);
                                   }}
-                                  className="pointer-events-auto inline-flex min-h-[44px] items-center rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-bold text-white shadow-[0_4px_14px_rgba(16,185,129,0.4)] transition-all active:scale-95 disabled:opacity-60"
+                                  className="pointer-events-auto inline-flex min-h-[44px] items-center rounded-xl border border-orange-400/60 bg-orange-500/20 px-4 py-2 text-sm font-bold text-orange-300 shadow-[0_4px_14px_rgba(120,53,15,0.35)] transition-all active:scale-95 disabled:opacity-60"
                                 >
                                   {claimingCardId === card.id ? "Collecting..." : "Collect Points"}
                                 </button>
@@ -1812,19 +1812,19 @@ export function SportsBingoHome() {
             className="absolute inset-0 bg-orange-950/50"
             onClick={() => setExpandedActiveCardId("")}
           />
-          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-ht-2xl border border-ht-cyan-600/40 bg-ht-elevated p-3 shadow-2xl shadow-black/60">
-            <div className="sticky top-0 z-10 mb-2 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-ht-border-soft bg-ht-elevated/95 px-3 py-2 backdrop-blur">
-              <p className="text-sm font-semibold text-ht-fg-primary">{expandedActiveCard.gameLabel}</p>
+          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-2xl border border-cyan-400/40 bg-slate-900 p-3 shadow-2xl shadow-black/60">
+            <div className="sticky top-0 z-10 mb-2 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-slate-700 bg-slate-900/95 px-3 py-2 backdrop-blur">
+              <p className="text-sm font-semibold text-slate-200">{expandedActiveCard.gameLabel}</p>
               <button
                 type="button"
                 onClick={() => setExpandedActiveCardId("")}
-                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-ht-border-soft bg-ht-elevated-2 px-3 py-2 text-xs font-semibold text-ht-fg-primary shadow-sm"
+                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-slate-700 bg-slate-800/50 px-3 py-2 text-xs font-semibold text-slate-200 shadow-sm"
               >
                 <span aria-hidden="true">✕</span>
                 <span>Close</span>
               </button>
             </div>
-            <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.1em] text-ht-cyan-400">Active Board</p>
+            <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.1em] text-cyan-300">Active Board</p>
             {renderExpandedGrid(expandedActiveCard.id, expandedActiveCard.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys, glowSquareKeys)}
           </div>
         </div>
@@ -1839,13 +1839,13 @@ export function SportsBingoHome() {
             className="absolute inset-0 bg-orange-950/50"
             onClick={() => setExpandedFinalCardId("")}
           />
-          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-ht-2xl border border-amber-400/40 bg-ht-elevated p-3 shadow-2xl shadow-black/60">
-            <div className="sticky top-0 z-10 mb-2 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-ht-border-soft bg-ht-elevated/95 px-3 py-2 backdrop-blur">
-              <p className="text-sm font-semibold text-ht-fg-primary">{expandedFinalCard.gameLabel}</p>
+          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-2xl border border-amber-400/40 bg-slate-900 p-3 shadow-2xl shadow-black/60">
+            <div className="sticky top-0 z-10 mb-2 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-slate-700 bg-slate-900/95 px-3 py-2 backdrop-blur">
+              <p className="text-sm font-semibold text-slate-200">{expandedFinalCard.gameLabel}</p>
               <button
                 type="button"
                 onClick={() => setExpandedFinalCardId("")}
-                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-ht-border-soft bg-ht-elevated-2 px-3 py-2 text-xs font-semibold text-ht-fg-primary shadow-sm"
+                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-slate-700 bg-slate-800/50 px-3 py-2 text-xs font-semibold text-slate-200 shadow-sm"
               >
                 <span aria-hidden="true">✕</span>
                 <span>Close</span>

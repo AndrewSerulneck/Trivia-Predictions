@@ -11,6 +11,7 @@ type CreateProfileBody = {
   pin?: string;
   selectedVenueId?: string;
   authUserId?: string;
+  accountId?: string;
 };
 
 type UserRow = {
@@ -73,16 +74,164 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json().catch(() => ({}))) as CreateProfileBody;
+  const accountId = normalizeAuthUserId(body.accountId);
+  const venueId = (body.venueId ?? "").trim();
+  const traceId = String(request.headers.get("x-auth-trace-id") ?? "").trim() || null;
+  const startedAt = Date.now();
+
+  // ── Account-first path ───────────────────────────────────────────────────────
+  // When accountId is supplied the caller has already authenticated; we just
+  // find or lazily create the venue-scoped profile (points start at 0).
+  if (accountId) {
+    if (!venueId) {
+      return NextResponse.json({ ok: false, error: "Venue is required." }, { status: 400 });
+    }
+
+    logAuthIncident("join-profile-route", "post-account-path-start", { traceId, accountId, venueId });
+
+    const { data: account, error: accountLookupError } = await supabaseAdmin
+      .from("accounts")
+      .select("id, auth_id, username")
+      .eq("id", accountId)
+      .maybeSingle<{ id: string; auth_id: string | null; username: string }>();
+
+    if (accountLookupError) {
+      return NextResponse.json({ ok: false, error: accountLookupError.message }, { status: 500 });
+    }
+    if (!account) {
+      return NextResponse.json({ ok: false, error: "Account not found." }, { status: 404 });
+    }
+
+    // Ensure default demo venue exists.
+    const defaultVenueForAccount = DEFAULT_VENUE_BY_ID[venueId];
+    if (defaultVenueForAccount) {
+      const { data: existingVenue, error: existingVenueError } = await supabaseAdmin
+        .from("venues")
+        .select("id")
+        .eq("id", defaultVenueForAccount.id)
+        .maybeSingle();
+      if (existingVenueError) {
+        return NextResponse.json({ ok: false, error: existingVenueError.message }, { status: 500 });
+      }
+      if (!existingVenue) {
+        const { error: insertVenueError } = await supabaseAdmin.from("venues").insert({
+          id: defaultVenueForAccount.id,
+          name: defaultVenueForAccount.name,
+          address: defaultVenueForAccount.address,
+          latitude: defaultVenueForAccount.latitude,
+          longitude: defaultVenueForAccount.longitude,
+          radius: defaultVenueForAccount.radius,
+        });
+        if (insertVenueError) {
+          return NextResponse.json({ ok: false, error: insertVenueError.message }, { status: 500 });
+        }
+      }
+    }
+
+    // Find or create the venue profile.
+    const { data: existingProfile, error: profileLookupError } = await supabaseAdmin
+      .from("users")
+      .select("id, auth_id, username, venue_id, points, created_at")
+      .eq("account_id", accountId)
+      .eq("venue_id", venueId)
+      .maybeSingle<UserRow>();
+
+    if (profileLookupError) {
+      return NextResponse.json({ ok: false, error: profileLookupError.message }, { status: 500 });
+    }
+
+    if (existingProfile) {
+      logAuthIncident("join-profile-route", "post-account-path-existing-profile", {
+        traceId, accountId, venueId, userId: existingProfile.id, elapsedMs: Date.now() - startedAt,
+      });
+      return NextResponse.json({
+        ok: true,
+        user: {
+          id: existingProfile.id,
+          accountId,
+          authId: existingProfile.auth_id ?? undefined,
+          username: existingProfile.username,
+          venueId: existingProfile.venue_id,
+          points: existingProfile.points,
+          createdAt: existingProfile.created_at,
+        },
+      });
+    }
+
+    const { data: newProfile, error: insertProfileError } = await supabaseAdmin
+      .from("users")
+      .insert({
+        account_id: accountId,
+        auth_id: account.auth_id,
+        username: account.username,
+        venue_id: venueId,
+        points: 0,
+      })
+      .select("id, auth_id, username, venue_id, points, created_at")
+      .single<UserRow>();
+
+    if (insertProfileError || !newProfile) {
+      const code = (insertProfileError as { code?: string } | null)?.code;
+      if (code === "23503") {
+        return NextResponse.json(
+          { ok: false, error: "Selected venue is unavailable right now. Refresh and choose again." },
+          { status: 409 }
+        );
+      }
+      if (code === "23505") {
+        // Race: another request already created the profile; re-fetch and return it.
+        const { data: racedProfile } = await supabaseAdmin
+          .from("users")
+          .select("id, auth_id, username, venue_id, points, created_at")
+          .eq("account_id", accountId)
+          .eq("venue_id", venueId)
+          .maybeSingle<UserRow>();
+        if (racedProfile) {
+          return NextResponse.json({
+            ok: true,
+            user: {
+              id: racedProfile.id,
+              accountId,
+              authId: racedProfile.auth_id ?? undefined,
+              username: racedProfile.username,
+              venueId: racedProfile.venue_id,
+              points: racedProfile.points,
+              createdAt: racedProfile.created_at,
+            },
+          });
+        }
+      }
+      return NextResponse.json(
+        { ok: false, error: insertProfileError?.message ?? "Failed to create venue profile." },
+        { status: 500 }
+      );
+    }
+
+    logAuthIncident("join-profile-route", "post-account-path-created-profile", {
+      traceId, accountId, venueId, userId: newProfile.id, elapsedMs: Date.now() - startedAt,
+    });
+    return NextResponse.json({
+      ok: true,
+      user: {
+        id: newProfile.id,
+        accountId,
+        authId: newProfile.auth_id ?? undefined,
+        username: newProfile.username,
+        venueId: newProfile.venue_id,
+        points: newProfile.points,
+        createdAt: newProfile.created_at,
+      },
+    });
+  }
+
+  // ── Legacy username+PIN path (backward compatible) ───────────────────────────
   const username = (body.username ?? "").trim();
   const usernameNormalized = normalizeUsernameForLookup(username);
-  const venueId = (body.venueId ?? "").trim();
   const selectedVenueFromBody = (body.selectedVenueId ?? "").trim();
   const selectedVenueFromHeader = (request.headers.get("x-selected-venue-id") ?? "").trim();
   const selectedVenueId = selectedVenueFromBody || selectedVenueFromHeader || venueId;
   const authUserId = normalizeAuthUserId(body.authUserId);
   const pin = normalizePin(body.pin ?? "");
-  const traceId = String(request.headers.get("x-auth-trace-id") ?? "").trim() || null;
-  const startedAt = Date.now();
   logAuthIncident("join-profile-route", "post-start", {
     traceId,
     username,
@@ -310,13 +459,28 @@ export async function GET(request: Request) {
   const username = (searchParams.get("username") ?? "").trim();
   const venueId = (searchParams.get("venueId") ?? "").trim();
 
-  if (!username || !venueId) {
-    return NextResponse.json(
-      { ok: false, error: "username and venueId are required." },
-      { status: 400 }
-    );
+  if (!username) {
+    return NextResponse.json({ ok: false, error: "username is required." }, { status: 400 });
   }
 
+  // Without a venueId: check the global accounts table (account-first flow).
+  if (!venueId) {
+    const { data, error } = await supabaseAdmin
+      .from("accounts")
+      .select("id, pin_salt, pin_hash")
+      .eq("username_normalized", normalizeUsernameForLookup(username))
+      .maybeSingle<{ id?: string; pin_salt?: string | null; pin_hash?: string | null }>();
+
+    if (error) {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    }
+
+    const exists = Boolean(data?.id);
+    const hasPin = Boolean(String(data?.pin_salt ?? "").trim() && String(data?.pin_hash ?? "").trim());
+    return NextResponse.json({ ok: true, exists, hasPin, isReturningUser: exists && hasPin });
+  }
+
+  // With venueId: per-venue check (legacy path).
   const query = await supabaseAdmin
     .from("users")
     .select("id, username, pin_salt, pin_hash")

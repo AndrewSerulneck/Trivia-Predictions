@@ -238,6 +238,128 @@ export async function createUserProfile(params: {
   return payload.user;
 }
 
+export async function createOrLoginAccount(params: {
+  username: string;
+  pin: string;
+  mode?: "login" | "create";
+  traceId?: string;
+  signal?: AbortSignal;
+}): Promise<{ id: string; username: string; authId?: string }> {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const username = params.username.trim();
+  const pin = normalizePin(params.pin);
+  if (!validateUsername(username)) {
+    throw new Error("Username is required.");
+  }
+  if (!validatePin(pin)) {
+    throw new Error("PIN must be exactly 4 digits.");
+  }
+
+  const traceId = String(params.traceId ?? "").trim() || null;
+  const authUserId = await getCurrentAuthUserId(traceId ?? undefined);
+
+  logAuthIncident("auth-helper", "create-or-login-account-start", { traceId, username });
+
+  const controller = new AbortController();
+  const timeoutId = globalThis.setTimeout(() => controller.abort(), JOIN_PROFILE_REQUEST_TIMEOUT_MS);
+  params.signal?.addEventListener("abort", () => controller.abort(), { once: true });
+
+  let response: Response;
+  try {
+    response = await fetch("/api/join/account", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(traceId ? { "X-Auth-Trace-Id": traceId } : {}),
+      },
+      body: JSON.stringify({ username, pin, authUserId, ...(params.mode ? { mode: params.mode } : {}) }),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (isAbortError(error)) {
+      throw params.signal?.aborted
+        ? new Error("Login request was canceled.")
+        : new Error("Account request timed out. Please try again.");
+    }
+    throw error;
+  } finally {
+    globalThis.clearTimeout(timeoutId);
+  }
+
+  const rawBody = await response.text().catch(() => "");
+  let payload = {} as { ok?: boolean; error?: string; account?: { id: string; username: string; authId?: string } };
+  try {
+    payload = rawBody ? (JSON.parse(rawBody) as typeof payload) : {};
+  } catch {
+    payload = {};
+  }
+
+  if (!response.ok || !payload.ok || !payload.account) {
+    throw new Error(payload.error ?? "Failed to authenticate account.");
+  }
+  return payload.account;
+}
+
+export async function resolveVenueProfile(params: {
+  accountId: string;
+  venueId: string;
+  traceId?: string;
+  signal?: AbortSignal;
+}): Promise<User> {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const traceId = String(params.traceId ?? "").trim() || null;
+  logAuthIncident("auth-helper", "resolve-venue-profile-start", {
+    traceId,
+    accountId: params.accountId,
+    venueId: params.venueId,
+  });
+
+  const controller = new AbortController();
+  const timeoutId = globalThis.setTimeout(() => controller.abort(), JOIN_PROFILE_REQUEST_TIMEOUT_MS);
+  params.signal?.addEventListener("abort", () => controller.abort(), { once: true });
+
+  let response: Response;
+  try {
+    response = await fetch("/api/join/profile", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(traceId ? { "X-Auth-Trace-Id": traceId } : {}),
+      },
+      body: JSON.stringify({ accountId: params.accountId, venueId: params.venueId }),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (isAbortError(error)) {
+      throw params.signal?.aborted
+        ? new Error("Request was canceled.")
+        : new Error("Venue profile request timed out. Please try again.");
+    }
+    throw error;
+  } finally {
+    globalThis.clearTimeout(timeoutId);
+  }
+
+  const rawBody = await response.text().catch(() => "");
+  let payload = {} as { ok?: boolean; error?: string; user?: User };
+  try {
+    payload = rawBody ? (JSON.parse(rawBody) as typeof payload) : {};
+  } catch {
+    payload = {};
+  }
+
+  if (!response.ok || !payload.ok || !payload.user) {
+    throw new Error(payload.error ?? "Failed to resolve venue profile.");
+  }
+  return payload.user;
+}
+
 export async function signOut(): Promise<void> {
   if (!supabase) {
     return;

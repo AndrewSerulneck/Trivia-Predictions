@@ -90,14 +90,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "kentucky-derby-distance",
-      "question": "What is the standard distance of the Kentucky Derby?",
-      "answer": "1.25 miles",
-      "answer_format": "write_in",
-      "category": "Sports",
-      "difficulty": "hard"
-    },
-    {
       "slug": "world-series-most-titles",
       "question": "Which MLB team has won the most World Series championships?",
       "answer": "New York Yankees",
@@ -138,28 +130,12 @@
       "difficulty": "medium"
     },
     {
-      "slug": "wimbledon-surface",
-      "question": "On what surface is the Wimbledon tennis tournament played?",
-      "answer": "Grass",
-      "answer_format": "write_in",
-      "category": "Sports",
-      "difficulty": "easy"
-    },
-    {
       "slug": "boxing-heavyweight-longest-reign",
       "question": "Which boxer held the heavyweight title for the longest consecutive time?",
       "answer": "Joe Louis",
       "answer_format": "write_in",
       "category": "Sports",
       "difficulty": "hard"
-    },
-    {
-      "slug": "soccer-field-common-name",
-      "question": "What is the formal name for a soccer field?",
-      "answer": "Pitch",
-      "answer_format": "write_in",
-      "category": "Sports",
-      "difficulty": "easy"
     },
     {
       "slug": "nfl-most-rushing-yards-season",
@@ -258,22 +234,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "soccer-offside-rule-players",
-      "question": "How many defending players must be between the attacker and the goal for the attacker to be onside?",
-      "answer": "Two",
-      "answer_format": "write_in",
-      "category": "Sports",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "golf-albatross-meaning",
-      "question": "In golf, what is another name for an 'Albatross'?",
-      "answer": "Double Eagle",
-      "answer_format": "write_in",
-      "category": "Sports",
-      "difficulty": "medium"
-    },
-    {
       "slug": "mlb-most-hits-career",
       "question": "Who holds the MLB record for the most career hits?",
       "answer": "Pete Rose",
@@ -285,14 +245,6 @@
       "slug": "ufc-first-two-division-champ",
       "question": "Who was the first fighter in UFC history to hold titles in two weight classes simultaneously?",
       "answer": "Conor McGregor",
-      "answer_format": "write_in",
-      "category": "Sports",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "olympics-marathon-distance-km",
-      "question": "What is the official distance of an Olympic marathon in kilometers?",
-      "answer": "42.195 km",
       "answer_format": "write_in",
       "category": "Sports",
       "difficulty": "medium"
@@ -362,14 +314,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "cycling-giro-d-italia-jersey",
-      "question": "What color jersey is worn by the leader of the Giro d'Italia?",
-      "answer": "Pink",
-      "answer_format": "write_in",
-      "category": "Sports",
-      "difficulty": "hard"
-    },
-    {
       "slug": "f1-monaco-grand-prix-most-wins",
       "question": "Who holds the record for the most wins at the Monaco Grand Prix?",
       "answer": "Ayrton Senna",
@@ -428,7 +372,7 @@
     {
       "slug": "olympics-gymnastics-perfect-ten",
       "question": "Who was the first gymnast to score a perfect 10.0 in the Olympics?",
-      "answer": "Nadia Com\u0103neci",
+      "answer": "Nadia Comăneci",
       "answer_format": "write_in",
       "category": "Sports",
       "difficulty": "medium"
@@ -466,22 +410,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "cricket-ashes-series-nations",
-      "question": "The 'Ashes' is a famous Test cricket series played between which two nations?",
-      "answer": "Australia & England",
-      "answer_format": "write_in",
-      "category": "Sports",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "nhl-rink-blue-line-purpose",
-      "question": "In the NHL, crossing which line before the puck results in an offside call?",
-      "answer": "Blue line",
-      "answer_format": "write_in",
-      "category": "Sports",
-      "difficulty": "easy"
-    },
-    {
       "slug": "nba-most-assists-career",
       "question": "Who is the NBA's all-time leader in career assists?",
       "answer": "John Stockton",
@@ -516,7 +444,7 @@
     {
       "slug": "f1-ferrari-last-drivers-champion",
       "question": "Who was the last driver to win an F1 World Championship for Ferrari (2007)?",
-      "answer": "Kimi R\u00e4ikk\u00f6nen",
+      "answer": "Kimi Räikkönen",
       "answer_format": "write_in",
       "category": "Sports",
       "difficulty": "medium"
@@ -528,14 +456,6 @@
       "answer_format": "write_in",
       "category": "Sports",
       "difficulty": "medium"
-    },
-    {
-      "slug": "golf-player-career-grand-slam",
-      "question": "How many players have completed the modern men's career Grand Slam in golf?",
-      "answer": "5",
-      "answer_format": "write_in",
-      "category": "Sports",
-      "difficulty": "hard"
     },
     {
       "slug": "nhl-most-shutouts-career",
@@ -571,7 +491,7 @@
     },
     {
       "slug": "olympics-first-perfect-score-gymnastics",
-      "question": "In which city did Nadia Com\u0103neci achieve the first perfect 10 in Olympic history?",
+      "question": "In which city did Nadia Comăneci achieve the first perfect 10 in Olympic history?",
       "answer": "Montreal",
       "answer_format": "write_in",
       "category": "Sports",
@@ -584,14 +504,6 @@
       "answer_format": "write_in",
       "category": "Sports",
       "difficulty": "easy"
-    },
-    {
-      "slug": "ufc-fastest-knockout-seconds",
-      "question": "How many seconds did Jorge Masvidal's record-breaking knockout of Ben Askren take?",
-      "answer": "5",
-      "answer_format": "write_in",
-      "category": "Sports",
-      "difficulty": "medium"
     },
     {
       "slug": "soccer-ucl-most-titles-club",
@@ -629,14 +541,6 @@
       "slug": "horse-racing-triple-crown-races",
       "question": "Which race is the second leg of the American Triple Crown?",
       "answer": "Preakness Stakes",
-      "answer_format": "write_in",
-      "category": "Sports",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "snooker-maximum-break-score",
-      "question": "What is the maximum break possible in a standard game of snooker?",
-      "answer": "147",
       "answer_format": "write_in",
       "category": "Sports",
       "difficulty": "medium"
@@ -732,7 +636,7 @@
     {
       "slug": "mlb-only-player-40-70-season",
       "question": "Who became the first MLB player to record 40 HRs and 70 SBs in one season?",
-      "answer": "Ronald Acu\u00f1a Jr.",
+      "answer": "Ronald Acuña Jr.",
       "answer_format": "write_in",
       "category": "Sports",
       "difficulty": "medium"
@@ -747,7 +651,7 @@
     },
     {
       "slug": "soccer-first-ever-million-pound-player",
-      "question": "Who was the first soccer player to be transferred for \u00a31 million?",
+      "question": "Who was the first soccer player to be transferred for £1 million?",
       "answer": "Trevor Francis",
       "answer_format": "write_in",
       "category": "Sports",
@@ -757,14 +661,6 @@
       "slug": "ncaa-football-most-wins-coach",
       "question": "Which coach has the most wins in major college football history?",
       "answer": "Joe Paterno",
-      "answer_format": "write_in",
-      "category": "Sports",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "tour-de-france-green-jersey",
-      "question": "What does the green jersey signify in the Tour de France?",
-      "answer": "Points/Sprints Leader",
       "answer_format": "write_in",
       "category": "Sports",
       "difficulty": "medium"
@@ -801,5 +697,6 @@
       "category": "Sports",
       "difficulty": "medium"
     }
-  ]
+  ],
+  "familiarity": "mainstream"
 }

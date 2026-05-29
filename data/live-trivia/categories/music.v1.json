@@ -18,14 +18,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "piano-key-count",
-      "question": "How many keys are on a standard modern piano?",
-      "answer": "88",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "easy"
-    },
-    {
       "slug": "beatles-original-drummer",
       "question": "Who was the original drummer for The Beatles before Ringo Starr?",
       "answer": "Pete Best",
@@ -66,22 +58,6 @@
       "difficulty": "hard"
     },
     {
-      "slug": "vivaldi-four-seasons-instrument",
-      "question": "What instrument is the solo focus of Vivaldi's 'The Four Seasons'?",
-      "answer": "Violin",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "adele-album-titles-pattern",
-      "question": "Adele's studio albums are famously titled after what?",
-      "answer": "Her Age",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "easy"
-    },
-    {
       "slug": "rolling-stones-logo-designer",
       "question": "Who designed the iconic 'Tongue and Lips' logo for the Rolling Stones?",
       "answer": "John Pasche",
@@ -96,14 +72,6 @@
       "answer_format": "write_in",
       "category": "Music",
       "difficulty": "medium"
-    },
-    {
-      "slug": "miles-davis-primary-instrument",
-      "question": "What instrument did jazz legend Miles Davis play?",
-      "answer": "Trumpet",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "easy"
     },
     {
       "slug": "ziggy-stardust-alter-ego",
@@ -178,28 +146,12 @@
       "difficulty": "medium"
     },
     {
-      "slug": "first-instrument-played-by-louis-armstrong",
-      "question": "What was the first instrument Louis Armstrong learned to play?",
-      "answer": "Cornet",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "hard"
-    },
-    {
       "slug": "led-zeppelin-stairway-to-heaven-album",
       "question": "On which Led Zeppelin album does 'Stairway to Heaven' appear?",
       "answer": "Led Zeppelin IV",
       "answer_format": "write_in",
       "category": "Music",
       "difficulty": "easy"
-    },
-    {
-      "slug": "madonna-like-a-virgin-performance-mtv",
-      "question": "At which award show did Madonna famously perform 'Like a Virgin' in a wedding dress?",
-      "answer": "The 1984 VMAs",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "medium"
     },
     {
       "slug": "beethoven-symphony-ode-to-joy",
@@ -221,14 +173,6 @@
       "slug": "eminem-alter-ego-name",
       "question": "What is the name of Eminem's famous mischievous alter ego?",
       "answer": "Slim Shady",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "aretha-franklin-queen-of-soul",
-      "question": "Aretha Franklin is widely known as the Queen of what genre?",
-      "answer": "Soul",
       "answer_format": "write_in",
       "category": "Music",
       "difficulty": "easy"
@@ -266,14 +210,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "woodwind-instrument-no-reed",
-      "question": "Which of these woodwind instruments does not use a reed to produce sound?",
-      "answer": "Flute",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "medium"
-    },
-    {
       "slug": "taylor-swift-first-single",
       "question": "What was the title of Taylor Swift's debut single released in 2006?",
       "answer": "Tim McGraw",
@@ -298,25 +234,9 @@
       "difficulty": "hard"
     },
     {
-      "slug": "green-day-american-idiot-genre",
-      "question": "Green Day's 'American Idiot' is classified as what type of musical work?",
-      "answer": "Rock Opera",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "medium"
-    },
-    {
       "slug": "elvis-presley-home-name",
       "question": "What is the name of Elvis Presley's famous estate in Memphis?",
       "answer": "Graceland",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "violin-string-count",
-      "question": "How many strings are typically on a standard violin?",
-      "answer": "4",
       "answer_format": "write_in",
       "category": "Music",
       "difficulty": "easy"
@@ -378,14 +298,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "cello-tuning-strings",
-      "question": "Which of these is the correct tuning for the four strings of a cello, from lowest to highest?",
-      "answer": "C-G-D-A",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "hard"
-    },
-    {
       "slug": "u2-lead-guitarist-nickname",
       "question": "What is the stage name of U2's lead guitarist, David Howell Evans?",
       "answer": "The Edge",
@@ -416,14 +328,6 @@
       "answer_format": "write_in",
       "category": "Music",
       "difficulty": "medium"
-    },
-    {
-      "slug": "fleetwood-mac-original-genre",
-      "question": "Before becoming a pop-rock powerhouse, Fleetwood Mac began as a band in which genre?",
-      "answer": "British Blues",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "hard"
     },
     {
       "slug": "kendrick-lamar-pulitzer",
@@ -594,14 +498,6 @@
       "difficulty": "hard"
     },
     {
-      "slug": "madonna-vogue-inspiration",
-      "question": "Madonna's hit song 'Vogue' was inspired by a dance style from which underground scene?",
-      "answer": "Harlem Ballroom",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "medium"
-    },
-    {
       "slug": "u2-joshua-tree-year",
       "question": "In which year was U2's 'The Joshua Tree' released?",
       "answer": "1987",
@@ -706,28 +602,12 @@
       "difficulty": "easy"
     },
     {
-      "slug": "woodwind-clarinet-reed-count",
-      "question": "How many reeds does a standard clarinet use?",
-      "answer": "One",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "medium"
-    },
-    {
       "slug": "fleetwood-mac-the-chain-writer",
       "question": "Which song is the only one on 'Rumours' credited to all five members of Fleetwood Mac?",
       "answer": "The Chain",
       "answer_format": "write_in",
       "category": "Music",
       "difficulty": "hard"
-    },
-    {
-      "slug": "beastie-boys-original-genre",
-      "question": "The Beastie Boys originally started as a band in which genre before moving to Hip Hop?",
-      "answer": "Punk Rock",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "medium"
     },
     {
       "slug": "dr-dre-the-chronic-year",
@@ -741,14 +621,6 @@
       "slug": "rolling-stones-sympathy-for-the-devil-album",
       "question": "Which album contains the Rolling Stones track 'Sympathy for the Devil'?",
       "answer": "Beggars Banquet",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "marvin-gaye-death-cause",
-      "question": "Tragically, Marvin Gaye was shot and killed by whom in 1984?",
-      "answer": "His father",
       "answer_format": "write_in",
       "category": "Music",
       "difficulty": "medium"
@@ -768,14 +640,6 @@
       "answer_format": "write_in",
       "category": "Music",
       "difficulty": "medium"
-    },
-    {
-      "slug": "queen-bohemian-rhapsody-length",
-      "question": "Approximately how long is the studio version of Queen's 'Bohemian Rhapsody'?",
-      "answer": "6 minutes",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "easy"
     },
     {
       "slug": "steely-dan-name-origin",
@@ -992,14 +856,7 @@
       "answer_format": "write_in",
       "category": "Rock Music",
       "difficulty": "easy"
-    },
-    {
-      "slug": "music-easy-woodwinds",
-      "question": "Despite being built out of shiny metal or brass, instruments like the saxophone and clarinet belong to which orchestral family because they rely on a wooden reed?",
-      "answer": "Woodwinds",
-      "answer_format": "write_in",
-      "category": "Musical Instruments",
-      "difficulty": "easy"
     }
-  ]
+  ],
+  "familiarity": "mainstream"
 }

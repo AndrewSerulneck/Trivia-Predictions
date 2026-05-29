@@ -28,6 +28,7 @@ export type UserRow = {
 export type UserPasskeyRow = {
   id: string;
   user_id: string;
+  account_id: string | null;
   credential_id_b64url: string;
   public_key_b64url: string;
   sign_count: number;
@@ -41,9 +42,20 @@ export type UserPasskeyRow = {
   last_used_at: string | null;
 };
 
+export type AccountRow = {
+  id: string;
+  auth_id: string | null;
+  username: string;
+  username_normalized: string;
+  pin_salt: string | null;
+  pin_hash: string | null;
+  created_at: string;
+};
+
 export type WebAuthnChallengeRow = {
   id: string;
   user_id: string | null;
+  account_id: string | null;
   flow_type: WebAuthnFlowType;
   challenge_b64url: string;
   rp_id: string;
@@ -430,7 +442,8 @@ export async function listPasskeysForUser(
 export async function createChallenge(
   supabaseAdmin: SupabaseClient,
   params: {
-    userId: string | null;
+    userId?: string | null;
+    accountId?: string | null;
     flowType: WebAuthnFlowType;
     challengeB64Url: string;
     rpId: string;
@@ -444,14 +457,15 @@ export async function createChallenge(
   const insert = await supabaseAdmin
     .from("webauthn_challenges")
     .insert({
-      user_id: params.userId,
+      user_id: params.userId ?? null,
+      account_id: params.accountId ?? null,
       flow_type: params.flowType,
       challenge_b64url: params.challengeB64Url,
       rp_id: params.rpId,
       origin: params.origin,
       expires_at: expiresAt,
     })
-    .select("id, user_id, flow_type, challenge_b64url, rp_id, origin, expires_at, used_at, created_at")
+    .select("id, user_id, account_id, flow_type, challenge_b64url, rp_id, origin, expires_at, used_at, created_at")
     .single<WebAuthnChallengeRow>();
 
   if (insert.error || !insert.data) {
@@ -470,7 +484,7 @@ export async function getActiveChallengeById(
 
   const query = await supabaseAdmin
     .from("webauthn_challenges")
-    .select("id, user_id, flow_type, challenge_b64url, rp_id, origin, expires_at, used_at, created_at")
+    .select("id, user_id, account_id, flow_type, challenge_b64url, rp_id, origin, expires_at, used_at, created_at")
     .eq("id", challengeId)
     .eq("flow_type", params.flowType)
     .is("used_at", null)
@@ -532,4 +546,74 @@ export function isPasskeyFeatureEnabled(): boolean {
     return false;
   }
   return true;
+}
+
+export async function findAccountByUsername(
+  supabaseAdmin: SupabaseClient,
+  username: string
+): Promise<AccountRow | null> {
+  const normalized = normalizeUsernameForLookup(normalizeUsername(username));
+  if (!normalized) return null;
+
+  const query = await supabaseAdmin
+    .from("accounts")
+    .select("id, auth_id, username, username_normalized, pin_salt, pin_hash, created_at")
+    .eq("username_normalized", normalized)
+    .maybeSingle<AccountRow>();
+
+  if (query.error) {
+    throw new Error(query.error.message);
+  }
+
+  return query.data ?? null;
+}
+
+export async function findAccountById(
+  supabaseAdmin: SupabaseClient,
+  accountId: string
+): Promise<AccountRow | null> {
+  const id = sanitizeUserId(accountId);
+  if (!id) return null;
+
+  const query = await supabaseAdmin
+    .from("accounts")
+    .select("id, auth_id, username, username_normalized, pin_salt, pin_hash, created_at")
+    .eq("id", id)
+    .maybeSingle<AccountRow>();
+
+  if (query.error) {
+    throw new Error(query.error.message);
+  }
+
+  return query.data ?? null;
+}
+
+export async function listPasskeysForAccount(
+  supabaseAdmin: SupabaseClient,
+  accountId: string
+): Promise<UserPasskeyRow[]> {
+  const id = sanitizeUserId(accountId);
+  if (!id) return [];
+
+  const query = await supabaseAdmin
+    .from("user_passkeys")
+    .select(
+      "id, user_id, account_id, credential_id_b64url, public_key_b64url, sign_count, transports, aaguid, device_type, backed_up, device_label, created_at, updated_at, last_used_at"
+    )
+    .eq("account_id", id)
+    .order("created_at", { ascending: false });
+
+  if (query.error) {
+    throw new Error(query.error.message);
+  }
+
+  return (query.data ?? []) as UserPasskeyRow[];
+}
+
+export function mapAccountForResponse(account: AccountRow) {
+  return {
+    id: account.id,
+    authId: account.auth_id ?? undefined,
+    username: account.username,
+  };
 }

@@ -5,15 +5,20 @@ import type { PasskeyErrorCode } from "@/lib/passkeyErrors";
 import {
   chooseUserAndVenueFromRequest,
   createChallenge,
+  findAccountById,
+  findAccountByUsername,
   findUserByIdAndVenue,
   findUserByUsernameAndVenue,
   getCredentialTransportList,
   isPasskeyFeatureEnabled,
+  listPasskeysForAccount,
   listPasskeysForUser,
+  mapAccountForResponse,
   mapUserForResponse,
   normalizeUsername,
   normalizeVenueId,
   resolveAllowedOriginAndRpId,
+  sanitizeUserId,
   getWebAuthnRpName,
 } from "@/lib/webauthn";
 
@@ -23,6 +28,7 @@ type RegisterOptionsBody = {
   username?: string;
   userId?: string;
   venueId?: string;
+  accountId?: string;
 };
 
 function passkeyError(status: number, errorCode: PasskeyErrorCode, error: string) {
@@ -58,30 +64,83 @@ export async function POST(request: Request) {
 
     const username = normalizeUsername(String(body.username ?? ""));
     const venueIdFromBody = normalizeVenueId(String(body.venueId ?? ""));
+    const accountIdFromBody = sanitizeUserId(body.accountId ?? "");
     const cookieOrBodySession = chooseUserAndVenueFromRequest(request, body);
 
-    const venueId = venueIdFromBody || cookieOrBodySession.venueId;
-    let user = cookieOrBodySession.userId
-      ? await findUserByIdAndVenue(supabaseAdmin, {
-          userId: cookieOrBodySession.userId,
-          venueId,
-        })
-      : null;
+    // ── Account-first lookup ──────────────────────────────────────────────────
+    // Prefer accountId, then fall back to username (global), then username+venue.
+    let resolvedAccountId: string | null = null;
+    let displayUsername = "";
 
-    if (!user && username && venueId) {
-      user = await findUserByUsernameAndVenue(supabaseAdmin, { username, venueId });
+    if (accountIdFromBody) {
+      const account = await findAccountById(supabaseAdmin, accountIdFromBody);
+      if (!account) {
+        return passkeyError(404, "USER_NOT_FOUND", "Account not found for passkey registration.");
+      }
+      resolvedAccountId = account.id;
+      displayUsername = account.username;
+    } else if (username) {
+      const account = await findAccountByUsername(supabaseAdmin, username);
+      if (account) {
+        resolvedAccountId = account.id;
+        displayUsername = account.username;
+      }
     }
 
-    if (!user) {
-      return passkeyError(404, "USER_NOT_FOUND", "User profile was not found for passkey registration.");
+    // ── Legacy venue-scoped fallback ──────────────────────────────────────────
+    // Used when account lookup yields nothing but venue context is available.
+    if (!resolvedAccountId) {
+      const venueId = venueIdFromBody || cookieOrBodySession.venueId;
+      let user = cookieOrBodySession.userId
+        ? await findUserByIdAndVenue(supabaseAdmin, { userId: cookieOrBodySession.userId, venueId })
+        : null;
+      if (!user && username && venueId) {
+        user = await findUserByUsernameAndVenue(supabaseAdmin, { username, venueId });
+      }
+      if (!user) {
+        return passkeyError(404, "USER_NOT_FOUND", "User profile was not found for passkey registration.");
+      }
+      // Prefer the account linked to the venue profile; fall back to the profile itself.
+      resolvedAccountId = (user as { account_id?: string | null }).account_id ?? null;
+      displayUsername = user.username;
+
+      if (!resolvedAccountId) {
+        // Pre-migration user without account_id: register passkey on venue profile.
+        const existingPasskeys = await listPasskeysForUser(supabaseAdmin, user.id);
+        const options = await generateRegistrationOptions({
+          rpName: getWebAuthnRpName(),
+          rpID: rpId,
+          userName: user.username,
+          userDisplayName: user.username,
+          timeout: 60_000,
+          attestationType: "none",
+          authenticatorSelection: {
+            authenticatorAttachment: "platform",
+            residentKey: "required",
+            userVerification: "preferred",
+          },
+          excludeCredentials: existingPasskeys.map((passkey) => ({
+            id: passkey.credential_id_b64url,
+            transports: getCredentialTransportList(passkey.transports ?? []),
+          })),
+        });
+        const challenge = await createChallenge(supabaseAdmin, {
+          userId: user.id,
+          flowType: "registration",
+          challengeB64Url: options.challenge,
+          rpId,
+          origin,
+        });
+        return NextResponse.json({ ok: true, challengeId: challenge.id, options, user: mapUserForResponse(user) });
+      }
     }
 
-    const existingPasskeys = await listPasskeysForUser(supabaseAdmin, user.id);
+    const existingPasskeys = await listPasskeysForAccount(supabaseAdmin, resolvedAccountId);
     const options = await generateRegistrationOptions({
       rpName: getWebAuthnRpName(),
       rpID: rpId,
-      userName: user.username,
-      userDisplayName: user.username,
+      userName: displayUsername,
+      userDisplayName: displayUsername,
       timeout: 60_000,
       attestationType: "none",
       authenticatorSelection: {
@@ -96,7 +155,7 @@ export async function POST(request: Request) {
     });
 
     const challenge = await createChallenge(supabaseAdmin, {
-      userId: user.id,
+      accountId: resolvedAccountId,
       flowType: "registration",
       challengeB64Url: options.challenge,
       rpId,
@@ -107,7 +166,7 @@ export async function POST(request: Request) {
       ok: true,
       challengeId: challenge.id,
       options,
-      user: mapUserForResponse(user),
+      account: { id: resolvedAccountId, username: displayUsername },
     });
   } catch (error) {
     return passkeyError(

@@ -16,14 +16,41 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
+function loadLocalEnv() {
+  const candidates = [
+    path.resolve(process.cwd(), ".env.local"),
+    path.resolve(process.cwd(), ".env"),
+  ];
+  for (const filePath of candidates) {
+    if (!fs.existsSync(filePath)) continue;
+    const raw = fs.readFileSync(filePath, "utf8");
+    for (const line of raw.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eqIdx = trimmed.indexOf("=");
+      if (eqIdx <= 0) continue;
+      const key = trimmed.slice(0, eqIdx).trim();
+      if (!key || Object.prototype.hasOwnProperty.call(process.env, key)) continue;
+      let value = trimmed.slice(eqIdx + 1).trim();
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+      process.env[key] = value;
+    }
+    break;
+  }
+}
+
+loadLocalEnv();
+
 const DEFAULT_DIR = "data/live-trivia/categories";
-const DEFAULT_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const DEFAULT_MODEL = process.env.GEMINI_MODEL || "gemini-1.5-flash";
 const DEFAULT_COUNT = 25;
 const DEFAULT_BATCH_SIZE = 25;
 const MAX_ATTEMPTS = 10;
 const MAX_API_RETRIES = 5;
 const BASE_RETRY_DELAY_MS = 4000;
-const VALID_DIFFICULTIES = new Set(["easy", "medium", "hard"]);
+const VALID_DIFFICULTIES = new Set(["easy", "easy-medium", "medium", "hard"]);
 
 function parseArgs(argv) {
   const args = {
@@ -142,6 +169,18 @@ function validateQuestion(item, displayCategory) {
   const answer = String(item.answer || "").trim();
   assert(answer.length > 0, `Question "${question}" is missing answer text.`);
 
+  // Instruction Consistency Check: if question mentions a word count, verify it.
+  const wordCountMatch = question.match(/\b(one|two|three|four|five|six|seven|eight|9|10)\b-word (phrase|answer|name|title)\b/i);
+  if (wordCountMatch) {
+    const wordMap = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, 9: 9, 10: 10 };
+    const expectedCount = wordMap[wordCountMatch[1].toLowerCase()];
+    const actualCount = answer.split(/\s+/).filter(Boolean).length;
+    assert(
+      actualCount === expectedCount,
+      `Question specifies a ${expectedCount}-word answer but the answer provided ("${answer}") has ${actualCount} words.`
+    );
+  }
+
   const difficultyRaw = String(item.difficulty || "medium").trim().toLowerCase();
   const difficulty = VALID_DIFFICULTIES.has(difficultyRaw) ? difficultyRaw : "medium";
   const slug = slugify(item.slug || question);
@@ -181,20 +220,26 @@ function buildPrompt({ category, count, existingSample, familiarity }) {
   const familiarityClause = buildFamiliarityClause(familiarity || "");
 
   const lines = [
-    `Generate ${count} write-in trivia questions for the category "${category}".`,
+    `Generate ${count} "Rigid Identifier" write-in trivia questions for the category "${category}".`,
     "Return ONLY a valid JSON array. No markdown, backticks, or commentary.",
     "Schema for each item:",
     '{ "question": "string", "answer": "string", "difficulty": "easy|medium|hard" }',
-    "Rules:",
+    "",
+    "CRITICAL REQUIREMENT: RIGID IDENTIFIERS ONLY",
+    "Every answer MUST pass this 3-point stability test:",
+    "1. Is the answer a Proper Noun or a Technical Term? (Must be YES)",
+    "2. Could a correct player respond with a different word that means the exact same thing? (Example: 'Physician' vs 'Doctor'). (Must be NO)",
+    "3. Does the answer refer to a specific, unique entity? (Must be YES)",
+    "",
+    "- PREFERRED ANSWERS: People (Full Names), Places (Cities/Countries/Landmarks), Chemical Elements, Years (4-digit), Sports Teams, Canonical Titles (Books/Movies/Songs), Scientific Constants, Biological Genus/Species.",
+    "- FORBIDDEN ANSWERS: Descriptive occupations (e.g., 'Real estate agent', 'Doctor', 'Scientist'), common nouns with many synonyms (e.g., 'Bicycle', 'Television'), or generic descriptive phrases.",
+    "- LINGUISTIC STABILITY: If there is ANY alternative name for the answer (e.g., 'Soccer' vs 'Football', 'Realtor' vs 'Real Estate Agent'), DISCARD THE QUESTION.",
     "- No options array — the player must type the answer without hints.",
-    "- Every answer must be a definitive, uniquely correct short phrase (1-3 words preferred).",
-    "- Correct answers must be a proper noun, person/place name, team, specific year, exact date, or clear standalone number.",
-    "- Avoid conceptual, abstract, or subjective answers that have multiple valid forms.",
-    "- Roughly 10-20% should have purely numeric answers (3+ digits) as 'Numerical Showdowns'.",
-    "- For Numerical Showdowns the answer must be a single specific number with no range/approximation.",
-    "- Facts must be accurate and unambiguous.",
-    "- Mix difficulties across easy/medium/hard.",
-    "- Keep question wording concise and production-ready.",
+    "- Answer length: 1-3 words maximum.",
+    "- If the question text specifies a format (e.g., 'Name the five-word phrase...'), the 'answer' field MUST exactly match.",
+    "- Facts must be accurate, definitive, and unambiguous.",
+    "- Mix difficulties across easy/easy-medium/medium/hard.",
+    "- Quality over Quantity: If you cannot find enough Rigid Identifiers for this category, return fewer items rather than violating the rules.",
   ];
 
   if (familiarityClause) lines.push(familiarityClause);

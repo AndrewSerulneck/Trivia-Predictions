@@ -5,6 +5,7 @@ type UserSummaryRow = {
   username: string;
   points: number;
   venue_id: string;
+  account_id: string | null;
 };
 
 export async function GET(request: Request) {
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, profile: null });
   }
 
-  let query = supabaseAdmin.from("users").select("username, points, venue_id").eq("id", userId);
+  let query = supabaseAdmin.from("users").select("username, points, venue_id, account_id").eq("id", userId);
   if (venueId) {
     query = query.eq("venue_id", venueId);
   }
@@ -34,6 +35,23 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, profile: null });
   }
 
+  // Check whether this user has at least one enrolled passkey. Prefer the account-level
+  // lookup (new system) but fall back to user-level for legacy rows without account_id.
+  let hasPasskey = false;
+  if (data.account_id) {
+    const { count } = await supabaseAdmin
+      .from("user_passkeys")
+      .select("id", { count: "exact", head: true })
+      .eq("account_id", data.account_id);
+    hasPasskey = (count ?? 0) > 0;
+  } else {
+    const { count } = await supabaseAdmin
+      .from("user_passkeys")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId);
+    hasPasskey = (count ?? 0) > 0;
+  }
+
   return NextResponse.json({
     ok: true,
     profile: {
@@ -41,5 +59,6 @@ export async function GET(request: Request) {
       points: data.points,
       venueId: data.venue_id,
     },
+    hasPasskey,
   });
 }

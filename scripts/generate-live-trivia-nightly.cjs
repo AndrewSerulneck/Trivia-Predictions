@@ -13,6 +13,33 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
+function loadLocalEnv() {
+  const candidates = [
+    path.resolve(process.cwd(), ".env.local"),
+    path.resolve(process.cwd(), ".env"),
+  ];
+  for (const filePath of candidates) {
+    if (!fs.existsSync(filePath)) continue;
+    const raw = fs.readFileSync(filePath, "utf8");
+    for (const line of raw.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eqIdx = trimmed.indexOf("=");
+      if (eqIdx <= 0) continue;
+      const key = trimmed.slice(0, eqIdx).trim();
+      if (!key || Object.prototype.hasOwnProperty.call(process.env, key)) continue;
+      let value = trimmed.slice(eqIdx + 1).trim();
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+      process.env[key] = value;
+    }
+    break;
+  }
+}
+
+loadLocalEnv();
+
 const DEFAULT_DIR = "data/live-trivia/categories";
 const DEFAULT_TOTAL = 50;
 const DEFAULT_BATCH_SIZE = 25;
@@ -306,7 +333,7 @@ async function main() {
   const apiKey = String(process.env.GEMINI_API_KEY || "").trim();
   assert(apiKey, "Missing GEMINI_API_KEY in environment.");
 
-  const model = args.model || process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  const model = args.model || process.env.GEMINI_MODEL || "gemini-1.5-flash";
   const initialLoad = listCategoryRecords(args.dir);
   const { absoluteDir } = initialLoad;
   let records = initialLoad.records;
@@ -326,19 +353,27 @@ async function main() {
 
   let { plan, remaining } = computePlan({ records, nightlyBudget: args.total });
 
-  // When all existing categories are at target, create a new one.
-  if (plan.size === 0 && remaining > 0) {
-    console.log("\nAll existing categories are at or above target. Inventing a new category...");
+  // If we have budget left and all existing categories are either full or already scheduled to be filled,
+  // we keep inventing new categories until the nightly budget is fully allocated.
+  while (remaining > 0) {
+    const allExistingAreFullOrPlanned = records.every(r => {
+      const planned = plan.get(r.categoryKey) || 0;
+      return (r.count + planned) >= CATEGORY_TARGET_SIZE;
+    });
+
+    if (!allExistingAreFullOrPlanned) break;
+
+    console.log(`\nBudget remaining (${remaining}) but all existing categories are full or scheduled. Inventing a new category...`);
     const existingNames = records.map((r) => r.categoryName || r.categoryKey);
     const { name, key, familiarity } = await inventNewLiveCategoryName({ apiKey, model, existingCategoryNames: existingNames });
     console.log(`New category: "${name}" (${key}) — familiarity: ${familiarity}`);
     createLiveCategoryFile({ absoluteDir, categoryName: name, categoryKey: key, familiarity, dryRun: args.dryRun });
 
-    // Re-read so the new file is visible to listCategoryRecords.
+    // Re-read and re-plan
     records = listCategoryRecords(args.dir).records;
-    const questionsToAdd = Math.min(remaining, CATEGORY_TARGET_SIZE);
-    plan = new Map([[key, questionsToAdd]]);
-    remaining -= questionsToAdd;
+    const recompute = computePlan({ records, nightlyBudget: args.total });
+    plan = recompute.plan;
+    remaining = recompute.remaining;
   }
 
   console.log("Planned additions:");

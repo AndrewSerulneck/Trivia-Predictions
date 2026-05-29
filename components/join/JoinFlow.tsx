@@ -7,7 +7,9 @@ import { browserSupportsWebAuthn, startAuthentication, startRegistration, WebAut
 import { PageShell } from "@/components/ui/PageShell";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import {
+  createOrLoginAccount,
   createUserProfile,
+  resolveVenueProfile,
   signInAnonymously,
   signOut,
   validatePin,
@@ -15,8 +17,10 @@ import {
 } from "@/lib/auth";
 import { calculateDistanceMeters, getBestCurrentLocation, getCurrentLocation, type Coordinates } from "@/lib/geolocation";
 import {
+  getAccountId,
   getUserId,
   getVenueId,
+  saveAccountId,
   saveUserId,
   saveUsername,
   saveVenueId,
@@ -50,7 +54,13 @@ import { normalizePin } from "@/lib/pin";
 import { getPasskeyClientMessage } from "@/lib/passkeyErrors";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
-type JoinPanel = "venue-list" | "venue-login";
+type JoinPanel =
+  | "auth-method-selection"
+  | "account-creation"
+  | "account-sign-in"
+  | "passkey-enrollment-offer"
+  | "venue-list"
+  | "venue-login";
 type AuthLoginState = "idle" | "authenticating" | "verifying" | "navigating" | "error";
 
 type TriviaQuotaPayload = {
@@ -149,16 +159,20 @@ function isLocationPermissionDenied(error: unknown): boolean {
 }
 
 function isPasskeyUserCancel(error: unknown): boolean {
-  if (!error) return false;
+  if (!error || typeof error !== "object") return false;
+  const err = error as Record<string, unknown>;
+  const name = String(err.name ?? "");
+  const code = String(err.code ?? "");
+  // DOMException / plain-object name check
+  if (name === "NotAllowedError" || name === "AbortError") return true;
+  // @simplewebauthn/browser WebAuthnError code (works even if instanceof fails across module boundaries)
+  if (code === "ERROR_CEREMONY_ABORTED") return true;
+  // instanceof fallbacks for when module identity is intact
   if (error instanceof DOMException) {
     return error.name === "NotAllowedError" || error.name === "AbortError";
   }
   if (error instanceof WebAuthnError) {
     return error.code === "ERROR_CEREMONY_ABORTED";
-  }
-  if (typeof error === "object" && error && "name" in error) {
-    const name = String((error as { name?: unknown }).name ?? "");
-    return name === "NotAllowedError" || name === "AbortError";
   }
   return false;
 }
@@ -353,6 +367,9 @@ type UsernameStepProps = {
   errorMessage: string;
   onBack: () => void;
   onNext: (username: string) => void;
+  tagline?: string;
+  heading?: string;
+  subheading?: string;
 };
 
 const UsernameStep = memo(function UsernameStep({
@@ -363,6 +380,9 @@ const UsernameStep = memo(function UsernameStep({
   errorMessage,
   onBack,
   onNext,
+  tagline = "Your Username",
+  heading = "What’s your username?",
+  subheading = "If this is your first time playing, make one up!",
 }: UsernameStepProps) {
   const [value, setValue] = useState("");
 
@@ -384,11 +404,11 @@ const UsernameStep = memo(function UsernameStep({
     >
       <div>
         <p className="mb-1 text-sm font-black uppercase tracking-[0.14em] text-cyan-300">
-          Your Username
+          {tagline}
         </p>
-        <h1 className="text-2xl font-black text-white">What&apos;s your username?</h1>
+        <h1 className="text-2xl font-black text-white">{heading}</h1>
         <p className="mt-1 text-sm font-semibold text-ht-fg-muted">
-          If this is your first time playing, make one up!
+          {subheading}
         </p>
       </div>
 
@@ -627,9 +647,20 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [lastLocationVerifiedAt, setLastLocationVerifiedAt] = useState<number | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [panelDirection, setPanelDirection] = useState<1 | -1>(1);
-  const [activePanel, setActivePanel] = useState<JoinPanel>(venueParam ? "venue-login" : "venue-list");
+  const [activePanel, setActivePanel] = useState<JoinPanel>("auth-method-selection");
   const [isOptimisticallyEntering, setIsOptimisticallyEntering] = useState(false);
   const [passkeyEnrollmentStep, setPasskeyEnrollmentStep] = useState<PasskeyEnrollmentStepData | null>(null);
+  // Account-first auth state
+  const [accountId, setAccountIdState] = useState<string | null>(null);
+  const [accountUsername, setAccountUsername] = useState("");
+  const [isNewAccount, setIsNewAccount] = useState(false);
+  const [accountAuthLoading, setAccountAuthLoading] = useState(false);
+  const [accountAuthError, setAccountAuthError] = useState("");
+  const [passkeyAuthError, setPasskeyAuthError] = useState("");
+  const [isEnrollmentLoading, setIsEnrollmentLoading] = useState(false);
+  const [enrollmentError, setEnrollmentError] = useState("");
+  const [accountPasskeyState, setAccountPasskeyState] = useState<"idle" | "loading" | "ready" | "unavailable">("idle");
+  const [isAccountPasskeyLoading, setIsAccountPasskeyLoading] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [isPasskeyAttempting, setIsPasskeyAttempting] = useState(false);
   // Discoverable-passkey button: "idle" → "loading" (prefetch) → "ready" | "unavailable"
@@ -661,11 +692,54 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     challengeId: string;
     options: Parameters<typeof startAuthentication>[0]["optionsJSON"];
   } | null>(null);
+  const accountPasskeyOptionsRef = useRef<{
+    challengeId: string;
+    options: Parameters<typeof startAuthentication>[0]["optionsJSON"];
+  } | null>(null);
+  const enrollmentOptionsRef = useRef<{
+    challengeId: string;
+    options: Parameters<typeof startRegistration>[0]["optionsJSON"];
+  } | null>(null);
+  const autoVenueResolveAttemptedRef = useRef(false);
 
   useEffect(() => {
     const load = async () => {
+      // Legacy fast-path: user already has a full venue session.
       if (venueParam && getUserId() && getVenueId() === venueParam) {
         router.replace(`/venue/${venueParam}`);
+        return;
+      }
+
+      // Account-first fast-path: stored accountId + venueParam → auto-resolve profile.
+      const storedAccountId = getAccountId();
+      if (venueParam && storedAccountId) {
+        setStatus("loading");
+        try {
+          const [venues, venueData] = await Promise.all([listVenues(), getVenueById(venueParam)]);
+          setVenueList(venues);
+          if (!venueData) {
+            setStatus("error");
+            setErrorMessage(`Venue "${venueParam}" was not found.`);
+            return;
+          }
+          setVenue(venueData);
+          setAccountIdState(storedAccountId);
+          hasSuccessfulInitialRenderRef.current = true;
+          const user = await resolveVenueProfile({ accountId: storedAccountId, venueId: venueParam });
+          hardClearAuthAndCachePreserveVenue(venueParam);
+          saveVenueId(venueParam);
+          saveUsername(user.username);
+          saveUserId(user.id);
+          const hardTarget = `/venue/${encodeURIComponent(venueParam)}?entryUser=${encodeURIComponent(user.id)}&entryVenue=${encodeURIComponent(venueParam)}&entryAt=${Date.now()}`;
+          void signInAnonymously().catch(() => {});
+          window.location.assign(hardTarget);
+        } catch {
+          // Resolve failed — clear stale accountId and show auth screen.
+          setAccountIdState(null);
+          setStatus("ready");
+          setActivePanel("auth-method-selection");
+          hasSuccessfulInitialRenderRef.current = true;
+        }
         return;
       }
 
@@ -691,7 +765,14 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
           const venues = await listVenues();
           setVenueList(venues);
-          setActivePanel("venue-list");
+          // Skip auth selection if account is already stored.
+          const resolvedId = getAccountId();
+          if (resolvedId) {
+            setAccountIdState(resolvedId);
+            setActivePanel("venue-list");
+          } else {
+            setActivePanel("auth-method-selection");
+          }
           setStatus("ready");
           hasSuccessfulInitialRenderRef.current = true;
 
@@ -749,7 +830,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         }
 
         setVenue(venueData);
-        setActivePanel("venue-login");
+        setActivePanel("auth-method-selection");
         setStatus("ready");
         hasSuccessfulInitialRenderRef.current = true;
 
@@ -980,16 +1061,81 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     []
   );
 
+  const resolveAndNavigate = useCallback(
+    async (resolvedAccountId: string, selectedVenue: Venue) => {
+      setErrorMessage("");
+      setPendingVenueSelectionId(selectedVenue.id);
+      setStatus("saving");
+      setIsTransitioning(true);
+      setIsOptimisticallyEntering(true);
+      setAuthLoginState("authenticating");
+      setLoadingPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("tp:global-transition-show", {
+            detail: { targetPath: `/venue/${selectedVenue.id}` },
+          })
+        );
+      }
+
+      let didNavigate = false;
+      try {
+        const user = await resolveVenueProfile({ accountId: resolvedAccountId, venueId: selectedVenue.id });
+        hardClearAuthAndCachePreserveVenue(selectedVenue.id);
+        saveVenueId(selectedVenue.id);
+        saveUsername(user.username);
+        saveUserId(user.id);
+        setSelectedVenueLock(selectedVenue.id);
+        setLoginInProgress(selectedVenue.id);
+        refreshAuthSession();
+        setVenueHomeRouteIntent({ venueId: selectedVenue.id });
+        setVenueHomeEntryHandoff({ venueId: selectedVenue.id, userId: user.id });
+        const hardTarget = `/venue/${encodeURIComponent(selectedVenue.id)}?entryUser=${encodeURIComponent(user.id)}&entryVenue=${encodeURIComponent(selectedVenue.id)}&entryAt=${Date.now()}`;
+        void signInAnonymously().catch(() => {});
+        setAuthLoginState("navigating");
+        didNavigate = true;
+        window.location.assign(hardTarget);
+      } catch (error) {
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
+        }
+        setAuthLoginState("error");
+        setErrorMessage(getErrorMessage(error, "Failed to join venue. Please try again."));
+      } finally {
+        setPendingVenueSelectionId(null);
+        if (!didNavigate) {
+          clearLoginInProgress();
+          clearSelectedVenueLock();
+          setIsOptimisticallyEntering(false);
+          setIsTransitioning(false);
+          setStatus("ready");
+          setAuthLoginState("idle");
+        }
+      }
+    },
+    [refreshAuthSession]
+  );
+
   const handleSelectVenue = useCallback(
     (selectedVenue: Venue) => {
+      setVenue(selectedVenue);
+      setErrorMessage("");
+      setConnectionRetryMessage("");
+
+      // Account-first path: resolve venue profile and navigate.
+      const resolvedAccountId = accountId || getAccountId();
+      if (resolvedAccountId) {
+        void resolveAndNavigate(resolvedAccountId, selectedVenue);
+        return;
+      }
+
+      // Legacy path (no accountId): show username/PIN login for this venue.
       setPanelDirection(1);
       setActivePanel("venue-login");
       setLoginStep("username");
       setLoginStepDirection(1);
       setPendingVenueSelectionId(selectedVenue.id);
-      setVenue(selectedVenue);
-      setErrorMessage("");
-      setConnectionRetryMessage("");
       setUsername("");
       setPin("");
       setIsTransitioning(false);
@@ -1004,7 +1150,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         setPendingVenueSelectionId((current) => (current === selectedVenue.id ? null : current));
       });
     },
-    [verifyVenueAccess]
+    [accountId, resolveAndNavigate, verifyVenueAccess]
   );
 
   const handleBackToVenueList = useCallback(() => {
@@ -1319,6 +1465,95 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     return () => window.clearTimeout(t);
   }, [activePanel, loginStep]);
 
+  // Pre-fetch account-level discoverable passkey options for auth-method-selection panel.
+  // Stored in accountPasskeyOptionsRef so handleAccountPasskeySignIn() can call
+  // startAuthentication() synchronously from the button click (iOS Safari requirement).
+  useEffect(() => {
+    if (activePanel !== "auth-method-selection" || !browserSupportsWebAuthn()) {
+      if (activePanel !== "auth-method-selection") {
+        accountPasskeyOptionsRef.current = null;
+        setAccountPasskeyState("idle");
+      }
+      return;
+    }
+
+    setAccountPasskeyState("loading");
+    accountPasskeyOptionsRef.current = null;
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 6000);
+
+    fetch("/api/auth/passkey/authenticate/options", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        const payload = (await res.json().catch(() => null)) as PasskeyAuthOptionsPayload | null;
+        if (res.ok && payload?.ok && payload.options && payload.challengeId) {
+          accountPasskeyOptionsRef.current = { challengeId: payload.challengeId, options: payload.options };
+          setAccountPasskeyState("ready");
+        } else {
+          setAccountPasskeyState("unavailable");
+        }
+      })
+      .catch(() => { setAccountPasskeyState("unavailable"); })
+      .finally(() => { window.clearTimeout(timeoutId); });
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [activePanel]);
+
+  // Pre-fetch passkey registration options when the enrollment offer panel mounts.
+  // Options land in enrollmentOptionsRef before the user clicks "Set Up" so that
+  // startRegistration() fires synchronously from the click handler (iOS Safari).
+  useEffect(() => {
+    if (activePanel !== "passkey-enrollment-offer" || !accountId || !accountUsername) return;
+
+    enrollmentOptionsRef.current = null;
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 6000);
+
+    fetch("/api/auth/passkey/register/options", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accountId, username: accountUsername }),
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        const payload = (await res.json().catch(() => null)) as PasskeyRegisterOptionsPayload | null;
+        if (res.ok && payload?.ok && payload.options && payload.challengeId) {
+          enrollmentOptionsRef.current = { challengeId: payload.challengeId, options: payload.options };
+        }
+      })
+      .catch(() => { /* non-critical — Set Up navigates gracefully without options */ })
+      .finally(() => { window.clearTimeout(timeoutId); });
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [activePanel, accountId, accountUsername]);
+
+  // When venue-list panel is shown and a venueParam is already in the URL
+  // (user arrived via /join?venue=X then authed), auto-select that venue.
+  useEffect(() => {
+    if (
+      activePanel !== "venue-list" ||
+      !accountId ||
+      !venueParam ||
+      !venue ||
+      autoVenueResolveAttemptedRef.current
+    ) {
+      return;
+    }
+    autoVenueResolveAttemptedRef.current = true;
+    void resolveAndNavigate(accountId, venue);
+  }, [activePanel, accountId, venueParam, venue, resolveAndNavigate]);
+
   // Pre-fetch discoverable-passkey options so the Sign-in button can call
   // startAuthentication() synchronously on click (iOS Safari user-activation).
   useEffect(() => {
@@ -1456,6 +1691,196 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     },
     []
   );
+
+  // ── Account-first handlers ──────────────────────────────────────────────────
+
+  const handleBackToAuthMethodSelection = useCallback(() => {
+    setPanelDirection(-1);
+    setActivePanel("auth-method-selection");
+    setLoginStep("username");
+    setLoginStepDirection(1);
+    setPin("");
+    setAccountAuthError("");
+    setIsAdvancingToPin(false);
+  }, []);
+
+  const handleAccountGoToPinStep = useCallback(
+    (usernameValue: string) => {
+      if (!validateUsername(usernameValue)) {
+        setAccountAuthError("Please enter a valid username.");
+        return;
+      }
+      setUsername(usernameValue.trim());
+      setAccountAuthError("");
+      setPin("");
+      setLoginStepDirection(1);
+      setLoginStep("pin");
+    },
+    []
+  );
+
+  const handleBackFromAccountPin = useCallback(() => {
+    if (pinFocusTimerRef.current) {
+      window.clearTimeout(pinFocusTimerRef.current);
+      pinFocusTimerRef.current = null;
+    }
+    setLoginStepDirection(-1);
+    setLoginStep("username");
+    setPin("");
+    setAccountAuthError("");
+    setIsAdvancingToPin(false);
+  }, []);
+
+  const handleAccountSubmitPin = useCallback(
+    async (pinOverride?: string) => {
+      const candidatePin = normalizePin(String(pinOverride ?? getCurrentPinCandidate()));
+      if (!validatePin(candidatePin)) {
+        setAccountAuthError(INVALID_PIN_MESSAGE);
+        setIsPinShaking(true);
+        return;
+      }
+      if (accountAuthLoading) return;
+
+      setAccountAuthError("");
+      setAccountAuthLoading(true);
+      setLoadingPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
+
+      try {
+        const account = await createOrLoginAccount({
+          username,
+          pin: candidatePin,
+          mode: activePanel === "account-sign-in" ? "login" : "create",
+        });
+        saveAccountId(account.id);
+        setAccountIdState(account.id);
+        setAccountUsername(account.username);
+
+        const alreadyEnrolled = (() => {
+          try { return Boolean(localStorage.getItem(PASSKEY_ENROLLMENT_STORAGE_KEY)); } catch { return false; }
+        })();
+        const isCreate = activePanel === "account-creation";
+        const shouldOffer = isCreate && !alreadyEnrolled && !passkeyRegistrationPromptedRef.current && browserSupportsWebAuthn();
+
+        setPanelDirection(1);
+        if (shouldOffer) {
+          setIsNewAccount(true);
+          setActivePanel("passkey-enrollment-offer");
+        } else {
+          setIsNewAccount(false);
+          setActivePanel("venue-list");
+        }
+      } catch (error) {
+        const msg = getErrorMessage(error, "Authentication failed. Please try again.");
+        setAccountAuthError(msg);
+        if (msg === "Incorrect PIN.") {
+          setIsPinShaking(true);
+          setPin("");
+        }
+      } finally {
+        setAccountAuthLoading(false);
+      }
+    },
+    [accountAuthLoading, activePanel, username, getCurrentPinCandidate]
+  );
+
+  const handleAccountPasskeySignIn = useCallback(async () => {
+    const stored = accountPasskeyOptionsRef.current;
+    if (!stored || isAccountPasskeyLoading) return;
+
+    setIsAccountPasskeyLoading(true);
+    setPasskeyAuthError("");
+
+    try {
+      const assertionResponse = await startAuthentication({ optionsJSON: stored.options });
+
+      const verifyResponse = await fetch("/api/auth/passkey/authenticate/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ challengeId: stored.challengeId, response: assertionResponse }),
+      });
+
+      type AccountVerifyPayload = PasskeyAuthVerifyPayload & { account?: { id: string; username: string } };
+      const verifyPayload = (await verifyResponse.json().catch(() => null)) as AccountVerifyPayload | null;
+
+      if (!verifyResponse.ok || !verifyPayload?.ok) {
+        setPasskeyAuthError(
+          "We do not have a passkey saved for you. If you have an account with us, please click 'Enter Username/PIN'."
+        );
+        return;
+      }
+
+      const resolvedAccountId = verifyPayload.account?.id;
+      const resolvedUsername = verifyPayload.account?.username ?? verifyPayload.user?.username ?? "";
+
+      if (!resolvedAccountId) {
+        setPasskeyAuthError(
+          "We do not have a passkey saved for you. If you have an account with us, please click 'Enter Username/PIN'."
+        );
+        return;
+      }
+
+      saveAccountId(resolvedAccountId);
+      setAccountIdState(resolvedAccountId);
+      setAccountUsername(resolvedUsername);
+      setIsNewAccount(false);
+      setPanelDirection(1);
+      setActivePanel("venue-list");
+    } catch (error) {
+      if (isPasskeyUserCancel(error)) return;
+      setPasskeyAuthError(
+        "We do not have a passkey saved for you. If you have an account with us, please click 'Enter Username/PIN'."
+      );
+    } finally {
+      setIsAccountPasskeyLoading(false);
+    }
+  }, [isAccountPasskeyLoading]);
+
+  const handleEnrollSetUp = useCallback(async () => {
+    const stored = enrollmentOptionsRef.current;
+    if (!stored) {
+      passkeyRegistrationPromptedRef.current = true;
+      setPanelDirection(1);
+      setActivePanel("venue-list");
+      return;
+    }
+
+    setIsEnrollmentLoading(true);
+    setEnrollmentError("");
+
+    try {
+      const registrationResponse = await startRegistration({ optionsJSON: stored.options });
+      const verifyResponse = await fetch("/api/auth/passkey/register/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ challengeId: stored.challengeId, response: registrationResponse, accountId }),
+      });
+      const verifyPayload = (await verifyResponse.json().catch(() => null)) as PasskeyRegisterVerifyPayload | null;
+      if (verifyResponse.ok && verifyPayload?.ok) {
+        try { localStorage.setItem(PASSKEY_ENROLLMENT_STORAGE_KEY, "1"); } catch { /* non-critical */ }
+      }
+      passkeyRegistrationPromptedRef.current = true;
+      setPanelDirection(1);
+      setActivePanel("venue-list");
+    } catch (error) {
+      if (isPasskeyUserCancel(error)) {
+        passkeyRegistrationPromptedRef.current = true;
+        setPanelDirection(1);
+        setActivePanel("venue-list");
+        return;
+      }
+      setEnrollmentError("Setup failed. You can enable Face ID from your account settings later.");
+    } finally {
+      setIsEnrollmentLoading(false);
+    }
+  }, [accountId]);
+
+  const handleEnrollSkip = useCallback(() => {
+    passkeyRegistrationPromptedRef.current = true;
+    setPanelDirection(1);
+    setActivePanel("venue-list");
+  }, []);
+
+  // ── End account-first handlers ──────────────────────────────────────────────
 
   // Called when the user taps "Sign in with Face ID / Touch ID" on the venue-login panel.
   // Options are pre-fetched in a useEffect so startAuthentication() fires immediately
@@ -1830,6 +2255,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         showUserStatus={false}
         noContainer
       >
+        {/* Legacy overlay enrollment prompt — used only by the venue-login path. */}
         {passkeyEnrollmentStep && (
           <PasskeyEnrollmentPrompt
             onSetUp={handlePasskeyEnrollSetUp}
@@ -1837,211 +2263,432 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           />
         )}
         <div className="mx-auto w-full max-w-md px-4 pt-5 pb-[max(2rem,env(safe-area-inset-bottom))]">
-              <HightopNeonLogo />
+          <HightopNeonLogo />
 
-              {/* Dark join card */}
-              <div className="rounded-3xl border border-cyan-400/40 bg-slate-900 p-6">
+          {/* Dark join card */}
+          <div className="rounded-3xl border border-cyan-400/40 bg-slate-900 p-6">
+            <div className="relative [overflow-x:clip]">
+              <AnimatePresence initial={false} custom={panelDirection} mode="wait">
 
-                {/* Panels */}
-                <div className="relative [overflow-x:clip]">
-                  <AnimatePresence initial={false} custom={panelDirection} mode="wait">
+                {/* ── Auth method selection (Chase-style first screen) ── */}
+                {activePanel === "auth-method-selection" && (
+                  <motion.div
+                    key="auth-method-selection"
+                    custom={panelDirection}
+                    variants={ONBOARDING_PANEL_VARIANTS}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={SWIPE_SPRING_TRANSITION}
+                    className="flex flex-col gap-6"
+                  >
+                    <div>
+                      <p className="mb-1 text-sm font-black uppercase tracking-[0.14em] text-cyan-300">
+                        Welcome
+                      </p>
+                      <h1 className="text-2xl font-black text-white">How do you want to continue?</h1>
+                    </div>
 
-                    {activePanel === "venue-login" && venue ? (
-                      <motion.div
-                        key={`venue-login-${venue.id}`}
-                        custom={panelDirection}
-                        variants={ONBOARDING_PANEL_VARIANTS}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                        transition={SWIPE_SPRING_TRANSITION}
-                        className="relative"
-                      >
-                        {/* Venue name context label */}
-                        <p className="mb-5 text-xl font-black uppercase tracking-[0.12em]"
-                          style={{ color: "#fbbf24", textShadow: "0 0 10px #f59e0b, 0 0 24px #d97706" }}>
-                          {getVenueDisplayName(venue)}
-                        </p>
-
-                        {/* Discoverable-passkey sign-in button — only shown once options
-                            are pre-fetched and on the username step (not during PIN entry). */}
-                        {loginStep === "username" && discoverablePasskeyState === "ready" && (
-                          <div className="mb-5">
-                            <button
-                              type="button"
-                              onClick={handleDiscoverablePasskeySignIn}
-                              disabled={isDiscoverablePasskeyLoading || isAuthLoading}
-                              className="tp-clean-button inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl border border-cyan-400/40 bg-slate-800/80 py-3 px-6 text-base font-black text-white transition-all active:translate-y-[1px] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
-                            >
-                              {isDiscoverablePasskeyLoading ? (
-                                <span className="animate-pulse">Authenticating…</span>
-                              ) : (
-                                <>
-                                  <span aria-hidden="true" className="text-lg">🔑</span>
-                                  Sign in with Face ID / Touch ID
-                                </>
-                              )}
-                            </button>
-                            <div className="mt-5 flex items-center gap-3">
-                              <div className="flex-1 h-px bg-slate-700" />
-                              <span className="text-xs font-semibold uppercase tracking-widest text-ht-fg-muted">or</span>
-                              <div className="flex-1 h-px bg-slate-700" />
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Keep input mounted for reliable mobile keypad behavior, but visually hide it. */}
-                        <input
-                          ref={pinInputRef}
-                          type="text"
-                          inputMode="numeric"
-                          enterKeyHint="go"
-                          pattern="[0-9]*"
-                          value={pin}
-                          maxLength={4}
-                          autoComplete="one-time-code"
-                          onChange={(e) => {
-                            if (loginStep !== "pin") return;
-                            setPin(normalizePin(e.target.value));
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              handleSubmitPinStep();
-                              return;
-                            }
-                            if (normalizePin(e.key).length === 1 && pin.length >= 4) {
-                              e.preventDefault();
-                              return;
-                            }
-                          }}
-                          onPaste={(e) => {
-                            if (loginStep !== "pin") return;
-                            const pasted = normalizePin(e.clipboardData.getData("text"));
-                            if (pasted) {
-                              setPin(pasted);
-                            }
-                            e.preventDefault();
-                          }}
-                          className="absolute h-px w-px overflow-hidden opacity-0"
-                          aria-label="4-digit PIN"
-                          placeholder="Enter 4-digit PIN"
-                        />
-
-                        <AnimatePresence custom={loginStepDirection} mode="wait">
-                          {loginStep === "username" ? (
-                            <UsernameStep
-                              key="step-username"
-                              direction={loginStepDirection}
-                              inputRef={usernameInputRef}
-                              isAdvancingToPin={isAdvancingToPin}
-                              locationLoading={locationLoading}
-                              errorMessage={errorMessage}
-                              onBack={handleBackToVenueList}
-                              onNext={handleGoToPinStep}
-                            />
-                          ) : (
-                            <PinStep
-                              key="step-pin"
-                              direction={loginStepDirection}
-                              pin={pin}
-                              isPinShaking={isPinShaking}
-                              isAuthLoading={isAuthLoading}
-                              canCreate={canCreate}
-                              loadingPhrase={loadingPhrase}
-                              errorMessage={errorMessage}
-                              connectionRetryMessage={connectionRetryMessage}
-                              blockedReason={blockedReason}
-                              pinContainerRef={pinContainerRef}
-                              onBack={handleBackFromPin}
-                              onSubmit={handleSubmitPinStep}
-                              onAnimationComplete={handlePinAnimationComplete}
-                              onPinContainerClick={handlePinContainerClick}
-                            />
-                          )}
-                        </AnimatePresence>
-                      </motion.div>
-
-                    ) : (
-
-                      <motion.div
-                        key="venue-list"
-                        custom={panelDirection}
-                        variants={ONBOARDING_PANEL_VARIANTS}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                        transition={SWIPE_SPRING_TRANSITION}
-                      >
-                        {errorMessage && (
-                          <div className="mb-4 rounded-xl border border-rose-400/60 bg-rose-950/30 p-3 text-sm text-rose-200">
-                            {errorMessage}
-                          </div>
-                        )}
-
-                        {venueList.length > 0 ? (
-                          <div className="space-y-4">
-                            <div>
-                              <p className="mb-1 text-sm font-black uppercase tracking-[0.14em] text-cyan-300">
-                                Choose Your Venue
-                              </p>
-                              {locationLoading ? (
-                                <p className="text-xs text-ht-fg-muted">Finding nearby venues...</p>
-                              ) : locationNotice ? (
-                                <p className="text-xs text-ht-fg-muted">{locationNotice}</p>
-                              ) : null}
-                            </div>
-                            <ul className="space-y-2">
-                              {venueList.map((item, index) => (
-                                <VenueListItem
-                                  key={item.id}
-                                  venue={item}
-                                  index={index}
-                                  isPending={pendingVenueSelectionId === item.id}
-                                  onSelect={handleSelectVenue}
-                                />
-                              ))}
-                            </ul>
-                            <InlineSlotAdClient
-                              slot="inline-content"
-                              venueId={venueParam || undefined}
-                              pageKey="join"
-                              adType="inline"
-                              displayTrigger="on-load"
-                              allowAnyVenue
-                              showPlaceholder
-                            />
-                          </div>
-                        ) : status === "loading" ? (
-                          <VenueListSkeleton />
-                        ) : (
-                          <div className="space-y-3 rounded-xl border border-slate-700 bg-slate-800/50 p-4">
-                            <p className="font-semibold text-white">Nearby venues only</p>
-                            {locationLoading ? (
-                              <p className="text-sm text-ht-fg-muted">Checking your location to find venues in range...</p>
-                            ) : locationNotice ? (
-                              <p className="text-sm text-ht-fg-muted">{locationNotice}</p>
+                    {/* Circular icon buttons — biometric and password */}
+                    <div className="flex justify-center gap-10 py-2">
+                      {browserSupportsWebAuthn() && (
+                        <div className="flex flex-col items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handleAccountPasskeySignIn}
+                            disabled={accountPasskeyState === "loading" || isAccountPasskeyLoading}
+                            aria-label="Sign in with Face ID or Touch ID"
+                            className="tp-clean-button flex h-20 w-20 items-center justify-center rounded-full border border-cyan-400/40 bg-slate-800 text-3xl shadow-sm transition-all active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+                          >
+                            {isAccountPasskeyLoading ? (
+                              <span className="animate-spin text-xl text-cyan-300">⟳</span>
+                            ) : accountPasskeyState === "loading" ? (
+                              <span className="animate-pulse text-xl">…</span>
                             ) : (
-                              <p className="text-sm text-ht-fg-muted">No venue is currently in range from your location.</p>
+                              "🔑"
                             )}
-                            <button
-                              type="button"
-                              onClick={() => router.refresh()}
-                              className="tp-clean-button inline-flex min-h-[42px] items-center rounded-xl bg-slate-700 px-4 py-2 text-sm font-semibold text-white"
-                            >
-                              Retry nearby venue scan
-                            </button>
-                          </div>
-                        )}
-                      </motion.div>
+                          </button>
+                            <span className="text-base font-semibold text-ht-fg-muted">
+                            {isAccountPasskeyLoading ? "Signing in..." : "Face ID / Touch ID"}
+                          </span>
+                        </div>
+                      )}
 
+                      <div className="flex flex-col items-center gap-2">
+                        <button
+                          type="button"
+                          aria-label="Sign in with username and PIN"
+                          onClick={() => {
+                            setPanelDirection(1);
+                            setLoginStep("username");
+                            setLoginStepDirection(1);
+                            setPin("");
+                            setAccountAuthError("");
+                            setActivePanel("account-sign-in");
+                          }}
+                          className="tp-clean-button flex h-20 w-20 items-center justify-center rounded-full border border-slate-600 bg-slate-800 text-3xl shadow-sm transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+                        >
+                          🔒
+                        </button>
+                        <span className="text-base font-semibold text-ht-fg-muted">Enter Username/PIN</span>
+                      </div>
+                    </div>
+
+                    {passkeyAuthError ? (
+                      <div className="rounded-xl border border-amber-400/40 bg-amber-950/30 p-3 text-sm text-amber-200">
+                        {passkeyAuthError}
+                      </div>
+                    ) : null}
+
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-px bg-slate-700" />
+                      <span className="text-2xl font-semibold uppercase tracking-widest text-ht-fg-muted">new here?</span>
+                      <div className="flex-1 h-px bg-slate-700" />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPanelDirection(1);
+                        setLoginStep("username");
+                        setLoginStepDirection(1);
+                        setPin("");
+                        setAccountAuthError("");
+                        setActivePanel("account-creation");
+                      }}
+                      className="tp-clean-button inline-flex min-h-[50px] w-full items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+                    >
+                      <span className="text-2xl">Create Account →</span>
+                    </button>
+                  </motion.div>
+                )}
+
+                {/* ── Account creation / sign-in (username → PIN two-step) ── */}
+                {(activePanel === "account-creation" || activePanel === "account-sign-in") && (
+                  <motion.div
+                    key={activePanel}
+                    custom={panelDirection}
+                    variants={ONBOARDING_PANEL_VARIANTS}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={SWIPE_SPRING_TRANSITION}
+                    className="relative"
+                  >
+                    {/* Hidden real PIN input — keeps mobile keyboard stable. */}
+                    <input
+                      ref={pinInputRef}
+                      type="text"
+                      inputMode="numeric"
+                      enterKeyHint="go"
+                      pattern="[0-9]*"
+                      value={pin}
+                      maxLength={4}
+                      autoComplete="one-time-code"
+                      onChange={(e) => {
+                        if (loginStep !== "pin") return;
+                        setPin(normalizePin(e.target.value));
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          void handleAccountSubmitPin();
+                          return;
+                        }
+                        if (normalizePin(e.key).length === 1 && pin.length >= 4) {
+                          e.preventDefault();
+                          return;
+                        }
+                      }}
+                      onPaste={(e) => {
+                        if (loginStep !== "pin") return;
+                        const pasted = normalizePin(e.clipboardData.getData("text"));
+                        if (pasted) setPin(pasted);
+                        e.preventDefault();
+                      }}
+                      className="absolute h-px w-px overflow-hidden opacity-0"
+                      aria-label="4-digit PIN"
+                      placeholder="Enter 4-digit PIN"
+                    />
+
+                    <AnimatePresence custom={loginStepDirection} mode="wait">
+                      {loginStep === "username" ? (
+                        <UsernameStep
+                          key="account-username"
+                          direction={loginStepDirection}
+                          inputRef={usernameInputRef}
+                          isAdvancingToPin={false}
+                          locationLoading={false}
+                          errorMessage={accountAuthError}
+                          onBack={handleBackToAuthMethodSelection}
+                          onNext={handleAccountGoToPinStep}
+                          tagline={activePanel === "account-creation" ? "Create Account" : "Sign In"}
+                          heading={activePanel === "account-creation" ? "Choose your username" : "What's your username?"}
+                          subheading={activePanel === "account-creation" ? "Pick a name you'll be known by at every venue." : "Enter the username linked to your account."}
+                        />
+                      ) : (
+                        <PinStep
+                          key="account-pin"
+                          direction={loginStepDirection}
+                          pin={pin}
+                          isPinShaking={isPinShaking}
+                          isAuthLoading={accountAuthLoading}
+                          canCreate={!accountAuthLoading && Boolean(username) && pin.length === 4}
+                          loadingPhrase={loadingPhrase}
+                          errorMessage={accountAuthError}
+                          connectionRetryMessage=""
+                          blockedReason=""
+                          pinContainerRef={pinContainerRef}
+                          onBack={handleBackFromAccountPin}
+                          onSubmit={handleAccountSubmitPin}
+                          onAnimationComplete={handlePinAnimationComplete}
+                          onPinContainerClick={handlePinContainerClick}
+                        />
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+
+                {/* ── Passkey enrollment offer (inline, shown after new account creation) ── */}
+                {activePanel === "passkey-enrollment-offer" && (
+                  <motion.div
+                    key="passkey-enrollment-offer"
+                    custom={panelDirection}
+                    variants={ONBOARDING_PANEL_VARIANTS}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={SWIPE_SPRING_TRANSITION}
+                    className="flex flex-col gap-5"
+                  >
+                    <div className="text-center space-y-3">
+                      <div className="text-5xl select-none" aria-hidden>🔑</div>
+                      <h1 className="text-2xl font-black text-white">Sign in faster next time</h1>
+                      <p className="text-sm leading-relaxed" style={{ color: "#fbbf24" }}>
+                        Set up Face ID or Touch ID now and you&apos;ll never need to type your PIN.
+                      </p>
+                      <p className="text-sm text-ht-fg-muted leading-relaxed">
+                        Use your device&apos;s built-in biometrics for instant, secure sign-in.
+                      </p>
+                    </div>
+
+                    {enrollmentError ? (
+                      <div className="rounded-xl border border-amber-400/40 bg-amber-950/30 p-3 text-sm text-amber-200">
+                        {enrollmentError}
+                      </div>
+                    ) : null}
+
+                    <div className="flex flex-col gap-3">
+                      <button
+                        type="button"
+                        onClick={handleEnrollSetUp}
+                        disabled={isEnrollmentLoading}
+                        className="tp-clean-button inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-cyan-400 py-3 px-6 text-base font-black text-slate-950 transition-all active:translate-y-[1px] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+                      >
+                        {isEnrollmentLoading ? "Setting up..." : "Set Up Face ID / Touch ID →"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleEnrollSkip}
+                        disabled={isEnrollmentLoading}
+                        className="tp-clean-button inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-transparent py-2 px-6 text-sm font-semibold text-ht-fg-muted transition-all active:opacity-70 focus-visible:outline-none"
+                      >
+                        Skip for now — I&apos;ll use my PIN
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* ── Venue list ── */}
+                {activePanel === "venue-list" && (
+                  <motion.div
+                    key="venue-list"
+                    custom={panelDirection}
+                    variants={ONBOARDING_PANEL_VARIANTS}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={SWIPE_SPRING_TRANSITION}
+                  >
+                    {errorMessage && (
+                      <div className="mb-4 rounded-xl border border-rose-400/60 bg-rose-950/30 p-3 text-sm text-rose-200">
+                        {errorMessage}
+                      </div>
                     )}
 
-                  </AnimatePresence>
-                </div>
+                    {venueList.length > 0 ? (
+                      <div className="space-y-4">
+                        <div>
+                          <p className="mb-1 text-sm font-black uppercase tracking-[0.14em] text-cyan-300">
+                            Choose Your Venue
+                          </p>
+                          {locationLoading ? (
+                            <p className="text-xs text-ht-fg-muted">Finding nearby venues...</p>
+                          ) : locationNotice ? (
+                            <p className="text-xs text-ht-fg-muted">{locationNotice}</p>
+                          ) : null}
+                        </div>
+                        <ul className="space-y-2">
+                          {venueList.map((item, index) => (
+                            <VenueListItem
+                              key={item.id}
+                              venue={item}
+                              index={index}
+                              isPending={pendingVenueSelectionId === item.id}
+                              onSelect={handleSelectVenue}
+                            />
+                          ))}
+                        </ul>
+                        <InlineSlotAdClient
+                          slot="inline-content"
+                          venueId={venueParam || undefined}
+                          pageKey="join"
+                          adType="inline"
+                          displayTrigger="on-load"
+                          allowAnyVenue
+                          showPlaceholder
+                        />
+                      </div>
+                    ) : status === "loading" ? (
+                      <VenueListSkeleton />
+                    ) : (
+                      <div className="space-y-3 rounded-xl border border-slate-700 bg-slate-800/50 p-4">
+                        <p className="font-semibold text-white">Nearby venues only</p>
+                        {locationLoading ? (
+                          <p className="text-sm text-ht-fg-muted">Checking your location to find venues in range...</p>
+                        ) : locationNotice ? (
+                          <p className="text-sm text-ht-fg-muted">{locationNotice}</p>
+                        ) : (
+                          <p className="text-sm text-ht-fg-muted">No venue is currently in range from your location.</p>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => router.refresh()}
+                          className="tp-clean-button inline-flex min-h-[42px] items-center rounded-xl bg-slate-700 px-4 py-2 text-sm font-semibold text-white"
+                        >
+                          Retry nearby venue scan
+                        </button>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
 
-              </div>
+                {/* ── Legacy venue-login panel (username+PIN for a specific venue) ── */}
+                {activePanel === "venue-login" && venue && (
+                  <motion.div
+                    key={`venue-login-${venue.id}`}
+                    custom={panelDirection}
+                    variants={ONBOARDING_PANEL_VARIANTS}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={SWIPE_SPRING_TRANSITION}
+                    className="relative"
+                  >
+                    <p className="mb-5 text-xl font-black uppercase tracking-[0.12em]"
+                      style={{ color: "#fbbf24", textShadow: "0 0 10px #f59e0b, 0 0 24px #d97706" }}>
+                      {getVenueDisplayName(venue)}
+                    </p>
+
+                    {loginStep === "username" && discoverablePasskeyState === "ready" && (
+                      <div className="mb-5">
+                        <button
+                          type="button"
+                          onClick={handleDiscoverablePasskeySignIn}
+                          disabled={isDiscoverablePasskeyLoading || isAuthLoading}
+                          className="tp-clean-button inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl border border-cyan-400/40 bg-slate-800/80 py-3 px-6 text-base font-black text-white transition-all active:translate-y-[1px] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+                        >
+                          {isDiscoverablePasskeyLoading ? (
+                            <span className="animate-pulse">Authenticating…</span>
+                          ) : (
+                            <>
+                              <span aria-hidden="true" className="text-lg">🔑</span>
+                              Sign in with Face ID / Touch ID
+                            </>
+                          )}
+                        </button>
+                        <div className="mt-5 flex items-center gap-3">
+                          <div className="flex-1 h-px bg-slate-700" />
+                          <span className="text-xs font-semibold uppercase tracking-widest text-ht-fg-muted">or</span>
+                          <div className="flex-1 h-px bg-slate-700" />
+                        </div>
+                      </div>
+                    )}
+
+                    <input
+                      ref={pinInputRef}
+                      type="text"
+                      inputMode="numeric"
+                      enterKeyHint="go"
+                      pattern="[0-9]*"
+                      value={pin}
+                      maxLength={4}
+                      autoComplete="one-time-code"
+                      onChange={(e) => {
+                        if (loginStep !== "pin") return;
+                        setPin(normalizePin(e.target.value));
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleSubmitPinStep();
+                          return;
+                        }
+                        if (normalizePin(e.key).length === 1 && pin.length >= 4) {
+                          e.preventDefault();
+                          return;
+                        }
+                      }}
+                      onPaste={(e) => {
+                        if (loginStep !== "pin") return;
+                        const pasted = normalizePin(e.clipboardData.getData("text"));
+                        if (pasted) setPin(pasted);
+                        e.preventDefault();
+                      }}
+                      className="absolute h-px w-px overflow-hidden opacity-0"
+                      aria-label="4-digit PIN"
+                      placeholder="Enter 4-digit PIN"
+                    />
+
+                    <AnimatePresence custom={loginStepDirection} mode="wait">
+                      {loginStep === "username" ? (
+                        <UsernameStep
+                          key="step-username"
+                          direction={loginStepDirection}
+                          inputRef={usernameInputRef}
+                          isAdvancingToPin={isAdvancingToPin}
+                          locationLoading={locationLoading}
+                          errorMessage={errorMessage}
+                          onBack={handleBackToVenueList}
+                          onNext={handleGoToPinStep}
+                        />
+                      ) : (
+                        <PinStep
+                          key="step-pin"
+                          direction={loginStepDirection}
+                          pin={pin}
+                          isPinShaking={isPinShaking}
+                          isAuthLoading={isAuthLoading}
+                          canCreate={canCreate}
+                          loadingPhrase={loadingPhrase}
+                          errorMessage={errorMessage}
+                          connectionRetryMessage={connectionRetryMessage}
+                          blockedReason={blockedReason}
+                          pinContainerRef={pinContainerRef}
+                          onBack={handleBackFromPin}
+                          onSubmit={handleSubmitPinStep}
+                          onAnimationComplete={handlePinAnimationComplete}
+                          onPinContainerClick={handlePinContainerClick}
+                        />
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+
+              </AnimatePresence>
             </div>
+          </div>
+        </div>
   </PageShell>
   );
 }

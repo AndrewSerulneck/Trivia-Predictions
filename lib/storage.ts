@@ -2,6 +2,7 @@ const STORAGE_KEYS = {
   venueId: "tp:venue-id",
   username: "tp:username",
   userId: "tp:user-id",
+  accountId: "tp:account-id",
 };
 
 export const AUTH_STATE_CHANGED_EVENT = "tp:auth-state-changed";
@@ -121,6 +122,18 @@ export function getUserId(): string | null {
   return readCookie("tp_user_id");
 }
 
+export function saveAccountId(accountId: string): void {
+  memoryStore[STORAGE_KEYS.accountId] = accountId;
+  writeLocalStorage(STORAGE_KEYS.accountId, accountId);
+  dispatchAuthStateEvent(AUTH_STATE_CHANGED_EVENT);
+}
+
+export function getAccountId(): string | null {
+  const memoryValue = memoryStore[STORAGE_KEYS.accountId];
+  if (memoryValue) return memoryValue;
+  return readLocalStorage(STORAGE_KEYS.accountId);
+}
+
 export function clearVenueSession(): void {
   clearClientState();
 }
@@ -129,6 +142,7 @@ export function clearClientState(): void {
   delete memoryStore[STORAGE_KEYS.venueId];
   delete memoryStore[STORAGE_KEYS.username];
   delete memoryStore[STORAGE_KEYS.userId];
+  delete memoryStore[STORAGE_KEYS.accountId];
   if (typeof window !== "undefined") {
     try {
       window.localStorage.clear();
@@ -136,6 +150,7 @@ export function clearClientState(): void {
       removeLocalStorage(STORAGE_KEYS.venueId);
       removeLocalStorage(STORAGE_KEYS.username);
       removeLocalStorage(STORAGE_KEYS.userId);
+      removeLocalStorage(STORAGE_KEYS.accountId);
     }
     try {
       window.sessionStorage.clear();

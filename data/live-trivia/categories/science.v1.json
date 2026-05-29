@@ -18,28 +18,12 @@
       "difficulty": "easy"
     },
     {
-      "slug": "human-body-largest-organ",
-      "question": "What is the largest organ in the human body?",
-      "answer": "Skin",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "easy"
-    },
-    {
       "slug": "gas-plants-absorb",
       "question": "Which gas do plants primarily absorb from the atmosphere for photosynthesis?",
       "answer": "Carbon Dioxide",
       "answer_format": "write_in",
       "category": "Science",
       "difficulty": "easy"
-    },
-    {
-      "slug": "speed-of-light-vacuum",
-      "question": "What is the approximate speed of light in a vacuum?",
-      "answer": "300,000 km/s",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "medium"
     },
     {
       "slug": "noble-gas-symbol-he",
@@ -56,14 +40,6 @@
       "answer_format": "write_in",
       "category": "Science",
       "difficulty": "medium"
-    },
-    {
-      "slug": "boiling-point-water-celsius",
-      "question": "What is the boiling point of water at sea level in Celsius?",
-      "answer": "100\u00b0C",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "easy"
     },
     {
       "slug": "dna-structure-shape",
@@ -146,14 +122,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "sound-travel-medium-fastest",
-      "question": "In which medium does sound travel the fastest?",
-      "answer": "Steel",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "hard"
-    },
-    {
       "slug": "periodic-table-first-element",
       "question": "What is the first element on the periodic table?",
       "answer": "Hydrogen",
@@ -234,25 +202,9 @@
       "difficulty": "easy"
     },
     {
-      "slug": "earth-inner-core-composition",
-      "question": "What are the two main metals found in the Earth's inner core?",
-      "answer": "Iron and Nickel",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "medium"
-    },
-    {
       "slug": "photosynthesis-byproduct",
       "question": "What primary gas do plants release as a byproduct of photosynthesis?",
       "answer": "Oxygen",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "light-year-measure",
-      "question": "A light-year is a unit of measurement for what?",
-      "answer": "Distance",
       "answer_format": "write_in",
       "category": "Science",
       "difficulty": "easy"
@@ -362,14 +314,6 @@
       "difficulty": "hard"
     },
     {
-      "slug": "universe-age-estimate",
-      "question": "What is the estimated age of the universe in billions of years?",
-      "answer": "13.8",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "medium"
-    },
-    {
       "slug": "earth-crust-most-abundant-metal",
       "question": "Which is the most abundant metal in the Earth's crust?",
       "answer": "Aluminum",
@@ -444,7 +388,7 @@
     {
       "slug": "absolute-zero-celsius",
       "question": "What is absolute zero expressed in degrees Celsius?",
-      "answer": "-273.15\u00b0C",
+      "answer": "-273.15°C",
       "answer_format": "write_in",
       "category": "Science",
       "difficulty": "hard"
@@ -456,22 +400,6 @@
       "answer_format": "write_in",
       "category": "Science",
       "difficulty": "easy"
-    },
-    {
-      "slug": "ozone-layer-gas",
-      "question": "What gas is the ozone layer primarily composed of?",
-      "answer": "Trioxygen",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "speed-of-sound-dry-air",
-      "question": "What is the approximate speed of sound in dry air at 20\u00b0C?",
-      "answer": "343 m/s",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "hard"
     },
     {
       "slug": "human-chromosome-count",
@@ -504,30 +432,6 @@
       "answer_format": "write_in",
       "category": "Science",
       "difficulty": "hard"
-    },
-    {
-      "slug": "earth-diameter-approximate",
-      "question": "What is the approximate diameter of the Earth?",
-      "answer": "8,000 miles",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "radio-waves-speed",
-      "question": "How fast do radio waves travel in a vacuum?",
-      "answer": "Speed of Light",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "process-liquid-to-solid",
-      "question": "What is the scientific term for a liquid turning into a solid?",
-      "answer": "Freezing",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "easy"
     },
     {
       "slug": "main-gas-in-the-sun",
@@ -573,14 +477,6 @@
       "slug": "potassium-chemical-symbol",
       "question": "What is the chemical symbol for Potassium?",
       "answer": "K",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "longest-wavelength-visible-light",
-      "question": "Which color of visible light has the longest wavelength?",
-      "answer": "Red",
       "answer_format": "write_in",
       "category": "Science",
       "difficulty": "medium"
@@ -642,14 +538,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "speed-of-light-value",
-      "question": "The speed of light is approximately how many meters per second?",
-      "answer": "300,000,000",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "medium"
-    },
-    {
       "slug": "dry-ice-composition",
       "question": "Dry ice is the solid form of which substance?",
       "answer": "Carbon Dioxide",
@@ -658,60 +546,12 @@
       "difficulty": "easy"
     },
     {
-      "slug": "smallest-bone-human-body",
-      "question": "Where is the smallest bone in the human body located?",
-      "answer": "Ear",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "gravity-constant-earth",
-      "question": "What is the approximate acceleration due to gravity on Earth?",
-      "answer": "9.8 m/s\u00b2",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "medium"
-    },
-    {
       "slug": "mercury-planet-atmosphere",
       "question": "Which planet is known for having almost no atmosphere?",
       "answer": "Mercury",
       "answer_format": "write_in",
       "category": "Science",
       "difficulty": "hard"
-    },
-    {
-      "slug": "helium-atomic-number",
-      "question": "What is the atomic number of Helium?",
-      "answer": "2",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "ph-scale-acid-range",
-      "question": "On the pH scale, values below 7 indicate what type of substance?",
-      "answer": "Acidic",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "celsius-to-fahrenheit-freezing",
-      "question": "At what temperature does water freeze in Fahrenheit?",
-      "answer": "32\u00b0F",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "halley-comet-orbit-period",
-      "question": "Approximately how often does Halley's Comet appear to observers on Earth?",
-      "answer": "76 years",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "medium"
     },
     {
       "slug": "magnesium-chemical-symbol",
@@ -741,14 +581,6 @@
       "slug": "chemical-symbol-for-tin",
       "question": "What is the chemical symbol for Tin?",
       "answer": "Sn",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "speed-of-light-unit-miles",
-      "question": "The speed of light is approximately how many miles per second?",
-      "answer": "186,000",
       "answer_format": "write_in",
       "category": "Science",
       "difficulty": "hard"
@@ -786,14 +618,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "newton-third-law-concept",
-      "question": "Newton's Third Law of Motion states that for every action there is an equal and opposite what?",
-      "answer": "Reaction",
-      "answer_format": "write_in",
-      "category": "Science",
-      "difficulty": "easy"
-    },
-    {
       "slug": "blood-red-color-protein",
       "question": "What is the name of the protein in red blood cells that carries oxygen?",
       "answer": "Hemoglobin",
@@ -801,5 +625,6 @@
       "category": "Science",
       "difficulty": "easy"
     }
-  ]
+  ],
+  "familiarity": "moderate"
 }

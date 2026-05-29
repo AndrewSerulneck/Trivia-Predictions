@@ -1,0 +1,1069 @@
+{
+  "categoryName": "Food",
+  "questions": [
+    {
+      "slug": "food-science-capsaicin",
+      "question": "What is the specific chemical compound responsible for the burning sensation and spicy heat found in chili peppers?",
+      "answer": "Capsaicin",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-cheese-roquefort-milk",
+      "question": "By strict French law, authentic Roquefort cheese must be produced exclusively from the milk of which specific animal?",
+      "answer": "Sheep",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-spice-saffron-crocus",
+      "question": "Widely considered the most expensive spice by weight globally, saffron is harvested from the stigmas of which specific flower genus?",
+      "answer": "Crocus",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-brand-spam-portmanteau",
+      "question": "Introduced by Hormel Foods in 1937, what iconic canned luncheon meat brand name serves as a portmanteau of the words 'spiced' and 'ham'?",
+      "answer": "Spam",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-pastry-croissant-origin",
+      "question": "While heavily associated with French cuisine, the crescent-shaped viennoiserie pastry known as the croissant originated in which European country?",
+      "answer": "Austria",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-fungus-truffle-hunting",
+      "question": "What specific domestic animal is traditionally used in the regions of Alba and Périgord to sniff out and harvest subterranean truffles?",
+      "answer": "Pig",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-confection-marshmallow-plant",
+      "question": "Historically, traditional marshmallows were thickened using a sticky sap extracted from the root of which specific wetland plant?",
+      "answer": "Althaea officinalis",
+      "category": "Food",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "food-dish-haggis-country",
+      "question": "Composed of sheep's pluck simmered with oatmeal and spices inside an animal's stomach, haggis is the national dish of which country?",
+      "answer": "Scotland",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-science-pectin",
+      "question": "What structural heteropolysaccharide, extracted primarily from citrus peels and apples, serves as the essential gelling agent in commercial jam and jelly production?",
+      "answer": "Pectin",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-condiment-worcestershire-fish",
+      "question": "What specific type of small, fermented saltwater fish provides the distinct, savory umami base for traditional Lea & Perrins Worcestershire sauce?",
+      "answer": "Anchovy",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-fruit-durian-ban",
+      "question": "Infamous for its pungent, sulfurous odor, which large, spiky Southeast Asian fruit is widely banned from public transportation systems and hotels in Singapore?",
+      "answer": "Durian",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-brand-vegemite-yeast",
+      "question": "Invented by Cyril Callister in 1922, the iconic Australian food spread Vegemite is manufactured using a concentrated extract of what specific byproduct?",
+      "answer": "Yeast",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-dish-scouse-city",
+      "question": "The hearty meat-and-vegetable stew known as 'scouse' is so deeply intertwined with the cultural identity of which English port city that its residents are nicknamed Scousers?",
+      "answer": "Liverpool",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-herb-cilantro-seed",
+      "question": "The fresh, leafy herb known in North America as cilantro produces dried, aromatic spherical seeds known by what distinct spice name?",
+      "answer": "Coriander",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-beverage-kombucha-symbiosis",
+      "question": "What is the common acronym for the symbiotic culture of bacteria and yeast utilized to ferment sweet tea into traditional kombucha?",
+      "answer": "SCOBY",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-pasta-orzo-meaning",
+      "question": "Literally translating from Italian as 'barley' due to its grain-like shape, what is the specific name of the small, rice-shaped pasta frequently used in soups?",
+      "answer": "Orzo",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-science-sucrose",
+      "question": "What is the precise chemical name of the common disaccharide carbohydrate composed of bound glucose and fructose that forms everyday granulated table sugar?",
+      "answer": "Sucrose",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-dish-poutine-province",
+      "question": "The decadent dish of French fries topped with fresh cheese curds and brown gravy known as poutine originated during the 1950s within which Canadian province?",
+      "answer": "Quebec",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-brand-twinkie-filling-original",
+      "question": "When Hostess bakery manager James Dewar first invented the Twinkie in 1930, the golden sponge cake was originally injected with what specific fruit-flavored cream filling?",
+      "answer": "Banana",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-grain-quinoa-botany",
+      "question": "While treated culinarily as a cereal grain, the ancient South American staple quinoa is botanically classified as a pseudocereal belonging to which plant family?",
+      "answer": "Amaranthaceae",
+      "category": "Food",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "food-sauce-tahini-seed",
+      "question": "A fundamental element of Middle Eastern cuisine and hummus preparation, tahini is a thick, smooth paste manufactured entirely from what toasted seed?",
+      "answer": "Sesame",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-brand-toblerone-mountain",
+      "question": "The distinct, triangular peaks of Switzerland's iconic Toblerone chocolate bar were directly inspired by the geometric silhouette of which specific Alpine mountain?",
+      "answer": "Matterhorn",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-mushroom-padi-straw-substance",
+      "question": "Traditional mock turtle soup, a 18th-century English replication of green sea turtle soup, relied heavily on what specific variety of offal meat to mimic the gelatinous texture of turtle flippers?",
+      "answer": "Calf's head",
+      "category": "Food",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "food-chili-scoville-scale-inventor",
+      "question": "What is the surname of the American pharmacist who, in 1912, created the organoleptic test and standardized scale used to measure the pungency and heat of chili peppers?",
+      "answer": "Scoville",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-sushi-wasabi-surrogate",
+      "question": "Because authentic Wasabia japonica is exceptionally rare and expensive, the vast majority of commercial 'wasabi' paste served in restaurants is made from a dyed paste of which root vegetable?",
+      "answer": "Horseradish",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-science-capsaicin",
+      "question": "What is the specific chemical compound responsible for the burning sensation and spicy heat found in chili peppers?",
+      "answer": "Capsaicin",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-cheese-roquefort-milk",
+      "question": "By strict French law, authentic Roquefort cheese must be produced exclusively from the milk of which specific animal?",
+      "answer": "Sheep",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-spice-saffron-crocus",
+      "question": "Widely considered the most expensive spice by weight globally, saffron is harvested from the stigmas of which specific flower genus?",
+      "answer": "Crocus",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-brand-spam-portmanteau",
+      "question": "Introduced by Hormel Foods in 1937, what iconic canned luncheon meat brand name serves as a portmanteau of the words 'spiced' and 'ham'?",
+      "answer": "Spam",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-pastry-croissant-origin",
+      "question": "While heavily associated with French cuisine, the crescent-shaped viennoiserie pastry known as the croissant originated in which European country?",
+      "answer": "Austria",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-fungus-truffle-hunting",
+      "question": "What specific domestic animal is traditionally used in the regions of Alba and Périgord to sniff out and harvest subterranean truffles?",
+      "answer": "Pig",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-confection-marshmallow-plant",
+      "question": "Historically, traditional marshmallows were thickened using a sticky sap extracted from the root of which specific wetland plant?",
+      "answer": "Althaea officinalis",
+      "category": "Food",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "food-dish-haggis-country",
+      "question": "Composed of sheep's pluck simmered with oatmeal and spices inside an animal's stomach, haggis is the national dish of which country?",
+      "answer": "Scotland",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-science-pectin",
+      "question": "What structural heteropolysaccharide, extracted primarily from citrus peels and apples, serves as the essential gelling agent in commercial jam and jelly production?",
+      "answer": "Pectin",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-condiment-worcestershire-fish",
+      "question": "What specific type of small, fermented saltwater fish provides the distinct, savory umami base for traditional Lea & Perrins Worcestershire sauce?",
+      "answer": "Anchovy",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-fruit-durian-ban",
+      "question": "Infamous for its pungent, sulfurous odor, which large, spiky Southeast Asian fruit is widely banned from public transportation systems and hotels in Singapore?",
+      "answer": "Durian",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-brand-vegemite-yeast",
+      "question": "Invented by Cyril Callister in 1922, the iconic Australian food spread Vegemite is manufactured using a concentrated extract of what specific byproduct?",
+      "answer": "Yeast",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-dish-scouse-city",
+      "question": "The hearty meat-and-vegetable stew known as 'scouse' is so deeply intertwined with the cultural identity of which English port city that its residents are nicknamed Scousers?",
+      "answer": "Liverpool",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-herb-cilantro-seed",
+      "question": "The fresh, leafy herb known in North America as cilantro produces dried, aromatic spherical seeds known by what distinct spice name?",
+      "answer": "Coriander",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-beverage-kombucha-symbiosis",
+      "question": "What is the common acronym for the symbiotic culture of bacteria and yeast utilized to ferment sweet tea into traditional kombucha?",
+      "answer": "SCOBY",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-pasta-orzo-meaning",
+      "question": "Literally translating from Italian as 'barley' due to its grain-like shape, what is the specific name of the small, rice-shaped pasta frequently used in soups?",
+      "answer": "Orzo",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-science-sucrose",
+      "question": "What is the precise chemical name of the common disaccharide carbohydrate composed of bound glucose and fructose that forms everyday granulated table sugar?",
+      "answer": "Sucrose",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-dish-poutine-province",
+      "question": "The decadent dish of French fries topped with fresh cheese curds and brown gravy known as poutine originated during the 1950s within which Canadian province?",
+      "answer": "Quebec",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-brand-twinkie-filling-original",
+      "question": "When Hostess bakery manager James Dewar first invented the Twinkie in 1930, the golden sponge cake was originally injected with what specific fruit-flavored cream filling?",
+      "answer": "Banana",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-grain-quinoa-botany",
+      "question": "While treated culinarily as a cereal grain, the ancient South American staple quinoa is botanically classified as a pseudocereal belonging to which plant family?",
+      "answer": "Amaranthaceae",
+      "category": "Food",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "food-sauce-tahini-seed",
+      "question": "A fundamental element of Middle Eastern cuisine and hummus preparation, tahini is a thick, smooth paste manufactured entirely from what toasted seed?",
+      "answer": "Sesame",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-brand-toblerone-mountain",
+      "question": "The distinct, triangular peaks of Switzerland's iconic Toblerone chocolate bar were directly inspired by the geometric silhouette of which specific Alpine mountain?",
+      "answer": "Matterhorn",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-mushroom-padi-straw-substance",
+      "question": "Traditional mock turtle soup, a 18th-century English replication of green sea turtle soup, relied heavily on what specific variety of offal meat to mimic the gelatinous texture of turtle flippers?",
+      "answer": "Calf's head",
+      "category": "Food",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "food-chili-scoville-scale-inventor",
+      "question": "What is the surname of the American pharmacist who, in 1912, created the organoleptic test and standardized scale used to measure the pungency and heat of chili peppers?",
+      "answer": "Scoville",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-sushi-wasabi-surrogate",
+      "question": "Because authentic Wasabia japonica is exceptionally rare and expensive, the vast majority of commercial 'wasabi' paste served in restaurants is made from a dyed paste of which root vegetable?",
+      "answer": "Horseradish",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-science-gluten-protein",
+      "question": "What is the specific name of the elastic, structural protein composite formed when water is combined with the gliadin and glutenin proteins found in wheat flour?",
+      "answer": "Gluten",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-dish-pho-country",
+      "question": "Consisting of a deeply aromatic bone broth, rice noodles, herbs, and thinly sliced meat, pho is celebrated worldwide as the national noodle soup of which Southeast Asian country?",
+      "answer": "Vietnam",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-fruit-apple-cider",
+      "question": "What common, crunchy orchard fruit is pressed to make cider and is traditionally left on teachers' desks?",
+      "answer": "Apple",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-fast-food-mcdonalds-fries",
+      "question": "Which global fast-food giant is famous for its Golden Arches and Happy Meals?",
+      "answer": "McDonald's",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-dairy-milk-cows",
+      "question": "What white liquid dairy product do humans most commonly harvest from cows to drink or pour over cereal?",
+      "answer": "Milk",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-breakfast-bacon-pig",
+      "question": "What popular, crispy breakfast meat is made from strips of salted and cured pork belly?",
+      "answer": "Bacon",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-italian-pizza-crust",
+      "question": "What iconic Italian-American food consists of a baked dough base topped with tomato sauce, melted cheese, and pepperoni?",
+      "answer": "Pizza",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-sweet-honey-bees",
+      "question": "What sweet, sticky substance is produced by honeybees using nectar from flowers?",
+      "answer": "Honey",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-vegetable-carrot-orange",
+      "question": "What crunchy, orange root vegetable is famously eaten by rabbits and known to be high in beta-carotene?",
+      "answer": "Carrot",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-baking-bread-yeast",
+      "question": "What basic, universally consumed carbohydrate food is baked using a simple mixture of flour, water, and yeast?",
+      "answer": "Bread",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-fruit-banana-peel",
+      "question": "What long, yellow tropical fruit grows in bunches and is famously easy to peel?",
+      "answer": "Banana",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-mexican-taco-shell",
+      "question": "What classic Mexican street food features a folded corn or wheat tortilla packed with seasoned meat, cheese, and lettuce?",
+      "answer": "Taco",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-condiment-ketchup-tomato",
+      "question": "What sweet, red condiment is made primarily from tomatoes and served universally with french fries?",
+      "answer": "Ketchup",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-poultry-chicken-egg",
+      "question": "What common barnyard bird gives us both drumsticks and scrambled eggs?",
+      "answer": "Chicken",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-dessert-ice-cream-cone",
+      "question": "What frozen dairy dessert is traditionally churned, flavored with vanilla or chocolate, and scooped onto a cone?",
+      "answer": "Ice cream",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-snack-popcorn-movie",
+      "question": "What classic movie theater snack is made by heating dried corn kernels until they burst open?",
+      "answer": "Popcorn",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-fruit-orange-juice",
+      "question": "What round citrus fruit is famous for its high Vitamin C content and shares its name with a primary color?",
+      "answer": "Orange",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-sandwich-hamburger-patty",
+      "question": "What classic American sandwich consists of a grilled ground beef patty placed inside a sliced bun?",
+      "answer": "Hamburger",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-dairy-butter-churn",
+      "question": "What solid yellow dairy spread is made by churning fresh cream and is commonly melted over toast?",
+      "answer": "Butter",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-herb-mint-gum",
+      "question": "What aromatic green herb is famously used to flavor toothpaste, chewing gum, and candy canes?",
+      "answer": "Mint",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-seafood-salmon-pink",
+      "question": "What popular saltwater fish is known for its distinct pink flesh and its habit of swimming upstream to spawn?",
+      "answer": "Salmon",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-snack-potato-chip-bag",
+      "question": "What is the name of the thin, crispy snack made by deep-frying or baking thin slices of russet potatoes?",
+      "answer": "Potato chip",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-cookie-oreo-milk",
+      "question": "What iconic sandwich cookie consists of two chocolate wafers separated by a sweet white cream filling?",
+      "answer": "Oreo",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-dairy-cheese-mouse",
+      "question": "What dairy product is made from coagulated milk, comes in varieties like Cheddar and Swiss, and is stereotypically loved by mice?",
+      "answer": "Cheese",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-fruit-strawberry-red",
+      "question": "What bright red, heart-shaped summer fruit wears its tiny seeds on the outside of its skin?",
+      "answer": "Strawberry",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-pasta-spaghetti-noodle",
+      "question": "What long, thin, cylindrical Italian pasta noodle is traditionally served topped with marinara sauce and meatballs?",
+      "answer": "Spaghetti",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-sweet-chocolate-cacao",
+      "question": "What sweet confection is made from roasted and ground cacao seeds and is traditionally gifted on Valentine's Day?",
+      "answer": "Chocolate",
+      "category": "Food",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "food-pasta-gnocchi-ingredient",
+      "question": "What mashed root vegetable serves as the primary structural ingredient in traditional Italian gnocchi dumplings?",
+      "answer": "Potato",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-sauce-mayonnaise-stabilizer",
+      "question": "What specific phospholipid compound found in egg yolks acts as the emulsifier to keep oil and acid stabilized in mayonnaise?",
+      "answer": "Lecithin",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-pastry-croissant-process",
+      "question": "What is the baking term for repeatedly folding and rolling butter into pastry dough to create the flaky layers characteristic of croissants?",
+      "answer": "Lamination",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-cheese-mozzarella-animal",
+      "question": "Traditional Italian Mozzarella di Bufala Campana is legally required to be made from the milk of which specific animal?",
+      "answer": "Water buffalo",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-grain-semolina-wheat",
+      "question": "What is the specific name of the coarse flour milled from Durum wheat that serves as the baseline ingredient for high-quality commercial dried pasta?",
+      "answer": "Semolina",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-condiment-harissa-country",
+      "question": "The hot, aromatic chili pepper paste known as harissa, flavored with garlic, caraway, and cumin, originated in which North African country?",
+      "answer": "Tunisia",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-spice-mace-origin",
+      "question": "What specific spice is derived from the lacy, reddish outer membrane that wraps around a whole nutmeg seed?",
+      "answer": "Mace",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-dish-mole-poblano-state",
+      "question": "The complex, rich savory sauce known as mole poblano—famously combining chilis, spices, and a touch of chocolate—originated in which Mexican state?",
+      "answer": "Puebla",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-fish-gravlax-preparation",
+      "question": "What is the Scandinavian culinary term for raw salmon that has been cured using a dry mixture of salt, sugar, and fresh dill?",
+      "answer": "Gravlax",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-pastry-profiterole-dough",
+      "question": "What is the traditional French name for the light, high-moisture pastry dough that relies on steam to hollow out cream puffs and profiteroles?",
+      "answer": "Pâte à choux",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-soup-gazpacho-region",
+      "question": "The classic, chilled tomato-and-cucumber soup known as gazpacho originated within which autonomous community of southern Spain?",
+      "answer": "Andalusia",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-brand-fritos-origin",
+      "question": "In 1932, C.E. Doolin purchased a recipe for fried corn chips from a vendor in San Antonio and founded which classic American snack brand?",
+      "answer": "Fritos",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-grain-farro-definition",
+      "question": "Which specific collective Italian term refers to the trio of ancient hulled wheat grains known individually as emmer, einkorn, and spelt?",
+      "answer": "Farro",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-seafood-caviar-family",
+      "question": "To be legally marketed as authentic caviar in the United States and Europe, the salted roe must be harvested from which specific family of fish?",
+      "answer": "Sturgeon",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-fruit-cavendish-banana",
+      "question": "Which specific banana cultivar became the dominant global commercial variety following the mid-20th-century collapse of the Gros Michel banana?",
+      "answer": "Cavendish",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-baking-soda-activation",
+      "question": "Unlike baking powder, raw baking soda is alkaline and requires the introduction of what type of chemical liquid ingredient to activate its leavening power?",
+      "answer": "Acid",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-fish-surimi-definition",
+      "question": "What is the specific Japanese term for the pulverized, gelled white fish paste used as the primary structural base for imitation crab meat?",
+      "answer": "Surimi",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-sauce-demi-glace-base",
+      "question": "Which classic, rich French brown sauce reduction is traditionally combined with equal parts Espagnole sauce and brown stock?",
+      "answer": "Demi-glace",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-oil-canola-plant",
+      "question": "What common kitchen cooking oil, heavily marketed under a trademarked name, is extracted from the seeds of the rapeseed plant?",
+      "answer": "Canola oil",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-fungus-huitlacoche-corn",
+      "question": "What is the Mexican culinary name for the edible, dark grey pathogenic plant fungus that grows natively on ears of sweet corn?",
+      "answer": "Huitlacoche",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-legume-chickpea-aquafaba",
+      "question": "What specific type of legume yields the viscous leftover starchy liquid known as aquafaba, which is frequently used as a vegan egg-white substitute?",
+      "answer": "Chickpea",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-dish-gumbo-thickener",
+      "question": "What specific powder, milled from the dried leaves of the sassafras tree, is traditionally used as a thickening agent in Louisiana gumbo?",
+      "answer": "Filé powder",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-confection-ganache-components",
+      "question": "What is the traditional French culinary name for the smooth glaze or filling manufactured by blending warm dairy cream into chopped chocolate?",
+      "answer": "Ganache",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-vegetable-tomatillo-husk",
+      "question": "What small, green, acidic nightshade fruit grows inside a papery husk and forms the essential flavor base for Mexican salsa verde?",
+      "answer": "Tomatillo",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-meat-sweetbreads-gland",
+      "question": "In culinary terminology, the offal meat known as sweetbreads is composed of either the animal's pancreas or which specific chest cavity gland?",
+      "answer": "Thymus",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-pasta-lasagna-layers",
+      "question": "What classic Italian baked dish is constructed by layering wide, flat pasta sheets with meat sauce, ricotta, and mozzarella cheese?",
+      "answer": "Lasagna",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-fruit-avocado-guacamole",
+      "question": "What creamy, green-fleshed tropical fruit serves as the essential, definitive base ingredient for guacamole?",
+      "answer": "Avocado",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-dairy-yogurt-greek",
+      "question": "What specific type of concentrated yogurt is strained repeatedly to remove excess liquid whey, resulting in a much thicker texture?",
+      "answer": "Greek yogurt",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-soup-minestrone-style",
+      "question": "What is the name of the thick, classic Italian vegetable soup that frequently incorporates beans, onions, celery, carrots, and small pasta shapes?",
+      "answer": "Minestrone",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-spice-cinnamon-bark",
+      "question": "What aromatic, sweet baking spice is harvested directly from the dried inner bark of trees belonging to the genus Cinnamomum?",
+      "answer": "Cinnamon",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-breakfast-maple-syrup-tree",
+      "question": "What sweet, viscous breakfast syrup is produced by boiling down the natural sap collected from maple trees?",
+      "answer": "Maple syrup",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-condiment-pesto-herb",
+      "question": "What fresh, aromatic green herb is blended with pine nuts, garlic, parmesan, and olive oil to make traditional Italian pesto?",
+      "answer": "Basil",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-dessert-tiramisu-flavor",
+      "question": "The name of what layered Italian dessert translates literally to 'pick me up' due to its heavy use of espresso and cocoa powder?",
+      "answer": "Tiramisu",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-grain-risotto-rice",
+      "question": "What specific short-grain Italian rice variety is prized for its high starch content, making it the standard choice for cooking risotto?",
+      "answer": "Arborio",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-meat-pepperoni-pizza",
+      "question": "What highly popular American pizza topping is a dry, seasoned sausage made from a cured mixture of pork and beef?",
+      "answer": "Pepperoni",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-seafood-tofu-soybean",
+      "question": "What versatile, protein-rich plant food is manufactured by coagulating fresh soy milk and pressing the resulting curds into solid white blocks?",
+      "answer": "Tofu",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-condiment-mayonnaise-oil",
+      "question": "What thick, creamy condiment is created by slowly whisking oil into a base of egg yolks and lemon juice or vinegar?",
+      "answer": "Mayonnaise",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-poultry-turkey-holiday",
+      "question": "What large North American bird is traditionally roasted whole and served as the centerpiece dish for Thanksgiving dinner?",
+      "answer": "Turkey",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-vegetable-garlic-bulb",
+      "question": "What strongly aromatic bulbous plant is divided into individual sections called cloves and forms the flavor base for cuisines worldwide?",
+      "answer": "Garlic",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-dessert-cheesecake-crust",
+      "question": "What rich, dense dessert features a thick sweet filling made from cream cheese baked over a crushed graham cracker crust?",
+      "answer": "Cheesecake",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-snack-hummus-base",
+      "question": "What savory Middle Eastern dip or spread is made by blending cooked chickpeas, tahini, olive oil, lemon juice, and garlic?",
+      "answer": "Hummus",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-fruit-pineapple-pizza",
+      "question": "What spiky, sweet tropical fruit serves as the controversial, defining topping on a Hawaiian-style pizza?",
+      "answer": "Pineapple",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-baking-brownie-texture",
+      "question": "What square or rectangular baked chocolate treat is characterized by a texture that falls somewhere between a cake and a soft cookie?",
+      "answer": "Brownie",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-cheese-cheddar-color",
+      "question": "Originating in an English village of the same name, what popular hard cheese is often dyed a deep orange color using annatto plant extract?",
+      "answer": "Cheddar",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-soup-clam-chowder",
+      "question": "What thick, hearty American seafood soup is famously prepared 'New England style' with a rich cream and potato base?",
+      "answer": "Clam chowder",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-pastry-pretzel-shape",
+      "question": "What traditional knot-shaped baked snack is boiled in a lye or baking soda bath before baking to give it a dark, glossy, salty crust?",
+      "answer": "Pretzel",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-beverage-matcha-tea",
+      "question": "What specific type of green tea is processed into a fine, vibrant powder and whisked directly into hot water for traditional Japanese tea ceremonies?",
+      "answer": "Matcha",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-dish-falafel-frying",
+      "question": "What popular Middle Eastern street food consists of spiced, ground chickpeas shaped into balls or patties and deep-fried until crispy?",
+      "answer": "Falafel",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-sauce-marinara-tomato",
+      "question": "What simple, classic Italian tomato sauce is seasoned minimally with garlic, herbs, and onions, acting as the standard base for pasta dishes?",
+      "answer": "Marinara",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-meat-beef-jerky",
+      "question": "What popular, shelf-stable snack food is made by slicing lean beef into thin strips, marinating it, and dehydrating it to prevent spoilage?",
+      "answer": "Beef jerky",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-pasta-ravioli-filling",
+      "question": "What is the name of the classic Italian pasta dumpling that consists of a filling sealed between two layers of thin egg pasta dough, typically served in square shapes?",
+      "answer": "Ravioli",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-fruit-lemon-citrus",
+      "question": "What bright yellow, highly acidic citrus fruit is commonly squeezed over seafood, used to make lemonade, or zested for baking?",
+      "answer": "Lemon",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-dairy-mozzarella-pizza",
+      "question": "What mild, semi-soft white Italian cheese is famous for its exceptional melting and stretching properties, making it the standard choice for pizza?",
+      "answer": "Mozzarella",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-soup-french-onion-cheese",
+      "question": "What classic, savory soup features a deep beef broth packed with caramelized onions, topped with a slice of bread and a thick blanket of melted Gruyère cheese?",
+      "answer": "French onion soup",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-spice-ginger-root",
+      "question": "What pungent, spicy knobby root is a staple in Asian stir-fries and is commonly consumed in sweet forms like ginger ale or gingerbread?",
+      "answer": "Ginger",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-breakfast-waffle-grid",
+      "question": "What popular batter-based breakfast food is cooked between two hot patterned plates, giving it a distinctive grid-like shape that holds butter and syrup?",
+      "answer": "Waffle",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-condiment-tzatziki-cucumber",
+      "question": "What refreshing Greek condiment or dip is made by combining thick strained yogurt with grated cucumber, garlic, olive oil, and fresh dill?",
+      "answer": "Tzatziki",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-dessert-macaron-almond",
+      "question": "What delicate, colorful French sandwich cookie is made by folding whipped egg whites into almond flour and sugar, featuring a sweet ganache or buttercream filling?",
+      "answer": "Macaron",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-grain-quinoa-seed",
+      "question": "What nutrient-dense, gluten-free pseudocereal native to the Andean region of South America expands into small, fluffy translucent rounds when boiled?",
+      "answer": "Quinoa",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-meat-prosciutto-ham",
+      "question": "What is the traditional Italian name for dry-cured ham that is salted, aged for months, and served uncooked in micro-thin slices?",
+      "answer": "Prosciutto",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-seafood-shrimp-cocktail",
+      "question": "What highly popular decapod crustacean turns pink when cooked and is famously served chilled on the rim of a glass alongside a spicy, tomato-based cocktail sauce?",
+      "answer": "Shrimp",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-condiment-soy-sauce-grain",
+      "question": "What salty, dark brown liquid condiment is produced by fermenting a boiled paste of soybeans, roasted grain, brine, and Aspergillus molds?",
+      "answer": "Soy sauce",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-poultry-duck-confit",
+      "question": "What specific water bird is famous in French cuisine for its rich, dark meat, often prepared slow-cooked in its own rendered fat as a 'confit'?",
+      "answer": "Duck",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-vegetable-onion-tears",
+      "question": "What foundational culinary bulb releases a sulfur-based gas when sliced, frequently causing cooks to shed tears while chopping it?",
+      "answer": "Onion",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-dessert-creme-brulee-sugar",
+      "question": "What rich, creamy French custard dessert is finished by melting a thin layer of granulated sugar on top with a blowtorch to form a hard, brittle caramel crust?",
+      "answer": "Crème brûlée",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-snack-salsa-mexican",
+      "question": "Translating directly to the word 'sauce' in Spanish, what ubiquitous Mexican condiment is typically made with diced tomatoes, onions, chilis, and cilantro?",
+      "answer": "Salsa",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-fruit-watermelon-summer",
+      "question": "What massive, round summer fruit features a thick green rind, sweet red flesh, and an extremely high water content of roughly 92 percent?",
+      "answer": "Watermelon",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-baking-muffin-cup",
+      "question": "What sweet, individual-sized baked product is prepared in a tin with distinct cups, similar to a cupcake but lacking frosting?",
+      "answer": "Muffin",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-cheese-feta-greek",
+      "question": "What crumbly, salty white cheese from Greece is traditionally cured in a brine solution and made from a mixture of sheep's and goat's milk?",
+      "answer": "Feta",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-soup-miso-paste",
+      "question": "What traditional Japanese soup is built on a cloudy savory broth made by dissolving a fermented soybean paste into dashi stock?",
+      "answer": "Miso soup",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-pastry-churro-cinnamon",
+      "question": "What fried-dough pastry, popular in Spain and Latin America, is piped through a star-shaped nozzle, deep-fried until crispy, and rolled in cinnamon sugar?",
+      "answer": "Churro",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-beverage-espresso-pressure",
+      "question": "What concentrated, full-bodied coffee shot is brewed by forcing hot water under high pressure through finely-ground coffee beans?",
+      "answer": "Espresso",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-dish-paella-rice",
+      "question": "What iconic Spanish rice dish, originating in Valencia, is traditionally cooked over an open fire in a wide, shallow metal pan with saffron, vegetables, and meat or seafood?",
+      "answer": "Paella",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-sauce-barbecue-smoky",
+      "question": "What tangy, often sweet and smoky condiment is brushed onto ribs, pulled pork, and chicken during or after the grilling process?",
+      "answer": "Barbecue sauce",
+      "category": "Food",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "food-meat-brisket-bbq",
+      "question": "Cut from the breast or lower chest of beef, what tough muscle tissue is prized in Texas-style barbecue for turning incredibly tender during long, slow smoking sessions?",
+      "answer": "Brisket",
+      "category": "Food",
+      "difficulty": "medium"
+    }
+  ]
+}
