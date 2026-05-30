@@ -441,6 +441,81 @@ async function findRelevantSchedules(nowIso: string, venueIdRaw: string): Promis
   return { active, upcoming };
 }
 
+async function repairSessionSlot(
+  scheduleId: string,
+  roundNumber: number,
+  questionIndex: number
+): Promise<LiveShowdownQuestionInternal | null> {
+  if (!supabaseAdmin) return null;
+
+  // Collect already-assigned question_ids for this schedule to avoid duplicates.
+  const { data: usedData } = await supabaseAdmin
+    .from("trivia_session_questions")
+    .select("question_id")
+    .eq("schedule_id", scheduleId)
+    .not("question_id", "is", null);
+
+  const usedIds = new Set(
+    ((usedData ?? []) as Array<{ question_id: string | null }>)
+      .map((r) => String(r.question_id ?? "").trim())
+      .filter(Boolean)
+  );
+
+  // Prefer live_showdown (write-in) questions; fall back to anytime_blitz.
+  const { data: poolData } = await supabaseAdmin
+    .from("trivia_questions")
+    .select("id, slug, question, options, correct_answer, category, difficulty, question_pool")
+    .not("slug", "is", null)
+    .order("slug", { ascending: true })
+    .limit(500);
+
+  if (!poolData || poolData.length === 0) return null;
+
+  const all = poolData as TriviaQuestionRow[];
+  const candidates = all.filter((r) => r.slug && !usedIds.has(r.slug));
+  const pool = candidates.length > 0 ? candidates : all;
+  if (pool.length === 0) return null;
+
+  // Deterministic slot-based selection so every poll picks the same fallback.
+  const hashInput = `${scheduleId}:${roundNumber}:${questionIndex}`;
+  let hash = 0;
+  for (let i = 0; i < hashInput.length; i += 1) {
+    hash = (Math.imul(31, hash) + hashInput.charCodeAt(i)) | 0;
+  }
+  const chosen = pool[Math.abs(hash) % pool.length];
+  if (!chosen) return null;
+
+  const questionId = String(chosen.slug ?? chosen.id ?? "").trim();
+  if (!questionId) return null;
+
+  // Upsert so all future polls for this slot return the same question.
+  try {
+    await supabaseAdmin
+      .from("trivia_session_questions")
+      .upsert(
+        {
+          schedule_id: scheduleId,
+          question_id: questionId,
+          round_number: roundNumber,
+          question_index: questionIndex,
+        },
+        { onConflict: "schedule_id,round_number,question_index" }
+      );
+  } catch {
+    // best-effort — don't fail the whole state fetch
+  }
+
+  const repairedSessionRow: TriviaSessionQuestionRow = {
+    id: "repaired",
+    schedule_id: scheduleId,
+    question_id: questionId,
+    round_number: roundNumber,
+    question_index: questionIndex,
+  };
+
+  return mapQuestionInternal(chosen, repairedSessionRow);
+}
+
 async function loadSessionQuestion(
   scheduleId: string,
   roundNumber: number,
@@ -465,12 +540,12 @@ async function loadSessionQuestion(
 
   const sessionRow = (sessionRowData as TriviaSessionQuestionRow | null) ?? null;
   if (!sessionRow) {
-    return null;
+    return repairSessionSlot(scheduleId, roundNumber, questionIndex);
   }
 
   const questionId = String(sessionRow.question_id ?? "").trim();
   if (!questionId) {
-    return null;
+    return repairSessionSlot(scheduleId, roundNumber, questionIndex);
   }
 
   const bySlug = await supabaseAdmin
@@ -501,7 +576,7 @@ async function loadSessionQuestion(
   }
 
   if (!questionRow) {
-    return null;
+    return repairSessionSlot(scheduleId, roundNumber, questionIndex);
   }
 
   return mapQuestionInternal(questionRow, sessionRow);

@@ -1064,7 +1064,9 @@ export default function LiveShowdownPage() {
                   Submit
                 </button>
               </>
-            ) : null}
+            ) : (
+              <p className="text-sm font-semibold text-sky-300/70">Syncing question from server…</p>
+            )}
           </section>
         ) : answering ? (
           <section className="rounded-2xl border border-emerald-400/60 bg-slate-900 p-4">
@@ -1082,8 +1084,11 @@ export default function LiveShowdownPage() {
               </p>
             ) : null}
             <p className="mt-2 text-3xl font-extrabold tracking-tight leading-tight">
-              {state.activeQuestion?.question ?? "Loading question..."}
+              {state.activeQuestion?.question ?? "Question loading…"}
             </p>
+            {!state.activeQuestion ? (
+              <p className="mt-1 text-sm text-slate-400">Hang tight — syncing question from server.</p>
+            ) : null}
             <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-slate-800">
               <div className="h-full bg-emerald-400 transition-all duration-700" style={{ width: `${progressPct}%` }} />
             </div>
