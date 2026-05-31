@@ -42,6 +42,7 @@ export type SubmitLiveShowdownAnswerParams = {
   roundNumber: number;
   questionIndex: number;
   submittedAnswer: string;
+  occurrenceDate?: string; // YYYY-MM-DD hint from client; server always derives authoritative value
 };
 
 export type SubmitLiveShowdownAnswerResult = {
@@ -66,7 +67,8 @@ function coerceOptions(value: unknown): string[] {
 async function getCorrectAnswerForScheduleSlot(
   scheduleId: string,
   roundNumber: number,
-  questionIndex: number
+  questionIndex: number,
+  occurrenceDate: string
 ): Promise<{
   questionId: string;
   questionDbId: string;
@@ -82,6 +84,7 @@ async function getCorrectAnswerForScheduleSlot(
     .from("trivia_session_questions")
     .select("question_id")
     .eq("schedule_id", scheduleId)
+    .eq("occurrence_date", occurrenceDate)
     .eq("round_number", roundNumber)
     .eq("question_index", questionIndex)
     .limit(1)
@@ -256,18 +259,19 @@ export async function submitLiveShowdownAnswer(
     throw new Error("Submissions are only accepted during the answering phase.");
   }
 
+  // Use the server-derived occurrence date from the active game state — never trust
+  // the client-supplied hint for anything that writes to the DB.
+  const occurrenceDate = state.occurrenceDate;
+
   const { questionId, questionDbId, correctTarget, correctAnswerIndex, closestGuessEligible } =
-    await getCorrectAnswerForScheduleSlot(
-    scheduleId,
-    roundNumber,
-    questionIndex
-  );
+    await getCorrectAnswerForScheduleSlot(scheduleId, roundNumber, questionIndex, occurrenceDate);
 
   const { data: existingRow, error: existingError } = await supabaseAdmin
     .from("live_showdown_answers")
     .select("id, is_correct, points_awarded")
     .eq("user_id", userId)
     .eq("schedule_id", scheduleId)
+    .eq("occurrence_date", occurrenceDate)
     .eq("round_number", roundNumber)
     .eq("question_index", questionIndex)
     .limit(1)
@@ -298,6 +302,7 @@ export async function submitLiveShowdownAnswer(
   const insertRow = {
     user_id: userId,
     schedule_id: scheduleId,
+    occurrence_date: occurrenceDate,
     question_id: questionId,
     round_number: roundNumber,
     question_index: questionIndex,
@@ -317,6 +322,7 @@ export async function submitLiveShowdownAnswer(
       .select("id, is_correct, points_awarded")
       .eq("user_id", userId)
       .eq("schedule_id", scheduleId)
+      .eq("occurrence_date", occurrenceDate)
       .eq("round_number", roundNumber)
       .eq("question_index", questionIndex)
       .limit(1)
@@ -347,6 +353,7 @@ export async function submitLiveShowdownAnswer(
         .update({ points_awarded: pointsAwarded })
         .eq("user_id", userId)
         .eq("schedule_id", scheduleId)
+        .eq("occurrence_date", occurrenceDate)
         .eq("round_number", roundNumber)
         .eq("question_index", questionIndex);
 

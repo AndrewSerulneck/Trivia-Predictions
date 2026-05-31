@@ -19,6 +19,7 @@ import { AdAnalyticsDashboard } from "@/components/admin/AdAnalyticsDashboard";
 import { AdsListSection } from "@/components/admin/sections/AdsListSection";
 import { AdsCreateSection } from "@/components/admin/sections/AdsCreateSection";
 import { PickEmSettlementSection } from "@/components/admin/sections/PickEmSettlementSection";
+import { QuestionInventoryAlert } from "@/components/admin/sections/QuestionInventoryAlert";
 import { SectionErrorBoundary } from "@/components/admin/SectionErrorBoundary";
 
 // ─── Shared Admin UI Primitives ───────────────────────────────────────────────
@@ -566,6 +567,7 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
 
         {/* Content area */}
         <div className="h-full flex-1 overflow-y-auto p-4 md:p-6 box-border">
+          <QuestionInventoryAlert />
           <SectionErrorBoundary>{renderContent()}</SectionErrorBoundary>
         </div>
       </main>

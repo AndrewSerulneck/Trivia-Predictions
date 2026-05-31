@@ -10,6 +10,7 @@ export async function POST(request: Request) {
       roundNumber?: number;
       questionIndex?: number;
       submittedAnswer?: string;
+      occurrenceDate?: string;
     };
 
     const userId = String(body.userId ?? "").trim();
@@ -18,6 +19,8 @@ export async function POST(request: Request) {
     const submittedAnswer = String(body.submittedAnswer ?? "").trim();
     const roundNumber = Number(body.roundNumber);
     const questionIndex = Number(body.questionIndex);
+    // Accept client hint but server derives the authoritative value independently.
+    const occurrenceDateHint = String(body.occurrenceDate ?? "").trim() || undefined;
 
     if (!userId || !venueId || !scheduleId || !submittedAnswer || !Number.isFinite(roundNumber) || !Number.isFinite(questionIndex)) {
       return NextResponse.json(
@@ -36,6 +39,7 @@ export async function POST(request: Request) {
       roundNumber,
       questionIndex,
       submittedAnswer,
+      occurrenceDate: occurrenceDateHint,
     });
 
     return NextResponse.json({ ok: true, result });

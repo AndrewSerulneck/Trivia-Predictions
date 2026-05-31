@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getLiveShowdownState } from "@/lib/liveShowdownEngine";
+import { djb2, getLiveShowdownState } from "@/lib/liveShowdownEngine";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const QUESTIONS_PER_ROUND = 15;
@@ -67,6 +67,83 @@ function getAdminClient(): NonNullable<typeof supabaseAdmin> {
     throw new Error("Supabase admin client is not configured.");
   }
   return supabaseAdmin;
+}
+
+// Swaps a single seeded session slot for a fresh active question, used when an
+// admin deletes a question that is still mapped to today's or a future
+// occurrence. The replacement is deterministic per slot (djb2-seeded) so repeated
+// calls converge on the same pick, avoids questions already used in the same
+// occurrence, and records the new slug in venue_seen_questions.
+export async function replaceSessionQuestion(
+  scheduleId: string,
+  occurrenceDate: string,
+  roundNumber: number,
+  questionIndex: number,
+  venueId: string,
+  excludeSlug: string
+): Promise<void> {
+  const admin = getAdminClient();
+  const safeVenueId = String(venueId ?? "").trim();
+  const safeExcludeSlug = String(excludeSlug ?? "").trim();
+
+  // Slugs already used anywhere in this occurrence, so we don't introduce a repeat.
+  const { data: usedData, error: usedError } = await admin
+    .from("trivia_session_questions")
+    .select("question_id")
+    .eq("schedule_id", scheduleId)
+    .eq("occurrence_date", occurrenceDate);
+  if (usedError) {
+    throw new Error(usedError.message || "Failed to load occurrence question usage.");
+  }
+  const usedSlugs = new Set(
+    ((usedData ?? []) as Array<{ question_id: string | null }>)
+      .map((row) => String(row.question_id ?? "").trim())
+      .filter(Boolean)
+  );
+  if (safeExcludeSlug) usedSlugs.add(safeExcludeSlug);
+
+  // Active candidates in a deterministic base order (exclude the deleted slug).
+  const { data: poolData, error: poolError } = await admin
+    .from("trivia_questions")
+    .select("slug")
+    .eq("status", "active")
+    .neq("slug", safeExcludeSlug)
+    .not("slug", "is", null)
+    .order("slug", { ascending: true })
+    .limit(5000);
+  if (poolError) {
+    throw new Error(poolError.message || "Failed to load replacement question pool.");
+  }
+
+  const candidates = ((poolData ?? []) as Array<{ slug: string | null }>)
+    .map((row) => String(row.slug ?? "").trim())
+    .filter((slug) => slug && !usedSlugs.has(slug));
+  if (candidates.length === 0) {
+    throw new Error("No eligible replacement question is available for this slot.");
+  }
+
+  const seed = djb2(`${scheduleId}${occurrenceDate}${roundNumber}${questionIndex}`);
+  const newSlug = candidates[seed % candidates.length];
+
+  const { error: updateError } = await admin
+    .from("trivia_session_questions")
+    .update({ question_id: newSlug })
+    .eq("schedule_id", scheduleId)
+    .eq("occurrence_date", occurrenceDate)
+    .eq("round_number", roundNumber)
+    .eq("question_index", questionIndex);
+  if (updateError) {
+    throw new Error(updateError.message || "Failed to replace session question.");
+  }
+
+  if (safeVenueId) {
+    const { error: seenError } = await admin
+      .from("venue_seen_questions")
+      .upsert({ venue_id: safeVenueId, question_id: newSlug }, { onConflict: "venue_id,question_id", ignoreDuplicates: true });
+    if (seenError) {
+      throw new Error(seenError.message || "Failed to record replacement in venue seen questions.");
+    }
+  }
 }
 
 function clampRounds(value: number): number {
@@ -208,7 +285,8 @@ async function buildLiveShowdownQuestionMatrix(numRounds: number): Promise<strin
   const { data, error } = await admin
     .from("trivia_questions")
     .select("id, slug, question, category, options, correct_answer, question_pool")
-    .in("question_pool", ["live_showdown", "anytime_blitz"]);
+    .in("question_pool", ["live_showdown", "anytime_blitz"])
+    .eq("status", "active");
 
   if (error) {
     throw new Error(error.message || "Failed to load trivia questions for Live Showdown seeding.");
@@ -245,7 +323,7 @@ async function buildLiveShowdownQuestionMatrix(numRounds: number): Promise<strin
   // Only categories that can fully support one round are eligible.
   // Contract: each round must use a distinct category (no repeats in a game).
   const eligibleRoundCategories = Array.from(byCategory.entries())
-    .filter(([, list]) => list.length >= QUESTIONS_PER_ROUND)
+    .filter(([, list]) => list.length >= 25)
     .map(([cat]) => cat);
   if (eligibleRoundCategories.length === 0) {
     throw new Error("No eligible Live Showdown categories are available for seeding.");

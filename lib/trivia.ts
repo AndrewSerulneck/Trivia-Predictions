@@ -172,7 +172,8 @@ export async function getTriviaQuestions(limit = 15, userId?: string): Promise<T
   const { count: totalQuestionCount, error: countError } = await client
     .from("trivia_questions")
     .select("id", { count: "exact", head: true })
-    .eq("question_pool", "anytime_blitz");
+    .eq("question_pool", "anytime_blitz")
+    .eq("status", "active");
 
   if (countError) {
     return pickBalancedRandomQuestions(FALLBACK_QUESTIONS, safeLimit);
@@ -189,6 +190,7 @@ export async function getTriviaQuestions(limit = 15, userId?: string): Promise<T
       .from("trivia_questions")
       .select("id, question, options, correct_answer, category, difficulty")
       .eq("question_pool", "anytime_blitz")
+      .eq("status", "active")
       .range(0, total - 1);
     if (error || !data) {
       return pickBalancedRandomQuestions(FALLBACK_QUESTIONS, safeLimit);
@@ -216,6 +218,7 @@ export async function getTriviaQuestions(limit = 15, userId?: string): Promise<T
           .from("trivia_questions")
           .select("id, question, options, correct_answer, category, difficulty")
           .eq("question_pool", "anytime_blitz")
+          .eq("status", "active")
           .range(offset, offset + windowSize - 1)
       )
     );

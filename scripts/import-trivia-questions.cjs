@@ -341,24 +341,65 @@ async function upsertRows(rows, { prune = false } = {}) {
 
   let processed = 0;
   for (let start = 0; start < rows.length; start += CHUNK_SIZE) {
+    const chunkNumber = Math.floor(start / CHUNK_SIZE) + 1;
     const chunk = rows.slice(start, start + CHUNK_SIZE);
-    await retryAsync(
-      async () => {
-        const { error } = await supabase
-          .from("trivia_questions")
-          .upsert(chunk, { onConflict: "slug" });
+    const chunkSlugs = chunk.map((row) => row.slug).filter(Boolean);
 
-        if (error) {
-          throw new Error(`Supabase upsert failed: ${describeError(error)}`);
-        }
-      },
-      {
-        operation: `upsert chunk ${Math.floor(start / CHUNK_SIZE) + 1}`,
+    // Determine which slugs already exist so we never overwrite an existing
+    // question's review status. Only brand-new questions land as pending_review;
+    // existing rows are updated WITHOUT touching their status column.
+    const existingSlugs = new Set();
+    if (chunkSlugs.length > 0) {
+      const { data: existingData, error: existingError } = await retryAsync(
+        async () => supabase.from("trivia_questions").select("slug").in("slug", chunkSlugs),
+        { operation: `lookup existing slugs chunk ${chunkNumber}` }
+      );
+      if (existingError) {
+        throw new Error(`Failed to look up existing slugs: ${describeError(existingError)}`);
       }
-    );
+      for (const row of existingData ?? []) {
+        if (row.slug) existingSlugs.add(row.slug);
+      }
+    }
+
+    const newRows = chunk
+      .filter((row) => !existingSlugs.has(row.slug))
+      .map((row) => ({ ...row, status: "pending_review" }));
+    const existingRows = chunk.filter((row) => existingSlugs.has(row.slug));
+
+    if (newRows.length > 0) {
+      await retryAsync(
+        async () => {
+          const { error } = await supabase
+            .from("trivia_questions")
+            .upsert(newRows, { onConflict: "slug" });
+          if (error) {
+            throw new Error(`Supabase insert (pending_review) failed: ${describeError(error)}`);
+          }
+        },
+        { operation: `insert pending chunk ${chunkNumber}` }
+      );
+    }
+
+    if (existingRows.length > 0) {
+      await retryAsync(
+        async () => {
+          // status omitted from payload → existing review status is preserved.
+          const { error } = await supabase
+            .from("trivia_questions")
+            .upsert(existingRows, { onConflict: "slug" });
+          if (error) {
+            throw new Error(`Supabase update failed: ${describeError(error)}`);
+          }
+        },
+        { operation: `update existing chunk ${chunkNumber}` }
+      );
+    }
 
     processed += chunk.length;
-    console.log(`Upserted ${processed}/${rows.length} questions...`);
+    console.log(
+      `Upserted ${processed}/${rows.length} questions (${newRows.length} new → pending_review, ${existingRows.length} updated)...`
+    );
   }
 
   const { count, error } = await retryAsync(

@@ -96,6 +96,16 @@ jobs:
             git pull --rebase origin main
           done
 
+      - name: Seed Today's Live Trivia Occurrences
+        if: steps.commit-trivia.outputs.pushed == 'true'
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+        run: |
+          curl -s -X POST "${APP_URL}/api/cron/seed-live-trivia-occurrences" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -o /dev/null -w "Seed occurrences status: %{http_code}\n"
+
       - name: Trigger Vercel Redeploy
         if: steps.commit-trivia.outputs.pushed == 'true' && secrets.VERCEL_DEPLOY_HOOK_URL != ''
         run: |

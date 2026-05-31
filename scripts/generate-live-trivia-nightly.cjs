@@ -161,6 +161,11 @@ async function inventNewLiveCategoryName({ apiKey, model, existingCategoryNames 
     '  - "niche": Primarily of interest to enthusiasts or specialists (e.g. Fantasy Epics, Jazz Music, Comic Book Heroes).',
     "Other rules:",
     "- Each category must be broad enough to support 100+ distinct trivia questions.",
+    "- New categories must be ones where answers are Rigid Identifiers by nature — unique proper nouns,",
+    "  specific titles, or unambiguous technical terms. Avoid categories where most answers are",
+    "  descriptions or interchangeable words.",
+    "- Good category examples: 'U.S. State Capitals', 'Academy Award Best Picture Winners',",
+    "  'Song Lyrics (Fill in the Blank)', 'Chemical Elements', 'Olympic Host Cities'.",
     "- Mix familiarity levels — include some niche categories, but rate them honestly.",
     "- Do not repeat these existing categories:",
     existingCategoryNames.length > 0

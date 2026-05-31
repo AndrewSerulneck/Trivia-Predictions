@@ -78,12 +78,30 @@ type LiveShowdownViewerResult = {
   pendingClosestGuess: boolean;
 };
 
+type LiveShowdownLeaderboardEntry = {
+  rank: number;
+  userId: string;
+  username: string;
+  roundPoints: Record<number, number>; // { 1: 80, 2: 90 }
+  totalPoints: number;
+  pointsThisRound: number; // delta from the round that just completed
+};
+
+type LiveShowdownViewerRoundSummary = {
+  roundNumber: number;
+  category: string | null;
+  correctCount: number;
+  totalAnswered: number;
+  points: number;
+};
+
 type LiveShowdownActiveState = {
   isGameActive: true;
   scheduleId: string;
   scheduleTitle: string;
   scheduleTimezone: string;
   scheduleStartTime: string;
+  occurrenceDate: string; // 'YYYY-MM-DD'
   intermissionAdDelaySeconds: number;
   lobbyAdEnabled: boolean;
   totalRounds: number;
@@ -99,6 +117,9 @@ type LiveShowdownActiveState = {
   currentRoundCategory: string | null;
   upcomingRoundNumber: number | null;
   upcomingRoundCategory: string | null;
+  leaderboard: LiveShowdownLeaderboardEntry[] | null;
+  viewerRank: number | null;
+  viewerRoundByRound: LiveShowdownViewerRoundSummary[] | null; // only populated post-game (isFinalResultsWindow)
 };
 
 type LiveShowdownInactiveState = {
@@ -222,6 +243,45 @@ function getTimeZoneParts(date: Date, timeZone: string): {
   };
 }
 
+function formatZonedDate(ms: number, timeZone: string): string {
+  const parts = getTimeZoneParts(new Date(ms), timeZone);
+  const yyyy = String(parts.year).padStart(4, "0");
+  const mm = String(parts.month).padStart(2, "0");
+  const dd = String(parts.day).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+// djb2 string hash → unsigned 32-bit. Used to seed the per-venue shuffle so the
+// same (venue, date) always produces the same question order (idempotent re-runs)
+// while different venues get different orders for the same date. Also reused by
+// the admin in-game replacement path for deterministic slot-based picks.
+export function djb2(input: string): number {
+  let hash = 5381;
+  for (let i = 0; i < input.length; i += 1) {
+    hash = ((hash << 5) + hash + input.charCodeAt(i)) | 0;
+  }
+  return hash >>> 0;
+}
+
+// Deterministic Fisher-Yates shuffle driven by a mulberry32 PRNG seeded from djb2.
+function seededShuffle<T>(items: readonly T[], seed: number): T[] {
+  const result = items.slice();
+  let state = seed >>> 0;
+  const next = (): number => {
+    state = (state + 0x6d2b79f5) | 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(next() * (i + 1));
+    const tmp = result[i];
+    result[i] = result[j];
+    result[j] = tmp;
+  }
+  return result;
+}
+
 function getTimeZoneOffsetMs(date: Date, timeZone: string): number {
   const parts = getTimeZoneParts(date, timeZone);
   const asUtc = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);
@@ -297,47 +357,99 @@ function toPublicQuestion(question: LiveShowdownQuestionInternal | null): LiveSh
   };
 }
 
+const SCHEDULE_COLUMNS =
+  "id, title, start_time, timezone, recurring_type, recurring_days, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled";
+const SCHEDULE_COLUMNS_LEGACY =
+  "id, title, start_time, timezone, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled";
+
+// Loads schedule rows, transparently falling back to the pre-recurring-columns
+// schema. Pass a venueId to scope to a single venue; omit it to load all venues
+// (used by the per-occurrence seeder cron).
+async function loadScheduleRows(venueId?: string): Promise<TriviaScheduleRow[]> {
+  const admin = supabaseAdmin;
+  if (!admin) return [];
+
+  const limit = venueId ? 200 : 2000;
+  const buildQuery = (columns: string) => {
+    let query = admin.from("trivia_schedules").select(columns);
+    if (venueId) query = query.eq("venue_id", venueId);
+    return query.order("start_time", { ascending: false }).limit(limit);
+  };
+
+  const withRecurring = await buildQuery(SCHEDULE_COLUMNS);
+
+  if (withRecurring.error && isMissingRecurringColumnsError(withRecurring.error.message)) {
+    const legacy = await buildQuery(SCHEDULE_COLUMNS_LEGACY);
+    if (legacy.error) {
+      throw new Error(legacy.error.message || "Failed to load Live Showdown schedules.");
+    }
+    return ((legacy.data ?? []) as unknown as Array<Omit<TriviaScheduleRow, "recurring_type" | "recurring_days">>).map((row) => ({
+      ...row,
+      recurring_type: "none",
+      recurring_days: null,
+    }));
+  }
+
+  if (withRecurring.error) {
+    throw new Error(withRecurring.error.message || "Failed to load Live Showdown schedules.");
+  }
+
+  return (withRecurring.data ?? []) as unknown as TriviaScheduleRow[];
+}
+
+// Enumerates candidate occurrence start times (UTC ms) for a schedule within a
+// window around now, honoring recurring_type / recurring_days in the schedule's
+// timezone. One-time / monthly / yearly schedules yield their single fixed start.
+function enumerateOccurrenceStartsMs(row: TriviaScheduleRow, nowMs: number): number[] {
+  const baseStartMs = Date.parse(String(row.start_time ?? ""));
+  if (!Number.isFinite(baseStartMs)) return [];
+
+  const recurringType = normalizeRecurringType(row.recurring_type);
+  const rowTimezone = String(row.timezone ?? "America/New_York").trim() || "America/New_York";
+  const dayMs = 24 * 60 * 60 * 1000;
+
+  if (recurringType === "daily" || recurringType === "weekly") {
+    const baseStartParts = getTimeZoneParts(new Date(baseStartMs), rowTimezone);
+    const recurringDays = normalizeRecurringDays(row.recurring_days);
+    const effectiveDays =
+      recurringType === "daily"
+        ? WEEKDAY_KEYS
+        : recurringDays.length > 0
+        ? recurringDays
+        : [baseStartParts.weekday];
+
+    const starts: number[] = [];
+    for (let offset = -7; offset <= 14; offset += 1) {
+      const dayProbe = getTimeZoneParts(new Date(nowMs + offset * dayMs), rowTimezone);
+      if (!effectiveDays.includes(dayProbe.weekday)) continue;
+      const occurrenceMs = zonedDateTimeToUtcMs(
+        dayProbe.year,
+        dayProbe.month,
+        dayProbe.day,
+        baseStartParts.hour,
+        baseStartParts.minute,
+        baseStartParts.second,
+        rowTimezone
+      );
+      if (occurrenceMs < baseStartMs) continue;
+      starts.push(occurrenceMs);
+    }
+    return starts;
+  }
+
+  return [baseStartMs];
+}
+
 async function findRelevantSchedules(nowIso: string, venueIdRaw: string): Promise<{
-  active: TriviaScheduleRow | null;
-  upcoming: TriviaScheduleRow | null;
+  active: (TriviaScheduleRow & { occurrenceDate: string }) | null;
+  upcoming: (TriviaScheduleRow & { occurrenceDate: string }) | null;
 }> {
   const venueId = toSafeVenueId(venueIdRaw);
   if (!venueId) {
     return { active: null, upcoming: null };
   }
 
-  if (!supabaseAdmin) {
-    return { active: null, upcoming: null };
-  }
-
-  const withRecurring = await supabaseAdmin
-    .from("trivia_schedules")
-    .select("id, title, start_time, timezone, recurring_type, recurring_days, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled")
-    .eq("venue_id", venueId)
-    .order("start_time", { ascending: false })
-    .limit(200);
-
-  let rows: TriviaScheduleRow[] = [];
-  if (withRecurring.error && isMissingRecurringColumnsError(withRecurring.error.message)) {
-    const legacy = await supabaseAdmin
-      .from("trivia_schedules")
-      .select("id, title, start_time, timezone, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled")
-      .eq("venue_id", venueId)
-      .order("start_time", { ascending: false })
-      .limit(200);
-    if (legacy.error) {
-      throw new Error(legacy.error.message || "Failed to load Live Showdown schedules.");
-    }
-    rows = ((legacy.data ?? []) as Array<Omit<TriviaScheduleRow, "recurring_type" | "recurring_days">>).map((row) => ({
-      ...row,
-      recurring_type: "none",
-      recurring_days: null,
-    }));
-  } else if (withRecurring.error) {
-    throw new Error(withRecurring.error.message || "Failed to load Live Showdown schedules.");
-  } else {
-    rows = (withRecurring.data ?? []) as TriviaScheduleRow[];
-  }
+  const rows = await loadScheduleRows(venueId);
 
   const nowMs = Date.parse(nowIso);
   const dayMs = 24 * 60 * 60 * 1000;
@@ -433,93 +545,33 @@ async function findRelevantSchedules(nowIso: string, venueIdRaw: string): Promis
   }
 
   const active = activeCandidate
-    ? { ...activeCandidate.row, start_time: new Date(activeCandidate.startMs).toISOString() }
+    ? {
+        ...activeCandidate.row,
+        start_time: new Date(activeCandidate.startMs).toISOString(),
+        occurrenceDate: formatZonedDate(
+          activeCandidate.startMs,
+          String(activeCandidate.row.timezone ?? "America/New_York").trim() || "America/New_York"
+        ),
+      }
     : null;
   const upcoming = upcomingCandidate
-    ? { ...upcomingCandidate.row, start_time: new Date(upcomingCandidate.startMs).toISOString() }
+    ? {
+        ...upcomingCandidate.row,
+        start_time: new Date(upcomingCandidate.startMs).toISOString(),
+        occurrenceDate: formatZonedDate(
+          upcomingCandidate.startMs,
+          String(upcomingCandidate.row.timezone ?? "America/New_York").trim() || "America/New_York"
+        ),
+      }
     : null;
   return { active, upcoming };
-}
-
-async function repairSessionSlot(
-  scheduleId: string,
-  roundNumber: number,
-  questionIndex: number
-): Promise<LiveShowdownQuestionInternal | null> {
-  if (!supabaseAdmin) return null;
-
-  // Collect already-assigned question_ids for this schedule to avoid duplicates.
-  const { data: usedData } = await supabaseAdmin
-    .from("trivia_session_questions")
-    .select("question_id")
-    .eq("schedule_id", scheduleId)
-    .not("question_id", "is", null);
-
-  const usedIds = new Set(
-    ((usedData ?? []) as Array<{ question_id: string | null }>)
-      .map((r) => String(r.question_id ?? "").trim())
-      .filter(Boolean)
-  );
-
-  // Prefer live_showdown (write-in) questions; fall back to anytime_blitz.
-  const { data: poolData } = await supabaseAdmin
-    .from("trivia_questions")
-    .select("id, slug, question, options, correct_answer, category, difficulty, question_pool")
-    .not("slug", "is", null)
-    .order("slug", { ascending: true })
-    .limit(500);
-
-  if (!poolData || poolData.length === 0) return null;
-
-  const all = poolData as TriviaQuestionRow[];
-  const candidates = all.filter((r) => r.slug && !usedIds.has(r.slug));
-  const pool = candidates.length > 0 ? candidates : all;
-  if (pool.length === 0) return null;
-
-  // Deterministic slot-based selection so every poll picks the same fallback.
-  const hashInput = `${scheduleId}:${roundNumber}:${questionIndex}`;
-  let hash = 0;
-  for (let i = 0; i < hashInput.length; i += 1) {
-    hash = (Math.imul(31, hash) + hashInput.charCodeAt(i)) | 0;
-  }
-  const chosen = pool[Math.abs(hash) % pool.length];
-  if (!chosen) return null;
-
-  const questionId = String(chosen.slug ?? chosen.id ?? "").trim();
-  if (!questionId) return null;
-
-  // Upsert so all future polls for this slot return the same question.
-  try {
-    await supabaseAdmin
-      .from("trivia_session_questions")
-      .upsert(
-        {
-          schedule_id: scheduleId,
-          question_id: questionId,
-          round_number: roundNumber,
-          question_index: questionIndex,
-        },
-        { onConflict: "schedule_id,round_number,question_index" }
-      );
-  } catch {
-    // best-effort — don't fail the whole state fetch
-  }
-
-  const repairedSessionRow: TriviaSessionQuestionRow = {
-    id: "repaired",
-    schedule_id: scheduleId,
-    question_id: questionId,
-    round_number: roundNumber,
-    question_index: questionIndex,
-  };
-
-  return mapQuestionInternal(chosen, repairedSessionRow);
 }
 
 async function loadSessionQuestion(
   scheduleId: string,
   roundNumber: number,
-  questionIndex: number
+  questionIndex: number,
+  occurrenceDate: string
 ): Promise<LiveShowdownQuestionInternal | null> {
   if (!supabaseAdmin) {
     return null;
@@ -529,6 +581,7 @@ async function loadSessionQuestion(
     .from("trivia_session_questions")
     .select("id, schedule_id, question_id, round_number, question_index")
     .eq("schedule_id", scheduleId)
+    .eq("occurrence_date", occurrenceDate)
     .eq("round_number", roundNumber)
     .eq("question_index", questionIndex)
     .limit(1)
@@ -540,12 +593,12 @@ async function loadSessionQuestion(
 
   const sessionRow = (sessionRowData as TriviaSessionQuestionRow | null) ?? null;
   if (!sessionRow) {
-    return repairSessionSlot(scheduleId, roundNumber, questionIndex);
+    return null;
   }
 
   const questionId = String(sessionRow.question_id ?? "").trim();
   if (!questionId) {
-    return repairSessionSlot(scheduleId, roundNumber, questionIndex);
+    return null;
   }
 
   const bySlug = await supabaseAdmin
@@ -576,14 +629,18 @@ async function loadSessionQuestion(
   }
 
   if (!questionRow) {
-    return repairSessionSlot(scheduleId, roundNumber, questionIndex);
+    return null;
   }
 
   return mapQuestionInternal(questionRow, sessionRow);
 }
 
-async function loadRoundCategory(scheduleId: string, roundNumber: number): Promise<string | null> {
-  const firstQuestion = await loadSessionQuestion(scheduleId, roundNumber, 1);
+async function loadRoundCategory(
+  scheduleId: string,
+  roundNumber: number,
+  occurrenceDate: string
+): Promise<string | null> {
+  const firstQuestion = await loadSessionQuestion(scheduleId, roundNumber, 1, occurrenceDate);
   const category = String(firstQuestion?.category ?? "").trim();
   return category || null;
 }
@@ -637,7 +694,8 @@ async function loadViewerResult(
   scheduleId: string,
   roundNumber: number,
   questionIndex: number,
-  pendingClosestGuessEligible: boolean
+  pendingClosestGuessEligible: boolean,
+  occurrenceDate: string
 ): Promise<LiveShowdownViewerResult | null> {
   if (!supabaseAdmin) return null;
 
@@ -649,6 +707,7 @@ async function loadViewerResult(
     .select("submitted_answer, is_correct, points_awarded")
     .eq("user_id", userId)
     .eq("schedule_id", scheduleId)
+    .eq("occurrence_date", occurrenceDate)
     .eq("round_number", roundNumber)
     .eq("question_index", questionIndex)
     .limit(1)
@@ -677,7 +736,8 @@ async function settleClosestGuessQuestion(
   scheduleId: string,
   roundNumber: number,
   questionIndex: number,
-  correctAnswerRaw: string | null
+  correctAnswerRaw: string | null,
+  occurrenceDate: string
 ): Promise<string | null> {
   if (!supabaseAdmin) return null;
 
@@ -691,6 +751,7 @@ async function settleClosestGuessQuestion(
     .from("live_showdown_answers")
     .select("id, user_id, submitted_answer, normalized_answer, is_correct, points_awarded")
     .eq("schedule_id", scheduleId)
+    .eq("occurrence_date", occurrenceDate)
     .eq("round_number", roundNumber)
     .eq("question_index", questionIndex);
 
@@ -791,6 +852,7 @@ async function settleClosestGuessQuestion(
       .from("live_showdown_answers")
       .update({ is_correct: false })
       .eq("schedule_id", scheduleId)
+      .eq("occurrence_date", occurrenceDate)
       .eq("round_number", roundNumber)
       .eq("question_index", questionIndex);
 
@@ -817,6 +879,423 @@ async function settleClosestGuessQuestion(
   return buildClosestGuessAnnouncement(winners, correctAnswer);
 }
 
+export type LiveOccurrenceSeedTarget = {
+  scheduleId: string;
+  occurrenceDate: string; // YYYY-MM-DD in the schedule's timezone
+  venueId: string;
+  numRounds: number;
+};
+
+// Only seed occurrences that are happening now or starting within this horizon,
+// so the daily cron seeds "today's" game without consuming the unseen-question
+// pool for games far in the future.
+const SEED_LOOKAHEAD_MS = 24 * 60 * 60 * 1000;
+
+// Identifies every venue schedule whose occurrence is active now or starts within
+// the next SEED_LOOKAHEAD_MS, returning the occurrence date in the schedule's
+// timezone. Used by the per-occurrence seeder cron.
+export async function findOccurrencesToSeed(nowMs: number): Promise<LiveOccurrenceSeedTarget[]> {
+  const rows = await loadScheduleRows();
+  const targets: LiveOccurrenceSeedTarget[] = [];
+
+  for (const row of rows) {
+    const venueId = toSafeVenueId(String(row.venue_id ?? ""));
+    if (!venueId) continue;
+
+    const rounds = clampRounds(Number(row.num_rounds));
+    const rowTimezone = String(row.timezone ?? "America/New_York").trim() || "America/New_York";
+    const starts = enumerateOccurrenceStartsMs(row, nowMs);
+
+    let chosenMs: number | null = null;
+    for (const startMs of starts) {
+      const endMs = startMs + rounds * ROUND_MS;
+      if (nowMs >= startMs && nowMs < endMs) {
+        chosenMs = startMs;
+        break;
+      }
+    }
+    if (chosenMs === null) {
+      for (const startMs of starts) {
+        if (startMs > nowMs && startMs - nowMs <= SEED_LOOKAHEAD_MS) {
+          if (chosenMs === null || startMs < chosenMs) {
+            chosenMs = startMs;
+          }
+        }
+      }
+    }
+    if (chosenMs === null) continue;
+
+    targets.push({
+      scheduleId: row.id,
+      occurrenceDate: formatZonedDate(chosenMs, rowTimezone),
+      venueId,
+      numRounds: rounds,
+    });
+  }
+
+  return targets;
+}
+
+// Seeds trivia_session_questions for one occurrence. Idempotent: if rows already
+// exist for (schedule_id, occurrence_date) it returns without re-seeding.
+// Questions are drawn from status='active' trivia_questions, deduplicated against
+// venue_seen_questions, and shuffled with a per-(venue, date) seed.
+export async function seedOccurrenceQuestions(
+  scheduleId: string,
+  occurrenceDate: string,
+  venueId: string,
+  numRounds: number
+): Promise<{ seeded: number; skipped: number }> {
+  const admin = supabaseAdmin;
+  if (!admin) return { seeded: 0, skipped: 0 };
+
+  const rounds = clampRounds(numRounds);
+  const totalSlots = rounds * QUESTIONS_PER_ROUND;
+  const safeVenueId = toSafeVenueId(venueId);
+
+  // Idempotency guard — never re-seed an occurrence that already has rows.
+  const { count: existingCount, error: existingError } = await admin
+    .from("trivia_session_questions")
+    .select("id", { count: "exact", head: true })
+    .eq("schedule_id", scheduleId)
+    .eq("occurrence_date", occurrenceDate);
+  if (existingError) {
+    throw new Error(existingError.message || "Failed to check existing occurrence questions.");
+  }
+  if ((existingCount ?? 0) > 0) {
+    return { seeded: 0, skipped: totalSlots };
+  }
+
+  // Slugs already used at this venue.
+  const { data: seenData, error: seenError } = await admin
+    .from("venue_seen_questions")
+    .select("question_id")
+    .eq("venue_id", safeVenueId);
+  if (seenError) {
+    throw new Error(seenError.message || "Failed to load venue seen questions.");
+  }
+  const seenSlugs = new Set(
+    ((seenData ?? []) as Array<{ question_id: string | null }>)
+      .map((r) => String(r.question_id ?? "").trim())
+      .filter(Boolean)
+  );
+
+  // Active question pool in a deterministic base order.
+  const { data: poolData, error: poolError } = await admin
+    .from("trivia_questions")
+    .select("slug")
+    .eq("status", "active")
+    .not("slug", "is", null)
+    .order("slug", { ascending: true })
+    .limit(5000);
+  if (poolError) {
+    throw new Error(poolError.message || "Failed to load active question pool.");
+  }
+
+  const allSlugs = ((poolData ?? []) as Array<{ slug: string | null }>)
+    .map((r) => String(r.slug ?? "").trim())
+    .filter(Boolean);
+
+  const seed = djb2(`${safeVenueId}${occurrenceDate}`);
+  const unseen = allSlugs.filter((slug) => !seenSlugs.has(slug));
+  const seen = allSlugs.filter((slug) => seenSlugs.has(slug));
+  const shuffledUnseen = seededShuffle(unseen, seed);
+  const shuffledSeen = seededShuffle(seen, seed ^ 0x9e3779b9);
+
+  const chosen: string[] = [];
+  const chosenSet = new Set<string>();
+  const pushUnique = (slug: string) => {
+    if (!slug || chosenSet.has(slug)) return;
+    chosen.push(slug);
+    chosenSet.add(slug);
+  };
+
+  for (const slug of shuffledUnseen) {
+    if (chosen.length >= totalSlots) break;
+    pushUnique(slug);
+  }
+
+  let usedRepeats = false;
+  if (chosen.length < totalSlots) {
+    // Not enough unseen questions — fall back to already-seen ones (allow repeats).
+    usedRepeats = true;
+    for (const slug of shuffledSeen) {
+      if (chosen.length >= totalSlots) break;
+      pushUnique(slug);
+    }
+  }
+
+  if (chosen.length === 0) {
+    // No active questions at all — nothing we can seed.
+    return { seeded: 0, skipped: totalSlots };
+  }
+
+  // Fewer distinct questions than slots: cycle through what we have to fill.
+  if (chosen.length < totalSlots) {
+    const cycle = chosen.slice();
+    let idx = 0;
+    while (chosen.length < totalSlots) {
+      chosen.push(cycle[idx % cycle.length]);
+      idx += 1;
+    }
+  }
+
+  if (usedRepeats) {
+    // TODO(Prompt 10): persist a venue_question_warnings row / fire a notification
+    // when a venue runs low on unseen questions. The table/notifier does not exist
+    // yet, so we only log for now.
+    console.warn(
+      `[seedOccurrenceQuestions] venue ${safeVenueId} ran low on unseen questions for ${occurrenceDate} ` +
+        `(unseen=${unseen.length}, needed=${totalSlots}); reused seen questions.`
+    );
+  }
+
+  const sessionRows = chosen.slice(0, totalSlots).map((slug, k) => ({
+    schedule_id: scheduleId,
+    occurrence_date: occurrenceDate,
+    question_id: slug,
+    round_number: Math.floor(k / QUESTIONS_PER_ROUND) + 1,
+    question_index: (k % QUESTIONS_PER_ROUND) + 1,
+  }));
+
+  const { error: insertError } = await admin
+    .from("trivia_session_questions")
+    .upsert(sessionRows, {
+      onConflict: "schedule_id,occurrence_date,round_number,question_index",
+      ignoreDuplicates: true,
+    });
+  if (insertError) {
+    throw new Error(insertError.message || "Failed to seed occurrence questions.");
+  }
+
+  const seenRows = Array.from(new Set(chosen)).map((slug) => ({
+    venue_id: safeVenueId,
+    question_id: slug,
+  }));
+  const { error: seenUpsertError } = await admin
+    .from("venue_seen_questions")
+    .upsert(seenRows, { onConflict: "venue_id,question_id", ignoreDuplicates: true });
+  if (seenUpsertError) {
+    throw new Error(seenUpsertError.message || "Failed to record venue seen questions.");
+  }
+
+  return { seeded: totalSlots, skipped: 0 };
+}
+
+// Number of leaderboard entries surfaced in state. Ranks are computed across the
+// full participant set so the viewer's rank is accurate even when off the board.
+const LEADERBOARD_DISPLAY_LIMIT = 10;
+
+type LeaderboardAnswer = {
+  userId: string;
+  roundNumber: number;
+  points: number;
+  isCorrect: boolean;
+};
+
+// Resolves the category name for each round of an occurrence in one batch
+// (question_index 1 of each round → trivia_questions.category).
+async function loadRoundCategoriesForOccurrence(
+  scheduleId: string,
+  occurrenceDate: string
+): Promise<Map<number, string | null>> {
+  const result = new Map<number, string | null>();
+  if (!supabaseAdmin) return result;
+
+  const { data: slotData, error: slotError } = await supabaseAdmin
+    .from("trivia_session_questions")
+    .select("round_number, question_id")
+    .eq("schedule_id", scheduleId)
+    .eq("occurrence_date", occurrenceDate)
+    .eq("question_index", 1);
+  if (slotError) {
+    throw new Error(slotError.message || "Failed to load round categories.");
+  }
+
+  const slots = ((slotData ?? []) as Array<{ round_number: number; question_id: string | null }>)
+    .map((row) => ({ round: Math.floor(Number(row.round_number)), slug: String(row.question_id ?? "").trim() }))
+    .filter((row) => Number.isFinite(row.round) && row.slug);
+  if (slots.length === 0) return result;
+
+  const slugs = Array.from(new Set(slots.map((slot) => slot.slug)));
+  const { data: questionData, error: questionError } = await supabaseAdmin
+    .from("trivia_questions")
+    .select("slug, category")
+    .in("slug", slugs)
+    .limit(slugs.length);
+  if (questionError) {
+    throw new Error(questionError.message || "Failed to load round category names.");
+  }
+
+  const categoryBySlug = new Map(
+    ((questionData ?? []) as Array<{ slug: string | null; category: string | null }>).map((row) => [
+      String(row.slug ?? "").trim(),
+      String(row.category ?? "").trim() || null,
+    ])
+  );
+
+  for (const slot of slots) {
+    result.set(slot.round, categoryBySlug.get(slot.slug) ?? null);
+  }
+  return result;
+}
+
+// Builds the viewer's post-game round-by-round recap from their own answers.
+async function buildViewerRoundByRound(
+  scheduleId: string,
+  occurrenceDate: string,
+  viewerId: string,
+  totalRounds: number,
+  allAnswers: LeaderboardAnswer[]
+): Promise<LiveShowdownViewerRoundSummary[]> {
+  const byRound = new Map<number, { correctCount: number; totalAnswered: number; points: number }>();
+  for (const row of allAnswers) {
+    if (row.userId !== viewerId) continue;
+    let stats = byRound.get(row.roundNumber);
+    if (!stats) {
+      stats = { correctCount: 0, totalAnswered: 0, points: 0 };
+      byRound.set(row.roundNumber, stats);
+    }
+    stats.totalAnswered += 1;
+    stats.points += row.points;
+    if (row.isCorrect) stats.correctCount += 1;
+  }
+
+  const categoryByRound = await loadRoundCategoriesForOccurrence(scheduleId, occurrenceDate);
+
+  const summaries: LiveShowdownViewerRoundSummary[] = [];
+  for (let round = 1; round <= totalRounds; round += 1) {
+    const stats = byRound.get(round) ?? { correctCount: 0, totalAnswered: 0, points: 0 };
+    summaries.push({
+      roundNumber: round,
+      category: categoryByRound.get(round) ?? null,
+      correctCount: stats.correctCount,
+      totalAnswered: stats.totalAnswered,
+      points: stats.points,
+    });
+  }
+  return summaries;
+}
+
+// Computes the in-game leaderboard (this occurrence only — not lifetime venue
+// points), the viewer's rank across the full field, and the viewer's post-game
+// round-by-round recap. `currentRound` is the round that just completed (this is
+// only ever invoked during mid_game_break).
+async function loadGameLeaderboard(
+  scheduleId: string,
+  occurrenceDate: string,
+  currentRound: number,
+  viewerUserId: string,
+  totalRounds: number,
+  isFinalResultsWindow: boolean
+): Promise<{
+  leaderboard: LiveShowdownLeaderboardEntry[];
+  viewerRank: number | null;
+  viewerRoundByRound: LiveShowdownViewerRoundSummary[] | null;
+}> {
+  if (!supabaseAdmin) {
+    return { leaderboard: [], viewerRank: null, viewerRoundByRound: null };
+  }
+
+  const viewerId = String(viewerUserId ?? "").trim();
+
+  const { data: answerData, error: answerError } = await supabaseAdmin
+    .from("live_showdown_answers")
+    .select("user_id, round_number, points_awarded, is_correct")
+    .eq("schedule_id", scheduleId)
+    .eq("occurrence_date", occurrenceDate);
+  if (answerError) {
+    throw new Error(answerError.message || "Failed to load Live Showdown leaderboard answers.");
+  }
+
+  const answers: LeaderboardAnswer[] = (
+    (answerData ?? []) as Array<{
+      user_id: string;
+      round_number: number;
+      points_awarded: number;
+      is_correct: boolean;
+    }>
+  )
+    .map((row) => ({
+      userId: String(row.user_id ?? "").trim(),
+      roundNumber: Math.floor(Number(row.round_number)),
+      points: Math.max(0, Number(row.points_awarded ?? 0)),
+      isCorrect: Boolean(row.is_correct),
+    }))
+    .filter((row) => row.userId && Number.isFinite(row.roundNumber));
+
+  if (answers.length === 0) {
+    return { leaderboard: [], viewerRank: null, viewerRoundByRound: null };
+  }
+
+  // Aggregate per user: per-round points and cumulative total.
+  const perUser = new Map<string, { roundPoints: Record<number, number>; totalPoints: number }>();
+  for (const row of answers) {
+    let entry = perUser.get(row.userId);
+    if (!entry) {
+      entry = { roundPoints: {}, totalPoints: 0 };
+      perUser.set(row.userId, entry);
+    }
+    entry.roundPoints[row.roundNumber] = (entry.roundPoints[row.roundNumber] ?? 0) + row.points;
+    entry.totalPoints += row.points;
+  }
+
+  const userIds = Array.from(perUser.keys());
+  const { data: usersData, error: usersError } = await supabaseAdmin
+    .from("users")
+    .select("id, username")
+    .in("id", userIds)
+    .limit(userIds.length);
+  if (usersError) {
+    throw new Error(usersError.message || "Failed to load leaderboard usernames.");
+  }
+  const usernameById = new Map(
+    ((usersData ?? []) as Array<{ id: string; username: string | null }>).map((row) => [
+      String(row.id ?? "").trim(),
+      String(row.username ?? "").trim() || "Player",
+    ])
+  );
+
+  // Sort descending by total; break ties by username for a stable order.
+  const sorted = userIds
+    .map((userId) => {
+      const agg = perUser.get(userId);
+      const roundPoints = agg?.roundPoints ?? {};
+      const totalPoints = agg?.totalPoints ?? 0;
+      return {
+        userId,
+        username: usernameById.get(userId) ?? "Player",
+        roundPoints,
+        totalPoints,
+        pointsThisRound: roundPoints[currentRound] ?? 0,
+      };
+    })
+    .sort((a, b) => b.totalPoints - a.totalPoints || a.username.localeCompare(b.username));
+
+  // Competition ranking — equal totals share a rank (1, 2, 2, 4).
+  const ranked: LiveShowdownLeaderboardEntry[] = [];
+  let previousPoints: number | null = null;
+  let previousRank = 0;
+  sorted.forEach((entry, index) => {
+    const rank = previousPoints !== null && entry.totalPoints === previousPoints ? previousRank : index + 1;
+    previousPoints = entry.totalPoints;
+    previousRank = rank;
+    ranked.push({ rank, ...entry });
+  });
+
+  const viewerEntry = viewerId ? ranked.find((entry) => entry.userId === viewerId) : undefined;
+  const viewerRank = viewerEntry ? viewerEntry.rank : null;
+
+  const leaderboard = ranked.slice(0, LEADERBOARD_DISPLAY_LIMIT);
+
+  const viewerRoundByRound =
+    isFinalResultsWindow && viewerId
+      ? await buildViewerRoundByRound(scheduleId, occurrenceDate, viewerId, totalRounds, answers)
+      : null;
+
+  return { leaderboard, viewerRank, viewerRoundByRound };
+}
+
 export async function getLiveShowdownState(
   serverTimestamp: number,
   venueId: string,
@@ -834,7 +1313,7 @@ export async function getLiveShowdownState(
       : 0;
 
     const firstRoundCategory = upcoming
-      ? await loadRoundCategory(upcoming.id, 1).catch(() => null)
+      ? await loadRoundCategory(upcoming.id, 1, upcoming.occurrenceDate).catch(() => null)
       : null;
 
     return {
@@ -868,6 +1347,8 @@ export async function getLiveShowdownState(
     throw new Error("Active schedule has an invalid start_time.");
   }
 
+  const occurrenceDate = active.occurrenceDate;
+
   const totalRounds = clampRounds(Number(active.num_rounds));
   const totalDurationMs = totalRounds * ROUND_MS;
   const clampedElapsedMs = Math.max(0, Math.min(nowMs - startMs, totalDurationMs - 1));
@@ -896,41 +1377,45 @@ export async function getLiveShowdownState(
       secondsRemaining = Math.max(1, Math.ceil((QUESTION_BLOCK_MS - elapsedInQuestionMs) / 1000));
     }
 
-    activeQuestion = await loadSessionQuestion(active.id, currentRound, questionIndex);
+    activeQuestion = await loadSessionQuestion(active.id, currentRound, questionIndex, occurrenceDate);
     if (activePhase !== "answering") {
       revealedAnswer = activeQuestion?.correctAnswer ?? null;
       emceeAnnouncement = await settleClosestGuessQuestion(
         active.id,
         currentRound,
         questionIndex,
-        activeQuestion?.correctAnswer ?? null
+        activeQuestion?.correctAnswer ?? null,
+        occurrenceDate
       );
       viewerResult = await loadViewerResult(
         viewerUserId,
         active.id,
         currentRound,
         questionIndex,
-        activeQuestion?.correctNumericAnswer !== null
+        activeQuestion?.correctNumericAnswer !== null,
+        occurrenceDate
       );
     }
   } else {
     activePhase = "mid_game_break";
     secondsRemaining = Math.max(1, Math.ceil((ROUND_MS - roundElapsedMs) / 1000));
 
-    const previousQuestion = await loadSessionQuestion(active.id, currentRound, QUESTIONS_PER_ROUND);
+    const previousQuestion = await loadSessionQuestion(active.id, currentRound, QUESTIONS_PER_ROUND, occurrenceDate);
     revealedAnswer = previousQuestion?.correctAnswer ?? null;
     emceeAnnouncement = await settleClosestGuessQuestion(
       active.id,
       currentRound,
       QUESTIONS_PER_ROUND,
-      previousQuestion?.correctAnswer ?? null
+      previousQuestion?.correctAnswer ?? null,
+      occurrenceDate
     );
     viewerResult = await loadViewerResult(
       viewerUserId,
       active.id,
       currentRound,
       QUESTIONS_PER_ROUND,
-      previousQuestion?.correctNumericAnswer !== null
+      previousQuestion?.correctNumericAnswer !== null,
+      occurrenceDate
     );
   }
 
@@ -940,12 +1425,30 @@ export async function getLiveShowdownState(
     secondsRemaining <= 60;
   const currentRoundCategory =
     activeQuestion?.category ??
-    (await loadRoundCategory(active.id, currentRound).catch(() => null));
+    (await loadRoundCategory(active.id, currentRound, occurrenceDate).catch(() => null));
   const upcomingRoundNumber = activePhase === "mid_game_break" && currentRound < totalRounds ? currentRound + 1 : null;
   const upcomingRoundCategory =
     upcomingRoundNumber !== null
-      ? await loadRoundCategory(active.id, upcomingRoundNumber).catch(() => null)
+      ? await loadRoundCategory(active.id, upcomingRoundNumber, occurrenceDate).catch(() => null)
       : null;
+
+  // Leaderboard only matters during the break / final-results window.
+  let leaderboard: LiveShowdownLeaderboardEntry[] | null = null;
+  let viewerRank: number | null = null;
+  let viewerRoundByRound: LiveShowdownViewerRoundSummary[] | null = null;
+  if (activePhase === "mid_game_break") {
+    const board = await loadGameLeaderboard(
+      active.id,
+      occurrenceDate,
+      currentRound,
+      viewerUserId,
+      totalRounds,
+      isFinalResultsWindow
+    );
+    leaderboard = board.leaderboard;
+    viewerRank = board.viewerRank;
+    viewerRoundByRound = board.viewerRoundByRound;
+  }
 
   return {
     isGameActive: true,
@@ -953,6 +1456,7 @@ export async function getLiveShowdownState(
     scheduleTitle: active.title,
     scheduleTimezone: active.timezone,
     scheduleStartTime: active.start_time,
+    occurrenceDate,
     intermissionAdDelaySeconds: clampIntermissionDelaySeconds(active.intermission_ad_delay_seconds),
     lobbyAdEnabled: Boolean(active.lobby_ad_enabled ?? true),
     totalRounds,
@@ -968,6 +1472,9 @@ export async function getLiveShowdownState(
     currentRoundCategory,
     upcomingRoundNumber,
     upcomingRoundCategory,
+    leaderboard,
+    viewerRank,
+    viewerRoundByRound,
   };
 }
 

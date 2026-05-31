@@ -12,6 +12,23 @@ import { ReadyPrompt } from "@/components/trivia/ReadyPrompt";
 
 type Phase = "answering" | "rest_warning" | "mid_game_break" | "pre_game";
 
+type LeaderboardEntry = {
+  rank: number;
+  userId: string;
+  username: string;
+  roundPoints: Record<number, number>;
+  totalPoints: number;
+  pointsThisRound: number;
+};
+
+type ViewerRoundSummary = {
+  roundNumber: number;
+  category: string | null;
+  correctCount: number;
+  totalAnswered: number;
+  points: number;
+};
+
 type LiveState = {
   isGameActive: boolean;
   activePhase: Phase;
@@ -39,6 +56,9 @@ type LiveState = {
   currentRoundCategory?: string | null;
   upcomingRoundNumber?: number | null;
   upcomingRoundCategory?: string | null;
+  leaderboard?: LeaderboardEntry[] | null;
+  viewerRank?: number | null;
+  viewerRoundByRound?: ViewerRoundSummary[] | null;
   nextSchedule?: {
     id: string;
     title: string;
@@ -92,6 +112,8 @@ const RULE_LINES = [
   "Click 'Join Live Trivia!' to enter the lobby."
 ];
 
+const QUESTIONS_PER_ROUND = 15;
+
 function formatCountdown(totalSeconds: number): string {
   const safe = Math.max(0, Math.floor(totalSeconds));
   const h = Math.floor(safe / 3600);
@@ -111,6 +133,50 @@ function toLiveIntermissionVariant(roundNumber: number): number {
   const safeRound = Math.max(1, Math.floor(roundNumber));
   return ((safeRound - 1) % 12) + 1;
 }
+
+// Derives each player's rank change vs the standings as of the previous round
+// (positive = moved up). Computed from the displayed entries' round points, so it
+// is approximate when players sit outside the returned set.
+function computeRankMovement(entries: LeaderboardEntry[]): Map<string, number> {
+  const previousRankByUser = new Map<string, number>();
+  const previousStandings = entries
+    .map((entry) => ({ userId: entry.userId, previousTotal: entry.totalPoints - entry.pointsThisRound }))
+    .sort((a, b) => b.previousTotal - a.previousTotal);
+
+  let previousPoints: number | null = null;
+  let previousRank = 0;
+  previousStandings.forEach((entry, index) => {
+    const rank = previousPoints !== null && entry.previousTotal === previousPoints ? previousRank : index + 1;
+    previousPoints = entry.previousTotal;
+    previousRank = rank;
+    previousRankByUser.set(entry.userId, rank);
+  });
+
+  const movement = new Map<string, number>();
+  for (const entry of entries) {
+    const before = previousRankByUser.get(entry.userId);
+    if (before != null) movement.set(entry.userId, before - entry.rank);
+  }
+  return movement;
+}
+
+const RankBadge = ({ rank }: { rank: number }) => {
+  const palette =
+    rank === 1
+      ? "bg-amber-400 text-slate-900"
+      : rank === 2
+      ? "bg-slate-300 text-slate-900"
+      : rank === 3
+      ? "bg-amber-700 text-amber-50"
+      : "bg-slate-700 text-slate-300";
+  return (
+    <span
+      className={`inline-flex h-7 w-7 items-center justify-center rounded-lg text-sm font-black tabular-nums ${palette}`}
+    >
+      {rank}
+    </span>
+  );
+};
 
 export default function LiveShowdownPage() {
   const [state, setState] = useState<LiveState | null>(null);
@@ -192,6 +258,43 @@ export default function LiveShowdownPage() {
       byRound,
     };
   }, [participatingQuestionKeys, resultByKey]);
+
+  // Rank movement is only meaningful once at least one full round precedes the
+  // round that just completed.
+  const rankMovement = useMemo(() => {
+    if ((state?.currentRound ?? 0) < 2) return new Map<string, number>();
+    return computeRankMovement(state?.leaderboard ?? []);
+  }, [state?.leaderboard, state?.currentRound]);
+  const viewerId = (getUserId() ?? "").trim();
+
+  // Post-game standings derived from the venue leaderboard + viewer recap.
+  const postGameLeaderboard = useMemo(() => {
+    const board = state?.leaderboard ?? null;
+    if (!board || board.length === 0) return null;
+
+    const champion = board[0] ?? null;
+    const podium = board.slice(0, 3);
+
+    const rounds = state?.viewerRoundByRound ?? [];
+    const totalCorrect = rounds.reduce((sum, round) => sum + round.correctCount, 0);
+    const totalAnswered = rounds.reduce((sum, round) => sum + round.totalAnswered, 0);
+    const correctRate = totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+
+    // Rank gained = standings as of round 1 vs. final rank (positive = climbed).
+    // Approximate: round-1 standing is computed among the returned (top) entries.
+    let rankGained: number | null = null;
+    const finalRank = state?.viewerRank ?? null;
+    if (finalRank != null && viewerId) {
+      const viewerEntry = board.find((entry) => entry.userId === viewerId);
+      if (viewerEntry) {
+        const viewerRoundOne = viewerEntry.roundPoints[1] ?? 0;
+        const aheadAtRoundOne = board.filter((entry) => (entry.roundPoints[1] ?? 0) > viewerRoundOne).length;
+        rankGained = aheadAtRoundOne + 1 - finalRank;
+      }
+    }
+
+    return { champion, podium, totalCorrect, totalAnswered, correctRate, rankGained };
+  }, [state?.leaderboard, state?.viewerRoundByRound, state?.viewerRank, viewerId]);
 
   const isPreGameLobby = Boolean(hasOnboarded && !isPostGame && (!state?.isGameActive || state?.activePhase === "pre_game"));
   const isSpectatingActiveBlock = Boolean(
@@ -880,105 +983,239 @@ export default function LiveShowdownPage() {
         ) : isPostGame && postGameStats ? (
           /* ── Post-game results screen ── */
           <div className="space-y-3">
-            {/* Champion / Game Over banner */}
-            <div
-              className="flex items-center gap-3 rounded-2xl px-4 py-4"
-              style={{ background: "linear-gradient(135deg, #1c1400, #2d1f00)", border: "1px solid rgba(251,191,36,0.35)" }}
-            >
-              {/* Star icon badge */}
-              <div
-                className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
-                style={{ background: "linear-gradient(135deg, #78350f, #b45309, #f59e0b)", border: "2px solid rgba(251,191,36,0.5)" }}
-                aria-hidden="true"
-              >
-                ⭐
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-500">Game Over</p>
-                <p className="truncate text-base font-black leading-tight text-white">
-                  {state.scheduleTitle ?? "Live Showdown"}
-                </p>
-                {state.totalRounds ? (
-                  <p className="text-[11px] text-slate-500">
-                    {state.totalRounds} round{state.totalRounds !== 1 ? "s" : ""}
-                  </p>
-                ) : null}
-              </div>
-              <div className="shrink-0 text-right">
-                <p className="text-3xl font-black tabular-nums leading-none text-amber-300">
-                  {postGameStats.correct * 10}
-                </p>
-                <p className="text-[9px] font-black uppercase tracking-[0.12em] text-amber-600">Points</p>
-              </div>
-            </div>
-
-            {/* Round-by-round breakdown */}
-            {Object.keys(postGameStats.byRound).length > 0 ? (
-              <div
-                className="rounded-2xl px-4 py-4"
-                style={{ background: "#111827", border: "1px solid rgba(51,65,85,0.7)" }}
-              >
-                <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
-                  Your Round-by-Round
-                </p>
-                <div className="space-y-4">
-                  {Object.entries(postGameStats.byRound)
-                    .sort(([a], [b]) => Number(a) - Number(b))
-                    .map(([roundNum, data]) => {
-                      const score = data.correct * 10;
-                      const pct = data.total > 0 ? (data.correct / data.total) * 100 : 0;
-                      const barBg =
-                        pct >= 70
-                          ? "linear-gradient(90deg, #10b981, #34d399)"
-                          : pct >= 40
-                          ? "linear-gradient(90deg, #0891b2, #22d3ee)"
-                          : "linear-gradient(90deg, #be123c, #f43f5e)";
-                      return (
-                        <div key={roundNum}>
-                          <div className="mb-1.5 flex items-baseline justify-between">
-                            <span className="text-sm font-black text-slate-200">Round {roundNum}</span>
-                            <span className="text-xl font-black tabular-nums text-slate-100">{score}</span>
-                          </div>
-                          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
-                            <div
-                              className="h-full rounded-full transition-all duration-700"
-                              style={{ width: `${pct}%`, background: barBg }}
-                            />
-                          </div>
-                          <p className="mt-1 text-[11px] text-slate-600">
-                            {data.correct} of {data.total} correct
-                          </p>
-                        </div>
-                      );
-                    })}
+            {state.leaderboard && state.leaderboard.length > 0 && postGameLeaderboard ? (
+              <>
+                {/* Section 1 — Champion banner */}
+                <div className="flex items-center gap-3 rounded-2xl border border-amber-400/35 bg-gradient-to-br from-[#1c1400] to-[#2d1f00] px-4 py-4">
+                  <div
+                    className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-amber-400/50 bg-gradient-to-br from-amber-900 via-amber-700 to-amber-500 text-2xl"
+                    aria-hidden="true"
+                  >
+                    ⭐
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-500">Game Over · Champion</p>
+                    <p className="truncate text-lg font-black leading-tight text-white">
+                      {postGameLeaderboard.champion?.username ?? "—"}
+                    </p>
+                    <p className="truncate text-[11px] text-slate-500">
+                      {state.scheduleTitle ?? "Live Showdown"}
+                      {state.totalRounds
+                        ? ` · ${state.totalRounds * QUESTIONS_PER_ROUND} questions · ${state.totalRounds} round${
+                            state.totalRounds !== 1 ? "s" : ""
+                          }`
+                        : ""}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-3xl font-black tabular-nums leading-none text-amber-300">
+                      {postGameLeaderboard.champion?.totalPoints ?? 0}
+                    </p>
+                    <p className="text-[9px] font-black uppercase tracking-[0.12em] text-amber-600">Points</p>
+                  </div>
                 </div>
-              </div>
-            ) : null}
 
-            {/* Stat pills */}
-            <div className="grid grid-cols-3 gap-2">
-              <div
-                className="flex flex-col items-center rounded-2xl py-3"
-                style={{ background: "rgba(5,150,105,0.15)", border: "1px solid rgba(52,211,153,0.3)" }}
-              >
-                <span className="text-xl font-black tabular-nums text-emerald-300">{postGameStats.correctRate}%</span>
-                <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-emerald-600">Correct Rate</span>
-              </div>
-              <div
-                className="flex flex-col items-center rounded-2xl py-3"
-                style={{ background: "rgba(8,145,178,0.15)", border: "1px solid rgba(34,211,238,0.3)" }}
-              >
-                <span className="text-xl font-black tabular-nums text-cyan-300">{postGameStats.total}</span>
-                <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-cyan-600">Answered</span>
-              </div>
-              <div
-                className="flex flex-col items-center rounded-2xl py-3"
-                style={{ background: "rgba(120,53,15,0.2)", border: "1px solid rgba(251,191,36,0.3)" }}
-              >
-                <span className="text-xl font-black tabular-nums text-amber-300">×{postGameStats.bestStreak}</span>
-                <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-amber-600">Best Streak</span>
-              </div>
-            </div>
+                {/* Section 2 — Final standings podium (left = 2nd, center = 1st, right = 3rd) */}
+                <div className="rounded-2xl border border-slate-700/70 bg-slate-900 px-4 py-4">
+                  <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Final Standings</p>
+                  <div className="flex items-end justify-center gap-2">
+                    {[postGameLeaderboard.podium[1], postGameLeaderboard.podium[0], postGameLeaderboard.podium[2]].map(
+                      (entry, slot) => {
+                        if (!entry) return <div key={`empty-${slot}`} className="flex-1" />;
+                        const isFirst = entry.rank === 1;
+                        return (
+                          <div
+                            key={entry.userId}
+                            className={`flex flex-1 flex-col items-center rounded-xl border px-2 py-3 text-center ${
+                              isFirst ? "border-amber-400/60 bg-amber-500/10 pb-6" : "border-slate-700 bg-slate-800/50"
+                            }`}
+                          >
+                            <RankBadge rank={entry.rank} />
+                            <p className="mt-2 w-full truncate text-xs font-bold text-slate-100">{entry.username}</p>
+                            <p className="mt-0.5 text-lg font-black tabular-nums text-white">{entry.totalPoints}</p>
+                          </div>
+                        );
+                      }
+                    )}
+                  </div>
+                </div>
+
+                {/* Section 3 — Your round-by-round */}
+                {state.viewerRoundByRound && state.viewerRoundByRound.length > 0 ? (
+                  <div className="rounded-2xl border border-slate-700/70 bg-slate-900 px-4 py-4">
+                    <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
+                      Your Round-by-Round{state.viewerRank ? ` · #${state.viewerRank}` : ""}
+                    </p>
+                    <div className="space-y-4">
+                      {state.viewerRoundByRound.map((round) => {
+                        const pct = (round.correctCount / QUESTIONS_PER_ROUND) * 100;
+                        const barColor = pct >= 70 ? "bg-emerald-500" : pct >= 40 ? "bg-cyan-500" : "bg-rose-500";
+                        return (
+                          <div key={round.roundNumber}>
+                            <div className="mb-1.5 flex items-baseline justify-between gap-2">
+                              <span className="min-w-0 truncate text-sm font-black text-slate-200">
+                                R{round.roundNumber}
+                                {round.category ? (
+                                  <span className="ml-1 font-bold text-slate-500">· {round.category}</span>
+                                ) : null}
+                              </span>
+                              <span className="shrink-0 text-xl font-black tabular-nums text-slate-100">{round.points}</span>
+                            </div>
+                            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
+                              <div
+                                className={`h-full rounded-full transition-all duration-700 ${barColor}`}
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                            <p className="mt-1 text-[11px] text-slate-600">
+                              {round.correctCount} of {QUESTIONS_PER_ROUND} correct
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* Section 4 — Stats bar */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="flex flex-col items-center rounded-2xl border border-emerald-400/30 bg-emerald-600/15 py-3">
+                    <span className="text-xl font-black tabular-nums text-emerald-300">
+                      {postGameLeaderboard.rankGained != null
+                        ? postGameLeaderboard.rankGained > 0
+                          ? `+${postGameLeaderboard.rankGained}`
+                          : `${postGameLeaderboard.rankGained}`
+                        : "—"}
+                    </span>
+                    <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-emerald-600">Rank Gained</span>
+                  </div>
+                  <div className="flex flex-col items-center rounded-2xl border border-cyan-400/30 bg-cyan-600/15 py-3">
+                    <span className="text-xl font-black tabular-nums text-cyan-300">{postGameLeaderboard.correctRate}%</span>
+                    <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-cyan-600">Correct Rate</span>
+                  </div>
+                  <div className="flex flex-col items-center rounded-2xl border border-amber-400/30 bg-amber-900/20 py-3">
+                    <span className="text-xl font-black tabular-nums text-amber-300">×{postGameStats.bestStreak}</span>
+                    <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-amber-600">Best Streak</span>
+                  </div>
+                </div>
+
+                {/* Section 5 — Back to venue */}
+                <button
+                  type="button"
+                  onClick={() => void goHome()}
+                  className="w-full rounded-2xl bg-rose-500 px-4 py-3.5 text-sm font-black uppercase tracking-[0.1em] text-white transition-colors hover:bg-rose-400"
+                >
+                  Back to Venue
+                </button>
+              </>
+            ) : (
+              <>
+                {/* No venue standings available — fall back to individual stats. */}
+                <div className="rounded-2xl border border-slate-700/70 bg-slate-900 px-4 py-3 text-center text-xs font-bold text-slate-500">
+                  No results available for standings.
+                </div>
+
+                {/* Champion / Game Over banner */}
+                <div
+                  className="flex items-center gap-3 rounded-2xl px-4 py-4"
+                  style={{ background: "linear-gradient(135deg, #1c1400, #2d1f00)", border: "1px solid rgba(251,191,36,0.35)" }}
+                >
+                  {/* Star icon badge */}
+                  <div
+                    className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
+                    style={{ background: "linear-gradient(135deg, #78350f, #b45309, #f59e0b)", border: "2px solid rgba(251,191,36,0.5)" }}
+                    aria-hidden="true"
+                  >
+                    ⭐
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-500">Game Over</p>
+                    <p className="truncate text-base font-black leading-tight text-white">
+                      {state.scheduleTitle ?? "Live Showdown"}
+                    </p>
+                    {state.totalRounds ? (
+                      <p className="text-[11px] text-slate-500">
+                        {state.totalRounds} round{state.totalRounds !== 1 ? "s" : ""}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-3xl font-black tabular-nums leading-none text-amber-300">
+                      {postGameStats.correct * 10}
+                    </p>
+                    <p className="text-[9px] font-black uppercase tracking-[0.12em] text-amber-600">Points</p>
+                  </div>
+                </div>
+
+                {/* Round-by-round breakdown */}
+                {Object.keys(postGameStats.byRound).length > 0 ? (
+                  <div
+                    className="rounded-2xl px-4 py-4"
+                    style={{ background: "#111827", border: "1px solid rgba(51,65,85,0.7)" }}
+                  >
+                    <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
+                      Your Round-by-Round
+                    </p>
+                    <div className="space-y-4">
+                      {Object.entries(postGameStats.byRound)
+                        .sort(([a], [b]) => Number(a) - Number(b))
+                        .map(([roundNum, data]) => {
+                          const score = data.correct * 10;
+                          const pct = data.total > 0 ? (data.correct / data.total) * 100 : 0;
+                          const barBg =
+                            pct >= 70
+                              ? "linear-gradient(90deg, #10b981, #34d399)"
+                              : pct >= 40
+                              ? "linear-gradient(90deg, #0891b2, #22d3ee)"
+                              : "linear-gradient(90deg, #be123c, #f43f5e)";
+                          return (
+                            <div key={roundNum}>
+                              <div className="mb-1.5 flex items-baseline justify-between">
+                                <span className="text-sm font-black text-slate-200">Round {roundNum}</span>
+                                <span className="text-xl font-black tabular-nums text-slate-100">{score}</span>
+                              </div>
+                              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
+                                <div
+                                  className="h-full rounded-full transition-all duration-700"
+                                  style={{ width: `${pct}%`, background: barBg }}
+                                />
+                              </div>
+                              <p className="mt-1 text-[11px] text-slate-600">
+                                {data.correct} of {data.total} correct
+                              </p>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* Stat pills */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div
+                    className="flex flex-col items-center rounded-2xl py-3"
+                    style={{ background: "rgba(5,150,105,0.15)", border: "1px solid rgba(52,211,153,0.3)" }}
+                  >
+                    <span className="text-xl font-black tabular-nums text-emerald-300">{postGameStats.correctRate}%</span>
+                    <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-emerald-600">Correct Rate</span>
+                  </div>
+                  <div
+                    className="flex flex-col items-center rounded-2xl py-3"
+                    style={{ background: "rgba(8,145,178,0.15)", border: "1px solid rgba(34,211,238,0.3)" }}
+                  >
+                    <span className="text-xl font-black tabular-nums text-cyan-300">{postGameStats.total}</span>
+                    <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-cyan-600">Answered</span>
+                  </div>
+                  <div
+                    className="flex flex-col items-center rounded-2xl py-3"
+                    style={{ background: "rgba(120,53,15,0.2)", border: "1px solid rgba(251,191,36,0.3)" }}
+                  >
+                    <span className="text-xl font-black tabular-nums text-amber-300">×{postGameStats.bestStreak}</span>
+                    <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-amber-600">Best Streak</span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         ) : isPreGameLobby ? (
           <>
@@ -1206,6 +1443,95 @@ export default function LiveShowdownPage() {
                 style={{ background: "rgba(120,53,15,0.3)", border: "1px solid rgba(245,158,11,0.35)", color: "#fde68a" }}
               >
                 {state.emceeAnnouncement}
+              </div>
+            ) : null}
+
+            {/* In-game leaderboard (this game only, not lifetime venue points) */}
+            {state.leaderboard && state.leaderboard.length > 0 ? (
+              <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
+                <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Leaderboard</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-600">This game only</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-left text-sm">
+                    <thead>
+                      <tr className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">
+                        <th className="px-3 py-2">Rank</th>
+                        <th className="px-3 py-2">Player</th>
+                        {Array.from({ length: state.currentRound ?? 0 }, (_, i) => (
+                          <th key={i + 1} className="px-2 py-2 text-right tabular-nums">
+                            R{i + 1}
+                          </th>
+                        ))}
+                        <th className="px-3 py-2 text-right">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {state.leaderboard.slice(0, 10).map((player) => {
+                        const isViewer = Boolean(viewerId) && player.userId === viewerId;
+                        const movement = rankMovement.get(player.userId) ?? 0;
+                        return (
+                          <tr
+                            key={player.userId}
+                            className={`border-t border-slate-800 ${
+                              isViewer ? "bg-fuchsia-950/30 ring-1 ring-inset ring-fuchsia-500/50" : ""
+                            }`}
+                          >
+                            <td className="px-3 py-2.5">
+                              <RankBadge rank={player.rank} />
+                            </td>
+                            <td className="px-3 py-2.5">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-slate-100">{player.username}</span>
+                                {isViewer ? (
+                                  <span className="rounded bg-fuchsia-500 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">
+                                    You
+                                  </span>
+                                ) : null}
+                                {movement > 0 ? (
+                                  <span className="text-[10px] font-black tabular-nums text-emerald-400">▲{movement}</span>
+                                ) : movement < 0 ? (
+                                  <span className="text-[10px] font-black tabular-nums text-rose-400">
+                                    ▼{Math.abs(movement)}
+                                  </span>
+                                ) : null}
+                              </div>
+                            </td>
+                            {Array.from({ length: state.currentRound ?? 0 }, (_, i) => {
+                              const roundNumber = i + 1;
+                              return (
+                                <td key={roundNumber} className="px-2 py-2.5 text-right tabular-nums text-slate-400">
+                                  {player.roundPoints[roundNumber] ?? 0}
+                                </td>
+                              );
+                            })}
+                            <td className="px-3 py-2.5 text-right">
+                              <span className="text-lg font-black tabular-nums text-white">{player.totalPoints}</span>
+                              {player.pointsThisRound > 0 ? (
+                                <span className="ml-1 text-xs font-black tabular-nums text-emerald-400">
+                                  +{player.pointsThisRound}
+                                </span>
+                              ) : null}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Viewer outside the top 10 — minimal rank row (full row data not in state) */}
+                {state.viewerRank && state.viewerRank > 10 ? (
+                  <div className="flex items-center gap-2 border-t border-slate-800 bg-fuchsia-950/30 px-3 py-2.5 ring-1 ring-inset ring-fuchsia-500/50">
+                    <RankBadge rank={state.viewerRank} />
+                    <span className="rounded bg-fuchsia-500 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">
+                      You
+                    </span>
+                    <span className="text-xs font-semibold text-slate-400">
+                      You&apos;re ranked #{state.viewerRank} this game
+                    </span>
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </section>

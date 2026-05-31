@@ -2,6 +2,7 @@ import React from "react";
 import { AdsCreateSection } from "@/components/admin/sections/AdsCreateSection";
 import { AdsListSection } from "@/components/admin/sections/AdsListSection";
 import { PickEmSettlementSection } from "@/components/admin/sections/PickEmSettlementSection";
+import { TriviaPendingReviewSection } from "@/components/admin/sections/TriviaPendingReviewSection";
 import LegacySectionPlaceholder from "@/components/admin/sections/LegacySectionPlaceholder";
 
 export type AdminSection =
@@ -12,6 +13,7 @@ export type AdminSection =
   | "venue-manage"
   | "trivia-create"
   | "trivia-list"
+  | "trivia-review"
   | "ads-create"
   | "ads-list"
   | "challenge-campaigns"
@@ -38,6 +40,7 @@ export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
   { id: "venue-manage",          label: "Venue Profiles",        slug: "venue-manage",          component: () => <LegacySectionPlaceholder sectionName="Venue Profiles" /> },
   { id: "trivia-list",           label: "Trivia Questions",      slug: "trivia-list",           status: { label: "Ready", tone: "live" }, component: () => <LegacySectionPlaceholder sectionName="Trivia Questions" /> },
   { id: "trivia-create",         label: "Create Question",       slug: "trivia-create",         status: { label: "Ready", tone: "live" }, component: () => <LegacySectionPlaceholder sectionName="Create Question" /> },
+  { id: "trivia-review",         label: "Question Review",       slug: "trivia-review",         status: { label: "Ready", tone: "live" }, component: TriviaPendingReviewSection },
   { id: "ads-list",              label: "Manage Ads",            slug: "ads-list",              status: { label: "Ready", tone: "live" }, component: AdsListSection },
   { id: "ads-create",            label: "Create Ad",             slug: "ads-create",            status: { label: "Ready", tone: "live" }, component: AdsCreateSection },
   { id: "ad-placement",          label: "Placement Builder",     slug: "ad-placement",          component: () => <LegacySectionPlaceholder sectionName="Placement Builder" /> },
@@ -54,7 +57,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     label: "Content",
-    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["trivia-list", "trivia-create"].includes(opt.id)),
+    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["trivia-list", "trivia-create", "trivia-review"].includes(opt.id)),
   },
   {
     label: "Advertising",
@@ -75,6 +78,7 @@ export const MIGRATED_SECTIONS: ReadonlySet<AdminSection> = new Set([
   "venue-manage",
   "trivia-list",
   "trivia-create",
+  "trivia-review",
   "challenge-campaigns",
   "live-trivia",
   "ad-placement",
