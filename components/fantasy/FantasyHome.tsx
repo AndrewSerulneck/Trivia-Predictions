@@ -2317,11 +2317,7 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
               Tonight&apos;s {selectedSportLabel} slate · {sportGames.length} game{sportGames.length === 1 ? "" : "s"}
             </span>
             <span className="text-[9.5px] font-extrabold uppercase tracking-[0.06em] text-[#fde68a]">
-              {selectedSport === "baseball"
-                ? "Locks at first pitch"
-                : selectedSport === "football"
-                ? "Locks at kickoff"
-                : "Locks at first tip"}
+              {selectedSport === "baseball" ? "Locks at first pitch" : "Locks at first tip"}
             </span>
           </div>
         ) : null}
