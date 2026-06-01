@@ -236,9 +236,7 @@ html {
 html.tp-bingo-theme,
 body.tp-bingo-theme {
   background-color: var(--ht-canvas);
-  background-image: var(--ht-game-bingo);
-  background-size: cover;
-  background-attachment: fixed;
+  background-image: none;
 }
 
 html.tp-admin-theme,

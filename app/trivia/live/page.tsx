@@ -114,7 +114,6 @@ const RULE_LINES = [
   "New players can join any time.",
   "Do not close your browser or switch tabs during live play.",
   "If you wish to leave the game, click 'Back to Home Page' any time.",
-  "The user with the most points at the end wins a $25 gift certificate.",
   "Click 'Join Live Trivia!' to enter the lobby."
 ];
 

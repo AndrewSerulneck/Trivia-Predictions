@@ -12,7 +12,7 @@ export const GAME_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
   pickem:
     "bg-[linear-gradient(134deg,#2563eb_0%,#7c3aed_56%,#ec4899_100%)]",
   fantasy:
-    "bg-[linear-gradient(134deg,#7c3aed_0%,#2563eb_48%,#06b6d4_100%)]",
+    "bg-[#020617]",
 };
 
 export const GAME_PAGE_THEME_BY_KEY: Record<VenueGameKey, string> = {
@@ -25,7 +25,7 @@ export const GAME_PAGE_THEME_BY_KEY: Record<VenueGameKey, string> = {
   pickem:
     "bg-[linear-gradient(134deg,rgba(37,99,235,0.22)_0%,rgba(124,58,237,0.22)_56%,rgba(236,72,153,0.2)_100%)] border-indigo-200/65",
   fantasy:
-    "bg-[linear-gradient(134deg,rgba(124,58,237,0.22)_0%,rgba(37,99,235,0.22)_48%,rgba(6,182,212,0.2)_100%)] border-violet-200/60",
+    "bg-[#020617] border-[#fef3c7]/20",
 };
 
 export const GAME_IDENTITY_SUBTITLE: Record<VenueGameKey, string> = {

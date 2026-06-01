@@ -140,22 +140,24 @@ const BINGO_HEADER_LETTERS = [
   { letter: "B", color: "text-rose-300" },
   { letter: "I", color: "text-amber-300" },
   { letter: "N", color: "text-emerald-300" },
-  { letter: "G", color: "text-cyan-300" },
+  { letter: "G", color: "text-sky-300" },
   { letter: "O", color: "text-violet-300" },
 ] as const;
 
+// Felt board square treatment for the preview — matches the live board: gold FREE
+// center, dark open squares awaiting their first stat update.
 function getPreviewSquareStyle(isFree: boolean): string {
   if (isFree) {
-    return "border-emerald-500/60 bg-[linear-gradient(165deg,#052e16_0%,#064e3b_50%,#065f46_100%)] text-emerald-300 shadow-[inset_0_1px_0_rgba(16,185,129,0.2)]";
+    return "border-amber-300/65 bg-[linear-gradient(135deg,rgba(252,211,77,0.42),rgba(217,119,6,0.32))] text-amber-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]";
   }
-  return "border-slate-700 bg-slate-800/40 text-slate-400";
+  return "border-white/10 bg-white/[0.04] text-white/75";
 }
 
 function getExpandedSquareStyle(isFree: boolean): string {
   if (isFree) {
-    return "border-emerald-500/60 bg-[linear-gradient(165deg,#052e16_0%,#064e3b_50%,#065f46_100%)] text-emerald-300 shadow-[inset_0_1px_0_rgba(16,185,129,0.2)]";
+    return "border-amber-300/65 bg-[linear-gradient(135deg,rgba(252,211,77,0.42),rgba(217,119,6,0.32))] text-amber-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]";
   }
-  return "border-slate-700 bg-slate-800/40 text-slate-400";
+  return "border-white/10 bg-white/[0.04] text-white/75";
 }
 
 function toMascotDisplayName(team: string): string {
@@ -201,10 +203,10 @@ function getGeneratingLoaderVariant(sportKey: string): {
       emoji: "🏀",
       title: "Generating WNBA board...",
       subtitle: "Calibrating pace-aware player and team squares.",
-      panelClassName: "border-orange-400/40 bg-slate-800/70",
-      badgeClassName: "border border-orange-400/40 bg-orange-500/20 text-orange-300",
+      panelClassName: "border-sky-300/30 bg-slate-800/70",
+      badgeClassName: "border border-sky-300/40 bg-sky-300/10 text-sky-200",
       barTrackClassName: "bg-slate-700/70",
-      barClassName: "bg-gradient-to-r from-orange-500 to-amber-500",
+      barClassName: "bg-gradient-to-r from-sky-500 to-cyan-400",
     };
   }
   if (normalized.includes("baseball") || normalized.includes("mlb")) {
@@ -212,20 +214,20 @@ function getGeneratingLoaderVariant(sportKey: string): {
       emoji: "⚾",
       title: "Generating MLB board...",
       subtitle: "Building balanced prop and team-event squares.",
-      panelClassName: "border-orange-400/40 bg-slate-800/70",
-      badgeClassName: "border border-orange-400/40 bg-orange-500/20 text-orange-300",
+      panelClassName: "border-sky-300/30 bg-slate-800/70",
+      badgeClassName: "border border-sky-300/40 bg-sky-300/10 text-sky-200",
       barTrackClassName: "bg-slate-700/70",
-      barClassName: "bg-gradient-to-r from-amber-500 to-orange-500",
+      barClassName: "bg-gradient-to-r from-cyan-500 to-sky-400",
     };
   }
   return {
     emoji: "🏀",
     title: "Generating NBA board...",
     subtitle: "Optimizing a fresh mix of team and player squares.",
-    panelClassName: "border-orange-400/40 bg-slate-800/70",
-    badgeClassName: "border border-orange-400/40 bg-orange-500/20 text-orange-300",
+    panelClassName: "border-sky-300/30 bg-slate-800/70",
+    badgeClassName: "border border-sky-300/40 bg-sky-300/10 text-sky-200",
     barTrackClassName: "bg-slate-700/70",
-    barClassName: "bg-gradient-to-r from-orange-500 to-amber-500",
+    barClassName: "bg-gradient-to-r from-sky-500 to-cyan-400",
   };
 }
 
@@ -450,22 +452,23 @@ export function SportsBingoSelectBoard() {
     }
 
     return (
-      <div className="rounded-xl border-2 border-cyan-300/80 bg-[linear-gradient(180deg,#0f172a_0%,#1e293b_100%)] p-2 shadow-[0_8px_20px_rgba(15,23,42,0.28)]">
-        <div className="mb-1.5 grid grid-cols-5 gap-1.5">
+      <div className="relative rounded-[18px] border-2 border-sky-300/90 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(255,215,128,0.10),transparent_60%),radial-gradient(circle_at_20%_80%,rgba(0,0,0,0.45),transparent_60%),#0c3a2e] p-3 shadow-[inset_0_0_0_1px_rgba(125,211,252,0.4),0_12px_26px_rgba(0,0,0,0.55),0_0_28px_rgba(125,211,252,0.18)]">
+        <span aria-hidden="true" className="pointer-events-none absolute inset-1 rounded-[14px] border border-[#c89b3a]/55" />
+        <div className="relative z-[2] mb-2 grid grid-cols-5 gap-1.5">
           {BINGO_HEADER_LETTERS.map((item) => (
             <div
               key={item.letter}
-              className={`text-center text-base font-black tracking-[0.18em] [text-shadow:0_0_8px_rgba(255,255,255,0.35)] ${item.color}`}
+              className={`text-center text-lg font-black tracking-[0.1em] [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_1px_0_rgba(0,0,0,0.5),0_0_12px_currentColor] ${item.color}`}
             >
               {item.letter}
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-5 gap-1.5">
+        <div className="relative z-[2] grid grid-cols-5 gap-1.5">
           {Array.from({ length: 25 }).map((_, index) => {
             const square = byIndex.get(index);
             if (!square) {
-              return <div key={index} className="aspect-square rounded-md border border-slate-700/60 bg-slate-800/40" />;
+              return <div key={index} className="aspect-square rounded-md border border-white/[0.06] bg-slate-900/40" />;
             }
 
             const isFree = Boolean(square.isFree);
@@ -495,22 +498,23 @@ export function SportsBingoSelectBoard() {
     }
 
     return (
-      <div className="rounded-xl border-2 border-cyan-300/80 bg-[linear-gradient(180deg,#0f172a_0%,#1e293b_100%)] p-2 pb-1 shadow-[0_8px_20px_rgba(15,23,42,0.3)]">
-        <div className="mb-2 grid grid-cols-5 gap-1.5 sm:gap-2">
+      <div className="relative rounded-[18px] border-2 border-sky-300/90 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(255,215,128,0.10),transparent_60%),radial-gradient(circle_at_20%_80%,rgba(0,0,0,0.45),transparent_60%),#0c3a2e] p-3 pb-2 shadow-[inset_0_0_0_1px_rgba(125,211,252,0.4),0_12px_26px_rgba(0,0,0,0.55),0_0_28px_rgba(125,211,252,0.18)]">
+        <span aria-hidden="true" className="pointer-events-none absolute inset-1 rounded-[14px] border border-[#c89b3a]/55" />
+        <div className="relative z-[2] mb-2 grid grid-cols-5 gap-1.5 sm:gap-2">
           {BINGO_HEADER_LETTERS.map((item) => (
             <div
               key={item.letter}
-              className={`text-center text-lg font-black tracking-[0.2em] [text-shadow:0_0_8px_rgba(255,255,255,0.35)] sm:text-xl ${item.color}`}
+              className={`text-center text-xl font-black tracking-[0.1em] [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_1px_0_rgba(0,0,0,0.5),0_0_12px_currentColor] sm:text-2xl ${item.color}`}
             >
               {item.letter}
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+        <div className="relative z-[2] grid grid-cols-5 gap-1.5 sm:gap-2">
           {Array.from({ length: 25 }).map((_, index) => {
             const square = byIndex.get(index);
             if (!square) {
-              return <div key={index} className="min-h-[72px] rounded-lg border border-slate-700/60 bg-slate-800/40 sm:min-h-[82px]" />;
+              return <div key={index} className="min-h-[72px] rounded-lg border border-white/[0.06] bg-slate-900/40 sm:min-h-[82px]" />;
             }
 
             const isFree = Boolean(square.isFree);
@@ -564,8 +568,8 @@ export function SportsBingoSelectBoard() {
         <div className="rounded-md border border-rose-500/40 bg-rose-950/30 p-3 text-sm text-rose-300">{errorMessage}</div>
       ) : null}
 
-      <div className="rounded-2xl border border-orange-400/30 bg-slate-900 p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-orange-300">Step 3 of 3</p>
+      <div className="rounded-2xl border border-sky-300/30 bg-slate-900 p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-300">Step 3 of 3</p>
         <h2 className="mt-1 text-lg font-semibold text-slate-200">Generate And Lock Board</h2>
 
         {loadingGame ? (
@@ -573,12 +577,12 @@ export function SportsBingoSelectBoard() {
             <BouncingBallLoader size="sm" label="Loading game..." />
           </div>
         ) : !game ? (
-          <div className="mt-3 rounded-md border border-amber-400/40 bg-amber-950/30 p-3 text-sm text-amber-300">
+          <div className="mt-3 rounded-md border border-sky-300/30 bg-slate-800/60 p-3 text-sm text-sky-200">
             That game is no longer available. Please pick another game.
           </div>
         ) : (
-          <div className="mt-3 rounded-2xl border border-orange-400/30 bg-slate-800/60 p-3 text-sm text-slate-400 sm:text-base">
-            <p className="font-bold text-slate-200">
+          <div className="mt-3 rounded-2xl border border-sky-300/20 bg-slate-800/60 p-3 text-sm text-slate-300 sm:text-base">
+            <p className="font-bold text-slate-100">
               {toMascotDisplayName(game.awayTeam)} vs {toMascotDisplayName(game.homeTeam)}
             </p>
             <p className="mt-1 font-medium">Starts {formatLocalDateTime(game.startsAt)} · Cards lock at game start.</p>
@@ -593,9 +597,9 @@ export function SportsBingoSelectBoard() {
               void generateBoard();
             }}
             disabled={!canGenerate}
-            className="tp-clean-button inline-flex min-h-[42px] items-center rounded-xl border border-orange-400/60 bg-orange-500/20 px-4 py-2 text-sm font-bold text-orange-300 transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+            className="tp-clean-button inline-flex min-h-[42px] items-center gap-1.5 rounded-xl border border-sky-300/55 bg-sky-300/10 px-4 py-2 text-sm font-bold text-sky-200 transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {generating ? "Generating..." : "Change Bingo Boards"}
+            {generating ? "Shuffling..." : preview ? "🎲 Shuffle Board" : "🎲 Generate Board"}
           </button>
           <button
             type="button"
@@ -603,7 +607,7 @@ export function SportsBingoSelectBoard() {
               void playBoard();
             }}
             disabled={!canPlay}
-            className="tp-clean-button inline-flex min-h-[42px] items-center rounded-xl bg-orange-500 px-4 py-2 text-sm font-black text-white shadow-[0_3px_0_rgba(124,45,18,0.65)] transition-all active:translate-y-px active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+            className="tp-clean-button inline-flex min-h-[42px] items-center rounded-xl border border-sky-300/60 bg-sky-500/20 px-4 py-2 text-sm font-black text-white shadow-[0_3px_0_rgba(0,0,0,0.4)] transition-all active:translate-y-px active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {playing ? "Locking..." : "Play!"}
           </button>
@@ -629,15 +633,15 @@ export function SportsBingoSelectBoard() {
         ) : null}
 
         {loadingCards ? <p className="mt-2 text-xs text-slate-400">Checking your active cards...</p> : null}
-        {hasCardForGame ? <p className="mt-2 text-xs text-orange-300">You already have an active card for this game.</p> : null}
-        {!userId || !venueId ? <p className="mt-2 text-xs text-amber-300">Join a venue before locking this board.</p> : null}
+        {hasCardForGame ? <p className="mt-2 text-xs text-sky-300">You already have an active card for this game.</p> : null}
+        {!userId || !venueId ? <p className="mt-2 text-xs text-slate-300">Join a venue before locking this board.</p> : null}
         {preview ? (
-          <div className="mt-4 space-y-3 rounded-2xl border border-orange-400/30 bg-slate-800/60 p-3">
-            <p className="rounded-md border border-orange-400/40 bg-orange-950/30 px-2.5 py-2 text-sm font-semibold text-orange-300">
+          <div className="mt-4 space-y-3 rounded-2xl border border-sky-300/20 bg-slate-800/60 p-3">
+            <p className="rounded-md border border-sky-300/40 bg-sky-300/10 px-2.5 py-2 text-sm font-semibold text-sky-200">
               Tap the board to expand it.
             </p>
             <p className="text-xs text-slate-400">
-              Keep generating new bingo cards until you find one you like, then press play!
+              Keep shuffling until you find a board you like, then press Play!
             </p>
             <motion.div
               key={previewPopKey}
@@ -671,21 +675,21 @@ export function SportsBingoSelectBoard() {
               setIsPreviewExpanded(false);
             }}
           />
-          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-2xl border border-orange-400/40 bg-slate-900 p-3 shadow-2xl shadow-black/60">
-            <div className="sticky top-0 z-10 mb-2 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-slate-700 bg-slate-900/95 px-3 py-2 backdrop-blur">
+          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-2xl border border-sky-300/35 bg-slate-900 p-3 shadow-2xl shadow-black/60">
+            <div className="sticky top-0 z-10 mb-2 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-white/10 bg-slate-900/95 px-3 py-2 backdrop-blur">
               <p className="text-sm font-semibold text-slate-200">{preview.game.gameLabel}</p>
               <button
                 type="button"
                 onClick={() => {
                   setIsPreviewExpanded(false);
                 }}
-                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-slate-700 bg-slate-800/50 px-3 py-2 text-xs font-semibold text-slate-200 shadow-sm"
+                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-white/10 bg-slate-800/50 px-3 py-2 text-xs font-semibold text-slate-200 shadow-sm"
               >
                 <span aria-hidden="true">✕</span>
                 <span>Close</span>
               </button>
             </div>
-            <p className="mb-2 mt-1 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-orange-300">
+            <p className="mb-2 mt-1 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-sky-300">
               Expanded Board Preview
             </p>
             {renderExpandedGrid(preview.squares)}

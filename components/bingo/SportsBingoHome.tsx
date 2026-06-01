@@ -162,27 +162,29 @@ function shortenLabel(label: string, maxLength = 18): string {
   return `${normalized.slice(0, maxLength - 3)}...`;
 }
 
+// Casino-felt square treatment — open squares read as dark "daub-ready" tiles on
+// the green felt; hit squares glow orange; the FREE center is gold.
 function getCardSquareStyle(status: BingoCardSquare["status"], isFree: boolean): string {
   if (isFree) {
-    return "border-emerald-400/60 bg-emerald-500 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]";
+    return "border-amber-300/65 bg-[linear-gradient(135deg,rgba(252,211,77,0.42),rgba(217,119,6,0.32))] text-amber-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]";
   }
   if (status === "hit") {
-    return "border-orange-300 bg-orange-500 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]";
+    return "border-orange-400/70 bg-[radial-gradient(circle_at_50%_38%,rgba(249,115,22,0.6),rgba(249,115,22,0.16)_70%,transparent),rgba(249,115,22,0.18)] text-orange-100 shadow-[0_0_12px_rgba(249,115,22,0.45)]";
   }
   if (status === "miss") {
-    return "border-rose-400/60 bg-rose-950/20 text-rose-300";
+    return "border-rose-500/45 bg-rose-950/30 text-rose-300/80";
   }
   if (status === "void") {
-    return "border-slate-600 bg-slate-800/50 text-slate-500";
+    return "border-white/[0.06] bg-slate-900/40 text-slate-600";
   }
-  // pending — board idle canvas
-  return "border-orange-900/50 bg-slate-800 text-slate-300";
+  // pending — open square on the felt, awaiting a stat update
+  return "border-white/10 bg-white/[0.04] text-white/75";
 }
 
 function renderSquareStatusGlyph(square: BingoCardSquare) {
   if (square.isFree || square.status === "hit") {
     return (
-      <span className="absolute right-1 top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-700 text-[10px] font-black text-white">
+      <span className="absolute right-0.5 top-0.5 text-[11px] font-black leading-none text-amber-200 [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">
         ✓
       </span>
     );
@@ -389,9 +391,111 @@ const BINGO_HEADER_LETTERS = [
   { letter: "B", color: "text-rose-300" },
   { letter: "I", color: "text-amber-300" },
   { letter: "N", color: "text-emerald-300" },
-  { letter: "G", color: "text-cyan-300" },
+  { letter: "G", color: "text-sky-300" },
   { letter: "O", color: "text-violet-300" },
 ] as const;
+
+// Closest 5-in-a-row remaining for the board: 0 means a line is complete (bingo),
+// null means every line is blocked by a miss/void. Drives the "N to bingo" hint.
+function getClosestLineRemaining(squares: BingoCardSquare[]): number | null {
+  const byIndex = new Map<number, BingoCardSquare>();
+  for (const square of squares) {
+    byIndex.set(square.index, square);
+  }
+  let best: number | null = null;
+  for (const line of LINE_PATTERNS) {
+    let hits = 0;
+    let blocked = false;
+    for (const index of line) {
+      const square = byIndex.get(index);
+      if (square && (square.isFree || square.status === "hit")) {
+        hits += 1;
+      } else if (square && (square.status === "miss" || square.status === "void")) {
+        blocked = true;
+        break;
+      }
+    }
+    if (blocked) {
+      continue;
+    }
+    const remaining = 5 - hits;
+    if (best === null || remaining < best) {
+      best = remaining;
+    }
+  }
+  return best;
+}
+
+function getBoardProgress(squares: BingoCardSquare[]): {
+  hitCount: number;
+  pctFilled: number;
+  toBingo: number | null;
+} {
+  const hitCount = squares.reduce(
+    (sum, square) => (square.isFree || square.status === "hit" ? sum + 1 : sum),
+    0
+  );
+  return {
+    hitCount,
+    pctFilled: Math.round((hitCount / 25) * 100),
+    toBingo: getClosestLineRemaining(squares),
+  };
+}
+
+// Casino-felt progress ring — mirrors the conic gauge in the Bingo design mockups.
+const BingoProgressRing = ({
+  squares,
+  size = "md",
+}: {
+  squares: BingoCardSquare[];
+  size?: "sm" | "md";
+}) => {
+  const { hitCount, pctFilled, toBingo } = getBoardProgress(squares);
+  const ringClass = size === "sm" ? "h-10 w-10" : "h-12 w-12";
+  const innerClass = size === "sm" ? "h-[30px] w-[30px] text-[10px]" : "h-9 w-9 text-[11px]";
+  const toBingoLabel =
+    toBingo === null ? "every line blocked" : toBingo === 0 ? "Bingo!" : `${toBingo} to bingo`;
+  return (
+    <div className="flex items-center gap-3">
+      <div
+        className={`relative flex shrink-0 items-center justify-center rounded-full ${ringClass}`}
+        style={{
+          background: `conic-gradient(#f97316 0 ${pctFilled}%, rgba(255,255,255,0.06) ${pctFilled}% 100%)`,
+        }}
+      >
+        <div
+          className={`flex items-center justify-center rounded-full bg-slate-900 font-black tabular-nums text-sky-200 ${innerClass}`}
+        >
+          {hitCount}/25
+        </div>
+      </div>
+      <div className="leading-tight">
+        <p className="text-sm font-extrabold text-slate-100">Squares hit</p>
+        <p className="mt-0.5 text-[11px] font-semibold text-slate-400">
+          {pctFilled}% filled · {toBingoLabel}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// Legend panel — explains the three square states on the felt board.
+const BingoLegend = () => (
+  <ul className="space-y-2 text-[11.5px] font-semibold text-slate-200">
+    <li className="flex items-center gap-2">
+      <span className="h-3.5 w-3.5 shrink-0 rounded border border-amber-300/60 bg-[linear-gradient(135deg,rgba(252,211,77,0.4),rgba(217,119,6,0.3))]" />
+      Center FREE — auto-filled
+    </li>
+    <li className="flex items-center gap-2">
+      <span className="h-3.5 w-3.5 shrink-0 rounded border border-orange-400/70 bg-orange-500/35 shadow-[0_0_6px_rgba(249,115,22,0.45)]" />
+      Hit · square completed live
+    </li>
+    <li className="flex items-center gap-2">
+      <span className="h-3.5 w-3.5 shrink-0 rounded border border-white/10 bg-white/[0.04]" />
+      Open · awaiting stat update
+    </li>
+  </ul>
+);
 
 function renderCompactGrid(
   cardId: string,
@@ -406,22 +510,23 @@ function renderCompactGrid(
   }
 
   return (
-    <div className="rounded-xl border-2 border-cyan-300/80 bg-[linear-gradient(180deg,#0f172a_0%,#1e293b_100%)] p-2 shadow-[0_8px_20px_rgba(15,23,42,0.28)]">
-      <div className="mb-1.5 grid grid-cols-5 gap-1.5">
+    <div className="relative rounded-[18px] border-2 border-sky-300/90 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(255,215,128,0.10),transparent_60%),radial-gradient(circle_at_20%_80%,rgba(0,0,0,0.45),transparent_60%),#0c3a2e] p-3 shadow-[inset_0_0_0_1px_rgba(125,211,252,0.4),0_12px_26px_rgba(0,0,0,0.55),0_0_28px_rgba(125,211,252,0.18)]">
+      <span aria-hidden="true" className="pointer-events-none absolute inset-1 rounded-[14px] border border-[#c89b3a]/55" />
+      <div className="relative z-[2] mb-2 grid grid-cols-5 gap-1.5">
         {BINGO_HEADER_LETTERS.map((item) => (
           <div
             key={item.letter}
-            className={`text-center text-base font-black tracking-[0.18em] [text-shadow:0_0_8px_rgba(255,255,255,0.35)] ${item.color}`}
+            className={`text-center text-lg font-black tracking-[0.1em] [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_1px_0_rgba(0,0,0,0.5),0_0_12px_currentColor] ${item.color}`}
           >
             {item.letter}
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-5 gap-1.5">
+      <div className="relative z-[2] grid grid-cols-5 gap-1.5">
       {Array.from({ length: 25 }).map((_, index) => {
         const square = byIndex.get(index);
         if (!square) {
-          return <div key={index} className="h-10 rounded-md border border-slate-700/60 bg-slate-800/40" />;
+          return <div key={index} className="h-10 rounded-md border border-white/[0.06] bg-slate-900/40" />;
         }
 
         const isFree = Boolean(square.isFree);
@@ -458,7 +563,7 @@ function renderCompactGrid(
             {renderSquareStatusGlyph(square)}
             <span>{isFree ? "FREE" : shortenLabel(square.label)}</span>
             {progressText ? (
-              <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 text-[8px] font-black text-cyan-900/85">
+              <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 text-[8px] font-black text-sky-200/90">
                 {progressText}
               </span>
             ) : null}
@@ -483,22 +588,23 @@ function renderExpandedGrid(
   }
 
   return (
-    <div className="rounded-xl border-2 border-cyan-300/80 bg-[linear-gradient(180deg,#0f172a_0%,#1e293b_100%)] p-2 pb-1 shadow-[0_8px_20px_rgba(15,23,42,0.3)]">
-      <div className="mb-2 grid grid-cols-5 gap-1.5 sm:gap-2">
+    <div className="relative rounded-[18px] border-2 border-sky-300/90 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(255,215,128,0.10),transparent_60%),radial-gradient(circle_at_20%_80%,rgba(0,0,0,0.45),transparent_60%),#0c3a2e] p-3 pb-2 shadow-[inset_0_0_0_1px_rgba(125,211,252,0.4),0_12px_26px_rgba(0,0,0,0.55),0_0_28px_rgba(125,211,252,0.18)]">
+      <span aria-hidden="true" className="pointer-events-none absolute inset-1 rounded-[14px] border border-[#c89b3a]/55" />
+      <div className="relative z-[2] mb-2 grid grid-cols-5 gap-1.5 sm:gap-2">
         {BINGO_HEADER_LETTERS.map((item) => (
           <div
             key={item.letter}
-            className={`text-center text-lg font-black tracking-[0.2em] [text-shadow:0_0_8px_rgba(255,255,255,0.35)] sm:text-xl ${item.color}`}
+            className={`text-center text-xl font-black tracking-[0.1em] [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_1px_0_rgba(0,0,0,0.5),0_0_12px_currentColor] sm:text-2xl ${item.color}`}
           >
             {item.letter}
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+      <div className="relative z-[2] grid grid-cols-5 gap-1.5 sm:gap-2">
         {Array.from({ length: 25 }).map((_, index) => {
           const square = byIndex.get(index);
           if (!square) {
-            return <div key={index} className="min-h-[72px] rounded-lg border border-slate-700/60 bg-slate-800/40 sm:min-h-[82px]" />;
+            return <div key={index} className="min-h-[72px] rounded-lg border border-white/[0.06] bg-slate-900/40 sm:min-h-[82px]" />;
           }
 
           const isFree = Boolean(square.isFree);
@@ -534,7 +640,7 @@ function renderExpandedGrid(
               {renderSquareStatusGlyph(square)}
               <span>{isFree ? "FREE" : square.label}</span>
               {progressText ? (
-                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-black text-cyan-900/85 sm:text-[10px]">
+                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-black text-sky-200/90 sm:text-[10px]">
                   {progressText}
                 </span>
               ) : null}
@@ -1493,14 +1599,14 @@ export function SportsBingoHome() {
       ) : null}
 
       {unclaimedWonBingoCards.length > 0 ? (
-        <div className="rounded-2xl border border-orange-400/40 bg-orange-950/30 px-3 py-3 shadow-[0_6px_18px_rgba(120,53,15,0.35)]">
-          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-orange-300">🎉 Bingo Points Ready</p>
+        <div className="rounded-2xl border border-sky-300/40 bg-slate-900 px-3 py-3 shadow-sm">
+          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-sky-300">🎉 Bingo Points Ready</p>
           <div className="mt-1 flex items-center justify-between gap-3">
             <div>
               <p className="text-lg font-black leading-none text-slate-100">
                 {unclaimedWonBingoCards.length} winning board{unclaimedWonBingoCards.length !== 1 ? "s" : ""}
               </p>
-              <p className="mt-0.5 text-[11px] font-semibold text-orange-300">
+              <p className="mt-0.5 text-[11px] font-semibold text-sky-300">
                 +{totalUnclaimedBingoPoints} pts waiting to collect
               </p>
             </div>
@@ -1509,7 +1615,7 @@ export function SportsBingoHome() {
               data-bingo-collect-all
               onClick={() => void collectAllBingoPoints()}
               disabled={isCollectingAllBingo}
-              className="tp-clean-button inline-flex min-h-[44px] items-center rounded-xl border border-orange-400/60 bg-orange-500/20 px-4 py-2 text-sm font-black text-orange-300 shadow-[0_3px_0_rgba(0,0,0,0.25)] transition-all active:scale-95 disabled:opacity-60"
+              className="tp-clean-button inline-flex min-h-[44px] items-center rounded-xl border border-sky-300/50 bg-sky-300/10 px-4 py-2 text-sm font-black text-sky-200 shadow-[0_3px_0_rgba(0,0,0,0.25)] transition-all active:scale-95 disabled:opacity-60"
             >
               {isCollectingAllBingo ? "Collecting..." : "Collect Points"}
             </button>
@@ -1518,19 +1624,19 @@ export function SportsBingoHome() {
       ) : null}
 
       {/* Header — BINGO rainbow title + controls */}
-      <div className="rounded-2xl border border-orange-400/40 bg-slate-900 p-4">
-        <p className="text-center text-[11px] font-black uppercase tracking-[0.16em] text-orange-400">Sports Bingo</p>
+      <div className="rounded-2xl border border-sky-300/30 bg-slate-900 p-4">
+        <p className="text-center text-[11px] font-black uppercase tracking-[0.16em] text-sky-300">Sports Bingo</p>
         <div className="mb-1 grid grid-cols-5 gap-1">
           {[
             { letter: "B", cls: "text-rose-400" },
             { letter: "I", cls: "text-amber-400" },
             { letter: "N", cls: "text-emerald-400" },
-            { letter: "G", cls: "text-cyan-400" },
+            { letter: "G", cls: "text-sky-400" },
             { letter: "O", cls: "text-violet-400" },
           ].map((item) => (
             <div
               key={item.letter}
-              className={`text-center text-3xl font-black tracking-[0.1em] drop-shadow-[0_0_8px_currentColor] ${item.cls}`}
+              className={`text-center text-3xl font-black tracking-[0.1em] drop-shadow-[0_0_8px_currentColor] [font-family:'Bree_Serif','Nunito',serif] ${item.cls}`}
             >
               {item.letter}
             </div>
@@ -1542,27 +1648,27 @@ export function SportsBingoHome() {
               type="button"
               aria-disabled="true"
               onClick={triggerLimitReachedFeedback}
-              className={`tp-clean-button inline-flex min-h-[44px] items-center rounded-full border border-orange-400/50 bg-orange-950/30 px-5 py-2 text-sm font-bold text-orange-300 ${
+              className={`tp-clean-button inline-flex min-h-[44px] items-center rounded-full border border-sky-300/40 bg-sky-300/[0.07] px-5 py-2 text-sm font-bold text-sky-300 ${
                 limitPulse ? "pickem-limit-pulse" : ""
               }`}
             >
-              {showBoardLimitMessage ? "Max 4 active boards reached!" : "Generate New Bingo Board"}
+              {showBoardLimitMessage ? "Max 4 active boards reached!" : "Click Here to Play!"}
             </button>
           ) : (
             <Link
               href="/bingo/select-sport"
-              className="tp-clean-button inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-orange-400/60 bg-orange-500/20 px-5 py-2 text-sm font-bold text-orange-300 shadow-[0_4px_16px_rgba(124,45,18,0.25)] transition-all active:scale-95"
+              className="tp-clean-button inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-sky-300/50 bg-sky-300/10 px-5 py-2 text-sm font-bold text-sky-200 shadow-[0_0_16px_rgba(125,211,252,0.2)] transition-all active:scale-95"
             >
-              🎲 Generate New Bingo Board
+              🎲 Click Here to Play!
             </Link>
           )}
         </div>
 
-        <div className="mt-3 flex w-full items-center justify-between rounded-xl border border-orange-400/40 bg-orange-950/30 px-2 py-1.5">
+        <div className="mt-3 flex w-full items-center justify-between rounded-xl border border-sky-300/25 bg-slate-800/50 px-2 py-1.5">
           <button
             type="button"
             onClick={navigateToPrevDay}
-            className="tp-clean-button relative flex h-7 w-7 items-center justify-center rounded-full border border-orange-400/40 bg-slate-900/70 text-orange-300 transition-all hover:bg-orange-900/40 active:scale-90"
+            className="tp-clean-button relative flex h-7 w-7 items-center justify-center rounded-full border border-sky-300/30 bg-slate-900/70 text-sky-300 transition-all hover:bg-sky-900/30 active:scale-90"
             aria-label="Previous day"
           >
             ◀
@@ -1575,7 +1681,7 @@ export function SportsBingoHome() {
             type="button"
             onClick={navigateToNextDay}
             disabled={selectedDate >= todayDate}
-            className="tp-clean-button relative flex h-7 w-7 items-center justify-center rounded-full border border-orange-400/40 bg-slate-900/70 text-orange-300 transition-all hover:bg-orange-900/40 active:scale-90 disabled:opacity-30"
+            className="tp-clean-button relative flex h-7 w-7 items-center justify-center rounded-full border border-sky-300/30 bg-slate-900/70 text-sky-300 transition-all hover:bg-sky-900/30 active:scale-90 disabled:opacity-30"
             aria-label="Next day"
           >
             ▶
@@ -1608,7 +1714,7 @@ export function SportsBingoHome() {
             data-bingo-collect-all
             onClick={() => void collectAllBingoPoints()}
             disabled={unclaimedWonBingoCards.length === 0 || isCollectingAllBingo}
-            className="tp-clean-button flex flex-1 items-center justify-center gap-1 rounded-xl border border-orange-400/60 bg-orange-500/20 py-2 text-sm font-bold text-orange-300 shadow-sm active:scale-95 disabled:opacity-40"
+            className="tp-clean-button flex flex-1 items-center justify-center gap-1 rounded-xl border border-sky-300/50 bg-sky-300/10 py-2 text-sm font-bold text-sky-200 shadow-sm active:scale-95 disabled:opacity-40"
           >
             {isCollectingAllBingo ? "Collecting..." : "Collect Points"}
           </button>
@@ -1616,7 +1722,7 @@ export function SportsBingoHome() {
       </div>
 
       {/* Boards section */}
-      <div className="rounded-2xl border border-orange-400/30 bg-slate-900 p-3">
+      <div className="rounded-2xl border border-sky-300/25 bg-slate-900 p-3">
         <div className="mb-3 flex items-center justify-center gap-2">
           {isSelectedDateToday ? (
             <button
@@ -1624,7 +1730,7 @@ export function SportsBingoHome() {
             onClick={() => goToScreen(0)}
             className={`tp-clean-button rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.1em] transition-all ${
               activeScreen === 0
-                ? "bg-orange-500/20 border border-orange-400/60 text-orange-300 shadow-[0_2px_10px_rgba(234,88,12,0.25)]"
+                ? "bg-sky-300/10 border border-sky-300/50 text-sky-300 shadow-[0_2px_10px_rgba(125,211,252,0.2)]"
                 : "bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700"
             }`}
           >
@@ -1636,7 +1742,7 @@ export function SportsBingoHome() {
             onClick={() => goToScreen(isSelectedDateToday ? 1 : 0)}
             className={`tp-clean-button rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.1em] transition-all ${
               (isSelectedDateToday ? activeScreen === 1 : true)
-                ? "bg-orange-500/20 border border-orange-400/60 text-orange-300 shadow-[0_2px_10px_rgba(245,158,11,0.25)]"
+                ? "bg-sky-300/10 border border-sky-300/50 text-sky-300 shadow-[0_2px_10px_rgba(125,211,252,0.2)]"
                 : "bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700"
             }`}
           >
@@ -1652,44 +1758,65 @@ export function SportsBingoHome() {
         >
           {/* Active boards panel */}
           <section className="w-full shrink-0 snap-start">
-            <h2 className="text-base font-black text-orange-300">Active Boards</h2>
-            <p className="mt-1 text-sm text-slate-400">Tap a board to expand it.</p>
+            <h2 className="text-base font-black text-sky-300">Active Boards</h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Tap a board to expand it — or turn your phone sideways for the enhanced view.
+            </p>
             {loadingCards ? (
               <LoadingState label="Loading your cards..." />
             ) : selectedActiveCards.length === 0 ? (
-              <p className="mt-3 rounded-xl border border-orange-400/30 bg-slate-800/50 p-3 text-sm text-slate-400">
-                No active cards yet. Tap Generate New Bingo Board to begin.
+              <p className="mt-3 rounded-xl border border-sky-300/20 bg-slate-800/50 p-3 text-sm text-slate-300">
+                No active cards yet. Tap &ldquo;Click Here to Play!&rdquo; above to get started.
               </p>
             ) : (
               <ul className="mt-3 space-y-3">
-                {selectedActiveCards.map((card) => (
+                {selectedActiveCards.map((card, cardIndex) => {
+                  const isLive = Date.parse(card.startsAt) <= Date.now();
+                  return (
                   <li
                     key={card.id}
                     data-bingo-card-id={card.id}
                     onClick={() => setExpandedActiveCardId(card.id)}
-                    className={`relative cursor-pointer rounded-xl border border-orange-400/40 bg-slate-800/60 p-3 transition-all hover:border-orange-400 hover:bg-slate-800 ${
+                    className={`relative cursor-pointer rounded-2xl border border-sky-300/40 bg-slate-900/80 p-3 transition-all hover:border-sky-300/70 hover:bg-slate-900 ${
                       recentlyAddedCardIds.has(card.id) ? "bingo-board-pop" : ""
                     }`}
                     style={{ touchAction: "pan-y", WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none" }}
                   >
                     <span
-                      className={`pointer-events-none absolute inset-0 rounded-xl bg-cyan-300/20 transition duration-200 ${
+                      className={`pointer-events-none absolute inset-0 rounded-2xl bg-cyan-300/20 transition duration-200 ${
                         glowCardIds.has(card.id) ? "scale-105 opacity-100" : "scale-95 opacity-0"
                       }`}
                       style={{ willChange: "transform, opacity" }}
                     />
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-sm font-semibold text-slate-200">{card.gameLabel}</p>
-                      <span className="rounded-full border border-cyan-400/40 bg-cyan-500/15 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-cyan-300">
-                        Active
-                      </span>
+                    <div className="relative flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">
+                          Sports Bingo · Board {cardIndex + 1} of {selectedActiveCards.length}
+                        </p>
+                        <p className="mt-0.5 truncate text-base font-black text-slate-100 [font-family:'Bree_Serif','Nunito',serif]">
+                          {card.gameLabel}
+                        </p>
+                      </div>
+                      {isLive ? (
+                        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-sky-300/45 bg-sky-300/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-sky-300">
+                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sky-300" />
+                          Live
+                        </span>
+                      ) : (
+                        <span className="inline-flex shrink-0 items-center rounded-full border border-sky-300/35 bg-sky-300/[0.08] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-sky-300">
+                          Starts {formatLocalDateTime(card.startsAt)}
+                        </span>
+                      )}
                     </div>
-                    <p className="mt-1 text-xs text-slate-400">Starts {formatLocalDateTime(card.startsAt)}</p>
-                    <div className="mt-2">
+                    <div className="relative mt-2.5">
                       {renderCompactGrid(card.id, card.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys, glowSquareKeys)}
                     </div>
+                    <div className="relative mt-3 rounded-xl border border-sky-300/25 bg-slate-900/70 px-3 py-2.5">
+                      <BingoProgressRing squares={card.squares} size="sm" />
+                    </div>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             )}
             <div className="mt-3">
@@ -1706,11 +1833,11 @@ export function SportsBingoHome() {
 
           {/* Final scores panel */}
           <section className="w-full shrink-0 snap-start pl-3">
-            <h2 className="text-base font-black text-orange-300">Scored Boards</h2>
+            <h2 className="text-base font-black text-sky-300">Scored Boards</h2>
             {loadingCards ? (
               <LoadingState label="Loading scored boards..." />
             ) : selectedSettledCards.length === 0 ? (
-              <p className="mt-3 rounded-xl border border-orange-400/30 bg-slate-800/50 p-3 text-sm text-slate-400">No scored boards yet.</p>
+              <p className="mt-3 rounded-xl border border-sky-300/20 bg-slate-800/50 p-3 text-sm text-slate-300">No scored boards yet.</p>
             ) : (
               <ul className="mt-3 space-y-3">
                 {selectedSettledCards.slice(0, 8).map((card) => {
@@ -1722,8 +1849,8 @@ export function SportsBingoHome() {
                       data-bingo-card-id={card.id}
                       className={`rounded-xl border p-3 shadow-sm transition-all ${
                         showClaimOverlay
-                          ? "cursor-pointer border-orange-400/60 bg-orange-500/10 ring-2 ring-orange-400/40 animate-pulse"
-                          : "border-slate-700 bg-slate-900"
+                          ? "cursor-pointer border-sky-300/50 bg-sky-300/[0.07] ring-2 ring-sky-300/30 animate-pulse"
+                          : "border-sky-300/15 bg-slate-900"
                       }`}
                       onClick={showClaimOverlay ? (event) => void claimPoints(card, event.currentTarget) : undefined}
                     >
@@ -1735,13 +1862,13 @@ export function SportsBingoHome() {
                               ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
                               : card.status === "lost"
                               ? "border border-rose-500/40 bg-rose-500/15 text-rose-400"
-                              : "border border-amber-400/40 bg-amber-500/15 text-amber-300"
+                              : "border border-sky-300/35 bg-sky-300/10 text-sky-300"
                           }`}
                         >
                           {card.status}
                         </span>
                         {showClaimOverlay ? (
-                          <span className="rounded-full border border-orange-400/40 bg-orange-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-orange-300">
+                          <span className="rounded-full border border-sky-300/40 bg-sky-300/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-sky-300">
                             Tap to Claim
                           </span>
                         ) : null}
@@ -1765,7 +1892,7 @@ export function SportsBingoHome() {
                                     event.stopPropagation();
                                     void claimPoints(card, event.currentTarget);
                                   }}
-                                  className="pointer-events-auto inline-flex min-h-[44px] items-center rounded-xl border border-orange-400/60 bg-orange-500/20 px-4 py-2 text-sm font-bold text-orange-300 shadow-[0_4px_14px_rgba(120,53,15,0.35)] transition-all active:scale-95 disabled:opacity-60"
+                                  className="pointer-events-auto inline-flex min-h-[44px] items-center rounded-xl border border-sky-300/50 bg-sky-300/10 px-4 py-2 text-sm font-bold text-sky-200 shadow-sm transition-all active:scale-95 disabled:opacity-60"
                                 >
                                   {claimingCardId === card.id ? "Collecting..." : "Collect Points"}
                                 </button>
@@ -1778,7 +1905,7 @@ export function SportsBingoHome() {
                           <button
                             type="button"
                             onClick={() => setExpandedFinalCardId(card.id)}
-                            className="tp-clean-button inline-flex min-h-[36px] items-center rounded-full border border-orange-400/40 bg-orange-500/10 px-3 py-1.5 text-xs font-semibold text-orange-300 transition-all active:scale-95 hover:border-orange-400/60"
+                            className="tp-clean-button inline-flex min-h-[36px] items-center rounded-full border border-sky-300/35 bg-sky-300/[0.07] px-3 py-1.5 text-xs font-semibold text-sky-300 transition-all active:scale-95 hover:border-sky-300/60"
                           >
                             View Final Board
                           </button>
@@ -1803,29 +1930,51 @@ export function SportsBingoHome() {
         </div>
       </div>
 
-      {/* Expanded active board modal */}
+      {/* Expanded active board modal — landscape becomes the enhanced two-pane view */}
       {expandedActiveCard ? (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[90] flex items-center justify-center p-3 sm:p-4">
           <button
             type="button"
             aria-label="Close active board view"
-            className="absolute inset-0 bg-orange-950/50"
+            className="absolute inset-0 bg-slate-950/70"
             onClick={() => setExpandedActiveCardId("")}
           />
-          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-2xl border border-cyan-400/40 bg-slate-900 p-3 shadow-2xl shadow-black/60">
-            <div className="sticky top-0 z-10 mb-2 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-slate-700 bg-slate-900/95 px-3 py-2 backdrop-blur">
-              <p className="text-sm font-semibold text-slate-200">{expandedActiveCard.gameLabel}</p>
+          <div className="relative max-h-[92vh] w-full max-w-[1000px] overflow-y-auto rounded-2xl border border-sky-300/45 bg-slate-950 p-3 shadow-2xl shadow-black/60">
+            <div className="sticky top-0 z-10 mb-3 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-white/10 bg-slate-950/95 px-3 py-2 backdrop-blur">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">Sports Bingo · Live Board</p>
+                <p className="truncate text-sm font-black text-slate-100 [font-family:'Bree_Serif','Nunito',serif]">
+                  {expandedActiveCard.gameLabel}
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setExpandedActiveCardId("")}
-                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-slate-700 bg-slate-800/50 px-3 py-2 text-xs font-semibold text-slate-200 shadow-sm"
+                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-white/10 bg-slate-800/60 px-3 py-2 text-xs font-semibold text-slate-200 shadow-sm"
               >
                 <span aria-hidden="true">✕</span>
                 <span>Close</span>
               </button>
             </div>
-            <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.1em] text-cyan-300">Active Board</p>
-            {renderExpandedGrid(expandedActiveCard.id, expandedActiveCard.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys, glowSquareKeys)}
+            <div className="grid gap-3 landscape:grid-cols-[1.5fr_1fr] landscape:items-start">
+              <div>
+                {renderExpandedGrid(expandedActiveCard.id, expandedActiveCard.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys, glowSquareKeys)}
+              </div>
+              <aside className="space-y-3">
+                <div className="rounded-2xl border border-sky-300/30 bg-slate-900 p-4">
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">Board progress</p>
+                  <BingoProgressRing squares={expandedActiveCard.squares} />
+                </div>
+                <div className="rounded-2xl border border-sky-300/30 bg-slate-900 p-4">
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">Legend</p>
+                  <BingoLegend />
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-slate-900 p-4 text-[11px] font-semibold leading-relaxed text-slate-300">
+                  <p className="mb-1 text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">How to win</p>
+                  Squares auto-mark as plays happen. Complete five in a row — line, column, or diagonal — to win the prize.
+                </div>
+              </aside>
+            </div>
           </div>
         </div>
       ) : null}
@@ -1836,23 +1985,46 @@ export function SportsBingoHome() {
           <button
             type="button"
             aria-label="Close final board view"
-            className="absolute inset-0 bg-orange-950/50"
+            className="absolute inset-0 bg-slate-950/70"
             onClick={() => setExpandedFinalCardId("")}
           />
-          <div className="relative w-full max-w-[900px] max-h-[82vh] overflow-y-auto rounded-2xl border border-amber-400/40 bg-slate-900 p-3 shadow-2xl shadow-black/60">
-            <div className="sticky top-0 z-10 mb-2 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-slate-700 bg-slate-900/95 px-3 py-2 backdrop-blur">
-              <p className="text-sm font-semibold text-slate-200">{expandedFinalCard.gameLabel}</p>
+          <div className="relative max-h-[92vh] w-full max-w-[1000px] overflow-y-auto rounded-2xl border border-sky-300/35 bg-slate-950 p-3 shadow-2xl shadow-black/60">
+            <div className="sticky top-0 z-10 mb-3 -mx-3 -mt-3 flex items-center justify-between gap-2 border-b border-white/10 bg-slate-950/95 px-3 py-2 backdrop-blur">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">Sports Bingo · Final Board</p>
+                <p className="truncate text-sm font-black text-slate-100 [font-family:'Bree_Serif','Nunito',serif]">
+                  {expandedFinalCard.gameLabel}
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setExpandedFinalCardId("")}
-                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-slate-700 bg-slate-800/50 px-3 py-2 text-xs font-semibold text-slate-200 shadow-sm"
+                className="tp-clean-button inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-full border border-white/10 bg-slate-800/60 px-3 py-2 text-xs font-semibold text-slate-200 shadow-sm"
               >
                 <span aria-hidden="true">✕</span>
                 <span>Close</span>
               </button>
             </div>
-            <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.1em] text-amber-300">Final Score Board</p>
-            {renderExpandedGrid(expandedFinalCard.id, expandedFinalCard.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys, glowSquareKeys)}
+            <div className="grid gap-3 landscape:grid-cols-[1.5fr_1fr] landscape:items-start">
+              <div>
+                {renderExpandedGrid(expandedFinalCard.id, expandedFinalCard.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys, glowSquareKeys)}
+              </div>
+              <aside className="space-y-3">
+                <div className="rounded-2xl border border-sky-300/25 bg-slate-900 p-4">
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">Final progress</p>
+                  <BingoProgressRing squares={expandedFinalCard.squares} />
+                  <p className="mt-3 text-[11px] font-semibold text-slate-400">
+                    {expandedFinalCard.status === "won"
+                      ? `Winning board · +${expandedFinalCard.rewardPoints} pts`
+                      : "No bingo this game — better luck next board."}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-sky-300/25 bg-slate-900 p-4">
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">Legend</p>
+                  <BingoLegend />
+                </div>
+              </aside>
+            </div>
           </div>
         </div>
       ) : null}

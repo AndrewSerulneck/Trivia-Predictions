@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
 import { getUserId, getVenueId } from "@/lib/storage";
-import { navigateBackToVenue } from "@/lib/venueGameTransition";
 import { calculateDistanceMeters, getCurrentLocation } from "@/lib/geolocation";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { supabase } from "@/lib/supabase";
@@ -96,11 +95,11 @@ function getGeofenceThresholdMeters(venueRadius: number, accuracy?: number): num
 }
 
 type FantasySport = "nba" | "wnba" | "baseball" | "football";
-const FANTASY_SPORTS: Array<{ key: FantasySport; icon: string; available: boolean }> = [
-  { key: "nba", icon: "NBA", available: true },
-  { key: "wnba", icon: "WNBA", available: true },
-  { key: "baseball", icon: "⚾", available: true },
-  { key: "football", icon: "🏈", available: false },
+const FANTASY_SPORTS: Array<{ key: FantasySport; icon: string; label: string; available: boolean }> = [
+  { key: "nba", icon: "🏀", label: "NBA", available: true },
+  { key: "wnba", icon: "🏀", label: "WNBA", available: true },
+  { key: "baseball", icon: "⚾", label: "Baseball", available: true },
+  { key: "football", icon: "🏈", label: "Football", available: false },
 ];
 const FANTASY_LINEUP_SIZE_BY_SPORT: Record<FantasySport, number> = {
   nba: 5,
@@ -577,12 +576,26 @@ function BasketballLoader({ label = "Loading Fantasy..." }: { label?: string }) 
   return <BouncingBallLoader size="md" label={label} />;
 }
 
-function PlayerHeadshot({ src, name, sizeClass = "h-7 w-7" }: { src?: string | null; name: string; sizeClass?: string }) {
+// Player avatar framed for the chalkboard theme — chalk-cream ring by default,
+// emerald ring while the player is actively scoring. Falls back to silhouette.
+function PlayerHeadshot({
+  src,
+  name,
+  live = false,
+  sizeClass = "h-[30px] w-[30px]",
+}: {
+  src?: string | null;
+  name: string;
+  live?: boolean;
+  sizeClass?: string;
+}) {
   return (
     <img
       src={src || FALLBACK_HEADSHOT_SRC}
       alt={`${name} headshot`}
-      className={`${sizeClass} rounded-full border border-white/70 bg-slate-200 object-cover shadow-sm`}
+      className={`${sizeClass} shrink-0 rounded-full border-[1.5px] bg-[#0a3128] object-cover ${
+        live ? "border-[#6ee7b7]/60" : "border-[#fef3c7]/55"
+      }`}
       loading="lazy"
       onError={(event) => {
         const target = event.currentTarget;
@@ -591,6 +604,30 @@ function PlayerHeadshot({ src, name, sizeClass = "h-7 w-7" }: { src?: string | n
         }
         target.src = FALLBACK_HEADSHOT_SRC;
       }}
+    />
+  );
+}
+
+function ordinalLabel(rank: number): string {
+  if (!Number.isFinite(rank) || rank <= 0) {
+    return "—";
+  }
+  const mod100 = rank % 100;
+  if (mod100 >= 11 && mod100 <= 13) {
+    return `${rank}th`;
+  }
+  const suffix = ["th", "st", "nd", "rd"][rank % 10] ?? "th";
+  return `${rank}${rank % 10 >= 1 && rank % 10 <= 3 ? suffix : "th"}`;
+}
+
+// Faint chalk grid overlay for the forest-green "chalkboard" surfaces.
+function ChalkGrid({ fine = false }: { fine?: boolean }) {
+  return (
+    <div
+      aria-hidden
+      className={`pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(254,243,199,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(254,243,199,0.06)_1px,transparent_1px)] ${
+        fine ? "bg-[length:18px_18px]" : "bg-[length:20px_20px]"
+      }`}
     />
   );
 }
@@ -645,7 +682,6 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [lastCollectedPoints, setLastCollectedPoints] = useState(0);
   const [isCollectingLive, setIsCollectingLive] = useState(false);
-  const [activeTab, setActiveTab] = useState<"draft" | "live">("draft");
   const syncedLastCollectedRef = useRef<string | false>(false);
   const gameDetailsRequestNonceRef = useRef(0);
   const prevStatsSnapshotRef = useRef<Map<number, StatsSnapshot>>(new Map());
@@ -1642,10 +1678,6 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
     };
   }, [loadSelectedGameDetails, selectedGameId]);
 
-  // Auto-switch to the live tab when a live game is detected.
-  useEffect(() => {
-    if (hasLiveEntry) setActiveTab("live");
-  }, [hasLiveEntry]);
 
   useEffect(() => {
     if (!userId || hasLiveEntry || nextPendingEntryStartMs === null) {
@@ -1916,14 +1948,33 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
     () => finalUnclaimedEntries.reduce((sum, e) => sum + computeFantasyClaimablePoints(e), 0),
     [finalUnclaimedEntries]
   );
+  const myLeaderboardEntry = useMemo(
+    () => leaderboard.find((row) => row.userId === userId) ?? null,
+    [leaderboard, userId]
+  );
+  const venueAvgPoints = useMemo(() => {
+    if (leaderboard.length === 0) {
+      return 0;
+    }
+    const sum = leaderboard.reduce((acc, row) => acc + Number(row.points ?? 0), 0);
+    return sum / leaderboard.length;
+  }, [leaderboard]);
+  const liveScoringCount = useMemo(() => {
+    let count = 0;
+    for (const value of livePointsByPlayer.values()) {
+      if (value > 0) {
+        count += 1;
+      }
+    }
+    return count;
+  }, [livePointsByPlayer]);
   const selectedPlayerKeySet = useMemo(
     () => new Set(selectedPlayers.map((name) => normalizePlayerKey(name))),
     [selectedPlayers]
   );
-  const availablePlayerPool = useMemo(
-    () => playerPool.filter((item) => !selectedPlayerKeySet.has(normalizePlayerKey(item.playerName))),
-    [playerPool, selectedPlayerKeySet]
-  );
+  // Show the full pool including drafted players so they render inline as
+  // "✓ Drafted" (chalkboard design); selection state still drives the toggle.
+  const availablePlayerPool = useMemo(() => playerPool, [playerPool]);
 
   const CANONICAL_POSITIONS: readonly string[] =
     selectedSport === "baseball"
@@ -2091,7 +2142,7 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
   const canModifyRosterSelections = !isSubmittedRosterView;
 
   return (
-    <div className="tp-fantasy-compact min-h-[100dvh] touch-pan-y pb-28">
+    <div className="tp-fantasy-compact min-h-[100dvh] touch-pan-y bg-[#020617] pb-28 text-[#f8fafc]">
       {/* Stat flash toasts */}
       <div className="pointer-events-none fixed left-1/2 top-[5.25rem] z-[2200] -translate-x-1/2 space-y-2">
         <AnimatePresence initial={false}>
@@ -2178,80 +2229,40 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
         : null}
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <button
-          type="button"
-          onClick={() => {
-            if (venueId) {
-              void navigateBackToVenue({
-                venuePath: `/venue/${encodeURIComponent(venueId)}`,
-                fallbackNavigate: () => { window.location.href = `/venue/${encodeURIComponent(venueId)}`; },
-              });
-            }
-          }}
-          className="tp-clean-button flex h-9 w-9 items-center justify-center rounded-full border border-slate-700 bg-slate-800/60 text-sm text-slate-300 active:scale-90"
-          aria-label="Back to venue"
-        >
-          ←
-        </button>
-        <h1 className="text-base font-black uppercase tracking-[0.22em] text-white">Fantasy</h1>
-        <div className="h-9 w-9" />
+      <div className="border-b border-white/5 px-4 pb-3 pt-4 text-center">
+        <h1 className="font-black text-[17px] uppercase leading-none tracking-[0.05em] text-[#fef3c7] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">
+          Hightop Fantasy
+        </h1>
       </div>
 
-      {/* ── DRAFT / LIVE tab bar ── */}
-      <div className="mx-4 mb-3 flex gap-1 rounded-xl border border-slate-700/60 bg-slate-900 p-1">
-        <button
-          type="button"
-          onClick={() => setActiveTab("draft")}
-          className={`tp-clean-button flex-1 rounded-lg py-2.5 text-sm font-black transition-colors ${
-            activeTab === "draft"
-              ? "bg-emerald-500 text-slate-950"
-              : "text-slate-500"
-          }`}
-        >
-          Draft
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("live")}
-          disabled={!trackedEntry && !hasLiveEntry}
-          className={`tp-clean-button flex-1 rounded-lg py-2.5 text-sm font-black transition-colors disabled:opacity-30 ${
-            activeTab === "live"
-              ? "bg-violet-600 text-white"
-              : "text-slate-500"
-          }`}
-        >
-          ← Live →
-        </button>
-      </div>
 
       <div className="space-y-3 px-4">
 
-        {/* ── Date nav + sport chips ── */}
+        {/* ── Date stepper + sport chips ── */}
         <div className="space-y-2.5">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 rounded-xl border border-[#fef3c7]/30 bg-[#0a3128] px-2 py-1.5">
             <button
               type="button"
               onClick={navigateToPrevDay}
-              className="tp-clean-button relative flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-800/60 text-xs text-slate-300 active:scale-90"
+              className="relative flex h-8 w-8 items-center justify-center rounded-full border border-[#fef3c7]/35 bg-black/30 text-xs font-black text-[#fde68a] active:scale-90"
               aria-label="Previous day"
             >
               ◀
               {hasPreviousUnclaimedFantasyEntries && !hasCurrentUnclaimedFantasyEntries ? (
-                <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-slate-900 bg-rose-500 text-[9px] font-black text-white">!</span>
+                <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#0a3128] bg-rose-500 text-[9px] font-black text-white">!</span>
               ) : null}
             </button>
-            <span className="text-sm font-bold text-slate-200">{formatDateLabel(selectedDate, serverTodayDate)}</span>
+            <span className="text-[12.5px] font-extrabold text-[#fef3c7]">{formatDateLabel(selectedDate, serverTodayDate)}</span>
             <button
               type="button"
               onClick={navigateToNextDay}
               disabled={isToday}
-              className="tp-clean-button relative flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-800/60 text-xs text-slate-300 active:scale-90 disabled:opacity-30"
+              className="relative flex h-8 w-8 items-center justify-center rounded-full border border-[#fef3c7]/35 bg-black/30 text-xs font-black text-[#fde68a] active:scale-90 disabled:opacity-30"
               aria-label="Next day"
             >
               ▶
               {hasFutureUnclaimedFantasyEntries && !hasCurrentUnclaimedFantasyEntries ? (
-                <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-slate-900 bg-rose-500 text-[9px] font-black text-white">!</span>
+                <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#0a3128] bg-rose-500 text-[9px] font-black text-white">!</span>
               ) : null}
             </button>
           </div>
@@ -2264,19 +2275,33 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
                 type="button"
                 disabled={!sport.available}
                 onClick={() => sport.available && setSelectedSport(sport.key)}
-                className={`tp-clean-button shrink-0 rounded-full border px-4 py-1.5 text-xs font-black tracking-wide transition-all disabled:opacity-30 ${
+                className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-black tracking-[0.03em] transition-all disabled:cursor-not-allowed ${
                   selectedSport === sport.key
-                    ? "border-emerald-400/60 bg-emerald-500/20 text-emerald-300"
+                    ? "border-[#fde68a] bg-[#fde68a] text-[#0a3128]"
                     : sport.available
-                    ? "border-slate-700 bg-slate-800/50 text-slate-400 hover:border-violet-400/40"
-                    : "border-slate-800 bg-slate-900 text-slate-600"
+                    ? "border-white/[0.12] bg-white/[0.03] text-slate-400"
+                    : "border-white/[0.12] bg-white/[0.03] text-slate-600 opacity-55"
                 }`}
               >
-                {sport.icon}
+                <span className="text-sm">{sport.icon}</span>
+                {sport.label}
+                {!sport.available ? (
+                  <span className="text-[8px] font-extrabold uppercase tracking-[0.1em] text-slate-500">Soon</span>
+                ) : null}
               </button>
             ))}
           </div>
         </div>
+
+        {/* Slate banner */}
+        {isFantasyLineupSport && sportGames.length > 0 ? (
+          <div className="flex items-center justify-between rounded-[10px] border border-[#fef3c7]/20 bg-[#fef3c7]/5 px-3 py-2">
+            <span className="text-[10.5px] font-extrabold text-slate-300">
+              Tonight&apos;s {selectedSportLabel} slate · {sportGames.length} game{sportGames.length === 1 ? "" : "s"}
+            </span>
+            <span className="text-[9.5px] font-extrabold uppercase tracking-[0.06em] text-[#fde68a]">Locks at first tip</span>
+          </div>
+        ) : null}
 
         <VenueEntryRulesPanel gameKey="fantasy" shouldDisplay={entries.length === 0} />
 
@@ -2313,163 +2338,425 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
           </button>
         ) : null}
 
-        {/* ── DRAFT TAB ── */}
-        {activeTab === "draft" ? (
+        {/* ── LIVE SCORING (shown whenever a tracked entry exists) ── */}
+        {isFantasyLineupSport && trackedEntry ? (
           <>
-            {selectedSport === "football" ? (
-              <div className="rounded-2xl border border-slate-700/50 bg-slate-900 p-4 text-center">
-                <p className="text-sm font-semibold text-slate-200">🏈 Football fantasy is coming soon!</p>
-              </div>
-            ) : null}
-
-            {/* Game Start prompt */}
-            {showGameStart ? (
-              <div className="rounded-2xl border border-slate-700/60 bg-slate-900 p-4">
-                <p className="text-[11px] font-black uppercase tracking-[0.12em] text-violet-300">
-                  {sportGames.length === 0
-                    ? `No ${selectedSportLabel} games today`
-                    : `${selectedSportLabel} · Tipoff ${sportGames[0] ? formatLocalDateTime(sportGames[0].startsAt) : ""}`}
-                </p>
-                {sportGames.length > 0 ? (
-                  isLoadingPool ? (
-                    <div className="mt-3 flex h-11 animate-pulse items-center justify-center gap-2 rounded-xl bg-violet-950/40">
-                      <span className="h-1.5 w-1.5 rounded-full bg-violet-300/60" />
-                      <span className="h-1.5 w-20 rounded-full bg-violet-300/60" />
+            {/* Total FP scoreboard */}
+            <div className="relative overflow-hidden rounded-[18px] border-2 border-[#fef3c7]/55 bg-[#0a3128] px-3.5 pb-4 pt-3.5">
+              <ChalkGrid />
+              <div className="relative z-[2]">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">Live Sweat</p>
+                  {hasLiveEntry ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-[#6ee7b7]/45 bg-emerald-500/15 px-2 py-1 text-[9.5px] font-black uppercase tracking-[0.16em] text-[#6ee7b7]">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+                      Live
+                    </span>
+                  ) : null}
+                </div>
+                <SpringPop popKey={totalScorePopTick} glowSize={14} glowColor={totalScorePopTone === "loss" ? "red" : "green"}>
+                  <div className="mt-1.5 flex items-end gap-2.5">
+                    <span className={`font-mono text-[46px] font-[900] leading-[0.95] tabular-nums ${
+                      totalScorePopTone === "loss" ? "text-rose-400" : isRealtimeFresh ? "text-[#6ee7b7]" : "text-[#fef3c7]"
+                    }`}>
+                      {liveTrackedEntryPoints.toFixed(1)}
+                    </span>
+                    <span className="pb-1.5 text-[11px] font-extrabold uppercase leading-tight tracking-[0.08em] text-[#fef3c7]/55">
+                      fantasy
+                      <br />
+                      points
+                    </span>
+                  </div>
+                </SpringPop>
+                <div className="mt-3 flex gap-2">
+                  {[
+                    {
+                      l: "Venue rank",
+                      v: myLeaderboardEntry ? ordinalLabel(myLeaderboardEntry.rank) : "—",
+                      sub: leaderboard.length > 0 ? `of ${leaderboard.length}` : "—",
+                      c: "text-[#6ee7b7]",
+                    },
+                    {
+                      l: "Venue avg",
+                      v: venueAvgPoints > 0 ? venueAvgPoints.toFixed(1) : "—",
+                      sub:
+                        venueAvgPoints > 0
+                          ? `${liveTrackedEntryPoints - venueAvgPoints >= 0 ? "+" : ""}${(liveTrackedEntryPoints - venueAvgPoints).toFixed(1)}`
+                          : "—",
+                      c: "text-[#fde68a]",
+                    },
+                    {
+                      l: "Players live",
+                      v: `${liveScoringCount}/${requiredLineupSize}`,
+                      sub: "scoring",
+                      c: "text-[#67e8f9]",
+                    },
+                  ].map((stat) => (
+                    <div key={stat.l} className="flex-1 rounded-[10px] border border-[#fef3c7]/[0.18] bg-black/30 px-2 py-1.5">
+                      <div className="text-[8px] font-black uppercase tracking-[0.12em] text-[#fef3c7]/55">{stat.l}</div>
+                      <div className={`mt-0.5 font-mono text-[15px] font-[900] tabular-nums ${stat.c}`}>{stat.v}</div>
+                      <div className="text-[9px] font-bold text-slate-500">{stat.sub}</div>
                     </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setHasStartedGame(true)}
-                      className="tp-clean-button mt-3 w-full rounded-xl bg-emerald-500 py-3 text-sm font-black text-slate-950 active:scale-[0.98]"
-                    >
-                      {draftCtaLabel}
-                    </button>
-                  )
-                ) : null}
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Geofence status banner */}
+            {!isGeofencePaused && hasLiveEntry ? (
+              <div className="flex items-center gap-2 rounded-[10px] border border-sky-400/30 bg-sky-400/[0.08] px-3 py-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                  <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" />
+                  <circle cx="12" cy="10" r="2.5" />
+                </svg>
+                <span className="text-[10px] font-bold leading-snug text-sky-200">At the venue — live scoring active. Leave and scoring pauses.</span>
               </div>
             ) : null}
 
-            {/* Lineup Builder */}
+            {/* Points ticker */}
+            {statFlashes.length > 0 ? (
+              <div className="rounded-xl border border-[#6ee7b7]/[0.28] bg-emerald-500/[0.06] px-3 py-2.5">
+                <div className="mb-2 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+                  <p className="text-[10.5px] font-black uppercase tracking-[0.16em] text-[#6ee7b7]">Points ticker</p>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {statFlashes.map((flash) => (
+                    <div key={flash.id} className="flex items-center gap-2">
+                      <span className="min-w-[72px] shrink-0 rounded border border-[#6ee7b7]/35 bg-emerald-500/15 px-1.5 py-0.5 text-center text-[8px] font-black tracking-[0.08em] text-[#6ee7b7]">
+                        {flash.label}
+                      </span>
+                      <span className={`shrink-0 font-mono text-[11px] font-[900] tabular-nums ${flash.pointsDelta >= 0 ? "text-[#6ee7b7]" : "text-rose-300"}`}>
+                        {flash.pointsDelta >= 0 ? "+" : ""}{flash.pointsDelta.toFixed(1)} FP
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {/* Live roster cards */}
+            <div>
+              <p className="mb-2 text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">Your roster · locked</p>
+              <div className="flex flex-col gap-2">
+                {(
+                  trackedEntry.lineupPlayers.length > 0
+                    ? trackedEntry.lineupPlayers
+                    : trackedEntry.lineup.map((playerName, index) => ({
+                        playerId: -(index + 1),
+                        playerName,
+                        headshotUrl: null,
+                      }))
+                ).map((player) => {
+                  const livePoints = livePointsByPlayer.get(String(player.playerId));
+                  const requireLiveRows = trackedEntry.status === "pending" || trackedEntry.status === "live";
+                  const playerPoints =
+                    typeof livePoints === "number"
+                      ? livePoints
+                      : requireLiveRows
+                      ? 0
+                      : getScoreFromBreakdown(trackedEntry.scoreBreakdown, player);
+                  const isHot = highlightedPlayerIds.includes(String(player.playerId));
+                  const popTone = playerPopToneById[String(player.playerId)] ?? "gain";
+                  const isScoring = playerPoints > 0;
+                  const poolItem = playerPool.find(
+                    (it) => normalizePlayerKey(it.playerName) === normalizePlayerKey(player.playerName)
+                  );
+                  return (
+                    <div
+                      key={`${trackedEntry.id}-${player.playerId}`}
+                      className={`grid grid-cols-[30px_1fr_auto] items-center gap-2.5 rounded-[14px] border px-3 py-2.5 transition-all duration-300 ${
+                        isHot
+                          ? popTone === "loss"
+                            ? "scale-[1.02] border-rose-400/40 bg-rose-950/20"
+                            : "scale-[1.02] border-emerald-400/40 bg-emerald-950/20"
+                          : "border-[#fef3c7]/[0.22] bg-[#fef3c7]/[0.045]"
+                      }`}
+                    >
+                      <PlayerHeadshot
+                        src={player.headshotUrl ?? playerPoolHeadshotByName.get(normalizePlayerKey(player.playerName)) ?? null}
+                        name={player.playerName}
+                        live={isScoring}
+                      />
+                      <div className="min-w-0 leading-tight">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`truncate text-[13px] font-black ${
+                            isHot ? (popTone === "loss" ? "text-rose-300" : "text-emerald-300") : "text-[#fef3c7]"
+                          }`}>
+                            {player.playerName}
+                          </span>
+                          <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[8.5px] font-black uppercase tracking-[0.08em] ${
+                            isScoring
+                              ? "border border-[#6ee7b7]/40 bg-emerald-500/15 text-[#6ee7b7]"
+                              : "border border-white/10 bg-white/5 text-slate-400"
+                          }`}>
+                            {isScoring ? <span className="h-1 w-1 animate-pulse rounded-full bg-emerald-400" /> : null}
+                            {isScoring ? "Live" : "Locked"}
+                          </span>
+                        </div>
+                        <div className="mt-0.5 truncate text-[10px] font-bold text-[#fef3c7]/55">
+                          {poolItem?.team ?? trackedEntry.gameLabel}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[8px] font-black uppercase tracking-[0.14em] text-[#fef3c7]/55">FP</div>
+                        <SpringPop
+                          popKey={playerPopTickById[String(player.playerId)] ?? 0}
+                          glowSize={10}
+                          glowColor={popTone === "loss" ? "red" : "green"}
+                          className={`font-mono text-[18px] font-[900] leading-[1.05] tabular-nums ${
+                            isHot ? (popTone === "loss" ? "text-rose-200" : "text-emerald-200") : "text-[#fde68a]"
+                          }`}
+                        >
+                          {playerPoints.toFixed(1)}
+                        </SpringPop>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Venue leaderboard */}
+            {leaderboard.length > 0 ? (
+              <div>
+                <p className="mb-2 text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">Venue leaderboard</p>
+                <div className="overflow-hidden rounded-xl border border-[#fef3c7]/[0.18] bg-[#0f172a]">
+                  {leaderboard.map((row, i) => {
+                    const isMe = row.userId === userId;
+                    return (
+                      <div
+                        key={row.entryId}
+                        className={`flex items-center justify-between px-3 py-2 ${i ? "border-t border-white/5" : ""} ${isMe ? "bg-[#fef3c7]/[0.06]" : ""}`}
+                      >
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <span className={`w-4 font-mono text-[12px] font-[900] tabular-nums ${row.rank <= 3 ? "text-[#fde68a]" : "text-slate-500"}`}>
+                            {row.rank}
+                          </span>
+                          <span className={`truncate text-[12px] ${isMe ? "font-black text-[#fef3c7]" : "font-bold text-slate-300"}`}>
+                            {isMe ? "You" : row.username}
+                          </span>
+                        </div>
+                        <span className={`font-mono text-[13px] font-[900] tabular-nums ${isMe ? "text-[#6ee7b7]" : "text-slate-200"}`}>
+                          {Number(row.points ?? 0).toFixed(1)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {/* Collect / claim */}
+            {showTrackedEntryClaimButton ? (
+              <button
+                type="button"
+                onClick={(event) => { const rect = event.currentTarget.getBoundingClientRect(); void claimReward(trackedEntry, rect); }}
+                disabled={claimingEntryId === trackedEntry.id}
+                className="flex min-h-[46px] w-full items-center justify-center gap-2.5 rounded-[14px] border border-[#6ee7b7]/60 bg-emerald-500/15 text-[13.5px] font-black tracking-[0.03em] text-[#6ee7b7] active:scale-[0.98] disabled:opacity-60"
+              >
+                <svg width="18" height="18" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="24" fill="#fde047" stroke="#a16207" strokeWidth="3" /><circle cx="32" cy="32" r="16" fill="#fef9c3" stroke="#a16207" strokeWidth="2" /></svg>
+                {claimingEntryId === trackedEntry.id ? "Collecting..." : `Collect Live Points (+${trackedEntryClaimablePoints})`}
+              </button>
+            ) : hasLiveEntry && uncollectedPoints > 0 ? (
+              <button
+                type="button"
+                onClick={() => void collectLivePoints()}
+                disabled={isCollectingLive || isGeofencePaused}
+                className="flex min-h-[46px] w-full items-center justify-center gap-2.5 rounded-[14px] border border-[#6ee7b7]/60 bg-emerald-500/15 text-[13.5px] font-black tracking-[0.03em] text-[#6ee7b7] active:scale-[0.98] disabled:opacity-60"
+              >
+                <svg width="18" height="18" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="24" fill="#fde047" stroke="#a16207" strokeWidth="3" /><circle cx="32" cy="32" r="16" fill="#fef9c3" stroke="#a16207" strokeWidth="2" /></svg>
+                {isCollectingLive
+                  ? "Collecting..."
+                  : isGeofencePaused
+                  ? "Must be at venue to collect"
+                  : `Collect Live Points (+${uncollectedPoints.toFixed(1)})`}
+              </button>
+            ) : hasLiveEntry ? (
+              <div className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+                <p className="text-[11px] font-semibold text-[#6ee7b7]">Live · Streaming updates</p>
+              </div>
+            ) : null}
+
+            {existingEntryForSelectedGame && canEditExistingEntryLineup ? (
+              <button
+                type="button"
+                onClick={() => { setJustSubmittedRoster(false); setIsEditingRoster(true); }}
+                className="text-[11px] font-bold text-[#fde68a] underline"
+              >
+                Edit roster before tipoff →
+              </button>
+            ) : null}
+
+            {isFantasyLineupSport && finalUnclaimedEntries.length > 1 ? (
+              <div className="rounded-2xl border border-[#fef3c7]/20 bg-[#0f172a] p-4">
+                <p className="mb-2 text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">Completed · Ready to collect</p>
+                <div className="flex flex-col gap-2">
+                  {finalUnclaimedEntries.map((entry) => (
+                    <div key={entry.id} className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold text-[#fef3c7]">{entry.gameLabel}</p>
+                        <p className="text-xs text-slate-500">{formatLocalDateTime(entry.startsAt)}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(event) => { const rect = event.currentTarget.getBoundingClientRect(); void claimReward(entry, rect); }}
+                        disabled={claimingEntryId === entry.id}
+                        className="shrink-0 rounded-full border border-[#6ee7b7]/55 bg-emerald-500/15 px-3 py-1.5 text-xs font-black text-[#6ee7b7] disabled:opacity-60"
+                      >
+                        {claimingEntryId === entry.id ? "…" : `Collect ${computeFantasyClaimablePoints(entry)} pts`}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </>
+        ) : null}
+
+        {/* ── DRAFT (shown when no locked entry yet, or roster is editable) ── */}
+        <>
+            {selectedSport === "football" ? (
+              <div className="rounded-2xl border border-[#fef3c7]/20 bg-[#0a3128] p-4 text-center">
+                <p className="text-sm font-extrabold text-[#fef3c7]">🏈 Football fantasy is coming soon!</p>
+              </div>
+            ) : null}
+
+            {/* Game start prompt */}
+            {showGameStart ? (
+              <div className="relative overflow-hidden rounded-2xl border border-[#fef3c7]/30 bg-[#0a3128] p-4">
+                <ChalkGrid fine />
+                <div className="relative z-[2]">
+                  <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#fde68a]">
+                    {sportGames.length === 0
+                      ? `No ${selectedSportLabel} games today`
+                      : `${selectedSportLabel} · Tipoff ${sportGames[0] ? formatLocalDateTime(sportGames[0].startsAt) : ""}`}
+                  </p>
+                  {sportGames.length > 0 ? (
+                    isLoadingPool ? (
+                      <div className="mt-3 flex h-11 animate-pulse items-center justify-center gap-2 rounded-xl bg-black/30">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#fde68a]/60" />
+                        <span className="h-1.5 w-20 rounded-full bg-[#fde68a]/60" />
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setHasStartedGame(true)}
+                        className="mt-3 w-full rounded-xl bg-[#8b5cf6] py-3 text-sm font-black uppercase tracking-[0.04em] text-white shadow-[0_8px_24px_rgba(139,92,246,0.35)] active:scale-[0.98]"
+                      >
+                        {draftCtaLabel}
+                      </button>
+                    )
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
+            {/* Lineup builder */}
             {showLineupBuilder ? (
               <>
-                {/* YOUR ROSTER */}
-                <div className="rounded-2xl border border-slate-700/60 bg-slate-900 px-3 py-3">
-                  <div className="mb-2.5 flex items-center justify-between">
-                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-violet-300">Your Roster</p>
-                    <div className="flex items-center gap-2">
+                {/* Chalkboard roster strip */}
+                <div className="relative overflow-hidden rounded-[14px] border border-[#fef3c7]/35 bg-[#0a3128] px-3 py-3">
+                  <ChalkGrid fine />
+                  <div className="relative z-[2]">
+                    <div className="mb-2.5 flex items-center justify-between">
+                      <p className="text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">
+                        Your lineup · {selectedPlayers.length}/{requiredLineupSize}
+                      </p>
                       {isSubmittedRosterView && canEditExistingEntryLineup ? (
                         <button
                           type="button"
                           onClick={() => { setJustSubmittedRoster(false); setIsEditingRoster(true); }}
-                          className="tp-clean-button text-[10px] font-bold text-violet-400 underline"
+                          className="text-[10px] font-bold text-[#fde68a] underline"
                         >
                           Edit
                         </button>
                       ) : null}
-                      <span className={`text-[10px] font-black tabular-nums ${selectedPlayers.length === requiredLineupSize ? "text-emerald-400" : "text-slate-500"}`}>
-                        {selectedPlayers.length}/{requiredLineupSize}
-                      </span>
                     </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    {selectedPlayers.map((name) => {
-                      const poolItem = playerPool.find((item) => normalizePlayerKey(item.playerName) === normalizePlayerKey(name));
-                      return (
-                        <div key={name} className="flex items-center gap-2.5 rounded-xl border border-violet-400/20 bg-violet-950/15 px-2.5 py-2">
-                          <PlayerHeadshot
-                            src={playerPoolHeadshotByName.get(normalizePlayerKey(name)) ?? null}
-                            name={name}
-                            sizeClass="h-8 w-8 shrink-0"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-semibold text-slate-100">{name}</p>
-                            {(poolItem?.position || poolItem?.team) ? (
-                              <p className="truncate text-[10px] text-slate-500">
-                                {[poolItem?.position, poolItem?.team].filter(Boolean).join(" · ")}
-                              </p>
-                            ) : null}
-                          </div>
-                          {canModifyRosterSelections ? (
-                            <button
-                              type="button"
-                              onClick={() => removeSelectedPlayer(name)}
-                              className="tp-clean-button flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-slate-600 bg-slate-800 text-[11px] font-black text-slate-400 active:scale-90"
-                              aria-label={`Remove ${name}`}
-                            >
-                              ×
-                            </button>
-                          ) : null}
-                        </div>
-                      );
-                    })}
-                    {Array.from({ length: requiredLineupSize - selectedPlayers.length }).map((_, i) => (
-                      <div key={`empty-${i}`} className="flex items-center gap-2.5 rounded-xl border border-dashed border-slate-700/50 px-2.5 py-2 opacity-35">
-                        <div className="h-8 w-8 shrink-0 rounded-full border border-dashed border-slate-600" />
-                        <span className="text-xs text-slate-500">
-                          {canModifyRosterSelections ? "Select a player below" : "Empty slot"}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  {!canModifyRosterSelections ? (
-                    <p className="mt-2 text-[11px] text-slate-500">
-                      {canEditExistingEntryLineup
-                        ? "Roster locked in. Tap Edit to make changes before tipoff."
-                        : "Roster locked — games have started."}
-                    </p>
-                  ) : null}
-                </div>
-
-                {/* PLAYER POOL */}
-                {canModifyRosterSelections ? (
-                  <div className="rounded-2xl border border-slate-700/60 bg-slate-900 px-3 pb-2 pt-3">
-                    <div className="mb-2.5 flex items-center justify-between">
-                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-violet-300">
-                        Player Pool · {selectedSport.toUpperCase()}
-                      </p>
-                      <span className="text-[10px] text-slate-500">{sortedFilteredPool.length} players</span>
-                    </div>
-
-                    {/* Sort + filter */}
-                    <div className="mb-3 space-y-2">
-                      <div className="flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
-                        {(["projected", "alpha", "position", "team"] as const).map((mode) => (
+                    <div className="flex gap-1.5">
+                      {Array.from({ length: requiredLineupSize }).map((_, i) => {
+                        const name = selectedPlayers[i];
+                        const poolItem = name
+                          ? playerPool.find((item) => normalizePlayerKey(item.playerName) === normalizePlayerKey(name))
+                          : undefined;
+                        const filled = Boolean(name);
+                        return (
                           <button
-                            key={mode}
+                            key={`slot-${i}`}
                             type="button"
-                            onClick={() => setSortBy(mode)}
-                            className={`tp-clean-button shrink-0 rounded-full border px-3 py-1 text-[11px] font-bold transition-colors ${
-                              sortBy === mode
-                                ? "border-violet-400/60 bg-violet-500/20 text-violet-300"
-                                : "border-slate-700 bg-slate-800/40 text-slate-500"
+                            disabled={!filled || !canModifyRosterSelections}
+                            onClick={() => name && removeSelectedPlayer(name)}
+                            aria-label={filled ? `Remove ${name}` : "Empty roster slot"}
+                            className={`flex flex-1 flex-col items-center justify-center gap-1 rounded-[9px] py-2.5 text-center transition-transform active:scale-95 disabled:cursor-default ${
+                              filled
+                                ? "border border-[#fef3c7]/40 bg-[#fef3c7]/10"
+                                : "border border-dashed border-[#fef3c7]/25 bg-black/25"
                             }`}
                           >
-                            {mode === "projected" ? "Projected" : mode === "alpha" ? "A–Z" : mode === "position" ? "Position" : "Team"}
+                            {filled ? (
+                              <PlayerHeadshot src={playerPoolHeadshotByName.get(normalizePlayerKey(name!)) ?? null} name={name!} />
+                            ) : (
+                              <span className="text-sm font-black text-[#fef3c7]/55">+</span>
+                            )}
+                            <span className={`text-[8px] font-extrabold leading-none ${filled ? "text-[#fef3c7]" : "text-slate-500"}`}>
+                              {poolItem?.position ?? "—"}
+                            </span>
                           </button>
+                        );
+                      })}
+                    </div>
+                    {!canModifyRosterSelections ? (
+                      <p className="mt-2.5 text-[10.5px] text-[#fef3c7]/55">
+                        {canEditExistingEntryLineup
+                          ? "Roster locked in. Tap Edit to make changes before tipoff."
+                          : "Roster locked — games have started."}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+
+                {/* Player pool */}
+                {canModifyRosterSelections ? (
+                  <div className="space-y-2.5">
+                    {/* Sort + filter controls */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+                      <span className="shrink-0 self-center text-[9px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Sort</span>
+                      {(["projected", "alpha", "position", "team"] as const).map((mode) => (
+                        <button
+                          key={mode}
+                          type="button"
+                          onClick={() => setSortBy(mode)}
+                          className={`shrink-0 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-[10.5px] font-extrabold tracking-[0.04em] transition-colors ${
+                            sortBy === mode
+                              ? "border-[#fef3c7]/40 bg-[#fef3c7]/15 text-[#fef3c7]"
+                              : "border-white/[0.12] bg-transparent text-slate-400"
+                          }`}
+                        >
+                          {mode === "projected" ? "Proj" : mode === "alpha" ? "A–Z" : mode === "position" ? "Pos" : "Team"}
+                        </button>
+                      ))}
+                      <span className="mx-0.5 h-4 w-px shrink-0 self-center bg-white/10" />
+                      <select
+                        value={filterPosition}
+                        onChange={(e) => setFilterPosition(e.target.value)}
+                        className="shrink-0 rounded-full border-white/[0.12] bg-transparent px-2.5 py-1.5 text-[10.5px] font-extrabold text-slate-300 focus:outline-none"
+                      >
+                        <option value="all">All positions</option>
+                        {CANONICAL_POSITIONS.map((pos) => (
+                          <option key={pos} value={pos}>{pos}</option>
                         ))}
-                      </div>
-                      <div className="flex gap-2">
-                        <select
-                          value={filterPosition}
-                          onChange={(e) => setFilterPosition(e.target.value)}
-                          className="flex-1 rounded-lg border border-slate-700 bg-slate-800/60 px-2.5 py-1.5 text-xs font-semibold text-slate-200 focus:border-violet-400 focus:outline-none"
-                        >
-                          <option value="all">All Positions</option>
-                          {CANONICAL_POSITIONS.map((pos) => (
-                            <option key={pos} value={pos}>{pos}</option>
-                          ))}
-                        </select>
-                        <select
-                          value={filterTeam}
-                          onChange={(e) => setFilterTeam(e.target.value)}
-                          className="flex-1 rounded-lg border border-slate-700 bg-slate-800/60 px-2.5 py-1.5 text-xs font-semibold text-slate-200 focus:border-violet-400 focus:outline-none"
-                        >
-                          <option value="all">All Teams</option>
-                          {uniqueTeams.map((team) => (
-                            <option key={team} value={team}>{team}</option>
-                          ))}
-                        </select>
-                      </div>
+                      </select>
+                      <select
+                        value={filterTeam}
+                        onChange={(e) => setFilterTeam(e.target.value)}
+                        className="shrink-0 rounded-full border-white/[0.12] bg-transparent px-2.5 py-1.5 text-[10.5px] font-extrabold text-slate-300 focus:outline-none"
+                      >
+                        <option value="all">All teams</option>
+                        {uniqueTeams.map((team) => (
+                          <option key={team} value={team}>{team}</option>
+                        ))}
+                      </select>
                     </div>
 
                     {/* Player rows */}
@@ -2485,52 +2772,54 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
                       <p className="py-4 text-center text-sm text-slate-500">No players match this filter.</p>
                     ) : (
                       <>
-                        <div className="space-y-1">
+                        <div className="flex flex-col gap-[7px]">
                           {sortedFilteredPool.slice(0, visibleCount).map((item) => {
                             const isSelected = selectedPlayerKeySet.has(normalizePlayerKey(item.playerName));
                             const isFull = selectedPlayers.length >= requiredLineupSize;
+                            const isTop = topProjectedPlayerKey === normalizePlayerKey(item.playerName);
                             const proj = item.projectedLine != null ? Math.round(Number(item.projectedLine)) : 0;
                             return (
-                              <button
+                              <div
                                 key={item.playerName}
-                                type="button"
-                                disabled={isFull && !isSelected}
-                                onClick={() => togglePlayer(item.playerName)}
-                                className={`tp-clean-button flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all active:scale-[0.985] disabled:opacity-40 ${
+                                className={`grid grid-cols-[30px_1fr_auto] items-center gap-2.5 rounded-[10px] px-2.5 py-2.5 ${
                                   isSelected
-                                    ? "border-emerald-400/35 bg-emerald-500/10"
-                                    : "border-slate-700/50 bg-slate-800/30 hover:border-slate-600"
+                                    ? "border border-[#fef3c7]/30 bg-[#fef3c7]/[0.06]"
+                                    : "border border-white/[0.06] bg-white/[0.015]"
                                 }`}
                               >
-                                <PlayerHeadshot
-                                  src={item.headshotUrl || FALLBACK_HEADSHOT_SRC}
-                                  name={item.playerName}
-                                  sizeClass="h-11 w-11 shrink-0"
-                                />
-                                <div className="min-w-0 flex-1">
+                                <PlayerHeadshot src={item.headshotUrl} name={item.playerName} />
+                                <div className="min-w-0 leading-[1.15]">
                                   <div className="flex items-center gap-1.5">
-                                    <p className="truncate text-sm font-bold text-slate-100">{item.playerName}</p>
-                                    {topProjectedPlayerKey === normalizePlayerKey(item.playerName) ? (
-                                      <span className="shrink-0 text-[9px] font-black text-amber-400">★ TOP</span>
+                                    <span className="truncate text-[13px] font-black text-[#fef3c7]">{item.playerName}</span>
+                                    {isTop ? (
+                                      <span className="shrink-0 rounded-full border border-[#fcd34d]/40 bg-[#fcd34d]/15 px-1.5 text-[8px] font-black uppercase tracking-[0.06em] text-[#fcd34d]">★ Top</span>
                                     ) : null}
                                   </div>
-                                  <p className="truncate text-[11px] text-slate-500">
-                                    {[item.team, item.position].filter(Boolean).join(" · ")}
-                                  </p>
-                                  {proj > 0 ? (
-                                    <p className="text-[11px] font-semibold tabular-nums text-violet-300/80">
-                                      Proj {proj} pts
-                                    </p>
-                                  ) : null}
+                                  <div className="mt-0.5 truncate text-[10px] font-bold text-[#fef3c7]/55">
+                                    {item.position ? <span className="text-[#fde68a]">{item.position}</span> : null}
+                                    {item.position && item.team ? " · " : null}
+                                    {item.team ?? ""}
+                                    {proj > 0 ? (
+                                      <>
+                                        {item.position || item.team ? " · " : null}
+                                        <span className="text-[#fde68a]">{proj} proj</span>
+                                      </>
+                                    ) : null}
+                                  </div>
                                 </div>
-                                <div className={`shrink-0 rounded-full border px-3 py-1 text-[11px] font-black transition-colors ${
-                                  isSelected
-                                    ? "border-emerald-400/60 bg-emerald-500/20 text-emerald-300"
-                                    : "border-violet-400/50 bg-violet-500/10 text-violet-300"
-                                }`}>
-                                  {isSelected ? "✓" : "+ ADD"}
-                                </div>
-                              </button>
+                                <button
+                                  type="button"
+                                  disabled={isFull && !isSelected}
+                                  onClick={() => togglePlayer(item.playerName)}
+                                  className={`h-8 min-w-[64px] rounded-full text-[10.5px] font-black uppercase tracking-[0.04em] transition-colors disabled:opacity-40 ${
+                                    isSelected
+                                      ? "border border-[#6ee7b7]/55 bg-emerald-500/15 text-[#6ee7b7]"
+                                      : "border border-[#fef3c7]/45 bg-[#fef3c7]/10 text-[#fde68a]"
+                                  }`}
+                                >
+                                  {isSelected ? "✓ Drafted" : "Draft"}
+                                </button>
+                              </div>
                             );
                           })}
                         </div>
@@ -2538,9 +2827,9 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
                           <button
                             type="button"
                             onClick={() => setVisibleCount((n) => n + 25)}
-                            className="tp-clean-button mt-2 w-full rounded-xl border border-slate-700 bg-slate-800/40 py-2 text-xs font-semibold text-slate-400"
+                            className="w-full rounded-[10px] border border-white/10 bg-white/[0.02] py-2.5 text-[11px] font-extrabold tracking-[0.04em] text-slate-400"
                           >
-                            Load more · {sortedFilteredPool.length - visibleCount} remaining
+                            Load more players ({sortedFilteredPool.length - visibleCount})
                           </button>
                         ) : null}
                       </>
@@ -2550,162 +2839,6 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
               </>
             ) : null}
           </>
-        ) : null}
-
-        {/* ── LIVE TAB ── */}
-        {activeTab === "live" ? (
-          <>
-            {isFantasyLineupSport && trackedEntry ? (
-              <div className="rounded-2xl border border-slate-700/60 bg-slate-900 p-4">
-                <div className="mb-3 flex items-center justify-between gap-2">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-violet-300">Live Tracking</p>
-                    <p className="text-base font-bold text-slate-100">Your Team</p>
-                  </div>
-                  <SpringPop popKey={totalScorePopTick} glowSize={12} glowColor={totalScorePopTone === "loss" ? "red" : "green"}>
-                    <div className="text-right">
-                      <p className={`text-2xl font-black tabular-nums ${
-                        totalScorePopTone === "loss" ? "text-rose-400" : isRealtimeFresh ? "text-emerald-400" : "text-slate-100"
-                      }`}>
-                        {liveTrackedEntryPoints.toFixed(1)}
-                      </p>
-                      <p className="text-[9px] font-bold uppercase tracking-wide text-slate-500">pts</p>
-                    </div>
-                  </SpringPop>
-                </div>
-
-                <div className="space-y-1.5">
-                  {(
-                    trackedEntry.lineupPlayers.length > 0
-                      ? trackedEntry.lineupPlayers
-                      : trackedEntry.lineup.map((playerName, index) => ({
-                          playerId: -(index + 1),
-                          playerName,
-                          headshotUrl: playerPoolHeadshotByName.get(normalizePlayerKey(playerName)) ?? null,
-                        }))
-                  ).map((player) => {
-                    const livePoints = livePointsByPlayer.get(String(player.playerId));
-                    const requireLiveRows = trackedEntry.status === "pending" || trackedEntry.status === "live";
-                    const playerPoints =
-                      typeof livePoints === "number"
-                        ? livePoints
-                        : requireLiveRows
-                        ? 0
-                        : getScoreFromBreakdown(trackedEntry.scoreBreakdown, player);
-                    const isHot = highlightedPlayerIds.includes(String(player.playerId));
-                    const popTone = playerPopToneById[String(player.playerId)] ?? "gain";
-                    return (
-                      <div
-                        key={`${trackedEntry.id}-${player.playerId}`}
-                        className={`flex items-center gap-2.5 rounded-xl border px-2.5 py-2 transition-all duration-300 ${
-                          isHot
-                            ? popTone === "loss"
-                              ? "scale-[1.02] border-rose-400/40 bg-rose-950/20"
-                              : "scale-[1.02] border-emerald-400/40 bg-emerald-950/20"
-                            : "border-slate-700/50 bg-slate-800/30"
-                        }`}
-                      >
-                        <PlayerHeadshot src={player.headshotUrl ?? null} name={player.playerName} sizeClass="h-9 w-9 shrink-0" />
-                        <span className={`flex-1 truncate text-sm font-semibold transition-colors ${
-                          isHot ? (popTone === "loss" ? "text-rose-300" : "text-emerald-300") : "text-slate-200"
-                        }`}>
-                          {player.playerName}
-                        </span>
-                        <SpringPop
-                          popKey={playerPopTickById[String(player.playerId)] ?? 0}
-                          glowSize={10}
-                          glowColor={popTone === "loss" ? "red" : "green"}
-                          className={`shrink-0 text-sm font-bold tabular-nums ${isHot ? (popTone === "loss" ? "text-rose-200" : "text-emerald-200") : "text-slate-300"}`}
-                        >
-                          {playerPoints.toFixed(1)} pts
-                        </SpringPop>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {showTrackedEntryClaimButton ? (
-                  <button
-                    type="button"
-                    onClick={(event) => { const rect = event.currentTarget.getBoundingClientRect(); void claimReward(trackedEntry, rect); }}
-                    disabled={claimingEntryId === trackedEntry.id}
-                    className="tp-clean-button mt-3 w-full rounded-xl border border-emerald-400/60 bg-emerald-500/20 py-3 text-sm font-black text-emerald-300 active:scale-[0.98] disabled:opacity-60"
-                  >
-                    {claimingEntryId === trackedEntry.id ? "Collecting..." : `Collect ${trackedEntryClaimablePoints} Points`}
-                  </button>
-                ) : hasLiveEntry ? (
-                  <div className="mt-3 space-y-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-                      <p className="text-[11px] font-semibold text-emerald-400">Live · Streaming updates</p>
-                    </div>
-                    {uncollectedPoints > 0 ? (
-                      <button
-                        type="button"
-                        onClick={() => void collectLivePoints()}
-                        disabled={isCollectingLive || isGeofencePaused}
-                        className="tp-clean-button w-full rounded-xl border border-amber-400/60 bg-amber-950/30 py-2.5 text-sm font-black text-amber-300 active:scale-[0.98] disabled:opacity-60"
-                      >
-                        {isCollectingLive
-                          ? "Collecting..."
-                          : isGeofencePaused
-                          ? "Must be at venue to collect"
-                          : `Collect ${uncollectedPoints.toFixed(1)} Live Pts`}
-                      </button>
-                    ) : null}
-                  </div>
-                ) : (
-                  <p className="mt-3 text-[11px] text-slate-500">No live game. Updates resume when your next game starts.</p>
-                )}
-
-                {existingEntryForSelectedGame && canEditExistingEntryLineup ? (
-                  <button
-                    type="button"
-                    onClick={() => { setJustSubmittedRoster(false); setIsEditingRoster(true); setActiveTab("draft"); }}
-                    className="tp-clean-button mt-2 text-[11px] font-bold text-violet-400 underline"
-                  >
-                    Edit roster before tipoff →
-                  </button>
-                ) : null}
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-slate-700/50 bg-slate-900 p-6 text-center">
-                <p className="text-sm text-slate-400">No live game in progress.</p>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("draft")}
-                  className="tp-clean-button mt-2 text-xs font-bold text-violet-300 underline"
-                >
-                  Go to Draft →
-                </button>
-              </div>
-            )}
-
-            {isFantasyLineupSport && finalUnclaimedEntries.length > 1 ? (
-              <div className="rounded-2xl border border-slate-700/60 bg-slate-900 p-4">
-                <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-violet-300">Completed · Ready to Collect</p>
-                <div className="space-y-2">
-                  {finalUnclaimedEntries.map((entry) => (
-                    <div key={entry.id} className="flex items-center justify-between gap-2 rounded-xl border border-slate-700/50 bg-slate-800/40 px-3 py-2.5">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-slate-200">{entry.gameLabel}</p>
-                        <p className="text-xs text-slate-500">{formatLocalDateTime(entry.startsAt)}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(event) => { const rect = event.currentTarget.getBoundingClientRect(); void claimReward(entry, rect); }}
-                        disabled={claimingEntryId === entry.id}
-                        className="tp-clean-button shrink-0 rounded-full border border-violet-400/60 bg-violet-500/20 px-3 py-1.5 text-xs font-black text-violet-300 disabled:opacity-60"
-                      >
-                        {claimingEntryId === entry.id ? "…" : `Collect ${computeFantasyClaimablePoints(entry)} pts`}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </>
-        ) : null}
 
         <InlineSlotAdClient
           slot="inline-content"
@@ -2752,21 +2885,28 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
       </AnimatePresence>
 
       {/* ── Sticky Submit Button ── */}
-      {activeTab === "draft" && showLineupBuilder && canModifyRosterSelections ? (
+      {showLineupBuilder && canModifyRosterSelections ? (
         <div className="fixed inset-x-0 bottom-0 z-50 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent px-4 pb-6 pt-3">
           <button
             type="button"
             onClick={() => void handleSubmitRoster()}
             disabled={submitting || selectedPlayers.length !== requiredLineupSize}
-            className={`tp-clean-button w-full rounded-2xl py-4 text-base font-black transition-all active:scale-[0.98] disabled:opacity-50 ${
+            className={`flex w-full items-center justify-center gap-2.5 rounded-[14px] py-4 text-base font-black uppercase tracking-[0.04em] transition-all active:scale-[0.98] disabled:opacity-50 ${
               selectedPlayers.length === requiredLineupSize && !submitting
-                ? "bg-emerald-500 text-slate-950 shadow-[0_8px_28px_rgba(34,197,94,0.35)]"
+                ? "bg-[#8b5cf6] text-white shadow-[0_8px_24px_rgba(139,92,246,0.35)]"
                 : "bg-slate-800 text-slate-400"
             }`}
           >
-            {submitting
-              ? "Saving…"
-              : `${existingEntryForSelectedGame ? "Update Roster" : "Submit Roster"} · ${selectedPlayers.length}/${requiredLineupSize}`}
+            {submitting ? (
+              "Saving…"
+            ) : (
+              <>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M5 12l5 5L20 7" />
+                </svg>
+                {`${existingEntryForSelectedGame ? "Update lineup" : "Submit lineup"} · ${selectedPlayers.length}/${requiredLineupSize}`}
+              </>
+            )}
           </button>
         </div>
       ) : null}

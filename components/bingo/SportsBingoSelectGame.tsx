@@ -127,9 +127,16 @@ export function SportsBingoSelectGame() {
         <div className="rounded-md border border-rose-500/40 bg-rose-950/30 p-3 text-sm text-rose-300">{errorMessage}</div>
       ) : null}
 
-      <div className="rounded-2xl border border-orange-400/30 bg-slate-900 p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-orange-300">Step 2 of 3</p>
-        <h2 className="mt-1 text-lg font-semibold text-slate-200">Choose A Game</h2>
+      <div className="rounded-2xl border border-sky-300/30 bg-slate-900 p-4">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-300">Step 2 of 3</p>
+            <h2 className="mt-1 text-lg font-semibold text-slate-200">Choose A Game</h2>
+          </div>
+          <span className="shrink-0 rounded-full border border-sky-300/40 bg-sky-300/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-sky-200">
+            {activeGameIds.size} of 4 boards active
+          </span>
+        </div>
         <p className="mt-1 text-sm text-slate-400">Showing upcoming {sportLabel} games only.</p>
 
         {loading ? (
@@ -137,7 +144,7 @@ export function SportsBingoSelectGame() {
             <BouncingBallLoader size="sm" label="Loading games..." />
           </div>
         ) : games.length === 0 ? (
-          <div className="mt-3 rounded-md border border-amber-400/40 bg-amber-950/30 p-3 text-sm text-amber-300">
+          <div className="mt-3 rounded-md border border-sky-300/25 bg-slate-800/60 p-3 text-sm text-sky-200">
             No upcoming games are available right now.
           </div>
         ) : (
@@ -157,19 +164,23 @@ export function SportsBingoSelectGame() {
                     );
                   }}
                   disabled={unavailable}
-                  className={`w-full rounded-xl border p-3 text-left transition-all ${
+                  className={`w-full rounded-xl border p-3.5 text-left transition-all ${
                     unavailable
                       ? "cursor-not-allowed border-slate-700/60 bg-slate-800/40 text-slate-400"
-                      : "border-orange-400/30 bg-slate-800/60 hover:border-orange-400/80"
+                      : "border-sky-300/25 bg-slate-800/60 hover:border-sky-300/60 active:scale-[0.99]"
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-semibold text-slate-200">{game.awayTeam} vs {game.homeTeam}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-black text-slate-100">{game.awayTeam} vs {game.homeTeam}</p>
                     {unavailable ? (
-                      <span className="rounded-full border border-slate-700 bg-slate-800 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-                        Unavailable
+                      <span className="shrink-0 rounded-full border border-slate-700 bg-slate-800 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                        Active
                       </span>
-                    ) : null}
+                    ) : (
+                      <span aria-hidden="true" className="shrink-0 text-lg font-black text-sky-300">
+                        ›
+                      </span>
+                    )}
                   </div>
                   <p className="mt-1 text-xs text-slate-400">Starts {formatLocalDateTime(game.startsAt)}</p>
                   {unavailable ? (
