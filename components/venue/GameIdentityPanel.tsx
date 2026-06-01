@@ -8,7 +8,7 @@ export const GAME_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
   live_trivia:
     "bg-[linear-gradient(132deg,#0ea5e9_0%,#2563eb_42%,#7c3aed_100%)]",
   bingo:
-    "[background:linear-gradient(135deg,#0f4a38_0%,#0c3a2e_55%,#082b22_100%)]",
+    "[background:linear-gradient(135deg,#1e293b_0%,#0f172a_55%,#020617_100%)]",
   pickem:
     "bg-[linear-gradient(134deg,#2563eb_0%,#7c3aed_56%,#ec4899_100%)]",
   fantasy:
@@ -21,7 +21,7 @@ export const GAME_PAGE_THEME_BY_KEY: Record<VenueGameKey, string> = {
   live_trivia:
     "bg-[linear-gradient(132deg,rgba(14,165,233,0.2)_0%,rgba(37,99,235,0.24)_42%,rgba(124,58,237,0.26)_100%)] border-cyan-200/60",
   bingo:
-    "bg-[linear-gradient(128deg,rgba(12,58,46,0.8)_0%,rgba(15,74,56,0.7)_48%,rgba(8,43,34,0.9)_100%)] border-cyan-400/30",
+    "bg-[linear-gradient(128deg,rgba(30,41,59,0.8)_0%,rgba(15,23,42,0.7)_48%,rgba(2,6,23,0.9)_100%)] border-cyan-400/30",
   pickem:
     "bg-[linear-gradient(134deg,rgba(37,99,235,0.22)_0%,rgba(124,58,237,0.22)_56%,rgba(236,72,153,0.2)_100%)] border-indigo-200/65",
   fantasy:

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { Advertisement } from "@/types";
 import type { AdPageKey } from "@/types";
 import { getVenueId } from "@/lib/storage";
+import { trackAdClick, trackAdView } from "@/lib/analytics";
 import { lookupSlotId } from "@/lib/adSlotRegistry";
 
 const IMPRESSION_THROTTLE_MS = 1000 * 60 * 30;
@@ -63,12 +64,13 @@ export function AdBanner({ ad, variant = "default" }: { ad: Advertisement; varia
     }
 
     sentForId.current = ad.id;
+    trackAdView({ adId: ad.id, referrerPage: pathname ?? undefined });
     void fetch("/api/ads/impression", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ adId: ad.id, pageKey, venueId }),
     });
-  }, [ad.id, pageKey, venueId]);
+  }, [ad.id, pageKey, pathname, venueId]);
 
   const isAdhesion = variant === "adhesion";
   const slotId = lookupSlotId(ad.pageKey, ad.slot, ad.displayTrigger, ad.roundNumber ?? undefined);
@@ -98,7 +100,13 @@ export function AdBanner({ ad, variant = "default" }: { ad: Advertisement; varia
           {slotLabel}
         </span>
       </div>
-      <a href={`/api/ads/click?${clickParams.toString()}`} target="_blank" rel="noreferrer noopener" className="block">
+      <a
+        href={`/api/ads/click?${clickParams.toString()}`}
+        target="_blank"
+        rel="noreferrer noopener"
+        className="block"
+        onClick={() => trackAdClick({ adId: ad.id, referrerPage: pathname ?? undefined }, true)}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={ad.imageUrl}

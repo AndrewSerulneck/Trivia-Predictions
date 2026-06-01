@@ -116,11 +116,11 @@
   --ht-game-trivia-primary:  #facc15;
   --ht-game-trivia-secondary:#84cc16;
 
-  /* Sports Bingo — Casino felt + cool ice border (NOT warm) */
+  /* Sports Bingo — Dark navy slate + cool ice border */
   --ht-game-bingo:        radial-gradient(120% 80% at 50% 0%, rgba(255,215,128,0.10), transparent 60%),
                           radial-gradient(circle at 20% 80%, rgba(0,0,0,0.45), transparent 60%),
-                          #0c3a2e;
-  --ht-game-bingo-base:   #0c3a2e;
+                          #0f172a;
+  --ht-game-bingo-base:   #0f172a;
   --ht-game-bingo-trim:   #c89b3a;
   --ht-game-bingo-edge:   #7dd3fc;
   --ht-game-bingo-primary:  #f97316;
@@ -237,6 +237,42 @@ html.tp-bingo-theme,
 body.tp-bingo-theme {
   background-color: var(--ht-canvas);
   background-image: none;
+}
+
+/* Speed Trivia — racing electric theme.
+   Scopes the entire page canvas to the near-black base so the themed
+   surface reaches every edge (including scrollbar gutters / overscroll). */
+html.tp-trivia-theme,
+body.tp-trivia-theme {
+  background-color: #0a0a0f !important;
+  background-image: none;
+}
+
+/* Full-viewport racing background used as the fixed game backdrop.
+   Solid black base + a diagonal yellow/lime stripe band that fades down. */
+.tp-trivia-bg {
+  background-color: #0a0a0f;
+}
+
+.tp-trivia-bg::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 320px;
+  background-image: repeating-linear-gradient(
+    115deg,
+    transparent 0 26px,
+    rgba(250, 204, 21, 0.85) 26px 34px,
+    transparent 34px 42px,
+    rgba(132, 204, 22, 0.8) 42px 48px,
+    transparent 48px 70px
+  );
+  opacity: 0.25;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, transparent 100%);
+  pointer-events: none;
 }
 
 html.tp-admin-theme,

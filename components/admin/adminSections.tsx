@@ -3,6 +3,7 @@ import { AdsCreateSection } from "@/components/admin/sections/AdsCreateSection";
 import { AdsListSection } from "@/components/admin/sections/AdsListSection";
 import { PickEmSettlementSection } from "@/components/admin/sections/PickEmSettlementSection";
 import { TriviaPendingReviewSection } from "@/components/admin/sections/TriviaPendingReviewSection";
+import { UserAnalyticsSection } from "@/components/admin/sections/UserAnalyticsSection";
 import LegacySectionPlaceholder from "@/components/admin/sections/LegacySectionPlaceholder";
 
 export type AdminSection =
@@ -10,6 +11,7 @@ export type AdminSection =
   | "ad-placement"
   | "pickem-settlement"
   | "venue-users"
+  | "user-analytics"
   | "venue-manage"
   | "trivia-create"
   | "trivia-list"
@@ -37,6 +39,7 @@ export type AdminNavGroup = {
 
 export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
   { id: "venue-users",           label: "Venue Users",           slug: "venue-users",           component: () => <LegacySectionPlaceholder sectionName="Venue Users" /> },
+  { id: "user-analytics",        label: "User Analytics",        slug: "user-analytics",        status: { label: "Planned", tone: "planned" }, component: UserAnalyticsSection },
   { id: "venue-manage",          label: "Venue Profiles",        slug: "venue-manage",          component: () => <LegacySectionPlaceholder sectionName="Venue Profiles" /> },
   { id: "trivia-list",           label: "Trivia Questions",      slug: "trivia-list",           status: { label: "Ready", tone: "live" }, component: () => <LegacySectionPlaceholder sectionName="Trivia Questions" /> },
   { id: "trivia-create",         label: "Create Question",       slug: "trivia-create",         status: { label: "Ready", tone: "live" }, component: () => <LegacySectionPlaceholder sectionName="Create Question" /> },
@@ -53,7 +56,7 @@ export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     label: "Users & Venues",
-    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["venue-users", "venue-manage"].includes(opt.id)),
+    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["venue-users", "user-analytics", "venue-manage"].includes(opt.id)),
   },
   {
     label: "Content",

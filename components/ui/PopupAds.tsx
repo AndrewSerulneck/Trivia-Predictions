@@ -7,6 +7,7 @@ import { isVenueTransitionGateActive } from "@/lib/venueGameTransition";
 import { releaseAdTier, requestAdTier, setLandingPopupGate } from "@/components/ui/adPriority";
 import { setScrollLock } from "@/lib/scrollLock";
 import { incrementAdCounter } from "@/lib/adFrequency";
+import { trackAdClick, trackAdView } from "@/lib/analytics";
 import { lookupSlotId } from "@/lib/adSlotRegistry";
 import type { Advertisement, AdPageKey } from "@/types";
 
@@ -579,6 +580,11 @@ export function PopupAds() {
     };
   }, [popupOwnerId]);
 
+  useEffect(() => {
+    if (!popup?.open) return;
+    trackAdView({ adId: popup.ad.id, referrerPage: pathname ?? undefined });
+  }, [pathname, popup?.ad.id, popup?.open]);
+
   if (!popup?.open) {
     return null;
   }
@@ -634,6 +640,7 @@ export function PopupAds() {
           target="_blank"
           rel="noreferrer noopener"
           className="block p-0.5"
+          onClick={() => trackAdClick({ adId: popup.ad.id, referrerPage: pathname ?? undefined }, true)}
         >
           <div className="mx-auto flex items-center justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}

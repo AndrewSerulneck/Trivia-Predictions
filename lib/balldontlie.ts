@@ -22,16 +22,24 @@ export async function fetchBallDontLieJson(path: string, query?: URLSearchParams
 
   const qs = query?.toString() ?? "";
   const url = qs ? `${BALLDONTLIE_API_BASE_URL}${path}?${qs}` : `${BALLDONTLIE_API_BASE_URL}${path}`;
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      Authorization: BALLDONTLIE_API_KEY,
-    },
-    next: { revalidate: revalidateSeconds },
-  });
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: BALLDONTLIE_API_KEY,
+      },
+      next: { revalidate: revalidateSeconds },
+    });
+  } catch (fetchError) {
+    console.error(`[BallDontLie] Network error fetching ${path}:`, fetchError);
+    return {};
+  }
 
   if (!response.ok) {
-    throw new Error(`BallDontLie request failed (${response.status}).`);
+    console.error(`[BallDontLie] Request failed (${response.status}) for ${url}. Returning empty result.`);
+    return {};
   }
 
   return response.json();

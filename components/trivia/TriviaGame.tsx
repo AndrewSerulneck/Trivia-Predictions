@@ -44,7 +44,8 @@ const QUESTIONS_PER_ROUND = 15;
 const ROUND_LIMIT_PER_WINDOW = 3;
 const PRE_ROUND_COUNTDOWN_START = 3;
 const BUTTON_POP_CLASS =
-  "transition-all duration-150 transform active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
+  "transition-all duration-150 transform active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300";
+const ANSWER_LETTERS = ["A", "B", "C", "D"] as const;
 const BACK_TO_VENUE_CLASS =
   "tp-exit-pill tp-clean-button inline-flex items-center justify-center gap-2 px-4 text-sm font-black";
 const INCORRECT_EMOJIS = [
@@ -208,6 +209,7 @@ type AnswerButtonProps = {
   option: string;
   optionIndex: number;
   questionId: string;
+  letter: string;
   selected: boolean;
   isRevealedCorrect: boolean;
   isSelectedWrong: boolean;
@@ -219,6 +221,7 @@ function AnswerButton({
   option,
   optionIndex,
   questionId,
+  letter,
   selected,
   isRevealedCorrect,
   isSelectedWrong,
@@ -227,28 +230,23 @@ function AnswerButton({
 }: AnswerButtonProps) {
   const controls = useAnimationControls();
 
-  // Instantly reset scale + filter whenever the question changes.
   useEffect(() => {
     void controls.set({ scale: 1, filter: "none" });
   }, [controls, questionId]);
 
-  // Spring-driven scale and drop-shadow effects only — color is handled by CSS classes
-  // to keep background-color out of the animation engine and avoid layout conflicts.
   useEffect(() => {
     if (isRevealedCorrect) {
       let active = true;
       const seq = async () => {
-        // 1 → 1.05 pop with green glow
         await controls.start({
           scale: 1.05,
-          filter: "drop-shadow(0 0 14px rgba(16,185,129,0.9))",
+          filter: "drop-shadow(0 0 14px rgba(52,211,153,0.9))",
           transition: { type: "spring", stiffness: 400, damping: 30 },
         });
         if (!active) return;
-        // Settle back to 1 with a softer persistent glow
         await controls.start({
           scale: 1,
-          filter: "drop-shadow(0 0 6px rgba(16,185,129,0.55))",
+          filter: "drop-shadow(0 0 6px rgba(52,211,153,0.55))",
           transition: { type: "spring", stiffness: 400, damping: 30 },
         });
       };
@@ -259,12 +257,11 @@ function AnswerButton({
     }
     if (isSelectedWrong) {
       void controls.start({
-        filter: "drop-shadow(0 0 12px rgba(239,68,68,0.85))",
+        filter: "drop-shadow(0 0 12px rgba(251,113,133,0.85))",
         transition: { type: "spring", stiffness: 400, damping: 30 },
       });
       return;
     }
-    // Clear lingering effects on deselect / question reset
     void controls.start({
       scale: 1,
       filter: "none",
@@ -272,27 +269,44 @@ function AnswerButton({
     });
   }, [controls, isRevealedCorrect, isSelectedWrong]);
 
+  const buttonClass = isRevealedCorrect
+    ? "border-[#34d399] bg-emerald-500/20 text-[#a7f3d0]"
+    : isSelectedWrong
+    ? "border-[#fb7185] bg-rose-500/[18%] text-[#fecdd3]"
+    : selected
+    ? "border-[#facc15] bg-[#facc15] text-[#0a0a0f]"
+    : "border-[rgba(250,204,21,0.30)] bg-[#0a0a0f] text-[#f8fafc] enabled:hover:border-[rgba(250,204,21,0.6)]";
+
+  const chipClass = isRevealedCorrect
+    ? "bg-[#34d399] text-[#052e16]"
+    : isSelectedWrong
+    ? "bg-[#fb7185] text-[#4c0519]"
+    : selected
+    ? "bg-[rgba(10,10,15,0.85)] text-[#facc15]"
+    : "bg-[#facc15] text-[#0a0a0f]";
+
   return (
     <motion.button
       type="button"
       data-answer-token={`${questionId}-${optionIndex}`}
       animate={controls}
-      // whileTap is additive on top of controls — springs back automatically
       whileTap={{ scale: 0.96, transition: { duration: 0.06 } }}
       onMouseDown={() => triggerHaptic()}
       onClick={() => onChoose(optionIndex)}
       disabled={locked}
-      className={`min-h-[56px] w-full rounded-xl border-2 px-2.5 py-2 text-left text-[15px] font-bold leading-snug transition-colors duration-[80ms] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:min-h-[64px] sm:rounded-2xl sm:px-3 sm:py-2.5 sm:text-base disabled:opacity-80 ${
-        isRevealedCorrect
-          ? "border-emerald-400 bg-emerald-500/20 text-emerald-200"
-          : isSelectedWrong
-          ? "border-rose-400 bg-rose-500/20 text-rose-200"
-          : selected
-          ? "border-blue-400 bg-blue-950/40 text-blue-100"
-          : "border-slate-700 bg-slate-800/80 text-slate-100 enabled:hover:border-blue-500/60 enabled:hover:bg-slate-800"
-      }`}
+      className={`grid grid-cols-[26px_1fr_auto] items-center gap-2.5 rounded-[14px] border-2 p-3 text-left leading-snug transition-colors duration-[80ms] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300 disabled:opacity-80 ${buttonClass}`}
     >
-      {option}
+      <span
+        className={`inline-flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-[8px] font-black text-[14px] ${chipClass}`}
+      >
+        {letter}
+      </span>
+      <span className="text-[13px] font-extrabold">{option}</span>
+      {isRevealedCorrect ? (
+        <span className="text-[14px] font-black text-[#34d399]">✓</span>
+      ) : (
+        <span aria-hidden="true" className="w-0" />
+      )}
     </motion.button>
   );
 }
@@ -1272,25 +1286,24 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
   if (loadingQuestions) {
     return (
-      <div className="space-y-4 rounded-md border border-cyan-200/45 bg-slate-950/35 p-5 text-sm text-cyan-50 backdrop-blur-sm">
-        <div className="relative mx-auto h-20 w-20">
-          <div className="absolute inset-0 animate-spin rounded-full border-4 border-ht-border-soft border-t-ht-fg-primary" />
-          <div className="absolute inset-2 flex items-center justify-center rounded-full bg-slate-900 text-xs font-black tracking-[0.2em] text-white">
+      <div className="flex h-full min-h-0 flex-col items-center justify-center gap-4 bg-transparent">
+        <div className="relative h-20 w-20">
+          <div className="absolute inset-0 animate-spin rounded-full border-4 border-[rgba(250,204,21,0.2)] border-t-[#facc15]" />
+          <div className="absolute inset-2 flex items-center justify-center rounded-full bg-[#0f0f17] font-black tracking-[0.2em] text-[#facc15] text-[11px]">
             HC
           </div>
         </div>
-        <div className="text-center">
-          <p className="text-lg font-semibold text-ht-fg-primary">Hightop Challenge</p>
-          <p>Loading trivia questions...</p>
-        </div>
+        <p className="font-black tracking-[0.06em] text-[#facc15] text-[14px]">Loading Trivia...</p>
       </div>
     );
   }
 
   if (loadError) {
     return (
-      <div className="rounded-ht-md border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-400">
-        {loadError}
+      <div className="flex h-full min-h-0 items-center justify-center bg-transparent p-4">
+        <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-4 text-[12px] text-rose-400">
+          {loadError}
+        </div>
       </div>
     );
   }
@@ -1299,66 +1312,95 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     const totalAfterRound = roundTotalPoints ?? estimatedRoundTotal ?? currentUserPoints ?? 0;
     const roundGain = Math.max(0, roundDelta);
     return (
-      <div className="flex h-full min-h-0 flex-col rounded-2xl border-2 border-cyan-200/55 bg-slate-950/35 p-2 shadow-[0_10px_28px_rgba(15,23,42,0.45)] backdrop-blur-sm">
-        <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-cyan-100/45 bg-slate-900/35 p-2">
-          <p className="mb-2 text-sm font-black tracking-wide text-emerald-200">Round complete 🎉</p>
-          <div className="grid min-h-0 flex-1 gap-2 sm:grid-cols-2">
-            <div className="rounded-2xl border border-cyan-200/55 bg-cyan-900/35 p-2">
-              <p className="text-xs uppercase text-cyan-100/90">Scoreboard</p>
-              <p className="text-lg font-bold text-cyan-50">
-                {correctAnswers}/{attempted}
-              </p>
-              <p className="text-sm text-cyan-100">{accuracy}% accuracy</p>
+      <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
+        <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+          {/* Header */}
+          <div
+            className="flex shrink-0 items-center justify-between gap-2 px-3.5"
+            style={{ paddingTop: "max(env(safe-area-inset-top), 10px)", paddingBottom: "12px" }}
+          >
+            <button
+              type="button"
+              onMouseDown={() => triggerHaptic(14)}
+              onClick={returnToVenueHome}
+              className="tp-exit-pill tp-clean-button inline-flex items-center gap-1.5 px-3 font-black text-[12px]"
+            >
+              ← Venue
+            </button>
+            <div
+              className="font-black uppercase tracking-[0.06em] text-[#facc15] text-[17px]"
+              style={{ textShadow: "0 1px 0 #000, 0 0 14px rgba(250,204,21,0.5)" }}
+            >
+              Speed Trivia
             </div>
-            <div className="rounded-2xl border border-cyan-200/55 bg-cyan-900/35 p-2">
-              <p className="text-xs uppercase text-cyan-100/90">Round reward</p>
-              <div className="flex items-center gap-2">
-                <p className="text-lg font-bold text-emerald-400">+{pointsWon} points</p>
+            <div className="flex items-center gap-1 rounded-[10px] border border-[rgba(250,204,21,0.4)] bg-[#0a0a0f] px-2.5 py-1.5 font-mono font-black tracking-[0.04em] text-[#facc15] text-[10px]">
+              <span className="text-[rgba(250,204,21,0.7)] text-[8px]">WINDOW</span>
+              {formatCountdown(quota?.windowSecondsRemaining ?? 0)}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3.5">
+            <div className="pt-2 pb-4">
+              <p className="font-black uppercase tracking-[0.16em] text-[#84cc16] text-[10.5px]">Round Complete 🎉</p>
+              <h1 className="mt-1 font-black text-white text-[22px]">Nice work!</h1>
+            </div>
+
+            {/* Stats cards */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-xl border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.08)] p-3">
+                <div className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-[10px]">Score</div>
+                <div className="mt-0.5 font-mono font-black text-[#facc15] text-[20px]">{correctAnswers}/{attempted}</div>
+                <div className="mt-0.5 text-[10px] text-slate-400">{accuracy}% accuracy</div>
+              </div>
+              <div className="rounded-xl border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.08)] p-3">
+                <div className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-[10px]">Points Earned</div>
+                <div className="mt-0.5 font-mono font-black text-[#facc15] text-[20px]">+{pointsWon}</div>
                 {roundPointsAwarded > correctAnswers * POINTS_PER_CORRECT ? (
-                  <span className="inline-flex items-center rounded-full bg-amber-500/25 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-300 border border-amber-400/40">
-                    ⚡ Challenge
+                  <span className="mt-0.5 inline-flex items-center rounded-full border border-[rgba(250,204,21,0.4)] bg-[rgba(250,204,21,0.15)] px-2 py-px font-black uppercase tracking-[0.1em] text-[#facc15] text-[9px]">
+                    ⚡ Challenge Bonus
                   </span>
                 ) : null}
               </div>
-              <p className="text-xs text-cyan-100">Keep the streak going in your next round.</p>
+              <div className="col-span-2 rounded-xl border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.08)] p-3">
+                <div className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-[10px]">Total Points</div>
+                <div className="mt-0.5 font-mono font-black text-[#facc15] text-[20px]">{totalAfterRound}</div>
+                <div className="mt-0.5 text-[10px] text-slate-400">+{roundGain} this round</div>
+              </div>
             </div>
-            <div className="rounded-2xl border border-cyan-200/55 bg-cyan-900/35 p-2 sm:col-span-2">
-              <p className="text-xs uppercase text-cyan-100/90">Total points</p>
-              <p className="text-xl font-bold text-cyan-50">{totalAfterRound}</p>
-              <p className="text-sm text-cyan-100">Round gain: +{roundGain}</p>
+
+            <div className="flex-1" />
+
+            {/* Action buttons */}
+            <div
+              className="grid gap-2 pt-4"
+              style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}
+            >
+              <button
+                type="button"
+                onMouseDown={() => triggerHaptic(14)}
+                onClick={() => { void startNextRound(); }}
+                disabled={isPreparingNextRound || triviaQuotaLocked}
+                className={`${BUTTON_POP_CLASS} w-full rounded-[14px] bg-[#facc15] py-3.5 font-black uppercase tracking-[0.04em] text-[#0a0a0f] text-[14px] disabled:opacity-50`}
+                style={{ boxShadow: "0 0 0 1px rgba(250,204,21,0.3), 0 10px 24px rgba(250,204,21,0.3)" }}
+              >
+                {isPreparingNextRound
+                  ? "Loading next round..."
+                  : triviaQuotaLocked
+                  ? `Unlocks in ${formatCountdown(quotaSecondsRemaining)}`
+                  : "Start Next Round"}
+              </button>
+              <button
+                type="button"
+                onMouseDown={() => triggerHaptic(14)}
+                onClick={returnToVenueHome}
+                className={`${BUTTON_POP_CLASS} ${BACK_TO_VENUE_CLASS} w-full`}
+              >
+                <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs">←</span>
+                Back to Venue
+              </button>
             </div>
           </div>
-        </div>
-        <div className="mt-2 grid gap-2">
-          <button
-            type="button"
-            onMouseDown={() => triggerHaptic(14)}
-            onClick={() => {
-              void startNextRound();
-            }}
-            disabled={isPreparingNextRound || triviaQuotaLocked}
-            className={`${BUTTON_POP_CLASS} inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border border-emerald-500/40 bg-gradient-to-r from-emerald-700 to-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald-900/40 disabled:opacity-60`}
-          >
-            {isPreparingNextRound
-              ? "Loading next round..."
-              : triviaQuotaLocked
-                ? `Next round unlocks in ${formatCountdown(quotaSecondsRemaining)}`
-                : "Start Next Round"}
-          </button>
-          <button
-            type="button"
-            onMouseDown={() => triggerHaptic(14)}
-            onClick={returnToVenueHome}
-            className={`${BUTTON_POP_CLASS} ${BACK_TO_VENUE_CLASS} w-full`}
-          >
-            <span
-              aria-hidden="true"
-              className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs"
-            >
-              ←
-            </span>
-            Back to Venue Home Page
-          </button>
         </div>
       </div>
     );
@@ -1366,96 +1408,143 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
   if (!question) {
     return (
-      <div className="rounded-md border border-cyan-200/45 bg-slate-950/35 p-4 text-sm text-cyan-50 backdrop-blur-sm">
-        No new trivia questions available right now.
+      <div className="flex h-full min-h-0 items-center justify-center bg-transparent p-4">
+        <div className="rounded-xl border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.05)] p-4 text-[12px] text-[#facc15]">
+          No new trivia questions available right now.
+        </div>
       </div>
     );
   }
 
   if (!isRoundStarted) {
     return (
-      <div className="space-y-2 rounded-md border border-cyan-200/45 bg-slate-950/38 p-3 text-base text-cyan-50 backdrop-blur-sm sm:space-y-3 sm:p-4">
-        {roundEndedMessage ? (
-          <p className="rounded-ht-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm font-semibold text-rose-400">
-            {roundEndedMessage}
-          </p>
-        ) : null}
-        <p className="text-sm font-semibold uppercase tracking-wide text-cyan-100">
-          Round {upcomingRoundNumber} of {ROUND_LIMIT_PER_WINDOW}
-        </p>
-        <p className="text-lg font-semibold text-yellow-200">Ready to start trivia?</p>
-        {triviaQuotaLocked ? (
-          <p>
-            Trivia limit reached. You can start another round in{" "}
-            <span className="font-bold">{formatCountdown(quotaSecondsRemaining)}</span>.
-          </p>
-        ) : (
-          <p>You will have 15 seconds to answer each question once the round begins.</p>
-        )}
-        <button
-          type="button"
-          onMouseDown={() => triggerHaptic(20)}
-          onClick={() => {
-            setRoundEndedMessage("");
-            setIsRoundStarted(true);
-            setPreRoundCountdown(PRE_ROUND_COUNTDOWN_START);
-            setSecondsRemaining(QUESTION_TIME_LIMIT_SECONDS);
-            setRoundStartPoints(currentUserPoints ?? null);
-          }}
-          disabled={triviaQuotaLocked}
-          className={`${BUTTON_POP_CLASS} inline-flex min-h-[44px] w-full items-center justify-center rounded-xl border border-blue-400/60 bg-blue-500 px-3 py-2 text-base font-black text-white sm:min-h-[50px] sm:px-4 sm:py-2`}
-        >
-          {triviaQuotaLocked ? `Locked ${formatCountdown(quotaSecondsRemaining)}` : "Yes, Start Trivia"}
-        </button>
-        <button
-          type="button"
-          onMouseDown={() => triggerHaptic(14)}
-          onClick={returnToVenueHome}
-          className={`${BUTTON_POP_CLASS} ${BACK_TO_VENUE_CLASS} w-full`}
-        >
-          <span
-            aria-hidden="true"
-            className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs"
+      <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
+        <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+          {/* Header */}
+          <div
+            className="flex shrink-0 items-center justify-between gap-2 px-3.5"
+            style={{ paddingTop: "max(env(safe-area-inset-top), 10px)", paddingBottom: "12px" }}
           >
-            ←
-          </span>
-          Back to Venue Home Page
-        </button>
+            <button
+              type="button"
+              onMouseDown={() => triggerHaptic(14)}
+              onClick={returnToVenueHome}
+              className="tp-exit-pill tp-clean-button inline-flex items-center gap-1.5 px-3 font-black text-[12px]"
+            >
+              ← Venue
+            </button>
+            <div
+              className="font-black uppercase tracking-[0.06em] text-[#facc15] text-[17px]"
+              style={{ textShadow: "0 1px 0 #000, 0 0 14px rgba(250,204,21,0.5)" }}
+            >
+              Speed Trivia
+            </div>
+            <div className="flex items-center gap-1 rounded-[10px] border border-[rgba(250,204,21,0.4)] bg-[#0a0a0f] px-2.5 py-1.5 font-mono font-black tracking-[0.04em] text-[#facc15] text-[10px]">
+              <span className="text-[rgba(250,204,21,0.7)] text-[8px]">WINDOW</span>
+              {formatCountdown(quota?.windowSecondsRemaining ?? 0)}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex min-h-0 flex-1 flex-col justify-center px-3.5">
+            {roundEndedMessage ? (
+              <div className="mb-4 rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2.5">
+                <p className="text-[12px] font-extrabold text-rose-400">{roundEndedMessage}</p>
+              </div>
+            ) : null}
+
+            <div className="mb-6">
+              <p className="font-black uppercase tracking-[0.16em] text-[#84cc16] text-[10.5px]">
+                Round {upcomingRoundNumber} of {ROUND_LIMIT_PER_WINDOW}
+              </p>
+              <h1 className="mt-1 font-black text-white text-[24px]">Ready to start trivia?</h1>
+              {triviaQuotaLocked ? (
+                <p className="mt-2 text-[13px] text-rose-300">
+                  Trivia limit reached. Play again in{" "}
+                  <span className="font-black">{formatCountdown(quotaSecondsRemaining)}</span>.
+                </p>
+              ) : (
+                <p className="mt-2 text-[13px] text-slate-400">
+                  You have {QUESTION_TIME_LIMIT_SECONDS} seconds to answer each question.
+                </p>
+              )}
+            </div>
+
+            <div
+              className="grid gap-2"
+              style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}
+            >
+              <button
+                type="button"
+                onMouseDown={() => triggerHaptic(20)}
+                onClick={() => {
+                  setRoundEndedMessage("");
+                  setIsRoundStarted(true);
+                  setPreRoundCountdown(PRE_ROUND_COUNTDOWN_START);
+                  setSecondsRemaining(QUESTION_TIME_LIMIT_SECONDS);
+                  setRoundStartPoints(currentUserPoints ?? null);
+                }}
+                disabled={triviaQuotaLocked}
+                className={`${BUTTON_POP_CLASS} w-full rounded-[14px] bg-[#facc15] py-3.5 font-black uppercase tracking-[0.04em] text-[#0a0a0f] text-[14px] disabled:opacity-50`}
+                style={{ boxShadow: "0 0 0 1px rgba(250,204,21,0.3), 0 10px 24px rgba(250,204,21,0.3)" }}
+              >
+                {triviaQuotaLocked ? `Locked · ${formatCountdown(quotaSecondsRemaining)}` : "Yes, Start Trivia"}
+              </button>
+              <button
+                type="button"
+                onMouseDown={() => triggerHaptic(14)}
+                onClick={returnToVenueHome}
+                className={`${BUTTON_POP_CLASS} ${BACK_TO_VENUE_CLASS} w-full`}
+              >
+                <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs">←</span>
+                Back to Venue
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (preRoundCountdown !== null) {
     return (
-      <div className="space-y-3 rounded-2xl border border-blue-400/40 bg-slate-900 p-4 text-center shadow-[0_12px_28px_rgba(15,23,42,0.45)]">
-        <p className="text-sm font-black uppercase tracking-[0.12em] text-blue-300">Get Ready</p>
-        <p className="text-2xl font-black text-blue-100 sm:text-3xl">
-          Round {upcomingRoundNumber}
-        </p>
-        <p
-          key={`count-${preRoundCountdown}`}
-          className="animate-tp-countdown-pop text-6xl font-black leading-none text-cyan-100 sm:text-7xl"
-        >
-          {preRoundCountdown > 0 ? preRoundCountdown : "START!"}
-        </p>
+      <div className="relative flex h-full min-h-0 flex-col items-center justify-center overflow-hidden bg-transparent text-center">
+        <div className="relative z-10 px-6">
+          <p className="font-black uppercase tracking-[0.12em] text-[#84cc16] text-[11px]">Get Ready</p>
+          <p className="mt-1 font-black text-white text-[24px]">Round {upcomingRoundNumber}</p>
+          <p
+            key={`count-${preRoundCountdown}`}
+            className="animate-tp-countdown-pop mt-3 font-black leading-none text-[#facc15] text-[72px]"
+            style={{ textShadow: "0 0 30px rgba(250,204,21,0.6)" }}
+          >
+            {preRoundCountdown > 0 ? preRoundCountdown : "GO!"}
+          </p>
+        </div>
       </div>
     );
   }
 
+  const timerDashOffset = Math.max(
+    0,
+    176 * (1 - secondsRemaining / QUESTION_TIME_LIMIT_SECONDS)
+  );
+
   return (
     <div
       ref={gameRootRef}
-      className="relative flex h-full min-h-0 flex-col gap-2 overflow-hidden px-0.5"
+      className="relative flex h-full min-h-0 flex-col overflow-hidden bg-transparent"
     >
+      {/* Feedback flash overlay */}
       {feedbackFlash ? (
         <div
           aria-hidden="true"
-          className={`pointer-events-none absolute inset-0 z-10 ${
+          className={`pointer-events-none absolute inset-0 z-10 transition-opacity duration-300 ${
             feedbackFlash === "correct" ? "bg-emerald-500/35" : "bg-rose-500/35"
-          } transition-opacity duration-300`}
+          }`}
         />
       ) : null}
 
+      {/* Rain emojis */}
       {rainEmojis.length > 0 ? (
         <div className="pointer-events-none absolute inset-0 z-20">
           {rainEmojis.map((item) => (
@@ -1476,12 +1565,13 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         </div>
       ) : null}
 
+      {/* Fireworks */}
       {fireworks.length > 0 ? (
         <div className="pointer-events-none absolute inset-0 z-30">
           {fireworks.map((item) => (
             <span
               key={item.id}
-              className={`absolute top-[-20px] animate-tp-rain ${item.sizeClass} font-black text-emerald-500`}
+              className={`absolute animate-tp-rain ${item.sizeClass} font-black text-emerald-500`}
               style={{
                 left: `${item.left}%`,
                 top: `${item.top}%`,
@@ -1496,108 +1586,228 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         </div>
       ) : null}
 
-      <div className="rounded-xl border border-blue-400/40 bg-slate-900 p-1.5 text-blue-200 sm:rounded-2xl sm:p-2">
-        <div className="flex items-center justify-between gap-2 text-sm font-black uppercase tracking-[0.08em]">
-          <span>Round {upcomingRoundNumber} of {ROUND_LIMIT_PER_WINDOW}</span>
-          <span>{quota?.isAdminBypass ? "Admin Unlimited" : "Live Round"}</span>
+      {/* Main layout */}
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+
+        {/* ─── Custom header ─── */}
+        <div
+          className="flex shrink-0 items-center justify-between gap-2 px-3.5"
+          style={{ paddingTop: "max(env(safe-area-inset-top), 10px)", paddingBottom: "12px" }}
+        >
+          <button
+            type="button"
+            onMouseDown={() => triggerHaptic(14)}
+            onClick={returnToVenueHome}
+            className="tp-exit-pill tp-clean-button inline-flex items-center gap-1.5 px-3 font-black text-[12px]"
+          >
+            ← Venue
+          </button>
+          <div
+            className="font-black uppercase tracking-[0.06em] text-[#facc15] text-[17px]"
+            style={{ textShadow: "0 1px 0 #000, 0 0 14px rgba(250,204,21,0.5)" }}
+          >
+            Speed Trivia
+          </div>
+          <div
+            className="flex items-center gap-1 rounded-[10px] border border-[rgba(250,204,21,0.4)] bg-[#0a0a0f] px-2.5 py-1.5 font-mono font-black tracking-[0.04em] text-[#facc15] text-[10px]"
+          >
+            <span className="text-[rgba(250,204,21,0.7)] text-[8px]">WINDOW</span>
+            {formatCountdown(quota?.windowSecondsRemaining ?? 0)}
+          </div>
         </div>
+
+        {/* ─── Round + question counter + pip strip ─── */}
+        <div className="flex shrink-0 items-center justify-between px-3.5">
+          <div className="flex gap-2 font-black uppercase tracking-[0.16em] text-[10.5px]">
+            <span className="text-[#84cc16]">Round {upcomingRoundNumber} / {ROUND_LIMIT_PER_WINDOW}</span>
+            <span className="text-white/20">·</span>
+            <span className="text-[#facc15]">Q {index + 1} / {questions.length}</span>
+          </div>
+          <div className="flex gap-[3px]">
+            {Array.from({ length: questions.length }).map((_, i) => (
+              <span
+                key={i}
+                className={`block h-1 w-2 rounded-sm ${
+                  i < index ? "bg-[#84cc16]" : i === index ? "bg-[#facc15]" : "bg-white/10"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
         {triviaQuotaLocked ? (
-          <p className="mt-1 text-sm font-semibold text-rose-300">
-            Limit reached. Next round unlocks in {formatCountdown(quotaSecondsRemaining)}.
+          <p className="px-3.5 pt-1 text-[11px] font-black text-rose-300">
+            Limit reached. Unlocks in {formatCountdown(quotaSecondsRemaining)}.
           </p>
         ) : null}
-      </div>
 
-      <div className="rounded-xl border border-blue-400/40 bg-slate-900 p-1.5 sm:rounded-2xl sm:p-2">
-        <div className="flex items-center justify-between gap-2 sm:gap-3">
-          <span className="text-sm font-black tabular-nums text-blue-200">Q {index + 1}/{questions.length}</span>
-          <span className={`text-5xl font-black tabular-nums leading-none ${secondsRemaining <= 3 ? "text-rose-400" : "text-blue-200"}`}>
-            {secondsRemaining}
-          </span>
-        </div>
-        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-800 sm:mt-2 sm:h-2">
-          <div
-            className={`h-full rounded-full transition-all duration-300 ${secondsRemaining <= 3 ? "bg-rose-500" : "bg-blue-400"}`}
-            style={{ width: `${Math.max(0, (secondsRemaining / QUESTION_TIME_LIMIT_SECONDS) * 100)}%` }}
-          />
-        </div>
-      </div>
+        {/* ─── Scrollable game area ─── */}
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto">
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div
+              key={question.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              className="flex flex-col"
+            >
+              {/* Question card with SVG timer ring */}
+              <div className="px-3.5 pt-3.5">
+                <div
+                  className="relative overflow-hidden rounded-[18px] border-2 border-[rgba(250,204,21,0.55)] bg-[#0f0f17] p-4"
+                  style={{ boxShadow: "0 0 0 4px rgba(250,204,21,0.1), 0 12px 30px rgba(0,0,0,0.6)" }}
+                >
+                  {/* Decorative corner ring */}
+                  <div className="pointer-events-none absolute -right-7 -top-7 h-[110px] w-[110px] rounded-full border-[5px] border-[rgba(250,204,21,0.18)]" />
 
-      {/* relative + overflow-y-auto — the popLayout exit uses position:absolute so no height jitter */}
-      <div className="relative min-h-0 flex flex-1 flex-col overflow-y-auto pr-0.5">
-        <AnimatePresence mode="popLayout" initial={false}>
-          <motion.div
-            key={question.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ type: "spring", stiffness: 500, damping: 35 }}
-            className="flex flex-col gap-2 pb-2 sm:gap-3"
-          >
-            <div className="min-h-[1.5rem] sm:min-h-[1.75rem]">
-              {showRewardPulse ? (
-                <p className="tp-pop-in px-0.5 text-sm font-black text-cyan-100">{rewardPulse}</p>
+                  <div className="relative z-10 flex items-center gap-3">
+                    {/* SVG timer ring */}
+                    <div className="relative h-16 w-16 shrink-0">
+                      <svg viewBox="0 0 64 64" className="absolute inset-0 h-full w-full">
+                        <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(250,204,21,0.18)" strokeWidth="5" />
+                        <circle
+                          cx="32" cy="32" r="28"
+                          fill="none"
+                          stroke={secondsRemaining <= 3 ? "#fb7185" : "#facc15"}
+                          strokeWidth="5"
+                          strokeDasharray="176"
+                          strokeDashoffset={timerDashOffset}
+                          strokeLinecap="round"
+                          transform="rotate(-90 32 32)"
+                        />
+                      </svg>
+                      <div
+                        className="absolute inset-0 flex items-center justify-center font-mono font-black text-[#facc15] text-[20px]"
+                        style={{ textShadow: "0 0 12px rgba(250,204,21,0.7)" }}
+                      >
+                        {secondsRemaining}
+                        <span className="ml-px text-[9px] font-black text-[rgba(250,204,21,0.7)]">s</span>
+                      </div>
+                    </div>
+
+                    {/* Question text */}
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1.5 flex items-center gap-1.5">
+                        {question.category ? (
+                          <span className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-[10px]">
+                            {question.category}
+                          </span>
+                        ) : null}
+                        {question.difficulty ? (
+                          <span className="rounded-full border border-[rgba(250,204,21,0.4)] px-1.5 py-px font-black uppercase tracking-[0.1em] text-[#facc15] text-[8px]">
+                            {question.difficulty}
+                          </span>
+                        ) : null}
+                      </div>
+                      <h2
+                        className="font-black leading-[1.15] text-white text-[17px]"
+                        style={{ textShadow: "0 1px 0 #000" }}
+                      >
+                        {question.question}
+                      </h2>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Answer buttons 2×2 grid */}
+              <div
+                className="grid grid-cols-2 gap-2 px-3.5 pt-3.5"
+                style={{ pointerEvents: selectedAnswer !== null ? "none" : undefined }}
+              >
+                {question.options.map((option, optionIndex) => {
+                  const isSelected = selectedAnswer === optionIndex;
+                  const isRevealedCorrect = revealedCorrectAnswer === optionIndex;
+                  const hasReveal = revealedCorrectAnswer !== null;
+                  const isSelectedWrong = hasReveal && selectedAnswer !== null && isSelected && !isRevealedCorrect;
+                  return (
+                    <AnswerButton
+                      key={`${question.id}-${optionIndex}`}
+                      option={option}
+                      optionIndex={optionIndex}
+                      questionId={question.id}
+                      letter={ANSWER_LETTERS[optionIndex] ?? String.fromCharCode(65 + optionIndex)}
+                      selected={isSelected}
+                      isRevealedCorrect={isRevealedCorrect}
+                      isSelectedWrong={isSelectedWrong}
+                      locked={selectedAnswer !== null || isSubmitting || secondsRemaining <= 0 || triviaQuotaLocked}
+                      onChoose={(idx) => { void chooseAnswer(idx); }}
+                    />
+                  );
+                })}
+              </div>
+
+              {/* Feedback bar */}
+              {feedback ? (
+                <div className="px-3.5 pt-3.5">
+                  <div
+                    className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 ${
+                      feedbackKind === "correct"
+                        ? "border border-emerald-300/40 bg-emerald-500/10"
+                        : feedbackKind === "incorrect" || feedbackKind === "timeout"
+                        ? "border border-rose-400/40 bg-rose-500/10"
+                        : "border border-white/10 bg-white/5"
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div
+                        className={`text-[12px] font-extrabold leading-snug ${
+                          feedbackKind === "correct"
+                            ? "text-[#6ee7b7]"
+                            : feedbackKind === "incorrect" || feedbackKind === "timeout"
+                            ? "text-rose-300"
+                            : "text-slate-300"
+                        }`}
+                      >
+                        {feedback}
+                      </div>
+                      {feedbackKind === "correct" ? (
+                        <div className="mt-0.5 text-[10px] font-extrabold text-slate-400">added to your profile</div>
+                      ) : null}
+                    </div>
+                    {feedbackKind === "correct" ? (
+                      <span className="shrink-0 whitespace-nowrap font-black text-[#fde68a] text-[11px]">
+                        🔥 +{POINTS_PER_CORRECT} pts
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
               ) : null}
-            </div>
-            <h2 className="px-0.5 text-base font-black leading-snug text-white [text-shadow:0_1px_0_rgba(2,6,23,0.7),0_0_12px_rgba(255,255,255,0.24)] sm:text-xl">
-              {question.question}
-            </h2>
-            {/* pointer-events:none fires the instant selectedAnswer is set — no re-render lag */}
-            <div
-              className="grid grid-cols-1 gap-2 sm:gap-3"
-              style={{ pointerEvents: selectedAnswer !== null ? "none" : undefined }}
-            >
-              {question.options.map((option, optionIndex) => {
-                const isSelected = selectedAnswer === optionIndex;
-                const isRevealedCorrect = revealedCorrectAnswer === optionIndex;
-                const hasReveal = revealedCorrectAnswer !== null;
-                const isSelectedWrong = hasReveal && selectedAnswer !== null && isSelected && !isRevealedCorrect;
-                return (
-                  <AnswerButton
-                    key={`${question.id}-${optionIndex}`}
-                    option={option}
-                    optionIndex={optionIndex}
-                    questionId={question.id}
-                    selected={isSelected}
-                    isRevealedCorrect={isRevealedCorrect}
-                    isSelectedWrong={isSelectedWrong}
-                    locked={selectedAnswer !== null || isSubmitting || secondsRemaining <= 0 || triviaQuotaLocked}
-                    onChoose={(idx) => { void chooseAnswer(idx); }}
-                  />
-                );
-              })}
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
 
-      <div className="z-40 mt-auto shrink-0 space-y-1.5 px-1 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-1 sm:space-y-2">
-        <div className="relative h-10 sm:h-11">
-          {feedback ? (
-            <p
-              className={`absolute inset-x-0 top-0 overflow-hidden text-ellipsis whitespace-nowrap px-0.5 text-sm font-black leading-snug ${
-                feedbackKind === "correct"
-                  ? "text-emerald-200"
-                  : feedbackKind === "incorrect" || feedbackKind === "timeout"
-                  ? "text-rose-200"
-                  : "text-cyan-100"
-              }`}
-            >
-              {feedback}
-            </p>
-          ) : null}
+              {/* Mini scoreboard */}
+              <div className="grid grid-cols-2 gap-2 px-3.5 pt-2 pb-3">
+                <div className="rounded-xl border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.08)] p-3">
+                  <div className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-[10px]">Correct</div>
+                  <div className="mt-0.5 font-mono font-black text-[#facc15] text-[14px]">{correctAnswers} / {attempted}</div>
+                </div>
+                <div className="rounded-xl border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.08)] p-3">
+                  <div className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-[10px]">Accuracy</div>
+                  <div className="mt-0.5 font-mono font-black text-[#facc15] text-[14px]">{accuracy}%</div>
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
 
-        <button
-          ref={nextQuestionButtonRef}
-          type="button"
-          onMouseDown={() => triggerHaptic(14)}
-          onClick={nextQuestion}
-          disabled={!canAdvanceToNextTriviaQuestion({ selectedAnswer, isSubmitting })}
-          className={`${BUTTON_POP_CLASS} inline-flex min-h-[44px] w-full items-center justify-center rounded-xl border border-blue-400/60 bg-blue-500 px-3 py-2 text-base font-black text-white sm:min-h-[50px] sm:rounded-2xl sm:px-4 sm:py-2.5 disabled:opacity-60`}
+        {/* ─── Next question button ─── */}
+        <div
+          className="z-40 shrink-0 px-3.5 pt-3"
+          style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}
         >
-          Next Question
-        </button>
+          <button
+            ref={nextQuestionButtonRef}
+            type="button"
+            onMouseDown={() => triggerHaptic(14)}
+            onClick={nextQuestion}
+            disabled={!canAdvanceToNextTriviaQuestion({ selectedAnswer, isSubmitting })}
+            className={`${BUTTON_POP_CLASS} w-full rounded-[14px] bg-[#facc15] py-3.5 font-black uppercase tracking-[0.04em] text-[#0a0a0f] text-[14px] disabled:opacity-50`}
+            style={{ boxShadow: "0 0 0 1px rgba(250,204,21,0.3), 0 10px 24px rgba(250,204,21,0.3)" }}
+          >
+            Next Question →
+          </button>
+        </div>
+
       </div>
     </div>
   );

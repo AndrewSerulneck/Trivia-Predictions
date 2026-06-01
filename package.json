@@ -4,7 +4,7 @@
   "private": true,
   "description": "A mobile website that allows users to compete with each other on trivia and predictions.",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
@@ -41,6 +41,7 @@
     "@simplewebauthn/browser": "^13.3.0",
     "@simplewebauthn/server": "^13.3.1",
     "@supabase/supabase-js": "^2.95.3",
+    "chart.js": "^4.5.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.38.0",
     "jsqr": "^1.4.0",

@@ -2,7 +2,7 @@ import { getConfiguredAdminCredentials } from "@/lib/adminCredentials";
 import { ADMIN_SESSION_COOKIE, getCookieValue, validateAdminSessionToken } from "@/lib/adminSession";
 
 type AdminAuthResult =
-  | { ok: true; authUserId: string }
+  | { ok: true; authUserId: string; adminUsername: string }
   | { ok: false; status: number; error: string };
 
 export async function requireAdminAuth(request: Request): Promise<AdminAuthResult> {
@@ -13,13 +13,17 @@ export async function requireAdminAuth(request: Request): Promise<AdminAuthResul
 
   // Allow an active signed admin session cookie.
   const adminSession = getCookieValue(request, ADMIN_SESSION_COOKIE);
-  if (
-    adminSession &&
-    configuredCredentials.some((credential) =>
-      validateAdminSessionToken(adminSession, credential.username)
-    )
-  ) {
-    return { ok: true, authUserId: "admin-session-cookie" };
+  if (adminSession) {
+    const credential = configuredCredentials.find((item) =>
+      validateAdminSessionToken(adminSession, item.username)
+    );
+    if (credential) {
+      return {
+        ok: true,
+        authUserId: "admin-session-cookie",
+        adminUsername: credential.username,
+      };
+    }
   }
 
   return { ok: false, status: 401, error: "Admin login required." };

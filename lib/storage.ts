@@ -139,6 +139,9 @@ export function clearVenueSession(): void {
 }
 
 export function clearClientState(): void {
+  // Let analytics flush final session/game durations before sessionStorage and
+  // cookies are cleared.
+  dispatchAuthStateEvent(AUTH_STATE_RESET_EVENT);
   delete memoryStore[STORAGE_KEYS.venueId];
   delete memoryStore[STORAGE_KEYS.username];
   delete memoryStore[STORAGE_KEYS.userId];

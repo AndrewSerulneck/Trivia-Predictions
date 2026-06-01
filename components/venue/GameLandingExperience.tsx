@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Children, cloneElement, isValidElement, useCallback, useEffect, useRef, useState, type ReactElement } from "react";
 import { useRouter } from "next/navigation";
 import { getVenueId } from "@/lib/storage";
+import { endCurrentGameSession, startGameSession, type GameAnalyticsType } from "@/lib/analytics";
 import { type VenueGameKey } from "@/lib/venueGameCards";
 import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
 import { hasResumableSession } from "@/lib/gameResume";
@@ -24,6 +25,14 @@ function recoverGamePageScrollState() {
   }
 }
 
+function analyticsGameType(gameKey: VenueGameKey): GameAnalyticsType {
+  if (gameKey === "live_trivia") return "live-trivia";
+  if (gameKey === "bingo") return "bingo";
+  if (gameKey === "fantasy") return "fantasy";
+  if (gameKey === "pickem") return "pickem";
+  return "speed-trivia";
+}
+
 export function GameLandingExperience({
   gameKey,
   playLabel = "Play",
@@ -34,6 +43,7 @@ export function GameLandingExperience({
   showShellUserStatus = true,
   showShellAlerts = true,
   playingBackgroundClassName,
+  playingContainerClassName,
   children,
 }: {
   gameKey: VenueGameKey;
@@ -45,6 +55,7 @@ export function GameLandingExperience({
   showShellUserStatus?: boolean;
   showShellAlerts?: boolean;
   playingBackgroundClassName?: string;
+  playingContainerClassName?: string;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -115,6 +126,14 @@ export function GameLandingExperience({
     };
   }, [gameKey]);
 
+  useEffect(() => {
+    if (!isPlaying) return;
+    startGameSession(analyticsGameType(gameKey));
+    return () => {
+      endCurrentGameSession("abandoned");
+    };
+  }, [gameKey, isPlaying]);
+
   const handlePlayClick = useCallback(() => {
     if (playHref) {
       router.push(playHref);
@@ -129,6 +148,7 @@ export function GameLandingExperience({
   }, [playHref, router]);
 
   const backToVenue = useCallback(() => {
+    endCurrentGameSession("abandoned");
     const venueId = getVenueId()?.trim() ?? "";
     if (venueId) {
       const targetPath = `/venue/${encodeURIComponent(venueId)}`;
@@ -167,24 +187,14 @@ export function GameLandingExperience({
           {isPlaying ? (
             <div
               data-venue-game-scroll
-              className="animate-tp-surface-enter relative z-10 flex min-h-[100dvh] flex-col overflow-y-auto px-2 py-2 touch-pan-y sm:px-3 sm:py-3"
+              className={`animate-tp-surface-enter relative z-10 flex min-h-[100dvh] flex-col overflow-y-auto touch-pan-y ${playingContainerClassName ?? "px-2 py-2 sm:px-3 sm:py-3"}`}
               style={{ WebkitOverflowScrolling: "touch" }}
             >
-            {showPlayingBackButton ? (
-              <div className="sticky top-0 z-30 mb-3">
-                <button
-                  type="button"
-                  onClick={backToVenue}
-                  className="tp-clean-button inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] px-4 py-2.5 text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90"
-                >
-                  <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">
-                    ←
-                  </span>
-                  Back to Venue
-                </button>
-              </div>
-            ) : null}
-            <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+            <div className="min-h-0 flex-1 overflow-hidden">
+              {showPlayingBackButton && Children.count(children) === 1 && isValidElement(children)
+                ? cloneElement(children as ReactElement<{ onBack?: () => void }>, { onBack: backToVenue })
+                : children}
+            </div>
             </div>
           ) : isResumeCheckPending ? (
             <div className="flex h-full min-h-[60dvh] items-center justify-center px-4">

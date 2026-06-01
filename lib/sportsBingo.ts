@@ -1340,18 +1340,25 @@ async function fetchBallDontLieJson(path: string, query: URLSearchParams): Promi
     throw new Error("BALLDONTLIE_API_KEY is not configured.");
   }
 
-  const response = await fetch(`${BALLDONTLIE_API_BASE_URL}${path}?${query.toString()}`, {
-    method: "GET",
-    headers: BALLDONTLIE_API_KEY
-      ? {
-          Authorization: BALLDONTLIE_API_KEY,
-        }
-      : undefined,
-    next: { revalidate: 15 },
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${BALLDONTLIE_API_BASE_URL}${path}?${query.toString()}`, {
+      method: "GET",
+      headers: BALLDONTLIE_API_KEY
+        ? {
+            Authorization: BALLDONTLIE_API_KEY,
+          }
+        : undefined,
+      next: { revalidate: 15 },
+    });
+  } catch (fetchError) {
+    console.error(`[BallDontLie] Network error fetching ${path}:`, fetchError);
+    return {};
+  }
 
   if (!response.ok) {
-    throw new Error(`BallDontLie request failed with status ${response.status}.`);
+    console.error(`[BallDontLie] Request failed (${response.status}) for ${path}. Returning empty result.`);
+    return {};
   }
 
   return response.json();

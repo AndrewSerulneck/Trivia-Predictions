@@ -9,6 +9,7 @@ import { ViewportHeightSync } from "@/components/ui/ViewportHeightSync";
 import { AuthSessionProvider } from "@/components/auth/AuthSessionProvider";
 import { AuthNavigationGuard } from "@/components/auth/AuthNavigationGuard";
 import { LoginStuckStateBreaker } from "@/components/auth/LoginStuckStateBreaker";
+import { AnalyticsRuntime } from "@/components/analytics/AnalyticsRuntime";
 import { AppShell } from "@/components/ui/AppShell";
 import { initializeScheduledTasks } from "@/lib/scheduledTasks";
 import "./globals.css";
@@ -52,6 +53,7 @@ export default async function RootLayout({
           <ScrollRescueGuard />
           <ViewportHeightSync />
           <GlobalTransitionOverlay />
+          <AnalyticsRuntime />
           <PopupAds />
           <MobileAdhesionAd />
         </AuthSessionProvider>

@@ -15,6 +15,7 @@ import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { ActionPop, type ActionPopTone } from "@/components/bingo/ActionPop";
+import { BackButton } from "@/components/navigation/BackButton";
 
 type BingoCardSquare = {
   id: string;
@@ -670,7 +671,7 @@ function LoadingState({ label }: { label: string }) {
   );
 }
 
-export function SportsBingoHome() {
+export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [userId, setUserId] = useState("");
   const [venueId, setVenueId] = useState("");
@@ -1589,6 +1590,11 @@ export function SportsBingoHome() {
 
   return (
     <div ref={rootRef} className={`tp-bingo-theme space-y-3 ${isScreenShaking ? "tp-bingo-screen-shake" : ""}`}>
+      {/* Back navigation pill */}
+      <div className="flex items-center justify-start">
+        <BackButton href="/" label="Back" venueHomeFallback />
+      </div>
+
       <VenueEntryRulesPanel
         gameKey="bingo"
         shouldDisplay={Boolean(userId) && !loadingCards && activeCards.length === 0}
@@ -1625,7 +1631,7 @@ export function SportsBingoHome() {
 
       {/* Header — BINGO rainbow title + controls */}
       <div className="rounded-2xl border border-sky-300/30 bg-slate-900 p-4">
-        <p className="text-center text-[11px] font-black uppercase tracking-[0.16em] text-sky-300">Sports Bingo</p>
+        <p className="text-center text-[44px] font-black uppercase tracking-[0.16em] text-amber-300 leading-none">Hightop</p>
         <div className="mb-1 grid grid-cols-5 gap-1">
           {[
             { letter: "B", cls: "text-rose-400" },
@@ -1692,23 +1698,6 @@ export function SportsBingoHome() {
         </div>
 
         <div className="mt-3 flex w-full items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              if (venueId) {
-                void navigateBackToVenue({
-                  venuePath: `/venue/${encodeURIComponent(venueId)}`,
-                  fallbackNavigate: () => {
-                    window.location.href = `/venue/${encodeURIComponent(venueId)}`;
-                  },
-                });
-              }
-            }}
-            className="tp-exit-pill tp-clean-button flex flex-1 items-center justify-center gap-1 py-2 text-sm font-black active:scale-95"
-            style={{ boxShadow: "0 0 0 2px #020617, 0 1px 3px rgba(28,43,58,0.5)" }}
-          >
-            ← Back to Venue
-          </button>
           <button
             type="button"
             data-bingo-collect-all

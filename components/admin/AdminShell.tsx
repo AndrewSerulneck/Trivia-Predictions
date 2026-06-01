@@ -9,6 +9,7 @@ import {
   type AdminSectionOption,
 } from "@/components/admin/adminSections";
 import { UsersSection } from "@/components/admin/sections/UsersSection";
+import { UserAnalyticsSection } from "@/components/admin/sections/UserAnalyticsSection";
 import { VenuesSection } from "@/components/admin/sections/VenuesSection";
 import { ChallengesSection } from "@/components/admin/sections/ChallengesSection";
 import { SchedulesSection } from "@/components/admin/sections/SchedulesSection";
@@ -480,6 +481,8 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
     switch (activeSection) {
       case "venue-users":
         return <UsersSection venues={venueList} />;
+      case "user-analytics":
+        return <UserAnalyticsSection venues={venueList} />;
       case "venue-manage":
         return <VenuesSection venues={venueList} onVenueCreated={handleVenueCreated} />;
       case "challenge-campaigns":

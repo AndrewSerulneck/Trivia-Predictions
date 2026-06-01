@@ -624,7 +624,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     label: string;
     nextStartAtMs: number | null;
     failureReason: LiveTriviaPayloadFailureReason | "network" | null;
-  }>({ live: false, label: "Status unavailable", nextStartAtMs: null, failureReason: "network" });
+  }>({ live: false, label: "", nextStartAtMs: null, failureReason: null });
   const [liveCountdownNowMs, setLiveCountdownNowMs] = useState(() => Date.now());
   const [leaderboardBootstrapEntries, setLeaderboardBootstrapEntries] = useState<LeaderboardEntry[]>([]);
   const [activeScreen, setActiveScreen] = useState<HomeScreenIndex>(0);
@@ -1569,6 +1569,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     return () => window.clearInterval(interval);
   }, []);
 
+  // Fetch live trivia status immediately on mount so the countdown clock
+  // appears right away instead of waiting for the full arrival pipeline.
+  useEffect(() => {
+    void loadLiveTriviaStatus();
+  }, [loadLiveTriviaStatus]);
 
   useEffect(() => {
     if (!homeRevealComplete) return;
@@ -1668,7 +1673,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     ? "Live Now"
     : nextLiveTriviaCountdownSeconds != null
     ? formatLongCountdown(nextLiveTriviaCountdownSeconds)
-    : liveTriviaStatus.label || "Status unavailable";
+    : liveTriviaStatus.label || "Loading...";
   const showLiveBadge = liveTriviaStatus.live;
   const lobbyButtonShouldPulse =
     liveTriviaStatus.live ||

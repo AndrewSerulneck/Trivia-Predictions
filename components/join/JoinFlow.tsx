@@ -49,6 +49,7 @@ import { getVenueDisplayName, getVenueVisual as getVenueVisualFromConfig } from 
 import { APP_PAGE_NAMES } from "@/lib/pageNames";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
+import { ensureSiteSession, syncUserGeographicData } from "@/lib/analytics";
 import { normalizePin } from "@/lib/pin";
 import { getPasskeyClientMessage } from "@/lib/passkeyErrors";
 
@@ -1082,6 +1083,15 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         saveVenueId(selectedVenue.id);
         saveUsername(user.username);
         saveUserId(user.id);
+        ensureSiteSession();
+        syncUserGeographicData({
+          zipCode: selectedVenue.zipCode,
+          city: selectedVenue.city,
+          stateCode: selectedVenue.state,
+          regionKey: selectedVenue.region,
+          country: selectedVenue.country,
+          dataSource: "geolocation",
+        });
         setSelectedVenueLock(selectedVenue.id);
         setLoginInProgress(selectedVenue.id);
         refreshAuthSession();
@@ -1294,6 +1304,15 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         saveUsername(verifyPayload.user.username);
         rememberLocalPasskeyForUsername(verifyPayload.user.username);
         saveUserId(verifyPayload.user.id);
+        ensureSiteSession();
+        syncUserGeographicData({
+          zipCode: venue.zipCode,
+          city: venue.city,
+          stateCode: venue.state,
+          regionKey: venue.region,
+          country: venue.country,
+          dataSource: "geolocation",
+        });
         setSelectedVenueLock(venue.id);
         setLoginInProgress(venue.id);
         refreshAuthSession();
@@ -2080,6 +2099,15 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       saveVenueId(venue.id);
       saveUsername(user.username);
       saveUserId(user.id);
+      ensureSiteSession();
+      syncUserGeographicData({
+        zipCode: venue.zipCode,
+        city: venue.city,
+        stateCode: venue.state,
+        regionKey: venue.region,
+        country: venue.country,
+        dataSource: "geolocation",
+      });
       setSelectedVenueLock(venue.id);
       setLoginInProgress(venue.id);
       refreshAuthSession();
@@ -2392,9 +2420,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                   >
                     <div className="text-center space-y-3">
                       <div className="text-5xl select-none" aria-hidden>🔑</div>
-                      <h1 className="text-2xl font-black text-white">Worried you'll forget your username and PIN?</h1>
+                      <h1 className="text-2xl font-black text-white">Worried you&apos;ll forget your username and PIN?</h1>
                       <p className="text-lg leading-relaxed" style={{ color: "#fbbf24" }}>
-                        You definitely will. Set up a passkey now so you can sign in to Hightop Challenge the same way you sign into your phone. This saves time and you don't have to remember anything.
+                        You definitely will. Set up a passkey now so you can sign in to Hightop Challenge the same way you sign into your phone. This saves time and you don&apos;t have to remember anything.
                       </p>
                       <p className="text-lg text-ht-fg-muted leading-relaxed">
                          This process does not share any of your data with us. Your information stays secure on your device.

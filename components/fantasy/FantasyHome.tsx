@@ -98,8 +98,8 @@ type FantasySport = "nba" | "wnba" | "baseball" | "football";
 const FANTASY_SPORTS: Array<{ key: FantasySport; icon: string; label: string; available: boolean }> = [
   { key: "nba", icon: "🏀", label: "NBA", available: true },
   { key: "wnba", icon: "🏀", label: "WNBA", available: true },
-  { key: "baseball", icon: "⚾", label: "Baseball", available: true },
-  { key: "football", icon: "🏈", label: "Football", available: false },
+  { key: "baseball", icon: "⚾", label: "MLB", available: true },
+  { key: "football", icon: "🏈", label: "NFL", available: false },
 ];
 const FANTASY_LINEUP_SIZE_BY_SPORT: Record<FantasySport, number> = {
   nba: 5,
@@ -634,9 +634,10 @@ function ChalkGrid({ fine = false }: { fine?: boolean }) {
 
 type FantasyHomeProps = {
   defaultSport?: FantasySport;
+  onBack?: () => void;
 };
 
-export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
+export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) {
   const [userId, setUserId] = useState("");
   const [venueId, setVenueId] = useState("");
   const [games, setGames] = useState<FantasyGame[]>([]);
@@ -2229,10 +2230,26 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
         : null}
 
       {/* ── Header ── */}
-      <div className="border-b border-white/5 px-4 pb-3 pt-4 text-center">
-        <h1 className="font-black text-[17px] uppercase leading-none tracking-[0.05em] text-[#fef3c7] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">
-          Hightop Fantasy
-        </h1>
+      <div className="flex items-center border-b border-white/5 px-4 py-2">
+        {onBack ? (
+          <button
+            type="button"
+            onClick={onBack}
+            className="tp-clean-button inline-flex min-h-[44px] w-11 shrink-0 items-center justify-center rounded-full border border-[#1c2b3a] bg-gradient-to-r from-[#a93d3a] via-[#c8573e] to-[#e9784e] text-sm font-semibold text-[#fff7ea] shadow-sm shadow-[#1c2b3a]/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e9784e]/60 active:scale-95 active:brightness-90"
+            aria-label="Back to Venue"
+          >
+            ←
+          </button>
+        ) : (
+          <div className="w-11 shrink-0" />
+        )}
+        <div className="flex-1 text-center">
+          <h1 className="font-black text-[44px] uppercase leading-none tracking-[0.05em] text-[#fef3c7] [text-shadow:0_1px_0_rgba(0,0,0,0.5)]">
+            Hightop Fantasy
+          </h1>
+        </div>
+        {/* Right spacer to keep title centered */}
+        <div className="w-11 shrink-0" />
       </div>
 
 
@@ -2299,7 +2316,13 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
             <span className="text-[10.5px] font-extrabold text-slate-300">
               Tonight&apos;s {selectedSportLabel} slate · {sportGames.length} game{sportGames.length === 1 ? "" : "s"}
             </span>
-            <span className="text-[9.5px] font-extrabold uppercase tracking-[0.06em] text-[#fde68a]">Locks at first tip</span>
+            <span className="text-[9.5px] font-extrabold uppercase tracking-[0.06em] text-[#fde68a]">
+              {selectedSport === "baseball"
+                ? "Locks at first pitch"
+                : selectedSport === "football"
+                ? "Locks at kickoff"
+                : "Locks at first tip"}
+            </span>
           </div>
         ) : null}
 
