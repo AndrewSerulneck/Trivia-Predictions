@@ -7,6 +7,7 @@ import type {
   ChallengeCampaignWin,
   ChallengeGameType,
   CampaignRecurringType,
+  ChallengeScheduleType,
   ChallengeImageFitMode,
   ChallengeLeaderboardEntry,
   ChallengeLeaderboardTiebreaker,
@@ -25,14 +26,18 @@ type ChallengeCampaignRow = {
   image_fit: ChallengeImageFitMode | null;
   rules: string;
   venue_ids: string[] | null;
+  schedule_type: string;
   active_days: string[] | null;
+  start_date: string | null;
   start_time: string | null;
+  end_day: string | null;
   end_time: string | null;
   end_date: string | null;
   game_types: string[] | null;
   point_multiplier: number | string;
   points_required_to_win: number;
   recurring_type: CampaignRecurringType;
+  display_order: number | null;
   challenge_mode: ChallengeMode | null;
   leaderboard_display_limit: number | null;
   leaderboard_tiebreaker: ChallengeLeaderboardTiebreaker | null;
@@ -235,8 +240,11 @@ function mapCampaignRow(
       : "cover",
     rules: row.rules,
     venueIds: Array.isArray(row.venue_ids) ? row.venue_ids : [],
+    scheduleType: (row.schedule_type === "multi_day" || row.schedule_type === "one_time") ? "multi_day" : "single_day",
     activeDays: Array.isArray(row.active_days) ? row.active_days : [],
+    startDate: row.start_date ?? undefined,
     startTime: row.start_time ?? undefined,
+    endDay: row.end_day ?? undefined,
     endTime: row.end_time ?? undefined,
     endDate: row.end_date ?? undefined,
     gameTypes: gameTypes.length > 0 ? gameTypes : [...VALID_GAME_TYPES],
@@ -246,6 +254,7 @@ function mapCampaignRow(
     pointMultiplier: Math.max(0.001, Number(row.point_multiplier ?? 1)),
     pointsRequiredToWin: Math.max(1, Number(row.points_required_to_win ?? 100)),
     recurringType: row.recurring_type,
+    displayOrder: row.display_order ?? null,
     winnerUserId: row.winner_user_id,
     winnerUsername: winnerUsername ?? null,
     prizeClaimedAt: prizeClaimedAt ?? null,
@@ -290,6 +299,60 @@ function getWeekdayKey(date: Date): string {
   return ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][date.getDay()] ?? "sun";
 }
 
+function isMultiDayCampaignActive(campaign: ChallengeCampaign, now: Date): boolean {
+  const isRecurring = campaign.recurringType && campaign.recurringType !== "none";
+  if (isRecurring) {
+    return isMultiDayRecurringActive(campaign, now);
+  }
+  // One-time: absolute start_date → end_date window
+  if (!campaign.startDate || !campaign.endDate) return false;
+  const startMs = Date.parse(campaign.startTime ? `${campaign.startDate}T${campaign.startTime}:00` : `${campaign.startDate}T00:00:00`);
+  const endMs = Date.parse(campaign.endTime ? `${campaign.endDate}T${campaign.endTime}:59` : `${campaign.endDate}T23:59:59`);
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) return false;
+  return now.getTime() >= startMs && now.getTime() <= endMs;
+}
+
+function isMultiDayRecurringActive(campaign: ChallengeCampaign, now: Date): boolean {
+  const DOW = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+  const startDayKey = campaign.activeDays[0];
+  const endDayKey = campaign.endDay;
+  if (!startDayKey || !endDayKey) return false;
+  const startDowIndex = DOW.indexOf(startDayKey as typeof DOW[number]);
+  const endDowIndex = DOW.indexOf(endDayKey as typeof DOW[number]);
+  if (startDowIndex < 0 || endDowIndex < 0) return false;
+
+  const [startH, startM] = (campaign.startTime ?? "00:00").split(":").map(Number);
+  const [endH, endM] = (campaign.endTime ?? "23:59").split(":").map(Number);
+
+  // Day span from start dow to end dow (0 = same day, 1–6 = days ahead)
+  const daySpan = ((endDowIndex - startDowIndex) + 7) % 7;
+
+  // Find the most recent occurrence of the start dow
+  const nowDow = now.getDay();
+  const daysAgo = ((nowDow - startDowIndex) + 7) % 7;
+
+  const windowStart = new Date(now);
+  windowStart.setDate(windowStart.getDate() - daysAgo);
+  windowStart.setHours(startH, startM, 0, 0);
+
+  // If now is before this week's start, step back one recurrence period
+  if (now < windowStart) {
+    windowStart.setDate(windowStart.getDate() - 7);
+  }
+
+  const windowEnd = new Date(windowStart);
+  windowEnd.setDate(windowEnd.getDate() + (daySpan === 0 ? 7 : daySpan));
+  windowEnd.setHours(endH, endM, 59, 999);
+
+  // Optional expiry: end_date as the last date this recurring challenge runs
+  if (campaign.endDate) {
+    const expiryMs = Date.parse(`${campaign.endDate}T23:59:59`);
+    if (Number.isFinite(expiryMs) && now.getTime() > expiryMs) return false;
+  }
+
+  return now >= windowStart && now <= windowEnd;
+}
+
 function isTimeInWindow(now: Date, startTime?: string, endTime?: string): boolean {
   if (!startTime || !endTime) {
     return true;
@@ -313,6 +376,10 @@ function campaignMatchesVenue(campaign: ChallengeCampaign, venueId: string): boo
 function isCampaignEligibleAtTime(campaign: ChallengeCampaign, now: Date, gameType: ChallengeGameType): boolean {
   if (!campaign.isActive || campaign.winnerUserId) return false;
   if (!campaign.gameTypes.includes(gameType)) return false;
+  if (campaign.scheduleType === "multi_day" || campaign.scheduleType === "one_time") {
+    return isMultiDayCampaignActive(campaign, now);
+  }
+  // Recurring path
   if (campaign.endDate) {
     const endDate = new Date(`${campaign.endDate}T23:59:59.999Z`);
     if (Number.isFinite(endDate.getTime()) && now.getTime() > endDate.getTime()) {
@@ -329,6 +396,16 @@ function isCampaignEligibleAtTime(campaign: ChallengeCampaign, now: Date, gameTy
 }
 
 function getCampaignCloseTimestampMs(campaign: ChallengeCampaign): number | null {
+  const isMultiDay = campaign.scheduleType === "multi_day" || campaign.scheduleType === "one_time";
+  if (isMultiDay) {
+    // Recurring multi-day campaigns have no fixed close — they repeat each period.
+    if (campaign.recurringType && campaign.recurringType !== "none") return null;
+    if (!campaign.endDate) return null;
+    const endTime = String(campaign.endTime ?? "").trim();
+    const boundary = endTime ? `${campaign.endDate}T${endTime}:59` : `${campaign.endDate}T23:59:59`;
+    const parsed = Date.parse(boundary);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
   if (!campaign.endDate) return null;
   const endTime = String(campaign.endTime ?? "").trim();
   const boundary = endTime
@@ -535,8 +612,9 @@ export async function listChallengeCampaigns(params: {
   let query = supabaseAdmin!
     .from("challenge_campaigns")
     .select(
-      "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, active_days, start_time, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, winner_user_id, is_active"
+      "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, schedule_type, active_days, start_date, start_time, end_day, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, display_order, winner_user_id, is_active"
     )
+    .order("display_order", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false })
     .limit(200);
 
@@ -621,8 +699,11 @@ export async function createChallengeCampaign(input: {
   imageFit?: ChallengeImageFitMode;
   rules: string;
   venueIds?: string[];
+  scheduleType?: ChallengeScheduleType;
   activeDays?: string[];
+  startDate?: string;
   startTime?: string;
+  endDay?: string;
   endTime?: string;
   endDate?: string;
   gameTypes?: string[];
@@ -632,6 +713,7 @@ export async function createChallengeCampaign(input: {
   pointMultiplier?: number;
   pointsRequiredToWin?: number;
   recurringType?: CampaignRecurringType;
+  displayOrder?: number | null;
   isActive?: boolean;
 }): Promise<ChallengeCampaign> {
   assertConfigured();
@@ -650,8 +732,11 @@ export async function createChallengeCampaign(input: {
     image_fit: VALID_IMAGE_FITS.includes((input.imageFit ?? "cover") as ChallengeImageFitMode) ? (input.imageFit ?? "cover") : "cover",
     rules,
     venue_ids: Array.from(new Set((input.venueIds ?? []).map((value) => String(value).trim()).filter(Boolean))),
+    schedule_type: (input.scheduleType === "one_time" ? "one_time" : "recurring") as ChallengeScheduleType,
     active_days: normalizeDays(input.activeDays),
+    start_date: String(input.startDate ?? "").trim() || null,
     start_time: String(input.startTime ?? "").trim() || null,
+    end_day: String(input.endDay ?? "").trim() || null,
     end_time: String(input.endTime ?? "").trim() || null,
     end_date: String(input.endDate ?? "").trim() || null,
     game_types: normalizeGameTypes(input.gameTypes),
@@ -663,6 +748,7 @@ export async function createChallengeCampaign(input: {
       ? Math.max(1, Math.round(Number(input.pointsRequiredToWin)))
       : 100,
     recurring_type: (input.recurringType ?? "none") as CampaignRecurringType,
+    display_order: input.displayOrder ?? null,
     is_active: input.isActive ?? true,
   };
 
@@ -670,7 +756,7 @@ export async function createChallengeCampaign(input: {
     .from("challenge_campaigns")
     .insert(row)
     .select(
-      "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, active_days, start_time, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, winner_user_id, is_active"
+      "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, schedule_type, active_days, start_date, start_time, end_day, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, display_order, winner_user_id, is_active"
     )
     .single<ChallengeCampaignRow>();
   if (error || !data) {
@@ -689,8 +775,11 @@ export async function updateChallengeCampaign(input: {
   imageFit?: ChallengeImageFitMode;
   rules?: string;
   venueIds?: string[];
+  scheduleType?: ChallengeScheduleType;
   activeDays?: string[];
+  startDate?: string;
   startTime?: string;
+  endDay?: string;
   endTime?: string;
   endDate?: string;
   gameTypes?: string[];
@@ -700,6 +789,7 @@ export async function updateChallengeCampaign(input: {
   pointMultiplier?: number;
   pointsRequiredToWin?: number;
   recurringType?: CampaignRecurringType;
+  displayOrder?: number | null;
   winnerUserId?: string | null;
   isActive?: boolean;
 }): Promise<ChallengeCampaign> {
@@ -716,8 +806,11 @@ export async function updateChallengeCampaign(input: {
   if (typeof input.imageFit === "string" && VALID_IMAGE_FITS.includes(input.imageFit)) update.image_fit = input.imageFit;
   if (typeof input.rules === "string") update.rules = input.rules.trim();
   if (Array.isArray(input.venueIds)) update.venue_ids = Array.from(new Set(input.venueIds.map((v) => String(v).trim()).filter(Boolean)));
+  if (typeof input.scheduleType === "string") update.schedule_type = input.scheduleType === "one_time" ? "one_time" : "recurring";
   if (Array.isArray(input.activeDays)) update.active_days = normalizeDays(input.activeDays);
+  if (typeof input.startDate === "string") update.start_date = input.startDate.trim() || null;
   if (typeof input.startTime === "string") update.start_time = input.startTime.trim() || null;
+  if (typeof input.endDay === "string") update.end_day = input.endDay.trim() || null;
   if (typeof input.endTime === "string") update.end_time = input.endTime.trim() || null;
   if (typeof input.endDate === "string") update.end_date = input.endDate.trim() || null;
   if (Array.isArray(input.gameTypes)) update.game_types = normalizeGameTypes(input.gameTypes);
@@ -731,6 +824,7 @@ export async function updateChallengeCampaign(input: {
   if (Number.isFinite(input.pointMultiplier)) update.point_multiplier = Math.max(0.001, Number(input.pointMultiplier));
   if (Number.isFinite(input.pointsRequiredToWin)) update.points_required_to_win = Math.max(1, Math.round(Number(input.pointsRequiredToWin)));
   if (typeof input.recurringType === "string") update.recurring_type = input.recurringType;
+  if (input.displayOrder !== undefined) update.display_order = input.displayOrder;
   if (input.winnerUserId !== undefined) update.winner_user_id = input.winnerUserId;
   if (typeof input.isActive === "boolean") update.is_active = input.isActive;
 
@@ -739,7 +833,7 @@ export async function updateChallengeCampaign(input: {
     .update(update)
     .eq("id", id)
     .select(
-      "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, active_days, start_time, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, winner_user_id, is_active"
+      "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, schedule_type, active_days, start_date, start_time, end_day, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, display_order, winner_user_id, is_active"
     )
     .single<ChallengeCampaignRow>();
   if (error || !data) {

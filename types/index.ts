@@ -175,6 +175,7 @@ export interface ChallengeInvite {
 }
 
 export type CampaignRecurringType = "none" | "daily" | "weekly" | "monthly" | "yearly";
+export type ChallengeScheduleType = "single_day" | "multi_day" | "recurring" | "one_time";
 export type ChallengeImageFitMode = "cover" | "contain";
 export type ChallengeMode = "progress" | "leaderboard";
 export type ChallengeLeaderboardTiebreaker = "first_to_score" | "latest_activity";
@@ -204,8 +205,11 @@ export interface ChallengeCampaign {
   imageFit?: ChallengeImageFitMode;
   rules: string;
   venueIds: string[];
+  scheduleType: ChallengeScheduleType;
   activeDays: string[];
+  startDate?: string;
   startTime?: string;
+  endDay?: string;
   endTime?: string;
   endDate?: string;
   gameTypes: ChallengeGameType[];
@@ -219,6 +223,7 @@ export interface ChallengeCampaign {
   pointMultiplier: number;
   pointsRequiredToWin: number;
   recurringType: CampaignRecurringType;
+  displayOrder?: number | null;
   winnerUserId?: string | null;
   winnerUsername?: string | null;
   prizeClaimedAt?: string | null;

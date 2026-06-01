@@ -17,8 +17,11 @@ type AdminChallengeCampaign = {
   imageUrl?: string;
   rules: string;
   venueIds: string[];
+  scheduleType: "single_day" | "multi_day" | "recurring" | "one_time";
   activeDays: string[];
+  startDate?: string;
   startTime?: string;
+  endDay?: string;
   endTime?: string;
   endDate?: string;
   gameTypes: string[];
@@ -28,6 +31,7 @@ type AdminChallengeCampaign = {
   pointMultiplier: number;
   pointsRequiredToWin: number;
   recurringType: CampaignRecurringType;
+  displayOrder?: number | null;
   winnerUserId?: string | null;
   winnerUsername?: string | null;
   isActive: boolean;
@@ -113,8 +117,11 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
   const [formName, setFormName] = useState("");
   const [formRules, setFormRules] = useState("");
   const [formVenueIds, setFormVenueIds] = useState<string[]>([]);
+  const [formScheduleType, setFormScheduleType] = useState<"single_day" | "multi_day">("single_day");
   const [formActiveDays, setFormActiveDays] = useState<string[]>([]);
+  const [formStartDate, setFormStartDate] = useState("");
   const [formStartTime, setFormStartTime] = useState("");
+  const [formEndDay, setFormEndDay] = useState("");
   const [formEndTime, setFormEndTime] = useState("");
   const [formEndDate, setFormEndDate] = useState("");
   const [formGameTypes, setFormGameTypes] = useState<string[]>([...GAME_TYPE_OPTIONS]);
@@ -263,14 +270,46 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
     }
   }
 
+  // ── Reorder ──────────────────────────────────────────────────────────────
+
+  async function moveItem(id: string, direction: "up" | "down") {
+    const idx = campaigns.findIndex((c) => c.id === id);
+    const neighborIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (idx < 0 || neighborIdx < 0 || neighborIdx >= campaigns.length) return;
+    const item = campaigns[idx];
+    const neighbor = campaigns[neighborIdx];
+    const itemOrder = item.displayOrder ?? idx * 10;
+    const neighborOrder = neighbor.displayOrder ?? neighborIdx * 10;
+    try {
+      await Promise.all([
+        fetch("/api/admin", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ resource: "challenge-campaigns", id: item.id, displayOrder: neighborOrder }),
+        }),
+        fetch("/api/admin", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ resource: "challenge-campaigns", id: neighbor.id, displayOrder: itemOrder }),
+        }),
+      ]);
+      await fetchCampaigns(page);
+    } catch {
+      setError("Failed to reorder campaigns.");
+    }
+  }
+
   // ── Create ───────────────────────────────────────────────────────────────
 
   function resetCreateForm() {
     setFormName("");
     setFormRules("");
     setFormVenueIds([]);
+    setFormScheduleType("single_day");
     setFormActiveDays([]);
+    setFormStartDate("");
     setFormStartTime("");
+    setFormEndDay("");
     setFormEndTime("");
     setFormEndDate("");
     setFormGameTypes([...GAME_TYPE_OPTIONS]);
@@ -296,8 +335,12 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
     setFormName(campaign.name);
     setFormRules(campaign.rules);
     setFormVenueIds(campaign.venueIds);
+    const st = campaign.scheduleType;
+    setFormScheduleType(st === "multi_day" || st === "one_time" ? "multi_day" : "single_day");
     setFormActiveDays(campaign.activeDays);
+    setFormStartDate(campaign.startDate ?? "");
     setFormStartTime(campaign.startTime ?? "");
+    setFormEndDay(campaign.endDay ?? "");
     setFormEndTime(campaign.endTime ?? "");
     setFormEndDate(campaign.endDate ?? "");
     setFormGameTypes(
@@ -330,8 +373,11 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
         name: formName.trim(),
         rules: formRules.trim(),
         venueIds: formVenueIds,
-        activeDays: formActiveDays,
+        scheduleType: formScheduleType,
+        activeDays: formScheduleType === "multi_day" ? (formRecurring !== "none" ? formActiveDays : []) : formActiveDays,
+        startDate: formScheduleType === "multi_day" && formRecurring === "none" ? (formStartDate || undefined) : undefined,
         startTime: formStartTime || undefined,
+        endDay: formScheduleType === "multi_day" && formRecurring !== "none" ? (formEndDay || undefined) : undefined,
         endTime: formEndTime || undefined,
         endDate: formEndDate || undefined,
         gameTypes: formGameTypes,
@@ -421,54 +467,227 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
             </div>
           </div>
 
-          {/* Active days */}
-          <div>
-            <label className={lbl}>Active Days</label>
-            <div className="flex flex-wrap gap-2 pt-1">
-              {DAY_OPTIONS.map((d) => (
-                <label key={d} className="flex cursor-pointer items-center gap-1.5 text-sm capitalize text-black">
-                  <input
-                    type="checkbox"
-                    checked={formActiveDays.includes(d)}
-                    onChange={() =>
-                      setFormActiveDays((prev) =>
-                        prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]
-                      )
-                    }
-                    className="h-4 w-4 rounded border-slate-300 text-indigo-600"
-                  />
-                  {d}
-                </label>
+          {/* Schedule type toggle */}
+          <div className="col-span-2">
+            <label className={lbl}>Schedule Type</label>
+            <div className="mt-1 flex w-fit overflow-hidden rounded-lg border border-slate-300">
+              {(["single_day", "multi_day"] as const).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setFormScheduleType(type)}
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    formScheduleType === type
+                      ? "bg-indigo-600 text-white"
+                      : "bg-white text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  {type === "multi_day" ? "Multi-Day Challenge" : "Single Day Challenge"}
+                </button>
               ))}
             </div>
           </div>
 
-          {/* Time window */}
-          <div>
-            <label className={lbl}>Start Time</label>
-            <input type="time" className={field} value={formStartTime} onChange={(e) => setFormStartTime(e.target.value)} />
-          </div>
-          <div>
-            <label className={lbl}>End Time</label>
-            <input type="time" className={field} value={formEndTime} onChange={(e) => setFormEndTime(e.target.value)} />
-          </div>
+          {formScheduleType === "multi_day" ? (
+            <>
+              {/* Multi-day: recurring cadence first — it controls which sub-fields appear */}
+              <div>
+                <label className={lbl}>Recurring</label>
+                <select
+                  className={field}
+                  value={formRecurring}
+                  onChange={(e) => setFormRecurring(e.target.value as CampaignRecurringType)}
+                >
+                  {RECURRING_OPTIONS.map((r) => (
+                    <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
+              <div /> {/* spacer */}
 
-          <div>
-            <label className={lbl}>End Date</label>
-            <input type="date" className={field} value={formEndDate} onChange={(e) => setFormEndDate(e.target.value)} />
-          </div>
-          <div>
-            <label className={lbl}>Recurring</label>
-            <select
-              className={field}
-              value={formRecurring}
-              onChange={(e) => setFormRecurring(e.target.value as CampaignRecurringType)}
-            >
-              {RECURRING_OPTIONS.map((r) => (
-                <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
-              ))}
-            </select>
-          </div>
+              {formRecurring === "none" ? (
+                <>
+                  {/* One-time: absolute start date+time → end date+time */}
+                  <div>
+                    <label className={lbl}>Start Date</label>
+                    <input type="date" className={field} value={formStartDate} onChange={(e) => setFormStartDate(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className={lbl}>Start Time</label>
+                    <input type="time" className={field} value={formStartTime} onChange={(e) => setFormStartTime(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className={lbl}>End Date</label>
+                    <input type="date" className={field} value={formEndDate} onChange={(e) => setFormEndDate(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className={lbl}>End Time</label>
+                    <input type="time" className={field} value={formEndTime} onChange={(e) => setFormEndTime(e.target.value)} />
+                  </div>
+                  {formStartDate && formEndDate && (() => {
+                    const fmtDatetime = (date: string, time: string) => {
+                      const d = new Date(time ? `${date}T${time}` : `${date}T00:00`);
+                      return d.toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+                    };
+                    const startMs = Date.parse(formStartTime ? `${formStartDate}T${formStartTime}` : `${formStartDate}T00:00`);
+                    const endMs = Date.parse(formEndTime ? `${formEndDate}T${formEndTime}` : `${formEndDate}T23:59`);
+                    const diffHrs = Number.isFinite(startMs) && Number.isFinite(endMs) && endMs > startMs
+                      ? Math.round((endMs - startMs) / 36000) / 100
+                      : null;
+                    return (
+                      <div className="col-span-2">
+                        <p className="text-xs font-medium text-indigo-700">
+                          Window: {fmtDatetime(formStartDate, formStartTime)} → {fmtDatetime(formEndDate, formEndTime)}
+                          {diffHrs !== null ? ` · ${diffHrs} hrs` : ""}
+                        </p>
+                      </div>
+                    );
+                  })()}
+                </>
+              ) : (
+                <>
+                  {/* Recurring multi-day: start day + time → end day + time */}
+                  <div>
+                    <label className={lbl}>Start Day</label>
+                    <select
+                      className={field}
+                      value={formActiveDays[0] ?? ""}
+                      onChange={(e) => setFormActiveDays(e.target.value ? [e.target.value] : [])}
+                    >
+                      <option value="">— select —</option>
+                      {DAY_OPTIONS.map((d) => (
+                        <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={lbl}>Start Time</label>
+                    <input type="time" className={field} value={formStartTime} onChange={(e) => setFormStartTime(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className={lbl}>End Day</label>
+                    <select
+                      className={field}
+                      value={formEndDay}
+                      onChange={(e) => setFormEndDay(e.target.value)}
+                    >
+                      <option value="">— select —</option>
+                      {DAY_OPTIONS.map((d) => (
+                        <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={lbl}>End Time</label>
+                    <input type="time" className={field} value={formEndTime} onChange={(e) => setFormEndTime(e.target.value)} />
+                  </div>
+                  {formActiveDays[0] && formEndDay && formStartTime && formEndTime && (() => {
+                    const DAY_FULL: Record<string, string> = {
+                      sun: "Sunday", mon: "Monday", tue: "Tuesday", wed: "Wednesday",
+                      thu: "Thursday", fri: "Friday", sat: "Saturday",
+                    };
+                    const fmtTime = (t: string) =>
+                      new Date(`1970-01-01T${t}`).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+                    const DOW = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+                    const startIdx = DOW.indexOf(formActiveDays[0]);
+                    const endIdx = DOW.indexOf(formEndDay);
+                    const span = ((endIdx - startIdx) + 7) % 7 || 7;
+                    return (
+                      <div className="col-span-2">
+                        <p className="text-xs font-medium text-indigo-700">
+                          Window: {DAY_FULL[formActiveDays[0]]} {fmtTime(formStartTime)} → {DAY_FULL[formEndDay]} {fmtTime(formEndTime)} · {span} day{span !== 1 ? "s" : ""} each {formRecurring}
+                        </p>
+                      </div>
+                    );
+                  })()}
+                  <div>
+                    <label className={lbl}>Schedule Expiry Date</label>
+                    <input type="date" className={field} value={formEndDate} onChange={(e) => setFormEndDate(e.target.value)} />
+                    <p className="mt-1.5 text-xs text-slate-500">Optional. The recurring schedule stops after this date.</p>
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Single-day: active days + time window + recurring cadence */}
+              <div>
+                <label className={lbl}>Start Day(s)</label>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {DAY_OPTIONS.map((d) => (
+                    <label key={d} className="flex cursor-pointer items-center gap-1.5 text-sm capitalize text-black">
+                      <input
+                        type="checkbox"
+                        checked={formActiveDays.includes(d)}
+                        onChange={() =>
+                          setFormActiveDays((prev) =>
+                            prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]
+                          )
+                        }
+                        className="h-4 w-4 rounded border-slate-300 text-indigo-600"
+                      />
+                      {d}
+                    </label>
+                  ))}
+                </div>
+                <p className="mt-1.5 text-xs text-slate-500">
+                  Select the day(s) the challenge window opens. If the end time is past midnight, the challenge closes on the following day.
+                </p>
+              </div>
+
+              <div>
+                <label className={lbl}>Start Time</label>
+                <input type="time" className={field} value={formStartTime} onChange={(e) => setFormStartTime(e.target.value)} />
+              </div>
+              <div>
+                <label className={lbl}>
+                  End Time <span className="normal-case font-normal text-slate-400">(next day if earlier than start)</span>
+                </label>
+                <input type="time" className={field} value={formEndTime} onChange={(e) => setFormEndTime(e.target.value)} />
+                {formStartTime && formEndTime && formActiveDays.length > 0 && (() => {
+                  const fmtTime = (t: string) =>
+                    new Date(`1970-01-01T${t}`).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+                  const DAY_FULL: Record<string, string> = {
+                    sun: "Sunday", mon: "Monday", tue: "Tuesday", wed: "Wednesday",
+                    thu: "Thursday", fri: "Friday", sat: "Saturday",
+                  };
+                  const DAY_ORDER = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+                  const crossesMidnight = formEndTime <= formStartTime;
+                  const startDayKey = formActiveDays[0];
+                  const startDayLabel = formActiveDays.length > 1 ? "each selected day" : (DAY_FULL[startDayKey] ?? startDayKey);
+                  const nextDayKey = DAY_ORDER[(DAY_ORDER.indexOf(startDayKey) + 1) % 7];
+                  const nextDayLabel = DAY_FULL[nextDayKey] ?? nextDayKey;
+                  return crossesMidnight ? (
+                    <p className="mt-1.5 text-xs font-medium text-indigo-700">
+                      Window: {startDayLabel} {fmtTime(formStartTime)} → {nextDayLabel} {fmtTime(formEndTime)} (crosses midnight)
+                    </p>
+                  ) : (
+                    <p className="mt-1.5 text-xs text-slate-500">
+                      Window: {startDayLabel} {fmtTime(formStartTime)} → {fmtTime(formEndTime)} (same day)
+                    </p>
+                  );
+                })()}
+              </div>
+
+              <div>
+                <label className={lbl}>Schedule Expiry Date</label>
+                <input type="date" className={field} value={formEndDate} onChange={(e) => setFormEndDate(e.target.value)} />
+                <p className="mt-1.5 text-xs text-slate-500">Optional. The recurring schedule stops after this date.</p>
+              </div>
+              <div>
+                <label className={lbl}>Recurring</label>
+                <select
+                  className={field}
+                  value={formRecurring}
+                  onChange={(e) => setFormRecurring(e.target.value as CampaignRecurringType)}
+                >
+                  {RECURRING_OPTIONS.map((r) => (
+                    <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
 
           <div>
             <label className={lbl}>Challenge Type</label>
@@ -688,6 +907,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
                     className="h-4 w-4 rounded border-slate-300 text-indigo-600"
                   />
                 </th>
+                <th className={`${TH} w-16`}>Order</th>
                 <th className={TH}>Name</th>
                 <th className={TH}>Status</th>
                 <th className={TH}>Games</th>
@@ -701,14 +921,14 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-sm text-slate-400">
+                  <td colSpan={10} className="py-12 text-center text-sm text-slate-400">
                     Loading…
                   </td>
                 </tr>
               )}
               {!loading && campaigns.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-sm text-slate-400">
+                  <td colSpan={10} className="py-12 text-center text-sm text-slate-400">
                     No campaigns yet.
                   </td>
                 </tr>
@@ -723,6 +943,26 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
                         onChange={() => toggleRow(c.id)}
                         className="h-4 w-4 rounded border-slate-300 text-indigo-600"
                       />
+                    </td>
+                    <td className={`${TD} w-16`}>
+                      <div className="flex flex-col items-center gap-0.5">
+                        <button
+                          onClick={() => moveItem(c.id, "up")}
+                          disabled={campaigns.indexOf(c) === 0}
+                          className="rounded px-1 py-0.5 text-xs text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-20"
+                          title="Move up"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          onClick={() => moveItem(c.id, "down")}
+                          disabled={campaigns.indexOf(c) === campaigns.length - 1}
+                          className="rounded px-1 py-0.5 text-xs text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-20"
+                          title="Move down"
+                        >
+                          ▼
+                        </button>
+                      </div>
                     </td>
                     <td className={TD}>
                       <span className="font-medium text-slate-900">{c.name}</span>

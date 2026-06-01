@@ -50,6 +50,7 @@ import type {
   AdSlot,
   AdType,
   CampaignRecurringType,
+  ChallengeScheduleType,
   ChallengeImageFitMode,
   ChallengeLeaderboardTiebreaker,
   ChallengeMode,
@@ -393,8 +394,11 @@ export async function POST(request: Request) {
           imageFit?: ChallengeImageFitMode;
           rules: string;
           venueIds?: string[];
+          scheduleType?: ChallengeScheduleType;
           activeDays?: string[];
+          startDate?: string;
           startTime?: string;
+          endDay?: string;
           endTime?: string;
           endDate?: string;
           gameTypes?: string[];
@@ -662,8 +666,11 @@ export async function POST(request: Request) {
         imageFit: body.imageFit,
         rules: body.rules,
         venueIds: body.venueIds,
+        scheduleType: body.scheduleType,
         activeDays: body.activeDays,
+        startDate: body.startDate,
         startTime: body.startTime,
+        endDay: body.endDay,
         endTime: body.endTime,
         endDate: body.endDate,
         gameTypes: body.gameTypes,
@@ -909,8 +916,11 @@ export async function PATCH(request: Request) {
           imageFit?: ChallengeImageFitMode;
           rules?: string;
           venueIds?: string[];
+          scheduleType?: ChallengeScheduleType;
           activeDays?: string[];
+          startDate?: string;
           startTime?: string;
+          endDay?: string;
           endTime?: string;
           endDate?: string;
           gameTypes?: string[];
@@ -920,6 +930,7 @@ export async function PATCH(request: Request) {
           pointMultiplier?: number;
           pointsRequiredToWin?: number;
           recurringType?: CampaignRecurringType;
+          displayOrder?: number | null;
           winnerUserId?: string | null;
           isActive?: boolean;
         }
@@ -1081,8 +1092,11 @@ export async function PATCH(request: Request) {
         imageFit: body.imageFit,
         rules: body.rules,
         venueIds: body.venueIds,
+        scheduleType: body.scheduleType,
         activeDays: body.activeDays,
+        startDate: body.startDate,
         startTime: body.startTime,
+        endDay: body.endDay,
         endTime: body.endTime,
         endDate: body.endDate,
         gameTypes: body.gameTypes,
@@ -1092,6 +1106,7 @@ export async function PATCH(request: Request) {
         pointMultiplier: body.pointMultiplier,
         pointsRequiredToWin: body.pointsRequiredToWin,
         recurringType: body.recurringType,
+        displayOrder: body.displayOrder,
         winnerUserId: body.winnerUserId,
         isActive: body.isActive,
       });
