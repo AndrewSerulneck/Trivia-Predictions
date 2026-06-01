@@ -31,6 +31,9 @@ export function GameLandingExperience({
   autoResume = true,
   playHref,
   showPlayingBackButton = true,
+  showShellUserStatus = true,
+  showShellAlerts = true,
+  playingBackgroundClassName,
   children,
 }: {
   gameKey: VenueGameKey;
@@ -39,6 +42,9 @@ export function GameLandingExperience({
   autoResume?: boolean;
   playHref?: string;
   showPlayingBackButton?: boolean;
+  showShellUserStatus?: boolean;
+  showShellAlerts?: boolean;
+  playingBackgroundClassName?: string;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -146,13 +152,16 @@ export function GameLandingExperience({
       data-venue-game-surface
       className="tp-game-page relative z-[70] min-h-[100dvh] w-full overflow-x-hidden"
     >
-      <div aria-hidden className={`pointer-events-none fixed inset-0 z-0 ${GAME_CARD_BG_BY_KEY[gameKey]}`} />
+      <div
+        aria-hidden
+        className={`pointer-events-none fixed inset-0 z-0 ${playingBackgroundClassName ?? GAME_CARD_BG_BY_KEY[gameKey]}`}
+      />
       <div className="relative z-10">
         <PageShell
           title=""
           showPageTitle={false}
-          showUserStatus
-          showAlerts
+          showUserStatus={showShellUserStatus}
+          showAlerts={showShellAlerts}
           noContainer
         >
           {isPlaying ? (

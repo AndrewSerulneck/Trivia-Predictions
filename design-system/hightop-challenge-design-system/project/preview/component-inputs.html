@@ -1,0 +1,31 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--ht-canvas);color:var(--ht-fg-primary);font-family:var(--ht-font-body)}
+  .card{box-sizing:border-box;width:700px;padding:24px;display:flex;flex-direction:column;gap:16px}
+  .lab{font-weight:900;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ht-cyan-300);margin-bottom:8px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:stretch}
+  input{
+    width:100%;background:#1e293b;border:1px solid #334155;border-radius:12px;
+    padding:14px 16px;font:600 16px/1.25 var(--ht-font-body);color:var(--ht-fg-primary);
+    box-sizing:border-box;outline:none;
+  }
+  input::placeholder{color:var(--ht-fg-dim);font-weight:500}
+  .focused{border-color:#22d3ee !important;box-shadow:0 0 0 2px rgba(34,211,238,.36)}
+  .legend{font-size:11px;color:var(--ht-fg-muted);font-weight:700;margin-top:6px}
+  code{font-family:var(--ht-font-mono);color:var(--ht-cyan-300);font-weight:700}
+</style></head><body><div class="card">
+  <div>
+    <div class="lab">Input · default → focus</div>
+    <div class="row">
+      <div><input placeholder="Type your answer…"/><div class="legend">Default — slate-800 fill</div></div>
+      <div><input class="focused" value="Mars"/><div class="legend">Focused — <code>2px rgba(34,211,238,.36)</code></div></div>
+    </div>
+  </div>
+  <div>
+    <div class="lab">Input · locked + error</div>
+    <div class="row">
+      <div><input value="Mars" disabled style="opacity:.6"/><div class="legend">Locked after submit</div></div>
+      <div><input value="" placeholder="Required" style="border-color:#f43f5e;box-shadow:0 0 0 2px rgba(244,63,94,.25)"/><div class="legend">Error — rose-500 ring</div></div>
+    </div>
+  </div>
+</div></body></html>

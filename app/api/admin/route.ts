@@ -44,7 +44,16 @@ import {
   updateChallengeCampaign,
 } from "@/lib/challengeCampaigns";
 import { recordAdClick, recordAdImpression } from "@/lib/ads";
-import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, CampaignRecurringType, ChallengeImageFitMode } from "@/types";
+import type {
+  AdDisplayTrigger,
+  AdPageKey,
+  AdSlot,
+  AdType,
+  CampaignRecurringType,
+  ChallengeImageFitMode,
+  ChallengeLeaderboardTiebreaker,
+  ChallengeMode,
+} from "@/types";
 import {
   createAdminLiveShowdownSchedule,
   deleteAdminLiveShowdownSchedule,
@@ -389,6 +398,9 @@ export async function POST(request: Request) {
           endTime?: string;
           endDate?: string;
           gameTypes?: string[];
+          challengeMode?: ChallengeMode;
+          leaderboardDisplayLimit?: number;
+          leaderboardTiebreaker?: ChallengeLeaderboardTiebreaker;
           pointMultiplier?: number;
           pointsRequiredToWin?: number;
           recurringType?: CampaignRecurringType;
@@ -655,6 +667,9 @@ export async function POST(request: Request) {
         endTime: body.endTime,
         endDate: body.endDate,
         gameTypes: body.gameTypes,
+        challengeMode: body.challengeMode,
+        leaderboardDisplayLimit: body.leaderboardDisplayLimit,
+        leaderboardTiebreaker: body.leaderboardTiebreaker,
         pointMultiplier: body.pointMultiplier,
         pointsRequiredToWin: body.pointsRequiredToWin,
         recurringType: body.recurringType,
@@ -899,6 +914,9 @@ export async function PATCH(request: Request) {
           endTime?: string;
           endDate?: string;
           gameTypes?: string[];
+          challengeMode?: ChallengeMode;
+          leaderboardDisplayLimit?: number;
+          leaderboardTiebreaker?: ChallengeLeaderboardTiebreaker;
           pointMultiplier?: number;
           pointsRequiredToWin?: number;
           recurringType?: CampaignRecurringType;
@@ -1068,6 +1086,9 @@ export async function PATCH(request: Request) {
         endTime: body.endTime,
         endDate: body.endDate,
         gameTypes: body.gameTypes,
+        challengeMode: body.challengeMode,
+        leaderboardDisplayLimit: body.leaderboardDisplayLimit,
+        leaderboardTiebreaker: body.leaderboardTiebreaker,
         pointMultiplier: body.pointMultiplier,
         pointsRequiredToWin: body.pointsRequiredToWin,
         recurringType: body.recurringType,

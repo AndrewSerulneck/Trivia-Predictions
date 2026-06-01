@@ -142,7 +142,13 @@ export interface Notification {
   createdAt: string;
 }
 
-export type ChallengeGameType = "pickem" | "fantasy" | "speed-trivia" | "bingo";
+export type ChallengeGameType =
+  | "pickem"
+  | "fantasy"
+  | "speed-trivia"
+  | "live-trivia"
+  | "trivia"
+  | "bingo";
 export type ChallengeStatus =
   | "pending"
   | "accepted"
@@ -170,6 +176,22 @@ export interface ChallengeInvite {
 
 export type CampaignRecurringType = "none" | "daily" | "weekly" | "monthly" | "yearly";
 export type ChallengeImageFitMode = "cover" | "contain";
+export type ChallengeMode = "progress" | "leaderboard";
+export type ChallengeLeaderboardTiebreaker = "first_to_score" | "latest_activity";
+export interface ChallengeLeaderboardEntry {
+  rank: number;
+  userId: string;
+  username: string;
+  points: number;
+  updatedAt: string;
+}
+export interface ChallengeLeaderboardViewer {
+  rank: number | null;
+  userId: string;
+  username?: string | null;
+  points: number;
+  inTop: boolean;
+}
 
 export interface ChallengeCampaign {
   id: string;
@@ -187,6 +209,13 @@ export interface ChallengeCampaign {
   endTime?: string;
   endDate?: string;
   gameTypes: ChallengeGameType[];
+  challengeMode: ChallengeMode;
+  leaderboardDisplayLimit: number;
+  leaderboardTiebreaker: ChallengeLeaderboardTiebreaker;
+  leaderboard?: {
+    topEntries: ChallengeLeaderboardEntry[];
+    viewer: ChallengeLeaderboardViewer | null;
+  };
   pointMultiplier: number;
   pointsRequiredToWin: number;
   recurringType: CampaignRecurringType;

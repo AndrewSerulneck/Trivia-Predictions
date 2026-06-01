@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { CoinFXCanvas } from "@/components/ui/CoinFXCanvas";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 import { getUserId, getUsername, getVenueId, saveUsername } from "@/lib/storage";
 import { setScrollLock } from "@/lib/scrollLock";
 
@@ -470,6 +471,7 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
             <span className="truncate text-right">{(points ?? displayedPoints).toLocaleString()}</span>
           </span>
         </div>
+        {showAlerts ? <NotificationBell /> : null}
       </div>
     );
   }
@@ -549,7 +551,7 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
               </span>
               <span>{(points ?? displayedPoints).toLocaleString()}</span>
             </div>
-
+            {showAlerts ? <NotificationBell /> : null}
           </div>
         </div>
       </div>

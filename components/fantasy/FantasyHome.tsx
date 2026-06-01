@@ -645,6 +645,7 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [lastCollectedPoints, setLastCollectedPoints] = useState(0);
   const [isCollectingLive, setIsCollectingLive] = useState(false);
+  const [activeTab, setActiveTab] = useState<"draft" | "live">("draft");
   const syncedLastCollectedRef = useRef<string | false>(false);
   const gameDetailsRequestNonceRef = useRef(0);
   const prevStatsSnapshotRef = useRef<Map<number, StatsSnapshot>>(new Map());
@@ -827,7 +828,12 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
       });
       return incoming;
     } catch (error) {
-      setEntries([]);
+      // Only wipe displayed entries when this is the visible primary load.
+      // Silent background refreshes (showLoading=false) should leave existing
+      // data intact so a transient timeout or network hiccup doesn't blank the page.
+      if (showLoading) {
+        setEntries([]);
+      }
       setErrorMessage(error instanceof Error ? error.message : "Failed to load fantasy entries.");
       return [] as FantasyEntry[];
     } finally {
@@ -987,7 +993,6 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
       return;
     }
     void loadEntries(false);
-    void loadEntries(true, false);
   }, [loadEntries, userId]);
 
   useEffect(() => {
@@ -1506,13 +1511,15 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
       });
 
     // Keep a low-frequency polling fallback for resilience if websocket delivery stalls.
+    // Pass refreshSettlement=false so the server only reads DB state — the cron jobs
+    // handle scoring, and triggering a server-side refresh here can cause Vercel timeouts.
     const scheduleFallbackRefresh = () => {
       if (!active || fantasyRealtimeFallbackTimerRef.current) {
         return;
       }
       fantasyRealtimeFallbackTimerRef.current = window.setTimeout(() => {
         fantasyRealtimeFallbackTimerRef.current = null;
-        void loadEntries(true, false);
+        void loadEntries(false, false);
         scheduleFallbackRefresh();
       }, 45000);
     };
@@ -1635,6 +1642,10 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
     };
   }, [loadSelectedGameDetails, selectedGameId]);
 
+  // Auto-switch to the live tab when a live game is detected.
+  useEffect(() => {
+    if (hasLiveEntry) setActiveTab("live");
+  }, [hasLiveEntry]);
 
   useEffect(() => {
     if (!userId || hasLiveEntry || nextPendingEntryStartMs === null) {
@@ -2080,7 +2091,7 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
   const canModifyRosterSelections = !isSubmittedRosterView;
 
   return (
-    <div className="tp-fantasy-compact min-h-[100dvh] touch-pan-y space-y-3 pb-2">
+    <div className="tp-fantasy-compact min-h-[100dvh] touch-pan-y pb-28">
       {/* Stat flash toasts */}
       <div className="pointer-events-none fixed left-1/2 top-[5.25rem] z-[2200] -translate-x-1/2 space-y-2">
         <AnimatePresence initial={false}>
@@ -2166,99 +2177,8 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
           )
         : null}
 
-      {/* Page title */}
-      <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-3">
-        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-violet-300">Fantasy · NBA · Games · Tip Time</p>
-        <h1 className="mt-1 text-xl font-black tracking-tight text-slate-200">Build Your Starting 5</h1>
-        <p className="mt-1 text-sm font-semibold text-slate-400">Draft your roster and track live points through tipoff.</p>
-      </section>
-
-      {/* Top section — date nav, sport scroll, roster tracker */}
-      <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-3">
-
-        {/* Date nav pill */}
-        <div className="flex w-full items-center justify-between rounded-xl border border-violet-400/40 bg-violet-950/40 px-2 py-1.5">
-          <button
-            type="button"
-            onClick={navigateToPrevDay}
-            className="tp-clean-button relative flex h-7 w-7 items-center justify-center rounded-full border border-violet-400/40 bg-slate-900/70 text-violet-300 transition-all hover:bg-violet-900/50 active:scale-90"
-            aria-label="Previous day"
-          >
-            ◀
-            {hasPreviousUnclaimedFantasyEntries && !hasCurrentUnclaimedFantasyEntries ? (
-              <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white">
-                !
-              </span>
-            ) : null}
-          </button>
-          <span className="text-sm font-bold text-slate-200">{formatDateLabel(selectedDate, serverTodayDate)}</span>
-          <button
-            type="button"
-            onClick={navigateToNextDay}
-            disabled={isToday}
-            className="tp-clean-button relative flex h-7 w-7 items-center justify-center rounded-full border border-violet-400/40 bg-slate-900/70 text-violet-300 transition-all hover:bg-violet-900/50 active:scale-90 disabled:opacity-30"
-            aria-label="Next day"
-          >
-            ▶
-            {hasFutureUnclaimedFantasyEntries && !hasCurrentUnclaimedFantasyEntries ? (
-              <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white">
-                !
-              </span>
-            ) : null}
-          </button>
-        </div>
-
-        {/* Sport scroll */}
-        <div className="mt-4 w-full touch-pan-x overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:thin]">
-          <div className="inline-flex w-max min-w-full justify-center gap-3 pr-1">
-            {FANTASY_SPORTS.map((sport) => {
-              const usesTextLabel = sport.icon.length > 2;
-              return (
-                <button
-                  key={sport.key}
-                  type="button"
-                  disabled={!sport.available}
-                  onClick={() => sport.available && setSelectedSport(sport.key)}
-                  className={`tp-clean-button flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-full border-2 leading-none transition-all ${
-                    usesTextLabel ? "px-1 text-sm font-black tracking-wide" : "text-[3.25rem]"
-                  } ${
-                    selectedSport === sport.key
-                      ? "border-violet-400/60 bg-violet-500/20 text-violet-300"
-                      : sport.available
-                      ? "border-violet-400/30 bg-slate-800/40 text-slate-300 hover:border-violet-400/60 hover:bg-violet-950/30"
-                      : "border-slate-700/60 bg-slate-800/40 opacity-40"
-                  }`}
-                  title={sport.available ? sport.key.toUpperCase() : `${sport.key} — coming soon`}
-                >
-                  {sport.icon}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Roster tracker pips */}
-        <div className="mt-3 flex items-center gap-2">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-violet-300">Roster</p>
-          <div className="flex flex-1 gap-1">
-            {Array.from({ length: requiredLineupSize }).map((_, i) => (
-              <div
-                key={i}
-                className={`h-2 flex-1 rounded-full transition-colors ${
-                  i < selectedPlayers.length ? "bg-violet-400" : "bg-slate-700"
-                }`}
-              />
-            ))}
-          </div>
-          <p className="text-[11px] font-semibold text-slate-300">
-            {selectedPlayers.length}/{requiredLineupSize}
-          </p>
-        </div>
-
-      </section>
-
-      {/* Sticky action row */}
-      <div className="sticky top-0 z-30 mb-1 flex w-full items-center gap-2">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <button
           type="button"
           onClick={() => {
@@ -2269,39 +2189,535 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
               });
             }
           }}
-          className="tp-clean-button tp-exit-pill flex flex-1 items-center justify-center gap-1 py-2 text-sm font-bold active:scale-95"
+          className="tp-clean-button flex h-9 w-9 items-center justify-center rounded-full border border-slate-700 bg-slate-800/60 text-sm text-slate-300 active:scale-90"
+          aria-label="Back to venue"
         >
-          ← Back to Venue
+          ←
+        </button>
+        <h1 className="text-base font-black uppercase tracking-[0.22em] text-white">Fantasy</h1>
+        <div className="h-9 w-9" />
+      </div>
+
+      {/* ── DRAFT / LIVE tab bar ── */}
+      <div className="mx-4 mb-3 flex gap-1 rounded-xl border border-slate-700/60 bg-slate-900 p-1">
+        <button
+          type="button"
+          onClick={() => setActiveTab("draft")}
+          className={`tp-clean-button flex-1 rounded-lg py-2.5 text-sm font-black transition-colors ${
+            activeTab === "draft"
+              ? "bg-emerald-500 text-slate-950"
+              : "text-slate-500"
+          }`}
+        >
+          Draft
         </button>
         <button
           type="button"
-          data-fantasy-collect-all
-          onClick={() => void collectAllFantasyEntries()}
-          disabled={finalUnclaimedEntries.length === 0 || isCollectingAllFantasy}
-          className="tp-clean-button flex flex-1 items-center justify-center gap-1 rounded-xl border border-violet-400/60 bg-violet-500/20 py-2 text-sm font-bold text-violet-300 active:scale-95 disabled:opacity-40"
+          onClick={() => setActiveTab("live")}
+          disabled={!trackedEntry && !hasLiveEntry}
+          className={`tp-clean-button flex-1 rounded-lg py-2.5 text-sm font-black transition-colors disabled:opacity-30 ${
+            activeTab === "live"
+              ? "bg-violet-600 text-white"
+              : "text-slate-500"
+          }`}
         >
-          {isCollectingAllFantasy
-            ? "Collecting..."
-            : finalUnclaimedEntries.length > 0
-            ? `Collect ${totalUnclaimedFantasyPoints} pts`
-            : "Collect Points"}
+          ← Live →
         </button>
       </div>
 
-      <VenueEntryRulesPanel gameKey="fantasy" shouldDisplay={entries.length === 0} />
+      <div className="space-y-3 px-4">
 
-      {isGeofencePaused ? (
-        <p className="rounded-lg border border-amber-400/40 bg-amber-950/30 px-3 py-2 text-xs font-semibold text-amber-200">
-          {geofencePauseReason || "Fantasy scoring is paused while outside the venue geofence."}
-        </p>
-      ) : null}
+        {/* ── Date nav + sport chips ── */}
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={navigateToPrevDay}
+              className="tp-clean-button relative flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-800/60 text-xs text-slate-300 active:scale-90"
+              aria-label="Previous day"
+            >
+              ◀
+              {hasPreviousUnclaimedFantasyEntries && !hasCurrentUnclaimedFantasyEntries ? (
+                <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-slate-900 bg-rose-500 text-[9px] font-black text-white">!</span>
+              ) : null}
+            </button>
+            <span className="text-sm font-bold text-slate-200">{formatDateLabel(selectedDate, serverTodayDate)}</span>
+            <button
+              type="button"
+              onClick={navigateToNextDay}
+              disabled={isToday}
+              className="tp-clean-button relative flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-800/60 text-xs text-slate-300 active:scale-90 disabled:opacity-30"
+              aria-label="Next day"
+            >
+              ▶
+              {hasFutureUnclaimedFantasyEntries && !hasCurrentUnclaimedFantasyEntries ? (
+                <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-slate-900 bg-rose-500 text-[9px] font-black text-white">!</span>
+              ) : null}
+            </button>
+          </div>
 
-      {statusMessage ? (
-        <p className="rounded-lg border border-emerald-400/40 bg-emerald-950/30 px-3 py-2 text-xs font-semibold text-emerald-300">
-          {statusMessage}
-        </p>
-      ) : null}
+          {/* Sport chips */}
+          <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+            {FANTASY_SPORTS.map((sport) => (
+              <button
+                key={sport.key}
+                type="button"
+                disabled={!sport.available}
+                onClick={() => sport.available && setSelectedSport(sport.key)}
+                className={`tp-clean-button shrink-0 rounded-full border px-4 py-1.5 text-xs font-black tracking-wide transition-all disabled:opacity-30 ${
+                  selectedSport === sport.key
+                    ? "border-emerald-400/60 bg-emerald-500/20 text-emerald-300"
+                    : sport.available
+                    ? "border-slate-700 bg-slate-800/50 text-slate-400 hover:border-violet-400/40"
+                    : "border-slate-800 bg-slate-900 text-slate-600"
+                }`}
+              >
+                {sport.icon}
+              </button>
+            ))}
+          </div>
+        </div>
 
+        <VenueEntryRulesPanel gameKey="fantasy" shouldDisplay={entries.length === 0} />
+
+        {isGeofencePaused ? (
+          <p className="rounded-xl border border-amber-400/40 bg-amber-950/30 px-3 py-2 text-xs font-semibold text-amber-200">
+            {geofencePauseReason || "Fantasy scoring is paused while outside the venue geofence."}
+          </p>
+        ) : null}
+
+        {statusMessage ? (
+          <p className="rounded-xl border border-emerald-400/40 bg-emerald-950/30 px-3 py-2 text-xs font-semibold text-emerald-300">
+            {statusMessage}
+          </p>
+        ) : null}
+
+        {errorMessage ? (
+          <p className="rounded-xl border border-rose-400/40 bg-rose-950/30 px-3 py-2 text-xs font-semibold text-rose-300">
+            {errorMessage}
+          </p>
+        ) : null}
+
+        {/* Collect all banner */}
+        {finalUnclaimedEntries.length > 0 ? (
+          <button
+            type="button"
+            data-fantasy-collect-all
+            onClick={() => void collectAllFantasyEntries()}
+            disabled={isCollectingAllFantasy}
+            className="tp-clean-button w-full rounded-xl border border-violet-400/50 bg-violet-500/20 py-3 text-sm font-black text-violet-300 active:scale-[0.98] disabled:opacity-50"
+          >
+            {isCollectingAllFantasy
+              ? "Collecting..."
+              : `Collect ${totalUnclaimedFantasyPoints} pts from ${finalUnclaimedEntries.length} game${finalUnclaimedEntries.length === 1 ? "" : "s"}`}
+          </button>
+        ) : null}
+
+        {/* ── DRAFT TAB ── */}
+        {activeTab === "draft" ? (
+          <>
+            {selectedSport === "football" ? (
+              <div className="rounded-2xl border border-slate-700/50 bg-slate-900 p-4 text-center">
+                <p className="text-sm font-semibold text-slate-200">🏈 Football fantasy is coming soon!</p>
+              </div>
+            ) : null}
+
+            {/* Game Start prompt */}
+            {showGameStart ? (
+              <div className="rounded-2xl border border-slate-700/60 bg-slate-900 p-4">
+                <p className="text-[11px] font-black uppercase tracking-[0.12em] text-violet-300">
+                  {sportGames.length === 0
+                    ? `No ${selectedSportLabel} games today`
+                    : `${selectedSportLabel} · Tipoff ${sportGames[0] ? formatLocalDateTime(sportGames[0].startsAt) : ""}`}
+                </p>
+                {sportGames.length > 0 ? (
+                  isLoadingPool ? (
+                    <div className="mt-3 flex h-11 animate-pulse items-center justify-center gap-2 rounded-xl bg-violet-950/40">
+                      <span className="h-1.5 w-1.5 rounded-full bg-violet-300/60" />
+                      <span className="h-1.5 w-20 rounded-full bg-violet-300/60" />
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setHasStartedGame(true)}
+                      className="tp-clean-button mt-3 w-full rounded-xl bg-emerald-500 py-3 text-sm font-black text-slate-950 active:scale-[0.98]"
+                    >
+                      {draftCtaLabel}
+                    </button>
+                  )
+                ) : null}
+              </div>
+            ) : null}
+
+            {/* Lineup Builder */}
+            {showLineupBuilder ? (
+              <>
+                {/* YOUR ROSTER */}
+                <div className="rounded-2xl border border-slate-700/60 bg-slate-900 px-3 py-3">
+                  <div className="mb-2.5 flex items-center justify-between">
+                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-violet-300">Your Roster</p>
+                    <div className="flex items-center gap-2">
+                      {isSubmittedRosterView && canEditExistingEntryLineup ? (
+                        <button
+                          type="button"
+                          onClick={() => { setJustSubmittedRoster(false); setIsEditingRoster(true); }}
+                          className="tp-clean-button text-[10px] font-bold text-violet-400 underline"
+                        >
+                          Edit
+                        </button>
+                      ) : null}
+                      <span className={`text-[10px] font-black tabular-nums ${selectedPlayers.length === requiredLineupSize ? "text-emerald-400" : "text-slate-500"}`}>
+                        {selectedPlayers.length}/{requiredLineupSize}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    {selectedPlayers.map((name) => {
+                      const poolItem = playerPool.find((item) => normalizePlayerKey(item.playerName) === normalizePlayerKey(name));
+                      return (
+                        <div key={name} className="flex items-center gap-2.5 rounded-xl border border-violet-400/20 bg-violet-950/15 px-2.5 py-2">
+                          <PlayerHeadshot
+                            src={playerPoolHeadshotByName.get(normalizePlayerKey(name)) ?? null}
+                            name={name}
+                            sizeClass="h-8 w-8 shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-slate-100">{name}</p>
+                            {(poolItem?.position || poolItem?.team) ? (
+                              <p className="truncate text-[10px] text-slate-500">
+                                {[poolItem?.position, poolItem?.team].filter(Boolean).join(" · ")}
+                              </p>
+                            ) : null}
+                          </div>
+                          {canModifyRosterSelections ? (
+                            <button
+                              type="button"
+                              onClick={() => removeSelectedPlayer(name)}
+                              className="tp-clean-button flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-slate-600 bg-slate-800 text-[11px] font-black text-slate-400 active:scale-90"
+                              aria-label={`Remove ${name}`}
+                            >
+                              ×
+                            </button>
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                    {Array.from({ length: requiredLineupSize - selectedPlayers.length }).map((_, i) => (
+                      <div key={`empty-${i}`} className="flex items-center gap-2.5 rounded-xl border border-dashed border-slate-700/50 px-2.5 py-2 opacity-35">
+                        <div className="h-8 w-8 shrink-0 rounded-full border border-dashed border-slate-600" />
+                        <span className="text-xs text-slate-500">
+                          {canModifyRosterSelections ? "Select a player below" : "Empty slot"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  {!canModifyRosterSelections ? (
+                    <p className="mt-2 text-[11px] text-slate-500">
+                      {canEditExistingEntryLineup
+                        ? "Roster locked in. Tap Edit to make changes before tipoff."
+                        : "Roster locked — games have started."}
+                    </p>
+                  ) : null}
+                </div>
+
+                {/* PLAYER POOL */}
+                {canModifyRosterSelections ? (
+                  <div className="rounded-2xl border border-slate-700/60 bg-slate-900 px-3 pb-2 pt-3">
+                    <div className="mb-2.5 flex items-center justify-between">
+                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-violet-300">
+                        Player Pool · {selectedSport.toUpperCase()}
+                      </p>
+                      <span className="text-[10px] text-slate-500">{sortedFilteredPool.length} players</span>
+                    </div>
+
+                    {/* Sort + filter */}
+                    <div className="mb-3 space-y-2">
+                      <div className="flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+                        {(["projected", "alpha", "position", "team"] as const).map((mode) => (
+                          <button
+                            key={mode}
+                            type="button"
+                            onClick={() => setSortBy(mode)}
+                            className={`tp-clean-button shrink-0 rounded-full border px-3 py-1 text-[11px] font-bold transition-colors ${
+                              sortBy === mode
+                                ? "border-violet-400/60 bg-violet-500/20 text-violet-300"
+                                : "border-slate-700 bg-slate-800/40 text-slate-500"
+                            }`}
+                          >
+                            {mode === "projected" ? "Projected" : mode === "alpha" ? "A–Z" : mode === "position" ? "Position" : "Team"}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <select
+                          value={filterPosition}
+                          onChange={(e) => setFilterPosition(e.target.value)}
+                          className="flex-1 rounded-lg border border-slate-700 bg-slate-800/60 px-2.5 py-1.5 text-xs font-semibold text-slate-200 focus:border-violet-400 focus:outline-none"
+                        >
+                          <option value="all">All Positions</option>
+                          {CANONICAL_POSITIONS.map((pos) => (
+                            <option key={pos} value={pos}>{pos}</option>
+                          ))}
+                        </select>
+                        <select
+                          value={filterTeam}
+                          onChange={(e) => setFilterTeam(e.target.value)}
+                          className="flex-1 rounded-lg border border-slate-700 bg-slate-800/60 px-2.5 py-1.5 text-xs font-semibold text-slate-200 focus:border-violet-400 focus:outline-none"
+                        >
+                          <option value="all">All Teams</option>
+                          {uniqueTeams.map((team) => (
+                            <option key={team} value={team}>{team}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Player rows */}
+                    {availablePlayerPool.length === 0 ? (
+                      <div className="py-6 text-center">
+                        {sportGames.length > 0 ? (
+                          <BasketballLoader label="Loading players…" />
+                        ) : (
+                          <p className="text-sm text-slate-500">No players available for this date.</p>
+                        )}
+                      </div>
+                    ) : sortedFilteredPool.length === 0 ? (
+                      <p className="py-4 text-center text-sm text-slate-500">No players match this filter.</p>
+                    ) : (
+                      <>
+                        <div className="space-y-1">
+                          {sortedFilteredPool.slice(0, visibleCount).map((item) => {
+                            const isSelected = selectedPlayerKeySet.has(normalizePlayerKey(item.playerName));
+                            const isFull = selectedPlayers.length >= requiredLineupSize;
+                            const proj = item.projectedLine != null ? Math.round(Number(item.projectedLine)) : 0;
+                            return (
+                              <button
+                                key={item.playerName}
+                                type="button"
+                                disabled={isFull && !isSelected}
+                                onClick={() => togglePlayer(item.playerName)}
+                                className={`tp-clean-button flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all active:scale-[0.985] disabled:opacity-40 ${
+                                  isSelected
+                                    ? "border-emerald-400/35 bg-emerald-500/10"
+                                    : "border-slate-700/50 bg-slate-800/30 hover:border-slate-600"
+                                }`}
+                              >
+                                <PlayerHeadshot
+                                  src={item.headshotUrl || FALLBACK_HEADSHOT_SRC}
+                                  name={item.playerName}
+                                  sizeClass="h-11 w-11 shrink-0"
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-1.5">
+                                    <p className="truncate text-sm font-bold text-slate-100">{item.playerName}</p>
+                                    {topProjectedPlayerKey === normalizePlayerKey(item.playerName) ? (
+                                      <span className="shrink-0 text-[9px] font-black text-amber-400">★ TOP</span>
+                                    ) : null}
+                                  </div>
+                                  <p className="truncate text-[11px] text-slate-500">
+                                    {[item.team, item.position].filter(Boolean).join(" · ")}
+                                  </p>
+                                  {proj > 0 ? (
+                                    <p className="text-[11px] font-semibold tabular-nums text-violet-300/80">
+                                      Proj {proj} pts
+                                    </p>
+                                  ) : null}
+                                </div>
+                                <div className={`shrink-0 rounded-full border px-3 py-1 text-[11px] font-black transition-colors ${
+                                  isSelected
+                                    ? "border-emerald-400/60 bg-emerald-500/20 text-emerald-300"
+                                    : "border-violet-400/50 bg-violet-500/10 text-violet-300"
+                                }`}>
+                                  {isSelected ? "✓" : "+ ADD"}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {visibleCount < sortedFilteredPool.length ? (
+                          <button
+                            type="button"
+                            onClick={() => setVisibleCount((n) => n + 25)}
+                            className="tp-clean-button mt-2 w-full rounded-xl border border-slate-700 bg-slate-800/40 py-2 text-xs font-semibold text-slate-400"
+                          >
+                            Load more · {sortedFilteredPool.length - visibleCount} remaining
+                          </button>
+                        ) : null}
+                      </>
+                    )}
+                  </div>
+                ) : null}
+              </>
+            ) : null}
+          </>
+        ) : null}
+
+        {/* ── LIVE TAB ── */}
+        {activeTab === "live" ? (
+          <>
+            {isFantasyLineupSport && trackedEntry ? (
+              <div className="rounded-2xl border border-slate-700/60 bg-slate-900 p-4">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-violet-300">Live Tracking</p>
+                    <p className="text-base font-bold text-slate-100">Your Team</p>
+                  </div>
+                  <SpringPop popKey={totalScorePopTick} glowSize={12} glowColor={totalScorePopTone === "loss" ? "red" : "green"}>
+                    <div className="text-right">
+                      <p className={`text-2xl font-black tabular-nums ${
+                        totalScorePopTone === "loss" ? "text-rose-400" : isRealtimeFresh ? "text-emerald-400" : "text-slate-100"
+                      }`}>
+                        {liveTrackedEntryPoints.toFixed(1)}
+                      </p>
+                      <p className="text-[9px] font-bold uppercase tracking-wide text-slate-500">pts</p>
+                    </div>
+                  </SpringPop>
+                </div>
+
+                <div className="space-y-1.5">
+                  {(
+                    trackedEntry.lineupPlayers.length > 0
+                      ? trackedEntry.lineupPlayers
+                      : trackedEntry.lineup.map((playerName, index) => ({
+                          playerId: -(index + 1),
+                          playerName,
+                          headshotUrl: playerPoolHeadshotByName.get(normalizePlayerKey(playerName)) ?? null,
+                        }))
+                  ).map((player) => {
+                    const livePoints = livePointsByPlayer.get(String(player.playerId));
+                    const requireLiveRows = trackedEntry.status === "pending" || trackedEntry.status === "live";
+                    const playerPoints =
+                      typeof livePoints === "number"
+                        ? livePoints
+                        : requireLiveRows
+                        ? 0
+                        : getScoreFromBreakdown(trackedEntry.scoreBreakdown, player);
+                    const isHot = highlightedPlayerIds.includes(String(player.playerId));
+                    const popTone = playerPopToneById[String(player.playerId)] ?? "gain";
+                    return (
+                      <div
+                        key={`${trackedEntry.id}-${player.playerId}`}
+                        className={`flex items-center gap-2.5 rounded-xl border px-2.5 py-2 transition-all duration-300 ${
+                          isHot
+                            ? popTone === "loss"
+                              ? "scale-[1.02] border-rose-400/40 bg-rose-950/20"
+                              : "scale-[1.02] border-emerald-400/40 bg-emerald-950/20"
+                            : "border-slate-700/50 bg-slate-800/30"
+                        }`}
+                      >
+                        <PlayerHeadshot src={player.headshotUrl ?? null} name={player.playerName} sizeClass="h-9 w-9 shrink-0" />
+                        <span className={`flex-1 truncate text-sm font-semibold transition-colors ${
+                          isHot ? (popTone === "loss" ? "text-rose-300" : "text-emerald-300") : "text-slate-200"
+                        }`}>
+                          {player.playerName}
+                        </span>
+                        <SpringPop
+                          popKey={playerPopTickById[String(player.playerId)] ?? 0}
+                          glowSize={10}
+                          glowColor={popTone === "loss" ? "red" : "green"}
+                          className={`shrink-0 text-sm font-bold tabular-nums ${isHot ? (popTone === "loss" ? "text-rose-200" : "text-emerald-200") : "text-slate-300"}`}
+                        >
+                          {playerPoints.toFixed(1)} pts
+                        </SpringPop>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {showTrackedEntryClaimButton ? (
+                  <button
+                    type="button"
+                    onClick={(event) => { const rect = event.currentTarget.getBoundingClientRect(); void claimReward(trackedEntry, rect); }}
+                    disabled={claimingEntryId === trackedEntry.id}
+                    className="tp-clean-button mt-3 w-full rounded-xl border border-emerald-400/60 bg-emerald-500/20 py-3 text-sm font-black text-emerald-300 active:scale-[0.98] disabled:opacity-60"
+                  >
+                    {claimingEntryId === trackedEntry.id ? "Collecting..." : `Collect ${trackedEntryClaimablePoints} Points`}
+                  </button>
+                ) : hasLiveEntry ? (
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+                      <p className="text-[11px] font-semibold text-emerald-400">Live · Streaming updates</p>
+                    </div>
+                    {uncollectedPoints > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => void collectLivePoints()}
+                        disabled={isCollectingLive || isGeofencePaused}
+                        className="tp-clean-button w-full rounded-xl border border-amber-400/60 bg-amber-950/30 py-2.5 text-sm font-black text-amber-300 active:scale-[0.98] disabled:opacity-60"
+                      >
+                        {isCollectingLive
+                          ? "Collecting..."
+                          : isGeofencePaused
+                          ? "Must be at venue to collect"
+                          : `Collect ${uncollectedPoints.toFixed(1)} Live Pts`}
+                      </button>
+                    ) : null}
+                  </div>
+                ) : (
+                  <p className="mt-3 text-[11px] text-slate-500">No live game. Updates resume when your next game starts.</p>
+                )}
+
+                {existingEntryForSelectedGame && canEditExistingEntryLineup ? (
+                  <button
+                    type="button"
+                    onClick={() => { setJustSubmittedRoster(false); setIsEditingRoster(true); setActiveTab("draft"); }}
+                    className="tp-clean-button mt-2 text-[11px] font-bold text-violet-400 underline"
+                  >
+                    Edit roster before tipoff →
+                  </button>
+                ) : null}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-slate-700/50 bg-slate-900 p-6 text-center">
+                <p className="text-sm text-slate-400">No live game in progress.</p>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("draft")}
+                  className="tp-clean-button mt-2 text-xs font-bold text-violet-300 underline"
+                >
+                  Go to Draft →
+                </button>
+              </div>
+            )}
+
+            {isFantasyLineupSport && finalUnclaimedEntries.length > 1 ? (
+              <div className="rounded-2xl border border-slate-700/60 bg-slate-900 p-4">
+                <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-violet-300">Completed · Ready to Collect</p>
+                <div className="space-y-2">
+                  {finalUnclaimedEntries.map((entry) => (
+                    <div key={entry.id} className="flex items-center justify-between gap-2 rounded-xl border border-slate-700/50 bg-slate-800/40 px-3 py-2.5">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-200">{entry.gameLabel}</p>
+                        <p className="text-xs text-slate-500">{formatLocalDateTime(entry.startsAt)}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(event) => { const rect = event.currentTarget.getBoundingClientRect(); void claimReward(entry, rect); }}
+                        disabled={claimingEntryId === entry.id}
+                        className="tp-clean-button shrink-0 rounded-full border border-violet-400/60 bg-violet-500/20 px-3 py-1.5 text-xs font-black text-violet-300 disabled:opacity-60"
+                      >
+                        {claimingEntryId === entry.id ? "…" : `Collect ${computeFantasyClaimablePoints(entry)} pts`}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </>
+        ) : null}
+
+        <InlineSlotAdClient
+          slot="inline-content"
+          venueId={venueId}
+          pageKey="fantasy"
+          adType="inline"
+          displayTrigger="on-load"
+          placementKey="fantasy-inline"
+        />
+      </div>{/* end px-4 space-y-3 */}
+
+      {/* ── Submission toast ── */}
       <AnimatePresence initial={false}>
         {lastSubmissionTime ? (
           <motion.div
@@ -2314,7 +2730,7 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
             }
             exit={{ opacity: 0, scale: 0.98, y: -4 }}
             transition={{ duration: submissionAnimationComplete ? 0.65 : 0.3, ease: "easeOut" }}
-            className="fixed bottom-6 left-1/2 z-[2400] w-[min(92vw,28rem)] -translate-x-1/2 rounded-xl border border-emerald-400/60 bg-emerald-500/20 px-3 py-3 shadow-[0_14px_32px_rgba(16,185,129,0.35)]"
+            className="fixed bottom-24 left-1/2 z-[2400] w-[min(92vw,28rem)] -translate-x-1/2 rounded-xl border border-emerald-400/60 bg-emerald-500/20 px-3 py-3 shadow-[0_14px_32px_rgba(16,185,129,0.35)]"
             role="status"
             aria-live="polite"
           >
@@ -2335,585 +2751,25 @@ export function FantasyHome({ defaultSport = "nba" }: FantasyHomeProps) {
         ) : null}
       </AnimatePresence>
 
-      {errorMessage ? (
-        <p className="rounded-lg border border-rose-400/40 bg-rose-950/30 px-3 py-2 text-xs font-semibold text-rose-300">
-          {errorMessage}
-        </p>
+      {/* ── Sticky Submit Button ── */}
+      {activeTab === "draft" && showLineupBuilder && canModifyRosterSelections ? (
+        <div className="fixed inset-x-0 bottom-0 z-50 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent px-4 pb-6 pt-3">
+          <button
+            type="button"
+            onClick={() => void handleSubmitRoster()}
+            disabled={submitting || selectedPlayers.length !== requiredLineupSize}
+            className={`tp-clean-button w-full rounded-2xl py-4 text-base font-black transition-all active:scale-[0.98] disabled:opacity-50 ${
+              selectedPlayers.length === requiredLineupSize && !submitting
+                ? "bg-emerald-500 text-slate-950 shadow-[0_8px_28px_rgba(34,197,94,0.35)]"
+                : "bg-slate-800 text-slate-400"
+            }`}
+          >
+            {submitting
+              ? "Saving…"
+              : `${existingEntryForSelectedGame ? "Update Roster" : "Submit Roster"} · ${selectedPlayers.length}/${requiredLineupSize}`}
+          </button>
+        </div>
       ) : null}
-
-      {/* "Coming soon" for football */}
-      {selectedSport === "football" ? (
-        <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-4">
-          <p className="text-center text-sm font-semibold text-slate-200">
-            🏈 Football fantasy is coming soon!
-          </p>
-        </section>
-      ) : null}
-
-      {/* Team tracker for live/pending entry */}
-      {isFantasyLineupSport && trackedEntry ? (
-        <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-4">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.14em] text-violet-300">Points Ledger</p>
-              <h3 className="text-base font-semibold text-slate-200">Your Team Tracker</h3>
-            </div>
-            {existingEntryForSelectedGame ? (
-              canEditExistingEntryLineup ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setJustSubmittedRoster(false);
-                    setIsEditingRoster(true);
-                  }}
-                  className="tp-clean-button rounded-lg border border-violet-400/60 bg-violet-950/30 px-3 py-1.5 text-xs font-semibold text-violet-300"
-                >
-                  {isEditingRoster ? "Editing roster" : "Edit your roster"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  disabled
-                  className="tp-clean-button cursor-not-allowed rounded-lg border border-slate-600 bg-slate-800/40 px-3 py-1.5 text-xs font-semibold text-slate-400 opacity-90"
-                >
-                  Roster Locked
-                </button>
-              )
-            ) : null}
-          </div>
-          <div className="mt-2 rounded-xl border border-violet-400/30 bg-slate-800/40 px-3 py-2">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-slate-200">{showTrackedEntryClaimButton ? "Final Score" : "Live Points"}</p>
-              <SpringPop
-                popKey={totalScorePopTick}
-                glowSize={12}
-                glowColor={totalScorePopTone === "loss" ? "red" : "green"}
-              >
-                <p
-                  className={`text-sm font-black ${
-                    totalScorePopTone === "loss"
-                      ? "text-rose-400"
-                      : isRealtimeFresh
-                      ? "text-emerald-400"
-                      : "text-slate-200"
-                  }`}
-                >
-                  {liveTrackedEntryPoints.toFixed(2)} pts
-                </p>
-              </SpringPop>
-            </div>
-            <ul className="mt-2 space-y-1">
-              {(
-                isEditingRoster && canEditExistingEntryLineup && existingEntryForSelectedGame
-                  ? selectedPlayers.map((playerName, index) => ({
-                      playerId: -(index + 1),
-                      playerName,
-                      headshotUrl: playerPoolHeadshotByName.get(normalizePlayerKey(playerName)) ?? null,
-                    }))
-                  : trackedEntry.lineupPlayers.length > 0
-                  ? trackedEntry.lineupPlayers
-                  : trackedEntry.lineup.map((playerName, index) => ({
-                      playerId: -(index + 1),
-                      playerName,
-                      headshotUrl: playerPoolHeadshotByName.get(normalizePlayerKey(playerName)) ?? null,
-                    }))
-              ).map((player) => {
-                const playerName = player.playerName;
-                const livePoints = livePointsByPlayer.get(String(player.playerId));
-                const requireLiveRows = trackedEntry.status === "pending" || trackedEntry.status === "live";
-                const playerPoints =
-                  typeof livePoints === "number"
-                    ? livePoints
-                    : requireLiveRows
-                    ? 0
-                    : getScoreFromBreakdown(trackedEntry.scoreBreakdown, player);
-                const isHot = highlightedPlayerIds.includes(String(player.playerId));
-                const popTone = playerPopToneById[String(player.playerId)] ?? "gain";
-                return (
-                  <li
-                    key={`${trackedEntry.id}-${player.playerId}`}
-                    className={`flex items-center justify-between gap-2 text-xs transition-all duration-300 ${
-                      isHot
-                        ? popTone === "loss"
-                          ? "scale-[1.03] text-rose-300 drop-shadow-[0_0_10px_rgba(244,63,94,0.95)]"
-                          : "scale-[1.03] text-emerald-300 drop-shadow-[0_0_10px_rgba(34,197,94,0.95)]"
-                        : "text-slate-300"
-                    }`}
-                  >
-                    <div className="flex min-w-0 items-center gap-2">
-                      {isEditingRoster && canEditExistingEntryLineup && existingEntryForSelectedGame ? (
-                        <button
-                          type="button"
-                          onClick={() => removeSelectedPlayer(playerName)}
-                          className="tp-clean-button inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-rose-600 bg-rose-600 text-[10px] font-black leading-none text-white"
-                          aria-label={`Remove ${playerName}`}
-                        >
-                          -
-                        </button>
-                      ) : null}
-                      <PlayerHeadshot src={player.headshotUrl ?? null} name={playerName} sizeClass="h-9 w-9" />
-                      <span className="truncate text-sm font-semibold text-slate-200">{playerName}</span>
-                    </div>
-                    <SpringPop
-                      popKey={playerPopTickById[String(player.playerId)] ?? 0}
-                      glowSize={10}
-                      glowColor={popTone === "loss" ? "red" : "green"}
-                      className={`text-sm font-bold ${isHot ? (popTone === "loss" ? "text-rose-200" : "text-emerald-200") : ""}`}
-                    >
-                      {playerPoints.toFixed(2)} pts
-                    </SpringPop>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-          {showTrackedEntryClaimButton ? (
-            <button
-              type="button"
-              onClick={(event) => {
-                const rect = event.currentTarget.getBoundingClientRect();
-                void claimReward(trackedEntry, rect);
-              }}
-              disabled={claimingEntryId === trackedEntry.id}
-              className="tp-clean-button mt-3 w-full rounded-lg border border-emerald-400/60 bg-emerald-950/30 px-3 py-2 text-sm font-semibold text-emerald-300 disabled:opacity-60"
-            >
-              {claimingEntryId === trackedEntry.id ? "Collecting..." : `Collect ${trackedEntryClaimablePoints} Points`}
-            </button>
-          ) : hasLiveEntry ? (
-            <>
-              <p className="mt-2 text-[11px] font-semibold text-emerald-400">Live game detected. Streaming realtime updates.</p>
-              {uncollectedPoints > 0 ? (
-                <button
-                  type="button"
-                  onClick={() => void collectLivePoints()}
-                  disabled={isCollectingLive || isGeofencePaused}
-                  className="tp-clean-button mt-2 w-full rounded-lg border border-amber-400/60 bg-amber-950/30 px-3 py-2 text-sm font-semibold text-amber-300 disabled:opacity-60"
-                >
-                  {isCollectingLive
-                    ? "Collecting..."
-                    : isGeofencePaused
-                    ? "Must be at venue to collect"
-                    : `Collect ${uncollectedPoints.toFixed(1)} Live Pts`}
-                </button>
-              ) : null}
-            </>
-          ) : (
-            <p className="mt-2 text-[11px] text-slate-400">No live game right now. Automatic updates will resume when your next game starts.</p>
-          )}
-        </section>
-      ) : null}
-
-      {/* Completed games with unclaimed points */}
-      {isFantasyLineupSport && finalUnclaimedEntries.length > 1 ? (
-        <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-4">
-          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-violet-300">History</p>
-          <h3 className="text-base font-semibold text-slate-200">Completed Games Ready To Collect</h3>
-          <p className="mt-1 text-xs leading-relaxed text-slate-400">
-            Finalized rosters stay here until you collect points.
-          </p>
-          <div className="mt-3 space-y-2">
-            {finalUnclaimedEntries.map((entry) => (
-              <div key={entry.id} className="rounded-xl border border-violet-400/30 bg-slate-800/40 px-3 py-2">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-200">{entry.gameLabel}</p>
-                    <p className="text-xs text-slate-400">{formatLocalDateTime(entry.startsAt)}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      const rect = event.currentTarget.getBoundingClientRect();
-                      void claimReward(entry, rect);
-                    }}
-                    disabled={claimingEntryId === entry.id}
-                    className="tp-clean-button rounded-lg border border-violet-400/60 bg-violet-500/20 px-2.5 py-1.5 text-xs font-semibold text-violet-300 disabled:opacity-60"
-                  >
-                    {claimingEntryId === entry.id ? "Collecting..." : `Collect ${computeFantasyClaimablePoints(entry)} Points`}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {/* Game Start card */}
-      {showGameStart ? (
-        <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-4">
-          <p className="text-xs font-black uppercase tracking-[0.12em] text-violet-300">Game Start</p>
-          {sportGames.length > 0 ? (
-            <p className="mt-1 text-sm text-slate-400">
-              {sportGames[0] ? formatLocalDateTime(sportGames[0].startsAt) : null}
-            </p>
-          ) : null}
-          {sportGames.length === 0 ? (
-            <p className="mt-1 text-sm text-slate-400">
-              No {selectedSportLabel} games scheduled for this day.
-            </p>
-          ) : null}
-          {sportGames.length > 0 ? (
-            isLoadingPool ? (
-              <div
-                className="mt-3 flex h-[46px] w-full animate-pulse items-center justify-center gap-2 rounded-xl bg-violet-950/40"
-                aria-label="Loading player pool…"
-              >
-                <span className="h-2 w-2 rounded-full bg-violet-300/70" />
-                <span className="h-2 w-24 rounded-full bg-violet-300/70" />
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setHasStartedGame(true)}
-                className="tp-clean-button mt-3 w-full rounded-xl border border-violet-400/60 bg-violet-500/20 px-3 py-3 text-sm font-bold text-violet-300 shadow-sm active:scale-95"
-              >
-                {draftCtaLabel}
-              </button>
-            )
-          ) : null}
-        </section>
-      ) : null}
-
-      {/* Lineup Builder */}
-      {showLineupBuilder ? (
-        <section className="rounded-2xl border border-violet-400/30 bg-slate-900 p-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-base font-semibold text-slate-200">
-              {existingEntryForSelectedGame ? "Update Lineup" : "Lineup Builder"}
-            </h3>
-            <div className="text-xs font-semibold text-slate-300">
-              {selectedPlayers.length}/{requiredLineupSize} selected
-            </div>
-          </div>
-
-          {/* Scoring reference */}
-          <div className="mt-3 rounded-xl border border-violet-400/30 bg-slate-800/40 px-3 py-3">
-            <p className="text-center text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">Scoring System</p>
-            {selectedSport === "baseball" ? (
-              <div className="mt-2 space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Batting</p>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                  <span className="text-slate-400">Single / Walk</span><span className="text-right font-semibold text-slate-200">+10</span>
-                  <span className="text-slate-400">Double</span><span className="text-right font-semibold text-slate-200">+20</span>
-                  <span className="text-slate-400">Triple</span><span className="text-right font-semibold text-slate-200">+30</span>
-                  <span className="text-slate-400">Home Run</span><span className="text-right font-semibold text-slate-200">+50</span>
-                  <span className="text-slate-400">Run / RBI</span><span className="text-right font-semibold text-slate-200">+10</span>
-                  <span className="text-slate-400">Stolen Base</span><span className="text-right font-semibold text-slate-200">+15</span>
-                  <span className="text-slate-400">Strikeout (bat)</span><span className="text-right font-semibold text-rose-400">-5</span>
-                </div>
-                <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-slate-400">Pitching</p>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                  <span className="text-slate-400">Strikeout</span><span className="text-right font-semibold text-slate-200">+10</span>
-                  <span className="text-slate-400">Out Recorded</span><span className="text-right font-semibold text-slate-200">+5</span>
-                  <span className="text-slate-400">Earned Run</span><span className="text-right font-semibold text-rose-400">-15</span>
-                  <span className="text-slate-400">Walk / Hit Allowed</span><span className="text-right font-semibold text-rose-400">-5</span>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                <span className="text-slate-400">Points</span><span className="text-right font-semibold text-slate-200">+1.0</span>
-                <span className="text-slate-400">Rebounds</span><span className="text-right font-semibold text-slate-200">+1.2</span>
-                <span className="text-slate-400">Assists</span><span className="text-right font-semibold text-slate-200">+1.5</span>
-                <span className="text-slate-400">Steals</span><span className="text-right font-semibold text-slate-200">+3.0</span>
-                <span className="text-slate-400">Blocks</span><span className="text-right font-semibold text-slate-200">+3.0</span>
-                <span className="text-slate-400">Turnovers</span><span className="text-right font-semibold text-rose-400">-1.0</span>
-              </div>
-            )}
-          </div>
-
-          {/* ── Live Roster Preview ── */}
-          <div className="mt-3 rounded-xl border border-violet-400/30 bg-slate-800/40 px-3 py-3">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <p className="text-[11px] font-black uppercase tracking-[0.1em] text-violet-300">
-                  My Roster
-                </p>
-                {isSubmittedRosterView && canEditExistingEntryLineup ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setJustSubmittedRoster(false);
-                      setIsEditingRoster(true);
-                    }}
-                    className="tp-clean-button rounded-full border border-violet-400/60 bg-violet-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-300"
-                  >
-                    Edit roster
-                  </button>
-                ) : null}
-              </div>
-              {submitting ? (
-                <span className="text-[10px] font-semibold text-slate-400">Saving…</span>
-              ) : isSubmittedRosterView ? (
-                <span className="text-[10px] font-bold text-emerald-400">
-                  {canEditExistingEntryLineup ? "Roster submitted" : "Roster locked"}
-                </span>
-              ) : selectedPlayers.length === requiredLineupSize ? (
-                <span className="text-[10px] font-bold text-emerald-400">
-                  Ready to {existingEntryForSelectedGame ? "update" : "submit"}
-                </span>
-              ) : (
-                <span className="text-[10px] text-slate-400">
-                  {requiredLineupSize - selectedPlayers.length} more to complete
-                </span>
-              )}
-            </div>
-            <ul className="mt-2 space-y-2">
-              {selectedPlayers.map((name) => {
-                const poolItem = playerPool.find((item) => normalizePlayerKey(item.playerName) === normalizePlayerKey(name));
-                return (
-                  <li key={name} className="flex items-center justify-between gap-2">
-                    <div className="flex min-w-0 items-center gap-2">
-                      {canModifyRosterSelections ? (
-                        <button
-                          type="button"
-                          onClick={() => removeSelectedPlayer(name)}
-                          className="tp-clean-button inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-rose-500 bg-rose-500 text-[12px] font-black leading-none text-white active:scale-90"
-                          aria-label={`Remove ${name}`}
-                        >
-                          −
-                        </button>
-                      ) : null}
-                      <PlayerHeadshot
-                        src={playerPoolHeadshotByName.get(normalizePlayerKey(name)) ?? null}
-                        name={name}
-                        sizeClass="h-7 w-7"
-                      />
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-slate-200">{name}</p>
-                        {(poolItem?.position || poolItem?.team) ? (
-                          <div className="mt-0.5 flex items-center gap-1.5">
-                            {poolItem?.position ? (
-                              <span className="rounded-full border border-violet-400/40 bg-violet-950/40 px-2 py-[2px] text-[10px] font-black leading-none text-violet-300">
-                                {poolItem.position}
-                              </span>
-                            ) : null}
-                            {poolItem?.team ? (
-                              <span className="text-[10px] text-slate-400">{poolItem.team}</span>
-                            ) : null}
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-                    {(() => {
-                      const rosterProj =
-                        poolItem?.projectedLine !== null && poolItem?.projectedLine !== undefined
-                          ? Math.round(Number(poolItem.projectedLine))
-                          : 0;
-                      return (
-                        <span
-                          className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-black ${
-                            rosterProj > 0
-                              ? "border-violet-400/40 bg-violet-950/40 text-violet-300"
-                              : "border-slate-700/60 bg-slate-800/40 text-slate-400"
-                          }`}
-                        >
-                          Projected: {rosterProj} pts
-                        </span>
-                      );
-                    })()}
-                  </li>
-                );
-              })}
-              {Array.from({ length: requiredLineupSize - selectedPlayers.length }).map((_, i) => (
-                <li key={`empty-${i}`} className="flex items-center gap-2 opacity-40">
-                  <div className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-dashed border-slate-400" />
-                  <span className="text-xs text-slate-400">
-                    {canModifyRosterSelections ? "Pick a player below…" : "Empty slot"}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            {canModifyRosterSelections ? (
-              <>
-                {submitting ? (
-                  <p className="mt-3 text-xs font-semibold leading-relaxed text-slate-400">Saving lineup…</p>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => void handleSubmitRoster()}
-                  disabled={submitting || selectedPlayers.length !== requiredLineupSize}
-                  className="tp-clean-button mt-3 w-full rounded-xl border border-violet-400/60 bg-violet-500/20 px-3 py-3 text-sm font-bold text-violet-300 shadow-sm active:scale-95 disabled:cursor-not-allowed disabled:opacity-45"
-                >
-                  {existingEntryForSelectedGame ? "Update roster" : "Submit roster"}
-                </button>
-                <p className="mt-2 text-[11px] font-medium text-slate-400">
-                  Your lineup is saved only when you tap {existingEntryForSelectedGame ? "Update roster" : "Submit roster"}.
-                </p>
-              </>
-            ) : (
-              <p className="mt-3 text-[11px] font-medium text-slate-400">
-                {canEditExistingEntryLineup
-                  ? "Roster is locked in. Tap Edit roster to make changes before tipoff."
-                  : "Roster is locked because games have already started."}
-              </p>
-            )}
-          </div>
-
-          {/* ── Sort + Filter controls ── */}
-          {canModifyRosterSelections ? (
-          <div className="mt-3 space-y-2">
-            {/* Sort toggles */}
-            <div className="flex flex-wrap gap-1.5">
-              {(["projected", "alpha", "position", "team"] as const).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setSortBy(mode)}
-                  className={`tp-clean-button rounded-full border px-3 py-1 text-[11px] font-bold transition-colors ${
-                    sortBy === mode
-                      ? "border-violet-400/60 bg-violet-500/20 text-violet-300"
-                      : "border-slate-700 bg-slate-800/40 text-slate-400 hover:border-violet-400/60"
-                  }`}
-                >
-                  {mode === "projected" ? "Best Proj" : mode === "alpha" ? "A–Z" : mode === "position" ? "Position" : "Team"}
-                </button>
-              ))}
-            </div>
-            {/* Dropdowns row */}
-            <div className="flex gap-2">
-              <select
-                value={filterPosition}
-                onChange={(e) => setFilterPosition(e.target.value)}
-                className="flex-1 rounded-lg border border-slate-700 bg-slate-800/40 px-2.5 py-1.5 text-xs font-semibold text-slate-200 shadow-sm focus:border-violet-400 focus:outline-none focus:ring-1 focus:ring-violet-400/30"
-              >
-                <option value="all">All Positions</option>
-                {CANONICAL_POSITIONS.map((pos) => (
-                  <option key={pos} value={pos}>{pos}</option>
-                ))}
-              </select>
-              <select
-                value={filterTeam}
-                onChange={(e) => setFilterTeam(e.target.value)}
-                className="flex-1 rounded-lg border border-slate-700 bg-slate-800/40 px-2.5 py-1.5 text-xs font-semibold text-slate-200 shadow-sm focus:border-violet-400 focus:outline-none focus:ring-1 focus:ring-violet-400/30"
-              >
-                <option value="all">All Teams</option>
-                {uniqueTeams.map((team) => (
-                  <option key={team} value={team}>{team}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          ) : null}
-
-          {/* ── Player pool ── */}
-          {canModifyRosterSelections ? (
-            <>
-              {availablePlayerPool.length === 0 ? (
-                <div className="mt-3">
-                  {sportGames.length > 0 ? (
-                    <BasketballLoader label="Loading today's eligible players…" />
-                  ) : (
-                    <p className="text-sm text-slate-400">No players available for this date.</p>
-                  )}
-                </div>
-              ) : sortedFilteredPool.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-400">No players match the current filter.</p>
-              ) : (
-                <>
-                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    {sortedFilteredPool.slice(0, visibleCount).map((item) => {
-                      const isSelected = selectedPlayerKeySet.has(normalizePlayerKey(item.playerName));
-                      const isFull = selectedPlayers.length >= requiredLineupSize;
-                      return (
-                        <button
-                          key={item.playerName}
-                          type="button"
-                          disabled={isFull && !isSelected}
-                          onClick={() => togglePlayer(item.playerName)}
-                          className={`tp-clean-button rounded-lg border px-3 py-2 text-left transition-colors disabled:opacity-50 ${
-                            isSelected
-                              ? "border-emerald-400/40 bg-emerald-500/20"
-                              : "border-violet-400/30 bg-slate-800/40 hover:bg-slate-800/80 hover:border-violet-400/60"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <PlayerHeadshot
-                              src={item.headshotUrl || FALLBACK_HEADSHOT_SRC}
-                              name={item.playerName}
-                              sizeClass="h-9 w-9 shrink-0"
-                            />
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-semibold text-slate-200">{item.playerName}</p>
-                              {(item.position || item.team) ? (
-                                <div className="mt-0.5 flex items-center gap-1.5">
-                                  {item.position ? (
-                                    <span className="rounded-full border border-violet-400/40 bg-violet-950/40 px-2 py-[2px] text-[10px] font-black leading-none text-violet-300">
-                                      {item.position}
-                                    </span>
-                                  ) : null}
-                                  {item.team ? (
-                                    <span className="text-[10px] text-slate-400">{item.team}</span>
-                                  ) : null}
-                                </div>
-                              ) : null}
-                            </div>
-                            <div className="flex shrink-0 flex-col items-end gap-0.5">
-                              {(() => {
-                                const displayProjection =
-                                  item.projectedLine !== null && item.projectedLine !== undefined
-                                    ? Math.round(Number(item.projectedLine))
-                                    : 0;
-                                return (
-                                  <span
-                                    className={`text-xs font-black tabular-nums ${
-                                      isSelected
-                                        ? "text-emerald-400"
-                                        : displayProjection > 0
-                                        ? "text-violet-300"
-                                        : "text-slate-400"
-                                    }`}
-                                  >
-                                    Projected: {displayProjection} pts
-                                  </span>
-                                );
-                              })()}
-                              {topProjectedPlayerKey === normalizePlayerKey(item.playerName) ? (
-                                <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-950/30 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-amber-300">
-                                  <span aria-hidden="true">★</span>
-                                  Top performer
-                                </span>
-                              ) : null}
-                              {isSelected ? (
-                                <span className="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-emerald-300">
-                                  Drafted
-                                </span>
-                              ) : (
-                                <span className="rounded-full border border-violet-400/60 bg-violet-500/20 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-violet-300">
-                                  Draft
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Load More */}
-                  {visibleCount < sortedFilteredPool.length ? (
-                    <button
-                      type="button"
-                      onClick={() => setVisibleCount((n) => n + 25)}
-                      className="tp-clean-button mt-3 w-full rounded-lg border border-violet-400/60 bg-violet-500/20 py-2 text-xs font-semibold text-violet-300 hover:border-violet-400/80"
-                    >
-                      Load more · {sortedFilteredPool.length - visibleCount} remaining
-                    </button>
-                  ) : null}
-                </>
-              )}
-            </>
-          ) : null}
-
-        </section>
-      ) : null}
-
-      <InlineSlotAdClient
-        slot="inline-content"
-        venueId={venueId}
-        pageKey="fantasy"
-        adType="inline"
-        displayTrigger="on-load"
-        placementKey="fantasy-inline"
-      />
     </div>
   );
 }

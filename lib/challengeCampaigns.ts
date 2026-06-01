@@ -8,6 +8,10 @@ import type {
   ChallengeGameType,
   CampaignRecurringType,
   ChallengeImageFitMode,
+  ChallengeLeaderboardEntry,
+  ChallengeLeaderboardTiebreaker,
+  ChallengeLeaderboardViewer,
+  ChallengeMode,
 } from "@/types";
 
 type ChallengeCampaignRow = {
@@ -29,6 +33,9 @@ type ChallengeCampaignRow = {
   point_multiplier: number | string;
   points_required_to_win: number;
   recurring_type: CampaignRecurringType;
+  challenge_mode: ChallengeMode | null;
+  leaderboard_display_limit: number | null;
+  leaderboard_tiebreaker: ChallengeLeaderboardTiebreaker | null;
   winner_user_id: string | null;
   is_active: boolean;
 };
@@ -49,12 +56,158 @@ type ChallengeCampaignRedemptionRow = {
   claimed_at: string;
 };
 
-const VALID_GAME_TYPES: ChallengeGameType[] = ["pickem", "fantasy", "speed-trivia", "bingo"];
+type ChallengeLeaderboardProgressRow = {
+  userId: string;
+  username: string;
+  pointsEarned: number;
+  updatedAt: string;
+};
+
+type ChallengeLeaderboardRpcRow = {
+  rank_position: number;
+  user_id: string;
+  username: string | null;
+  points_earned: number;
+  updated_at: string;
+  is_viewer: boolean;
+  in_top: boolean;
+};
+
+const VALID_GAME_TYPES: Array<Exclude<ChallengeGameType, "trivia">> = [
+  "pickem",
+  "fantasy",
+  "speed-trivia",
+  "live-trivia",
+  "bingo",
+];
 const VALID_DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 const VALID_IMAGE_FITS: ChallengeImageFitMode[] = ["cover", "contain"];
+const VALID_CHALLENGE_MODES: ChallengeMode[] = ["progress", "leaderboard"];
+const VALID_LEADERBOARD_TIEBREAKERS: ChallengeLeaderboardTiebreaker[] = ["first_to_score", "latest_activity"];
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
+}
+
+function normalizeChallengeMode(value: string | undefined | null): ChallengeMode {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  return VALID_CHALLENGE_MODES.includes(normalized as ChallengeMode) ? (normalized as ChallengeMode) : "progress";
+}
+
+function normalizeLeaderboardDisplayLimit(value: number | undefined | null): number {
+  if (!Number.isFinite(value)) return 10;
+  return Math.max(1, Math.min(50, Math.round(Number(value))));
+}
+
+function normalizeLeaderboardTiebreaker(value: string | undefined | null): ChallengeLeaderboardTiebreaker {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  return VALID_LEADERBOARD_TIEBREAKERS.includes(normalized as ChallengeLeaderboardTiebreaker)
+    ? (normalized as ChallengeLeaderboardTiebreaker)
+    : "first_to_score";
+}
+
+function toSortableTimestamp(value: string): number {
+  const parsed = Date.parse(String(value ?? ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+/**
+ * Deterministic tie-breaking:
+ * 1) Higher points wins.
+ * 2) If tied:
+ *    - first_to_score: earlier updatedAt wins.
+ *    - latest_activity: later updatedAt wins.
+ * 3) Final fallback: lexical userId.
+ */
+export function compareChallengeLeaderboardRows(
+  a: ChallengeLeaderboardProgressRow,
+  b: ChallengeLeaderboardProgressRow,
+  tiebreaker: ChallengeLeaderboardTiebreaker
+): number {
+  if (a.pointsEarned !== b.pointsEarned) {
+    return b.pointsEarned - a.pointsEarned;
+  }
+
+  const aTime = toSortableTimestamp(a.updatedAt);
+  const bTime = toSortableTimestamp(b.updatedAt);
+  if (aTime !== bTime) {
+    return tiebreaker === "latest_activity" ? bTime - aTime : aTime - bTime;
+  }
+
+  return a.userId.localeCompare(b.userId);
+}
+
+export function buildChallengeLeaderboardSnapshot(
+  rows: ChallengeLeaderboardProgressRow[],
+  options: {
+    displayLimit: number;
+    viewerUserId?: string;
+    tiebreaker: ChallengeLeaderboardTiebreaker;
+  }
+): {
+  topEntries: ChallengeLeaderboardEntry[];
+  viewer: ChallengeLeaderboardViewer | null;
+  ordered: ChallengeLeaderboardProgressRow[];
+} {
+  const displayLimit = normalizeLeaderboardDisplayLimit(options.displayLimit);
+  const viewerUserId = String(options.viewerUserId ?? "").trim();
+  const ordered = [...rows].sort((a, b) => compareChallengeLeaderboardRows(a, b, options.tiebreaker));
+
+  const topEntries = ordered.slice(0, displayLimit).map((row, index) => ({
+    rank: index + 1,
+    userId: row.userId,
+    username: row.username,
+    points: row.pointsEarned,
+    updatedAt: row.updatedAt,
+  }));
+
+  if (!viewerUserId) {
+    return { topEntries, viewer: null, ordered };
+  }
+
+  const viewerIndex = ordered.findIndex((row) => row.userId === viewerUserId);
+  if (viewerIndex < 0) {
+    return {
+      topEntries,
+      viewer: {
+        rank: null,
+        userId: viewerUserId,
+        username: null,
+        points: 0,
+        inTop: false,
+      },
+      ordered,
+    };
+  }
+
+  const viewerRow = ordered[viewerIndex];
+  return {
+    topEntries,
+    viewer: {
+      rank: viewerIndex + 1,
+      userId: viewerRow.userId,
+      username: viewerRow.username,
+      points: viewerRow.pointsEarned,
+      inTop: viewerIndex < displayLimit,
+    },
+    ordered,
+  };
+}
+
+export function pickLeaderboardWinner(
+  rows: ChallengeLeaderboardProgressRow[],
+  tiebreaker: ChallengeLeaderboardTiebreaker
+): ChallengeLeaderboardProgressRow | null {
+  if (rows.length === 0) return null;
+  const ordered = [...rows].sort((a, b) => compareChallengeLeaderboardRows(a, b, tiebreaker));
+  return ordered[0] ?? null;
+}
+
+function normalizeGameTypeAlias(value: string): ChallengeGameType {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (normalized === "trivia") return "speed-trivia";
+  if (normalized === "live_trivia") return "live-trivia";
+  return normalized as ChallengeGameType;
 }
 
 function mapCampaignRow(
@@ -63,8 +216,11 @@ function mapCampaignRow(
   prizeClaimedAt?: string | null
 ): ChallengeCampaign {
   const gameTypes = (row.game_types ?? [])
-    .map((value) => String(value).trim().toLowerCase())
-    .filter((value): value is ChallengeGameType => VALID_GAME_TYPES.includes(value as ChallengeGameType));
+    .map((value) => normalizeGameTypeAlias(value))
+    .filter(
+      (value): value is Exclude<ChallengeGameType, "trivia"> =>
+        VALID_GAME_TYPES.includes(value as Exclude<ChallengeGameType, "trivia">)
+    );
 
   return {
     id: row.id,
@@ -84,6 +240,9 @@ function mapCampaignRow(
     endTime: row.end_time ?? undefined,
     endDate: row.end_date ?? undefined,
     gameTypes: gameTypes.length > 0 ? gameTypes : [...VALID_GAME_TYPES],
+    challengeMode: normalizeChallengeMode(row.challenge_mode),
+    leaderboardDisplayLimit: normalizeLeaderboardDisplayLimit(row.leaderboard_display_limit),
+    leaderboardTiebreaker: normalizeLeaderboardTiebreaker(row.leaderboard_tiebreaker),
     pointMultiplier: Math.max(0.001, Number(row.point_multiplier ?? 1)),
     pointsRequiredToWin: Math.max(1, Number(row.points_required_to_win ?? 100)),
     recurringType: row.recurring_type,
@@ -116,12 +275,12 @@ function normalizeDays(input: string[] | undefined): string[] {
   return [...normalized];
 }
 
-function normalizeGameTypes(input: string[] | undefined): ChallengeGameType[] {
-  const normalized = new Set<ChallengeGameType>();
+function normalizeGameTypes(input: string[] | undefined): Array<Exclude<ChallengeGameType, "trivia">> {
+  const normalized = new Set<Exclude<ChallengeGameType, "trivia">>();
   for (const value of input ?? []) {
-    const key = String(value ?? "").trim().toLowerCase() as ChallengeGameType;
-    if (VALID_GAME_TYPES.includes(key)) {
-      normalized.add(key);
+    const key = normalizeGameTypeAlias(value);
+    if (VALID_GAME_TYPES.includes(key as Exclude<ChallengeGameType, "trivia">)) {
+      normalized.add(key as Exclude<ChallengeGameType, "trivia">);
     }
   }
   return normalized.size > 0 ? [...normalized] : [...VALID_GAME_TYPES];
@@ -169,6 +328,195 @@ function isCampaignEligibleAtTime(campaign: ChallengeCampaign, now: Date, gameTy
   return true;
 }
 
+function getCampaignCloseTimestampMs(campaign: ChallengeCampaign): number | null {
+  if (!campaign.endDate) return null;
+  const endTime = String(campaign.endTime ?? "").trim();
+  const boundary = endTime
+    ? `${campaign.endDate}T${endTime}:59.999Z`
+    : `${campaign.endDate}T23:59:59.999Z`;
+  const parsed = Date.parse(boundary);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function isLeaderboardCampaignClosed(campaign: ChallengeCampaign, now: Date): boolean {
+  if (campaign.challengeMode !== "leaderboard" || campaign.winnerUserId) return false;
+  const closeAt = getCampaignCloseTimestampMs(campaign);
+  if (closeAt !== null) {
+    return now.getTime() > closeAt;
+  }
+  return !campaign.isActive;
+}
+
+async function listLeaderboardProgressRows(params: {
+  challengeId: string;
+  venueId?: string;
+}): Promise<ChallengeLeaderboardProgressRow[]> {
+  assertConfigured();
+  let query = supabaseAdmin!
+    .from("challenge_campaign_progress")
+    .select("user_id, points_earned, updated_at")
+    .eq("challenge_id", params.challengeId)
+    .limit(5000);
+  if (params.venueId) {
+    query = query.eq("venue_id", params.venueId);
+  }
+
+  const { data, error } = await query.returns<Array<{ user_id: string; points_earned: number; updated_at: string }>>();
+  if (error || !data) {
+    throw new Error(error?.message ?? "Failed to load challenge leaderboard progress.");
+  }
+  if (data.length === 0) return [];
+
+  const userIds = Array.from(new Set(data.map((row) => row.user_id).filter(Boolean)));
+  const { data: userRows, error: userError } = await supabaseAdmin!
+    .from("users")
+    .select("id, username")
+    .in("id", userIds)
+    .returns<Array<{ id: string; username: string }>>();
+  if (userError) {
+    throw new Error(userError.message ?? "Failed to load challenge leaderboard users.");
+  }
+  const usernameById = new Map<string, string>((userRows ?? []).map((row) => [row.id, row.username]));
+
+  return data.map((row) => ({
+    userId: row.user_id,
+    username: usernameById.get(row.user_id) ?? "Player",
+    pointsEarned: Math.max(0, Number(row.points_earned ?? 0)),
+    updatedAt: row.updated_at,
+  }));
+}
+
+async function getLeaderboardSnapshotViaRpc(params: {
+  challengeId: string;
+  venueId: string;
+  viewerUserId?: string;
+  displayLimit: number;
+  tiebreaker: ChallengeLeaderboardTiebreaker;
+}): Promise<{ topEntries: ChallengeLeaderboardEntry[]; viewer: ChallengeLeaderboardViewer | null } | null> {
+  assertConfigured();
+  const viewerUserId = String(params.viewerUserId ?? "").trim();
+  const { data, error } = await supabaseAdmin!.rpc("get_challenge_leaderboard_snapshot", {
+    p_challenge_id: params.challengeId,
+    p_venue_id: params.venueId,
+    p_viewer_user_id: viewerUserId || null,
+    p_limit: normalizeLeaderboardDisplayLimit(params.displayLimit),
+    p_tiebreaker: params.tiebreaker,
+  });
+
+  if (error || !Array.isArray(data)) {
+    return null;
+  }
+
+  const rows = data as ChallengeLeaderboardRpcRow[];
+  const topEntries = rows
+    .filter((row) => row.in_top)
+    .sort((a, b) => Number(a.rank_position) - Number(b.rank_position))
+    .map((row) => ({
+      rank: Math.max(1, Number(row.rank_position)),
+      userId: row.user_id,
+      username: row.username ?? "Player",
+      points: Math.max(0, Number(row.points_earned ?? 0)),
+      updatedAt: row.updated_at,
+    }));
+
+  const viewerRow = rows.find((row) => row.is_viewer);
+  const viewer: ChallengeLeaderboardViewer | null = viewerUserId
+    ? viewerRow
+      ? {
+          rank: Math.max(1, Number(viewerRow.rank_position)),
+          userId: viewerRow.user_id,
+          username: viewerRow.username ?? "Player",
+          points: Math.max(0, Number(viewerRow.points_earned ?? 0)),
+          inTop: Boolean(viewerRow.in_top),
+        }
+      : {
+          rank: null,
+          userId: viewerUserId,
+          username: null,
+          points: 0,
+          inTop: false,
+        }
+    : null;
+
+  return { topEntries, viewer };
+}
+
+async function getLeaderboardWinnerUserId(params: {
+  campaignId: string;
+  tiebreaker: ChallengeLeaderboardTiebreaker;
+}): Promise<string | null> {
+  assertConfigured();
+  const updatedAtAscending = params.tiebreaker !== "latest_activity";
+  const { data, error } = await supabaseAdmin!
+    .from("challenge_campaign_progress")
+    .select("user_id")
+    .eq("challenge_id", params.campaignId)
+    .order("points_earned", { ascending: false })
+    .order("updated_at", { ascending: updatedAtAscending })
+    .order("user_id", { ascending: true })
+    .limit(1)
+    .maybeSingle<{ user_id: string }>();
+  if (error) {
+    throw new Error(error.message ?? "Failed to determine leaderboard winner.");
+  }
+  return data?.user_id ?? null;
+}
+
+async function getLeaderboardSnapshotForCampaign(params: {
+  campaign: ChallengeCampaign;
+  venueId: string;
+  viewerUserId?: string;
+}): Promise<{ topEntries: ChallengeLeaderboardEntry[]; viewer: ChallengeLeaderboardViewer | null }> {
+  const viaRpc = await getLeaderboardSnapshotViaRpc({
+    challengeId: params.campaign.id,
+    venueId: params.venueId,
+    viewerUserId: params.viewerUserId,
+    displayLimit: params.campaign.leaderboardDisplayLimit,
+    tiebreaker: params.campaign.leaderboardTiebreaker,
+  });
+  if (viaRpc) return viaRpc;
+
+  const rows = await listLeaderboardProgressRows({
+    challengeId: params.campaign.id,
+    venueId: params.venueId,
+  });
+
+  const snapshot = buildChallengeLeaderboardSnapshot(rows, {
+    displayLimit: params.campaign.leaderboardDisplayLimit,
+    viewerUserId: params.viewerUserId,
+    tiebreaker: params.campaign.leaderboardTiebreaker,
+  });
+  return { topEntries: snapshot.topEntries, viewer: snapshot.viewer };
+}
+
+async function finalizeClosedLeaderboardCampaigns(
+  campaigns: ChallengeCampaign[],
+  now: Date
+): Promise<Map<string, string>> {
+  assertConfigured();
+  const finalizedWinnerByCampaignId = new Map<string, string>();
+  const candidates = campaigns.filter((campaign) => isLeaderboardCampaignClosed(campaign, now));
+  for (const campaign of candidates) {
+    const winnerUserId = await getLeaderboardWinnerUserId({
+      campaignId: campaign.id,
+      tiebreaker: campaign.leaderboardTiebreaker,
+    });
+    if (!winnerUserId) continue;
+
+    const { data: updatedRow } = await supabaseAdmin!
+      .from("challenge_campaigns")
+      .update({ winner_user_id: winnerUserId, is_active: false })
+      .eq("id", campaign.id)
+      .is("winner_user_id", null)
+      .select("id, winner_user_id")
+      .maybeSingle<{ id: string; winner_user_id: string | null }>();
+    if (updatedRow?.id && updatedRow.winner_user_id) {
+      finalizedWinnerByCampaignId.set(updatedRow.id, updatedRow.winner_user_id);
+    }
+  }
+  return finalizedWinnerByCampaignId;
+}
+
 function assertConfigured() {
   if (!supabaseAdmin) {
     throw new Error("Supabase admin client is not configured.");
@@ -187,7 +535,7 @@ export async function listChallengeCampaigns(params: {
   let query = supabaseAdmin!
     .from("challenge_campaigns")
     .select(
-      "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, active_days, start_time, end_time, end_date, game_types, point_multiplier, points_required_to_win, recurring_type, winner_user_id, is_active"
+      "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, active_days, start_time, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, winner_user_id, is_active"
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -204,6 +552,19 @@ export async function listChallengeCampaigns(params: {
     throw new Error(error?.message ?? "Failed to load challenge campaigns.");
   }
 
+  const now = new Date();
+  const parsedCampaigns = data.map((row) => mapCampaignRow(row));
+  const finalizedWinnerByCampaignId = await finalizeClosedLeaderboardCampaigns(parsedCampaigns, now);
+  if (finalizedWinnerByCampaignId.size > 0) {
+    for (const row of data) {
+      const winnerUserId = finalizedWinnerByCampaignId.get(row.id);
+      if (winnerUserId) {
+        row.winner_user_id = winnerUserId;
+        row.is_active = false;
+      }
+    }
+  }
+
   const winnerIds = Array.from(new Set(data.map((row) => row.winner_user_id).filter(Boolean))) as string[];
   const winnerNameById = new Map<string, string>();
   if (winnerIds.length > 0) {
@@ -217,7 +578,13 @@ export async function listChallengeCampaigns(params: {
     }
   }
 
-  const mapped = data.map((row) => mapCampaignRow(row, row.winner_user_id ? winnerNameById.get(row.winner_user_id) ?? null : null));
+  let mapped = data.map((row) => mapCampaignRow(row, row.winner_user_id ? winnerNameById.get(row.winner_user_id) ?? null : null));
+  if (!includeInactive) {
+    mapped = mapped.filter((campaign) => campaign.isActive);
+  }
+  if (!includeResolved) {
+    mapped = mapped.filter((campaign) => !campaign.winnerUserId);
+  }
   if (!params.venueId) {
     return mapped;
   }
@@ -259,6 +626,9 @@ export async function createChallengeCampaign(input: {
   endTime?: string;
   endDate?: string;
   gameTypes?: string[];
+  challengeMode?: ChallengeMode;
+  leaderboardDisplayLimit?: number;
+  leaderboardTiebreaker?: ChallengeLeaderboardTiebreaker;
   pointMultiplier?: number;
   pointsRequiredToWin?: number;
   recurringType?: CampaignRecurringType;
@@ -269,6 +639,7 @@ export async function createChallengeCampaign(input: {
   if (!name) throw new Error("Challenge name is required.");
   const rules = String(input.rules ?? "").trim();
   if (!rules) throw new Error("Challenge rules are required.");
+  const challengeMode = normalizeChallengeMode(input.challengeMode);
 
   const row = {
     name,
@@ -284,6 +655,9 @@ export async function createChallengeCampaign(input: {
     end_time: String(input.endTime ?? "").trim() || null,
     end_date: String(input.endDate ?? "").trim() || null,
     game_types: normalizeGameTypes(input.gameTypes),
+    challenge_mode: challengeMode,
+    leaderboard_display_limit: normalizeLeaderboardDisplayLimit(input.leaderboardDisplayLimit),
+    leaderboard_tiebreaker: normalizeLeaderboardTiebreaker(input.leaderboardTiebreaker),
     point_multiplier: Number.isFinite(input.pointMultiplier) ? Math.max(0.001, Number(input.pointMultiplier)) : 1,
     points_required_to_win: Number.isFinite(input.pointsRequiredToWin)
       ? Math.max(1, Math.round(Number(input.pointsRequiredToWin)))
@@ -296,7 +670,7 @@ export async function createChallengeCampaign(input: {
     .from("challenge_campaigns")
     .insert(row)
     .select(
-      "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, active_days, start_time, end_time, end_date, game_types, point_multiplier, points_required_to_win, recurring_type, winner_user_id, is_active"
+      "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, active_days, start_time, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, winner_user_id, is_active"
     )
     .single<ChallengeCampaignRow>();
   if (error || !data) {
@@ -320,6 +694,9 @@ export async function updateChallengeCampaign(input: {
   endTime?: string;
   endDate?: string;
   gameTypes?: string[];
+  challengeMode?: ChallengeMode;
+  leaderboardDisplayLimit?: number;
+  leaderboardTiebreaker?: ChallengeLeaderboardTiebreaker;
   pointMultiplier?: number;
   pointsRequiredToWin?: number;
   recurringType?: CampaignRecurringType;
@@ -344,6 +721,13 @@ export async function updateChallengeCampaign(input: {
   if (typeof input.endTime === "string") update.end_time = input.endTime.trim() || null;
   if (typeof input.endDate === "string") update.end_date = input.endDate.trim() || null;
   if (Array.isArray(input.gameTypes)) update.game_types = normalizeGameTypes(input.gameTypes);
+  if (typeof input.challengeMode === "string") update.challenge_mode = normalizeChallengeMode(input.challengeMode);
+  if (Number.isFinite(input.leaderboardDisplayLimit)) {
+    update.leaderboard_display_limit = normalizeLeaderboardDisplayLimit(input.leaderboardDisplayLimit);
+  }
+  if (typeof input.leaderboardTiebreaker === "string") {
+    update.leaderboard_tiebreaker = normalizeLeaderboardTiebreaker(input.leaderboardTiebreaker);
+  }
   if (Number.isFinite(input.pointMultiplier)) update.point_multiplier = Math.max(0.001, Number(input.pointMultiplier));
   if (Number.isFinite(input.pointsRequiredToWin)) update.points_required_to_win = Math.max(1, Math.round(Number(input.pointsRequiredToWin)));
   if (typeof input.recurringType === "string") update.recurring_type = input.recurringType;
@@ -355,7 +739,7 @@ export async function updateChallengeCampaign(input: {
     .update(update)
     .eq("id", id)
     .select(
-      "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, active_days, start_time, end_time, end_date, game_types, point_multiplier, points_required_to_win, recurring_type, winner_user_id, is_active"
+      "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, active_days, start_time, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, winner_user_id, is_active"
     )
     .single<ChallengeCampaignRow>();
   if (error || !data) {
@@ -465,7 +849,7 @@ export async function applyChallengeCampaignPoints(params: {
     }
 
     let won = false;
-    if (nextProgress >= campaign.pointsRequiredToWin && !campaign.winnerUserId) {
+    if (campaign.challengeMode === "progress" && nextProgress >= campaign.pointsRequiredToWin && !campaign.winnerUserId) {
       const { data: updatedWinner } = await supabaseAdmin!
         .from("challenge_campaigns")
         .update({ winner_user_id: userId, is_active: false })
@@ -526,10 +910,44 @@ export async function getChallengeCampaignSnapshotForUser(params: {
     }
   }
 
-  return campaigns.map((campaign) => ({
+  const baseCampaigns = campaigns.map((campaign) => ({
     ...campaign,
     progressPoints: progressByChallenge.get(campaign.id) ?? 0,
     prizeClaimedAt: claimedAtByChallengeId.get(campaign.id) ?? null,
+  }));
+
+  return attachLeaderboardSnapshotsToCampaigns({
+    campaigns: baseCampaigns,
+    venueId,
+    viewerUserId: userId,
+  });
+}
+
+export async function attachLeaderboardSnapshotsToCampaigns(params: {
+  campaigns: Array<ChallengeCampaign & { progressPoints: number }>;
+  venueId: string;
+  viewerUserId?: string;
+}): Promise<Array<ChallengeCampaign & { progressPoints: number }>> {
+  const venueId = String(params.venueId ?? "").trim();
+  if (!venueId || params.campaigns.length === 0) return params.campaigns;
+
+  const leaderboardByChallengeId = new Map<string, { topEntries: ChallengeLeaderboardEntry[]; viewer: ChallengeLeaderboardViewer | null }>();
+  await Promise.all(
+    params.campaigns
+      .filter((campaign) => campaign.challengeMode === "leaderboard")
+      .map(async (campaign) => {
+        const snapshot = await getLeaderboardSnapshotForCampaign({
+          campaign,
+          venueId,
+          viewerUserId: params.viewerUserId,
+        });
+        leaderboardByChallengeId.set(campaign.id, snapshot);
+      })
+  );
+
+  return params.campaigns.map((campaign) => ({
+    ...campaign,
+    leaderboard: leaderboardByChallengeId.get(campaign.id) ?? campaign.leaderboard,
   }));
 }
 

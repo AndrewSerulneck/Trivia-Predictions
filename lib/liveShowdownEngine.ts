@@ -104,6 +104,7 @@ type LiveShowdownActiveState = {
   occurrenceDate: string; // 'YYYY-MM-DD'
   intermissionAdDelaySeconds: number;
   lobbyAdEnabled: boolean;
+  venueName: string | null;
   totalRounds: number;
   currentRound: number;
   currentQuestionIndex: number | null;
@@ -207,6 +208,42 @@ function isMissingRecurringColumnsError(message: string | undefined): boolean {
   const mentionsRecurringColumn =
     normalized.includes("recurring_type") || normalized.includes("recurring_days");
   return mentionsRecurringColumn && (normalized.includes("does not exist") || normalized.includes("schema cache"));
+}
+
+let supportsOccurrenceDateColumn: boolean | null = null;
+let hasLoggedOccurrenceDateFallback = false;
+
+function isMissingOccurrenceDateColumnError(message: string | undefined): boolean {
+  const normalized = String(message ?? "").toLowerCase();
+  return normalized.includes("occurrence_date") && normalized.includes("does not exist");
+}
+
+function logOccurrenceDateFallbackOnce(scope: string): void {
+  if (hasLoggedOccurrenceDateFallback) return;
+  hasLoggedOccurrenceDateFallback = true;
+  console.warn(`[live-trivia][occurrence-compat] Falling back to legacy schema in ${scope} (missing occurrence_date column).`);
+}
+
+async function runOccurrenceCompatibleQuery(
+  scope: string,
+  withOccurrence: () => PromiseLike<any>,
+  withoutOccurrence: () => PromiseLike<any>
+): Promise<any> {
+  if (supportsOccurrenceDateColumn === false) {
+    return withoutOccurrence();
+  }
+
+  const withResult = await withOccurrence();
+  if (withResult.error && isMissingOccurrenceDateColumnError(withResult.error.message ?? undefined)) {
+    supportsOccurrenceDateColumn = false;
+    logOccurrenceDateFallbackOnce(scope);
+    return withoutOccurrence();
+  }
+
+  if (!withResult.error) {
+    supportsOccurrenceDateColumn = true;
+  }
+  return withResult;
 }
 
 function getTimeZoneParts(date: Date, timeZone: string): {
@@ -573,19 +610,33 @@ async function loadSessionQuestion(
   questionIndex: number,
   occurrenceDate: string
 ): Promise<LiveShowdownQuestionInternal | null> {
-  if (!supabaseAdmin) {
+  const admin = supabaseAdmin;
+  if (!admin) {
     return null;
   }
 
-  const { data: sessionRowData, error: sessionRowError } = await supabaseAdmin
-    .from("trivia_session_questions")
-    .select("id, schedule_id, question_id, round_number, question_index")
-    .eq("schedule_id", scheduleId)
-    .eq("occurrence_date", occurrenceDate)
-    .eq("round_number", roundNumber)
-    .eq("question_index", questionIndex)
-    .limit(1)
-    .maybeSingle();
+  const { data: sessionRowData, error: sessionRowError } = await runOccurrenceCompatibleQuery(
+    "loadSessionQuestion",
+    () =>
+      admin
+        .from("trivia_session_questions")
+        .select("id, schedule_id, question_id, round_number, question_index")
+        .eq("schedule_id", scheduleId)
+        .eq("occurrence_date", occurrenceDate)
+        .eq("round_number", roundNumber)
+        .eq("question_index", questionIndex)
+        .limit(1)
+        .maybeSingle(),
+    () =>
+      admin
+        .from("trivia_session_questions")
+        .select("id, schedule_id, question_id, round_number, question_index")
+        .eq("schedule_id", scheduleId)
+        .eq("round_number", roundNumber)
+        .eq("question_index", questionIndex)
+        .limit(1)
+        .maybeSingle()
+  );
 
   if (sessionRowError) {
     throw new Error(sessionRowError.message || "Failed to load session question mapping.");
@@ -601,7 +652,7 @@ async function loadSessionQuestion(
     return null;
   }
 
-  const bySlug = await supabaseAdmin
+  const bySlug = await admin
     .from("trivia_questions")
     .select("id, slug, question, options, correct_answer, category, difficulty, question_pool")
     .eq("slug", questionId)
@@ -615,7 +666,7 @@ async function loadSessionQuestion(
   let questionRow = (bySlug.data as TriviaQuestionRow | null) ?? null;
 
   if (!questionRow && isUuidLike(questionId)) {
-    const byId = await supabaseAdmin
+    const byId = await admin
       .from("trivia_questions")
       .select("id, slug, question, options, correct_answer, category, difficulty, question_pool")
       .eq("id", questionId)
@@ -667,7 +718,7 @@ async function awardTriviaPointsForLiveShowdown(userId: string, basePoints: numb
     const campaignResult = await applyChallengeCampaignPoints({
       userId,
       venueId,
-      gameType: "speed-trivia",
+      gameType: "live-trivia",
       basePoints,
     }).catch(() => null);
 
@@ -697,21 +748,36 @@ async function loadViewerResult(
   pendingClosestGuessEligible: boolean,
   occurrenceDate: string
 ): Promise<LiveShowdownViewerResult | null> {
-  if (!supabaseAdmin) return null;
+  const admin = supabaseAdmin;
+  if (!admin) return null;
 
   const userId = String(userIdRaw ?? "").trim();
   if (!userId) return null;
 
-  const { data, error } = await supabaseAdmin
-    .from("live_showdown_answers")
-    .select("submitted_answer, is_correct, points_awarded")
-    .eq("user_id", userId)
-    .eq("schedule_id", scheduleId)
-    .eq("occurrence_date", occurrenceDate)
-    .eq("round_number", roundNumber)
-    .eq("question_index", questionIndex)
-    .limit(1)
-    .maybeSingle<{ submitted_answer: string; is_correct: boolean; points_awarded: number }>();
+  const { data, error } = await runOccurrenceCompatibleQuery(
+    "loadViewerResult",
+    () =>
+      admin
+        .from("live_showdown_answers")
+        .select("submitted_answer, is_correct, points_awarded")
+        .eq("user_id", userId)
+        .eq("schedule_id", scheduleId)
+        .eq("occurrence_date", occurrenceDate)
+        .eq("round_number", roundNumber)
+        .eq("question_index", questionIndex)
+        .limit(1)
+        .maybeSingle<{ submitted_answer: string; is_correct: boolean; points_awarded: number }>(),
+    () =>
+      admin
+        .from("live_showdown_answers")
+        .select("submitted_answer, is_correct, points_awarded")
+        .eq("user_id", userId)
+        .eq("schedule_id", scheduleId)
+        .eq("round_number", roundNumber)
+        .eq("question_index", questionIndex)
+        .limit(1)
+        .maybeSingle<{ submitted_answer: string; is_correct: boolean; points_awarded: number }>()
+  );
 
   if (error) {
     throw new Error(error.message || "Failed to load viewer showdown result.");
@@ -739,7 +805,8 @@ async function settleClosestGuessQuestion(
   correctAnswerRaw: string | null,
   occurrenceDate: string
 ): Promise<string | null> {
-  if (!supabaseAdmin) return null;
+  const admin = supabaseAdmin;
+  if (!admin) return null;
 
   const correctAnswer = String(correctAnswerRaw ?? "").trim();
   const correctNumericAnswer = parseLargePureNumberAnswer(correctAnswer);
@@ -747,13 +814,24 @@ async function settleClosestGuessQuestion(
     return null;
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("live_showdown_answers")
-    .select("id, user_id, submitted_answer, normalized_answer, is_correct, points_awarded")
-    .eq("schedule_id", scheduleId)
-    .eq("occurrence_date", occurrenceDate)
-    .eq("round_number", roundNumber)
-    .eq("question_index", questionIndex);
+  const { data, error } = await runOccurrenceCompatibleQuery(
+    "settleClosestGuessQuestion:load_submissions",
+    () =>
+      admin
+        .from("live_showdown_answers")
+        .select("id, user_id, submitted_answer, normalized_answer, is_correct, points_awarded")
+        .eq("schedule_id", scheduleId)
+        .eq("occurrence_date", occurrenceDate)
+        .eq("round_number", roundNumber)
+        .eq("question_index", questionIndex),
+    () =>
+      admin
+        .from("live_showdown_answers")
+        .select("id, user_id, submitted_answer, normalized_answer, is_correct, points_awarded")
+        .eq("schedule_id", scheduleId)
+        .eq("round_number", roundNumber)
+        .eq("question_index", questionIndex)
+  );
 
   if (error) {
     throw new Error(error.message || "Failed to load live showdown submissions.");
@@ -773,7 +851,7 @@ async function settleClosestGuessQuestion(
   }
 
   const userIds = Array.from(new Set(answers.map((row) => row.user_id).filter(Boolean)));
-  const { data: usersData } = await supabaseAdmin
+  const { data: usersData } = await admin
     .from("users")
     .select("id, username")
     .in("id", userIds)
@@ -808,7 +886,7 @@ async function settleClosestGuessQuestion(
   const unscoredWinnerRows = winnerRows.filter((row) => row.points_awarded <= 0);
 
   for (const winnerRow of unscoredWinnerRows) {
-    const { data: claimedRows, error: claimError } = await supabaseAdmin
+    const { data: claimedRows, error: claimError } = await admin
       .from("live_showdown_answers")
       .update({ points_awarded: 10, is_correct: true })
       .eq("id", winnerRow.id)
@@ -831,7 +909,7 @@ async function settleClosestGuessQuestion(
 
     const finalPointsAwarded = await awardTriviaPointsForLiveShowdown(claimedUserId, 10);
     if (finalPointsAwarded !== 10) {
-      const { error: finalPointsError } = await supabaseAdmin
+      const { error: finalPointsError } = await admin
         .from("live_showdown_answers")
         .update({ points_awarded: finalPointsAwarded })
         .eq("id", winnerRow.id);
@@ -848,20 +926,31 @@ async function settleClosestGuessQuestion(
     return shouldBeCorrect ? row.is_correct : !row.is_correct;
   });
   if (!flagsAlreadyCorrect) {
-    const { error: clearError } = await supabaseAdmin
-      .from("live_showdown_answers")
-      .update({ is_correct: false })
-      .eq("schedule_id", scheduleId)
-      .eq("occurrence_date", occurrenceDate)
-      .eq("round_number", roundNumber)
-      .eq("question_index", questionIndex);
+    const { error: clearError } = await runOccurrenceCompatibleQuery(
+      "settleClosestGuessQuestion:clear_flags",
+      () =>
+        admin
+          .from("live_showdown_answers")
+          .update({ is_correct: false })
+          .eq("schedule_id", scheduleId)
+          .eq("occurrence_date", occurrenceDate)
+          .eq("round_number", roundNumber)
+          .eq("question_index", questionIndex),
+      () =>
+        admin
+          .from("live_showdown_answers")
+          .update({ is_correct: false })
+          .eq("schedule_id", scheduleId)
+          .eq("round_number", roundNumber)
+          .eq("question_index", questionIndex)
+    );
 
     if (clearError) {
       throw new Error(clearError.message || "Failed to clear showdown correctness flags.");
     }
 
     if (winnerIds.size > 0) {
-      const { error: markError } = await supabaseAdmin
+      const { error: markError } = await admin
         .from("live_showdown_answers")
         .update({ is_correct: true })
         .in("id", Array.from(winnerIds));
@@ -954,11 +1043,20 @@ export async function seedOccurrenceQuestions(
   const safeVenueId = toSafeVenueId(venueId);
 
   // Idempotency guard — never re-seed an occurrence that already has rows.
-  const { count: existingCount, error: existingError } = await admin
-    .from("trivia_session_questions")
-    .select("id", { count: "exact", head: true })
-    .eq("schedule_id", scheduleId)
-    .eq("occurrence_date", occurrenceDate);
+  const { count: existingCount, error: existingError } = await runOccurrenceCompatibleQuery(
+    "seedOccurrenceQuestions:existing_count",
+    () =>
+      admin
+        .from("trivia_session_questions")
+        .select("id", { count: "exact", head: true })
+        .eq("schedule_id", scheduleId)
+        .eq("occurrence_date", occurrenceDate),
+    () =>
+      admin
+        .from("trivia_session_questions")
+        .select("id", { count: "exact", head: true })
+        .eq("schedule_id", scheduleId)
+  );
   if (existingError) {
     throw new Error(existingError.message || "Failed to check existing occurrence questions.");
   }
@@ -1050,20 +1148,37 @@ export async function seedOccurrenceQuestions(
     );
   }
 
-  const sessionRows = chosen.slice(0, totalSlots).map((slug, k) => ({
+  const sessionRowsWithOccurrence = chosen.slice(0, totalSlots).map((slug, k) => ({
     schedule_id: scheduleId,
     occurrence_date: occurrenceDate,
     question_id: slug,
     round_number: Math.floor(k / QUESTIONS_PER_ROUND) + 1,
     question_index: (k % QUESTIONS_PER_ROUND) + 1,
   }));
+  const sessionRowsLegacy = chosen.slice(0, totalSlots).map((slug, k) => ({
+    schedule_id: scheduleId,
+    question_id: slug,
+    round_number: Math.floor(k / QUESTIONS_PER_ROUND) + 1,
+    question_index: (k % QUESTIONS_PER_ROUND) + 1,
+  }));
 
-  const { error: insertError } = await admin
-    .from("trivia_session_questions")
-    .upsert(sessionRows, {
-      onConflict: "schedule_id,occurrence_date,round_number,question_index",
-      ignoreDuplicates: true,
-    });
+  const { error: insertError } = await runOccurrenceCompatibleQuery(
+    "seedOccurrenceQuestions:insert",
+    () =>
+      admin
+        .from("trivia_session_questions")
+        .upsert(sessionRowsWithOccurrence, {
+          onConflict: "schedule_id,occurrence_date,round_number,question_index",
+          ignoreDuplicates: true,
+        }),
+    () =>
+      admin
+        .from("trivia_session_questions")
+        .upsert(sessionRowsLegacy, {
+          onConflict: "schedule_id,round_number,question_index",
+          ignoreDuplicates: true,
+        })
+  );
   if (insertError) {
     throw new Error(insertError.message || "Failed to seed occurrence questions.");
   }
@@ -1100,14 +1215,25 @@ async function loadRoundCategoriesForOccurrence(
   occurrenceDate: string
 ): Promise<Map<number, string | null>> {
   const result = new Map<number, string | null>();
-  if (!supabaseAdmin) return result;
+  const admin = supabaseAdmin;
+  if (!admin) return result;
 
-  const { data: slotData, error: slotError } = await supabaseAdmin
-    .from("trivia_session_questions")
-    .select("round_number, question_id")
-    .eq("schedule_id", scheduleId)
-    .eq("occurrence_date", occurrenceDate)
-    .eq("question_index", 1);
+  const { data: slotData, error: slotError } = await runOccurrenceCompatibleQuery(
+    "loadRoundCategoriesForOccurrence",
+    () =>
+      admin
+        .from("trivia_session_questions")
+        .select("round_number, question_id")
+        .eq("schedule_id", scheduleId)
+        .eq("occurrence_date", occurrenceDate)
+        .eq("question_index", 1),
+    () =>
+      admin
+        .from("trivia_session_questions")
+        .select("round_number, question_id")
+        .eq("schedule_id", scheduleId)
+        .eq("question_index", 1)
+  );
   if (slotError) {
     throw new Error(slotError.message || "Failed to load round categories.");
   }
@@ -1118,7 +1244,7 @@ async function loadRoundCategoriesForOccurrence(
   if (slots.length === 0) return result;
 
   const slugs = Array.from(new Set(slots.map((slot) => slot.slug)));
-  const { data: questionData, error: questionError } = await supabaseAdmin
+  const { data: questionData, error: questionError } = await admin
     .from("trivia_questions")
     .select("slug, category")
     .in("slug", slugs)
@@ -1193,17 +1319,27 @@ async function loadGameLeaderboard(
   viewerRank: number | null;
   viewerRoundByRound: LiveShowdownViewerRoundSummary[] | null;
 }> {
-  if (!supabaseAdmin) {
+  const admin = supabaseAdmin;
+  if (!admin) {
     return { leaderboard: [], viewerRank: null, viewerRoundByRound: null };
   }
 
   const viewerId = String(viewerUserId ?? "").trim();
 
-  const { data: answerData, error: answerError } = await supabaseAdmin
-    .from("live_showdown_answers")
-    .select("user_id, round_number, points_awarded, is_correct")
-    .eq("schedule_id", scheduleId)
-    .eq("occurrence_date", occurrenceDate);
+  const { data: answerData, error: answerError } = await runOccurrenceCompatibleQuery(
+    "loadGameLeaderboard",
+    () =>
+      admin
+        .from("live_showdown_answers")
+        .select("user_id, round_number, points_awarded, is_correct")
+        .eq("schedule_id", scheduleId)
+        .eq("occurrence_date", occurrenceDate),
+    () =>
+      admin
+        .from("live_showdown_answers")
+        .select("user_id, round_number, points_awarded, is_correct")
+        .eq("schedule_id", scheduleId)
+  );
   if (answerError) {
     throw new Error(answerError.message || "Failed to load Live Showdown leaderboard answers.");
   }
@@ -1241,7 +1377,7 @@ async function loadGameLeaderboard(
   }
 
   const userIds = Array.from(perUser.keys());
-  const { data: usersData, error: usersError } = await supabaseAdmin
+  const { data: usersData, error: usersError } = await admin
     .from("users")
     .select("id, username")
     .in("id", userIds)
@@ -1294,6 +1430,16 @@ async function loadGameLeaderboard(
       : null;
 
   return { leaderboard, viewerRank, viewerRoundByRound };
+}
+
+async function loadVenueName(venueId: string): Promise<string | null> {
+  if (!supabaseAdmin || !venueId) return null;
+  const { data } = await supabaseAdmin
+    .from("venues")
+    .select("name")
+    .eq("id", venueId)
+    .maybeSingle<{ name: string }>();
+  return data?.name ?? null;
 }
 
 export async function getLiveShowdownState(
@@ -1450,6 +1596,8 @@ export async function getLiveShowdownState(
     viewerRoundByRound = board.viewerRoundByRound;
   }
 
+  const venueName = await loadVenueName(venueId);
+
   return {
     isGameActive: true,
     scheduleId: active.id,
@@ -1459,6 +1607,7 @@ export async function getLiveShowdownState(
     occurrenceDate,
     intermissionAdDelaySeconds: clampIntermissionDelaySeconds(active.intermission_ad_delay_seconds),
     lobbyAdEnabled: Boolean(active.lobby_ad_enabled ?? true),
+    venueName,
     totalRounds,
     currentRound,
     currentQuestionIndex,

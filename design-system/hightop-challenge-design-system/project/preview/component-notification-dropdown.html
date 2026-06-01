@@ -1,0 +1,116 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:#0a0f1e;color:var(--ht-fg-primary);font-family:var(--ht-font-body)}
+  .card{box-sizing:border-box;width:700px;padding:18px;display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+  .stage{
+    background:var(--ht-canvas);border-radius:18px;
+    border:1px solid rgba(255,255,255,.06);padding:14px;
+    min-height:340px;position:relative;
+  }
+  .bell{
+    position:relative;width:38px;height:38px;border-radius:10px;
+    background:var(--ht-surface);border:1px solid rgba(255,255,255,.08);
+    display:flex;align-items:center;justify-content:center;color:var(--ht-cyan-300);
+  }
+  .bell .pip{
+    position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;
+    background:var(--ht-rose-500);box-shadow:0 0 0 2px var(--ht-surface);
+  }
+  .dropdown{
+    margin-top:10px;background:var(--ht-surface);
+    border:1px solid rgba(255,255,255,.08);border-radius:20px;
+    box-shadow:0 24px 48px rgba(0,0,0,.6);
+    overflow:hidden;
+  }
+  .head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06);
+  }
+  .head .eb{font-weight:900;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ht-cyan-300)}
+  .head a{color:var(--ht-cyan-400);font-size:11px;font-weight:800;text-decoration:none;letter-spacing:.04em}
+  .list{display:flex;flex-direction:column;padding:8px 8px 10px;gap:6px;max-height:280px;overflow:auto}
+  .n{
+    display:flex;gap:10px;padding:10px 10px;border-radius:12px;
+    border:1px solid rgba(255,255,255,.06);
+    background:rgba(30,41,59,.4);
+  }
+  .n.unread{
+    border-color:rgba(34,211,238,.30);
+    background:rgba(8,51,68,.4);
+  }
+  .ic{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+  .ic.amber{background:rgba(245,158,11,.18);color:var(--ht-amber-300)}
+  .ic.emerald{background:rgba(16,185,129,.18);color:var(--ht-emerald-300)}
+  .ic.cyan{background:rgba(34,211,238,.18);color:var(--ht-cyan-300)}
+  .ic.rose{background:rgba(244,63,94,.18);color:var(--ht-rose-300)}
+  .body{min-width:0;flex:1}
+  .body .t{color:var(--ht-fg-primary);font-weight:800;font-size:12.5px;line-height:1.3}
+  .body .s{color:var(--ht-fg-secondary);font-weight:600;font-size:11.5px;margin-top:2px;line-height:1.35}
+  .body .ts{color:var(--ht-fg-muted);font-weight:700;font-size:10px;margin-top:4px;letter-spacing:.04em}
+  .dot-unread{width:7px;height:7px;border-radius:50%;background:var(--ht-cyan-400);margin:6px 0 0 4px;flex-shrink:0}
+
+  .meta{font-size:12px;color:var(--ht-fg-muted);font-weight:600;line-height:1.5;padding:8px 4px}
+  .meta b{color:var(--ht-cyan-300);font-weight:900;font-size:10px;letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:2px;margin-top:6px}
+  .meta b:first-child{margin-top:0}
+  code{font-family:var(--ht-font-mono);color:var(--ht-cyan-300);font-weight:700}
+</style></head><body><div class="card">
+
+  <div class="stage">
+    <div style="display:flex;justify-content:flex-end"><div class="bell">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 9H3c0-1 3-2 3-9zM10 21a2 2 0 0 0 4 0"/></svg>
+      <span class="pip"></span>
+    </div></div>
+    <div class="dropdown">
+      <div class="head">
+        <span class="eb">Notifications</span>
+        <a href="#">Mark all read</a>
+      </div>
+      <div class="list">
+        <div class="n unread">
+          <div class="ic amber">★</div>
+          <div class="body">
+            <div class="t">You're #4 at The Local Tavern</div>
+            <div class="s">Climbed 2 spots this round.</div>
+            <div class="ts">2 MIN AGO</div>
+          </div>
+          <span class="dot-unread"></span>
+        </div>
+        <div class="n unread">
+          <div class="ic emerald">✓</div>
+          <div class="body">
+            <div class="t">Live Trivia starts in 14m</div>
+            <div class="s">Opening category: Sports History</div>
+            <div class="ts">5 MIN AGO</div>
+          </div>
+          <span class="dot-unread"></span>
+        </div>
+        <div class="n unread">
+          <div class="ic cyan">⚔︎</div>
+          <div class="body">
+            <div class="t">nine_ball_neil challenged you</div>
+            <div class="s">Hightop Fantasy™ · 100 pts on the line.</div>
+            <div class="ts">8 MIN AGO</div>
+          </div>
+          <span class="dot-unread"></span>
+        </div>
+        <div class="n">
+          <div class="ic rose">●</div>
+          <div class="body">
+            <div class="t">Bingo board ended without a hit</div>
+            <div class="s">Squares 14/25 filled. New board auto-queued.</div>
+            <div class="ts">1 HR AGO</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="meta">
+    <b>Panel</b><code>bg-slate-900</code> · <code>border-white/8</code> · <code>shadow-[0_24_48_rgba(0,0,0,.6)]</code> · <code>rounded-3xl</code>.
+    <b>Unread</b>cyan-400/30 border · cyan-950/30 tint · 7px cyan-400 dot on the right edge.
+    <b>Read</b>slate-700 hairline · slate-900/60 tint · no dot.
+    <b>Icon tile</b>Color-coded by event type — amber (rank/prize), emerald (success), cyan (social), rose (loss/expired).
+    <b>"Mark all read"</b>cyan-400 text, small, top-right of header.
+  </div>
+
+</div></body></html>

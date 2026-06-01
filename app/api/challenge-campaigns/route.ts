@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { getChallengeCampaignSnapshotForUser, listChallengeCampaigns } from "@/lib/challengeCampaigns";
+import {
+  attachLeaderboardSnapshotsToCampaigns,
+  getChallengeCampaignSnapshotForUser,
+  listChallengeCampaigns,
+} from "@/lib/challengeCampaigns";
 
 function toClientErrorStatus(message: string): number {
   const normalized = message.toLowerCase();
@@ -50,10 +54,12 @@ export async function GET(request: Request) {
       includeResolved,
     });
 
-    return NextResponse.json({
-      ok: true,
-      campaigns: campaigns.map((campaign) => ({ ...campaign, progressPoints: 0 })),
+    const snapshots = campaigns.map((campaign) => ({ ...campaign, progressPoints: 0 }));
+    const withLeaderboard = await attachLeaderboardSnapshotsToCampaigns({
+      campaigns: snapshots,
+      venueId,
     });
+    return NextResponse.json({ ok: true, campaigns: withLeaderboard });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load challenge campaigns.";
     return NextResponse.json({ ok: false, error: message }, { status: toClientErrorStatus(message) });

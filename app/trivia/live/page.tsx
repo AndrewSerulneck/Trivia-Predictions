@@ -2,8 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { getUserId, getVenueId } from "@/lib/storage";
+import { useSearchParams } from "next/navigation";
+import { getUserId, getVenueId, getUsername } from "@/lib/storage";
 import { navigateBackToVenue } from "@/lib/venueGameTransition";
+import {
+  resolveLiveTriviaVenueContext,
+  type LiveTriviaVenueSource,
+} from "@/lib/liveTriviaClientState";
 import {
   selectLiveShowdownComment,
   type LiveShowdownCommentTrigger,
@@ -51,6 +56,7 @@ type LiveState = {
   scheduleId?: string;
   scheduleTitle?: string;
   scheduleTimezone?: string;
+  venueName?: string | null;
   intermissionAdDelaySeconds?: number;
   lobbyAdEnabled?: boolean;
   currentRoundCategory?: string | null;
@@ -113,6 +119,12 @@ const RULE_LINES = [
 ];
 
 const QUESTIONS_PER_ROUND = 15;
+const SHOULD_DEBUG_LIVE_TRIVIA = process.env.NODE_ENV !== "production";
+
+function debugLiveTrivia(message: string, details: Record<string, unknown>) {
+  if (!SHOULD_DEBUG_LIVE_TRIVIA) return;
+  console.info(`[live-trivia][live-page] ${message}`, details);
+}
 
 function formatCountdown(totalSeconds: number): string {
   const safe = Math.max(0, Math.floor(totalSeconds));
@@ -179,6 +191,7 @@ const RankBadge = ({ rank }: { rank: number }) => {
 };
 
 export default function LiveShowdownPage() {
+  const searchParams = useSearchParams();
   const [state, setState] = useState<LiveState | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -217,6 +230,17 @@ export default function LiveShowdownPage() {
   // Tracks whether the user is in any spectating state so submit() and the
   // forfeit path can gate on it without reading React state from a stale closure.
   const spectatingRef = useRef(false);
+  const [fetchFailureCategory, setFetchFailureCategory] = useState<
+    "missing_venue" | "network" | "non_ok_payload" | "missing_fields" | "invalid_date" | null
+  >(null);
+  const venueIdFromUrl = String(searchParams?.get("venueId") ?? "").trim();
+  const storedVenueId = String(getVenueId() ?? "").trim();
+  const venueContext = resolveLiveTriviaVenueContext({
+    routeVenueId: venueIdFromUrl,
+    storedVenueId,
+  });
+  const resolvedVenueId = venueContext.venueId;
+  const resolvedVenueSource: LiveTriviaVenueSource = venueContext.source;
   const answerInputRef = useRef<HTMLInputElement>(null);
 
   const activeKey = useMemo(() => {
@@ -284,16 +308,19 @@ export default function LiveShowdownPage() {
     // Approximate: round-1 standing is computed among the returned (top) entries.
     let rankGained: number | null = null;
     const finalRank = state?.viewerRank ?? null;
-    if (finalRank != null && viewerId) {
-      const viewerEntry = board.find((entry) => entry.userId === viewerId);
-      if (viewerEntry) {
-        const viewerRoundOne = viewerEntry.roundPoints[1] ?? 0;
-        const aheadAtRoundOne = board.filter((entry) => (entry.roundPoints[1] ?? 0) > viewerRoundOne).length;
-        rankGained = aheadAtRoundOne + 1 - finalRank;
-      }
+    const viewerEntry = viewerId ? board.find((entry) => entry.userId === viewerId) : null;
+    if (finalRank != null && viewerEntry) {
+      const viewerRoundOne = viewerEntry.roundPoints[1] ?? 0;
+      const aheadAtRoundOne = board.filter((entry) => (entry.roundPoints[1] ?? 0) > viewerRoundOne).length;
+      rankGained = aheadAtRoundOne + 1 - finalRank;
     }
 
-    return { champion, podium, totalCorrect, totalAnswered, correctRate, rankGained };
+    // Viewer's total score: prefer leaderboard entry; fall back to summing round-by-round.
+    const viewerScore =
+      viewerEntry?.totalPoints ??
+      rounds.reduce((sum, r) => sum + r.points, 0);
+
+    return { champion, podium, totalCorrect, totalAnswered, correctRate, rankGained, viewerEntry, viewerScore };
   }, [state?.leaderboard, state?.viewerRoundByRound, state?.viewerRank, viewerId]);
 
   const isPreGameLobby = Boolean(hasOnboarded && !isPostGame && (!state?.isGameActive || state?.activePhase === "pre_game"));
@@ -323,18 +350,82 @@ export default function LiveShowdownPage() {
     };
   }, []);
 
+  useEffect(() => {
+    debugLiveTrivia("resolved_venue_context", {
+      resolvedVenueId: resolvedVenueId || null,
+      source: resolvedVenueSource,
+      routeVenueId: venueIdFromUrl || null,
+      storedVenueId: storedVenueId || null,
+    });
+  }, [resolvedVenueId, resolvedVenueSource, storedVenueId, venueIdFromUrl]);
+
   const fetchState = useCallback(async () => {
+    let failureReason: "missing_venue" | "network" | "non_ok_payload" | "missing_fields" | "invalid_date" | null = null;
+    if (!resolvedVenueId) {
+      setState(null);
+      setLoading(false);
+      failureReason = "missing_venue";
+      setFetchFailureCategory(failureReason);
+      setError("Venue session not found. Return to your venue page and rejoin Live Trivia.");
+      debugLiveTrivia("state_fetch_skipped", {
+        reason: failureReason,
+        resolvedVenueId: null,
+      });
+      return;
+    }
+
     try {
-      const venueId = String(getVenueId() ?? "").trim();
       const userId = String(getUserId() ?? "").trim();
       const params = new URLSearchParams();
-      if (venueId) params.set("venueId", venueId);
+      if (resolvedVenueId) params.set("venueId", resolvedVenueId);
       if (userId) params.set("userId", userId);
       const query = params.size > 0 ? `?${params.toString()}` : "";
       const response = await fetch(`/api/trivia/live/state${query}`, { cache: "no-store" });
       const payload = (await response.json()) as { ok: boolean; state?: LiveState; error?: string };
-      if (!payload.ok || !payload.state) throw new Error(payload.error || "Failed to sync live state.");
+      if (!payload.ok) {
+        failureReason = "non_ok_payload";
+        setFetchFailureCategory(failureReason);
+        debugLiveTrivia("state_fetch_failed", {
+          reason: failureReason,
+          resolvedVenueId,
+          ok: payload.ok,
+          error: payload.error ?? null,
+        });
+        throw new Error(payload.error || "Failed to sync live state.");
+      }
+      if (!payload.state) {
+        failureReason = "missing_fields";
+        setFetchFailureCategory(failureReason);
+        debugLiveTrivia("state_fetch_failed", {
+          reason: failureReason,
+          resolvedVenueId,
+          ok: payload.ok,
+        });
+        throw new Error("Live Trivia state response is missing required data.");
+      }
+      const nextStartTimeRaw = String(payload.state.nextSchedule?.startTime ?? "").trim();
+      if (nextStartTimeRaw && !Number.isFinite(Date.parse(nextStartTimeRaw))) {
+        failureReason = "invalid_date";
+        setFetchFailureCategory(failureReason);
+        debugLiveTrivia("state_fetch_failed", {
+          reason: failureReason,
+          resolvedVenueId,
+          nextStartTime: nextStartTimeRaw,
+        });
+        throw new Error("Live Trivia schedule data is invalid. Please retry from your venue page.");
+      }
+
+      debugLiveTrivia("state_summary", {
+        ok: payload.ok,
+        resolvedVenueId,
+        source: resolvedVenueSource,
+        isGameActive: payload.state.isGameActive,
+        hasNextSchedule: Boolean(payload.state.nextSchedule),
+        nextStartTime: nextStartTimeRaw || null,
+      });
+
       setState(payload.state);
+      setFetchFailureCategory(null);
       const viewerResult = payload.state.viewerResult;
       if (
         viewerResult &&
@@ -355,14 +446,21 @@ export default function LiveShowdownPage() {
       setIsEngineReady(true);
       setError("");
     } catch (e) {
+      const reason = failureReason ?? "network";
+      setFetchFailureCategory(reason);
+      debugLiveTrivia("state_fetch_failed", {
+        reason,
+        resolvedVenueId: resolvedVenueId || null,
+        error: e instanceof Error ? e.message : "unknown",
+      });
       setError(e instanceof Error ? e.message : "Failed to sync live state.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [resolvedVenueId, resolvedVenueSource]);
 
   const loadPopupAd = useCallback(async (options: { displayTrigger: "on-load" | "round-end"; roundNumber?: number }) => {
-    const venueId = String(getVenueId() ?? "").trim();
+    const venueId = resolvedVenueId;
     const params = new URLSearchParams({
       slot: "popup-on-entry",
       pageKey: "live-trivia",
@@ -385,7 +483,7 @@ export default function LiveShowdownPage() {
       throw new Error(payload.error ?? "Failed to load ad slot.");
     }
     return payload.ad ?? null;
-  }, []);
+  }, [resolvedVenueId]);
 
   useEffect(() => {
     void fetchState();
@@ -577,7 +675,7 @@ export default function LiveShowdownPage() {
       if (spectatingRef.current) return;
       if (!state?.isGameActive || !state.scheduleId || !state.currentRound || !state.currentQuestionIndex) return;
       const userId = (getUserId() ?? "").trim();
-      const venueId = (getVenueId() ?? "").trim();
+      const venueId = resolvedVenueId;
       if (!userId) {
         setSubmitMessage("Join a venue first.");
         return;
@@ -627,7 +725,7 @@ export default function LiveShowdownPage() {
         setIsSubmitting(false);
       }
     },
-    [activeKey, state]
+    [activeKey, resolvedVenueId, state]
   );
 
   // Keep refs in sync so the stable forfeit listener always reads the freshest
@@ -709,7 +807,7 @@ export default function LiveShowdownPage() {
     if (isLeaving) return;
     setIsLeaving(true);
     await new Promise((resolve) => window.setTimeout(resolve, 280));
-    const venueId = getVenueId()?.trim() ?? "";
+    const venueId = resolvedVenueId;
     const fallbackPath = venueId ? `/venue/${encodeURIComponent(venueId)}` : "/";
     await navigateBackToVenue({
       venuePath: fallbackPath,
@@ -717,7 +815,7 @@ export default function LiveShowdownPage() {
         window.location.href = fallbackPath;
       },
     });
-  }, [isLeaving]);
+  }, [isLeaving, resolvedVenueId]);
 
   const nextCommentEvent = useMemo((): { key: string; trigger: LiveShowdownCommentTrigger } | null => {
     if (!hasOnboarded) return null;
@@ -808,13 +906,57 @@ export default function LiveShowdownPage() {
     );
   }, [commentEventKey, nextCommentEvent]);
 
-  if (loading || !state) {
+  if (loading) {
     return (
       <main
         className="flex flex-col bg-slate-950 p-4 text-white overflow-hidden"
         style={{ height: "var(--tp-vh, 100dvh)", minHeight: "100dvh" }}
       >
         {hasOnboarded ? "Loading Lobby..." : "Syncing Live Showdown..."}
+      </main>
+    );
+  }
+
+  if (!state) {
+    const missingVenue = fetchFailureCategory === "missing_venue";
+    return (
+      <main
+        className="flex flex-col bg-slate-950 p-4 text-white overflow-hidden"
+        style={{ height: "var(--tp-vh, 100dvh)", minHeight: "100dvh" }}
+      >
+        <div className="mx-auto flex h-full w-full max-w-md items-center justify-center">
+          <section className="w-full rounded-2xl border border-rose-400/40 bg-slate-900 p-5 text-center">
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-rose-300">Live Trivia Unavailable</p>
+            <p className="mt-2 text-sm font-semibold text-slate-100">
+              {error || "Unable to load the Live Trivia lobby right now."}
+            </p>
+            <p className="mt-2 text-xs text-slate-400">
+              {missingVenue
+                ? "Rejoin your venue from the venue page, then open Live Trivia again."
+                : "Try syncing again. If this keeps happening, go back to your venue page and retry."}
+            </p>
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setLoading(true);
+                  void fetchState();
+                }}
+                className="tp-clean-button rounded-xl border border-cyan-400/45 bg-cyan-500/15 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-cyan-200"
+              >
+                Retry Sync
+              </button>
+              <button
+                type="button"
+                onClick={() => void goHome()}
+                className="tp-clean-button tp-exit-pill inline-flex items-center justify-center gap-1 rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.08em]"
+              >
+                <span aria-hidden="true">←</span>
+                Back
+              </button>
+            </div>
+          </section>
+        </div>
       </main>
     );
   }
@@ -982,241 +1124,259 @@ export default function LiveShowdownPage() {
           </>
         ) : isPostGame && postGameStats ? (
           /* ── Post-game results screen ── */
-          <div className="space-y-3">
-            {state.leaderboard && state.leaderboard.length > 0 && postGameLeaderboard ? (
-              <>
-                {/* Section 1 — Champion banner */}
-                <div className="flex items-center gap-3 rounded-2xl border border-amber-400/35 bg-gradient-to-br from-[#1c1400] to-[#2d1f00] px-4 py-4">
-                  <div
-                    className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-amber-400/50 bg-gradient-to-br from-amber-900 via-amber-700 to-amber-500 text-2xl"
-                    aria-hidden="true"
-                  >
-                    ⭐
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-500">Game Over · Champion</p>
-                    <p className="truncate text-lg font-black leading-tight text-white">
-                      {postGameLeaderboard.champion?.username ?? "—"}
-                    </p>
-                    <p className="truncate text-[11px] text-slate-500">
-                      {state.scheduleTitle ?? "Live Showdown"}
-                      {state.totalRounds
-                        ? ` · ${state.totalRounds * QUESTIONS_PER_ROUND} questions · ${state.totalRounds} round${
-                            state.totalRounds !== 1 ? "s" : ""
-                          }`
-                        : ""}
-                    </p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-3xl font-black tabular-nums leading-none text-amber-300">
-                      {postGameLeaderboard.champion?.totalPoints ?? 0}
-                    </p>
-                    <p className="text-[9px] font-black uppercase tracking-[0.12em] text-amber-600">Points</p>
-                  </div>
-                </div>
+          (() => {
+            const viewerUsername = getUsername() ?? "—";
+            return (
+              <div className="space-y-3">
+                {state.leaderboard && state.leaderboard.length > 0 && postGameLeaderboard ? (
+                  <>
+                    {/* Section 1 — Game Over banner (viewer's own stats) */}
+                    <div className="flex items-center gap-3 rounded-2xl border border-amber-400/35 bg-gradient-to-br from-[#1c1400] to-[#2d1f00] px-4 py-4">
+                      <div
+                        className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-amber-400/50 bg-gradient-to-br from-amber-900 via-amber-700 to-amber-500 text-2xl"
+                        aria-hidden="true"
+                      >
+                        ⭐
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-500">Game Over</p>
+                        <p className="truncate text-lg font-black leading-tight text-white">{viewerUsername}</p>
+                        <p className="truncate text-[11px] text-slate-500">
+                          {state.venueName ?? state.scheduleTitle ?? "Live Showdown"}
+                          {state.totalRounds
+                            ? ` · ${state.totalRounds * QUESTIONS_PER_ROUND} questions · ${state.totalRounds} round${
+                                state.totalRounds !== 1 ? "s" : ""
+                              }`
+                            : ""}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="text-3xl font-black tabular-nums leading-none text-amber-300">
+                          {postGameLeaderboard.viewerScore}
+                        </p>
+                        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-amber-600">Points</p>
+                      </div>
+                    </div>
 
-                {/* Section 2 — Final standings podium (left = 2nd, center = 1st, right = 3rd) */}
-                <div className="rounded-2xl border border-slate-700/70 bg-slate-900 px-4 py-4">
-                  <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Final Standings</p>
-                  <div className="flex items-end justify-center gap-2">
-                    {[postGameLeaderboard.podium[1], postGameLeaderboard.podium[0], postGameLeaderboard.podium[2]].map(
-                      (entry, slot) => {
-                        if (!entry) return <div key={`empty-${slot}`} className="flex-1" />;
-                        const isFirst = entry.rank === 1;
-                        return (
-                          <div
-                            key={entry.userId}
-                            className={`flex flex-1 flex-col items-center rounded-xl border px-2 py-3 text-center ${
-                              isFirst ? "border-amber-400/60 bg-amber-500/10 pb-6" : "border-slate-700 bg-slate-800/50"
-                            }`}
-                          >
-                            <RankBadge rank={entry.rank} />
-                            <p className="mt-2 w-full truncate text-xs font-bold text-slate-100">{entry.username}</p>
-                            <p className="mt-0.5 text-lg font-black tabular-nums text-white">{entry.totalPoints}</p>
-                          </div>
-                        );
-                      }
-                    )}
-                  </div>
-                </div>
-
-                {/* Section 3 — Your round-by-round */}
-                {state.viewerRoundByRound && state.viewerRoundByRound.length > 0 ? (
-                  <div className="rounded-2xl border border-slate-700/70 bg-slate-900 px-4 py-4">
-                    <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
-                      Your Round-by-Round{state.viewerRank ? ` · #${state.viewerRank}` : ""}
-                    </p>
-                    <div className="space-y-4">
-                      {state.viewerRoundByRound.map((round) => {
-                        const pct = (round.correctCount / QUESTIONS_PER_ROUND) * 100;
-                        const barColor = pct >= 70 ? "bg-emerald-500" : pct >= 40 ? "bg-cyan-500" : "bg-rose-500";
-                        return (
-                          <div key={round.roundNumber}>
-                            <div className="mb-1.5 flex items-baseline justify-between gap-2">
-                              <span className="min-w-0 truncate text-sm font-black text-slate-200">
-                                R{round.roundNumber}
-                                {round.category ? (
-                                  <span className="ml-1 font-bold text-slate-500">· {round.category}</span>
-                                ) : null}
-                              </span>
-                              <span className="shrink-0 text-xl font-black tabular-nums text-slate-100">{round.points}</span>
-                            </div>
-                            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
+                    {/* Section 2 — Final standings podium (left = 2nd, center = 1st, right = 3rd) */}
+                    <div className="rounded-2xl border border-slate-700/70 bg-slate-900 px-4 py-4">
+                      <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Final Standings</p>
+                      <div className="flex items-end justify-center gap-2">
+                        {[postGameLeaderboard.podium[1], postGameLeaderboard.podium[0], postGameLeaderboard.podium[2]].map(
+                          (entry, slot) => {
+                            if (!entry) return <div key={`empty-${slot}`} className="flex-1" />;
+                            const isFirst = entry.rank === 1;
+                            return (
                               <div
-                                className={`h-full rounded-full transition-all duration-700 ${barColor}`}
-                                style={{ width: `${pct}%` }}
-                              />
-                            </div>
-                            <p className="mt-1 text-[11px] text-slate-600">
-                              {round.correctCount} of {QUESTIONS_PER_ROUND} correct
-                            </p>
-                          </div>
-                        );
-                      })}
+                                key={entry.userId}
+                                className={`flex flex-1 flex-col items-center rounded-xl border px-2 py-3 text-center ${
+                                  isFirst ? "border-amber-400/60 bg-amber-500/10 pb-6" : "border-slate-700 bg-slate-800/50"
+                                }`}
+                              >
+                                <RankBadge rank={entry.rank} />
+                                <p className="mt-2 w-full truncate text-xs font-bold text-slate-100">{entry.username}</p>
+                                <p className="mt-0.5 text-lg font-black tabular-nums text-white">{entry.totalPoints}</p>
+                              </div>
+                            );
+                          }
+                        )}
+                      </div>
+                      {/* Viewer row — shown only when viewer is not in the top 3 */}
+                      {state.viewerRank != null && state.viewerRank > 3 && (
+                        <div className="mt-3 flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+                          <RankBadge rank={state.viewerRank} />
+                          <span className="min-w-0 flex-1 truncate text-sm font-bold text-slate-100">{viewerUsername}</span>
+                          <span className="shrink-0 text-base font-black tabular-nums text-white">
+                            {postGameLeaderboard.viewerScore}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ) : null}
 
-                {/* Section 4 — Stats bar */}
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="flex flex-col items-center rounded-2xl border border-emerald-400/30 bg-emerald-600/15 py-3">
-                    <span className="text-xl font-black tabular-nums text-emerald-300">
-                      {postGameLeaderboard.rankGained != null
-                        ? postGameLeaderboard.rankGained > 0
-                          ? `+${postGameLeaderboard.rankGained}`
-                          : `${postGameLeaderboard.rankGained}`
-                        : "—"}
-                    </span>
-                    <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-emerald-600">Rank Gained</span>
-                  </div>
-                  <div className="flex flex-col items-center rounded-2xl border border-cyan-400/30 bg-cyan-600/15 py-3">
-                    <span className="text-xl font-black tabular-nums text-cyan-300">{postGameLeaderboard.correctRate}%</span>
-                    <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-cyan-600">Correct Rate</span>
-                  </div>
-                  <div className="flex flex-col items-center rounded-2xl border border-amber-400/30 bg-amber-900/20 py-3">
-                    <span className="text-xl font-black tabular-nums text-amber-300">×{postGameStats.bestStreak}</span>
-                    <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-amber-600">Best Streak</span>
-                  </div>
-                </div>
-
-                {/* Section 5 — Back to venue */}
-                <button
-                  type="button"
-                  onClick={() => void goHome()}
-                  className="w-full rounded-2xl bg-rose-500 px-4 py-3.5 text-sm font-black uppercase tracking-[0.1em] text-white transition-colors hover:bg-rose-400"
-                >
-                  Back to Venue
-                </button>
-              </>
-            ) : (
-              <>
-                {/* No venue standings available — fall back to individual stats. */}
-                <div className="rounded-2xl border border-slate-700/70 bg-slate-900 px-4 py-3 text-center text-xs font-bold text-slate-500">
-                  No results available for standings.
-                </div>
-
-                {/* Champion / Game Over banner */}
-                <div
-                  className="flex items-center gap-3 rounded-2xl px-4 py-4"
-                  style={{ background: "linear-gradient(135deg, #1c1400, #2d1f00)", border: "1px solid rgba(251,191,36,0.35)" }}
-                >
-                  {/* Star icon badge */}
-                  <div
-                    className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
-                    style={{ background: "linear-gradient(135deg, #78350f, #b45309, #f59e0b)", border: "2px solid rgba(251,191,36,0.5)" }}
-                    aria-hidden="true"
-                  >
-                    ⭐
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-500">Game Over</p>
-                    <p className="truncate text-base font-black leading-tight text-white">
-                      {state.scheduleTitle ?? "Live Showdown"}
-                    </p>
-                    {state.totalRounds ? (
-                      <p className="text-[11px] text-slate-500">
-                        {state.totalRounds} round{state.totalRounds !== 1 ? "s" : ""}
-                      </p>
+                    {/* Section 3 — Your round-by-round */}
+                    {state.viewerRoundByRound && state.viewerRoundByRound.length > 0 ? (
+                      <div className="rounded-2xl border border-slate-700/70 bg-slate-900 px-4 py-4">
+                        <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
+                          Your Round-by-Round{state.viewerRank ? ` · #${state.viewerRank}` : ""}
+                        </p>
+                        <div className="space-y-4">
+                          {state.viewerRoundByRound.map((round) => {
+                            const pct = (round.correctCount / QUESTIONS_PER_ROUND) * 100;
+                            const barColor = pct >= 70 ? "bg-emerald-500" : pct >= 40 ? "bg-cyan-500" : "bg-rose-500";
+                            return (
+                              <div key={round.roundNumber}>
+                                <div className="mb-1.5 flex items-start justify-between gap-2">
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-black text-slate-200">Round {round.roundNumber}</p>
+                                    {round.category ? (
+                                      <p className="truncate text-[11px] text-slate-500">{round.category}</p>
+                                    ) : null}
+                                  </div>
+                                  <span className="shrink-0 text-xl font-black tabular-nums text-slate-100">{round.points}</span>
+                                </div>
+                                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
+                                  <div
+                                    className={`h-full rounded-full transition-all duration-700 ${barColor}`}
+                                    style={{ width: `${pct}%` }}
+                                  />
+                                </div>
+                                <p className="mt-1 text-[11px] text-slate-600">
+                                  {round.correctCount} of {QUESTIONS_PER_ROUND} correct
+                                </p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
                     ) : null}
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-3xl font-black tabular-nums leading-none text-amber-300">
-                      {postGameStats.correct * 10}
-                    </p>
-                    <p className="text-[9px] font-black uppercase tracking-[0.12em] text-amber-600">Points</p>
-                  </div>
-                </div>
 
-                {/* Round-by-round breakdown */}
-                {Object.keys(postGameStats.byRound).length > 0 ? (
-                  <div
-                    className="rounded-2xl px-4 py-4"
-                    style={{ background: "#111827", border: "1px solid rgba(51,65,85,0.7)" }}
-                  >
-                    <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
-                      Your Round-by-Round
-                    </p>
-                    <div className="space-y-4">
-                      {Object.entries(postGameStats.byRound)
-                        .sort(([a], [b]) => Number(a) - Number(b))
-                        .map(([roundNum, data]) => {
-                          const score = data.correct * 10;
-                          const pct = data.total > 0 ? (data.correct / data.total) * 100 : 0;
-                          const barBg =
-                            pct >= 70
-                              ? "linear-gradient(90deg, #10b981, #34d399)"
-                              : pct >= 40
-                              ? "linear-gradient(90deg, #0891b2, #22d3ee)"
-                              : "linear-gradient(90deg, #be123c, #f43f5e)";
-                          return (
-                            <div key={roundNum}>
-                              <div className="mb-1.5 flex items-baseline justify-between">
-                                <span className="text-sm font-black text-slate-200">Round {roundNum}</span>
-                                <span className="text-xl font-black tabular-nums text-slate-100">{score}</span>
-                              </div>
-                              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
-                                <div
-                                  className="h-full rounded-full transition-all duration-700"
-                                  style={{ width: `${pct}%`, background: barBg }}
-                                />
-                              </div>
-                              <p className="mt-1 text-[11px] text-slate-600">
-                                {data.correct} of {data.total} correct
-                              </p>
-                            </div>
-                          );
-                        })}
+                    {/* Section 4 — Stats bar */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="flex flex-col items-center rounded-2xl border border-emerald-400/30 bg-emerald-600/15 py-3">
+                        <span className="text-xl font-black tabular-nums text-emerald-300">
+                          {postGameLeaderboard.rankGained != null
+                            ? postGameLeaderboard.rankGained > 0
+                              ? `+${postGameLeaderboard.rankGained}`
+                              : `${postGameLeaderboard.rankGained}`
+                            : "—"}
+                        </span>
+                        <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-emerald-600">Rank Gained</span>
+                      </div>
+                      <div className="flex flex-col items-center rounded-2xl border border-cyan-400/30 bg-cyan-600/15 py-3">
+                        <span className="text-xl font-black tabular-nums text-cyan-300">{postGameLeaderboard.correctRate}%</span>
+                        <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-cyan-600">Correct Rate</span>
+                      </div>
+                      <div className="flex flex-col items-center rounded-2xl border border-amber-400/30 bg-amber-900/20 py-3">
+                        <span className="text-xl font-black tabular-nums text-amber-300">×{postGameStats.bestStreak}</span>
+                        <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-amber-600">Best Streak</span>
+                      </div>
                     </div>
-                  </div>
-                ) : null}
 
-                {/* Stat pills */}
-                <div className="grid grid-cols-3 gap-2">
-                  <div
-                    className="flex flex-col items-center rounded-2xl py-3"
-                    style={{ background: "rgba(5,150,105,0.15)", border: "1px solid rgba(52,211,153,0.3)" }}
-                  >
-                    <span className="text-xl font-black tabular-nums text-emerald-300">{postGameStats.correctRate}%</span>
-                    <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-emerald-600">Correct Rate</span>
-                  </div>
-                  <div
-                    className="flex flex-col items-center rounded-2xl py-3"
-                    style={{ background: "rgba(8,145,178,0.15)", border: "1px solid rgba(34,211,238,0.3)" }}
-                  >
-                    <span className="text-xl font-black tabular-nums text-cyan-300">{postGameStats.total}</span>
-                    <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-cyan-600">Answered</span>
-                  </div>
-                  <div
-                    className="flex flex-col items-center rounded-2xl py-3"
-                    style={{ background: "rgba(120,53,15,0.2)", border: "1px solid rgba(251,191,36,0.3)" }}
-                  >
-                    <span className="text-xl font-black tabular-nums text-amber-300">×{postGameStats.bestStreak}</span>
-                    <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-amber-600">Best Streak</span>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
+                    {/* Section 5 — Back to venue */}
+                    <button
+                      type="button"
+                      onClick={() => void goHome()}
+                      className="w-full rounded-2xl bg-rose-500 px-4 py-3.5 text-sm font-black uppercase tracking-[0.1em] text-white transition-colors hover:bg-rose-400"
+                    >
+                      ← Back to Venue
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {/* No venue standings available — fall back to individual stats. */}
+                    {/* Section 1 — Game Over banner (viewer's own stats) */}
+                    <div
+                      className="flex items-center gap-3 rounded-2xl px-4 py-4"
+                      style={{ background: "linear-gradient(135deg, #1c1400, #2d1f00)", border: "1px solid rgba(251,191,36,0.35)" }}
+                    >
+                      <div
+                        className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
+                        style={{ background: "linear-gradient(135deg, #78350f, #b45309, #f59e0b)", border: "2px solid rgba(251,191,36,0.5)" }}
+                        aria-hidden="true"
+                      >
+                        ⭐
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-500">Game Over</p>
+                        <p className="truncate text-lg font-black leading-tight text-white">{viewerUsername}</p>
+                        <p className="truncate text-[11px] text-slate-500">
+                          {state.venueName ?? state.scheduleTitle ?? "Live Showdown"}
+                          {state.totalRounds
+                            ? ` · ${state.totalRounds * QUESTIONS_PER_ROUND} questions · ${state.totalRounds} round${
+                                state.totalRounds !== 1 ? "s" : ""
+                              }`
+                            : ""}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="text-3xl font-black tabular-nums leading-none text-amber-300">
+                          {postGameStats.correct * 10}
+                        </p>
+                        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-amber-600">Points</p>
+                      </div>
+                    </div>
+
+                    {/* Round-by-round breakdown */}
+                    {Object.keys(postGameStats.byRound).length > 0 ? (
+                      <div
+                        className="rounded-2xl px-4 py-4"
+                        style={{ background: "#111827", border: "1px solid rgba(51,65,85,0.7)" }}
+                      >
+                        <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
+                          Your Round-by-Round
+                        </p>
+                        <div className="space-y-4">
+                          {Object.entries(postGameStats.byRound)
+                            .sort(([a], [b]) => Number(a) - Number(b))
+                            .map(([roundNum, data]) => {
+                              const score = data.correct * 10;
+                              const pct = data.total > 0 ? (data.correct / data.total) * 100 : 0;
+                              const barBg =
+                                pct >= 70
+                                  ? "linear-gradient(90deg, #10b981, #34d399)"
+                                  : pct >= 40
+                                  ? "linear-gradient(90deg, #0891b2, #22d3ee)"
+                                  : "linear-gradient(90deg, #be123c, #f43f5e)";
+                              return (
+                                <div key={roundNum}>
+                                  <div className="mb-1.5 flex items-baseline justify-between">
+                                    <span className="text-sm font-black text-slate-200">Round {roundNum}</span>
+                                    <span className="text-xl font-black tabular-nums text-slate-100">{score}</span>
+                                  </div>
+                                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
+                                    <div
+                                      className="h-full rounded-full transition-all duration-700"
+                                      style={{ width: `${pct}%`, background: barBg }}
+                                    />
+                                  </div>
+                                  <p className="mt-1 text-[11px] text-slate-600">
+                                    {data.correct} of {data.total} correct
+                                  </p>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {/* Stat pills */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <div
+                        className="flex flex-col items-center rounded-2xl py-3"
+                        style={{ background: "rgba(5,150,105,0.15)", border: "1px solid rgba(52,211,153,0.3)" }}
+                      >
+                        <span className="text-xl font-black tabular-nums text-emerald-300">{postGameStats.correctRate}%</span>
+                        <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-emerald-600">Correct Rate</span>
+                      </div>
+                      <div
+                        className="flex flex-col items-center rounded-2xl py-3"
+                        style={{ background: "rgba(8,145,178,0.15)", border: "1px solid rgba(34,211,238,0.3)" }}
+                      >
+                        <span className="text-xl font-black tabular-nums text-cyan-300">{postGameStats.total}</span>
+                        <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-cyan-600">Answered</span>
+                      </div>
+                      <div
+                        className="flex flex-col items-center rounded-2xl py-3"
+                        style={{ background: "rgba(120,53,15,0.2)", border: "1px solid rgba(251,191,36,0.3)" }}
+                      >
+                        <span className="text-xl font-black tabular-nums text-amber-300">×{postGameStats.bestStreak}</span>
+                        <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-amber-600">Best Streak</span>
+                      </div>
+                    </div>
+
+                    {/* Back to venue */}
+                    <button
+                      type="button"
+                      onClick={() => void goHome()}
+                      className="w-full rounded-2xl bg-rose-500 px-4 py-3.5 text-sm font-black uppercase tracking-[0.1em] text-white transition-colors hover:bg-rose-400"
+                    >
+                      ← Back to Venue
+                    </button>
+                  </>
+                )}
+              </div>
+            );
+          })()
         ) : isPreGameLobby ? (
           <>
             <section className="rounded-2xl border-2 border-cyan-300 bg-cyan-500/15 p-4 text-center">

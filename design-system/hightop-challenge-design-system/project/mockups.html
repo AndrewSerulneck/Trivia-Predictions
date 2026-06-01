@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=1400, initial-scale=1"/>
+<title>Hightop Challenge — Player App Mockups</title>
+<link rel="stylesheet" href="colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:
+     radial-gradient(120% 70% at 50% -10%, #14161c 0%, transparent 60%),
+     #08090c;
+     font-family:Nunito,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;color:#e7e3da}
+  #root{min-height:100vh}
+  .board{max-width:1340px;margin:0 auto;padding:40px 36px 80px}
+  .board-head{margin:4px 0 30px}
+  .board-eyebrow{font-weight:900;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#67e8f9}
+  .board-title{font-family:"Bree Serif",serif;font-size:30px;letter-spacing:.01em;color:#fff;margin:8px 0 6px}
+  .board-sub{font-size:13.5px;font-weight:600;color:#8a8578;max-width:640px;line-height:1.5}
+  .sec{margin-top:30px}
+  .sec-label{display:flex;align-items:baseline;gap:12px;margin:0 0 16px;padding-left:2px}
+  .sec-label .n{font-family:ui-monospace,monospace;font-size:11px;font-weight:800;color:#4b5563}
+  .sec-label .t{font-weight:800;font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:#cbd5e1}
+  .sec-label .d{font-size:12px;font-weight:600;color:#6b6558}
+  .row{display:flex;flex-wrap:wrap;gap:34px 30px}
+  .phone{display:flex;flex-direction:column;align-items:center;gap:12px}
+  /* zoom shrinks the layout box too, so phones tile cleanly */
+  .phone .scale{zoom:.62}
+  .phone figcaption{font-size:12px;font-weight:700;color:#9a948726;color:#9a9487;letter-spacing:.02em;text-align:center}
+  .phone figcaption b{color:#e7e3da;font-weight:800}
+
+  /* ── Join screen neon logo ── */
+  .neon-ht{font-family:"Bree Serif",serif;font-weight:400;letter-spacing:.04em;text-transform:uppercase;line-height:1}
+  .neon-cy{color:#e7feff;text-shadow:0 0 4px #fff,0 0 10px #67e8f9,0 0 22px #22d3ee,0 0 44px #0891b2,0 0 80px rgba(34,211,238,.55)}
+  .neon-pk{color:#ffe4f3;text-shadow:0 0 4px #fff,0 0 10px #f0abfc,0 0 22px #e879f9,0 0 44px #c026d3,0 0 80px rgba(232,121,249,.50)}
+  .neon-dash{display:inline-block;border-radius:9999px;background:#fffbe7;box-shadow:0 0 4px #fff,0 0 10px #fde047,0 0 22px #facc15,0 0 38px #eab308,0 0 60px rgba(250,204,21,.4)}
+
+  /* ── shared motion ── */
+  @keyframes ht-live-dot{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(52,211,153,.55)}50%{opacity:.5;box-shadow:0 0 0 6px rgba(52,211,153,0)}}
+  .ht-live-dot{animation:ht-live-dot 1.5s ease-in-out infinite}
+  @keyframes ht-ring-pulse{0%{box-shadow:inset 0 0 0 2px rgba(52,211,153,.85),0 0 20px rgba(52,211,153,.38)}100%{box-shadow:inset 0 0 0 2px rgba(52,211,153,0),0 0 0 rgba(52,211,153,0)}}
+  .ht-ring-pulse{animation:ht-ring-pulse .85s ease-out forwards}
+  @keyframes ht-feed-in{0%{opacity:0;transform:translateY(-7px)}100%{opacity:1;transform:translateY(0)}}
+  .ht-feed-in{animation:ht-feed-in .45s cubic-bezier(.22,1,.36,1)}
+  .ht-noscroll::-webkit-scrollbar{display:none}
+  .ht-noscroll{scrollbar-width:none}
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="screen-shared.jsx"></script>
+<script type="text/babel" src="screen-pickem.jsx"></script>
+<script type="text/babel" src="screen-fantasy.jsx"></script>
+<script type="text/babel" src="screen-bingo.jsx"></script>
+<script type="text/babel" src="screen-trivia.jsx"></script>
+
+<script type="text/babel">
+function Phone({ children, label, sub }) {
+  return (
+    <figure className="phone" style={{ margin: 0 }} data-screen-label={label}>
+      <div className="scale">
+        <IOSDevice width={420} height={900} dark>{children}</IOSDevice>
+      </div>
+      <figcaption><b>{label}</b>{sub ? " · " + sub : ""}</figcaption>
+    </figure>
+  );
+}
+
+function Board() {
+  return (
+    <div className="board">
+      <div className="board-head">
+        <div className="board-eyebrow">Hightop Challenge</div>
+        <div className="board-title">Player App — Screen Mockups</div>
+        <div className="board-sub">
+          Dark-broadcast mockups for the player-facing venue app. Each game keeps its own
+          color identity. Built to mirror the real page structure — every element here maps
+          to a component in the codebase (see the header comment in each <code>screen-*.jsx</code>).
+        </div>
+      </div>
+
+      <div className="sec">
+        <div className="sec-label"><span className="n">01</span><span className="t">Entry &amp; Venue Hub</span><span className="d">Join · Challenges tab</span></div>
+        <div className="row">
+          <Phone label="Login / Join" sub="QR + venue code"><JoinScreen/></Phone>
+          <Phone label="Challenges" sub="venue achievements"><ChallengesScreen/></Phone>
+        </div>
+      </div>
+
+      <div className="sec">
+        <div className="sec-label"><span className="n">02</span><span className="t">Games</span><span className="d">one color identity per game</span></div>
+        <div className="row">
+          <Phone label="Pick 'Em" sub="sportsbook ticket"><PickEmScreen/></Phone>
+          <Phone label="Fantasy" sub="coach's chalkboard"><FantasyScreen/></Phone>
+          <Phone label="Sports Bingo" sub="casino felt"><BingoScreen/></Phone>
+          <Phone label="Speed Trivia" sub="racing electric"><SpeedTriviaScreen/></Phone>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Board/>);
+</script>
+</body>
+</html>

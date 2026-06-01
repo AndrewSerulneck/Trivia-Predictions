@@ -131,12 +131,21 @@ function GaugeBar({
 const POLL_INTERVAL_MS = 15_000;
 
 function gameTypeLabel(gameTypes: string[]): string {
-  if (!gameTypes || gameTypes.length === 0 || gameTypes.length === 4) return "All games";
+  if (!gameTypes || gameTypes.length === 0) return "All games";
+  const normalized = new Set(gameTypes.map((gameType) => String(gameType).trim().toLowerCase()));
+  const coversAllGames =
+    normalized.has("pickem") &&
+    normalized.has("fantasy") &&
+    normalized.has("bingo") &&
+    (normalized.has("speed-trivia") || normalized.has("trivia")) &&
+    normalized.has("live-trivia");
+  if (coversAllGames) return "All games";
   return gameTypes
     .map((g) => {
       if (g === "pickem") return "Pick 'Em";
       if (g === "fantasy") return "Fantasy";
-      if (g === "trivia") return "Trivia";
+      if (g === "speed-trivia" || g === "trivia") return "Speed Trivia";
+      if (g === "live-trivia" || g === "live_trivia") return "Live Trivia";
       if (g === "bingo") return "Bingo";
       return g;
     })
@@ -324,13 +333,17 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
                   ? Math.min(100, (lastSeen / campaign.pointsRequiredToWin) * 100)
                   : 0;
 
+              const isLeaderboard = campaign.challengeMode === "leaderboard";
+              const leaderboardEntries = campaign.leaderboard?.topEntries ?? [];
+              const leaderboardViewer = campaign.leaderboard?.viewer ?? null;
+
               return (
                 <li key={campaign.id} className="space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-sm font-semibold leading-tight text-white">{campaign.name}</p>
                       <p className="text-[11px] text-cyan-400/70">{gameTypeLabel(campaign.gameTypes)}</p>
-                      {progressDelta > 0 ? (
+                      {!isLeaderboard && progressDelta > 0 ? (
                         <span className="mt-1 inline-block rounded-full bg-emerald-400/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-emerald-300 animate-pulse">
                           +{progressDelta.toLocaleString()} pts since last visit
                         </span>
@@ -350,11 +363,73 @@ export function ChallengeRedeemPanel({ venueId }: { venueId: string }) {
                     )}
                   </div>
 
-                  <GaugeBar
-                    current={campaign.progressPoints}
-                    target={campaign.pointsRequiredToWin}
-                    initialPct={initialPct}
-                  />
+                  {isLeaderboard ? (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-cyan-400/80">
+                          Live Rankings
+                        </p>
+                        {leaderboardViewer && !leaderboardViewer.inTop && leaderboardViewer.rank ? (
+                          <span className="rounded-full bg-cyan-500/15 px-2 py-0.5 text-[9px] font-black text-cyan-300">
+                            Your rank: #{leaderboardViewer.rank}
+                          </span>
+                        ) : null}
+                      </div>
+                      {leaderboardEntries.length === 0 ? (
+                        <p className="text-[11px] text-cyan-300/50">
+                          No one has scored yet — be the first!
+                        </p>
+                      ) : (
+                        <ol aria-label={`${campaign.name} leaderboard`} className="space-y-0.5">
+                          {leaderboardEntries.map((entry) => {
+                            const isViewer = entry.userId === userId;
+                            return (
+                              <li
+                                key={entry.userId}
+                                className={`flex items-center gap-2 rounded-md px-2 py-1 text-[11px] ${
+                                  isViewer ? "bg-cyan-500/15" : "bg-slate-900/40"
+                                }`}
+                              >
+                                <span className="w-5 shrink-0 text-center font-black tabular-nums text-slate-400">
+                                  {entry.rank}
+                                </span>
+                                <span className={`min-w-0 flex-1 truncate font-semibold ${isViewer ? "text-cyan-200" : "text-slate-200"}`}>
+                                  {entry.username}{isViewer ? " (you)" : ""}
+                                </span>
+                                <span className="shrink-0 font-black tabular-nums text-amber-200">
+                                  {entry.points.toLocaleString()} pts
+                                </span>
+                              </li>
+                            );
+                          })}
+                          {leaderboardViewer && !leaderboardViewer.inTop ? (
+                            <>
+                              <li aria-hidden className="py-0.5">
+                                <div className="border-t border-cyan-700/40" />
+                              </li>
+                              <li className="flex items-center gap-2 rounded-md bg-cyan-500/15 px-2 py-1 text-[11px]">
+                                <span className="w-5 shrink-0 text-center font-black tabular-nums text-slate-400">
+                                  {leaderboardViewer.rank ?? "—"}
+                                </span>
+                                <span className="min-w-0 flex-1 truncate font-semibold text-cyan-200">
+                                  {leaderboardViewer.username ?? "You"} (you)
+                                </span>
+                                <span className="shrink-0 font-black tabular-nums text-amber-200">
+                                  {leaderboardViewer.points.toLocaleString()} pts
+                                </span>
+                              </li>
+                            </>
+                          ) : null}
+                        </ol>
+                      )}
+                    </div>
+                  ) : (
+                    <GaugeBar
+                      current={campaign.progressPoints}
+                      target={campaign.pointsRequiredToWin}
+                      initialPct={initialPct}
+                    />
+                  )}
 
                   {campaign.rules ? (
                     <p className="text-[11px] leading-relaxed text-cyan-300/60">{campaign.rules}</p>

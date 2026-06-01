@@ -7,6 +7,8 @@ import { PaginationBar, BulkActionBar, TH, TD, TR } from "@/components/admin/Adm
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type CampaignRecurringType = "none" | "daily" | "weekly" | "monthly" | "yearly";
+type ChallengeMode = "progress" | "leaderboard";
+type ChallengeLeaderboardTiebreaker = "first_to_score" | "latest_activity";
 
 type AdminChallengeCampaign = {
   id: string;
@@ -20,6 +22,9 @@ type AdminChallengeCampaign = {
   endTime?: string;
   endDate?: string;
   gameTypes: string[];
+  challengeMode: ChallengeMode;
+  leaderboardDisplayLimit: number;
+  leaderboardTiebreaker: ChallengeLeaderboardTiebreaker;
   pointMultiplier: number;
   pointsRequiredToWin: number;
   recurringType: CampaignRecurringType;
@@ -32,9 +37,35 @@ type AdminChallengeCampaign = {
 
 const PAGE_SIZE = 25;
 
-const GAME_TYPE_OPTIONS = ["pickem", "fantasy", "trivia", "bingo"] as const;
+const GAME_TYPE_OPTIONS = ["pickem", "fantasy", "speed-trivia", "live-trivia", "bingo"] as const;
 const DAY_OPTIONS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 const RECURRING_OPTIONS: CampaignRecurringType[] = ["none", "daily", "weekly", "monthly", "yearly"];
+const CHALLENGE_MODE_OPTIONS: ChallengeMode[] = ["progress", "leaderboard"];
+const LEADERBOARD_TIEBREAKER_OPTIONS: ChallengeLeaderboardTiebreaker[] = ["first_to_score", "latest_activity"];
+
+function gameTypeLabel(gameType: string): string {
+  if (gameType === "pickem") return "Pick 'Em";
+  if (gameType === "fantasy") return "Fantasy";
+  if (gameType === "speed-trivia" || gameType === "trivia") return "Speed Trivia";
+  if (gameType === "live-trivia" || gameType === "live_trivia") return "Live Trivia";
+  if (gameType === "bingo") return "Bingo";
+  return gameType;
+}
+
+function normalizeFormGameType(gameType: string): string {
+  const normalized = String(gameType ?? "").trim().toLowerCase();
+  if (normalized === "trivia") return "speed-trivia";
+  if (normalized === "live_trivia") return "live-trivia";
+  return normalized;
+}
+
+function challengeModeLabel(mode: ChallengeMode): string {
+  return mode === "leaderboard" ? "Leaderboard" : "Progress Gauge";
+}
+
+function leaderboardTiebreakerLabel(value: ChallengeLeaderboardTiebreaker): string {
+  return value === "latest_activity" ? "Latest activity" : "First to score";
+}
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
@@ -87,6 +118,9 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
   const [formEndTime, setFormEndTime] = useState("");
   const [formEndDate, setFormEndDate] = useState("");
   const [formGameTypes, setFormGameTypes] = useState<string[]>([...GAME_TYPE_OPTIONS]);
+  const [formChallengeMode, setFormChallengeMode] = useState<ChallengeMode>("progress");
+  const [formLeaderboardDisplayLimit, setFormLeaderboardDisplayLimit] = useState("10");
+  const [formLeaderboardTiebreaker, setFormLeaderboardTiebreaker] = useState<ChallengeLeaderboardTiebreaker>("first_to_score");
   const [formMultiplier, setFormMultiplier] = useState("1");
   const [formPointsRequired, setFormPointsRequired] = useState("100");
   const [formRecurring, setFormRecurring] = useState<CampaignRecurringType>("none");
@@ -240,6 +274,9 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
     setFormEndTime("");
     setFormEndDate("");
     setFormGameTypes([...GAME_TYPE_OPTIONS]);
+    setFormChallengeMode("progress");
+    setFormLeaderboardDisplayLimit("10");
+    setFormLeaderboardTiebreaker("first_to_score");
     setFormMultiplier("1");
     setFormPointsRequired("100");
     setFormRecurring("none");
@@ -263,9 +300,18 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
     setFormStartTime(campaign.startTime ?? "");
     setFormEndTime(campaign.endTime ?? "");
     setFormEndDate(campaign.endDate ?? "");
-    setFormGameTypes(campaign.gameTypes.length > 0 ? campaign.gameTypes : [...GAME_TYPE_OPTIONS]);
+    setFormGameTypes(
+      campaign.gameTypes.length > 0
+        ? Array.from(new Set(campaign.gameTypes.map((gameType) => normalizeFormGameType(gameType))))
+        : [...GAME_TYPE_OPTIONS]
+    );
     setFormMultiplier(String(campaign.pointMultiplier ?? 1));
     setFormPointsRequired(String(campaign.pointsRequiredToWin ?? 100));
+    setFormChallengeMode(campaign.challengeMode === "leaderboard" ? "leaderboard" : "progress");
+    setFormLeaderboardDisplayLimit(String(campaign.leaderboardDisplayLimit ?? 10));
+    setFormLeaderboardTiebreaker(
+      campaign.leaderboardTiebreaker === "latest_activity" ? "latest_activity" : "first_to_score"
+    );
     setFormRecurring(campaign.recurringType ?? "none");
     setFormActive(Boolean(campaign.isActive));
     setCreateError("");
@@ -289,6 +335,9 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
         endTime: formEndTime || undefined,
         endDate: formEndDate || undefined,
         gameTypes: formGameTypes,
+        challengeMode: formChallengeMode,
+        leaderboardDisplayLimit: parseInt(formLeaderboardDisplayLimit, 10) || 10,
+        leaderboardTiebreaker: formLeaderboardTiebreaker,
         pointMultiplier: parseFloat(formMultiplier) || 1,
         pointsRequiredToWin: parseInt(formPointsRequired, 10) || 100,
         recurringType: formRecurring,
@@ -355,7 +404,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
             <label className={lbl}>Game Types</label>
             <div className="flex flex-wrap gap-2 pt-1">
               {GAME_TYPE_OPTIONS.map((g) => (
-                <label key={g} className="flex cursor-pointer items-center gap-1.5 text-sm">
+                <label key={g} className="flex cursor-pointer items-center gap-1.5 text-sm text-black">
                   <input
                     type="checkbox"
                     checked={formGameTypes.includes(g)}
@@ -366,7 +415,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
                     }
                     className="h-4 w-4 rounded border-slate-300 text-indigo-600"
                   />
-                  {g.charAt(0).toUpperCase() + g.slice(1)}
+                  {gameTypeLabel(g)}
                 </label>
               ))}
             </div>
@@ -377,7 +426,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
             <label className={lbl}>Active Days</label>
             <div className="flex flex-wrap gap-2 pt-1">
               {DAY_OPTIONS.map((d) => (
-                <label key={d} className="flex cursor-pointer items-center gap-1.5 text-sm capitalize">
+                <label key={d} className="flex cursor-pointer items-center gap-1.5 text-sm capitalize text-black">
                   <input
                     type="checkbox"
                     checked={formActiveDays.includes(d)}
@@ -422,6 +471,26 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
           </div>
 
           <div>
+            <label className={lbl}>Challenge Type</label>
+            <select
+              className={field}
+              value={formChallengeMode}
+              onChange={(e) => setFormChallengeMode(e.target.value as ChallengeMode)}
+            >
+              {CHALLENGE_MODE_OPTIONS.map((mode) => (
+                <option key={mode} value={mode}>
+                  {challengeModeLabel(mode)}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1.5 text-xs text-slate-500">
+              {formChallengeMode === "leaderboard"
+                ? "Users are ranked by eligible points earned during the challenge window. The user with the most points when the challenge closes wins."
+                : "Users fill a progress gauge by earning eligible points. The first user to reach the points target wins immediately."}
+            </p>
+          </div>
+
+          <div>
             <label className={lbl}>Point Multiplier</label>
             <input
               type="number"
@@ -432,23 +501,65 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
               onChange={(e) => setFormMultiplier(e.target.value)}
             />
           </div>
-          <div>
-            <label className={lbl}>Points Required to Win</label>
-            <input
-              type="number"
-              min={1}
-              className={field}
-              value={formPointsRequired}
-              onChange={(e) => setFormPointsRequired(e.target.value)}
-            />
-          </div>
+          {formChallengeMode === "progress" ? (
+            <div>
+              <label className={lbl}>Points Required to Win</label>
+              <input
+                type="number"
+                min={1}
+                className={field}
+                value={formPointsRequired}
+                onChange={(e) => setFormPointsRequired(e.target.value)}
+              />
+              <p className="mt-1.5 text-xs text-slate-500">
+                First user to accumulate this many eligible points wins and the challenge closes immediately.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <label className={lbl}>Leaderboard Display Limit</label>
+              <input
+                type="number"
+                min={1}
+                max={50}
+                className={field}
+                value={formLeaderboardDisplayLimit}
+                onChange={(e) => setFormLeaderboardDisplayLimit(e.target.value)}
+              />
+              <p className="mt-1.5 text-xs text-slate-500">
+                Max users shown on the leaderboard card (1–50). Players outside this range still see their own rank.
+              </p>
+            </div>
+          )}
+
+          {formChallengeMode === "leaderboard" && (
+            <div>
+              <label className={lbl}>Leaderboard Tie-breaker</label>
+              <select
+                className={field}
+                value={formLeaderboardTiebreaker}
+                onChange={(e) => setFormLeaderboardTiebreaker(e.target.value as ChallengeLeaderboardTiebreaker)}
+              >
+                {LEADERBOARD_TIEBREAKER_OPTIONS.map((tiebreaker) => (
+                  <option key={tiebreaker} value={tiebreaker}>
+                    {leaderboardTiebreakerLabel(tiebreaker)}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1.5 text-xs text-slate-500">
+                {formLeaderboardTiebreaker === "latest_activity"
+                  ? "Tied users are broken by who scored most recently (later activity wins)."
+                  : "Tied users are broken by who reached that score first (earlier activity wins)."}
+              </p>
+            </div>
+          )}
 
           {/* Venue targeting */}
           <div className="col-span-2">
             <label className={lbl}>Target Venues (leave empty for all venues)</label>
             <div className="mt-1 grid grid-cols-3 gap-2 rounded-lg border border-slate-200 p-3">
               {venues.map((v) => (
-                <label key={v.id} className="flex cursor-pointer items-center gap-2 text-sm">
+                <label key={v.id} className="flex cursor-pointer items-center gap-2 text-sm text-black">
                   <input
                     type="checkbox"
                     checked={formVenueIds.includes(v.id)}
@@ -580,6 +691,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
                 <th className={TH}>Name</th>
                 <th className={TH}>Status</th>
                 <th className={TH}>Games</th>
+                <th className={TH}>Type</th>
                 <th className={TH}>Recurring</th>
                 <th className={TH}>Venues</th>
                 <th className={TH}>Winner</th>
@@ -589,14 +701,14 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-sm text-slate-400">
+                  <td colSpan={9} className="py-12 text-center text-sm text-slate-400">
                     Loading…
                   </td>
                 </tr>
               )}
               {!loading && campaigns.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-sm text-slate-400">
+                  <td colSpan={9} className="py-12 text-center text-sm text-slate-400">
                     No campaigns yet.
                   </td>
                 </tr>
@@ -622,7 +734,10 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
                       <StatusBadge isActive={c.isActive} hasWinner={Boolean(c.winnerUserId)} />
                     </td>
                     <td className={`${TD} text-slate-500`}>
-                      {c.gameTypes.join(", ")}
+                      {c.gameTypes.map((gameType) => gameTypeLabel(gameType)).join(", ")}
+                    </td>
+                    <td className={`${TD} text-slate-500`}>
+                      {challengeModeLabel(c.challengeMode)}
                     </td>
                     <td className={`${TD} capitalize text-slate-500`}>{c.recurringType}</td>
                     <td className={`${TD} text-slate-500`}>

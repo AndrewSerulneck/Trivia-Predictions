@@ -1,0 +1,93 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--ht-canvas);color:var(--ht-fg-primary);font-family:var(--ht-font-body)}
+  .card{box-sizing:border-box;width:700px;padding:18px;display:flex;flex-direction:column;gap:12px}
+
+  /* Header — intermission state */
+  .head{
+    background:var(--ht-surface);border:1px solid rgba(240,171,252,.6);
+    border-radius:16px;padding:12px 14px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .head .eb{font-weight:900;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ht-fuchsia-300)}
+  .head .t{font-family:var(--ht-font-display);font-size:20px;color:var(--ht-fg-primary);line-height:1;margin-top:2px;letter-spacing:.02em}
+  .head .clock{
+    font-variant-numeric:tabular-nums;font-weight:900;font-size:26px;
+    color:var(--ht-fuchsia-200);line-height:1;
+  }
+  .head .clock small{font-size:10px;font-weight:800;color:var(--ht-fuchsia-300);display:block;letter-spacing:.14em;text-transform:uppercase;margin-bottom:3px}
+
+  /* Round-by-round legend */
+  .rounds{
+    display:flex;gap:6px;padding:8px 10px;
+    background:rgba(15,23,42,.55);border:1px solid rgba(255,255,255,.06);
+    border-radius:12px;
+  }
+  .r{
+    flex:1;text-align:center;padding:6px 4px;border-radius:8px;
+    font-weight:900;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ht-fg-muted);background:rgba(255,255,255,.04);
+  }
+  .r.done{color:var(--ht-emerald-300);background:rgba(16,185,129,.18);box-shadow:inset 0 0 0 1px rgba(110,231,183,.4)}
+  .r.now{color:var(--ht-fuchsia-300);background:rgba(217,70,239,.18);box-shadow:inset 0 0 0 1px rgba(240,171,252,.6)}
+
+  /* Leaderboard table */
+  .board{
+    background:var(--ht-surface);border:1px solid rgba(255,255,255,.08);
+    border-radius:16px;overflow:hidden;
+  }
+  table{width:100%;border-collapse:collapse;font-weight:700;color:var(--ht-fg-primary)}
+  th{
+    text-align:left;padding:10px 14px;
+    font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ht-amber-300);
+    background:rgba(245,158,11,.08);
+    border-bottom:1px solid rgba(252,211,77,.20);
+  }
+  th.r{text-align:right}
+  td{padding:9px 14px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.06)}
+  tr:last-child td{border-bottom:0}
+  tr.you td{background:rgba(34,211,238,.06)}
+  .rank{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:22px;padding:0 7px;border-radius:9999px;font-size:10.5px;font-weight:900;border:1px solid;letter-spacing:.06em}
+  .r1{color:#fde68a;background:rgba(252,211,77,.18);border-color:rgba(252,211,77,.6)}
+  .r2{color:#e2e8f0;background:rgba(226,232,240,.12);border-color:rgba(226,232,240,.5)}
+  .r3{color:#fdba74;background:rgba(253,186,116,.15);border-color:rgba(253,186,116,.55)}
+  .rd{color:var(--ht-fg-secondary);background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.22)}
+  .you-tag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:9999px;font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--ht-cyan-300);background:rgba(34,211,238,.10);border:1px solid rgba(34,211,238,.45)}
+  .delta{font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;margin-left:6px}
+  .delta.up{color:var(--ht-emerald-300)}
+  .delta.flat{color:var(--ht-fg-muted)}
+  .pts{text-align:right;font-variant-numeric:tabular-nums;font-weight:900;font-size:15px;color:var(--ht-fg-primary)}
+  .pts small{display:block;font-size:9.5px;color:var(--ht-emerald-300);font-weight:800;letter-spacing:.04em;margin-top:1px}
+  .pts.dim small{color:var(--ht-fg-muted)}
+</style></head><body><div class="card">
+
+  <div class="head">
+    <div>
+      <div class="eb">Round 2 of 3 · Intermission</div>
+      <div class="t">Next round begins in</div>
+    </div>
+    <div class="clock"><small>Break</small>00:42</div>
+  </div>
+
+  <div class="rounds">
+    <div class="r done">R1 · Sports History</div>
+    <div class="r done">R2 · Geography</div>
+    <div class="r now">R3 · Pop Culture · ↑</div>
+  </div>
+
+  <div class="board">
+    <table>
+      <thead><tr><th style="width:64px">Rank</th><th>Player</th><th>R1</th><th>R2</th><th class="r">Total</th></tr></thead>
+      <tbody>
+        <tr><td><span class="rank r1">1st</span></td><td>karaoke_kraken<span class="delta flat">—</span></td><td>80</td><td>90</td><td class="pts">170<small>+90</small></td></tr>
+        <tr><td><span class="rank r2">2nd</span></td><td>nine_ball_neil<span class="delta up">▲ 1</span></td><td>70</td><td>80</td><td class="pts">150<small>+80</small></td></tr>
+        <tr><td><span class="rank r3">3rd</span></td><td>last_call_lucy<span class="delta flat">—</span></td><td>80</td><td>50</td><td class="pts">130<small>+50</small></td></tr>
+        <tr class="you"><td><span class="rank rd">#4</span></td><td>you_are_here<span class="you-tag">you</span><span class="delta up">▲ 2</span></td><td>50</td><td>70</td><td class="pts">120<small>+70</small></td></tr>
+        <tr><td><span class="rank rd">#5</span></td><td>frosty_mug_42<span class="delta flat">—</span></td><td>60</td><td>50</td><td class="pts dim">110<small>+50</small></td></tr>
+        <tr><td><span class="rank rd">#6</span></td><td>jukebox_jerry<span class="delta flat">—</span></td><td>50</td><td>40</td><td class="pts dim">90<small>+40</small></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div></body></html>

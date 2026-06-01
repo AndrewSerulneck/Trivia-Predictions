@@ -1,0 +1,96 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--ht-canvas);color:var(--ht-fg-primary);font-family:var(--ht-font-body)}
+  .card{box-sizing:border-box;width:700px;padding:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+  .panel{
+    background:var(--ht-surface);
+    border:1px solid rgba(96,165,250,.3);
+    border-radius:18px;padding:14px;
+  }
+  .eb{font-weight:900;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#93c5fd;margin-bottom:10px}
+
+  /* — Career stats grid — */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .stat{
+    background:rgba(30,41,59,.6);border:1px solid rgba(255,255,255,.06);
+    border-radius:12px;padding:10px 12px;
+  }
+  .stat .val{font-family:var(--ht-font-body);font-weight:900;font-size:24px;color:#bfdbfe;line-height:1;font-variant-numeric:tabular-nums}
+  .stat .val.gold{color:var(--ht-amber-300)}
+  .stat .lab{font-size:9.5px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;color:var(--ht-fg-muted);margin-top:4px}
+  .progress{margin-top:10px}
+  .progress .label{display:flex;justify-content:space-between;color:var(--ht-fg-muted);font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px}
+  .progress .label span:last-child{color:#bfdbfe;font-variant-numeric:tabular-nums}
+  .bar{height:8px;border-radius:9999px;background:#334155;overflow:hidden}
+  .bar>div{height:100%;background:#60a5fa;border-radius:9999px;width:64%}
+
+  /* — Activity timeline — */
+  .timeline{display:flex;flex-direction:column;gap:10px}
+  .ev{
+    border-left:2px solid rgba(96,165,250,.4);
+    background:rgba(30,41,59,.4);
+    border-radius:0 12px 12px 0;
+    padding:8px 12px;position:relative;
+  }
+  .ev::before{
+    content:"";position:absolute;left:-7px;top:14px;
+    width:10px;height:10px;border-radius:50%;background:#60a5fa;
+    box-shadow:0 0 0 2px var(--ht-surface);
+  }
+  .ev.win{border-left-color:rgba(52,211,153,.55)}
+  .ev.win::before{background:var(--ht-emerald-400)}
+  .ev.loss{border-left-color:rgba(251,113,133,.55)}
+  .ev.loss::before{background:var(--ht-rose-400)}
+  .ev .t{color:var(--ht-fg-primary);font-weight:800;font-size:12.5px;line-height:1.3}
+  .ev .ts{color:var(--ht-fg-muted);font-weight:700;font-size:10px;margin-top:2px;letter-spacing:.04em}
+  .ev .pts{margin-left:auto;font-weight:900;font-size:13px;font-variant-numeric:tabular-nums}
+  .ev .head{display:flex;align-items:center;gap:6px}
+  .ev.win .pts{color:var(--ht-emerald-300)}
+  .ev.loss .pts{color:var(--ht-rose-300)}
+  .ev .pts{color:#bfdbfe}
+</style></head><body><div class="card">
+
+  <!-- Career stats panel -->
+  <div class="panel">
+    <div class="eb">Career stats</div>
+    <div class="grid">
+      <div class="stat"><div class="val gold">428</div><div class="lab">Top points · single game</div></div>
+      <div class="stat"><div class="val">3,184</div><div class="lab">All-time points</div></div>
+      <div class="stat"><div class="val">71%</div><div class="lab">Live Trivia correct rate</div></div>
+      <div class="stat"><div class="val">12</div><div class="lab">Boards bingo'd</div></div>
+    </div>
+    <div class="progress">
+      <div class="label"><span>Win rate · last 50</span><span>64%</span></div>
+      <div class="bar"><div></div></div>
+    </div>
+  </div>
+
+  <!-- Activity timeline panel -->
+  <div class="panel">
+    <div class="eb">Recent activity</div>
+    <div class="timeline">
+      <div class="ev win">
+        <div class="head"><div class="t">Won Hightop Fantasy™ vs ipa_iggy</div><div class="pts">+50</div></div>
+        <div class="ts">14 MIN AGO</div>
+      </div>
+      <div class="ev">
+        <div class="head"><div class="t">Joined Live Trivia · Round 2</div><div class="pts">—</div></div>
+        <div class="ts">28 MIN AGO</div>
+      </div>
+      <div class="ev win">
+        <div class="head"><div class="t">Correct streak ×4 · Sports History</div><div class="pts">+40</div></div>
+        <div class="ts">31 MIN AGO</div>
+      </div>
+      <div class="ev loss">
+        <div class="head"><div class="t">Wrong · Geography Q12</div><div class="pts">0</div></div>
+        <div class="ts">33 MIN AGO</div>
+      </div>
+      <div class="ev">
+        <div class="head"><div class="t">Bingo board started · NBA</div><div class="pts">—</div></div>
+        <div class="ts">1 HR AGO</div>
+      </div>
+    </div>
+  </div>
+
+</div></body></html>

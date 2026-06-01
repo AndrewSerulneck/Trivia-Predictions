@@ -1,0 +1,39 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--ht-canvas);color:var(--ht-fg-primary);font-family:var(--ht-font-body)}
+  .card{box-sizing:border-box;width:700px;padding:22px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .panel{
+    border-radius:16px;background:var(--ht-surface);padding:16px;
+    border:1px solid;
+  }
+  .eb{font-weight:900;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+  .num{
+    font-variant-numeric:tabular-nums;font-weight:900;font-family:var(--ht-font-body);
+    margin-top:8px;line-height:1;
+  }
+  .bar{margin-top:12px;height:10px;border-radius:9999px;background:#1e293b;overflow:hidden}
+  .bar>div{height:100%;border-radius:9999px}
+  .sub{font-weight:700;font-size:13px;margin-top:8px;opacity:.85}
+
+  .lobby{border-color:rgba(252,211,77,.6)}
+  .lobby .eb{color:var(--ht-amber-300)}
+  .lobby .num{color:var(--ht-amber-200);font-size:42px}
+  .lobby .sub{color:#fde68a}
+
+  .question{border-color:rgba(110,231,183,.6)}
+  .question .eb{color:var(--ht-emerald-300)}
+  .question .num{color:var(--ht-emerald-300);font-size:42px}
+  .question .bar>div{background:var(--ht-emerald-400);width:62%}
+</style></head><body><div class="card">
+  <div class="panel lobby">
+    <div class="eb">Next Live Trivia Showdown in</div>
+    <div class="num">00:14:32</div>
+    <div class="sub">Opening category: Sports History</div>
+  </div>
+  <div class="panel question">
+    <div class="eb">Round 2 · Question 7</div>
+    <div class="num">18s</div>
+    <div class="bar"><div></div></div>
+    <div class="sub" style="color:#a7f3d0">30s answer window · progress to right</div>
+  </div>
+</div></body></html>

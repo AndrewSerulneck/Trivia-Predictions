@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Player silhouette placeholder">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d1d5db"></stop>
+      <stop offset="100%" stop-color="#9ca3af"></stop>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#bg)"></circle>
+  <circle cx="60" cy="45" r="20" fill="#e5e7eb"></circle>
+  <path d="M23 96c4-17 19-29 37-29s33 12 37 29" fill="#e5e7eb"></path>
+</svg>

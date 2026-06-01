@@ -4,6 +4,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { navigateBackToVenue } from "@/lib/venueGameTransition";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
@@ -93,6 +94,15 @@ type PickEmPickHistoryItem = {
   rewardClaimedAt?: string | null;
 };
 
+type SummaryPayload = {
+  ok: boolean;
+  profile?: {
+    username: string;
+    points: number;
+    venueId: string;
+  } | null;
+};
+
 async function readJsonResponse<T>(response: Response, label: string): Promise<T> {
   const raw = await response.text();
   try {
@@ -155,13 +165,20 @@ function getSportIcon(slug: string): string {
 
 function formatLocalStartTime(iso: string): string {
   const date = new Date(iso);
-  return date.toLocaleString(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
+  return date.toLocaleTimeString(undefined, {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function getGameStatusLabel(game: PickEmGame): string {
+  if (game.status === "live") {
+    return game.periodLabel?.trim() || "Live";
+  }
+  if (game.status === "final") {
+    return "Final";
+  }
+  return formatLocalStartTime(game.startsAt);
 }
 
 function getLocalDateKey(): string {
@@ -253,6 +270,11 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
   const [isMounted, setIsMounted] = useState(false);
   const [pickHistory, setPickHistory] = useState<PickEmPickHistoryItem[]>([]);
   const [loadingPickHistory, setLoadingPickHistory] = useState(false);
+  const [headerPoints, setHeaderPoints] = useState(0);
+  const [headerPointsGain, setHeaderPointsGain] = useState<number | null>(null);
+  const [headerPointsPulse, setHeaderPointsPulse] = useState(false);
+  const headerPointsGainTimerRef = useRef<number | null>(null);
+  const headerPointsPulseTimerRef = useRef<number | null>(null);
   const popIdRef = useRef(0);
 
   useEffect(() => {
@@ -279,6 +301,12 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
     return () => {
       if (refreshTimerRef.current !== null) {
         window.clearTimeout(refreshTimerRef.current);
+      }
+      if (headerPointsGainTimerRef.current !== null) {
+        window.clearTimeout(headerPointsGainTimerRef.current);
+      }
+      if (headerPointsPulseTimerRef.current !== null) {
+        window.clearTimeout(headerPointsPulseTimerRef.current);
       }
     };
   }, []);
@@ -426,6 +454,76 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
+
+  const loadHeaderPoints = useCallback(async () => {
+    if (!userId) {
+      setHeaderPoints(0);
+      return;
+    }
+    try {
+      const response = await fetch(
+        `/api/users/summary?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venueId)}`,
+        { cache: "no-store" }
+      );
+      const payload = await readJsonResponse<SummaryPayload>(response, "/api/users/summary");
+      if (!payload.ok || !payload.profile) {
+        return;
+      }
+      setHeaderPoints(Math.max(0, Number(payload.profile.points ?? 0)));
+    } catch {
+      // no-op: we keep previous value on transient network errors
+    }
+  }, [userId, venueId]);
+
+  useEffect(() => {
+    if (!userId) {
+      return;
+    }
+    const initial = window.setTimeout(() => {
+      void loadHeaderPoints();
+    }, 0);
+    const interval = window.setInterval(() => {
+      void loadHeaderPoints();
+    }, 20_000);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(interval);
+    };
+  }, [loadHeaderPoints, userId]);
+
+  useEffect(() => {
+    const onPointsUpdated = (event: Event) => {
+      const custom = event as CustomEvent<{ delta?: number }>;
+      const delta = Number(custom.detail?.delta ?? 0);
+      if (!Number.isFinite(delta) || delta <= 0) {
+        return;
+      }
+      setHeaderPoints((current) => current + delta);
+      setHeaderPointsGain((current) => (current ?? 0) + delta);
+      setHeaderPointsPulse(true);
+
+      if (headerPointsGainTimerRef.current !== null) {
+        window.clearTimeout(headerPointsGainTimerRef.current);
+      }
+      headerPointsGainTimerRef.current = window.setTimeout(() => {
+        setHeaderPointsGain(null);
+      }, 1300);
+
+      if (headerPointsPulseTimerRef.current !== null) {
+        window.clearTimeout(headerPointsPulseTimerRef.current);
+      }
+      headerPointsPulseTimerRef.current = window.setTimeout(() => {
+        setHeaderPointsPulse(false);
+      }, 550);
+
+      void loadHeaderPoints();
+    };
+
+    window.addEventListener("tp:points-updated", onPointsUpdated as EventListener);
+    return () => {
+      window.removeEventListener("tp:points-updated", onPointsUpdated as EventListener);
+    };
+  }, [loadHeaderPoints]);
 
 
   const grouped = useMemo(() => {
@@ -877,12 +975,12 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
   let renderedPickEmCardCount = 0;
 
   return (
-    <div className="tp-pickem-compact min-h-[100dvh] touch-pan-y space-y-3 sm:space-y-4">
+    <div className="tp-pickem-compact min-h-[100dvh] touch-pan-y pb-[max(env(safe-area-inset-bottom),6px)]">
       <style>{`
         @keyframes sport-pop {
           0%   { transform: scale(1); }
-          35%  { transform: scale(1.14); box-shadow: 0 0 0 5px rgba(99,102,241,0.30); }
-          65%  { transform: scale(0.97); }
+          35%  { transform: scale(1.08); box-shadow: 0 0 0 5px rgba(253,230,138,0.34); }
+          65%  { transform: scale(0.98); }
           100% { transform: scale(1); }
         }
         @keyframes pickem-gold-flash {
@@ -899,338 +997,356 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         .pickem-gold-flash { animation: pickem-gold-flash 700ms ease-out; }
         .pickem-limit-pulse { animation: pickem-limit-pulse 420ms ease-in-out; }
       `}</style>
-      <section className="rounded-2xl border border-indigo-400/40 bg-slate-900 p-3 sm:p-4">
-        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-indigo-300">Pick &apos;Em</p>
-        <h2 className="text-base font-black text-indigo-300 sm:text-lg">Hightop Pick &apos;Em™</h2>
-        <p className="mt-1 text-xs text-slate-400 sm:text-sm">
-          Select winners by checking a team. Picks lock at scheduled start time and are final.
-        </p>
 
-        <motion.div
-          animate={limitPulse ? { scale: [1, 1.06, 1] } : { scale: 1 }}
-          transition={{ duration: 0.35 }}
-          className={`mt-3 overflow-hidden rounded-xl border ${
-            pickCount >= PICKEM_PICK_LIMIT
-              ? "border-rose-400/60 bg-rose-950/20"
-              : "border-slate-700 bg-slate-800/60"
-          }`}
-        >
-          {/* Label row */}
-          <div className={`flex items-center justify-between border-b px-3 py-1.5 ${
-            pickCount >= PICKEM_PICK_LIMIT ? "border-rose-400/40 bg-rose-950/30" : "border-slate-700 bg-slate-800"
-          }`}>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-              Pick Tracker
-            </span>
-            <span className={`text-[10px] font-bold uppercase tracking-widest ${
-              pickCount >= PICKEM_PICK_LIMIT ? "text-rose-400" : "text-indigo-300"
-            } ${pickCount >= PICKEM_PICK_LIMIT && limitPulse ? "pickem-limit-pulse" : ""}`}>
-              {pickCount >= PICKEM_PICK_LIMIT ? "Limit Reached" : "Daily Picks"}
-            </span>
+      <div className="sticky top-0 z-30 border-b border-white/10 bg-[#020617]/95 px-2 pb-2 pt-[max(env(safe-area-inset-top),6px)] backdrop-blur">
+        <div className="flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (!venueId) return;
+              navigateBackToVenue({
+                venuePath: `/venue/${encodeURIComponent(venueId)}`,
+                fallbackNavigate: () => {
+                  window.location.href = `/venue/${encodeURIComponent(venueId)}`;
+                },
+              });
+            }}
+            disabled={!venueId}
+            className="tp-clean-button tp-exit-pill inline-flex h-9 w-10 items-center justify-center rounded-full p-0 text-sm font-black disabled:cursor-not-allowed disabled:opacity-60"
+            aria-label="Back to venue"
+          >
+            <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-[12px]">←</span>
+          </button>
+          <div
+            className="text-[15px] uppercase tracking-[0.04em] text-[#fde68a] [text-shadow:0_1px_0_rgba(0,0,0,.45)]"
+            style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
+          >
+            Pick &apos;Em
           </div>
-
-          {/* Progress row */}
-          <div className="flex items-center gap-3 px-3 py-2.5">
-            {/* Pip track */}
-            <div className="flex flex-1 items-center gap-[3px]">
-              {Array.from({ length: PICKEM_PICK_LIMIT }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-2 flex-1 rounded-full transition-colors duration-200 ${
-                    i < pickCount
-                      ? pickCount >= PICKEM_PICK_LIMIT
-                        ? `bg-red-500 ${limitPulse ? "pickem-limit-pulse" : ""}`
-                        : "bg-cyan-400"
-                      : "bg-slate-700/80"
-                  }`}
-                />
-              ))}
+          <div className="relative flex items-center gap-1.5">
+            <div
+              id="tp-points-pill"
+              className={`relative inline-flex h-9 min-w-[6.3rem] items-center justify-center gap-1.5 rounded-[10px] border px-2 text-sm font-black tabular-nums transition-all duration-300 ${
+                headerPointsPulse
+                  ? "border-amber-300/60 bg-amber-300/20 text-amber-200 scale-105"
+                  : "border-amber-300/40 bg-amber-300/10 text-amber-300"
+              }`}
+            >
+              {headerPointsGain ? (
+                <span className="pointer-events-none absolute -top-3 right-0 rounded-full border border-emerald-700 bg-emerald-300 px-1.5 py-0.5 text-[10px] font-black leading-none text-emerald-900 shadow">
+                  +{headerPointsGain}
+                </span>
+              ) : null}
+              <GoldCoinIcon className="h-4 w-4" />
+              <span>{headerPoints.toLocaleString()}</span>
             </div>
-
-            {/* Numeric readout */}
-            <motion.span
-              key={pickCount}
-              initial={{ scale: 1 }}
-              animate={{ scale: [1, 1.18, 1] }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              className={`shrink-0 text-lg font-black tabular-nums leading-none ${
-                pickCount >= PICKEM_PICK_LIMIT ? "text-red-500" : "text-indigo-300"
-              } ${pickCount >= PICKEM_PICK_LIMIT && limitPulse ? "pickem-limit-pulse" : ""}`}
-            >
-              {pickCount}
-              <span className={`text-xs font-semibold ${
-                pickCount >= PICKEM_PICK_LIMIT ? "text-red-400" : "text-slate-400"
-              }`}>/10</span>
-            </motion.span>
+            <NotificationBell />
           </div>
-        </motion.div>
-
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <div className="flex w-full items-center justify-between rounded-xl border border-indigo-400/40 bg-indigo-950/40 px-2 py-1.5 text-slate-200">
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedDate((current) => shiftDateKey(current, -1));
-                setSubmitMessage("");
-                setErrorMessage("");
-              }}
-              className="tp-clean-button relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-indigo-400/40 bg-slate-900/70 text-indigo-300 transition-all active:scale-95 active:brightness-90"
-              aria-label="Previous day"
-            >
-              ◀
-              {hasPreviousUnclaimedPicks ? (
-                <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white">
-                  !
-                </span>
-              ) : null}
-            </button>
-            <span className="text-center text-xs font-semibold sm:text-sm">
-              {new Date(`${selectedDate}T00:00:00.000Z`).toLocaleDateString(undefined, {
-                weekday: "short",
-                timeZone: "UTC",
-              })}{" · "}
-              {new Date(`${selectedDate}T00:00:00.000Z`).toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-                timeZone: "UTC",
-              })}
-              {isViewingToday ? " (Today)" : ""}
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                if (isViewingToday) return;
-                setSelectedDate((current) => shiftDateKey(current, 1));
-                setSubmitMessage("");
-                setErrorMessage("");
-              }}
-              disabled={isViewingToday}
-              className="tp-clean-button relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-indigo-400/40 bg-slate-900/70 text-indigo-300 transition-all active:scale-95 active:brightness-90 disabled:cursor-not-allowed disabled:opacity-35"
-              aria-label="Next day"
-            >
-              ▶
-              {hasFutureUnclaimedPicks ? (
-                <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white">
-                  !
-                </span>
-              ) : null}
-            </button>
-          </div>
-          {selectedSportSlug === "nfl" && nflWeekOptions.length > 0 ? (
-            <>
-              <label htmlFor="pickem-nfl-week" className="text-xs font-medium text-slate-400">
-                NFL Week:
-              </label>
-              <select
-                id="pickem-nfl-week"
-                value={nflWeekStartDate}
-                onChange={(event) => {
-                  setNflWeekStartDate(event.target.value);
-                  setSubmitMessage("");
-                }}
-                className="tp-clean-button rounded-lg border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-200 sm:text-sm"
-              >
-                {nflWeekOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </>
-          ) : null}
-          {!userId || !venueId ? (
-            <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-300 border border-amber-400/30">
-              Browse only
-            </span>
-          ) : null}
         </div>
+      </div>
 
-        {isViewingToday ? (
-          <div className="mt-4 w-full overflow-x-auto pb-1 [scrollbar-width:thin] touch-pan-x overscroll-x-contain">
-            <div className="inline-flex w-max min-w-full gap-2 pr-1">
-              {loadingSports ? (
-                <BouncingBallLoader size="sm" label="Loading sports..." />
-              ) : sports.length === 0 ? (
-                <p className="text-sm text-slate-400">No sports available.</p>
-              ) : (
-                sports.map((item) => {
-                  const isSelected = selectedSportSlug === item.slug;
-                  const isDisabled = !item.isClickable && item.slug !== "nfl";
-                  return (
-                    <button
-                      key={item.slug}
-                      type="button"
-                      disabled={isDisabled}
-                      onClick={() => {
-                        if (!isDisabled) {
-                          setSelectedSportSlug(item.slug);
-                          setSubmitMessage("");
-                          setErrorMessage("");
-                          setFlashingSportSlug(item.slug);
-                          setTimeout(() => setFlashingSportSlug(""), 500);
-                        }
-                      }}
-                      className={`tp-clean-button inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-bold sm:gap-2.5 sm:px-4 sm:py-2 sm:text-sm ${
-                        isSelected
-                          ? "bg-indigo-500/20 border border-indigo-400/60 text-indigo-300"
-                          : isDisabled
-                          ? "cursor-not-allowed bg-slate-800 border border-slate-700 text-slate-400 opacity-50"
-                          : "bg-slate-800 border border-slate-700 text-slate-400 hover:border-indigo-400/60 hover:text-slate-200"
-                      } ${flashingSportSlug === item.slug ? "sport-pop" : ""}`}
-                    >
-                      <span aria-label={item.label} className="text-2xl sm:text-3xl">{getSportIcon(item.slug)}</span>
-                    </button>
-                  );
-                })
-              )}
+      <div className="space-y-3 px-2 pt-2">
+        <section className="rounded-2xl border border-[#fde68a]/30 bg-slate-900 px-3 py-3">
+          <h2
+            className="text-[20px] leading-none text-[#fde68a]"
+            style={{ fontFamily: '"Bree Serif", "Nunito", serif' }}
+          >
+            Hightop Pick &apos;Em
+          </h2>
+          <p className="mt-2 text-[11px] font-semibold leading-relaxed text-slate-400">
+            Select winners by checking a team. Picks lock at scheduled start time and are final.
+          </p>
+
+          <motion.div
+            animate={limitPulse ? { scale: [1, 1.06, 1] } : { scale: 1 }}
+            transition={{ duration: 0.35 }}
+            className={`mt-3 overflow-hidden rounded-xl border ${
+              pickCount >= PICKEM_PICK_LIMIT
+                ? "border-rose-400/60 bg-rose-950/20"
+                : "border-[#fde68a]/30 bg-[#020617]/55"
+            }`}
+          >
+            <div className="flex items-center justify-between border-b border-[#fde68a]/20 bg-black/20 px-3 py-1.5">
+              <span className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">Pick Tracker</span>
+              <span
+                className={`text-[9px] font-black uppercase tracking-[0.16em] ${
+                  pickCount >= PICKEM_PICK_LIMIT ? "text-rose-400" : "text-[#fde68a]"
+                } ${pickCount >= PICKEM_PICK_LIMIT && limitPulse ? "pickem-limit-pulse" : ""}`}
+              >
+                {pickCount >= PICKEM_PICK_LIMIT ? "Limit Reached" : "Daily Picks"}
+              </span>
             </div>
+            <div className="flex items-center gap-3 px-3 py-2.5">
+              <div className="flex flex-1 items-center gap-[3px]">
+                {Array.from({ length: PICKEM_PICK_LIMIT }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-[7px] flex-1 rounded-full ${
+                      i < pickCount
+                        ? pickCount >= PICKEM_PICK_LIMIT
+                          ? `bg-rose-500 ${limitPulse ? "pickem-limit-pulse" : ""}`
+                          : "bg-[#fde68a]"
+                        : "bg-white/12"
+                    }`}
+                  />
+                ))}
+              </div>
+              <motion.span
+                key={pickCount}
+                initial={{ scale: 1 }}
+                animate={{ scale: [1, 1.16, 1] }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className={`shrink-0 text-[19px] font-black leading-none tabular-nums ${
+                  pickCount >= PICKEM_PICK_LIMIT ? "text-rose-400" : "text-[#fde68a]"
+                }`}
+              >
+                {pickCount}
+                <span className="text-[11px] font-semibold text-slate-400">/{PICKEM_PICK_LIMIT}</span>
+              </motion.span>
+            </div>
+          </motion.div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="flex w-full items-center justify-between rounded-xl border border-[#fde68a]/35 bg-[#fde68a]/10 px-2 py-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedDate((current) => shiftDateKey(current, -1));
+                  setSubmitMessage("");
+                  setErrorMessage("");
+                }}
+                className="tp-clean-button relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#fde68a]/45 bg-slate-950/65 text-[#fde68a]"
+                aria-label="Previous day"
+              >
+                ◀
+                {hasPreviousUnclaimedPicks ? (
+                  <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white">
+                    !
+                  </span>
+                ) : null}
+              </button>
+              <span className="text-xs font-extrabold tracking-[0.02em] text-slate-50">
+                {new Date(`${selectedDate}T00:00:00.000Z`).toLocaleDateString(undefined, {
+                  weekday: "short",
+                  timeZone: "UTC",
+                })}{" · "}
+                {new Date(`${selectedDate}T00:00:00.000Z`).toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  timeZone: "UTC",
+                })}
+                {isViewingToday ? " (Today)" : ""}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (isViewingToday) return;
+                  setSelectedDate((current) => shiftDateKey(current, 1));
+                  setSubmitMessage("");
+                  setErrorMessage("");
+                }}
+                disabled={isViewingToday}
+                className="tp-clean-button relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#fde68a]/30 bg-slate-950/55 text-[#fde68a] disabled:cursor-not-allowed disabled:opacity-35"
+                aria-label="Next day"
+              >
+                ▶
+                {hasFutureUnclaimedPicks ? (
+                  <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white">
+                    !
+                  </span>
+                ) : null}
+              </button>
+            </div>
+
+            {selectedSportSlug === "nfl" && nflWeekOptions.length > 0 ? (
+              <>
+                <label htmlFor="pickem-nfl-week" className="text-xs font-medium text-slate-400">
+                  NFL Week:
+                </label>
+                <select
+                  id="pickem-nfl-week"
+                  value={nflWeekStartDate}
+                  onChange={(event) => {
+                    setNflWeekStartDate(event.target.value);
+                    setSubmitMessage("");
+                  }}
+                  className="tp-clean-button rounded-lg border border-[#fde68a]/30 bg-slate-900 px-2 py-1 text-xs text-slate-200 sm:text-sm"
+                >
+                  {nflWeekOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </>
+            ) : null}
+
+            {!userId || !venueId ? (
+              <span className="rounded-full border border-amber-300/35 bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-300">
+                Browse only
+              </span>
+            ) : null}
+          </div>
+
+          {isViewingToday ? (
+            <div className="mt-3 w-full overflow-x-auto pb-1 [scrollbar-width:thin]">
+              <div className="grid min-w-full grid-cols-7 gap-2">
+                {loadingSports ? (
+                  <BouncingBallLoader size="sm" label="Loading sports..." />
+                ) : sports.length === 0 ? (
+                  <p className="text-xs text-slate-400">No sports available.</p>
+                ) : (
+                  sports.map((item) => {
+                    const isSelected = selectedSportSlug === item.slug;
+                    const isDisabled = !item.isClickable && item.slug !== "nfl";
+                    return (
+                      <button
+                        key={item.slug}
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={() => {
+                          if (!isDisabled) {
+                            setSelectedSportSlug(item.slug);
+                            setSubmitMessage("");
+                            setErrorMessage("");
+                            setFlashingSportSlug(item.slug);
+                            setTimeout(() => setFlashingSportSlug(""), 500);
+                          }
+                        }}
+                        className={`tp-clean-button inline-flex h-12 w-full items-center justify-center rounded-full border p-0 text-2xl leading-none ${
+                          isSelected
+                            ? "border-[#fde68a] bg-[#fde68a] text-[#1a2f72]"
+                            : isDisabled
+                            ? "cursor-not-allowed border-white/10 bg-white/[0.03] text-slate-600 opacity-60"
+                            : "border-white/15 bg-white/[0.03] text-slate-400"
+                        } ${flashingSportSlug === item.slug ? "sport-pop" : ""}`}
+                        aria-label={item.label}
+                        title={item.label}
+                      >
+                        <span aria-hidden="true">{getSportIcon(item.slug)}</span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          ) : null}
+        </section>
+
+        {errorMessage ? (
+          <div className="rounded-xl border border-rose-500/45 bg-rose-950/30 px-3 py-2 text-xs font-semibold text-rose-300">
+            {errorMessage}
           </div>
         ) : null}
 
-      </section>
+        {submitMessage ? (
+          <div className="rounded-xl border border-amber-400/45 bg-amber-950/30 px-3 py-2 text-xs font-semibold text-amber-300">
+            {submitMessage}
+          </div>
+        ) : null}
 
-      <div className="sticky top-0 z-30 mb-3 flex w-full items-center gap-2">
-        <button
-          type="button"
-          onClick={() => {
-            if (venueId) {
-              navigateBackToVenue({
-                venuePath: `/venue/${encodeURIComponent(venueId)}`,
-                fallbackNavigate: () => { window.location.href = `/venue/${encodeURIComponent(venueId)}`; },
-              });
-            }
-          }}
-          className="tp-clean-button tp-exit-pill inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold transition-all focus-visible:outline-none active:scale-95 active:brightness-90"
-        >
-          <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff7ea]/20 text-xs">←</span>
-          Back to Venue
-        </button>
-        <button
-          type="button"
-          data-pickem-bank-collect
-          onClick={() => void collectBankPoints()}
-          disabled={isCollectingBank || !userId || !venueId || collectablePoints === 0}
-          className={`tp-clean-button inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border border-indigo-400/60 bg-indigo-500/20 px-4 py-2.5 text-sm font-semibold text-indigo-300 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/40 active:scale-95 active:brightness-90 disabled:cursor-not-allowed disabled:opacity-55 ${goldFlash ? "pickem-gold-flash" : ""}`}
-        >
-          <GoldCoinIcon className="h-5 w-5" />
-          {isCollectingBank
-            ? "Collecting..."
-            : `Collect Points (${collectablePoints.toLocaleString()})`}
-        </button>
-      </div>
-
-      {errorMessage ? (
-        <div className="rounded-xl border border-rose-500/40 bg-rose-950/30 p-2.5 text-xs text-rose-300 sm:p-3 sm:text-sm">{errorMessage}</div>
-      ) : null}
-
-      {submitMessage ? (
-        <div className="rounded-xl border border-amber-400/40 bg-amber-950/30 p-2.5 text-xs text-amber-300 sm:p-3 sm:text-sm">{submitMessage}</div>
-      ) : null}
-
-      {!isViewingToday ? (
-        loadingPickHistory ? (
-          <BouncingBallLoader size="sm" label="Loading your picks..." />
-        ) : historicalPicks.length === 0 ? (
-          <div className="rounded-xl border border-slate-700/60 bg-slate-800/40 p-2.5 text-xs text-slate-400 sm:p-3 sm:text-sm">
-            No picks found for this date.
+        {!isViewingToday ? (
+          loadingPickHistory ? (
+            <BouncingBallLoader size="sm" label="Loading your picks..." />
+          ) : historicalPicks.length === 0 ? (
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-slate-400">
+              No picks found for this date.
+            </div>
+          ) : (
+            <section className="space-y-3">
+              <div className="flex items-end justify-between gap-2">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.16em] text-[#fde68a]">Your Picks</h3>
+                <span className="text-[10px] font-bold tracking-[0.03em] text-slate-500">{historicalPicks.length} picks</span>
+              </div>
+              <ul className="space-y-2.5">
+                {historicalPicks.map((pick) => {
+                  const statusClass =
+                    pick.status === "won"
+                      ? "border-emerald-500/45 bg-emerald-500/15 text-emerald-300"
+                      : pick.status === "lost"
+                      ? "border-rose-500/45 bg-rose-500/15 text-rose-300"
+                      : pick.status === "pending"
+                      ? "border-amber-400/45 bg-amber-500/15 text-amber-300"
+                      : "border-white/10 bg-white/[0.04] text-slate-400";
+                  return (
+                    <li key={pick.id} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-extrabold text-slate-100">
+                          <span className="mr-1" aria-hidden="true">{getSportIcon(pick.sportSlug)}</span>
+                          {pick.league}
+                        </p>
+                        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] ${statusClass}`}>
+                          {pick.status}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs font-semibold text-slate-300">{pick.awayTeam} at {pick.homeTeam}</p>
+                      <p className="mt-1 text-[11px] text-slate-500">{formatLocalStartTime(pick.startsAt)}</p>
+                      <p className="mt-1.5 text-[11px] font-semibold text-slate-400">Your pick: {pick.selectedTeam}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )
+        ) : loadingGames ? (
+          <BouncingBallLoader size="sm" label="Loading games..." />
+        ) : !sport ? (
+          <div className="rounded-xl border border-amber-400/45 bg-amber-950/30 px-3 py-2 text-xs text-amber-300">
+            Choose a sport to load today&apos;s games.
+          </div>
+        ) : !sport.isClickable && sport.slug !== "nfl" ? (
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-slate-400">
+            {sport.label} Pick &apos;Em is coming soon.
+          </div>
+        ) : grouped.length === 0 ? (
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-slate-400">
+            Sorry, no games available. Check back later!
           </div>
         ) : (
-          <section className="rounded-2xl border border-indigo-400/40 bg-slate-900 p-4 sm:p-5">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <h3 className="text-xs font-black uppercase tracking-[0.14em] text-indigo-300 sm:text-sm">Your Picks</h3>
-              <span className="text-[11px] font-medium text-slate-400">{historicalPicks.length} picks</span>
-            </div>
-            <ul className="space-y-3">
-              {historicalPicks.map((pick) => {
-                const statusClass =
-                  pick.status === "won"
-                    ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
-                    : pick.status === "lost"
-                    ? "border-rose-500/40 bg-rose-500/15 text-rose-400"
-                    : pick.status === "pending"
-                    ? "border-amber-400/40 bg-amber-500/15 text-amber-300"
-                    : "border-slate-700 bg-slate-800/40 text-slate-400";
-                return (
-                  <li key={pick.id} className="rounded-xl border border-slate-700/60 bg-slate-800/40 p-3 sm:p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-sm font-bold text-slate-200">
-                        <span className="mr-1.5" aria-hidden="true">{getSportIcon(pick.sportSlug)}</span>
-                        {pick.league}
-                      </p>
-                      <span className={`rounded-full border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider ${statusClass}`}>
-                        {pick.status}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-xs font-semibold text-slate-200">{pick.awayTeam} at {pick.homeTeam}</p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {new Date(pick.startsAt).toLocaleString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                        hour: "numeric",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                    <p className="mt-2 text-xs font-semibold text-slate-400">Your pick: {pick.selectedTeam}</p>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        )
-      ) : loadingGames ? (
-        <BouncingBallLoader size="sm" label="Loading games..." />
-      ) : !sport ? (
-        <div className="rounded-xl border border-amber-400/40 bg-amber-950/30 p-2.5 text-xs text-amber-300 sm:p-3 sm:text-sm">
-          Choose a sport to load today&apos;s games.
-        </div>
-      ) : !sport.isClickable && sport.slug !== "nfl" ? (
-        <div className="rounded-xl border border-slate-700 bg-slate-800/40 p-2.5 text-xs text-slate-400 sm:p-3 sm:text-sm">
-          {sport.label} Pick &apos;Em is coming soon.
-        </div>
-      ) : grouped.length === 0 ? (
-        <div className="rounded-xl border border-slate-700/60 bg-slate-800/40 p-2.5 text-xs text-slate-400 sm:p-3 sm:text-sm">
-          Sorry, no games available. Check back later!
-        </div>
-      ) : (
-        <div className="space-y-5">
-          {grouped.map(([league, leagueGames]) => (
-            <section key={league} className="rounded-2xl border border-indigo-400/40 bg-slate-900 p-4 sm:p-5">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-xs font-black uppercase tracking-[0.14em] text-indigo-300 sm:text-sm">{league}</h3>
-                <span className="text-[11px] font-medium text-slate-400">{leagueGames.length} games</span>
-              </div>
+          <div className="space-y-4 pb-1">
+            {grouped.map(([league, leagueGames]) => (
+              <section key={league}>
+                <div className="mb-2 flex items-end justify-between">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.16em] text-[#fde68a]">{league}</h3>
+                  <span className="text-[10px] font-bold tracking-[0.03em] text-slate-500">{leagueGames.length} games</span>
+                </div>
 
-              <ul className="mt-4 space-y-4">
-                {leagueGames.map((game) => {
-                  renderedPickEmCardCount += 1;
-                  const isLastGame = renderedPickEmCardCount === totalPickEmGames;
-                  const shouldRenderAdBreak =
-                    renderedPickEmCardCount <= 30 &&
-                    (
-                      renderedPickEmCardCount % 5 === 0 ||
-                      (isLastGame && renderedPickEmCardCount % 5 !== 0)
-                    );
-                  const sequenceIndex = shouldRenderAdBreak ? Math.ceil(renderedPickEmCardCount / 5) : 1;
-                  const displayedPickTeam = optimisticPickByGame[game.id] ?? game.userPickTeam;
-                  const baseDisabled = !sport.isClickable || !userId || !venueId || !isViewingToday;
-                  const awaySelected = displayedPickTeam === game.awayTeam;
-                  const homeSelected = displayedPickTeam === game.homeTeam;
-                  const pickLimitReached = pickCount >= PICKEM_PICK_LIMIT;
-                  const disableAwaySelection = baseDisabled || (pickLimitReached && !awaySelected && !homeSelected);
-                  const disableHomeSelection = baseDisabled || (pickLimitReached && !awaySelected && !homeSelected);
+                <ul className="space-y-2.5">
+                  {leagueGames.map((game) => {
+                    renderedPickEmCardCount += 1;
+                    const isLastGame = renderedPickEmCardCount === totalPickEmGames;
+                    const shouldRenderAdBreak =
+                      renderedPickEmCardCount <= 30 &&
+                      (renderedPickEmCardCount % 5 === 0 || (isLastGame && renderedPickEmCardCount % 5 !== 0));
+                    const sequenceIndex = shouldRenderAdBreak ? Math.ceil(renderedPickEmCardCount / 5) : 1;
+                    const displayedPickTeam = optimisticPickByGame[game.id] ?? game.userPickTeam;
+                    const baseDisabled = !sport.isClickable || !userId || !venueId || !isViewingToday;
+                    const awaySelected = displayedPickTeam === game.awayTeam;
+                    const homeSelected = displayedPickTeam === game.homeTeam;
+                    const pickLimitReached = pickCount >= PICKEM_PICK_LIMIT;
+                    const disableAwaySelection = baseDisabled || (pickLimitReached && !awaySelected && !homeSelected);
+                    const disableHomeSelection = baseDisabled || (pickLimitReached && !awaySelected && !homeSelected);
+                    const isAwayWinner = game.winnerTeam === game.awayTeam;
+                    const isHomeWinner = game.winnerTeam === game.homeTeam;
+                    const statusLabel = getGameStatusLabel(game);
 
-                  return (
-                    <Fragment key={game.id}>
-                      <li className="rounded-xl border border-indigo-400/40 bg-slate-900 p-4 sm:p-5">
-                        {/* Scoreboard — team name rows are the pick action */}
-                        <div className="rounded-lg border border-slate-700 bg-slate-800 overflow-hidden">
-                          <div className="flex items-center justify-between border-b border-slate-700 px-3 py-2">
-                            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Tap to pick</span>
-                            <span className="text-sm font-semibold text-slate-300 sm:text-base">
-                              {formatLocalStartTime(game.startsAt)}
+                    return (
+                      <Fragment key={game.id}>
+                        <li className="overflow-hidden rounded-xl border border-[#fde68a]/45 bg-[linear-gradient(115deg,#1a2f72_0%,#1a2f72_46%,#6b1a4e_54%,#6b1a4e_100%)]">
+                          <div className="flex items-center justify-between border-b border-dashed border-[#fde68a]/45 px-3 py-1.5">
+                            <span className="text-[9px] font-black uppercase tracking-[0.16em] text-[#fde68a]">{league}</span>
+                            <span
+                              className={`inline-flex items-center gap-1 text-[10px] font-extrabold ${
+                                game.status === "live" ? "text-emerald-300" : "text-slate-300"
+                              }`}
+                            >
+                              {game.status === "live" ? (
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              ) : null}
+                              {statusLabel}
                             </span>
                           </div>
-                          <div className="divide-y divide-slate-700">
+                          <div className="bg-[#020617]/45">
                             <button
                               type="button"
                               aria-disabled={disableAwaySelection}
@@ -1257,24 +1373,29 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                                 void submitPick(game, game.awayTeam);
                               }}
                               style={{ touchAction: "manipulation" }}
-                              className={`tp-clean-button w-full grid grid-cols-[auto_1fr_auto] items-center gap-3 px-3 py-3.5 text-left transition-all sm:py-4 ${
-                                disableAwaySelection ? "cursor-not-allowed opacity-40" : ""
+                              className={`tp-clean-button flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left ${
+                                disableAwaySelection ? "cursor-not-allowed opacity-45" : ""
                               } ${
-                                awaySelected
-                                  ? "bg-cyan-500/20"
-                                  : "hover:bg-slate-700/50"
-                              } ${pickPulseByGameId[game.id] === game.awayTeam ? "scale-[1.01] shadow-[inset_0_0_0_2px_rgba(34,211,238,0.3)]" : ""}`}
+                                awaySelected ? "bg-[#fde68a]/15" : ""
+                              } ${pickPulseByGameId[game.id] === game.awayTeam ? "scale-[1.01]" : ""}`}
                             >
-                              <span className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${awaySelected ? "border-cyan-400 bg-cyan-400" : "border-slate-600 bg-transparent"}`}>
-                                {awaySelected ? (
-                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 text-slate-950" aria-hidden="true">
-                                    <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-                                  </svg>
-                                ) : null}
+                              <span className="flex min-w-0 items-center gap-2">
+                                <span
+                                  className={`inline-flex h-5 w-5 items-center justify-center rounded-[5px] text-xs font-black ${
+                                    awaySelected
+                                      ? "rotate-[-7deg] border border-[#fde68a] bg-[#fde68a] text-[#1a2f72]"
+                                      : "border border-[#fde68a]/45 text-transparent"
+                                  }`}
+                                >
+                                  ✓
+                                </span>
+                                <span className="truncate text-[13px] font-black text-white">{game.awayTeam}</span>
                               </span>
-                              <span className={`text-sm font-bold sm:text-base ${awaySelected ? "text-cyan-100" : "text-slate-200"}`}>{game.awayTeam}</span>
-                              <span className={`text-base font-black tabular-nums sm:text-lg ${awaySelected ? "text-cyan-200" : "text-slate-400"}`}>{getDisplayedScoreCell(game, game.awayTeam, game.awayScore)}</span>
+                              <span className={`text-[14px] font-black tabular-nums ${isAwayWinner ? "text-emerald-300" : "text-slate-200"}`}>
+                                {getDisplayedScoreCell(game, game.awayTeam, game.awayScore)}
+                              </span>
                             </button>
+                            <div className="h-px bg-[#fde68a]/20" />
                             <button
                               type="button"
                               aria-disabled={disableHomeSelection}
@@ -1301,105 +1422,107 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                                 void submitPick(game, game.homeTeam);
                               }}
                               style={{ touchAction: "manipulation" }}
-                              className={`tp-clean-button w-full grid grid-cols-[auto_1fr_auto] items-center gap-3 px-3 py-3.5 text-left transition-all sm:py-4 ${
-                                disableHomeSelection ? "cursor-not-allowed opacity-40" : ""
+                              className={`tp-clean-button flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left ${
+                                disableHomeSelection ? "cursor-not-allowed opacity-45" : ""
                               } ${
-                                homeSelected
-                                  ? "bg-cyan-500/20"
-                                  : "hover:bg-slate-700/50"
-                              } ${pickPulseByGameId[game.id] === game.homeTeam ? "scale-[1.01] shadow-[inset_0_0_0_2px_rgba(34,211,238,0.3)]" : ""}`}
+                                homeSelected ? "bg-[#fde68a]/15" : ""
+                              } ${pickPulseByGameId[game.id] === game.homeTeam ? "scale-[1.01]" : ""}`}
                             >
-                              <span className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${homeSelected ? "border-cyan-400 bg-cyan-400" : "border-slate-600 bg-transparent"}`}>
-                                {homeSelected ? (
-                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 text-slate-950" aria-hidden="true">
-                                    <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-                                  </svg>
-                                ) : null}
+                              <span className="flex min-w-0 items-center gap-2">
+                                <span
+                                  className={`inline-flex h-5 w-5 items-center justify-center rounded-[5px] text-xs font-black ${
+                                    homeSelected
+                                      ? "rotate-[-7deg] border border-[#fde68a] bg-[#fde68a] text-[#1a2f72]"
+                                      : "border border-[#fde68a]/45 text-transparent"
+                                  }`}
+                                >
+                                  ✓
+                                </span>
+                                <span className="truncate text-[13px] font-black text-white">{game.homeTeam}</span>
                               </span>
-                              <span className={`text-sm font-bold sm:text-base ${homeSelected ? "text-cyan-100" : "text-slate-200"}`}>{game.homeTeam}</span>
-                              <span className={`text-base font-black tabular-nums sm:text-lg ${homeSelected ? "text-cyan-200" : "text-slate-400"}`}>{getDisplayedScoreCell(game, game.homeTeam, game.homeScore)}</span>
+                              <span className={`text-[14px] font-black tabular-nums ${isHomeWinner ? "text-emerald-300" : "text-slate-200"}`}>
+                                {getDisplayedScoreCell(game, game.homeTeam, game.homeScore)}
+                              </span>
                             </button>
                           </div>
-                        </div>
-                        {displayedPickTeam ? (
-                          <p className="mt-2 text-[11px] font-black uppercase tracking-[0.08em] text-cyan-400">
-                            Pick locked in
-                          </p>
-                        ) : null}
 
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
-                          {game.status === "live" ? (
-                            <>
-                              <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-600 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest text-white">
-                                <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-                                Live
-                              </span>
-                              {game.periodLabel ? (
-                                <span className="text-[11px] font-semibold text-slate-400">{game.periodLabel}</span>
-                              ) : null}
-                            </>
-                          ) : game.status === "final" ? (
-                            <span className="inline-flex items-center rounded-full border border-slate-700 bg-slate-800/50 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                              Final
-                            </span>
-                          ) : (
-                            <span className="text-[11px] font-medium text-slate-400">Picks open</span>
-                          )}
-                          {game.isLocked && game.status === "live" ? (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/10 px-2 py-0.5 text-[11px] font-bold text-rose-400">
-                              <span aria-hidden="true">🔒</span> Picks locked
-                            </span>
-                          ) : null}
-                        </div>
-
-                        {resultLabel(game) ? (
-                          <p
-                            className={`mt-1 text-xs font-semibold ${
-                              game.userPickStatus === "won"
-                                ? "text-emerald-400"
+                          {resultLabel(game) ? (
+                            <div
+                              className={`px-3 py-1 text-[10px] font-extrabold tracking-[0.04em] ${
+                                game.userPickStatus === "won"
+                                  ? "bg-emerald-500/15 text-emerald-300"
+                                  : "bg-rose-500/15 text-rose-300"
+                              }`}
+                            >
+                              {game.userPickStatus === "won"
+                                ? "✓ Correct pick · +10 points"
                                 : game.userPickStatus === "lost"
-                                ? "text-rose-400"
-                                : "text-slate-400"
-                            }`}
-                          >
-                            {resultLabel(game)}
-                          </p>
-                        ) : null}
-                        {game.userPickStatus === "pending" ? (
-                          <p className="mt-1 text-xs font-semibold text-slate-400">Pick submitted. Awaiting final result.</p>
-                        ) : null}
+                                  ? "Incorrect pick · 0 points"
+                                  : resultLabel(game)}
+                            </div>
+                          ) : null}
+                        </li>
 
-                        {game.userPickStatus === "won" && !game.userPickRewardClaimedAt ? (
-                          <p className="mt-2 text-xs font-semibold text-cyan-300">
-                            Settled correct pick. Points are available in your Points Bank.
-                          </p>
+                        {shouldRenderAdBreak ? (
+                          <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.03] p-2">
+                            <InlineSlotAdClient
+                              slot={PICKEM_INLINE_SLOTS[sequenceIndex] ?? "pickem-inline-cards-1-5"}
+                              venueId={venueId}
+                              pageKey="pickem"
+                              adType="inline"
+                              displayTrigger="on-load"
+                              placementKey="pickem-inline"
+                              sequenceIndex={sequenceIndex}
+                              showPlaceholder
+                            />
+                          </div>
                         ) : null}
-                        {game.userPickStatus === "won" && game.userPickRewardClaimedAt ? (
-                          <p className="mt-2 text-xs font-semibold text-cyan-300">
-                            Points collected via Points Bank.
-                          </p>
-                        ) : null}
-                      </li>
-                      {shouldRenderAdBreak ? (
-                        <InlineSlotAdClient
-                          slot={PICKEM_INLINE_SLOTS[sequenceIndex] ?? "pickem-inline-cards-1-5"}
-                          venueId={venueId}
-                          pageKey="pickem"
-                          adType="inline"
-                          displayTrigger="on-load"
-                          placementKey="pickem-inline"
-                          sequenceIndex={sequenceIndex}
-                          showPlaceholder
-                        />
-                      ) : null}
-                    </Fragment>
-                  );
-                })}
-              </ul>
-            </section>
-          ))}
+                      </Fragment>
+                    );
+                  })}
+                </ul>
+              </section>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="sticky bottom-0 z-30 mt-3 bg-gradient-to-t from-[#020617] via-[#020617]/96 to-transparent px-2 pb-[max(env(safe-area-inset-bottom),6px)] pt-4">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (!venueId) return;
+              navigateBackToVenue({
+                venuePath: `/venue/${encodeURIComponent(venueId)}`,
+                fallbackNavigate: () => {
+                  window.location.href = `/venue/${encodeURIComponent(venueId)}`;
+                },
+              });
+            }}
+            disabled={!venueId}
+            className="tp-clean-button tp-exit-pill inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 px-3 text-xs font-extrabold tracking-[0.02em] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <span aria-hidden="true" className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#fff7ea]/20 text-[11px]">
+              ←
+            </span>
+            Back to Venue
+          </button>
+          <button
+            type="button"
+            data-pickem-bank-collect
+            onClick={() => void collectBankPoints()}
+            disabled={isCollectingBank || !userId || !venueId || collectablePoints === 0}
+            className={`tp-clean-button inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border border-[#fde68a]/60 bg-[#fde68a]/15 px-3 text-xs font-extrabold text-[#fde68a] transition-all active:scale-95 active:brightness-90 disabled:cursor-not-allowed disabled:opacity-55 ${goldFlash ? "pickem-gold-flash" : ""}`}
+          >
+            <GoldCoinIcon className="h-4 w-4" />
+            {isCollectingBank ? "Collecting..." : `Collect Points (${collectablePoints.toLocaleString()})`}
+          </button>
         </div>
-      )}
+        <p className="pt-2 text-center text-[10px] font-bold tracking-[0.03em] text-slate-500">
+          Think you can pick today&apos;s winners? Prove it.
+        </p>
+      </div>
 
       {isMounted && (popAnim || multiplierAnim || limitEchoAnim)
         ? createPortal(

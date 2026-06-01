@@ -35,6 +35,42 @@ type ScheduleVenueRow = {
   venue_id: string | null;
 };
 
+let supportsOccurrenceDateColumn: boolean | null = null;
+let hasLoggedOccurrenceDateFallback = false;
+
+function isMissingOccurrenceDateColumnError(message: string | undefined): boolean {
+  const normalized = String(message ?? "").toLowerCase();
+  return normalized.includes("occurrence_date") && normalized.includes("does not exist");
+}
+
+function logOccurrenceDateFallbackOnce(scope: string): void {
+  if (hasLoggedOccurrenceDateFallback) return;
+  hasLoggedOccurrenceDateFallback = true;
+  console.warn(`[live-trivia][occurrence-compat] Falling back to legacy answer schema in ${scope} (missing occurrence_date column).`);
+}
+
+async function runOccurrenceCompatibleQuery(
+  scope: string,
+  withOccurrence: () => PromiseLike<any>,
+  withoutOccurrence: () => PromiseLike<any>
+): Promise<any> {
+  if (supportsOccurrenceDateColumn === false) {
+    return withoutOccurrence();
+  }
+
+  const withResult = await withOccurrence();
+  if (withResult.error && isMissingOccurrenceDateColumnError(withResult.error.message ?? undefined)) {
+    supportsOccurrenceDateColumn = false;
+    logOccurrenceDateFallbackOnce(scope);
+    return withoutOccurrence();
+  }
+
+  if (!withResult.error) {
+    supportsOccurrenceDateColumn = true;
+  }
+  return withResult;
+}
+
 export type SubmitLiveShowdownAnswerParams = {
   userId: string;
   venueId: string;
@@ -76,19 +112,33 @@ async function getCorrectAnswerForScheduleSlot(
   correctAnswerIndex: number;
   closestGuessEligible: boolean;
 }> {
-  if (!supabaseAdmin) {
+  const admin = supabaseAdmin;
+  if (!admin) {
     throw new Error("Supabase admin client is not configured.");
   }
 
-  const { data: slotRow, error: slotError } = await supabaseAdmin
-    .from("trivia_session_questions")
-    .select("question_id")
-    .eq("schedule_id", scheduleId)
-    .eq("occurrence_date", occurrenceDate)
-    .eq("round_number", roundNumber)
-    .eq("question_index", questionIndex)
-    .limit(1)
-    .maybeSingle();
+  const { data: slotRow, error: slotError } = await runOccurrenceCompatibleQuery(
+    "getCorrectAnswerForScheduleSlot",
+    () =>
+      admin
+        .from("trivia_session_questions")
+        .select("question_id")
+        .eq("schedule_id", scheduleId)
+        .eq("occurrence_date", occurrenceDate)
+        .eq("round_number", roundNumber)
+        .eq("question_index", questionIndex)
+        .limit(1)
+        .maybeSingle(),
+    () =>
+      admin
+        .from("trivia_session_questions")
+        .select("question_id")
+        .eq("schedule_id", scheduleId)
+        .eq("round_number", roundNumber)
+        .eq("question_index", questionIndex)
+        .limit(1)
+        .maybeSingle()
+  );
 
   if (slotError) {
     throw new Error(slotError.message || "Failed to resolve session question slot.");
@@ -103,7 +153,7 @@ async function getCorrectAnswerForScheduleSlot(
     throw new Error("Mapped question id is empty.");
   }
 
-  const bySlug = await supabaseAdmin
+  const bySlug = await admin
     .from("trivia_questions")
     .select("id, slug, options, correct_answer, question_pool")
     .eq("slug", questionSlugOrId)
@@ -116,7 +166,7 @@ async function getCorrectAnswerForScheduleSlot(
 
   let question = (bySlug.data as TriviaQuestionRow | null) ?? null;
   if (!question && isUuidLike(questionSlugOrId)) {
-    const byId = await supabaseAdmin
+    const byId = await admin
       .from("trivia_questions")
       .select("id, slug, options, correct_answer, question_pool")
       .eq("id", questionSlugOrId)
@@ -175,7 +225,7 @@ async function awardTriviaPointsForLiveShowdown(userId: string, basePoints: numb
     const campaignResult = await applyChallengeCampaignPoints({
       userId,
       venueId,
-      gameType: "speed-trivia",
+      gameType: "live-trivia",
       basePoints,
     }).catch(() => null);
 
@@ -200,7 +250,8 @@ async function awardTriviaPointsForLiveShowdown(userId: string, basePoints: numb
 export async function submitLiveShowdownAnswer(
   params: SubmitLiveShowdownAnswerParams
 ): Promise<SubmitLiveShowdownAnswerResult> {
-  if (!supabaseAdmin) {
+  const admin = supabaseAdmin;
+  if (!admin) {
     throw new Error("Supabase admin client is not configured.");
   }
 
@@ -218,7 +269,7 @@ export async function submitLiveShowdownAnswer(
     throw new Error("roundNumber and questionIndex are invalid.");
   }
 
-  const { data: userVenueData, error: userVenueError } = await supabaseAdmin
+  const { data: userVenueData, error: userVenueError } = await admin
     .from("users")
     .select("venue_id")
     .eq("id", userId)
@@ -233,7 +284,7 @@ export async function submitLiveShowdownAnswer(
     throw new Error("User venue does not match this Live Showdown venue.");
   }
 
-  const { data: scheduleVenueData, error: scheduleVenueError } = await supabaseAdmin
+  const { data: scheduleVenueData, error: scheduleVenueError } = await admin
     .from("trivia_schedules")
     .select("venue_id")
     .eq("id", scheduleId)
@@ -266,16 +317,30 @@ export async function submitLiveShowdownAnswer(
   const { questionId, questionDbId, correctTarget, correctAnswerIndex, closestGuessEligible } =
     await getCorrectAnswerForScheduleSlot(scheduleId, roundNumber, questionIndex, occurrenceDate);
 
-  const { data: existingRow, error: existingError } = await supabaseAdmin
-    .from("live_showdown_answers")
-    .select("id, is_correct, points_awarded")
-    .eq("user_id", userId)
-    .eq("schedule_id", scheduleId)
-    .eq("occurrence_date", occurrenceDate)
-    .eq("round_number", roundNumber)
-    .eq("question_index", questionIndex)
-    .limit(1)
-    .maybeSingle();
+  const { data: existingRow, error: existingError } = await runOccurrenceCompatibleQuery(
+    "submitLiveShowdownAnswer:existing_check",
+    () =>
+      admin
+        .from("live_showdown_answers")
+        .select("id, is_correct, points_awarded")
+        .eq("user_id", userId)
+        .eq("schedule_id", scheduleId)
+        .eq("occurrence_date", occurrenceDate)
+        .eq("round_number", roundNumber)
+        .eq("question_index", questionIndex)
+        .limit(1)
+        .maybeSingle(),
+    () =>
+      admin
+        .from("live_showdown_answers")
+        .select("id, is_correct, points_awarded")
+        .eq("user_id", userId)
+        .eq("schedule_id", scheduleId)
+        .eq("round_number", roundNumber)
+        .eq("question_index", questionIndex)
+        .limit(1)
+        .maybeSingle()
+  );
 
   if (existingError) {
     throw new Error(existingError.message || "Failed to check existing answer submission.");
@@ -299,7 +364,7 @@ export async function submitLiveShowdownAnswer(
 
   await trackLiveShowdownQuestionExposure([userId], questionId);
 
-  const insertRow = {
+  const insertRowWithOccurrence = {
     user_id: userId,
     schedule_id: scheduleId,
     occurrence_date: occurrenceDate,
@@ -311,22 +376,49 @@ export async function submitLiveShowdownAnswer(
     is_correct: isCorrect,
     points_awarded: 0,
   };
+  const insertRowLegacy = {
+    user_id: userId,
+    schedule_id: scheduleId,
+    question_id: questionId,
+    round_number: roundNumber,
+    question_index: questionIndex,
+    submitted_answer: submittedAnswer,
+    normalized_answer: normalizedAnswer,
+    is_correct: isCorrect,
+    points_awarded: 0,
+  };
 
-  const { error: insertError } = await supabaseAdmin
-    .from("live_showdown_answers")
-    .insert(insertRow);
+  const { error: insertError } = await runOccurrenceCompatibleQuery(
+    "submitLiveShowdownAnswer:insert",
+    () => admin.from("live_showdown_answers").insert(insertRowWithOccurrence),
+    () => admin.from("live_showdown_answers").insert(insertRowLegacy)
+  );
 
   if (insertError?.code === "23505") {
-    const { data: conflictRow } = await supabaseAdmin
-      .from("live_showdown_answers")
-      .select("id, is_correct, points_awarded")
-      .eq("user_id", userId)
-      .eq("schedule_id", scheduleId)
-      .eq("occurrence_date", occurrenceDate)
-      .eq("round_number", roundNumber)
-      .eq("question_index", questionIndex)
-      .limit(1)
-      .maybeSingle();
+    const { data: conflictRow } = await runOccurrenceCompatibleQuery(
+      "submitLiveShowdownAnswer:conflict_lookup",
+      () =>
+        admin
+          .from("live_showdown_answers")
+          .select("id, is_correct, points_awarded")
+          .eq("user_id", userId)
+          .eq("schedule_id", scheduleId)
+          .eq("occurrence_date", occurrenceDate)
+          .eq("round_number", roundNumber)
+          .eq("question_index", questionIndex)
+          .limit(1)
+          .maybeSingle(),
+      () =>
+        admin
+          .from("live_showdown_answers")
+          .select("id, is_correct, points_awarded")
+          .eq("user_id", userId)
+          .eq("schedule_id", scheduleId)
+          .eq("round_number", roundNumber)
+          .eq("question_index", questionIndex)
+          .limit(1)
+          .maybeSingle()
+    );
 
     const conflict = (conflictRow as ExistingAnswerRow | null) ?? null;
     return {
@@ -348,14 +440,26 @@ export async function submitLiveShowdownAnswer(
   if (isCorrect) {
     pointsAwarded = await awardTriviaPointsForLiveShowdown(userId, LIVE_SHOWDOWN_POINTS_PER_CORRECT);
     if (pointsAwarded > 0) {
-      const { error: awardedUpdateError } = await supabaseAdmin
-        .from("live_showdown_answers")
-        .update({ points_awarded: pointsAwarded })
-        .eq("user_id", userId)
-        .eq("schedule_id", scheduleId)
-        .eq("occurrence_date", occurrenceDate)
-        .eq("round_number", roundNumber)
-        .eq("question_index", questionIndex);
+      const { error: awardedUpdateError } = await runOccurrenceCompatibleQuery(
+        "submitLiveShowdownAnswer:award_update",
+        () =>
+          admin
+            .from("live_showdown_answers")
+            .update({ points_awarded: pointsAwarded })
+            .eq("user_id", userId)
+            .eq("schedule_id", scheduleId)
+            .eq("occurrence_date", occurrenceDate)
+            .eq("round_number", roundNumber)
+            .eq("question_index", questionIndex),
+        () =>
+          admin
+            .from("live_showdown_answers")
+            .update({ points_awarded: pointsAwarded })
+            .eq("user_id", userId)
+            .eq("schedule_id", scheduleId)
+            .eq("round_number", roundNumber)
+            .eq("question_index", questionIndex)
+      );
 
       if (awardedUpdateError) {
         throw new Error(awardedUpdateError.message || "Failed to finalize awarded points for answer.");

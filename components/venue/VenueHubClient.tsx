@@ -12,6 +12,11 @@ import { getVenueDisplayName } from "@/lib/venueDisplay";
 import { getPasskeyClientMessage } from "@/lib/passkeyErrors";
 import { writeWarmTriviaCache, writeWarmPredictionsCache } from "@/lib/warmupCache";
 import {
+  evaluateLiveTriviaStatePayload,
+  resolveLiveTriviaVenueContext,
+  type LiveTriviaPayloadFailureReason,
+} from "@/lib/liveTriviaClientState";
+import {
   consumeVenueHomeBootstrap,
   consumeVenueHomeEntryHandoff,
   hasRecentVenueHomeRouteIntent,
@@ -77,6 +82,11 @@ type ChallengeCampaignCard = {
   imageFocusY?: number;
   imageFit?: "cover" | "contain";
   rules: string;
+  challengeMode?: "progress" | "leaderboard";
+  leaderboard?: {
+    topEntries: Array<{ rank: number; userId: string; username: string; points: number }>;
+    viewer: { rank: number | null; userId: string; username?: string | null; points: number; inTop: boolean } | null;
+  };
   pointsRequiredToWin: number;
   progressPoints: number;
   winnerUserId?: string | null;
@@ -183,6 +193,7 @@ const ARRIVAL_CORE_MAX_WAIT_MS = 1800;
 const ARRIVAL_WATCHDOG_TIMEOUT_MS = 8000;
 const ARRIVAL_RECOVERY_ATTEMPT_KEY = "tp:venue-arrival-recovery-attempt";
 const BOOTSTRAP_QUOTA_FRESH_MS = 30_000;
+const SHOULD_DEBUG_LIVE_TRIVIA = process.env.NODE_ENV !== "production";
 
 function formatCountdown(seconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(seconds));
@@ -197,6 +208,11 @@ function formatLongCountdown(seconds: number): string {
   const minutes = Math.floor((safeSeconds % 3600) / 60);
   const remainingSeconds = safeSeconds % 60;
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+}
+
+function debugLiveTrivia(message: string, details: Record<string, unknown>) {
+  if (!SHOULD_DEBUG_LIVE_TRIVIA) return;
+  console.info(`[live-trivia][venue-hub] ${message}`, details);
 }
 
 function formatBadgeCount(value: number): string {
@@ -603,7 +619,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const [hasPasskey, setHasPasskey] = useState(false);
   const [isBadgeLoading, setIsBadgeLoading] = useState(true);
   const [badgeError, setBadgeError] = useState("");
-  const [liveTriviaStatus, setLiveTriviaStatus] = useState<{ live: boolean; label: string; nextStartAtMs?: number | null }>({ live: false, label: "" });
+  const [liveTriviaStatus, setLiveTriviaStatus] = useState<{
+    live: boolean;
+    label: string;
+    nextStartAtMs: number | null;
+    failureReason: LiveTriviaPayloadFailureReason | "network" | null;
+  }>({ live: false, label: "Status unavailable", nextStartAtMs: null, failureReason: "network" });
   const [liveCountdownNowMs, setLiveCountdownNowMs] = useState(() => Date.now());
   const [leaderboardBootstrapEntries, setLeaderboardBootstrapEntries] = useState<LeaderboardEntry[]>([]);
   const [activeScreen, setActiveScreen] = useState<HomeScreenIndex>(0);
@@ -1200,12 +1221,16 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     liveTriviaRequestRef.current = controller;
     const signal = controller.signal;
     try {
-      // Prefer the stored venue ID (respects cross-venue sessions), but fall back to
-      // the prop venue ID so the countdown is always populated for this venue's page
-      // even before the user completes the login / join flow.
       const storedVenueId = String(getVenueId() ?? "").trim();
-      const venueId = storedVenueId || venue.id;
-      const query = venueId ? `?venueId=${encodeURIComponent(venueId)}` : "";
+      const venueContext = resolveLiveTriviaVenueContext({
+        routeVenueId: venue.id,
+        storedVenueId,
+      });
+      const query = venueContext.venueId ? `?venueId=${encodeURIComponent(venueContext.venueId)}` : "";
+      debugLiveTrivia("requesting_state", {
+        venueId: venueContext.venueId,
+        venueSource: venueContext.source,
+      });
       const payload = await fetchJsonWithTimeout<{
         ok?: boolean;
         state?: {
@@ -1215,35 +1240,57 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       }>(`/api/trivia/live/state${query}`, 3600, signal);
       if (signal.aborted) return;
 
-      if (!payload?.ok || !payload.state) {
-        setLiveTriviaStatus({ live: false, label: "" });
+      const evaluation = evaluateLiveTriviaStatePayload(payload);
+      debugLiveTrivia("state_summary", {
+        venueId: venueContext.venueId,
+        venueSource: venueContext.source,
+        ok: Boolean(payload?.ok),
+        isGameActive: Boolean(payload?.state?.isGameActive),
+        hasNextSchedule: Boolean(payload?.state?.nextSchedule),
+        nextStartTime: String(payload?.state?.nextSchedule?.startTime ?? "").trim() || null,
+        resultKind: evaluation.kind,
+        failureReason: evaluation.failureReason,
+      });
+
+      if (evaluation.kind === "live") {
+        setLiveTriviaStatus({
+          live: true,
+          label: evaluation.label,
+          nextStartAtMs: null,
+          failureReason: null,
+        });
         return;
       }
 
-      if (payload.state.isGameActive) {
-        setLiveTriviaStatus({ live: true, label: "Live Now" });
+      if (evaluation.kind === "upcoming") {
+        const nextStart = new Date(evaluation.nextStartAtMs);
+        setLiveTriviaStatus({
+          live: false,
+          label: formatLiveTriviaNextGameLabel(nextStart, evaluation.scheduleTimezone || undefined),
+          nextStartAtMs: evaluation.nextStartAtMs,
+          failureReason: null,
+        });
         return;
       }
 
-      const nextStartRaw = String(payload.state.nextSchedule?.startTime ?? "").trim();
-      if (!nextStartRaw) {
-        setLiveTriviaStatus({ live: false, label: "Next Game: TBD" });
-        return;
-      }
-      const nextStart = new Date(nextStartRaw);
-      if (!Number.isFinite(nextStart.getTime())) {
-        setLiveTriviaStatus({ live: false, label: "Next Game: TBD" });
-        return;
-      }
-      const scheduleTz = String(payload.state.nextSchedule?.timezone ?? "").trim();
       setLiveTriviaStatus({
         live: false,
-        label: formatLiveTriviaNextGameLabel(nextStart, scheduleTz || undefined),
-        nextStartAtMs: nextStart.getTime(),
+        label: evaluation.label,
+        nextStartAtMs: null,
+        failureReason: evaluation.failureReason,
       });
     } catch {
       if (!signal.aborted) {
-        setLiveTriviaStatus({ live: false, label: "" });
+        debugLiveTrivia("state_fetch_failed", {
+          venueId: venue.id,
+          reason: "network",
+        });
+        setLiveTriviaStatus({
+          live: false,
+          label: "Status unavailable",
+          nextStartAtMs: null,
+          failureReason: "network",
+        });
       }
     } finally {
       if (liveTriviaRequestRef.current === controller) {
@@ -1554,6 +1601,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     async (dest: VenueGameKey, sourceElement: HTMLElement | null) => {
       const destination = VENUE_GAME_CARD_BY_KEY[dest];
       if (!destination) return;
+      const targetPath =
+        dest === "live_trivia" ? `${destination.path}?venueId=${encodeURIComponent(venue.id)}` : destination.path;
       triggerPulse();
       if (dest === "speed-trivia") {
         // Only block navigation when trivia is already known to be locked.
@@ -1580,14 +1629,14 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         await runVenueGameOpenTransition({
           gameKey: dest,
           sourceElement,
-          targetPath: destination.path,
-          navigate: () => router.push(destination.path),
+          targetPath,
+          navigate: () => router.push(targetPath),
         });
       } catch {
         setPendingDestination(null);
       }
     },
-  [loadTriviaQuota, router, triviaUnlockSeconds, triviaQuota]
+  [loadTriviaQuota, router, triviaUnlockSeconds, triviaQuota, venue.id]
   );
 
   const homeCards = useMemo(() => VENUE_HOME_GAME_KEYS.map((key) => VENUE_GAME_CARD_BY_KEY[key]), []);
@@ -1619,7 +1668,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     ? "Live Now"
     : nextLiveTriviaCountdownSeconds != null
     ? formatLongCountdown(nextLiveTriviaCountdownSeconds)
-    : "--:--:--";
+    : liveTriviaStatus.label || "Status unavailable";
   const showLiveBadge = liveTriviaStatus.live;
   const lobbyButtonShouldPulse =
     liveTriviaStatus.live ||
@@ -1833,12 +1882,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                           {badge}
                         </span>
                       ) : null}
-                      {isLiveTriviaCard && showLiveBadge ? (
-                        <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full border border-rose-300/50 bg-rose-500/15 px-2 py-0.5">
-                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />
-                          <span className="text-[9px] font-black uppercase tracking-[0.14em] text-rose-200">Live</span>
-                        </span>
-                      ) : null}
                     </button>
                   );
                 })}
@@ -1976,6 +2019,59 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                             <div className="mt-1 text-xs text-slate-500">
                               Won by <span className="text-slate-400">{challenge.winnerUsername ?? "Champion"}</span>
                             </div>
+                          ) : challenge.challengeMode === "leaderboard" ? (
+                            <>
+                              <p className="mt-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">
+                                Live Rankings
+                              </p>
+                              {(challenge.leaderboard?.topEntries ?? []).length === 0 ? (
+                                <p className="mt-1.5 text-[11px] text-slate-500">
+                                  No scores yet — be the first to play!
+                                </p>
+                              ) : (
+                                <div role="list" aria-label="Challenge leaderboard" className="mt-1.5 space-y-0.5">
+                                  {(challenge.leaderboard?.topEntries ?? []).map((entry) => {
+                                    const isViewer = entry.userId === currentUserId;
+                                    return (
+                                      <div
+                                        key={entry.userId}
+                                        role="listitem"
+                                        className={`flex items-center gap-1.5 rounded px-1 py-0.5 ${isViewer ? "bg-cyan-500/10" : ""}`}
+                                      >
+                                        <span className="w-4 shrink-0 text-right text-[9px] font-black tabular-nums text-slate-500">
+                                          {entry.rank}
+                                        </span>
+                                        <span className={`min-w-0 flex-1 truncate text-[11px] font-semibold ${isViewer ? "text-cyan-300" : "text-slate-200"}`}>
+                                          {entry.username}{isViewer ? " (you)" : ""}
+                                        </span>
+                                        <span className="shrink-0 text-[10px] font-black tabular-nums text-amber-200">
+                                          {entry.points.toLocaleString()}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                  {challenge.leaderboard?.viewer && !challenge.leaderboard.viewer.inTop ? (
+                                    <>
+                                      <div aria-hidden className="my-0.5 border-t border-slate-700/50" />
+                                      <div
+                                        role="listitem"
+                                        className="flex items-center gap-1.5 rounded bg-cyan-500/10 px-1 py-0.5"
+                                      >
+                                        <span className="w-4 shrink-0 text-right text-[9px] font-black tabular-nums text-slate-500">
+                                          {challenge.leaderboard.viewer.rank ?? "—"}
+                                        </span>
+                                        <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-cyan-300">
+                                          {challenge.leaderboard.viewer.username ?? "You"} (you)
+                                        </span>
+                                        <span className="shrink-0 text-[10px] font-black tabular-nums text-amber-200">
+                                          {challenge.leaderboard.viewer.points.toLocaleString()}
+                                        </span>
+                                      </div>
+                                    </>
+                                  ) : null}
+                                </div>
+                              )}
+                            </>
                           ) : (
                             <>
                               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-800/80">
@@ -2015,7 +2111,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                       How Challenges Work
                     </p>
                     <p className="text-[12px] leading-relaxed text-slate-600">
-                      Challenges are admin-set achievements at this venue. Be the first to hit the target while playing the right game during the right time window — win the coupon.
+                      Challenges are venue-set achievements. <span className="text-slate-500">Gauge challenges:</span> be the first to hit the points target. <span className="text-slate-500">Leaderboard challenges:</span> earn the most eligible points before the window closes. Play the right games at the right time to compete.
                     </p>
                   </div>
                 ) : null}
