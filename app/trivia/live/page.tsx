@@ -484,11 +484,50 @@ export default function LiveShowdownPage() {
     return payload.ad ?? null;
   }, [resolvedVenueId]);
 
+  // When the game is inactive (idle / upcoming), poll infrequently — the
+  // countdown is kept smooth by a local ticker below, not by server fetches.
+  // When a game is active, poll every 1 second for live game state.
+  const isGameActive = Boolean(state?.isGameActive);
   useEffect(() => {
     void fetchState();
-    const timer = window.setInterval(() => void fetchState(), 1000);
+    const intervalMs = isGameActive ? 1000 : 15_000;
+    const timer = window.setInterval(() => void fetchState(), intervalMs);
     return () => window.clearInterval(timer);
-  }, [fetchState]);
+  }, [fetchState, isGameActive]);
+
+  // Local countdown state: derives secondsRemaining from the known
+  // nextSchedule.startTime so the countdown stays smooth between server fetches.
+  const [localSecondsRemaining, setLocalSecondsRemaining] = useState<number>(0);
+
+  // Seed localSecondsRemaining from the server state whenever it arrives.
+  useEffect(() => {
+    if (!state) return;
+    if (state.isGameActive) {
+      // Active game: local countdown not used for pre-game display, no seeding needed.
+      return;
+    }
+    const startTimeRaw = state.nextSchedule?.startTime ?? "";
+    if (!startTimeRaw) {
+      setLocalSecondsRemaining(state.secondsRemaining);
+      return;
+    }
+    const startMs = Date.parse(startTimeRaw);
+    if (!Number.isFinite(startMs)) {
+      setLocalSecondsRemaining(state.secondsRemaining);
+      return;
+    }
+    setLocalSecondsRemaining(Math.max(0, Math.ceil((startMs - Date.now()) / 1000)));
+  }, [state]);
+
+  // Tick the local countdown every second when no game is active so the
+  // display stays smooth even with the 15-second server poll.
+  useEffect(() => {
+    if (isGameActive) return;
+    const ticker = window.setInterval(() => {
+      setLocalSecondsRemaining((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => window.clearInterval(ticker);
+  }, [isGameActive]);
 
   useEffect(() => {
     setAnswer("");
@@ -962,8 +1001,11 @@ export default function LiveShowdownPage() {
 
   const answering = state.isGameActive && state.activePhase === "answering";
   const restWarning = state.isGameActive && state.activePhase === "rest_warning";
+  // Pre-game countdown uses the locally-ticked value so the display is smooth
+  // even when the server is only polled every 15 seconds.
+  const preGameSecondsRemaining = state.isGameActive ? state.secondsRemaining : localSecondsRemaining;
   const pregameJoinWindowActive =
-    !state.isGameActive && Boolean(state.nextSchedule) && state.secondsRemaining > 0 && state.secondsRemaining <= 120;
+    !state.isGameActive && Boolean(state.nextSchedule) && preGameSecondsRemaining > 0 && preGameSecondsRemaining <= 120;
   const canJoinLobby = state.isGameActive || Boolean(state.nextSchedule);
   const joinButtonShouldPulse = state.isGameActive || pregameJoinWindowActive;
   const locked = forfeitKey === activeKey || submittedKey === activeKey || !answering;
@@ -983,8 +1025,8 @@ export default function LiveShowdownPage() {
     hasOnboarded &&
     !state.isGameActive &&
     state.nextSchedule &&
-    state.secondsRemaining > 0 &&
-    state.secondsRemaining <= 10
+    preGameSecondsRemaining > 0 &&
+    preGameSecondsRemaining <= 10
   );
   const showRoundStartPrompt = Boolean(
     hasOnboarded &&
@@ -1046,7 +1088,7 @@ export default function LiveShowdownPage() {
               <p className="text-xs uppercase tracking-[0.14em] text-amber-300">Live Trivia Status</p>
               {!state.isGameActive ? (
                 <p className="mt-2 text-2xl font-black tabular-nums text-amber-200">
-                  Next Live Trivia Showdown in {formatCountdown(state.secondsRemaining)}
+                  Next Live Trivia Showdown in {formatCountdown(preGameSecondsRemaining)}
                 </p>
               ) : null}
               {!state.isGameActive && !state.nextSchedule ? (
@@ -1389,7 +1431,7 @@ export default function LiveShowdownPage() {
               {state.nextSchedule ? (
                 <>
                   <p className="text-xs uppercase tracking-[0.14em] text-amber-300">Next Live Trivia Showdown In</p>
-                  <p className="mt-2 text-4xl font-black tabular-nums text-amber-200">{formatCountdown(state.secondsRemaining)}</p>
+                  <p className="mt-2 text-4xl font-black tabular-nums text-amber-200">{formatCountdown(preGameSecondsRemaining)}</p>
                 </>
               ) : (
                 <>
@@ -1724,7 +1766,7 @@ export default function LiveShowdownPage() {
         type={showGameStartPrompt ? "game_start" : "round_start"}
         roundNumber={showRoundStartPrompt ? (state.upcomingRoundNumber ?? undefined) : undefined}
         category={showRoundStartPrompt ? (state.upcomingRoundCategory ?? null) : null}
-        secondsRemaining={state.secondsRemaining}
+        secondsRemaining={preGameSecondsRemaining}
         isVisible={showReadyPrompt}
       />
 
