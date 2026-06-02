@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { claimFantasyReward, collectFantasyLivePoints, debugFantasyScoring, listUserFantasyEntries, refreshFantasyProgress, submitFantasyEntry, updateFantasyEntryLineup } from "@/lib/fantasy";
+import { isSessionEnforced, readSession } from "@/lib/serverSession";
 
 function normalizeBoolean(value: string | null, fallback: boolean): boolean {
   const normalized = String(value ?? "").trim().toLowerCase();
@@ -73,6 +74,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const sessionUserId = readSession(request);
+    if (isSessionEnforced() && !sessionUserId) {
+      return NextResponse.json({ ok: false, error: "Session required." }, { status: 401 });
+    }
+
     const body = (await request.json()) as {
       action?: string;
       userId?: string;
@@ -83,11 +89,12 @@ export async function POST(request: Request) {
       tzOffsetMinutes?: number | string;
     };
 
+    const mutationUserId = sessionUserId ?? String(body.userId ?? "").trim();
     const action = String(body.action ?? "").trim().toLowerCase();
 
     if (action === "claim") {
       const result = await claimFantasyReward({
-        userId: String(body.userId ?? "").trim(),
+        userId: mutationUserId,
         entryId: String(body.entryId ?? "").trim(),
       });
       return NextResponse.json({ ok: true, result });
@@ -95,7 +102,7 @@ export async function POST(request: Request) {
 
     if (action === "collect-live") {
       const result = await collectFantasyLivePoints({
-        userId: String(body.userId ?? "").trim(),
+        userId: mutationUserId,
         entryId: String(body.entryId ?? "").trim(),
       });
       return NextResponse.json({ ok: true, result });
@@ -104,14 +111,14 @@ export async function POST(request: Request) {
     const entry =
       action === "update"
         ? await updateFantasyEntryLineup({
-            userId: String(body.userId ?? "").trim(),
+            userId: mutationUserId,
             venueId: String(body.venueId ?? "").trim(),
             gameId: String(body.gameId ?? "").trim(),
             lineup: body.lineup,
             tzOffsetMinutes: body.tzOffsetMinutes,
           })
         : await submitFantasyEntry({
-          userId: String(body.userId ?? "").trim(),
+          userId: mutationUserId,
           venueId: String(body.venueId ?? "").trim(),
           gameId: String(body.gameId ?? "").trim(),
           lineup: body.lineup,

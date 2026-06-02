@@ -13,8 +13,7 @@ function isAuthorized(request: Request): boolean {
     return headerSecret === secret;
   }
 
-  const vercelCronHeader = request.headers.get("x-vercel-cron")?.trim() ?? "";
-  return vercelCronHeader.length > 0;
+  return false;
 }
 
 export async function POST(request: Request) {

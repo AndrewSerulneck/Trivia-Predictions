@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getTriviaQuestions, submitTriviaAnswer, TriviaLimitReachedError } from "@/lib/trivia";
+import { isSessionEnforced, readSession } from "@/lib/serverSession";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -24,8 +25,14 @@ export async function POST(request: Request) {
       );
     }
 
+    const sessionUserId = readSession(request);
+    if (isSessionEnforced() && !sessionUserId) {
+      return NextResponse.json({ ok: false, error: "Session required." }, { status: 401 });
+    }
+    const userId = sessionUserId ?? body.userId;
+
     const result = await submitTriviaAnswer({
-      userId: body.userId,
+      userId,
       questionId: body.questionId,
       answer: body.answer,
       timeElapsed: body.timeElapsed ?? 0,

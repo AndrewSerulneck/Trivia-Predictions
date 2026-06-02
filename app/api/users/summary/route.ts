@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { isSessionEnforced, readSession } from "@/lib/serverSession";
 
 type UserSummaryRow = {
   username: string;
@@ -15,6 +16,11 @@ export async function GET(request: Request) {
 
   if (!userId) {
     return NextResponse.json({ ok: false, error: "userId is required." }, { status: 400 });
+  }
+
+  const sessionUserId = readSession(request);
+  if (isSessionEnforced() && (!sessionUserId || sessionUserId !== userId)) {
+    return NextResponse.json({ ok: false, error: "Forbidden." }, { status: 403 });
   }
 
   if (!supabaseAdmin) {

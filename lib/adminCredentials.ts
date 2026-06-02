@@ -3,32 +3,13 @@ export type AdminCredential = {
   password: string;
 };
 
-const STATIC_ADMIN_CREDENTIALS: AdminCredential[] = [
-  {
-    username: "marc",
-    password: "MeMarc25",
-  },
-];
-
 export function getConfiguredAdminCredentials(): AdminCredential[] {
-  const credentials: AdminCredential[] = [];
-
   const configuredUsername = process.env.ADMIN_LOGIN_USERNAME?.trim();
   const configuredPassword = process.env.ADMIN_LOGIN_PASSWORD?.trim();
   if (configuredUsername && configuredPassword) {
-    credentials.push({ username: configuredUsername, password: configuredPassword });
+    return [{ username: configuredUsername, password: configuredPassword }];
   }
-
-  for (const credential of STATIC_ADMIN_CREDENTIALS) {
-    const exists = credentials.some(
-      (item) => item.username === credential.username && item.password === credential.password
-    );
-    if (!exists) {
-      credentials.push(credential);
-    }
-  }
-
-  return credentials;
+  return [];
 }
 
 export function findMatchingAdminCredential(params: {

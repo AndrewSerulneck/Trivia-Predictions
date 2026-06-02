@@ -7,6 +7,7 @@ import {
   settlePendingPickEmPicks,
   submitPickEmPick,
 } from "@/lib/pickem";
+import { isSessionEnforced, readSession } from "@/lib/serverSession";
 
 function normalizeBoolean(value: string | null, fallback: boolean): boolean {
   const normalized = String(value ?? "").trim().toLowerCase();
@@ -81,6 +82,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const sessionUserId = readSession(request);
+    if (isSessionEnforced() && !sessionUserId) {
+      return NextResponse.json({ ok: false, error: "Session required." }, { status: 401 });
+    }
+
     const body = (await request.json()) as {
       action?: string;
       userId?: string;
@@ -95,10 +101,11 @@ export async function POST(request: Request) {
       tzOffsetMinutes?: number | string;
     };
 
+    const mutationUserId = sessionUserId ?? String(body.userId ?? "").trim();
     const action = String(body.action ?? "").trim().toLowerCase();
     if (action === "claim_points") {
       const result = await claimPickEmPoints({
-        userId: String(body.userId ?? "").trim(),
+        userId: mutationUserId,
         venueId: String(body.venueId ?? "").trim(),
         localDate: String(body.localDate ?? body.date ?? "").trim(),
         tzOffsetMinutes: body.tzOffsetMinutes,
@@ -108,7 +115,7 @@ export async function POST(request: Request) {
     }
     if (action === "claim") {
       const result = await claimPickEmReward({
-        userId: String(body.userId ?? "").trim(),
+        userId: mutationUserId,
         pickId: String(body.pickId ?? "").trim(),
       });
 
@@ -116,14 +123,14 @@ export async function POST(request: Request) {
     }
     if (action === "clear") {
       const result = await clearPickEmPick({
-        userId: String(body.userId ?? "").trim(),
+        userId: mutationUserId,
         gameId: String(body.gameId ?? "").trim(),
       });
       return NextResponse.json({ ok: true, result });
     }
 
     const pick = await submitPickEmPick({
-      userId: String(body.userId ?? "").trim(),
+      userId: mutationUserId,
       venueId: String(body.venueId ?? "").trim(),
       sportSlug: String(body.sportSlug ?? "").trim().toLowerCase(),
       gameId: String(body.gameId ?? "").trim(),

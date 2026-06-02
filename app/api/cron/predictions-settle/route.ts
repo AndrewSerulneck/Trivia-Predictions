@@ -13,10 +13,7 @@ function isAuthorized(request: Request): boolean {
     return headerSecret === secret;
   }
 
-  // Fallback for Vercel Cron in environments where CRON_SECRET was not set yet.
-  // Vercel includes this header on cron invocations.
-  const vercelCronHeader = request.headers.get("x-vercel-cron")?.trim() ?? "";
-  return vercelCronHeader.length > 0;
+  return false;
 }
 
 export async function POST(request: Request) {

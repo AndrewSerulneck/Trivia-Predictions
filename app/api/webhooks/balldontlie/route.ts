@@ -26,7 +26,10 @@ export async function POST(request: Request) {
   const signature = request.headers.get("x-bdl-webhook-signature") ?? "";
   const webhookId = request.headers.get("x-bdl-webhook-id") ?? "";
 
-  if (WEBHOOK_SECRET && !verifyBdlSignature(WEBHOOK_SECRET, timestamp, rawBody, signature)) {
+  if (!WEBHOOK_SECRET) {
+    return NextResponse.json({ error: "Webhook secret not configured" }, { status: 401 });
+  }
+  if (!verifyBdlSignature(WEBHOOK_SECRET, timestamp, rawBody, signature)) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 

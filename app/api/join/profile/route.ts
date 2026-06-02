@@ -4,6 +4,13 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { DEFAULT_VENUE_BY_ID } from "@/lib/defaultVenues";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
 import { normalizePin as normalizeCanonicalPin } from "@/lib/pin";
+import { createSessionCookie } from "@/lib/serverSession";
+
+function userResponse(userId: string, data: Record<string, unknown>): NextResponse {
+  const res = NextResponse.json(data);
+  res.headers.append("Set-Cookie", createSessionCookie(userId));
+  return res;
+}
 
 type CreateProfileBody = {
   username?: string;
@@ -144,7 +151,7 @@ export async function POST(request: Request) {
       logAuthIncident("join-profile-route", "post-account-path-existing-profile", {
         traceId, accountId, venueId, userId: existingProfile.id, elapsedMs: Date.now() - startedAt,
       });
-      return NextResponse.json({
+      return userResponse(existingProfile.id, {
         ok: true,
         user: {
           id: existingProfile.id,
@@ -187,7 +194,7 @@ export async function POST(request: Request) {
           .eq("venue_id", venueId)
           .maybeSingle<UserRow>();
         if (racedProfile) {
-          return NextResponse.json({
+          return userResponse(racedProfile.id, {
             ok: true,
             user: {
               id: racedProfile.id,
@@ -210,7 +217,7 @@ export async function POST(request: Request) {
     logAuthIncident("join-profile-route", "post-account-path-created-profile", {
       traceId, accountId, venueId, userId: newProfile.id, elapsedMs: Date.now() - startedAt,
     });
-    return NextResponse.json({
+    return userResponse(newProfile.id, {
       ok: true,
       user: {
         id: newProfile.id,
@@ -367,7 +374,7 @@ export async function POST(request: Request) {
       existingUser.auth_id = authUserId;
     }
 
-    return NextResponse.json({
+    return userResponse(existingUser.id, {
       ok: true,
       user: {
         id: existingUser.id,
@@ -437,7 +444,7 @@ export async function POST(request: Request) {
     userId: data.id,
     elapsedMs: Date.now() - startedAt,
   });
-  return NextResponse.json({
+  return userResponse(data.id, {
     ok: true,
     user: {
       id: data.id,
