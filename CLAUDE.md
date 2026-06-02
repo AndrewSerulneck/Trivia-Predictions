@@ -1,5 +1,7 @@
 # CLAUDE.md — Hightop Challenge Project Rules
 
+> **Read `SYSTEM_CONTEXT.md` before starting any task.**
+
 ## Build and Test Commands
 - Dev server: `npm run dev`
 - Build: `npm run build`
