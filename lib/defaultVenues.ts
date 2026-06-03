@@ -11,7 +11,7 @@ export type DefaultVenueSeed = {
 
 export const DEFAULT_VENUE_SEEDS: DefaultVenueSeed[] = [
   {
-    id: "venue-downtown",
+    id: "brunswick-grove",
     name: "Brunswick Grove",
     address: "327 Milltown Rd, East Brunswick, NJ",
     latitude: 40.4376405,

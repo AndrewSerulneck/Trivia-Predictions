@@ -64,6 +64,7 @@ export async function GET(request: Request) {
       username: data.username,
       points: data.points,
       venueId: data.venue_id,
+      accountId: data.account_id ?? undefined,
     },
     hasPasskey,
   });

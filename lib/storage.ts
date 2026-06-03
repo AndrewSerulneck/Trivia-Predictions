@@ -3,6 +3,7 @@ const STORAGE_KEYS = {
   username: "tp:username",
   userId: "tp:user-id",
   accountId: "tp:account-id",
+  godMode: "tp:god-mode",
 };
 
 export const AUTH_STATE_CHANGED_EVENT = "tp:auth-state-changed";
@@ -134,6 +135,19 @@ export function getAccountId(): string | null {
   return readLocalStorage(STORAGE_KEYS.accountId);
 }
 
+export function saveGodMode(value: boolean): void {
+  const str = value ? "1" : "0";
+  memoryStore[STORAGE_KEYS.godMode] = str;
+  writeLocalStorage(STORAGE_KEYS.godMode, str);
+  dispatchAuthStateEvent(AUTH_STATE_CHANGED_EVENT);
+}
+
+export function getGodMode(): boolean {
+  const memoryValue = memoryStore[STORAGE_KEYS.godMode];
+  if (memoryValue !== undefined) return memoryValue === "1";
+  return readLocalStorage(STORAGE_KEYS.godMode) === "1";
+}
+
 export function clearVenueSession(): void {
   clearClientState();
 }
@@ -146,6 +160,7 @@ export function clearClientState(): void {
   delete memoryStore[STORAGE_KEYS.username];
   delete memoryStore[STORAGE_KEYS.userId];
   delete memoryStore[STORAGE_KEYS.accountId];
+  delete memoryStore[STORAGE_KEYS.godMode];
   if (typeof window !== "undefined") {
     try {
       window.localStorage.clear();

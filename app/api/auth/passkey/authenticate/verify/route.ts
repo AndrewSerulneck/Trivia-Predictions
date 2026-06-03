@@ -178,8 +178,8 @@ export async function POST(request: Request) {
         ok: true,
         verified: true,
         account: account
-          ? { id: account.id, username: account.username, authId: account.auth_id ?? undefined }
-          : { id: resolvedAccountId },
+          ? { id: account.id, username: account.username, authId: account.auth_id ?? undefined, godMode: account.god_mode }
+          : { id: resolvedAccountId, godMode: false },
         ...(venueUser ? { user: mapUserForResponse(venueUser) } : {}),
         next: { method: "passkey" },
       });

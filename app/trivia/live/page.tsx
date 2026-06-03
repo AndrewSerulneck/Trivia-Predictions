@@ -197,6 +197,11 @@ export default function LiveShowdownPage() {
   const [answer, setAnswer] = useState("");
   const [submittedKey, setSubmittedKey] = useState("");
   const [forfeitKey, setForfeitKey] = useState("");
+  // Retain the last known leaderboard so the post-game screen can show Final
+  // Standings even after the engine stops returning leaderboard data.
+  const [savedLeaderboard, setSavedLeaderboard] = useState<typeof state extends null ? never : NonNullable<typeof state>["leaderboard"]>(null);
+  const [savedViewerRank, setSavedViewerRank] = useState<number | null>(null);
+  const [savedViewerRoundByRound, setSavedViewerRoundByRound] = useState<typeof state extends null ? never : NonNullable<typeof state>["viewerRoundByRound"]>(null);
   const [submitMessage, setSubmitMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resultByKey, setResultByKey] = useState<Record<string, SubmissionResult>>({});
@@ -291,14 +296,15 @@ export default function LiveShowdownPage() {
   const viewerId = (getUserId() ?? "").trim();
 
   // Post-game standings derived from the venue leaderboard + viewer recap.
+  // Falls back to the last saved leaderboard when state no longer carries live data.
   const postGameLeaderboard = useMemo(() => {
-    const board = state?.leaderboard ?? null;
+    const board = (state?.leaderboard && state.leaderboard.length > 0 ? state.leaderboard : savedLeaderboard) ?? null;
     if (!board || board.length === 0) return null;
 
     const champion = board[0] ?? null;
     const podium = board.slice(0, 3);
 
-    const rounds = state?.viewerRoundByRound ?? [];
+    const rounds = (state?.viewerRoundByRound ?? savedViewerRoundByRound) ?? [];
     const totalCorrect = rounds.reduce((sum, round) => sum + round.correctCount, 0);
     const totalAnswered = rounds.reduce((sum, round) => sum + round.totalAnswered, 0);
     const correctRate = totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
@@ -306,7 +312,7 @@ export default function LiveShowdownPage() {
     // Rank gained = standings as of round 1 vs. final rank (positive = climbed).
     // Approximate: round-1 standing is computed among the returned (top) entries.
     let rankGained: number | null = null;
-    const finalRank = state?.viewerRank ?? null;
+    const finalRank = (state?.viewerRank ?? savedViewerRank) ?? null;
     const viewerEntry = viewerId ? board.find((entry) => entry.userId === viewerId) : null;
     if (finalRank != null && viewerEntry) {
       const viewerRoundOne = viewerEntry.roundPoints[1] ?? 0;
@@ -319,8 +325,10 @@ export default function LiveShowdownPage() {
       viewerEntry?.totalPoints ??
       rounds.reduce((sum, r) => sum + r.points, 0);
 
-    return { champion, podium, totalCorrect, totalAnswered, correctRate, rankGained, viewerEntry, viewerScore };
-  }, [state?.leaderboard, state?.viewerRoundByRound, state?.viewerRank, viewerId]);
+    const isChampion = Boolean(viewerId && champion?.userId === viewerId);
+
+    return { champion, podium, totalCorrect, totalAnswered, correctRate, rankGained, viewerEntry, viewerScore, isChampion };
+  }, [state?.leaderboard, state?.viewerRoundByRound, state?.viewerRank, viewerId, savedLeaderboard, savedViewerRank, savedViewerRoundByRound]);
 
   const isPreGameLobby = Boolean(hasOnboarded && !isPostGame && (!state?.isGameActive || state?.activePhase === "pre_game"));
   const isSpectatingActiveBlock = Boolean(
@@ -533,6 +541,27 @@ export default function LiveShowdownPage() {
     setAnswer("");
     setSubmitMessage("");
   }, [activeKey]);
+
+  // Clear forfeit as soon as the answering phase ends (answer is revealed).
+  // This unlocks the screen and dismisses the forfeit modal during rest_warning,
+  // rather than making the user wait until the next question arrives.
+  useEffect(() => {
+    if (state?.isGameActive && state.activePhase !== "answering") {
+      setForfeitKey("");
+    }
+  }, [state?.activePhase, state?.isGameActive]);
+
+  // Persist leaderboard data so the post-game screen can display Final Standings
+  // even after the engine stops returning live leaderboard state.
+  useEffect(() => {
+    if (state?.leaderboard && state.leaderboard.length > 0) {
+      setSavedLeaderboard(state.leaderboard);
+    }
+    if (state?.viewerRank != null) setSavedViewerRank(state.viewerRank);
+    if (state?.viewerRoundByRound && state.viewerRoundByRound.length > 0) {
+      setSavedViewerRoundByRound(state.viewerRoundByRound);
+    }
+  }, [state?.leaderboard, state?.viewerRank, state?.viewerRoundByRound]);
 
   // Auto-focus the answer input whenever a new question becomes active.
   // If the input isn't rendered (non-answering phase), the ref is null and this is a no-op.
@@ -1180,8 +1209,10 @@ export default function LiveShowdownPage() {
                         ⭐
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-500">Game Over</p>
-                        <p className="truncate text-lg font-black leading-tight text-white">{viewerUsername}</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-500">
+                          {postGameLeaderboard.isChampion ? "Game Over · Champion" : "Game Over"}
+                        </p>
+                        <p className="truncate text-xl font-black leading-tight text-white">{viewerUsername}</p>
                         <p className="truncate text-[11px] text-slate-500">
                           {state.venueName ?? state.scheduleTitle ?? "Live Showdown"}
                           {state.totalRounds
@@ -1319,7 +1350,7 @@ export default function LiveShowdownPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-500">Game Over</p>
-                        <p className="truncate text-lg font-black leading-tight text-white">{viewerUsername}</p>
+                        <p className="truncate text-xl font-black leading-tight text-white">{viewerUsername}</p>
                         <p className="truncate text-[11px] text-slate-500">
                           {state.venueName ?? state.scheduleTitle ?? "Live Showdown"}
                           {state.totalRounds

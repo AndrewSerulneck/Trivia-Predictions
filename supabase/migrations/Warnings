@@ -1,0 +1,1229 @@
+[
+  {
+    "name": "function_search_path_mutable",
+    "title": "Function Search Path Mutable",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects functions where the search_path parameter is not set.",
+    "detail": "Function \\`public.enforce_canonical_sport_key\\` has a role mutable search_path",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+    "metadata": {
+      "name": "enforce_canonical_sport_key",
+      "type": "function",
+      "schema": "public"
+    },
+    "cache_key": "function_search_path_mutable_public_enforce_canonical_sport_key_79a3449ed5aa9ae9d61749c464d26808"
+  },
+  {
+    "name": "function_search_path_mutable",
+    "title": "Function Search Path Mutable",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects functions where the search_path parameter is not set.",
+    "detail": "Function \\`public.fantasy_normalize_player_name\\` has a role mutable search_path",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+    "metadata": {
+      "name": "fantasy_normalize_player_name",
+      "type": "function",
+      "schema": "public"
+    },
+    "cache_key": "function_search_path_mutable_public_fantasy_normalize_player_name_ed2bf5663031196759e7ea4f465a462b"
+  },
+  {
+    "name": "function_search_path_mutable",
+    "title": "Function Search Path Mutable",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects functions where the search_path parameter is not set.",
+    "detail": "Function \\`public.recalculate_active_fantasy_entries_for_player\\` has a role mutable search_path",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+    "metadata": {
+      "name": "recalculate_active_fantasy_entries_for_player",
+      "type": "function",
+      "schema": "public"
+    },
+    "cache_key": "function_search_path_mutable_public_recalculate_active_fantasy_entries_for_player_ade7b748298d16192f0da2bd698139cd"
+  },
+  {
+    "name": "function_search_path_mutable",
+    "title": "Function Search Path Mutable",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects functions where the search_path parameter is not set.",
+    "detail": "Function \\`public.handle_live_player_stats_fantasy_recalc\\` has a role mutable search_path",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+    "metadata": {
+      "name": "handle_live_player_stats_fantasy_recalc",
+      "type": "function",
+      "schema": "public"
+    },
+    "cache_key": "function_search_path_mutable_public_handle_live_player_stats_fantasy_recalc_2232ff8ff271daaea8dfff6671a82b30"
+  },
+  {
+    "name": "function_search_path_mutable",
+    "title": "Function Search Path Mutable",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects functions where the search_path parameter is not set.",
+    "detail": "Function \\`public.canonical_sport_key\\` has a role mutable search_path",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+    "metadata": {
+      "name": "canonical_sport_key",
+      "type": "function",
+      "schema": "public"
+    },
+    "cache_key": "function_search_path_mutable_public_canonical_sport_key_186a014e702acf55f5c03c8e8607f9f3"
+  },
+  {
+    "name": "function_search_path_mutable",
+    "title": "Function Search Path Mutable",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects functions where the search_path parameter is not set.",
+    "detail": "Function \\`public.recalculate_active_fantasy_entries_for_player_identity\\` has a role mutable search_path",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+    "metadata": {
+      "name": "recalculate_active_fantasy_entries_for_player_identity",
+      "type": "function",
+      "schema": "public"
+    },
+    "cache_key": "function_search_path_mutable_public_recalculate_active_fantasy_entries_for_player_identity_67938ed1574f369281a2566027ac3bcf"
+  },
+  {
+    "name": "function_search_path_mutable",
+    "title": "Function Search Path Mutable",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects functions where the search_path parameter is not set.",
+    "detail": "Function \\`public.set_updated_at\\` has a role mutable search_path",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+    "metadata": {
+      "name": "set_updated_at",
+      "type": "function",
+      "schema": "public"
+    },
+    "cache_key": "function_search_path_mutable_public_set_updated_at_9b1889f56258bf9d6554213c05019c76"
+  },
+  {
+    "name": "function_search_path_mutable",
+    "title": "Function Search Path Mutable",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects functions where the search_path parameter is not set.",
+    "detail": "Function \\`public.fantasy_points_multiplier\\` has a role mutable search_path",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+    "metadata": {
+      "name": "fantasy_points_multiplier",
+      "type": "function",
+      "schema": "public"
+    },
+    "cache_key": "function_search_path_mutable_public_fantasy_points_multiplier_8a19a75739d95fc32e4b5fd43d7dce96"
+  },
+  {
+    "name": "function_search_path_mutable",
+    "title": "Function Search Path Mutable",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects functions where the search_path parameter is not set.",
+    "detail": "Function \\`public.recalculate_active_fantasy_entries_for_player_id\\` has a role mutable search_path",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+    "metadata": {
+      "name": "recalculate_active_fantasy_entries_for_player_id",
+      "type": "function",
+      "schema": "public"
+    },
+    "cache_key": "function_search_path_mutable_public_recalculate_active_fantasy_entries_for_player_id_dcee81451d2788223833b105cd2503cd"
+  },
+  {
+    "name": "function_search_path_mutable",
+    "title": "Function Search Path Mutable",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects functions where the search_path parameter is not set.",
+    "detail": "Function \\`public.fantasy_lineup_has_required_player_ids\\` has a role mutable search_path",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+    "metadata": {
+      "name": "fantasy_lineup_has_required_player_ids",
+      "type": "function",
+      "schema": "public"
+    },
+    "cache_key": "function_search_path_mutable_public_fantasy_lineup_has_required_player_ids_6dbb6a1881159f47b89d2a040b8df7c1"
+  },
+  {
+    "name": "function_search_path_mutable",
+    "title": "Function Search Path Mutable",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects functions where the search_path parameter is not set.",
+    "detail": "Function \\`public.set_users_username_normalized\\` has a role mutable search_path",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+    "metadata": {
+      "name": "set_users_username_normalized",
+      "type": "function",
+      "schema": "public"
+    },
+    "cache_key": "function_search_path_mutable_public_set_users_username_normalized_79c442f5a97e4458fb49e5835ca336d8"
+  },
+  {
+    "name": "function_search_path_mutable",
+    "title": "Function Search Path Mutable",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects functions where the search_path parameter is not set.",
+    "detail": "Function \\`public.update_answer_variants_updated_at\\` has a role mutable search_path",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+    "metadata": {
+      "name": "update_answer_variants_updated_at",
+      "type": "function",
+      "schema": "public"
+    },
+    "cache_key": "function_search_path_mutable_public_update_answer_variants_updated_at_9b1889f56258bf9d6554213c05019c76"
+  },
+  {
+    "name": "function_search_path_mutable",
+    "title": "Function Search Path Mutable",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects functions where the search_path parameter is not set.",
+    "detail": "Function \\`public.set_accounts_username_normalized\\` has a role mutable search_path",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+    "metadata": {
+      "name": "set_accounts_username_normalized",
+      "type": "function",
+      "schema": "public"
+    },
+    "cache_key": "function_search_path_mutable_public_set_accounts_username_normalized_79c442f5a97e4458fb49e5835ca336d8"
+  },
+  {
+    "name": "anon_security_definer_function_executable",
+    "title": "Public Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.",
+    "detail": "Function `public.claim_pickem_points(p_user_id uuid, p_venue_id text, p_local_date date, p_day_start timestamp with time zone, p_day_end timestamp with time zone)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/claim_pickem_points`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
+    "metadata": {
+      "name": "claim_pickem_points",
+      "schema": "public",
+      "language": "plpgsql",
+      "arguments": "p_user_id uuid, p_venue_id text, p_local_date date, p_day_start timestamp with time zone, p_day_end timestamp with time zone",
+      "security_definer": true
+    },
+    "cache_key": "anon_security_definer_function_executable_public_claim_pickem_points_p_user_id uuid, p_venue_id text, p_local_date date, p_day_start timestamp with time zone, p_day_end timestamp with time zone"
+  },
+  {
+    "name": "anon_security_definer_function_executable",
+    "title": "Public Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.",
+    "detail": "Function `public.current_admin_venue_ids()` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/current_admin_venue_ids`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
+    "metadata": {
+      "name": "current_admin_venue_ids",
+      "schema": "public",
+      "language": "sql",
+      "arguments": "",
+      "security_definer": true
+    },
+    "cache_key": "anon_security_definer_function_executable_public_current_admin_venue_ids_"
+  },
+  {
+    "name": "anon_security_definer_function_executable",
+    "title": "Public Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.",
+    "detail": "Function `public.get_challenge_leaderboard_snapshot(p_challenge_id uuid, p_venue_id text, p_viewer_user_id uuid, p_limit integer, p_tiebreaker text)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/get_challenge_leaderboard_snapshot`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
+    "metadata": {
+      "name": "get_challenge_leaderboard_snapshot",
+      "schema": "public",
+      "language": "sql",
+      "arguments": "p_challenge_id uuid, p_venue_id text, p_viewer_user_id uuid, p_limit integer, p_tiebreaker text",
+      "security_definer": true
+    },
+    "cache_key": "anon_security_definer_function_executable_public_get_challenge_leaderboard_snapshot_p_challenge_id uuid, p_venue_id text, p_viewer_user_id uuid, p_limit integer, p_tiebreaker text"
+  },
+  {
+    "name": "anon_security_definer_function_executable",
+    "title": "Public Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.",
+    "detail": "Function `public.is_current_admin_for_analytics_venue(target_venue_id text)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/is_current_admin_for_analytics_venue`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
+    "metadata": {
+      "name": "is_current_admin_for_analytics_venue",
+      "schema": "public",
+      "language": "sql",
+      "arguments": "target_venue_id text",
+      "security_definer": true
+    },
+    "cache_key": "anon_security_definer_function_executable_public_is_current_admin_for_analytics_venue_target_venue_id text"
+  },
+  {
+    "name": "anon_security_definer_function_executable",
+    "title": "Public Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.",
+    "detail": "Function `public.is_current_user_for_analytics(target_user_id uuid, target_venue_id text)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/is_current_user_for_analytics`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
+    "metadata": {
+      "name": "is_current_user_for_analytics",
+      "schema": "public",
+      "language": "sql",
+      "arguments": "target_user_id uuid, target_venue_id text",
+      "security_definer": true
+    },
+    "cache_key": "anon_security_definer_function_executable_public_is_current_user_for_analytics_target_user_id uuid, target_venue_id text"
+  },
+  {
+    "name": "anon_security_definer_function_executable",
+    "title": "Public Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.",
+    "detail": "Function `public.prune_user_analytics_raw_events(raw_retention interval)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/prune_user_analytics_raw_events`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
+    "metadata": {
+      "name": "prune_user_analytics_raw_events",
+      "schema": "public",
+      "language": "plpgsql",
+      "arguments": "raw_retention interval",
+      "security_definer": true
+    },
+    "cache_key": "anon_security_definer_function_executable_public_prune_user_analytics_raw_events_raw_retention interval"
+  },
+  {
+    "name": "anon_security_definer_function_executable",
+    "title": "Public Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.",
+    "detail": "Function `public.refresh_user_analytics_rollups()` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/refresh_user_analytics_rollups`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
+    "metadata": {
+      "name": "refresh_user_analytics_rollups",
+      "schema": "public",
+      "language": "plpgsql",
+      "arguments": "",
+      "security_definer": true
+    },
+    "cache_key": "anon_security_definer_function_executable_public_refresh_user_analytics_rollups_"
+  },
+  {
+    "name": "anon_security_definer_function_executable",
+    "title": "Public Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.",
+    "detail": "Function `public.settle_prediction_market(p_prediction_id text, p_winning_outcome_id text, p_settle_as_canceled boolean)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/settle_prediction_market`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
+    "metadata": {
+      "name": "settle_prediction_market",
+      "schema": "public",
+      "language": "plpgsql",
+      "arguments": "p_prediction_id text, p_winning_outcome_id text, p_settle_as_canceled boolean",
+      "security_definer": true
+    },
+    "cache_key": "anon_security_definer_function_executable_public_settle_prediction_market_p_prediction_id text, p_winning_outcome_id text, p_settle_as_canceled boolean"
+  },
+  {
+    "name": "anon_security_definer_function_executable",
+    "title": "Public Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.",
+    "detail": "Function `public.settle_prediction_market(p_prediction_id text, p_winning_outcome_id text, p_settle_as_canceled boolean, p_market_question text)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/settle_prediction_market`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
+    "metadata": {
+      "name": "settle_prediction_market",
+      "schema": "public",
+      "language": "plpgsql",
+      "arguments": "p_prediction_id text, p_winning_outcome_id text, p_settle_as_canceled boolean, p_market_question text",
+      "security_definer": true
+    },
+    "cache_key": "anon_security_definer_function_executable_public_settle_prediction_market_p_prediction_id text, p_winning_outcome_id text, p_settle_as_canceled boolean, p_market_question text"
+  },
+  {
+    "name": "anon_security_definer_function_executable",
+    "title": "Public Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.",
+    "detail": "Function `public.sync_auth_user_display_name()` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/sync_auth_user_display_name`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
+    "metadata": {
+      "name": "sync_auth_user_display_name",
+      "schema": "public",
+      "language": "plpgsql",
+      "arguments": "",
+      "security_definer": true
+    },
+    "cache_key": "anon_security_definer_function_executable_public_sync_auth_user_display_name_"
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.",
+    "detail": "Function `public.claim_pickem_points(p_user_id uuid, p_venue_id text, p_local_date date, p_day_start timestamp with time zone, p_day_end timestamp with time zone)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/claim_pickem_points`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+    "metadata": {
+      "name": "claim_pickem_points",
+      "schema": "public",
+      "language": "plpgsql",
+      "arguments": "p_user_id uuid, p_venue_id text, p_local_date date, p_day_start timestamp with time zone, p_day_end timestamp with time zone",
+      "security_definer": true
+    },
+    "cache_key": "authenticated_security_definer_function_executable_public_claim_pickem_points_p_user_id uuid, p_venue_id text, p_local_date date, p_day_start timestamp with time zone, p_day_end timestamp with time zone"
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.",
+    "detail": "Function `public.current_admin_venue_ids()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/current_admin_venue_ids`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+    "metadata": {
+      "name": "current_admin_venue_ids",
+      "schema": "public",
+      "language": "sql",
+      "arguments": "",
+      "security_definer": true
+    },
+    "cache_key": "authenticated_security_definer_function_executable_public_current_admin_venue_ids_"
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.",
+    "detail": "Function `public.get_challenge_leaderboard_snapshot(p_challenge_id uuid, p_venue_id text, p_viewer_user_id uuid, p_limit integer, p_tiebreaker text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/get_challenge_leaderboard_snapshot`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+    "metadata": {
+      "name": "get_challenge_leaderboard_snapshot",
+      "schema": "public",
+      "language": "sql",
+      "arguments": "p_challenge_id uuid, p_venue_id text, p_viewer_user_id uuid, p_limit integer, p_tiebreaker text",
+      "security_definer": true
+    },
+    "cache_key": "authenticated_security_definer_function_executable_public_get_challenge_leaderboard_snapshot_p_challenge_id uuid, p_venue_id text, p_viewer_user_id uuid, p_limit integer, p_tiebreaker text"
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.",
+    "detail": "Function `public.is_current_admin_for_analytics_venue(target_venue_id text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/is_current_admin_for_analytics_venue`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+    "metadata": {
+      "name": "is_current_admin_for_analytics_venue",
+      "schema": "public",
+      "language": "sql",
+      "arguments": "target_venue_id text",
+      "security_definer": true
+    },
+    "cache_key": "authenticated_security_definer_function_executable_public_is_current_admin_for_analytics_venue_target_venue_id text"
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.",
+    "detail": "Function `public.is_current_user_for_analytics(target_user_id uuid, target_venue_id text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/is_current_user_for_analytics`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+    "metadata": {
+      "name": "is_current_user_for_analytics",
+      "schema": "public",
+      "language": "sql",
+      "arguments": "target_user_id uuid, target_venue_id text",
+      "security_definer": true
+    },
+    "cache_key": "authenticated_security_definer_function_executable_public_is_current_user_for_analytics_target_user_id uuid, target_venue_id text"
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.",
+    "detail": "Function `public.prune_user_analytics_raw_events(raw_retention interval)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/prune_user_analytics_raw_events`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+    "metadata": {
+      "name": "prune_user_analytics_raw_events",
+      "schema": "public",
+      "language": "plpgsql",
+      "arguments": "raw_retention interval",
+      "security_definer": true
+    },
+    "cache_key": "authenticated_security_definer_function_executable_public_prune_user_analytics_raw_events_raw_retention interval"
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.",
+    "detail": "Function `public.refresh_user_analytics_rollups()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/refresh_user_analytics_rollups`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+    "metadata": {
+      "name": "refresh_user_analytics_rollups",
+      "schema": "public",
+      "language": "plpgsql",
+      "arguments": "",
+      "security_definer": true
+    },
+    "cache_key": "authenticated_security_definer_function_executable_public_refresh_user_analytics_rollups_"
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.",
+    "detail": "Function `public.settle_prediction_market(p_prediction_id text, p_winning_outcome_id text, p_settle_as_canceled boolean)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/settle_prediction_market`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+    "metadata": {
+      "name": "settle_prediction_market",
+      "schema": "public",
+      "language": "plpgsql",
+      "arguments": "p_prediction_id text, p_winning_outcome_id text, p_settle_as_canceled boolean",
+      "security_definer": true
+    },
+    "cache_key": "authenticated_security_definer_function_executable_public_settle_prediction_market_p_prediction_id text, p_winning_outcome_id text, p_settle_as_canceled boolean"
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.",
+    "detail": "Function `public.settle_prediction_market(p_prediction_id text, p_winning_outcome_id text, p_settle_as_canceled boolean, p_market_question text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/settle_prediction_market`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+    "metadata": {
+      "name": "settle_prediction_market",
+      "schema": "public",
+      "language": "plpgsql",
+      "arguments": "p_prediction_id text, p_winning_outcome_id text, p_settle_as_canceled boolean, p_market_question text",
+      "security_definer": true
+    },
+    "cache_key": "authenticated_security_definer_function_executable_public_settle_prediction_market_p_prediction_id text, p_winning_outcome_id text, p_settle_as_canceled boolean, p_market_question text"
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.",
+    "detail": "Function `public.sync_auth_user_display_name()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/sync_auth_user_display_name`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+    "metadata": {
+      "name": "sync_auth_user_display_name",
+      "schema": "public",
+      "language": "plpgsql",
+      "arguments": "",
+      "security_definer": true
+    },
+    "cache_key": "authenticated_security_definer_function_executable_public_sync_auth_user_display_name_"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `auth.users` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Users can read own profiles\",\"Users can update own profiles\"}`",
+    "metadata": {
+      "name": "users",
+      "type": "table",
+      "schema": "auth"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_auth_users"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `auth.webauthn_challenges` has policies enforced on roles that allow access to anonymous users. Policies include `{webauthn_challenges_no_direct_access}`",
+    "metadata": {
+      "name": "webauthn_challenges",
+      "type": "table",
+      "schema": "auth"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_auth_webauthn_challenges"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.accounts` has policies enforced on roles that allow access to anonymous users. Policies include `{accounts_no_direct_access_authenticated}`",
+    "metadata": {
+      "name": "accounts",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_accounts"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.ad_events` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Admins can read ad events\"}`",
+    "metadata": {
+      "name": "ad_events",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_ad_events"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.ad_interactions` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Admins can read venue ad interactions\",\"Users can read own ad interactions\"}`",
+    "metadata": {
+      "name": "ad_interactions",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_ad_interactions"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.advertisements` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Admins can manage advertisements\",\"Public can view active advertisements\"}`",
+    "metadata": {
+      "name": "advertisements",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_advertisements"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.challenge_invites` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Users can read own challenges\",\"Users can update own challenges\"}`",
+    "metadata": {
+      "name": "challenge_invites",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_challenge_invites"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.fantasy_entries` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Users can read own fantasy entries\",\"Users can update own fantasy entries\"}`",
+    "metadata": {
+      "name": "fantasy_entries",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_fantasy_entries"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.game_sessions` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Admins can read venue game sessions\",\"Users can read own game sessions\",\"Users can update own game sessions\"}`",
+    "metadata": {
+      "name": "game_sessions",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_game_sessions"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.live_player_stats` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Public can read live player stats\"}`",
+    "metadata": {
+      "name": "live_player_stats",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_live_player_stats"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.live_showdown_answers` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Admins can manage live showdown answers\",\"Users can read own live showdown answers\"}`",
+    "metadata": {
+      "name": "live_showdown_answers",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_live_showdown_answers"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.notifications` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Users can read own notifications\",\"Users can update own notifications\"}`",
+    "metadata": {
+      "name": "notifications",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_notifications"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.pickem_daily_snapshots` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Users can read own pickem daily snapshots\"}`",
+    "metadata": {
+      "name": "pickem_daily_snapshots",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_pickem_daily_snapshots"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.pickem_picks` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Users can read own pickem picks\",\"Users can update own pickem picks\"}`",
+    "metadata": {
+      "name": "pickem_picks",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_pickem_picks"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.prize_wins` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Admins can manage prize wins\",\"Users can claim own prize wins\",\"Users can read own prize wins\"}`",
+    "metadata": {
+      "name": "prize_wins",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_prize_wins"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.sports_bingo_cards` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Users can read own sports bingo cards\",\"Users can update own sports bingo cards\"}`",
+    "metadata": {
+      "name": "sports_bingo_cards",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_sports_bingo_cards"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.sports_bingo_squares` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Users can read own sports bingo squares\",\"Users can update own sports bingo squares\"}`",
+    "metadata": {
+      "name": "sports_bingo_squares",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_sports_bingo_squares"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.trivia_answers` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Users can read own trivia answers\"}`",
+    "metadata": {
+      "name": "trivia_answers",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_trivia_answers"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.trivia_questions` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Public can view trivia questions\"}`",
+    "metadata": {
+      "name": "trivia_questions",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_trivia_questions"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.trivia_schedules` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Admins can manage trivia schedules\",\"Authenticated can view trivia schedules\"}`",
+    "metadata": {
+      "name": "trivia_schedules",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_trivia_schedules"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.trivia_session_questions` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Admins can manage trivia session questions\",\"Authenticated can view trivia session questions\"}`",
+    "metadata": {
+      "name": "trivia_session_questions",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_trivia_session_questions"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.user_geographic_data` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Admins can read venue geographic data\",\"Users can read own geographic data\",\"Users can update own geographic data\"}`",
+    "metadata": {
+      "name": "user_geographic_data",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_user_geographic_data"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.user_passkeys` has policies enforced on roles that allow access to anonymous users. Policies include `{user_passkeys_delete_own,user_passkeys_select_own,user_passkeys_update_own}`",
+    "metadata": {
+      "name": "user_passkeys",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_user_passkeys"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.user_predictions` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Users can read own predictions\"}`",
+    "metadata": {
+      "name": "user_predictions",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_user_predictions"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.user_seen_questions` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Users can read own seen questions\"}`",
+    "metadata": {
+      "name": "user_seen_questions",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_user_seen_questions"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.user_sessions` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Admins can read venue analytics sessions\",\"Users can read own analytics sessions\",\"Users can update own analytics sessions\"}`",
+    "metadata": {
+      "name": "user_sessions",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_user_sessions"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.username_change_attempts` has policies enforced on roles that allow access to anonymous users. Policies include `{username_change_attempts_no_direct_access}`",
+    "metadata": {
+      "name": "username_change_attempts",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_username_change_attempts"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.username_change_audit` has policies enforced on roles that allow access to anonymous users. Policies include `{username_change_audit_no_direct_access}`",
+    "metadata": {
+      "name": "username_change_audit",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_username_change_audit"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.users` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Users can read own profiles\",\"Users can update own profiles\"}`",
+    "metadata": {
+      "name": "users",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_users"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.venues` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Public can view venues\"}`",
+    "metadata": {
+      "name": "venues",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_venues"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.webauthn_challenges` has policies enforced on roles that allow access to anonymous users. Policies include `{webauthn_challenges_no_direct_access}`",
+    "metadata": {
+      "name": "webauthn_challenges",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_webauthn_challenges"
+  },
+  {
+    "name": "auth_allow_anonymous_sign_ins",
+    "title": "Anonymous Access Policies",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects row level security (RLS) policies that allow access to anonymous users.",
+    "detail": "https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins",
+    "remediation": "Table `public.weekly_prizes` has policies enforced on roles that allow access to anonymous users. Policies include `{\"Admins can manage weekly prizes\",\"Public can read weekly prizes\"}`",
+    "metadata": {
+      "name": "weekly_prizes",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "auth_allow_anonymous_sign_ins_public_weekly_prizes"
+  },
+  {
+    "name": "auth_leaked_password_protection",
+    "title": "Leaked Password Protection Disabled",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Leaked password protection is currently disabled.",
+    "detail": "Supabase Auth prevents the use of compromised passwords by checking against HaveIBeenPwned.org. Enable this feature to enhance security.",
+    "cache_key": "auth_leaked_password_protection",
+    "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection",
+    "metadata": {
+      "type": "auth",
+      "entity": "Auth"
+    }
+  }
+]

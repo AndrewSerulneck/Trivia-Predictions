@@ -1960,7 +1960,7 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-slate-900 p-4 text-[11px] font-semibold leading-relaxed text-slate-300">
                   <p className="mb-1 text-[10px] font-black uppercase tracking-[0.14em] text-sky-300">How to win</p>
-                  Squares auto-mark as plays happen. Complete five in a row — line, column, or diagonal — to win the prize.
+                  Squares auto-mark as plays happen. Complete five in a row — line, column, or diagonal — to win points.
                 </div>
               </aside>
             </div>

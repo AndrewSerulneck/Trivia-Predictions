@@ -19,6 +19,7 @@ type AccountRow = {
   username_normalized: string;
   pin_salt: string | null;
   pin_hash: string | null;
+  god_mode: boolean;
   created_at: string;
 };
 
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
 
   const { data: existing, error: lookupError } = await supabaseAdmin
     .from("accounts")
-    .select("id, auth_id, username, username_normalized, pin_salt, pin_hash, created_at")
+    .select("id, auth_id, username, username_normalized, pin_salt, pin_hash, god_mode, created_at")
     .eq("username_normalized", usernameNormalized)
     .maybeSingle<AccountRow>();
 
@@ -117,6 +118,7 @@ export async function POST(request: Request) {
         id: existing.id,
         username: existing.username,
         authId: existing.auth_id ?? undefined,
+        godMode: existing.god_mode,
       },
     });
   }
@@ -165,6 +167,7 @@ export async function POST(request: Request) {
       id: newAccount.id,
       username: newAccount.username,
       authId: newAccount.auth_id ?? undefined,
+      godMode: false,
     },
   });
 }

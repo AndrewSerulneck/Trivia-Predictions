@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { DEFAULT_VENUE_BY_ID } from "@/lib/defaultVenues";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
 import { normalizePin as normalizeCanonicalPin } from "@/lib/pin";
-import { createSessionCookie } from "@/lib/serverSession";
+import { createSessionCookie, isSessionEnforced, readSession } from "@/lib/serverSession";
 
 function userResponse(userId: string, data: Record<string, unknown>): NextResponse {
   const res = NextResponse.json(data);
@@ -19,11 +19,13 @@ type CreateProfileBody = {
   selectedVenueId?: string;
   authUserId?: string;
   accountId?: string;
+  sessionUserId?: string;
 };
 
 type UserRow = {
   id: string;
   auth_id: string | null;
+  account_id?: string | null;
   username: string;
   username_normalized?: string | null;
   venue_id: string;
@@ -75,6 +77,159 @@ function isMissingPinColumnError(error: unknown): boolean {
   return dbError?.code === "42703" || message.includes("pin_salt") || message.includes("pin_hash");
 }
 
+async function ensureDefaultVenueExists(venueId: string): Promise<string | null> {
+  const defaultVenue = DEFAULT_VENUE_BY_ID[venueId];
+  if (!defaultVenue) {
+    return null;
+  }
+
+  const { data: existingVenue, error: existingVenueError } = await supabaseAdmin!
+    .from("venues")
+    .select("id")
+    .eq("id", defaultVenue.id)
+    .maybeSingle();
+
+  if (existingVenueError) {
+    return existingVenueError.message;
+  }
+
+  if (existingVenue) {
+    return null;
+  }
+
+  const { error: insertVenueError } = await supabaseAdmin!.from("venues").insert({
+    id: defaultVenue.id,
+    name: defaultVenue.name,
+    address: defaultVenue.address,
+    latitude: defaultVenue.latitude,
+    longitude: defaultVenue.longitude,
+    radius: defaultVenue.radius,
+  });
+
+  return insertVenueError?.message ?? null;
+}
+
+async function resolveVenueProfileForAccount(params: {
+  accountId: string;
+  venueId: string;
+  traceId: string | null;
+  startedAt: number;
+}): Promise<NextResponse> {
+  const { accountId, venueId, traceId, startedAt } = params;
+  logAuthIncident("join-profile-route", "post-account-path-start", { traceId, accountId, venueId });
+
+  const { data: account, error: accountLookupError } = await supabaseAdmin!
+    .from("accounts")
+    .select("id, auth_id, username")
+    .eq("id", accountId)
+    .maybeSingle<{ id: string; auth_id: string | null; username: string }>();
+
+  if (accountLookupError) {
+    return NextResponse.json({ ok: false, error: accountLookupError.message }, { status: 500 });
+  }
+  if (!account) {
+    return NextResponse.json({ ok: false, error: "Account not found." }, { status: 404 });
+  }
+
+  const venueError = await ensureDefaultVenueExists(venueId);
+  if (venueError) {
+    return NextResponse.json({ ok: false, error: venueError }, { status: 500 });
+  }
+
+  const { data: existingProfile, error: profileLookupError } = await supabaseAdmin!
+    .from("users")
+    .select("id, auth_id, username, venue_id, points, created_at")
+    .eq("account_id", accountId)
+    .eq("venue_id", venueId)
+    .maybeSingle<UserRow>();
+
+  if (profileLookupError) {
+    return NextResponse.json({ ok: false, error: profileLookupError.message }, { status: 500 });
+  }
+
+  if (existingProfile) {
+    logAuthIncident("join-profile-route", "post-account-path-existing-profile", {
+      traceId, accountId, venueId, userId: existingProfile.id, elapsedMs: Date.now() - startedAt,
+    });
+    return userResponse(existingProfile.id, {
+      ok: true,
+      user: {
+        id: existingProfile.id,
+        accountId,
+        authId: existingProfile.auth_id ?? undefined,
+        username: existingProfile.username,
+        venueId: existingProfile.venue_id,
+        points: existingProfile.points,
+        createdAt: existingProfile.created_at,
+      },
+    });
+  }
+
+  const { data: newProfile, error: insertProfileError } = await supabaseAdmin!
+    .from("users")
+    .insert({
+      account_id: accountId,
+      auth_id: account.auth_id,
+      username: account.username,
+      venue_id: venueId,
+      points: 0,
+    })
+    .select("id, auth_id, username, venue_id, points, created_at")
+    .single<UserRow>();
+
+  if (insertProfileError || !newProfile) {
+    const code = (insertProfileError as { code?: string } | null)?.code;
+    if (code === "23503") {
+      return NextResponse.json(
+        { ok: false, error: "Selected venue is unavailable right now. Refresh and choose again." },
+        { status: 409 }
+      );
+    }
+    if (code === "23505") {
+      const { data: racedProfile } = await supabaseAdmin!
+        .from("users")
+        .select("id, auth_id, username, venue_id, points, created_at")
+        .eq("account_id", accountId)
+        .eq("venue_id", venueId)
+        .maybeSingle<UserRow>();
+      if (racedProfile) {
+        return userResponse(racedProfile.id, {
+          ok: true,
+          user: {
+            id: racedProfile.id,
+            accountId,
+            authId: racedProfile.auth_id ?? undefined,
+            username: racedProfile.username,
+            venueId: racedProfile.venue_id,
+            points: racedProfile.points,
+            createdAt: racedProfile.created_at,
+          },
+        });
+      }
+    }
+    return NextResponse.json(
+      { ok: false, error: insertProfileError?.message ?? "Failed to create venue profile." },
+      { status: 500 }
+    );
+  }
+
+  logAuthIncident("join-profile-route", "post-account-path-created-profile", {
+    traceId, accountId, venueId, userId: newProfile.id, elapsedMs: Date.now() - startedAt,
+  });
+  return userResponse(newProfile.id, {
+    ok: true,
+    user: {
+      id: newProfile.id,
+      accountId,
+      authId: newProfile.auth_id ?? undefined,
+      username: newProfile.username,
+      venueId: newProfile.venue_id,
+      points: newProfile.points,
+      createdAt: newProfile.created_at,
+    },
+  });
+}
+
 export async function POST(request: Request) {
   if (!supabaseAdmin) {
     return NextResponse.json({ ok: false, error: "Supabase admin client is not configured." }, { status: 500 });
@@ -82,9 +237,16 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => ({}))) as CreateProfileBody;
   const accountId = normalizeAuthUserId(body.accountId);
+  const bodySessionUserId = normalizeAuthUserId(body.sessionUserId);
+  const cookieSessionUserId = normalizeAuthUserId(readSession(request));
   const venueId = (body.venueId ?? "").trim();
   const traceId = String(request.headers.get("x-auth-trace-id") ?? "").trim() || null;
   const startedAt = Date.now();
+  const sessionUserId = isSessionEnforced() ? cookieSessionUserId : bodySessionUserId || cookieSessionUserId;
+
+  if (isSessionEnforced() && bodySessionUserId && cookieSessionUserId && bodySessionUserId !== cookieSessionUserId) {
+    return NextResponse.json({ ok: false, error: "Forbidden." }, { status: 403 });
+  }
 
   // ── Account-first path ───────────────────────────────────────────────────────
   // When accountId is supplied the caller has already authenticated; we just
@@ -93,74 +255,75 @@ export async function POST(request: Request) {
     if (!venueId) {
       return NextResponse.json({ ok: false, error: "Venue is required." }, { status: 400 });
     }
+    return resolveVenueProfileForAccount({ accountId, venueId, traceId, startedAt });
+  }
 
-    logAuthIncident("join-profile-route", "post-account-path-start", { traceId, accountId, venueId });
-
-    const { data: account, error: accountLookupError } = await supabaseAdmin
-      .from("accounts")
-      .select("id, auth_id, username")
-      .eq("id", accountId)
-      .maybeSingle<{ id: string; auth_id: string | null; username: string }>();
-
-    if (accountLookupError) {
-      return NextResponse.json({ ok: false, error: accountLookupError.message }, { status: 500 });
-    }
-    if (!account) {
-      return NextResponse.json({ ok: false, error: "Account not found." }, { status: 404 });
+  if (sessionUserId) {
+    if (!venueId) {
+      return NextResponse.json({ ok: false, error: "Venue is required." }, { status: 400 });
     }
 
-    // Ensure default demo venue exists.
-    const defaultVenueForAccount = DEFAULT_VENUE_BY_ID[venueId];
-    if (defaultVenueForAccount) {
-      const { data: existingVenue, error: existingVenueError } = await supabaseAdmin
-        .from("venues")
-        .select("id")
-        .eq("id", defaultVenueForAccount.id)
-        .maybeSingle();
-      if (existingVenueError) {
-        return NextResponse.json({ ok: false, error: existingVenueError.message }, { status: 500 });
-      }
-      if (!existingVenue) {
-        const { error: insertVenueError } = await supabaseAdmin.from("venues").insert({
-          id: defaultVenueForAccount.id,
-          name: defaultVenueForAccount.name,
-          address: defaultVenueForAccount.address,
-          latitude: defaultVenueForAccount.latitude,
-          longitude: defaultVenueForAccount.longitude,
-          radius: defaultVenueForAccount.radius,
-        });
-        if (insertVenueError) {
-          return NextResponse.json({ ok: false, error: insertVenueError.message }, { status: 500 });
-        }
-      }
-    }
+    logAuthIncident("join-profile-route", "post-session-path-start", {
+      traceId,
+      sessionUserId,
+      venueId,
+    });
 
-    // Find or create the venue profile.
-    const { data: existingProfile, error: profileLookupError } = await supabaseAdmin
+    const { data: sessionUser, error: sessionUserLookupError } = await supabaseAdmin
       .from("users")
-      .select("id, auth_id, username, venue_id, points, created_at")
-      .eq("account_id", accountId)
-      .eq("venue_id", venueId)
+      .select("id, auth_id, account_id, username, username_normalized, venue_id, points, created_at")
+      .eq("id", sessionUserId)
       .maybeSingle<UserRow>();
 
-    if (profileLookupError) {
-      return NextResponse.json({ ok: false, error: profileLookupError.message }, { status: 500 });
+    if (sessionUserLookupError) {
+      return NextResponse.json({ ok: false, error: sessionUserLookupError.message }, { status: 500 });
+    }
+    if (!sessionUser) {
+      return NextResponse.json({ ok: false, error: "Session user not found." }, { status: 404 });
     }
 
-    if (existingProfile) {
-      logAuthIncident("join-profile-route", "post-account-path-existing-profile", {
-        traceId, accountId, venueId, userId: existingProfile.id, elapsedMs: Date.now() - startedAt,
+    const linkedAccountId = String(sessionUser.account_id ?? "").trim();
+    if (linkedAccountId) {
+      return resolveVenueProfileForAccount({ accountId: linkedAccountId, venueId, traceId, startedAt });
+    }
+
+    const venueError = await ensureDefaultVenueExists(venueId);
+    if (venueError) {
+      return NextResponse.json({ ok: false, error: venueError }, { status: 500 });
+    }
+
+    const normalizedUsername =
+      String(sessionUser.username_normalized ?? "").trim() || normalizeUsernameForLookup(sessionUser.username);
+
+    const { data: existingProfile, error: existingProfileError } = await supabaseAdmin
+      .from("users")
+      .select("id, auth_id, username, venue_id, points, created_at")
+      .eq("username_normalized", normalizedUsername)
+      .eq("venue_id", venueId)
+      .limit(1);
+
+    if (existingProfileError) {
+      return NextResponse.json({ ok: false, error: existingProfileError.message }, { status: 500 });
+    }
+
+    const matchedProfile = ((existingProfile ?? []) as UserRow[])[0] ?? null;
+    if (matchedProfile) {
+      logAuthIncident("join-profile-route", "post-session-path-existing-profile", {
+        traceId,
+        sessionUserId,
+        venueId,
+        userId: matchedProfile.id,
+        elapsedMs: Date.now() - startedAt,
       });
-      return userResponse(existingProfile.id, {
+      return userResponse(matchedProfile.id, {
         ok: true,
         user: {
-          id: existingProfile.id,
-          accountId,
-          authId: existingProfile.auth_id ?? undefined,
-          username: existingProfile.username,
-          venueId: existingProfile.venue_id,
-          points: existingProfile.points,
-          createdAt: existingProfile.created_at,
+          id: matchedProfile.id,
+          authId: matchedProfile.auth_id ?? undefined,
+          username: matchedProfile.username,
+          venueId: matchedProfile.venue_id,
+          points: matchedProfile.points,
+          createdAt: matchedProfile.created_at,
         },
       });
     }
@@ -168,9 +331,8 @@ export async function POST(request: Request) {
     const { data: newProfile, error: insertProfileError } = await supabaseAdmin
       .from("users")
       .insert({
-        account_id: accountId,
-        auth_id: account.auth_id,
-        username: account.username,
+        auth_id: sessionUser.auth_id,
+        username: sessionUser.username,
         venue_id: venueId,
         points: 0,
       })
@@ -186,27 +348,10 @@ export async function POST(request: Request) {
         );
       }
       if (code === "23505") {
-        // Race: another request already created the profile; re-fetch and return it.
-        const { data: racedProfile } = await supabaseAdmin
-          .from("users")
-          .select("id, auth_id, username, venue_id, points, created_at")
-          .eq("account_id", accountId)
-          .eq("venue_id", venueId)
-          .maybeSingle<UserRow>();
-        if (racedProfile) {
-          return userResponse(racedProfile.id, {
-            ok: true,
-            user: {
-              id: racedProfile.id,
-              accountId,
-              authId: racedProfile.auth_id ?? undefined,
-              username: racedProfile.username,
-              venueId: racedProfile.venue_id,
-              points: racedProfile.points,
-              createdAt: racedProfile.created_at,
-            },
-          });
-        }
+        return NextResponse.json(
+          { ok: false, error: "That username is already taken at this venue. Please sign in again to choose a different username." },
+          { status: 409 }
+        );
       }
       return NextResponse.json(
         { ok: false, error: insertProfileError?.message ?? "Failed to create venue profile." },
@@ -214,14 +359,17 @@ export async function POST(request: Request) {
       );
     }
 
-    logAuthIncident("join-profile-route", "post-account-path-created-profile", {
-      traceId, accountId, venueId, userId: newProfile.id, elapsedMs: Date.now() - startedAt,
+    logAuthIncident("join-profile-route", "post-session-path-created-profile", {
+      traceId,
+      sessionUserId,
+      venueId,
+      userId: newProfile.id,
+      elapsedMs: Date.now() - startedAt,
     });
     return userResponse(newProfile.id, {
       ok: true,
       user: {
         id: newProfile.id,
-        accountId,
         authId: newProfile.auth_id ?? undefined,
         username: newProfile.username,
         venueId: newProfile.venue_id,

@@ -70,11 +70,28 @@
 - Nightly question generation: `scripts/generate-trivia-nightly.cjs` → calls `generate-trivia-questions.cjs`.
 
 ### Sports Bingo
-- Players mark off bingo squares based on real sports events.
+- Players mark off bingo squares based on real sports events tied to live NBA, WNBA, and MLB games.
+- Each square has a `resolver` — a typed rule that defines what must happen for the square to be marked hit or miss. Resolver types include:
+  - **NBA/WNBA player stat milestones:** e.g. "LeBron scores 25+ points" (`nba_player_stat_at_least`)
+  - **NBA/WNBA team stats:** e.g. "team outrebounds opponent", "team scores first", "leads at halftime"
+  - **NBA/WNBA player achievements:** double-double, triple-double, perfect FT, zero turnovers, etc.
+  - **MLB webhook events:** batter/pitcher prop events delivered in real time (e.g. home run, strikeout)
+  - **Moneyline / spread / game total / team total / player prop:** settled when game is final
+- Squares resolve to `hit`, `miss`, or remain `pending` during live play.
+
+**Real-time update pipeline (latency goal: near-instant — same as Fantasy):**
+- BallDontLie webhooks → `/api/webhooks/balldontlie` → `resolveBingoSquares()` runs immediately on every NBA/WNBA player stat event, checking all pending squares for that game against the incoming stats.
+- MLB prop squares are resolved via `applyMlbWebhookPropEvent()` and `applyMlbPlayerSnapshotEvent()` on each MLB stat event.
+- `refreshSportsBingoProgress()` is called after every webhook event (with throttled invalidation) to push updated state to clients.
+- Fallback: `/api/cron/bingo-progress` runs every 1 minute.
+- Squares that depend on game outcome (moneyline, spread, totals) are resolved when the game-final event arrives via webhook, triggering `refreshSportsBingoProgress({ limit: 500, bypassCache: true })`.
 
 ### Pick'Em
 - Users select the winner from a list of that day's games across one or more sports.
-- Pick outcomes are settled via `lib/pickem.ts` and the `/api/cron/pickem-settle` cron.
+- Pick outcomes are settled via `lib/pickem.ts`.
+- **Settlement latency goal: as close to instant as possible after a game ends.**
+  - Primary fast path: BallDontLie sends a game-final webhook event → `/api/webhooks/balldontlie` detects `isGameFinal` (via event type or game status) → immediately calls `settlePendingPickEmPicks()`. This fires the moment the data provider registers the game as over.
+  - Fallback: `/api/cron/pickem-settle` runs every 1 minute to catch anything the webhook missed.
 - **Note:** Pick'em does NOT use Polymarket. The old `/api/predictions` route and `lib/userPredictions.ts` use Polymarket for legacy prediction enrichment only. That system is deprecated and not user-facing.
 
 ### Fantasy Sports (Daily)
@@ -84,7 +101,24 @@
 - **NBA / WNBA:** Standard daily roster rules.
 - **MLB:** Being simplified — users draft 3 hitters and 3 pitchers.
 - **NFL:** Planned for the upcoming NFL season; rules TBD.
-- Live score sync: `/api/cron/fantasy-live-sync` (every 1 min). Progress: `/api/cron/fantasy-progress` (every 1 min).
+
+**Real-time update pipeline (latency goal: near-instant):**
+- The time between a player doing something on live TV and a user seeing their Fantasy score update should be as close to instant as possible. The same applies to Bingo.
+- BallDontLie sends stat webhooks to `/api/webhooks/balldontlie` as plays happen in real time. This is the primary live update trigger.
+- The webhook handler (`lib/webhooks/balldontlie.ts`) processes incoming stat events, upserts `live_player_stats`, and immediately triggers fantasy progress refresh and bingo square resolution for affected games.
+- Backup cron jobs run every 1 minute as a safety net: `/api/cron/fantasy-live-sync` (live stat polling) and `/api/cron/fantasy-progress` (score refresh). These are fallbacks — the webhook path is the fast path.
+- `/api/cron/bingo-progress` also runs every 1 minute as a bingo fallback.
+
+**Scoring models (computed in `lib/webhooks/balldontlie.ts`):**
+- **NBA / WNBA:** `pts + (reb × 1.2) + (ast × 1.5) + (stl × 3) + (blk × 3) − tov`
+- **MLB batters:** `(singles × 10) + (doubles × 20) + (triples × 30) + (HR × 50) + (runs × 10) + (RBI × 10) + (SB × 15) − (strikeouts × 5)` (floor: 0)
+- **MLB pitchers:** `(K × 10) + (outs × 5) − (earned runs × 15) − ((walks + hits allowed) × 5)` (floor: 0)
+- **NFL:** TBD when season starts.
+
+**Data providers:**
+- **Live stats:** BallDontLie API (`lib/balldontlie.ts`) — NBA, WNBA, MLB real-time box scores and play-by-play events delivered via webhook.
+- **Player headshots:** TheSportsDB (`lib/thesportsdb.ts`) — fetched and synced via nightly scripts (`scripts/sync-nba-headshots.cjs`, `sync-wnba-headshots.cjs`, `sync-mlb-headshots.cjs`). Stored in Cloudinary.
+- **Game schedules / draftable player lists:** BallDontLie API, queried at draft time to show only players on teams playing that day whose games haven't started yet.
 
 ## 5. Ad System Logic
 - Core model: deterministic, frequency-aware ad rotation.

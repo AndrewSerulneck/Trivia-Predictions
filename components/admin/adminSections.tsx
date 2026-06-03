@@ -1,4 +1,5 @@
 import React from "react";
+import { AccountsSection } from "@/components/admin/sections/AccountsSection";
 import { AdsCreateSection } from "@/components/admin/sections/AdsCreateSection";
 import { AdsListSection } from "@/components/admin/sections/AdsListSection";
 import { PickEmSettlementSection } from "@/components/admin/sections/PickEmSettlementSection";
@@ -9,6 +10,7 @@ import LegacySectionPlaceholder from "@/components/admin/sections/LegacySectionP
 export type AdminSection =
   | "ad-debug"
   | "ad-placement"
+  | "accounts"
   | "pickem-settlement"
   | "venue-users"
   | "user-analytics"
@@ -38,6 +40,7 @@ export type AdminNavGroup = {
 };
 
 export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
+  { id: "accounts",              label: "Accounts",              slug: "accounts",              status: { label: "Ready", tone: "live" }, component: AccountsSection },
   { id: "venue-users",           label: "Venue Users",           slug: "venue-users",           component: () => <LegacySectionPlaceholder sectionName="Venue Users" /> },
   { id: "user-analytics",        label: "User Analytics",        slug: "user-analytics",        status: { label: "Planned", tone: "planned" }, component: UserAnalyticsSection },
   { id: "venue-manage",          label: "Venue Profiles",        slug: "venue-manage",          component: () => <LegacySectionPlaceholder sectionName="Venue Profiles" /> },
@@ -56,7 +59,7 @@ export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     label: "Users & Venues",
-    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["venue-users", "user-analytics", "venue-manage"].includes(opt.id)),
+    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["accounts", "venue-users", "user-analytics", "venue-manage"].includes(opt.id)),
   },
   {
     label: "Content",
@@ -77,6 +80,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
 ];
 
 export const MIGRATED_SECTIONS: ReadonlySet<AdminSection> = new Set([
+  "accounts",
   "venue-users",
   "venue-manage",
   "trivia-list",

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
-import { getUserId, getVenueId } from "@/lib/storage";
+import { getGodMode, getUserId, getVenueId } from "@/lib/storage";
 import { calculateDistanceMeters, getCurrentLocation } from "@/lib/geolocation";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { supabase } from "@/lib/supabase";
@@ -748,7 +748,7 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
   }, [lastSubmissionTime]);
 
   useEffect(() => {
-    if (!venueId || DISABLE_GEOFENCE_FOR_TESTING) {
+    if (!venueId || DISABLE_GEOFENCE_FOR_TESTING || getGodMode()) {
       setIsGeofencePaused(false);
       setGeofencePauseReason("");
       return;

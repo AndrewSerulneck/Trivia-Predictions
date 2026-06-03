@@ -191,7 +191,7 @@ export function GameLandingExperience({
               style={{ WebkitOverflowScrolling: "touch" }}
             >
             <div className="min-h-0 flex-1 overflow-hidden">
-              {showPlayingBackButton && Children.count(children) === 1 && isValidElement(children)
+              {showPlayingBackButton && Children.count(children) === 1 && isValidElement(children) && typeof children.type !== "string"
                 ? cloneElement(children as ReactElement<{ onBack?: () => void }>, { onBack: backToVenue })
                 : children}
             </div>

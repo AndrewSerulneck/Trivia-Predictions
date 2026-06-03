@@ -4,6 +4,7 @@ import {
   bulkDeleteAdminAdvertisements,
   bulkSetAdminAdvertisementsActive,
   createAdminAdvertisement,
+  deleteAdminAccount,
   deleteAdminVenue,
   createAdminVenue,
   autoSettleResolvedPredictionMarkets,
@@ -16,6 +17,7 @@ import {
   getAdminAdvertisementById,
   getAdminGeographicHierarchy,
   bulkUpdateAdminTriviaQuestions,
+  listAdminAccounts,
   listPendingPredictionSummaries,
   listAdminAdvertisements,
   listAdminPickEmMatchupsByDate,
@@ -26,6 +28,7 @@ import {
   listAdminLiveTriviaQuestionsFromFiles,
   listAdminSpeedTriviaQuestionsFromFiles,
   resolvePendingPredictionMarket,
+  setAccountGodMode,
   settleAdminPickEmGame,
   updateAdminVenue,
   updateAdminAdvertisement,
@@ -263,6 +266,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ ok: true, isAdmin: true, scope: "join" });
     }
 
+    if (resource === "accounts") {
+      const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+      const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get("pageSize") ?? "25", 10)));
+      const search = String(searchParams.get("search") ?? "").trim();
+      const result = await listAdminAccounts({ page, pageSize, search });
+      return NextResponse.json({ ok: true, ...result, page, pageSize, totalPages: Math.max(1, Math.ceil(result.total / pageSize)) });
+    }
+
     if (resource === "live-showdown-schedules") {
       const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
       const pageSize = Math.min(200, Math.max(1, parseInt(searchParams.get("pageSize") ?? "25", 10)));
@@ -452,7 +463,39 @@ export async function POST(request: Request) {
       | {
           resource: "live-showdown-reset-answers";
           scheduleId: string;
+        }
+      | {
+          resource: "accounts";
+          action: "set-god-mode";
+          accountId: string;
+          godMode: boolean;
+        }
+      | {
+          resource: "accounts";
+          action: "delete";
+          accountId: string;
         };
+
+    if (body.resource === "accounts") {
+      const accountsBody = body as { resource: "accounts"; action: string; accountId?: string; godMode?: boolean };
+      const accountId = String(accountsBody.accountId ?? "").trim();
+      if (accountsBody.action === "set-god-mode") {
+        const godMode = Boolean(accountsBody.godMode);
+        if (!accountId) {
+          return NextResponse.json({ ok: false, error: "accountId is required." }, { status: 400 });
+        }
+        await setAccountGodMode(accountId, godMode);
+        return NextResponse.json({ ok: true });
+      }
+      if (accountsBody.action === "delete") {
+        if (!accountId) {
+          return NextResponse.json({ ok: false, error: "accountId is required." }, { status: 400 });
+        }
+        await deleteAdminAccount(accountId);
+        return NextResponse.json({ ok: true });
+      }
+      return NextResponse.json({ ok: false, error: "Unknown accounts action." }, { status: 400 });
+    }
 
     if (resourceFromQuery === "apply-placeholder-inline" || body.resource === "apply-placeholder-inline") {
       const templateAdId = String((body as { templateAdId?: string }).templateAdId ?? "").trim() || undefined;

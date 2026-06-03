@@ -13,8 +13,8 @@ const QUESTION_BLOCK_MS = 45_000;
 const ANSWERING_MS = 30_000;
 const REST_WARNING_MS = 15_000;
 const QUESTION_WINDOW_MS = QUESTIONS_PER_ROUND * QUESTION_BLOCK_MS; // 11 min 15 sec
-const ROUND_MS = 20 * 60_000; // 20 min
-const MID_GAME_BREAK_MS = ROUND_MS - QUESTION_WINDOW_MS; // 8 min 45 sec
+const ROUND_MS = 15 * 60_000; // 15 min
+const MID_GAME_BREAK_MS = ROUND_MS - QUESTION_WINDOW_MS; // 3 min 45 sec
 
 export type LiveShowdownPhase = "answering" | "rest_warning" | "mid_game_break";
 

@@ -1,4 +1,5 @@
 "use client";
+import { cachedFetch } from "@/lib/fetchCache";
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -461,11 +462,18 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
       return;
     }
     try {
-      const response = await fetch(
-        `/api/users/summary?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venueId)}`,
-        { cache: "no-store" }
+      const cacheKey = `summary:${userId}:${venueId}`;
+      const payload = await cachedFetch<SummaryPayload>(
+        cacheKey,
+        async () => {
+          const response = await fetch(
+            `/api/users/summary?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venueId)}`,
+            { cache: "no-store" }
+          );
+          return readJsonResponse<SummaryPayload>(response, "/api/users/summary");
+        },
+        4_000
       );
-      const payload = await readJsonResponse<SummaryPayload>(response, "/api/users/summary");
       if (!payload.ok || !payload.profile) {
         return;
       }

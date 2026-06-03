@@ -14,7 +14,6 @@ import { writeWarmTriviaCache, writeWarmPredictionsCache } from "@/lib/warmupCac
 import {
   evaluateLiveTriviaStatePayload,
   resolveLiveTriviaVenueContext,
-  type LiveTriviaPayloadFailureReason,
 } from "@/lib/liveTriviaClientState";
 import {
   consumeVenueHomeBootstrap,
@@ -26,8 +25,18 @@ import {
 } from "@/lib/venueHomeBootstrap";
 import { VENUE_GAME_CARD_BY_KEY, VENUE_HOME_GAME_KEYS, type VenueGameKey } from "@/lib/venueGameCards";
 import { runVenueGameOpenTransition } from "@/lib/venueGameTransition";
-import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
-import { NotificationBell } from "@/components/ui/NotificationBell";
+import { VenueHubHeaderBar } from "@/components/venue/VenueHubHeaderBar";
+import { VenueGamesPanel } from "@/components/venue/VenueGamesPanel";
+import { VenueChallengesPanel } from "@/components/venue/VenueChallengesPanel";
+import { VenueLeaderboardPanel } from "@/components/venue/VenueLeaderboardPanel";
+import {
+  formatBadgeCount,
+  formatCountdown,
+  type ChallengeCampaignCard,
+  type HomeScreenIndex,
+  type LiveTriviaStatus,
+  type VenueArrivalStage,
+} from "@/components/venue/venueHubShared";
 
 type BingoBadgePayload = {
   ok: boolean;
@@ -73,35 +82,10 @@ type PasskeyRegisterVerifyPayload = {
   verified?: boolean;
 };
 
-type ChallengeCampaignCard = {
-  id: string;
-  name: string;
-  imageUrl?: string;
-  imageScale?: number;
-  imageFocusX?: number;
-  imageFocusY?: number;
-  imageFit?: "cover" | "contain";
-  rules: string;
-  challengeMode?: "progress" | "leaderboard";
-  leaderboard?: {
-    topEntries: Array<{ rank: number; userId: string; username: string; points: number }>;
-    viewer: { rank: number | null; userId: string; username?: string | null; points: number; inTop: boolean } | null;
-  };
-  pointsRequiredToWin: number;
-  progressPoints: number;
-  winnerUserId?: string | null;
-  winnerUsername?: string | null;
-  prizeClaimedAt?: string | null;
-  isActive: boolean;
-};
-
 type ChallengeCampaignPayload = {
   ok?: boolean;
   campaigns?: ChallengeCampaignCard[];
 };
-
-type HomeScreenIndex = 0 | 1 | 2;
-type VenueArrivalStage = "identity" | "core" | "warmup" | "ready";
 
 type VenueMenuItem = {
   label: string;
@@ -109,59 +93,6 @@ type VenueMenuItem = {
   href: string;
 };
 
-// Background fill per game — each uses a distinct texture strategy
-const GAME_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
-  // Live Trivia: smooth broadcast gradient (The Anchor)
-  live_trivia: "bg-[linear-gradient(132deg,#06b6d4_0%,#0ea5e9_40%,#2563eb_100%)]",
-  // Speed Trivia: near-black navy — neon border provides the accent (The Sprint)
-  "speed-trivia": "bg-[linear-gradient(160deg,#080f1f_0%,#0c1535_100%)]",
-  // Bingo: solid stadium orange with dark ink bottom edge (The Wild Card)
-  bingo:       "bg-[linear-gradient(to_bottom,#ea580c_0%,#ea580c_85%,#1c0400_85%,#1c0400_100%)]",
-  // Pick 'Em: dark field with indigo left stripe — head-to-head split (The Rival)
-  pickem:      "bg-[linear-gradient(to_right,#4338ca_0%,#4338ca_6%,#0f172a_6%,#0f172a_100%)]",
-  // Fantasy: deep violet — premium collectible (The Dynasty)
-  fantasy:     "bg-[linear-gradient(145deg,#2e1065_0%,#1e0a4e_55%,#3b0764_100%)]",
-};
-
-// Per-game button border replaces the universal white/90 border
-const GAME_CARD_BORDER_BY_KEY: Record<VenueGameKey, string> = {
-  live_trivia: "!border-cyan-300/70",
-  "speed-trivia": "!border-blue-400",
-  bingo:       "!border-white/90",
-  pickem:      "!border-indigo-400/70",
-  fantasy:     "!border-violet-400/50",
-};
-
-// Only Live Trivia and Fantasy get the radial sheen (premium / broadcast); flat-texture games skip it
-const GAME_CARD_SHEEN_BY_KEY: Record<VenueGameKey, boolean> = {
-  live_trivia: true,
-  "speed-trivia": false,
-  bingo:       false,
-  pickem:      false,
-  fantasy:     true,
-};
-
-const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
-  "speed-trivia": ["Hightop", "Speed Trivia"],
-  live_trivia: ["Hightop", "Live Trivia"],
-  bingo: ["Hightop", "Sports Bingo™"],
-  pickem: ["Hightop", "Pick 'Em™"],
-  fantasy: ["Hightop", "Fantasy™"],
-};
-const VENUE_HUB_TILE_GRADIENT_BY_KEY: Record<VenueGameKey, string> = {
-  live_trivia: "linear-gradient(132deg,#06b6d4 0%,#0ea5e9 48%,#2563eb 100%)",
-  "speed-trivia": "linear-gradient(132deg,#f59e0b 0%,#f97316 52%,#ea580c 100%)",
-  bingo: "linear-gradient(128deg,#10b981 0%,#14b8a6 52%,#0f766e 100%)",
-  pickem: "linear-gradient(134deg,#3b82f6 0%,#6366f1 55%,#4f46e5 100%)",
-  fantasy: "linear-gradient(134deg,#a855f7 0%,#8b5cf6 52%,#7c3aed 100%)",
-};
-const VENUE_HUB_TILE_SUBTITLE_BY_KEY: Record<VenueGameKey, string> = {
-  live_trivia: "Synchronized bar trivia played against everyone else around you. Don't let them see your answers!",
-  "speed-trivia": "It's just you versus the clock. 15 seconds per question, 15 questions per round, and 3 rounds per hour. Good luck! ",
-  bingo: "Bingo boards align with the games on TV. Watch the game, track your squares in real time, and earn points as the live action unfolds!",
-  pickem: "Predict the winners of today's top matchups before the games start. Every correct call gets you one step closer to prizes and discounts!",
-  fantasy: "Draft the ultimate roster from the star athletes in today's games. The better they perform, the more points you earn! ",
-};
 const VENUE_HUB_GAME_ORDER: VenueGameKey[] = ["live_trivia", "speed-trivia", "bingo", "pickem", "fantasy"];
 const VENUE_DRAWER_MENU_ITEMS: VenueMenuItem[] = [
   {
@@ -193,14 +124,18 @@ const ARRIVAL_CORE_MAX_WAIT_MS = 1800;
 const ARRIVAL_WATCHDOG_TIMEOUT_MS = 8000;
 const ARRIVAL_RECOVERY_ATTEMPT_KEY = "tp:venue-arrival-recovery-attempt";
 const BOOTSTRAP_QUOTA_FRESH_MS = 30_000;
-const SHOULD_DEBUG_LIVE_TRIVIA = process.env.NODE_ENV !== "production";
-
-function formatCountdown(seconds: number): string {
-  const safeSeconds = Math.max(0, Math.floor(seconds));
-  const minutes = Math.floor(safeSeconds / 60);
-  const remainingSeconds = safeSeconds % 60;
-  return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
-}
+// Enable with ?tpDebug=1 in the URL — off by default so polling logs don't
+// fire in dev and saturate the console / log-forwarding overhead.
+const SHOULD_DEBUG_LIVE_TRIVIA =
+  process.env.NODE_ENV === "development" &&
+  typeof window !== "undefined" &&
+  (() => {
+    try {
+      return new URLSearchParams(window.location.search).get("tpDebug") === "1";
+    } catch {
+      return false;
+    }
+  })();
 
 function formatLongCountdown(seconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(seconds));
@@ -213,14 +148,6 @@ function formatLongCountdown(seconds: number): string {
 function debugLiveTrivia(message: string, details: Record<string, unknown>) {
   if (!SHOULD_DEBUG_LIVE_TRIVIA) return;
   console.info(`[live-trivia][venue-hub] ${message}`, details);
-}
-
-function formatBadgeCount(value: number): string {
-  const safeCount = Math.max(0, Math.floor(value));
-  if (safeCount > 99) {
-    return "99+";
-  }
-  return String(safeCount);
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -391,203 +318,6 @@ function venueDebugLog(message: string, details?: Record<string, unknown>) {
   console.log(`[tp-debug][venue-home] ${message}`, details ?? {});
 }
 
-const GAME_LOCKUP_SRC: Record<VenueGameKey, string> = {
-  "speed-trivia": "/brand/speed_trivia_icon.png",
-  live_trivia: "/brand/live_trivia_icon.png",
-  bingo: "/brand/bingo_icon.png",
-  pickem: "/brand/pickem_icon.png",
-  fantasy: "/brand/fantasy_icon.png",
-};
-
-function GameLockup({ gameKey, className = "" }: { gameKey: VenueGameKey; className?: string }) {
-  return (
-    <img
-      src={GAME_LOCKUP_SRC[gameKey]}
-      alt=""
-      aria-hidden="true"
-      className={`w-full h-full object-contain ${className}`}
-    />
-  );
-}
-
-function TriviaGlyph({ className = "h-10 w-10" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
-      <circle cx="32" cy="32" r="24" fill="#f59e0b" stroke="#0f172a" strokeWidth="4" />
-      <path d="M16 32h32M32 16v32" stroke="#0f172a" strokeWidth="3.4" opacity="0.28" />
-      <path d="M32 20c6 0 10 4 10 8 0 3-2 5-4 7-2 2-3 3-3 6" stroke="#0f172a" strokeWidth="4.2" fill="none" strokeLinecap="round" />
-      <circle cx="35" cy="47" r="2.6" fill="#0f172a" />
-    </svg>
-  );
-}
-
-function BingoGlyph({ className = "h-10 w-10" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
-      <circle cx="32" cy="32" r="24" fill="#fb923c" stroke="#0f172a" strokeWidth="4" />
-      <path d="M10 32h44M32 10v44" stroke="#0f172a" strokeWidth="3" opacity="0.28" />
-      <path d="M16 20c10 8 22 17 32 24" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
-      <path d="M16 44c10-8 22-17 32-24" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function PickEmGlyph({ className = "h-10 w-10" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
-      <path d="M19 14h26v8l-5 8H24l-5-8z" fill="#fde68a" stroke="#0f172a" strokeWidth="4" strokeLinejoin="round" />
-      <path d="M22 30h20v6c0 6-4 12-10 12s-10-6-10-12z" fill="#facc15" stroke="#0f172a" strokeWidth="4" />
-      <path d="M15 18c-3 0-6 2-6 5 0 4 3 8 8 8" fill="none" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
-      <path d="M49 18c3 0 6 2 6 5 0 4-3 8-8 8" fill="none" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
-      <path d="m26 36 4 4 8-9" fill="none" stroke="#1d4ed8" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function FantasyGlyph({ className = "h-10 w-10" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
-      <path d="M32 8 50 16v14c0 12-7 21-18 26C21 51 14 42 14 30V16z" fill="#34d399" stroke="#0f172a" strokeWidth="4" strokeLinejoin="round" />
-      <path d="m32 20 3.8 7.6 8.4 1.2-6.1 5.9 1.4 8.3-7.5-3.9-7.5 3.9 1.4-8.3-6.1-5.9 8.4-1.2z" fill="#fef08a" stroke="#0f172a" strokeWidth="3" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function TrophyGlyph({ className = "h-10 w-10" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
-      <path d="M20 10h24v10c0 8-5 15-12 18-7-3-12-10-12-18z" fill="#fcd34d" stroke="#0f172a" strokeWidth="4" />
-      <path d="M24 38h16v8H24z" fill="#f59e0b" stroke="#0f172a" strokeWidth="4" />
-      <path d="M18 46h28v8H18z" fill="#facc15" stroke="#0f172a" strokeWidth="4" />
-      <path d="M44 14h8c0 7-4 12-10 13" fill="none" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
-      <path d="M20 14h-8c0 7 4 12 10 13" fill="none" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
-      <circle cx="32" cy="21" r="4" fill="#fef9c3" stroke="#0f172a" strokeWidth="3" />
-    </svg>
-  );
-}
-
-function SpeedTriviaGlyph({ className = "h-10 w-10" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
-      <polygon
-        points="38,4 16,36 30,36 26,60 48,28 34,28"
-        fill="#fbbf24"
-        stroke="#78350f"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <polygon
-        points="38,4 16,36 30,36 26,60 48,28 34,28"
-        fill="none"
-        stroke="#fef08a"
-        strokeWidth="1"
-        strokeLinejoin="round"
-        opacity="0.6"
-      />
-    </svg>
-  );
-}
-
-function LiveTriviaGlyph({ className = "h-10 w-10" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
-      <path
-        d="M32 18c7 0 12 4.5 12 10 0 3.5-2.5 6.5-5.5 8.5-2.5 1.5-3.5 3-3.5 6.5"
-        stroke="white"
-        strokeWidth="5.5"
-        fill="none"
-        strokeLinecap="round"
-      />
-      <circle cx="35" cy="49.5" r="3.5" fill="white" />
-    </svg>
-  );
-}
-
-function GameGlyph({ gameKey }: { gameKey: VenueGameKey }) {
-  if (gameKey === "speed-trivia") return <TriviaGlyph />;
-  if (gameKey === "live_trivia") return <TriviaGlyph />;
-  if (gameKey === "bingo") return <BingoGlyph />;
-  if (gameKey === "pickem") return <PickEmGlyph />;
-  if (gameKey === "fantasy") return <FantasyGlyph />;
-  return <TriviaGlyph />;
-}
-
-type ChallengeGameType = "live_trivia" | "speed-trivia" | "bingo" | "pickem" | "fantasy" | "unknown";
-
-function inferChallengeGameType(name: string): ChallengeGameType {
-  const lower = name.toLowerCase();
-  if (lower.includes("live trivia") || lower.includes("live showdown") || lower.includes("showdown")) return "live_trivia";
-  if (lower.includes("speed trivia") || lower.includes("trivia")) return "speed-trivia";
-  if (lower.includes("bingo")) return "bingo";
-  if (lower.includes("pick") || lower.includes("pick 'em") || lower.includes("pickem")) return "pickem";
-  if (lower.includes("fantasy")) return "fantasy";
-  return "unknown";
-}
-
-const CHALLENGE_ICON_STYLE: Record<
-  ChallengeGameType,
-  { badgeBg: string; borderColor: string; barGradient: string; cardAccent: string }
-> = {
-  // Dark navy → blue, white ? mark — matches Live Trivia badge in mockup
-  live_trivia: {
-    badgeBg: "linear-gradient(145deg, #0c1445, #1d4ed8, #3b82f6)",
-    borderColor: "rgba(59,130,246,0.55)",
-    barGradient: "linear-gradient(90deg, #0891b2, #22d3ee)",
-    cardAccent: "rgba(59,130,246,0.25)",
-  },
-  // Very dark bg, bright amber lightning bolt — matches Speed Trivia badge in mockup
-  "speed-trivia": {
-    badgeBg: "linear-gradient(145deg, #0d0900, #1a1200, #261900)",
-    borderColor: "rgba(251,191,36,0.55)",
-    barGradient: "linear-gradient(90deg, #d97706, #fbbf24, #84cc16)",
-    cardAccent: "rgba(251,191,36,0.2)",
-  },
-  // Orange gradient — Bingo
-  bingo: {
-    badgeBg: "linear-gradient(145deg, #7c2d12, #c2410c, #f97316)",
-    borderColor: "rgba(249,115,22,0.55)",
-    barGradient: "linear-gradient(90deg, #ea580c, #fb923c)",
-    cardAccent: "rgba(249,115,22,0.2)",
-  },
-  // Amber/yellow gradient badge, fuchsia/purple progress — matches Pick 'Em badge in mockup
-  pickem: {
-    badgeBg: "linear-gradient(145deg, #78350f, #b45309, #f59e0b)",
-    borderColor: "rgba(245,158,11,0.55)",
-    barGradient: "linear-gradient(90deg, #7c3aed, #a855f7, #ec4899)",
-    cardAccent: "rgba(245,158,11,0.2)",
-  },
-  // Purple badge, purple→emerald progress — matches Fantasy badge in mockup
-  fantasy: {
-    badgeBg: "linear-gradient(145deg, #2d1b69, #4c1d95, #6d28d9)",
-    borderColor: "rgba(109,40,217,0.55)",
-    barGradient: "linear-gradient(90deg, #7c3aed, #8b5cf6, #10b981)",
-    cardAccent: "rgba(109,40,217,0.25)",
-  },
-  unknown: {
-    badgeBg: "linear-gradient(145deg, #0f766e, #0891b2, #22d3ee)",
-    borderColor: "rgba(34,211,238,0.45)",
-    barGradient: "linear-gradient(90deg, #0891b2, #22d3ee)",
-    cardAccent: "rgba(34,211,238,0.15)",
-  },
-};
-
-function ChallengeIconBadge({ gameType }: { gameType: ChallengeGameType }) {
-  const s = CHALLENGE_ICON_STYLE[gameType];
-  return (
-    <div
-      className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-lg"
-      style={{ background: s.badgeBg, border: `2px solid ${s.borderColor}` }}
-    >
-      {gameType === "live_trivia" ? <LiveTriviaGlyph className="h-8 w-8" /> : null}
-      {gameType === "speed-trivia" ? <SpeedTriviaGlyph className="h-8 w-8" /> : null}
-      {gameType === "bingo" ? <BingoGlyph className="h-8 w-8" /> : null}
-      {gameType === "pickem" ? <PickEmGlyph className="h-8 w-8" /> : null}
-      {gameType === "fantasy" ? <FantasyGlyph className="h-8 w-8" /> : null}
-      {gameType === "unknown" ? <TrophyGlyph className="h-8 w-8" /> : null}
-    </div>
-  );
-}
-
 function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; initialEntries?: LeaderboardEntry[] }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -619,12 +349,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const [hasPasskey, setHasPasskey] = useState(false);
   const [isBadgeLoading, setIsBadgeLoading] = useState(true);
   const [badgeError, setBadgeError] = useState("");
-  const [liveTriviaStatus, setLiveTriviaStatus] = useState<{
-    live: boolean;
-    label: string;
-    nextStartAtMs: number | null;
-    failureReason: LiveTriviaPayloadFailureReason | "network" | null;
-  }>({ live: false, label: "", nextStartAtMs: null, failureReason: null });
+  const [liveTriviaStatus, setLiveTriviaStatus] = useState<LiveTriviaStatus>({
+    live: false,
+    label: "",
+    nextStartAtMs: null,
+    failureReason: null,
+  });
   const [liveCountdownNowMs, setLiveCountdownNowMs] = useState(() => Date.now());
   const [leaderboardBootstrapEntries, setLeaderboardBootstrapEntries] = useState<LeaderboardEntry[]>([]);
   const [activeScreen, setActiveScreen] = useState<HomeScreenIndex>(0);
@@ -844,12 +574,16 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     };
   }, [homeRevealComplete]);
 
-  const triggerPulse = () => {
+  const triggerPulse = useCallback(() => {
     if (typeof navigator === "undefined" || !("vibrate" in navigator)) return;
     try {
       (navigator as any).vibrate?.(14);
     } catch {}
-  };
+  }, []);
+
+  const openMenu = useCallback(() => {
+    setIsMenuOpen(true);
+  }, []);
 
   const leaveVenue = () => {
     try {
@@ -1641,7 +1375,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         setPendingDestination(null);
       }
     },
-  [loadTriviaQuota, router, triviaUnlockSeconds, triviaQuota, venue.id]
+  [loadTriviaQuota, router, triggerPulse, triviaUnlockSeconds, triviaQuota, venue.id]
   );
 
   const homeCards = useMemo(() => VENUE_HOME_GAME_KEYS.map((key) => VENUE_GAME_CARD_BY_KEY[key]), []);
@@ -1661,6 +1395,18 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       }
     },
     [router, venue.id]
+  );
+  const retryBadges = useCallback(() => {
+    void loadHomeBadges();
+  }, [loadHomeBadges]);
+  const retryChallenges = useCallback(() => {
+    void loadChallengeCampaigns();
+  }, [loadChallengeCampaigns]);
+  const handleGoTo = useCallback(
+    (dest: VenueGameKey, sourceElement: HTMLElement | null) => {
+      void goTo(dest, sourceElement);
+    },
+    [goTo]
   );
   const leaderboardInitialEntries = leaderboardBootstrapEntries.length > 0 ? leaderboardBootstrapEntries : initialEntries;
   const triviaIsLocked = Boolean(triviaQuota && !triviaQuota.isAdminBypass && triviaQuota.questionsRemaining <= 0);
@@ -1706,71 +1452,15 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     <div
       className="relative z-[60] flex flex-col isolation-isolate"
     >
-      <section className="fixed inset-x-0 top-0 z-[1100] shrink-0 border-b border-white/10 bg-[rgba(2,6,23,0.92)] pt-[max(env(safe-area-inset-top),0px)] backdrop-blur-xl">
-        <div className="flex items-center justify-between px-4 py-1.5">
-          <button
-            type="button"
-            onMouseDown={triggerPulse}
-            onClick={() => setIsMenuOpen(true)}
-            className="tp-clean-button inline-flex h-8 w-8 items-center justify-center rounded-[10px] border border-white/10 bg-ht-surface text-ht-fg-primary"
-            aria-label="Open navigation menu"
-            aria-expanded={isMenuOpen}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <path d="M3 6h18M3 12h18M3 18h18" />
-            </svg>
-          </button>
-          <h2
-            className="truncate px-3 text-center text-[1.15rem] font-black uppercase tracking-[0.04em] text-cyan-300"
-            style={{ fontFamily: "'Bree Serif', 'Nunito', serif" }}
-          >
-            {venueDisplayName}
-          </h2>
-          <div className="shrink-0">
-            <NotificationBell />
-          </div>
-        </div>
-        <div className="px-4 pb-2">
-          <div className="mx-auto w-full max-w-[24rem] sm:max-w-md">
-            <div className="rounded-full border border-cyan-400/35 bg-slate-900/90 p-1 shadow-[0_8px_24px_rgba(2,6,23,0.45)]">
-              <div className="grid grid-cols-3 gap-1">
-                <button
-                  type="button"
-                  onClick={() => goToScreen(0)}
-                  className={`tp-clean-button rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
-                    activeScreen === 0 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
-                  }`}
-                >
-                  Games
-                </button>
-                <button
-                  type="button"
-                  onClick={() => goToScreen(1)}
-                  className={`tp-clean-button relative rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
-                    activeScreen === 1 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
-                  }`}
-                >
-                  Challenges
-                  {challengeBadgeCount > 0 ? (
-                    <span className="absolute -right-1 -top-1 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-black leading-none text-white">
-                      {formatBadgeCount(challengeBadgeCount)}
-                    </span>
-                  ) : null}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => goToScreen(2)}
-                  className={`tp-clean-button rounded-full px-2 py-2 text-[0.72rem] font-black uppercase tracking-[0.08em] ${
-                    activeScreen === 2 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
-                  }`}
-                >
-                  Leaderboard
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <VenueHubHeaderBar
+        venueDisplayName={venueDisplayName}
+        isMenuOpen={isMenuOpen}
+        onOpenMenu={openMenu}
+        onTriggerPulse={triggerPulse}
+        activeScreen={activeScreen}
+        onGoToScreen={goToScreen}
+        challengeBadgeCount={challengeBadgeCount}
+      />
 
       <div aria-hidden className="shrink-0 h-[calc(max(env(safe-area-inset-top),0px)+8rem)]" />
 
@@ -1788,349 +1478,44 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           }}
           aria-label="Venue home screens"
         >
-        <section className="venue-screen relative m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">
-          <div className={`venue-home-panel-content venue-home-games-fit w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-4 pt-2 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>
-            {showFastPathSkeleton ? (
-              <div className="mx-auto mb-2 w-full max-w-[24rem] rounded-2xl border border-slate-700 bg-slate-800/80 px-3 py-2 text-center text-xs font-semibold text-slate-300">
-                <p>{arrivalStatusText}</p>
-                <p className="mt-0.5 text-[11px] uppercase tracking-[0.08em] text-slate-400">
-                  {arrivalStage} · {Math.round(arrivalProgress)}%
-                </p>
-              </div>
-            ) : null}
+        <VenueGamesPanel
+          contentReady={contentReady}
+          showFastPathSkeleton={showFastPathSkeleton}
+          arrivalStatusText={arrivalStatusText}
+          arrivalStage={arrivalStage}
+          arrivalProgress={arrivalProgress}
+          liveTriviaStatus={liveTriviaStatus}
+          nextLiveTriviaCountdownLabel={nextLiveTriviaCountdownLabel}
+          lobbyButtonShouldPulse={lobbyButtonShouldPulse}
+          pendingDestination={pendingDestination}
+          orderedHomeCards={orderedHomeCards}
+          visibleBadgeByGame={visibleBadgeByGame}
+          triviaUnlockCountdown={triviaUnlockCountdown}
+          triviaGateNotice={triviaGateNotice}
+          badgeError={badgeError}
+          onTriggerPulse={triggerPulse}
+          onGoTo={handleGoTo}
+          onRetryBadges={retryBadges}
+        />
 
-            <div className="mx-auto w-full max-w-[24rem] space-y-3 sm:max-w-md">
-              <div className="rounded-2xl border border-amber-400/60 bg-ht-surface p-3 shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
-                <div className="flex items-stretch gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-300">
-                      {liveTriviaStatus.live ? "Live Trivia in progress! Join the game now!" : "Next Live Trivia Showdown In"}
-                    </p>
-                    <p className="mt-1 font-black tabular-nums text-amber-200 text-[2.2rem] leading-none">
-                      {nextLiveTriviaCountdownLabel}
-                    </p>
-                    {liveTriviaStatus.label ? (
-                      <p className="mt-1 text-xs font-semibold text-amber-100/90">{liveTriviaStatus.label}</p>
-                    ) : null}
-                  </div>
-                  <button
-                    type="button"
-                    onMouseDown={triggerPulse}
-                    onClick={(event) => {
-                      void goTo("live_trivia", event.currentTarget);
-                    }}
-                    disabled={pendingDestination !== null}
-                    className={`tp-clean-button min-w-[7.2rem] rounded-[12px] border px-4 py-2 text-lg font-black leading-tight transition-all disabled:opacity-60 ${
-                      lobbyButtonShouldPulse
-                        ? "animate-pulse border-rose-300/60 bg-rose-400/20 text-rose-200 shadow-[0_0_0_1px_rgba(252,165,165,0.3)]"
-                        : "border-cyan-400/40 bg-cyan-400/10 text-cyan-200 shadow-[0_0_0_1px_rgba(34,211,238,0.28)] hover:bg-cyan-400/15"
-                    }`}
-                  >
-                    Enter
-                    <br />
-                    lobby
-                  </button>
-                </div>
-              </div>
+        <VenueChallengesPanel
+          contentReady={contentReady}
+          isChallengesLoading={isChallengesLoading}
+          challengeCards={challengeCards}
+          currentUserId={currentUserId}
+          pendingChallengeRedeemId={pendingChallengeRedeemId}
+          challengesError={challengesError}
+          onSelectChallenge={setSelectedChallengeId}
+          onGoToChallengeRedeem={goToChallengeRedeem}
+          onRetryChallenges={retryChallenges}
+        />
 
-              <div className="space-y-3">
-                {orderedHomeCards.map((card) => {
-                  const isOpening = pendingDestination === card.key;
-                  const badge = visibleBadgeByGame.get(card.key);
-                  const isLiveTriviaCard = card.key === "live_trivia";
-                  const isSpeedTriviaCard = card.key === "speed-trivia";
-                  const statusLabel = isLiveTriviaCard && liveTriviaStatus.live ? "LIVE" : null;
-                  return (
-                    <button
-                      key={card.key}
-                      type="button"
-                      onMouseDown={triggerPulse}
-                      onClick={(event) => {
-                        void goTo(card.key, event.currentTarget);
-                      }}
-                      disabled={pendingDestination !== null}
-                      data-venue-game-card={card.key}
-                      className={`tp-clean-button tp-game-card-btn group relative w-full overflow-hidden rounded-[22px] border border-white/75 text-left shadow-[0_12px_26px_rgba(15,23,42,0.5)] ${isOpening ? "is-opening" : ""}`}
-                      style={{ backgroundImage: VENUE_HUB_TILE_GRADIENT_BY_KEY[card.key] }}
-                    >
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_14%,rgba(255,255,255,0.35)_0%,rgba(255,255,255,0.12)_40%,rgba(255,255,255,0)_72%)]" />
-                      <div className="relative flex min-h-[190px] flex-col gap-3 p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div
-                            className="text-[2rem] font-black uppercase leading-[0.95] text-white"
-                            style={{
-                              fontFamily: "'Bree Serif', 'Nunito', serif",
-                              letterSpacing: "0.045em",
-                              textShadow: "0 1px 0 rgba(12,18,28,.8), 0 3px 0 rgba(12,18,28,.58), 0 0 12px rgba(255,255,255,.5)",
-                            }}
-                          >
-                            {GAME_TITLE_LINES_BY_KEY[card.key][0]}
-                            <br />
-                            {GAME_TITLE_LINES_BY_KEY[card.key][1]}
-                          </div>
-                          {statusLabel ? (
-                            <span className="shrink-0 inline-flex items-center gap-1 rounded-full border border-rose-300/60 bg-rose-500/15 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-rose-200">
-                              <span className="h-[7px] w-[7px] rounded-full bg-rose-500" />
-                              {statusLabel}
-                            </span>
-                          ) : null}
-                        </div>
-
-                        <div className="max-w-[92%] rounded-xl border border-white/40 bg-black/30 px-3 py-2 text-[12px] font-bold text-white/95">
-                          {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key]}
-                        </div>
-
-                      </div>
-
-                      {badge ? (
-                        <span className="absolute right-2 top-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-black leading-none text-white shadow-[0_2px_8px_rgba(15,23,42,0.45)]">
-                          {badge}
-                        </span>
-                      ) : null}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {triviaUnlockCountdown > 0 ? (
-              <div className="mx-auto mt-3 max-w-[24rem] rounded-full border border-amber-400/40 bg-amber-950/30 px-3 py-1.5 text-center text-[11px] font-black tracking-[0.08em] text-amber-200">
-                Trivia unlocks in {formatCountdown(triviaUnlockCountdown)}
-              </div>
-            ) : null}
-            {triviaGateNotice ? (
-              <div className="mx-auto mt-2 max-w-[24rem] rounded-xl border border-rose-400/60 bg-rose-950/30 px-3 py-2 text-center text-xs font-semibold text-rose-200">
-                {triviaGateNotice}
-              </div>
-            ) : null}
-            {badgeError ? (
-              <button
-                type="button"
-                onClick={() => void loadHomeBadges()}
-                className="mx-auto mt-2 block max-w-[24rem] rounded-full border border-slate-600 bg-slate-800 px-3 py-1.5 text-center text-[11px] font-semibold text-slate-300"
-              >
-                {badgeError} Tap to retry
-              </button>
-            ) : null}
-          </div>
-        </section>
-
-        <section className="venue-screen m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">
-            <div className={`venue-home-panel-content w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-3 pt-1 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>
-            <div className="mx-auto w-full max-w-[26rem] space-y-3">
-              <div>
-                <p className="mb-3 text-[11px] font-black uppercase tracking-[0.14em] text-cyan-400">
-                  {isChallengesLoading
-                    ? "Challenges"
-                    : challengeCards.length > 0
-                    ? `Active · ${challengeCards.length} Challenge${challengeCards.length !== 1 ? "s" : ""}`
-                    : "Challenges"}
-                </p>
-                <div className="space-y-2">
-                  {isChallengesLoading ? (
-                    <div className="space-y-3 rounded-2xl border border-slate-700/60 bg-slate-800/40 p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-14 w-14 animate-pulse rounded-2xl bg-slate-700" />
-                        <div className="flex-1 space-y-2">
-                          <div className="h-3.5 w-40 animate-pulse rounded bg-slate-700" />
-                          <div className="h-2 w-full animate-pulse rounded bg-slate-700/70" />
-                          <div className="h-2 w-24 animate-pulse rounded bg-slate-700/50" />
-                        </div>
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {!isChallengesLoading && challengeCards.length === 0 ? (
-                    <div className="rounded-2xl border border-slate-700/60 bg-slate-800/40 p-4 text-center text-sm font-semibold text-slate-500">
-                      No active challenges for this venue yet.
-                    </div>
-                  ) : null}
-
-                  {challengeCards.map((challenge) => {
-                    const progress = Math.max(0, Number(challenge.progressPoints ?? 0));
-                    const target = Math.max(1, Number(challenge.pointsRequiredToWin ?? 1));
-                    const percent = Math.min(100, Math.round((progress / target) * 100));
-                    const isWon = Boolean(challenge.winnerUserId);
-                    const isWinner = Boolean(challenge.winnerUserId && challenge.winnerUserId === currentUserId);
-                    const canOpenRules = !isWon;
-                    const canOpenRedeem = isWinner;
-                    const isBusy = pendingChallengeRedeemId === challenge.id;
-                    const gameType = inferChallengeGameType(challenge.name);
-                    const iconStyle = CHALLENGE_ICON_STYLE[gameType];
-                    const topEntries = challenge.leaderboard?.topEntries ?? [];
-                    return (
-                      <button
-                        key={challenge.id}
-                        type="button"
-                        onClick={(event) => {
-                          if (canOpenRedeem) {
-                            void goToChallengeRedeem(challenge.id, event.currentTarget);
-                            return;
-                          }
-                          if (canOpenRules) {
-                            setSelectedChallengeId(challenge.id);
-                          }
-                        }}
-                        disabled={!canOpenRules && !canOpenRedeem}
-                        aria-disabled={!canOpenRules && !canOpenRedeem}
-                        className={`flex w-full flex-col overflow-hidden rounded-2xl p-4 text-left transition-opacity ${
-                          !canOpenRules && !canOpenRedeem ? "cursor-default opacity-60" : "hover:opacity-90"
-                        }`}
-                        style={{
-                          background: isWinner ? "linear-gradient(135deg, #1c1400, #2d1f00)" : "#111827",
-                          border: `1.5px solid ${isWinner ? "rgba(251,191,36,0.4)" : iconStyle.cardAccent}`,
-                        }}
-                      >
-                        {/* Header row: icon + name + status chip */}
-                        <div className="flex items-center gap-3">
-                          <ChallengeIconBadge gameType={gameType} />
-                          <div className="min-w-0 flex-1">
-                            <div className="text-xl font-black leading-snug text-slate-100">
-                              {challenge.name}
-                            </div>
-                            {isWon && isWinner ? (
-                              <span className="mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-amber-300"
-                                style={{ background: "rgba(251,191,36,0.18)", border: "1px solid rgba(251,191,36,0.3)" }}>
-                                You Won
-                              </span>
-                            ) : isWon ? (
-                              <span className="mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-slate-400"
-                                style={{ background: "rgba(51,65,85,0.5)", border: "1px solid rgba(71,85,105,0.5)" }}>
-                                Claimed
-                              </span>
-                            ) : (
-                              <span className="mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-cyan-400"
-                                style={{ background: "rgba(34,211,238,0.08)", border: "1px solid rgba(34,211,238,0.2)" }}>
-                                {challenge.challengeMode === "leaderboard" ? "Leaderboard" : "Gauge"}
-                              </span>
-                            )}
-                          </div>
-                          {canOpenRules && (
-                            <span className="shrink-0 text-xs font-black uppercase tracking-[0.08em] text-slate-500">
-                              Rules ›
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Rules */}
-                        {challenge.rules ? (
-                          <div className="mt-3 rounded-lg px-3 py-2.5 text-base leading-relaxed text-slate-400"
-                            style={{ background: "rgba(30,41,59,0.7)", border: "1px solid rgba(71,85,105,0.4)" }}>
-                            {challenge.rules}
-                          </div>
-                        ) : null}
-
-                        {/* Body: leaderboard, progress bar, or won state */}
-                        {isWon && isWinner ? (
-                          <div className="mt-3 inline-flex items-center rounded-full px-3 py-1.5 text-sm font-black uppercase tracking-[0.08em] text-amber-300"
-                            style={{ border: "1px solid rgba(251,191,36,0.35)", background: "rgba(251,191,36,0.12)" }}>
-                            {isBusy ? "Opening…" : challenge.prizeClaimedAt ? "Prize Claimed" : "→ Tap to Claim Prize"}
-                          </div>
-                        ) : isWon ? (
-                          <p className="mt-3 text-base text-slate-500">
-                            Won by <span className="text-slate-400">{challenge.winnerUsername ?? "Champion"}</span>
-                          </p>
-                        ) : challenge.challengeMode === "leaderboard" ? (
-                          <div className="mt-3">
-                            {topEntries.length === 0 ? (
-                              <p className="text-base text-slate-500">No scores yet — be the first to play!</p>
-                            ) : (
-                              <div role="list" aria-label="Challenge leaderboard">
-                                {/* Column headers */}
-                                <div className="mb-1 flex items-center gap-2 border-b border-slate-700/60 pb-1.5 px-1">
-                                  <span className="w-6 shrink-0 text-right text-sm font-black uppercase tracking-[0.1em] text-slate-600">#</span>
-                                  <span className="min-w-0 flex-1 text-sm font-black uppercase tracking-[0.1em] text-slate-600">Player</span>
-                                  <span className="shrink-0 text-sm font-black uppercase tracking-[0.1em] text-slate-600">Pts</span>
-                                </div>
-                                {topEntries.map((entry) => {
-                                  const isViewer = entry.userId === currentUserId;
-                                  return (
-                                    <div
-                                      key={entry.userId}
-                                      role="listitem"
-                                      className={`flex items-center gap-2 rounded px-1 py-1.5 ${isViewer ? "bg-cyan-500/10" : ""}`}
-                                    >
-                                      <span className="w-6 shrink-0 text-right text-base font-black tabular-nums text-slate-500">
-                                        {entry.rank}
-                                      </span>
-                                      <span className={`min-w-0 flex-1 truncate text-lg font-semibold ${isViewer ? "text-cyan-300" : "text-slate-200"}`}>
-                                        {entry.username}{isViewer ? " (you)" : ""}
-                                      </span>
-                                      <span className="shrink-0 text-lg font-black tabular-nums text-amber-200">
-                                        {entry.points.toLocaleString()}
-                                      </span>
-                                    </div>
-                                  );
-                                })}
-                                {challenge.leaderboard?.viewer && !challenge.leaderboard.viewer.inTop ? (
-                                  <>
-                                    <div aria-hidden className="my-1 border-t border-slate-700/50" />
-                                    <div
-                                      role="listitem"
-                                      className="flex items-center gap-2 rounded bg-cyan-500/10 px-1 py-1.5"
-                                    >
-                                      <span className="w-6 shrink-0 text-right text-base font-black tabular-nums text-slate-500">
-                                        {challenge.leaderboard.viewer.rank ?? "—"}
-                                      </span>
-                                      <span className="min-w-0 flex-1 truncate text-base font-semibold text-cyan-300">
-                                        {challenge.leaderboard.viewer.username ?? "You"} (you)
-                                      </span>
-                                      <span className="shrink-0 text-lg font-black tabular-nums text-amber-200">
-                                        {challenge.leaderboard.viewer.points.toLocaleString()}
-                                      </span>
-                                    </div>
-                                  </>
-                                ) : null}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="mt-3">
-                            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800/80">
-                              <div
-                                className="h-full rounded-full transition-all duration-500"
-                                style={{ width: `${percent}%`, background: iconStyle.barGradient }}
-                              />
-                            </div>
-                            <div className="mt-1.5 text-sm font-semibold tabular-nums text-slate-500">
-                              {progress.toLocaleString()} / {target.toLocaleString()} pts
-                            </div>
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-
-                  {challengesError ? (
-                    <button
-                      type="button"
-                      onClick={() => void loadChallengeCampaigns()}
-                      className="rounded-md border border-rose-400/60 bg-rose-950/30 px-2 py-1 text-[11px] font-black uppercase tracking-[0.08em] text-rose-300"
-                    >
-                      {challengesError} Tap to retry
-                    </button>
-                  ) : null}
-                </div>
-
-              </div>
-            </div>
-            </div>
-        </section>
-
-        <section className="venue-screen m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">
-            <div className={`venue-home-panel-content w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-8 pt-1 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>
-            <div className="mx-auto w-full max-w-[26rem] space-y-3">
-              <div className="rounded-2xl border border-cyan-400/30 bg-slate-900 p-4">
-                <p className="mb-3 text-sm font-black uppercase tracking-[0.14em] text-cyan-300">Leaderboard</p>
-                <LeaderboardTable
-                  venueId={venue.id}
-                  initialEntries={leaderboardInitialEntries}
-                  isEnabled={homeRevealComplete}
-                />
-              </div>
-            </div>
-            </div>
-        </section>
+        <VenueLeaderboardPanel
+          contentReady={contentReady}
+          venueId={venue.id}
+          initialEntries={leaderboardInitialEntries}
+          isEnabled={homeRevealComplete}
+        />
         </div>
       </div>
 

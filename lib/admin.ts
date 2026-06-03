@@ -2038,24 +2038,10 @@ export async function deleteAdminVenue(venueId: string): Promise<void> {
     throw new Error("Venue id is required.");
   }
 
-  const [{ count: userCount }, { count: scheduleCount }] = await Promise.all([
-    supabaseAdmin!
-      .from("users")
-      .select("id", { count: "exact", head: true })
-      .eq("venue_id", id),
-    supabaseAdmin!
-      .from("trivia_schedules")
-      .select("id", { count: "exact", head: true })
-      .eq("venue_id", id),
+  await Promise.all([
+    supabaseAdmin!.from("users").delete().eq("venue_id", id),
+    supabaseAdmin!.from("trivia_schedules").delete().eq("venue_id", id),
   ]);
-
-  if ((userCount ?? 0) > 0 || (scheduleCount ?? 0) > 0) {
-    throw new Error(
-      `Cannot delete venue while dependencies exist (users: ${userCount ?? 0}, trivia schedules: ${
-        scheduleCount ?? 0
-      }).`
-    );
-  }
 
   const { error } = await supabaseAdmin!.from("venues").delete().eq("id", id);
   if (error) {
@@ -3342,4 +3328,89 @@ async function resolvePendingPredictionMarketLegacy(params: {
     losers,
     canceled,
   };
+}
+
+// ── Account management ────────────────────────────────────────────────────────
+
+export type AdminAccount = {
+  id: string;
+  username: string;
+  godMode: boolean;
+  createdAt: string;
+};
+
+export async function listAdminAccounts(params: {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+}): Promise<{ items: AdminAccount[]; total: number }> {
+  assertAdminConfigured();
+  const page = Math.max(1, params.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, params.pageSize ?? 25));
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabaseAdmin!
+    .from("accounts")
+    .select("id, username, god_mode, created_at", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  const search = (params.search ?? "").trim();
+  if (search) {
+    query = query.ilike("username", `%${search}%`);
+  }
+
+  const { data, error, count } = await query;
+  if (error) {
+    throw new Error(error.message ?? "Failed to list accounts.");
+  }
+
+  const items: AdminAccount[] = ((data ?? []) as Array<{
+    id: string;
+    username: string;
+    god_mode: boolean;
+    created_at: string;
+  }>).map((row) => ({
+    id: row.id,
+    username: row.username,
+    godMode: row.god_mode,
+    createdAt: row.created_at,
+  }));
+
+  return { items, total: count ?? 0 };
+}
+
+export async function deleteAdminAccount(accountId: string): Promise<void> {
+  assertAdminConfigured();
+  const id = accountId.trim();
+  if (!id) {
+    throw new Error("Account id is required.");
+  }
+
+  const { error } = await supabaseAdmin!
+    .from("accounts")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    throw new Error(error.message ?? "Failed to delete account.");
+  }
+}
+
+export async function setAccountGodMode(accountId: string, godMode: boolean): Promise<void> {
+  assertAdminConfigured();
+  const id = accountId.trim();
+  if (!id) {
+    throw new Error("Account id is required.");
+  }
+
+  const { error } = await supabaseAdmin!
+    .from("accounts")
+    .update({ god_mode: godMode })
+    .eq("id", id);
+
+  if (error) {
+    throw new Error(error.message ?? "Failed to update account.");
+  }
 }

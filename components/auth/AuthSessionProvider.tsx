@@ -5,6 +5,7 @@ import {
   AUTH_STATE_CHANGED_EVENT,
   AUTH_STATE_RESET_EVENT,
   clearClientState,
+  getGodMode,
   getUserId,
   getUsername,
   getVenueId,
@@ -18,6 +19,7 @@ type AuthSessionState = {
   venueId: string;
   username: string;
   tokenVerified: boolean;
+  godMode: boolean;
   lastSyncedAt: number;
 };
 
@@ -37,6 +39,7 @@ const INITIAL_AUTH_STATE: AuthSessionState = {
   venueId: "",
   username: "",
   tokenVerified: false,
+  godMode: false,
   lastSyncedAt: 0,
 };
 
@@ -78,6 +81,7 @@ function readAuthStateFromStorage(): AuthSessionState {
     venueId,
     username,
     tokenVerified,
+    godMode: getGodMode(),
     lastSyncedAt: Date.now(),
   };
 }

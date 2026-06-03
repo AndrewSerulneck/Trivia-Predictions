@@ -31,7 +31,7 @@ describe("updateAdminVenue address/coordinate behavior", () => {
 
   it("updates venue with provided coordinates", async () => {
     const { update } = mockUpdateChain({
-      id: "venue-downtown",
+      id: "brunswick-grove",
       name: "Brunswick Grove",
       display_name: "Brunswick Grove",
       logo_text: null,
@@ -50,7 +50,7 @@ describe("updateAdminVenue address/coordinate behavior", () => {
     });
 
     await updateAdminVenue({
-      id: "venue-downtown",
+      id: "brunswick-grove",
       name: "Brunswick Grove",
       address: "327 Milltown Rd, East Brunswick, NJ",
       radius: 100,
@@ -70,7 +70,7 @@ describe("updateAdminVenue address/coordinate behavior", () => {
 
   it("falls back display_name to name when displayName is not provided", async () => {
     const { update } = mockUpdateChain({
-      id: "venue-downtown",
+      id: "brunswick-grove",
       name: "The Anchor",
       display_name: "The Anchor",
       logo_text: null,
@@ -89,7 +89,7 @@ describe("updateAdminVenue address/coordinate behavior", () => {
     });
 
     await updateAdminVenue({
-      id: "venue-downtown",
+      id: "brunswick-grove",
       name: "The Anchor",
       address: "10 Main St, Springfield, IL",
       radius: 150,

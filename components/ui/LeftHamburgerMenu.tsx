@@ -1,4 +1,5 @@
 "use client";
+import { cachedFetch } from "@/lib/fetchCache";
 
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
@@ -137,6 +138,7 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
   const priorPointsRef = useRef<number | null>(null);
   const displayedPointsRef = useRef(0);
   const pointsTickerRef = useRef<number | null>(null);
+  const pointsRef = useRef(points);
   const gainHideTimerRef = useRef<number | null>(null);
   const popHideTimerRef = useRef<number | null>(null);
   const flashHideTimerRef = useRef<number | null>(null);
@@ -270,11 +272,18 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
       setUsername(fallbackUsername);
     }
 
-    const response = await fetch(
-      `/api/users/summary?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venueId)}`,
-      { cache: "no-store" }
+    const cacheKey = `summary:${userId}:${venueId}`;
+    const payload = await cachedFetch<SummaryPayload>(
+      cacheKey,
+      async () => {
+        const response = await fetch(
+          `/api/users/summary?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venueId)}`,
+          { cache: "no-store" }
+        );
+        return response.json() as Promise<SummaryPayload>;
+      },
+      4_000
     );
-    const payload = (await response.json()) as SummaryPayload;
     if (!payload.ok || !payload.profile) {
       return;
     }
@@ -345,6 +354,12 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
     }
   }, [currentPinDraft, usernameDraft]);
 
+  // Keep a ref in sync with the points state so the onPointsUpdated closure
+  // always reads the latest value without needing `points` in the effect deps.
+  useEffect(() => {
+    pointsRef.current = points;
+  }, [points]);
+
   useEffect(() => {
     if (isJoinRoute) return;
 
@@ -360,7 +375,7 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
       const custom = event as CustomEvent<{ delta?: number; source?: string }>;
       const delta = Number(custom.detail?.delta ?? 0);
       if (Number.isFinite(delta) && delta > 0) {
-        const next = (points ?? 0) + delta;
+        const next = (pointsRef.current ?? 0) + delta;
         setPointsAndAnimate(next);
         animateGain(delta);
         if (
@@ -402,7 +417,7 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
         window.clearTimeout(burstHideTimerRef.current);
       }
     };
-  }, [animateGain, isJoinRoute, loadSummary, points, setPointsAndAnimate]);
+  }, [animateGain, isJoinRoute, loadSummary, setPointsAndAnimate]);
 
   useEffect(() => {
     if (compact || isJoinRoute) {

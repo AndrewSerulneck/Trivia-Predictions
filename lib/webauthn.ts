@@ -49,6 +49,7 @@ export type AccountRow = {
   username_normalized: string;
   pin_salt: string | null;
   pin_hash: string | null;
+  god_mode: boolean;
   created_at: string;
 };
 
@@ -561,7 +562,7 @@ export async function findAccountByUsername(
 
   const query = await supabaseAdmin
     .from("accounts")
-    .select("id, auth_id, username, username_normalized, pin_salt, pin_hash, created_at")
+    .select("id, auth_id, username, username_normalized, pin_salt, pin_hash, god_mode, created_at")
     .eq("username_normalized", normalized)
     .maybeSingle<AccountRow>();
 
@@ -581,7 +582,7 @@ export async function findAccountById(
 
   const query = await supabaseAdmin
     .from("accounts")
-    .select("id, auth_id, username, username_normalized, pin_salt, pin_hash, created_at")
+    .select("id, auth_id, username, username_normalized, pin_salt, pin_hash, god_mode, created_at")
     .eq("id", id)
     .maybeSingle<AccountRow>();
 
@@ -619,5 +620,6 @@ export function mapAccountForResponse(account: AccountRow) {
     id: account.id,
     authId: account.auth_id ?? undefined,
     username: account.username,
+    godMode: account.god_mode,
   };
 }

@@ -1,0 +1,1 @@
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS god_mode boolean NOT NULL DEFAULT false;

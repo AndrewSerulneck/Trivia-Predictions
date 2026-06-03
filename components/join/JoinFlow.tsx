@@ -10,6 +10,7 @@ import {
   createOrLoginAccount,
   createUserProfile,
   resolveVenueProfile,
+  resolveVenueProfileFromSession,
   signInAnonymously,
   signOut,
   validatePin,
@@ -18,7 +19,10 @@ import {
 import { calculateDistanceMeters, getBestCurrentLocation, getCurrentLocation, type Coordinates } from "@/lib/geolocation";
 import {
   getAccountId,
+  getUserId,
+  getUsername,
   saveAccountId,
+  saveGodMode,
   saveUserId,
   saveUsername,
   saveVenueId,
@@ -35,7 +39,7 @@ import {
   setLoginInProgress,
 } from "@/lib/authFastPath";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import { getVenueById, listVenues } from "@/lib/venues";
+import { getVenueById, listVenues, readCachedVenues } from "@/lib/venues";
 import {
   setVenueHomeRouteIntent,
   setVenueHomeEntryHandoff,
@@ -50,6 +54,7 @@ import { APP_PAGE_NAMES } from "@/lib/pageNames";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
 import { ensureSiteSession, syncUserGeographicData } from "@/lib/analytics";
+import { clearJoinPageEntryIntent, readFreshJoinPageEntryIntent } from "@/lib/joinPageNavigation";
 import { normalizePin } from "@/lib/pin";
 import { getPasskeyClientMessage } from "@/lib/passkeyErrors";
 
@@ -104,7 +109,7 @@ type PasskeyAuthVerifyPayload = {
   error?: string;
   errorCode?: string;
   user?: User;
-  account?: { id: string; username?: string };
+  account?: { id: string; username?: string; godMode?: boolean };
 };
 
 type PasskeyRegisterOptionsPayload = {
@@ -358,37 +363,14 @@ const VenueListItem = memo(function VenueListItem({ venue, index, isPending, onS
 
 function HightopNeonLogo() {
   return (
-    <div className="flex flex-col items-center py-6 select-none" aria-label="Hightop Challenge">
-      <div
-        className="font-['Bree_Serif',Georgia,serif] text-[2.75rem] font-normal leading-none tracking-[0.12em] uppercase"
-        aria-hidden="true"
-        style={{
-          color: "#a5f3fc",
-          textShadow:
-            "0 0 4px #a5f3fc, 0 0 12px #22d3ee, 0 0 28px #06b6d4, 0 0 48px #0891b2",
-        }}
-      >
-        Hightop
-      </div>
-      <div
-        className="my-2 h-px w-32 rounded-full"
-        aria-hidden="true"
-        style={{
-          background: "linear-gradient(90deg, transparent, #fbbf24, #fde68a, #fbbf24, transparent)",
-          boxShadow: "0 0 8px #f59e0b, 0 0 18px #d97706",
-        }}
+    <div className="w-full select-none" aria-label="Hightop Challenge">
+      <img
+        src="/brand/htc_logo_glow.svg"
+        alt="Hightop Challenge"
+        className="block h-auto w-full"
+        loading="eager"
+        decoding="async"
       />
-      <div
-        className="font-['Bree_Serif',Georgia,serif] text-[2.75rem] font-normal leading-none tracking-[0.12em] uppercase"
-        aria-hidden="true"
-        style={{
-          color: "#d8b4fe",
-          textShadow:
-            "0 0 4px #d8b4fe, 0 0 12px #a855f7, 0 0 28px #7c3aed, 0 0 48px #6d28d9",
-        }}
-      >
-        Challenge
-      </div>
     </div>
   );
 }
@@ -665,13 +647,24 @@ function PasskeyEnrollmentPrompt({ onSetUp, onSkip }: PasskeyEnrollmentPromptPro
 export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { state: authSessionState, refresh: refreshAuthSession } = useAuthSession();
+  const { refresh: refreshAuthSession, state: authState } = useAuthSession();
+  const godMode = authState.godMode;
   const venueParam = initialVenueId.trim();
+  const initialJoinPageEntryIntent = useMemo(() => readFreshJoinPageEntryIntent(), []);
+  const hasInitialStoredJoinIdentity = useMemo(() => {
+    const storedAccountId = (getAccountId() ?? "").trim();
+    const storedUserId = (getUserId() ?? "").trim();
+    const storedUsername = (getUsername() ?? "").trim();
+    return Boolean(storedAccountId || (storedUserId && storedUsername));
+  }, []);
+  const initialCachedVenueList = useMemo(() => readCachedVenues() ?? [], []);
 
-  const [status, setStatus] = useState<Status>("loading");
+  const [status, setStatus] = useState<Status>(() =>
+    !venueParam && initialCachedVenueList.length > 0 ? "ready" : "loading"
+  );
   const [errorMessage, setErrorMessage] = useState("");
   const [venue, setVenue] = useState<Venue | null>(null);
-  const [venueList, setVenueList] = useState<Venue[]>([]);
+  const [venueList, setVenueList] = useState<Venue[]>(initialCachedVenueList);
   const [username, setUsername] = useState("");
   const [pin, setPin] = useState("");
   const [distanceMeters, setDistanceMeters] = useState<number | null>(null);
@@ -680,8 +673,15 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [locationNotice, setLocationNotice] = useState("");
   const [lastLocationVerifiedAt, setLastLocationVerifiedAt] = useState<number | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [panelDirection, setPanelDirection] = useState<1 | -1>(1);
-  const [activePanel, setActivePanel] = useState<JoinPanel>("auth-method-selection");
+  const [panelDirection, setPanelDirection] = useState<1 | -1>(() =>
+    initialJoinPageEntryIntent?.source === "leave-venue" ? -1 : 1
+  );
+  const [activePanel, setActivePanel] = useState<JoinPanel>(() =>
+    hasInitialStoredJoinIdentity ? "venue-list" : "auth-method-selection"
+  );
+  const [animateInitialPanel] = useState<boolean>(() =>
+    Boolean(initialJoinPageEntryIntent?.source === "leave-venue" && hasInitialStoredJoinIdentity)
+  );
   const [isOptimisticallyEntering, setIsOptimisticallyEntering] = useState(false);
   const [passkeyEnrollmentStep, setPasskeyEnrollmentStep] = useState<PasskeyEnrollmentStepData | null>(null);
   // Account-first auth state
@@ -728,10 +728,18 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   }, []);
 
   useEffect(() => {
+    clearJoinPageEntryIntent();
+  }, []);
+
+  useEffect(() => {
     const load = async () => {
+      const storedAccountId = (getAccountId() ?? "").trim();
+      const storedUserId = (getUserId() ?? "").trim();
+      const storedUsername = (getUsername() ?? "").trim();
+      const hasStoredJoinIdentity = Boolean(storedAccountId || (storedUserId && storedUsername));
+
       // If accountId is stored, load venues and show the venue-list so the user can explicitly choose.
-      const storedAccountId = getAccountId();
-      if (venueParam && storedAccountId) {
+      if (venueParam && hasStoredJoinIdentity) {
         setStatus("loading");
         try {
           const [venues, venueData] = await Promise.all([listVenues(), getVenueById(venueParam)]);
@@ -742,7 +750,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             return;
           }
           setVenue(venueData);
-          setAccountIdState(storedAccountId);
+          setAccountIdState(storedAccountId || null);
+          setAccountUsername(storedUsername);
           setActivePanel("venue-list");
           setStatus("ready");
           hasSuccessfulInitialRenderRef.current = true;
@@ -757,7 +766,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
       // Preserve a stable join UI after first successful initialization.
       // Background refreshes should not blank the panel/state.
-      if (!hasSuccessfulInitialRenderRef.current) {
+      if (!hasSuccessfulInitialRenderRef.current && initialCachedVenueList.length === 0) {
         setStatus("loading");
         setErrorMessage("");
         setLocationVerified(false);
@@ -770,17 +779,20 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       try {
         if (!venueParam) {
           let locationPromise: Promise<LocationResult> | null = null;
-          if (!DISABLE_GEOFENCE_FOR_TESTING) {
+          if (!(DISABLE_GEOFENCE_FOR_TESTING || godMode) && !hasStoredJoinIdentity) {
             setLocationLoading(true);
             locationPromise = getInitialLocation();
+          } else {
+            setLocationLoading(false);
           }
 
           const venues = await listVenues();
           setVenueList(venues);
-          // Skip auth selection if account is already stored.
-          const resolvedId = getAccountId();
-          if (resolvedId) {
-            setAccountIdState(resolvedId);
+          // Skip auth selection if the user already has either an account-level
+          // identity or a legacy venue session we can continue from.
+          if (hasStoredJoinIdentity) {
+            setAccountIdState(storedAccountId || null);
+            setAccountUsername(storedUsername);
             setActivePanel("venue-list");
           } else {
             setActivePanel("auth-method-selection");
@@ -788,7 +800,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           setStatus("ready");
           hasSuccessfulInitialRenderRef.current = true;
 
-          if (DISABLE_GEOFENCE_FOR_TESTING) {
+          if (DISABLE_GEOFENCE_FOR_TESTING || godMode) {
             setLocationVerified(true);
             setLocationNotice("Testing mode: location checks are disabled.");
             setLocationLoading(false);
@@ -826,6 +838,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               );
             }
             setLocationLoading(false);
+          } else if (hasStoredJoinIdentity) {
+            setLocationNotice("Choose a venue to continue.");
           }
           setVenue(null);
           return;
@@ -853,7 +867,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           return;
         }
 
-        if (!DISABLE_GEOFENCE_FOR_TESTING) {
+        if (!(DISABLE_GEOFENCE_FOR_TESTING || godMode)) {
           setLocationLoading(true);
           try {
             let current = await getCurrentLocation();
@@ -910,7 +924,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     };
 
     void load();
-  }, [venueParam, router]);
+  }, [venueParam, router, godMode, initialCachedVenueList.length]);
 
   const clearLoginWatchdog = useCallback(() => {
     if (loginWatchdogRef.current !== null) {
@@ -1001,11 +1015,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
   const verifyVenueAccess = useCallback(
     async (selectedVenue: Venue) => {
-      if (DISABLE_GEOFENCE_FOR_TESTING) {
+      if (DISABLE_GEOFENCE_FOR_TESTING || godMode) {
         setLocationLoading(false);
         setLocationVerified(true);
         setLastLocationVerifiedAt(Date.now());
-        setLocationNotice("Testing mode: location checks are disabled.");
+        setLocationNotice(godMode ? "God mode: location checks are bypassed." : "Testing mode: location checks are disabled.");
         setDistanceMeters(null);
         setErrorMessage("");
         return;
@@ -1055,7 +1069,35 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         setLocationLoading(false);
       }
     },
-    []
+    [godMode]
+  );
+
+  const navigateToResolvedVenue = useCallback(
+    async (selectedVenue: Venue, user: User) => {
+      hardClearAuthAndCachePreserveVenue(selectedVenue.id);
+      saveVenueId(selectedVenue.id);
+      saveUsername(user.username);
+      saveUserId(user.id);
+      ensureSiteSession();
+      syncUserGeographicData({
+        zipCode: selectedVenue.zipCode,
+        city: selectedVenue.city,
+        stateCode: selectedVenue.state,
+        regionKey: selectedVenue.region,
+        country: selectedVenue.country,
+        dataSource: "geolocation",
+      });
+      setSelectedVenueLock(selectedVenue.id);
+      setLoginInProgress(selectedVenue.id);
+      refreshAuthSession();
+      setVenueHomeRouteIntent({ venueId: selectedVenue.id });
+      setVenueHomeEntryHandoff({ venueId: selectedVenue.id, userId: user.id });
+      const hardTarget = `/venue/${encodeURIComponent(selectedVenue.id)}?entryUser=${encodeURIComponent(user.id)}&entryVenue=${encodeURIComponent(selectedVenue.id)}&entryAt=${Date.now()}`;
+      void signInAnonymously().catch(() => {});
+      setAuthLoginState("navigating");
+      window.location.assign(hardTarget);
+    },
+    [refreshAuthSession]
   );
 
   const resolveAndNavigate = useCallback(
@@ -1079,29 +1121,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       let didNavigate = false;
       try {
         const user = await resolveVenueProfile({ accountId: resolvedAccountId, venueId: selectedVenue.id });
-        hardClearAuthAndCachePreserveVenue(selectedVenue.id);
-        saveVenueId(selectedVenue.id);
-        saveUsername(user.username);
-        saveUserId(user.id);
-        ensureSiteSession();
-        syncUserGeographicData({
-          zipCode: selectedVenue.zipCode,
-          city: selectedVenue.city,
-          stateCode: selectedVenue.state,
-          regionKey: selectedVenue.region,
-          country: selectedVenue.country,
-          dataSource: "geolocation",
-        });
-        setSelectedVenueLock(selectedVenue.id);
-        setLoginInProgress(selectedVenue.id);
-        refreshAuthSession();
-        setVenueHomeRouteIntent({ venueId: selectedVenue.id });
-        setVenueHomeEntryHandoff({ venueId: selectedVenue.id, userId: user.id });
-        const hardTarget = `/venue/${encodeURIComponent(selectedVenue.id)}?entryUser=${encodeURIComponent(user.id)}&entryVenue=${encodeURIComponent(selectedVenue.id)}&entryAt=${Date.now()}`;
-        void signInAnonymously().catch(() => {});
-        setAuthLoginState("navigating");
+        await navigateToResolvedVenue(selectedVenue, user);
         didNavigate = true;
-        window.location.assign(hardTarget);
       } catch (error) {
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
@@ -1120,7 +1141,51 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         }
       }
     },
-    [refreshAuthSession]
+    [navigateToResolvedVenue]
+  );
+
+  const resolveAndNavigateFromSession = useCallback(
+    async (sessionUserId: string, selectedVenue: Venue) => {
+      setErrorMessage("");
+      setPendingVenueSelectionId(selectedVenue.id);
+      setStatus("saving");
+      setIsTransitioning(true);
+      setIsOptimisticallyEntering(true);
+      setAuthLoginState("authenticating");
+      setLoadingPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("tp:global-transition-show", {
+            detail: { targetPath: `/venue/${selectedVenue.id}` },
+          })
+        );
+      }
+
+      let didNavigate = false;
+      try {
+        const user = await resolveVenueProfileFromSession({ sessionUserId, venueId: selectedVenue.id });
+        await navigateToResolvedVenue(selectedVenue, user);
+        didNavigate = true;
+      } catch (error) {
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("tp:global-transition-hide", { detail: { force: true } }));
+        }
+        setAuthLoginState("error");
+        setErrorMessage(getErrorMessage(error, "Failed to join venue. Please try again."));
+      } finally {
+        setPendingVenueSelectionId(null);
+        if (!didNavigate) {
+          clearLoginInProgress();
+          clearSelectedVenueLock();
+          setIsOptimisticallyEntering(false);
+          setIsTransitioning(false);
+          setStatus("ready");
+          setAuthLoginState("idle");
+        }
+      }
+    },
+    [navigateToResolvedVenue]
   );
 
   const handleSelectVenue = useCallback(
@@ -1133,6 +1198,12 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       const resolvedAccountId = accountId || getAccountId();
       if (resolvedAccountId) {
         void resolveAndNavigate(resolvedAccountId, selectedVenue);
+        return;
+      }
+
+      const sessionUserId = (getUserId() ?? "").trim();
+      if (sessionUserId) {
+        void resolveAndNavigateFromSession(sessionUserId, selectedVenue);
         return;
       }
 
@@ -1156,7 +1227,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         setPendingVenueSelectionId((current) => (current === selectedVenue.id ? null : current));
       });
     },
-    [accountId, resolveAndNavigate, verifyVenueAccess]
+    [accountId, resolveAndNavigate, resolveAndNavigateFromSession, verifyVenueAccess]
   );
 
   const handleBackToVenueList = useCallback(() => {
@@ -1293,7 +1364,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           return;
         }
 
-        if (!DISABLE_GEOFENCE_FOR_TESTING && !locationVerified) {
+        if (!(DISABLE_GEOFENCE_FOR_TESTING || godMode) && !locationVerified) {
           setErrorMessage("Verify your location before entering the venue.");
           fallbackToPin("");
           return;
@@ -1348,6 +1419,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       venue,
       transitionToPinStep,
       locationVerified,
+      godMode,
       refreshAuthSession,
     ]
   );
@@ -1434,7 +1506,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   }, [errorMessage, loginStep, pin]);
 
   const canCreate = useMemo(() => {
-    const locationOk = DISABLE_GEOFENCE_FOR_TESTING ? true : locationVerified;
+    const locationOk = (DISABLE_GEOFENCE_FOR_TESTING || godMode) ? true : locationVerified;
     return Boolean(
       isSupabaseConfigured &&
         venue &&
@@ -1444,18 +1516,18 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         !locationLoading &&
         !isTransitioning
     );
-  }, [isTransitioning, locationLoading, locationVerified, venue, username, pin]);
+  }, [isTransitioning, locationLoading, locationVerified, godMode, venue, username, pin]);
 
   const blockedReason = useMemo(() => {
     if (!isSupabaseConfigured) return "Login is temporarily unavailable. Please try again shortly.";
     if (!venue) return "Select a venue to continue.";
     if (!validateUsername(username)) return "Enter a username to continue.";
   if (!validatePin(pin)) return INVALID_PIN_MESSAGE;
-    if (!DISABLE_GEOFENCE_FOR_TESTING && locationLoading) return "Verifying your location...";
-    if (!DISABLE_GEOFENCE_FOR_TESTING && !locationVerified) return "Location verification is required to enter.";
+    if (!(DISABLE_GEOFENCE_FOR_TESTING || godMode) && locationLoading) return "Verifying your location...";
+    if (!(DISABLE_GEOFENCE_FOR_TESTING || godMode) && !locationVerified) return "Location verification is required to enter.";
     if (isTransitioning) return "Finishing your login...";
     return "";
-  }, [isTransitioning, locationLoading, locationVerified, pin, username, venue]);
+  }, [isTransitioning, locationLoading, locationVerified, godMode, pin, username, venue]);
 
   const openAdminDashboard = useCallback(() => {
     if (typeof window !== "undefined") {
@@ -1703,6 +1775,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
           rememberLocalPasskeyForUsername(verifyPayload.account.username ?? normalizedUsername);
           saveAccountId(verifyPayload.account.id);
+          saveGodMode(verifyPayload.account.godMode ?? false);
           setAccountIdState(verifyPayload.account.id);
           setAccountUsername(verifyPayload.account.username ?? normalizedUsername);
           setIsNewAccount(false);
@@ -1759,6 +1832,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           mode: activePanel === "account-sign-in" ? "login" : "create",
         });
         saveAccountId(account.id);
+        saveGodMode(account.godMode ?? false);
         setAccountIdState(account.id);
         setAccountUsername(account.username);
 
@@ -1847,6 +1921,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         setAccountUsername(resolvedUsername);
       }
       saveAccountId(verifyPayload.account.id);
+      saveGodMode(verifyPayload.account.godMode ?? false);
       setAccountIdState(verifyPayload.account.id);
       setIsNewAccount(false);
       setPanelDirection(1);
@@ -1980,7 +2055,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       setErrorMessage(INVALID_PIN_MESSAGE);
       return;
     }
-    if (!DISABLE_GEOFENCE_FOR_TESTING && !locationVerified) {
+    if (!(DISABLE_GEOFENCE_FOR_TESTING || godMode) && !locationVerified) {
       setErrorMessage("Verify your location before creating a profile.");
       return;
     }
@@ -2221,15 +2296,17 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             onSkip={handlePasskeyEnrollSkip}
           />
         )}
-        <div className="mx-auto w-full max-w-md px-4 pt-5 pb-[max(2rem,env(safe-area-inset-bottom))]">
-          <HightopNeonLogo />
+        <div className="mx-auto w-full px-2 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="relative left-1/2 w-[100dvw] max-w-none -translate-x-1/2">
+            <HightopNeonLogo />
+          </div>
 
           {/* Dark join card */}
-          <div className="rounded-3xl border border-cyan-400/40 bg-slate-900 p-6">
+          <div className="mx-auto w-full max-w-md rounded-3xl border border-cyan-400/40 bg-slate-900 p-5">
             <div className="relative [overflow-x:clip]">
-              <AnimatePresence initial={false} custom={panelDirection} mode="wait">
+              <AnimatePresence initial={animateInitialPanel} custom={panelDirection} mode="wait">
 
-                {/* ── Auth method selection (Chase-style first screen) ── */}
+                {/* ── Login Page panel (account entry chooser) ── */}
                 {activePanel === "auth-method-selection" && (
                   <motion.div
                     key="auth-method-selection"
@@ -2456,7 +2533,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                   </motion.div>
                 )}
 
-                {/* ── Venue list ── */}
+                {/* ── Join Page panel (venue selection list) ── */}
                 {activePanel === "venue-list" && (
                   <motion.div
                     key="venue-list"

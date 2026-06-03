@@ -13,7 +13,7 @@ type VenueCache = {
   fetchedAt: number;
 };
 
-function getCachedVenues(): Venue[] | null {
+export function readCachedVenues(): Venue[] | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = window.sessionStorage.getItem(VENUE_CACHE_KEY);
@@ -101,7 +101,7 @@ async function withTimedVenueQuery<T>(runQuery: (signal: AbortSignal) => Promise
 }
 
 export async function listVenues(): Promise<Venue[]> {
-  const cached = getCachedVenues();
+  const cached = readCachedVenues();
   if (cached) return cached;
 
   const supabaseClient = supabase;

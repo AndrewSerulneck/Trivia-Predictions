@@ -244,7 +244,7 @@ export async function createOrLoginAccount(params: {
   mode?: "login" | "create";
   traceId?: string;
   signal?: AbortSignal;
-}): Promise<{ id: string; username: string; authId?: string }> {
+}): Promise<{ id: string; username: string; authId?: string; godMode?: boolean }> {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
     throw new Error("Supabase is not configured.");
   }
@@ -290,7 +290,7 @@ export async function createOrLoginAccount(params: {
   }
 
   const rawBody = await response.text().catch(() => "");
-  let payload = {} as { ok?: boolean; error?: string; account?: { id: string; username: string; authId?: string } };
+  let payload = {} as { ok?: boolean; error?: string; account?: { id: string; username: string; authId?: string; godMode?: boolean } };
   try {
     payload = rawBody ? (JSON.parse(rawBody) as typeof payload) : {};
   } catch {
@@ -333,6 +333,63 @@ export async function resolveVenueProfile(params: {
         ...(traceId ? { "X-Auth-Trace-Id": traceId } : {}),
       },
       body: JSON.stringify({ accountId: params.accountId, venueId: params.venueId }),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (isAbortError(error)) {
+      throw params.signal?.aborted
+        ? new Error("Request was canceled.")
+        : new Error("Venue profile request timed out. Please try again.");
+    }
+    throw error;
+  } finally {
+    globalThis.clearTimeout(timeoutId);
+  }
+
+  const rawBody = await response.text().catch(() => "");
+  let payload = {} as { ok?: boolean; error?: string; user?: User };
+  try {
+    payload = rawBody ? (JSON.parse(rawBody) as typeof payload) : {};
+  } catch {
+    payload = {};
+  }
+
+  if (!response.ok || !payload.ok || !payload.user) {
+    throw new Error(payload.error ?? "Failed to resolve venue profile.");
+  }
+  return payload.user;
+}
+
+export async function resolveVenueProfileFromSession(params: {
+  sessionUserId: string;
+  venueId: string;
+  traceId?: string;
+  signal?: AbortSignal;
+}): Promise<User> {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const traceId = String(params.traceId ?? "").trim() || null;
+  logAuthIncident("auth-helper", "resolve-venue-profile-from-session-start", {
+    traceId,
+    sessionUserId: params.sessionUserId,
+    venueId: params.venueId,
+  });
+
+  const controller = new AbortController();
+  const timeoutId = globalThis.setTimeout(() => controller.abort(), JOIN_PROFILE_REQUEST_TIMEOUT_MS);
+  params.signal?.addEventListener("abort", () => controller.abort(), { once: true });
+
+  let response: Response;
+  try {
+    response = await fetch("/api/join/profile", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(traceId ? { "X-Auth-Trace-Id": traceId } : {}),
+      },
+      body: JSON.stringify({ sessionUserId: params.sessionUserId, venueId: params.venueId }),
       signal: controller.signal,
     });
   } catch (error) {
