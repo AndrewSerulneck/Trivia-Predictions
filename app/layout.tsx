@@ -11,6 +11,8 @@ import { AuthNavigationGuard } from "@/components/auth/AuthNavigationGuard";
 import { LoginStuckStateBreaker } from "@/components/auth/LoginStuckStateBreaker";
 import { AnalyticsRuntime } from "@/components/analytics/AnalyticsRuntime";
 import { AppShell } from "@/components/ui/AppShell";
+import { AnimationOverlay } from "@/components/animations/AnimationOverlay";
+import { AnimationTriggerProvider } from "@/components/animations/AnimationTriggerProvider";
 import { initializeScheduledTasks } from "@/lib/scheduledTasks";
 import "./globals.css";
 
@@ -44,18 +46,21 @@ export default async function RootLayout({
       </head>
       <body className="touch-manipulation m-0 p-0 min-h-screen w-full">
         <AuthSessionProvider>
-          <AppShell legalNotice={GLOBAL_LEGAL_NOTICE}>{children}</AppShell>
-          <Suspense fallback={null}>
-            <AuthNavigationGuard />
-          </Suspense>
-          <LoginStuckStateBreaker />
-          <ScrollRecoverySentinel />
-          <ScrollRescueGuard />
-          <ViewportHeightSync />
-          <GlobalTransitionOverlay />
-          <AnalyticsRuntime />
-          <PopupAds />
-          <MobileAdhesionAd />
+          <AnimationTriggerProvider>
+            <AppShell legalNotice={GLOBAL_LEGAL_NOTICE}>{children}</AppShell>
+            <Suspense fallback={null}>
+              <AuthNavigationGuard />
+            </Suspense>
+            <LoginStuckStateBreaker />
+            <ScrollRecoverySentinel />
+            <ScrollRescueGuard />
+            <ViewportHeightSync />
+            <AnimationOverlay />
+            <GlobalTransitionOverlay />
+            <AnalyticsRuntime />
+            <PopupAds />
+            <MobileAdhesionAd />
+          </AnimationTriggerProvider>
         </AuthSessionProvider>
       </body>
     </html>
