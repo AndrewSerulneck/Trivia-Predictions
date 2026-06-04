@@ -662,14 +662,31 @@ export function gradeWriteInAnswer(userSubmitted: string, correctTarget: string)
   return isSimilarShortAnswer(normalizedSubmitted, normalizedTarget);
 }
 
+function uniqueAnswerTargets(targets: string[]): string[] {
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const target of targets) {
+    const answer = String(target ?? "").trim();
+    const key = normalizeForTriviaComparison(answer);
+    if (!answer || !key || seen.has(key)) continue;
+    seen.add(key);
+    unique.push(answer);
+  }
+  return unique;
+}
+
 export async function gradeWriteInAnswerWithVariants(
   userSubmitted: string,
   correctTarget: string,
   questionId?: string,
-  answerIndex?: number
+  answerIndex?: number,
+  acceptableTargets: string[] = [],
+  answerVariantIndexes: number[] = []
 ): Promise<boolean> {
-  if (gradeWriteInAnswer(userSubmitted, correctTarget)) {
-    return true;
+  for (const target of uniqueAnswerTargets([correctTarget, ...acceptableTargets])) {
+    if (gradeWriteInAnswer(userSubmitted, target)) {
+      return true;
+    }
   }
 
   const normalizedSubmitted = normalizeForTriviaComparison(userSubmitted);
@@ -682,11 +699,20 @@ export async function gradeWriteInAnswerWithVariants(
   }
 
   try {
-    const variants = await getAnswerVariants(questionId, Number(answerIndex));
-    for (const variant of variants) {
-      const normalizedVariant = normalizeForTriviaComparison(variant);
-      if (normalizedVariant && normalizedSubmitted === normalizedVariant) {
-        return true;
+    const indexes = Array.from(
+      new Set(
+        [answerIndex, ...answerVariantIndexes]
+          .map((index) => Number(index))
+          .filter((index) => Number.isInteger(index) && index >= 0)
+      )
+    );
+    for (const index of indexes) {
+      const variants = await getAnswerVariants(questionId, index);
+      for (const variant of variants) {
+        const normalizedVariant = normalizeForTriviaComparison(variant);
+        if (normalizedVariant && normalizedSubmitted === normalizedVariant) {
+          return true;
+        }
       }
     }
   } catch (error) {

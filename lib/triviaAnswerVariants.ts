@@ -23,6 +23,7 @@ type TriviaQuestionVariantSeedRow = {
   id: string;
   options: unknown;
   correct_answer: number;
+  answer_format: "multiple_choice" | "write_in" | "numeric" | "true_false" | null;
 };
 
 function isAnswerVariantsTableMissing(error: { code?: string; message?: string } | null | undefined): boolean {
@@ -78,6 +79,33 @@ function normalize(value: string): string {
 function coerceOptions(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value.map((entry) => String(entry ?? "").trim());
+}
+
+function normalizeAnswerKey(value: string): string {
+  return normalize(value);
+}
+
+function getVariantSeedAnswers(question: TriviaQuestionVariantSeedRow): Array<{ answer: string; index: number }> {
+  const options = coerceOptions(question.options);
+  const correctAnswerIndex = Number(question.correct_answer);
+  if (!Number.isInteger(correctAnswerIndex) || correctAnswerIndex < 0 || correctAnswerIndex >= options.length) {
+    return [];
+  }
+
+  if (question.answer_format === "write_in" || question.answer_format === "numeric" || question.answer_format === "true_false") {
+    const seen = new Set<string>();
+    return options
+      .map((answer, index) => ({ answer: String(answer ?? "").trim(), index }))
+      .filter((entry) => {
+        const key = normalizeAnswerKey(entry.answer);
+        if (!entry.answer || !key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }
+
+  const correctAnswer = String(options[correctAnswerIndex] ?? "").trim();
+  return correctAnswer ? [{ answer: correctAnswer, index: correctAnswerIndex }] : [];
 }
 
 function generateAbbreviations(text: string): AnswerVariant[] {
@@ -359,7 +387,7 @@ export async function regenerateAllAnswerVariants(): Promise<{
   while (hasMore) {
     const { data, error } = await supabaseAdmin
       .from("trivia_questions")
-      .select("id, options, correct_answer")
+      .select("id, options, correct_answer, answer_format")
       .range(offset, offset + BATCH_SIZE - 1);
 
     if (error) {
@@ -375,18 +403,17 @@ export async function regenerateAllAnswerVariants(): Promise<{
 
     for (const question of questions) {
       try {
-        const options = coerceOptions(question.options);
-        const correctAnswerIndex = Number(question.correct_answer);
-        if (!Number.isInteger(correctAnswerIndex) || correctAnswerIndex < 0 || correctAnswerIndex >= options.length) {
+        const seedAnswers = getVariantSeedAnswers(question);
+        if (seedAnswers.length === 0) {
           continue;
         }
-        const correctAnswer = options[correctAnswerIndex] ?? "";
-        if (!correctAnswer) continue;
 
-        const variants = generateAnswerVariants(correctAnswer);
-        if (variants.length > 0) {
-          await storeAnswerVariants(String(question.id), correctAnswerIndex, variants);
-          variantsCreated += variants.length;
+        for (const seed of seedAnswers) {
+          const variants = generateAnswerVariants(seed.answer);
+          if (variants.length > 0) {
+            await storeAnswerVariants(String(question.id), seed.index, variants);
+            variantsCreated += variants.length;
+          }
         }
         processed += 1;
       } catch (errorDuringQuestion) {

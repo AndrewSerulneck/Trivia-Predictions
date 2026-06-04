@@ -12,6 +12,11 @@ export type AnimationType =
   | "FANTASY_SCORE_UP"
   | "FANTASY_LIVE_COLLECT";
 
+export interface AnimationPayload {
+  inputRect?: DOMRect | null;
+}
+
 export type GameplayAnimationProps = {
   onComplete: () => void;
+  payload?: AnimationPayload;
 };

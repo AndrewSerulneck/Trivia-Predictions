@@ -26,9 +26,15 @@ export function LiveTriviaRoundBreakAnimation({ onComplete }: GameplayAnimationP
   const [rowRect, setRowRect] = useState<RowRect | null>(null);
 
   useEffect(() => {
-    // ── Layer 3: deferred DOM query at 800ms ────────────────────────────────
-    // The leaderboard needs time to render before we can measure the row.
-    rowQueryTimerRef.current = setTimeout(() => {
+    // ── Layer 3: poll for the player's leaderboard row ──────────────────────
+    // The leaderboard renders asynchronously, so retry every 100ms (starting at
+    // 100ms) for up to 1200ms. If the row never appears (e.g. viewer outside the
+    // top 10), give up gracefully — Layer 3 is simply skipped.
+    const POLL_INTERVAL = 100;
+    const POLL_DEADLINE = 1200;
+    let elapsed = 0;
+
+    const pollForRow = (): void => {
       if (cancelledRef.current) return;
       if (typeof document === "undefined") return;
 
@@ -45,8 +51,16 @@ export function LiveTriviaRoundBreakAnimation({ onComplete }: GameplayAnimationP
           width: rect.width,
           height: rect.height,
         });
+        return;
       }
-    }, 800);
+
+      elapsed += POLL_INTERVAL;
+      if (elapsed < POLL_DEADLINE) {
+        rowQueryTimerRef.current = setTimeout(pollForRow, POLL_INTERVAL);
+      }
+    };
+
+    rowQueryTimerRef.current = setTimeout(pollForRow, POLL_INTERVAL);
 
     // ── Lifecycle timer ─────────────────────────────────────────────────────
     lifecycleTimerRef.current = setTimeout(() => {

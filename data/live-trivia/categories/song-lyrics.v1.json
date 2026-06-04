@@ -1,0 +1,458 @@
+{  
+    "categoryName": "Song Lyrics",
+  "questions": [
+  {
+    "slug": "bohemian-rhapsody-mama",
+    "question": "Complete this Queen lyric from 'Bohemian Rhapsody': '_____, just killed a man.'",
+    "answer": "Mama",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "imagine-john-lennon",
+    "question": "Complete this John Lennon lyric from 'Imagine': 'Imagine there's no heaven, it's easy if you _____.'",
+    "answer": "Try",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "sweet-child-o-mine-guns-n-roses",
+    "question": "Complete this Guns N' Roses lyric from 'Sweet Child O' Mine': 'She's got a smile that it seems to me, reminds me of childhood _____.'",
+    "answer": "Memories",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "billie-jean-michael-jackson",
+    "question": "Complete this Michael Jackson lyric from 'Billie Jean': 'But the kid is not my _____.'",
+    "answer": "Son",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "like-a-rolling-stone-bob-dylan",
+    "question": "Complete this Bob Dylan lyric from 'Like a Rolling Stone': 'How does it feel to be on your _____?'",
+    "answer": "Own",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "yesterday-the-beatles",
+    "question": "Complete this The Beatles lyric from 'Yesterday': 'Yesterday, all my troubles seemed so _____ away.'",
+    "answer": "Far",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "hotel-california-the-eagles",
+    "question": "Complete this The Eagles lyric from 'Hotel California': 'You can _________ any time you like, but you can never leave.'",
+    "answer": "check out",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "smells-like-teen-spirit-nirvana",
+    "question": "Complete this Nirvana lyric from 'Smells Like Teen Spirit': 'I feel stupid and contagious. Here we are now, _____ us.'",
+    "answer": "Entertain",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "wonderwall-oasis",
+    "question": "Complete this Oasis lyric from 'Wonderwall': '________ is gonna be the day that they're gonna throw it back to you.'",
+    "answer": "Today",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "sweet-caroline-neil-diamond",
+    "question": "Complete this Neil Diamond lyric from 'Sweet Caroline': 'Sweet Caroline, good times never seemed so _____.'",
+    "answer": "Good",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "living-on-a-prayer-bon-jovi",
+    "question": "Complete this Bon Jovi lyric from 'Livin' on a Prayer': 'Whoa, we're _________ there, whoa, livin' on a prayer.'",
+    "answer": "halfway",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "don't-stop-believin'-journey",
+    "question": "Complete this Journey lyric from 'Don't Stop Believin'': 'Don't stop believin', hold on to that _____.'",
+    "answer": "Feeling",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "all-star-smash-mouth",
+    "question": "Complete this Smash Mouth lyric from 'All Star': 'Somebody once told me the world is gonna roll me, I ain't the sharpest tool in the _____.'",
+    "answer": "Shed",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "hey-jude-the-beatles",
+    "question": "Complete this The Beatles lyric from 'Hey Jude': 'Hey Jude, don't make it _____. Take a sad song, and make it better.'",
+    "answer": "Bad",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "piano-man-billy-joel",
+    "question": "Complete this Billy Joel lyric from 'Piano Man': 'It's nine o'clock on a Saturday, the ________ crowd shuffles in, there's an old man sitting next to me, making love to his tonic and gin.'",
+    "answer": "regular",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "every-breath-you-take-the-police",
+    "question": "Complete this The Police lyric from 'Every Breath You Take': 'Every breath you take, every move you _____.'",
+    "answer": "Make",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "happy-pharrell-williams",
+    "question": "Complete this Pharrell Williams lyric from 'Happy': 'Clap along if you feel like a room without a ______ .'",
+    "answer": "roof",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "let-it-be-the-beatles",
+    "question": "Complete this The Beatles lyric from 'Let It Be': 'When I find myself in times of __________, Mother Mary comes to me.'",
+    "answer": "trouble",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "rolling-in-the-deep-adele",
+    "question": "Complete this Adele lyric from 'Rolling in the Deep': 'There's a fire starting in my heart, reaching a ____________ and it's bringing me out the dark.'",
+    "answer": "fever pitch",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "shape-of-you-ed-sheeran",
+    "question": "Complete this Ed Sheeran lyric: 'I'm in love with the _____ of you.'",
+    "answer": "Shape",
+    "category": "Song Lyrics",
+    "difficulty": "easy"
+  },
+
+  {
+    "slug": "purple-rain-prince",
+    "question": "Complete this Prince lyric from 'Purple Rain': 'I never meant to cause you any _____, I never meant to cause you any pain.'",
+    "answer": "Sorrow",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "stairway-to-heaven-led-zeppelin",
+    "question": "Complete this Led Zeppelin lyric: 'There's a lady who's sure all that glitters is gold, and she's buying a _____ to heaven.'",
+    "answer": "Stairway",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "thriller-michael-jackson",
+    "question": "Complete this Michael Jackson lyric from 'Thriller': ''Cause this is thriller, thriller night. And no one's gonna save you from the _________ about to strike.'",
+    "answer": "Thriller",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "born-to-run-bruce-springsteen",
+    "question": "Complete this Bruce Springsteen lyric from 'Born to Run': '_______ like us, baby we were baby to run.'",
+    "answer": "Tramps",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "smells-like-teen-spirit-nirvana-2",
+    "question": "Complete this Nirvana lyric from 'Smells Like Teen Spirit': 'A mulatto, an albino, a mosquito, my _____.'",
+    "answer": "Libido",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "bohemian-rhapsody-queen-2",
+    "question": "Complete this Queen lyric from 'Bohemian Rhapsody': 'Scaramouche, Scaramouche, will you do the _____?'",
+    "answer": "Fandango",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "like-a-prayer-madonna",
+    "question": "Complete this Madonna lyric from 'Like a Prayer': 'Life is a mystery, everyone must stand _____.'",
+    "answer": "Alone",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "sweet-dreams-eurythmics",
+    "question": "Complete this Eurythmics lyric: 'Sweet dreams are made of this, who am I to disagree? I travel the world and the __________ . Everybody's looking for something.'",
+    "answer": "seven seas",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "every-breath-you-take-the-police-2",
+    "question": "Complete this The Police lyric from 'Every Breath You Take': 'Every little thing she does is _____.'",
+    "answer": "Magic",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "wonderwall-oasis-2",
+    "question": "Complete this Oasis lyric from 'Wonderwall': 'I don't believe that anybody feels the way I do about you _____.'",
+    "answer": "Now",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "all-along-the-watchtower-bob-dylan",
+    "question": "Complete this Bob Dylan lyric from 'All Along the Watchtower': 'All along the watchtower, princes kept the _____.'",
+    "answer": "View",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "hurt-nine-inch-nails",
+    "question": "Complete this Nine Inch Nails lyric from 'Hurt': 'I hurt myself today, to see if I still _____.'",
+    "answer": "Feel",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "creep-radiohead",
+    "question": "Complete this Radiohead lyric from 'Creep': 'I wish I was special, you're so very _____.'",
+    "answer": "Special",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "losing-my-religion-rem",
+    "question": "Complete this R.E.M. lyric from 'Losing My Religion': 'That's me in the corner, that's me in the _____.'",
+    "answer": "Spotlight",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "black-hole-sun-soundgarden",
+    "question": "Complete this Soundgarden lyric from 'Black Hole Sun': 'Black hole sun, won't you come, and wash away the _____.'",
+    "answer": "Rain",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "zombie-the-cranberries",
+    "question": "Complete this The Cranberries lyric from 'Zombie': 'In your head, in your _____, they're fighting.'",
+    "answer": "Head",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "tears-in-heaven-eric-clapton",
+    "question": "Complete this Eric Clapton lyric from 'Tears in Heaven': 'Would you know my ______, if I saw you in Heaven?'",
+    "answer": "name",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "nothing-else-matters-metallica",
+    "question": "Complete this Metallica lyric from 'Nothing Else Matters': 'So close, no matter how far, couldn't be much more from the _____.'",
+    "answer": "Heart",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "killing-me-softly-fugees",
+    "question": "Complete this Fugees lyric from 'Killing Me Softly': 'Strumming my pain with his fingers, singing my life with his _____.'",
+    "answer": "Words",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "waterfalls-tlc",
+    "question": "Complete this TLC lyric from 'Waterfalls': 'Don't go _______ waterfalls.'",
+    "answer": "Chasing",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "baba-o-riley-the-who",
+    "question": "Complete this The Who lyric from 'Baba O'Riley': 'It's only teenage _____.'",
+    "answer": "Wasteland",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "paint-it-black-the-rolling-stones",
+    "question": "Complete this The Rolling Stones lyric from 'Paint It Black': 'I see a red ______ and I want it painted black.'",
+    "answer": "Door",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  
+  {
+    "slug": "blank-space-taylor-swift",
+    "question": "Complete this Taylor Swift lyric from 'Blank Space': 'Got a long list of ex-lovers, they'll tell you I'm _____.'",
+    "answer": "Insane",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "umbrella-rihanna",
+    "question": "Complete this Rihanna lyric from 'Umbrella': 'You had my heart, and we'll never be ________ apart.'",
+    "answer": "worlds",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "firework-katy-perry",
+    "question": "Complete this Katy Perry lyric from 'Firework': 'Cause baby, you're a firework. Come on, show 'em what you're ________.'",
+    "answer": "worth",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "love-story-taylor-swift",
+    "question": "Complete this Taylor Swift lyric from 'Love Story': 'Romeo, take me somewhere we can be _____.'",
+    "answer": "Alone",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "poker-face-lady-gaga",
+    "question": "Complete this Lady Gaga lyric: 'Can't read my, can't read my, no, he can't read my _____ face.'",
+    "answer": "Poker",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "we-found-love-rihanna",
+    "question": "Complete this Rihanna lyric from 'We Found Love': 'We found love in a _____ place.'",
+    "answer": "Hopeless",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "call-me-maybe-carly-rae-jepsen",
+    "question": "Complete this Carly Rae Jepsen lyric from 'Call Me Maybe': 'Hey, I just met you, and this is crazy, but here's my _____, so call me, maybe.'",
+    "answer": "Number",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "roar-katy-perry",
+    "question": "Complete this Katy Perry lyric from 'Roar': 'I got the eye of the tiger, a fighter, dancing through the _____.'",
+    "answer": "Fire",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "shake-it-off-taylor-swift",
+    "question": "Complete this Taylor Swift lyric from 'Shake It Off': 'I'm dancing on my own, I make the moves up as I _____.'",
+    "answer": "Go",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "dynamite-bts",
+    "question": "Complete this BTS lyric from 'Dynamite': 'Shining through the city with a little _____.'",
+    "answer": "Funk",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "love-me-like-you-do-ellie-goulding",
+    "question": "Complete this Ellie Goulding lyric from 'Love Me Like You Do': 'I didn't know that I was _____ for somebody like you.'",
+    "answer": "Waiting",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "cheap-thrills-sia",
+    "question": "Complete this Sia lyric from 'Cheap Thrills': 'I don't need no _____, I just need a beat.'",
+    "answer": "Dollar",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "work-rihanna",
+    "question": "Complete this Rihanna lyric from 'Work': 'Work, work, work, work, work, _____.'",
+    "answer": "Work",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "closer-the-chainsmokers",
+    "question": "Complete this The Chainsmokers lyric from 'Closer': 'So baby pull me closer, in the backseat of your __________.'",
+    "answer": "Rover",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "shape-of-you-ed-sheeran-2",
+    "question": "Complete this Ed Sheeran lyric from 'Shape of You': 'I'm in love with the shape of you. We push and pull like a _______ do'",
+    "answer": "Magnet",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "bad-guy-billie-eilish-2",
+    "question": "Complete this Billie Eilish lyric from 'Bad Guy': 'I'm that bad type, make your mama sad type, make your _________ mad tight.'",
+    "answer": "girlfriend",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "old-town-road-lil-nas-x",
+    "question": "Complete this Lil Nas X lyric from 'Old Town Road': 'I got the _____ in the back, horse tack is attached.'",
+    "answer": "Horses",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "sunflower-post-malone",
+    "question": "Complete this Post Malone lyric from 'Sunflower': 'Callin' it quits now, baby, I'm a _______.'",
+    "answer": "wreck",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "seven-rings-ariana-grande",
+    "question": "Complete this Ariana Grande lyric from '7 Rings': 'Yeah, my receipts be lookin' like _____.'",
+    "answer": "Phone numbers",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+   {
+    "slug": "juicy-notorious-big",
+    "question": "Complete this Notorious B.I.G. lyric from 'Juicy': 'It was all a dream, I used to read _____ magazine.'",
+    "answer": "Word Up",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "california-love-2pac",
+    "question": "Complete this 2Pac lyric from 'California Love': 'We in that sunshine state, where the bomb-ass hemp be. The state where you never find a dance floor ________.'",
+    "answer": "empty",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "c.r.e.a.m.-wu-tang-clan",
+    "question": "In the song 'C.R.E.A.M' by the Wu-Tang Clan, the acronmym stands for '_______ Rules Everything Around Me.'",
+    "answer": "Cash",
+    "category": "Song Lyrics",
+    "difficulty": "medium"
+  }
+  
+
+
+]
+}

@@ -177,15 +177,45 @@ function createSupabaseClient() {
 async function upsertRows(rows) {
   const supabase = createSupabaseClient();
   let processed = 0;
+  let skippedDeleted = 0;
 
   for (let start = 0; start < rows.length; start += CHUNK_SIZE) {
     const chunk = rows.slice(start, start + CHUNK_SIZE);
-    const { error } = await supabase.from("trivia_questions").upsert(chunk, { onConflict: "slug" });
+
+    const chunkSlugs = chunk.map((row) => row.slug).filter(Boolean);
+    const deletedSlugs = new Set();
+
+    if (chunkSlugs.length > 0) {
+      const { data: existingRows, error: lookupError } = await supabase
+        .from("trivia_questions")
+        .select("slug, status")
+        .in("slug", chunkSlugs);
+      if (lookupError) {
+        throw new Error(`Failed to look up existing trivia rows: ${lookupError.message}`);
+      }
+      for (const row of existingRows ?? []) {
+        if (row.slug && row.status === "deleted") {
+          deletedSlugs.add(row.slug);
+        }
+      }
+    }
+
+    const importable = chunk.filter((row) => !deletedSlugs.has(row.slug));
+    skippedDeleted += chunk.length - importable.length;
+    if (importable.length === 0) {
+      continue;
+    }
+
+    const { error } = await supabase.from("trivia_questions").upsert(importable, { onConflict: "slug" });
     if (error) {
       throw new Error(`Upsert failed: ${error.message}`);
     }
-    processed += chunk.length;
-    console.log(`Upserted ${processed}/${rows.length} rows...`);
+    processed += importable.length;
+    console.log(`Upserted ${processed}/${rows.length - skippedDeleted} importable rows...`);
+  }
+
+  if (skippedDeleted > 0) {
+    console.log(`Skipped ${skippedDeleted} row(s) because they were previously marked deleted.`);
   }
 }
 

@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync, writeFileSync } from "fs";
 import { join } from "path";
+import { replaceSessionQuestion } from "@/lib/liveShowdownAdmin";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getInlineSlotRegistryEntries } from "@/lib/adSlotRegistry";
 import {
@@ -162,11 +163,18 @@ let geographicHierarchyCache: { value: GeographicHierarchy; expiresAtMs: number 
 const GEOGRAPHIC_HIERARCHY_CACHE_MS = 5 * 60 * 1000;
 
 function mapTriviaRow(row: TriviaQuestionRow): TriviaQuestion {
+  const options = Array.isArray(row.options) ? row.options.map((option) => String(option ?? "").trim()) : [];
+  const answerIndex = Number.isInteger(row.correct_answer) ? row.correct_answer : -1;
+  const canonicalAnswer = answerIndex >= 0 && answerIndex < options.length ? options[answerIndex] ?? "" : "";
   return {
     id: row.id,
     question: row.question,
-    options: row.options,
+    options,
     correctAnswer: row.correct_answer,
+    acceptableAnswers:
+      row.answer_format === "write_in" || row.answer_format === "numeric" || row.answer_format === "true_false"
+        ? sanitizeAcceptableAnswers(options.filter((_, index) => index !== answerIndex), canonicalAnswer)
+        : undefined,
     category: row.category ?? undefined,
     difficulty: row.difficulty ?? undefined,
     questionPool: row.question_pool === "live_showdown" ? "live_showdown" : "anytime_blitz",
@@ -178,6 +186,25 @@ function mapTriviaRow(row: TriviaQuestionRow): TriviaQuestion {
         : "multiple_choice",
     createdAt: row.created_at,
   };
+}
+
+function normalizeAnswerKey(value: string): string {
+  return String(value ?? "").toLowerCase().trim().replace(/\s+/g, " ");
+}
+
+function sanitizeAcceptableAnswers(values: unknown, canonicalAnswer: string): string[] {
+  if (!Array.isArray(values)) return [];
+
+  const seen = new Set([normalizeAnswerKey(canonicalAnswer)]);
+  const answers: string[] = [];
+  for (const value of values) {
+    const answer = String(value ?? "").trim();
+    const key = normalizeAnswerKey(answer);
+    if (!answer || !key || seen.has(key)) continue;
+    seen.add(key);
+    answers.push(answer);
+  }
+  return answers;
 }
 
 function mapAdRow(row: AdvertisementRow): Advertisement {
@@ -517,6 +544,7 @@ export async function listAdminTriviaQuestions(opts?: {
   let query = supabaseAdmin!
     .from("trivia_questions")
     .select("id, question, options, correct_answer, category, difficulty, question_pool, answer_format, created_at", { count: "exact" });
+  query = query.eq("status", "active");
 
   const normalizedPool = String(opts?.questionPool ?? "").trim();
   if (normalizedPool === "anytime_blitz" || normalizedPool === "live_showdown") {
@@ -579,6 +607,7 @@ export async function listAdminTriviaQuestions(opts?: {
 export async function createAdminTriviaQuestion(input: {
   question: string;
   options?: string[];
+  acceptableAnswers?: string[];
   correctAnswer?: number;
   category?: string;
   difficulty?: string;
@@ -613,7 +642,7 @@ export async function createAdminTriviaQuestion(input: {
     if (!canonicalAnswer) {
       throw new Error("A canonical answer value is required for write-in, numeric, or true/false questions.");
     }
-    options = [canonicalAnswer];
+    options = [canonicalAnswer, ...sanitizeAcceptableAnswers(input.acceptableAnswers ?? options, canonicalAnswer)];
     correctAnswer = 0;
   }
 
@@ -642,6 +671,7 @@ export async function updateAdminTriviaQuestion(input: {
   id: string;
   question: string;
   options?: string[];
+  acceptableAnswers?: string[];
   correctAnswer?: number;
   category?: string;
   difficulty?: string;
@@ -680,7 +710,7 @@ export async function updateAdminTriviaQuestion(input: {
     if (!canonicalAnswer) {
       throw new Error("A canonical answer value is required for write-in, numeric, or true/false questions.");
     }
-    options = [canonicalAnswer];
+    options = [canonicalAnswer, ...sanitizeAcceptableAnswers(input.acceptableAnswers ?? options, canonicalAnswer)];
     correctAnswer = 0;
   }
 
@@ -2699,6 +2729,7 @@ type LiveTriviaFileQuestion = {
   slug: string;
   question: string;
   answer: string;
+  acceptableAnswers?: string[];
   answer_format: "write_in";
   category: string;
   difficulty: string;
@@ -2754,11 +2785,13 @@ function readAllSpeedTriviaFiles(): Array<{ file: string; categoryName: string; 
 }
 
 function mapLiveFileQuestion(q: LiveTriviaFileQuestion, categoryName: string): TriviaQuestion {
+  const acceptableAnswers = sanitizeAcceptableAnswers(q.acceptableAnswers, q.answer);
   return {
     id: q.slug,
     question: q.question,
-    options: [q.answer],
+    options: [q.answer, ...acceptableAnswers],
     correctAnswer: 0,
+    acceptableAnswers,
     category: categoryName || q.category,
     difficulty: q.difficulty,
     questionPool: "live_showdown",
@@ -2851,7 +2884,7 @@ function findSpeedTriviaQuestionInFile(
  */
 function updateLiveTriviaQuestionFileBySlug(
   slug: string,
-  patch: { question: string; answer: string; category?: string | null; difficulty?: string | null }
+  patch: { question: string; answer: string; acceptableAnswers?: string[]; category?: string | null; difficulty?: string | null }
 ): TriviaQuestion {
   const found = findLiveTriviaQuestionInFile(slug);
   if (!found) {
@@ -2864,11 +2897,17 @@ function updateLiveTriviaQuestionFileBySlug(
     questions: LiveTriviaFileQuestion[];
   };
 
+  const acceptableAnswers = sanitizeAcceptableAnswers(
+    patch.acceptableAnswers ?? raw.questions[found.index].acceptableAnswers,
+    patch.answer
+  );
+
   raw.questions[found.index] = {
     ...raw.questions[found.index],
     slug,
     question: patch.question,
     answer: patch.answer,
+    acceptableAnswers,
     answer_format: "write_in" as const,
     category: patch.category !== undefined ? patch.category ?? "" : raw.questions[found.index].category,
     difficulty: patch.difficulty !== undefined ? patch.difficulty ?? "" : raw.questions[found.index].difficulty,
@@ -2880,8 +2919,9 @@ function updateLiveTriviaQuestionFileBySlug(
   return {
     id: updated.slug,
     question: updated.question,
-    options: [updated.answer],
+    options: [updated.answer, ...acceptableAnswers],
     correctAnswer: 0,
+    acceptableAnswers,
     category: raw.categoryName || updated.category,
     difficulty: updated.difficulty,
     questionPool: "live_showdown",
@@ -2992,6 +3032,14 @@ function logAdminTriviaBankError(params: {
   });
 }
 
+function canFallbackToFileDelete(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes("Supabase admin client is not configured.") ||
+    message.includes("Trivia question not found in database.")
+  );
+}
+
 async function listAdminTriviaQuestionsByPool(opts: {
   questionPool: "anytime_blitz" | "live_showdown";
   page?: number;
@@ -3088,52 +3136,77 @@ async function deleteTriviaBankQuestionByIdOrSlug(params: {
 
   const questionPool = params.questionType === "live" ? "live_showdown" : "anytime_blitz";
 
-  const runDelete = async (field: "id" | "slug", value: string): Promise<boolean> => {
-    const { data, error } = await supabaseAdmin!
-      .from("trivia_questions")
-      .delete()
-      .eq("question_pool", questionPool)
-      .eq(field, value)
-      .select("id")
-      .maybeSingle<{ id: string }>();
-    if (error) {
-      throw new Error(error.message ?? "Failed to delete trivia question.");
-    }
-    return Boolean(data?.id);
-  };
-
   try {
-    // Remove any trivia_session_questions rows that reference this question's slug
-    // before deleting, since the FK is ON DELETE RESTRICT.
     const lookupField = isUuidLike(idOrSlug) ? "id" : "slug";
     const { data: questionRow, error: lookupError } = await supabaseAdmin!
       .from("trivia_questions")
-      .select("slug")
+      .select("id, slug")
+      .eq("question_pool", questionPool)
       .eq(lookupField, idOrSlug)
-      .maybeSingle();
+      .maybeSingle<{ id: string; slug: string | null }>();
     if (lookupError) {
       throw new Error(lookupError.message ?? "Failed to look up trivia question.");
     }
-    const slug = (questionRow as { slug?: string } | null)?.slug;
-    if (slug) {
-      const { error: sessionQError } = await supabaseAdmin!
-        .from("trivia_session_questions")
-        .delete()
-        .eq("question_id", slug);
-      if (sessionQError) {
-        throw new Error(sessionQError.message ?? "Failed to remove question from schedules.");
-      }
+    if (!questionRow?.id) {
+      throw new Error("Trivia question not found in database. Run the question-bank backfill first.");
     }
 
-    const deletedById = isUuidLike(idOrSlug) ? await runDelete("id", idOrSlug) : false;
-    if (deletedById) {
-      return;
+    const { error: updateError } = await supabaseAdmin!
+      .from("trivia_questions")
+      .update({ status: "deleted" })
+      .eq("id", questionRow.id);
+    if (updateError) {
+      throw new Error(updateError.message ?? "Failed to mark trivia question as deleted.");
     }
-    const deletedBySlug = await runDelete("slug", idOrSlug);
-    if (deletedBySlug) {
-      return;
+
+    const slug = String(questionRow.slug ?? "").trim();
+    if (slug) {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: affectedData, error: affectedError } = await supabaseAdmin!
+        .from("trivia_session_questions")
+        .select("schedule_id, occurrence_date, round_number, question_index")
+        .eq("question_id", slug)
+        .gte("occurrence_date", today);
+      if (affectedError) {
+        throw new Error(affectedError.message ?? "Failed to find affected session questions.");
+      }
+
+      const affectedRows = (affectedData ?? []) as Array<{
+        schedule_id: string;
+        occurrence_date: string;
+        round_number: number;
+        question_index: number;
+      }>;
+
+      if (affectedRows.length > 0) {
+        const scheduleIds = Array.from(new Set(affectedRows.map((row) => row.schedule_id).filter(Boolean)));
+        const { data: scheduleData, error: scheduleError } = await supabaseAdmin!
+          .from("trivia_schedules")
+          .select("id, venue_id")
+          .in("id", scheduleIds);
+        if (scheduleError) {
+          throw new Error(scheduleError.message ?? "Failed to resolve affected schedule venues.");
+        }
+
+        const venueBySchedule = new Map(
+          ((scheduleData ?? []) as Array<{ id: string; venue_id: string | null }>).map((row) => [
+            String(row.id),
+            String(row.venue_id ?? "").trim(),
+          ])
+        );
+
+        for (const row of affectedRows) {
+          await replaceSessionQuestion(
+            row.schedule_id,
+            row.occurrence_date,
+            row.round_number,
+            row.question_index,
+            venueBySchedule.get(row.schedule_id) ?? "",
+            slug
+          );
+        }
+      }
     }
-    throw new Error("Trivia question not found in database. Run the question-bank backfill first.");
   } catch (error) {
     logAdminTriviaBankError({
       action: "delete",
@@ -3209,7 +3282,7 @@ export async function listAdminLiveTriviaQuestionsFromFiles(opts?: {
   answerFormat?: string;
 }): Promise<PaginatedResult<TriviaQuestion>> {
   try {
-    const dbResult = await listAdminTriviaQuestionsByPool({
+    return await listAdminTriviaQuestionsByPool({
       questionPool: "live_showdown",
       page: opts?.page,
       pageSize: opts?.pageSize,
@@ -3218,9 +3291,6 @@ export async function listAdminLiveTriviaQuestionsFromFiles(opts?: {
       sortDirection: opts?.sortDirection,
       answerFormat: opts?.answerFormat,
     });
-    if (dbResult.total > 0) {
-      return dbResult;
-    }
   } catch (error) {
     logAdminTriviaBankError({
       action: "list",
@@ -3252,7 +3322,7 @@ export async function listAdminSpeedTriviaQuestionsFromFiles(opts?: {
   answerFormat?: string;
 }): Promise<PaginatedResult<TriviaQuestion>> {
   try {
-    const dbResult = await listAdminTriviaQuestionsByPool({
+    return await listAdminTriviaQuestionsByPool({
       questionPool: "anytime_blitz",
       page: opts?.page,
       pageSize: opts?.pageSize,
@@ -3261,9 +3331,6 @@ export async function listAdminSpeedTriviaQuestionsFromFiles(opts?: {
       sortDirection: opts?.sortDirection,
       answerFormat: opts?.answerFormat,
     });
-    if (dbResult.total > 0) {
-      return dbResult;
-    }
   } catch (error) {
     logAdminTriviaBankError({
       action: "list",
@@ -3290,6 +3357,7 @@ export async function updateAdminLiveTriviaQuestionInFile(input: {
   slug: string;
   question: string;
   answer: string;
+  acceptableAnswers?: string[];
   category?: string;
   difficulty?: string;
 }): Promise<TriviaQuestion> {
@@ -3300,9 +3368,10 @@ export async function updateAdminLiveTriviaQuestionInFile(input: {
   if (!question) throw new Error("Question is required.");
   if (!answer) throw new Error("Answer is required for write-in questions.");
 
+  const acceptableAnswers = sanitizeAcceptableAnswers(input.acceptableAnswers, answer);
   const patch: Record<string, unknown> = {
     question,
-    options: [answer],
+    options: [answer, ...acceptableAnswers],
     correct_answer: 0,
     question_pool: "live_showdown",
     answer_format: "write_in",
@@ -3335,6 +3404,7 @@ export async function updateAdminLiveTriviaQuestionInFile(input: {
   return updateLiveTriviaQuestionFileBySlug(slug, {
     question,
     answer,
+    acceptableAnswers,
     category: input.category !== undefined ? (input.category.trim() || null) : undefined,
     difficulty: input.difficulty !== undefined ? (input.difficulty.trim() || null) : undefined,
   });
@@ -3358,6 +3428,9 @@ export async function deleteAdminLiveTriviaQuestionInFile(slug: string): Promise
       questionId: normalizedSlug,
       error,
     });
+    if (!canFallbackToFileDelete(error)) {
+      throw error;
+    }
   }
 
   const deleted = deleteLiveTriviaQuestionFileBySlug(normalizedSlug);
@@ -3442,6 +3515,9 @@ export async function deleteAdminSpeedTriviaQuestionInFile(slug: string): Promis
       questionId: normalizedSlug,
       error,
     });
+    if (!canFallbackToFileDelete(error)) {
+      throw error;
+    }
   }
 
   const deleted = deleteSpeedTriviaQuestionFileBySlug(normalizedSlug);

@@ -19,6 +19,7 @@ export function AnimationOverlay() {
     >
       <AnimationComponent
         key={active.id}
+        payload={active.payload}
         onComplete={() => {
           completeAnimation(active.id);
         }}

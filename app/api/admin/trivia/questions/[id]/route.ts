@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 type PatchBody = {
   question?: string;
   options?: unknown;
+  acceptableAnswers?: unknown;
   correctAnswer?: number;
   answer?: string;
   status?: string;
@@ -17,6 +18,25 @@ type QuestionUpdate = {
   correct_answer?: number;
   status?: "active" | "deleted";
 };
+
+function normalizeAnswerKey(value: string): string {
+  return String(value ?? "").toLowerCase().trim().replace(/\s+/g, " ");
+}
+
+function sanitizeAcceptableAnswers(values: unknown, canonicalAnswer: string): string[] {
+  if (!Array.isArray(values)) return [];
+
+  const seen = new Set([normalizeAnswerKey(canonicalAnswer)]);
+  const answers: string[] = [];
+  for (const value of values) {
+    const answer = String(value ?? "").trim();
+    const key = normalizeAnswerKey(answer);
+    if (!answer || !key || seen.has(key)) continue;
+    seen.add(key);
+    answers.push(answer);
+  }
+  return answers;
+}
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -45,13 +65,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       update.question = question;
     }
 
-    // Write-in answer takes precedence: store as the single option with index 0.
+    // Write-in answer takes precedence: options[0] is the canonical reveal answer.
     if (typeof body.answer === "string") {
       const answer = body.answer.trim();
       if (!answer) {
         return NextResponse.json({ ok: false, error: "answer cannot be empty." }, { status: 400 });
       }
-      update.options = [answer];
+      update.options = [answer, ...sanitizeAcceptableAnswers(body.acceptableAnswers, answer)];
       update.correct_answer = 0;
     } else if (Array.isArray(body.options)) {
       const options = body.options.map((entry) => String(entry ?? "").trim()).filter(Boolean);

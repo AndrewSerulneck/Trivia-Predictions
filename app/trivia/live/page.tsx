@@ -788,7 +788,16 @@ export default function LiveShowdownPage() {
         } else {
           setSubmittedKey(activeKey);
           if (!nextResult.pendingClosestGuess) {
-            triggerAnimation(nextResult.isCorrect ? "LIVE_TRIVIA_CORRECT" : "LIVE_TRIVIA_WRONG");
+            // Capture the input's rect now — the phase transition that follows
+            // submission unmounts the input before the animation can measure it.
+            const inputEl = document.querySelector<HTMLInputElement>(
+              'input[placeholder="Type your answer..."]'
+            );
+            const inputRect = inputEl?.getBoundingClientRect() ?? null;
+            triggerAnimation(
+              nextResult.isCorrect ? "LIVE_TRIVIA_CORRECT" : "LIVE_TRIVIA_WRONG",
+              { inputRect }
+            );
           }
         }
       } catch (e) {
@@ -985,7 +994,7 @@ export default function LiveShowdownPage() {
   useEffect(() => {
     const prev = prevPhaseRef.current;
     prevPhaseRef.current = state?.activePhase ?? null;
-    if (state?.activePhase === "mid_game_break" && prev !== "mid_game_break") {
+    if (prev && prev !== "mid_game_break" && state?.activePhase === "mid_game_break") {
       triggerAnimation("LIVE_TRIVIA_ROUND_BREAK");
     }
   }, [state?.activePhase, triggerAnimation]);

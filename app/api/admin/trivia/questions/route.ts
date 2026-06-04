@@ -29,6 +29,23 @@ function coerceOptions(value: unknown): string[] {
   return value.map((entry) => String(entry ?? "").trim());
 }
 
+function normalizeAnswerKey(value: string): string {
+  return String(value ?? "").toLowerCase().trim().replace(/\s+/g, " ");
+}
+
+function sanitizeAcceptableAnswers(values: string[], canonicalAnswer: string): string[] {
+  const seen = new Set([normalizeAnswerKey(canonicalAnswer)]);
+  const answers: string[] = [];
+  for (const value of values) {
+    const answer = String(value ?? "").trim();
+    const key = normalizeAnswerKey(answer);
+    if (!answer || !key || seen.has(key)) continue;
+    seen.add(key);
+    answers.push(answer);
+  }
+  return answers;
+}
+
 function mapRow(row: TriviaQuestionRow) {
   const options = coerceOptions(row.options);
   const answerIndex = Number.isInteger(row.correct_answer) ? row.correct_answer : -1;
@@ -40,6 +57,10 @@ function mapRow(row: TriviaQuestionRow) {
     options,
     correctAnswer: answerIndex,
     answer,
+    acceptableAnswers:
+      row.answer_format === "write_in" || row.answer_format === "numeric" || row.answer_format === "true_false"
+        ? sanitizeAcceptableAnswers(options.filter((_, index) => index !== answerIndex), answer)
+        : [],
     category: row.category,
     difficulty: row.difficulty,
     pool: row.question_pool,

@@ -991,8 +991,8 @@ export async function updateAdminLiveShowdownSessionQuestions(
  * different question from the same category.  Used by the admin manage-view
  * "delete & replace" button so the round always stays full.
  *
- * The replaced question is **permanently deleted** from the `trivia_questions`
- * table so it will never appear in any future game.
+ * The replaced question is soft-deleted in `trivia_questions` so it can never
+ * appear in future rotation while historical joins and answer records stay intact.
  *
  * 1. Look up all question slugs already present in this schedule + round
  *    so we don't introduce a duplicate.
@@ -1001,7 +1001,7 @@ export async function updateAdminLiveShowdownSessionQuestions(
  * 3. Exclude the slug being removed and any slug already used in this round.
  * 4. Check answer eligibility via `isLiveShowdownEligibleAnswer`.
  * 5. Pick a random candidate, UPDATE the session-question row's question_id.
- * 6. **Delete** the old question from `trivia_questions` permanently.
+ * 6. Mark the old question as deleted in `trivia_questions`.
  * 7. Return the full question details.
  */
 export async function replaceSingleSessionQuestion(
@@ -1093,14 +1093,14 @@ export async function replaceSingleSessionQuestion(
     throw new Error(updateError.message || "Failed to replace session question.");
   }
 
-  // 5. Permanently delete the old question from the trivia_questions table.
+  // 5. Soft-delete the old question so it cannot be selected again.
   const { error: deleteError } = await admin
     .from("trivia_questions")
-    .delete()
+    .update({ status: "deleted" })
     .eq("slug", safeExclude);
 
   if (deleteError) {
-    throw new Error(deleteError.message || "Failed to permanently delete the replaced question.");
+    throw new Error(deleteError.message || "Failed to mark the replaced question as deleted.");
   }
 
   return {
@@ -1194,7 +1194,15 @@ export async function replaceRoundQuestionsWithCategory(
   if (!targetCategory) throw new Error("category is required.");
 
   // ---- Check if this category comes from a file-based bank ----
-  type FileBasedQuestion = { slug: string; question: string; answer: string; answer_format: string; category: string; difficulty: string };
+  type FileBasedQuestion = {
+    slug: string;
+    question: string;
+    answer: string;
+    acceptableAnswers?: unknown;
+    answer_format: string;
+    category: string;
+    difficulty: string;
+  };
   let fileQuestions: FileBasedQuestion[] | null = null;
 
   try {
@@ -1232,14 +1240,53 @@ export async function replaceRoundQuestionsWithCategory(
       );
     }
 
-    // Upsert each eligible question into trivia_questions so slugs exist at runtime
-    for (const q of eligible) {
+    const eligibleSlugs = eligible
+      .map((q) => String(q.slug ?? "").trim())
+      .filter(Boolean);
+    const deletedSlugs = new Set<string>();
+
+    if (eligibleSlugs.length > 0) {
+      const { data: existingRows, error: existingError } = await admin
+        .from("trivia_questions")
+        .select("slug, status")
+        .in("slug", eligibleSlugs);
+      if (existingError) {
+        throw new Error(existingError.message || "Failed to check deleted-question status.");
+      }
+      for (const row of (existingRows ?? []) as Array<{ slug: string | null; status: string | null }>) {
+        const slug = String(row.slug ?? "").trim();
+        if (slug && row.status === "deleted") {
+          deletedSlugs.add(slug);
+        }
+      }
+    }
+
+    const importable = eligible.filter((q) => !deletedSlugs.has(String(q.slug ?? "").trim()));
+    if (importable.length < QUESTIONS_PER_ROUND) {
+      throw new Error(
+        `Category "${targetCategory}" only has ${importable.length} eligible non-deleted file-based questions; ${QUESTIONS_PER_ROUND} are required to fill a round.`
+      );
+    }
+
+    // Upsert each eligible, non-deleted question into trivia_questions so slugs exist at runtime
+    for (const q of importable) {
       const answer = String(q.answer ?? "").trim();
+      const acceptableAnswers = Array.isArray(q.acceptableAnswers)
+        ? Array.from(
+            new Map(
+              q.acceptableAnswers
+                .map((entry) => String(entry ?? "").trim())
+                .filter(Boolean)
+                .filter((entry) => entry.toLowerCase().replace(/\s+/g, " ") !== answer.toLowerCase().replace(/\s+/g, " "))
+                .map((entry) => [entry.toLowerCase().replace(/\s+/g, " "), entry])
+            ).values()
+          )
+        : [];
       const upsertPayload = {
         slug: q.slug,
         question: q.question,
         category: targetCategory,
-        options: JSON.stringify([answer]),
+        options: [answer, ...acceptableAnswers],
         correct_answer: 0,
         question_pool: "live_showdown" as const,
         status: "active",
@@ -1259,7 +1306,7 @@ export async function replaceRoundQuestionsWithCategory(
     const { data: refetched, error: refetchError } = await admin
       .from("trivia_questions")
       .select("id, slug, question, category, options, correct_answer, question_pool, difficulty")
-      .in("slug", eligible.map((q) => q.slug));
+      .in("slug", importable.map((q) => q.slug));
 
     if (refetchError) {
       throw new Error(refetchError.message || "Failed to re-fetch upserted questions.");

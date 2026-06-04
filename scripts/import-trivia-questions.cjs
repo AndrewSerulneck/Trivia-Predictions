@@ -81,6 +81,37 @@ function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+function normalizeAnswerKey(value) {
+  return String(value ?? "").toLowerCase().trim().replace(/\s+/g, " ");
+}
+
+function coerceAcceptableAnswers(item, canonicalAnswer, rowLabel) {
+  if (item.acceptableAnswers === undefined || item.acceptableAnswers === null) {
+    return [];
+  }
+
+  assert(Array.isArray(item.acceptableAnswers), `${rowLabel}: acceptableAnswers must be an array when provided.`);
+
+  const seen = new Set([normalizeAnswerKey(canonicalAnswer)]);
+  const answers = [];
+  item.acceptableAnswers.forEach((entry, index) => {
+    assert(
+      typeof entry === "string",
+      `${rowLabel}: acceptableAnswers[${index}] must be a string when provided.`
+    );
+
+    const answer = entry.trim();
+    const key = normalizeAnswerKey(answer);
+    if (!answer || !key || seen.has(key)) {
+      return;
+    }
+    seen.add(key);
+    answers.push(answer);
+  });
+
+  return answers;
+}
+
 function readCategoryPayload(parsed, sourceLabel) {
   if (Array.isArray(parsed)) {
     return parsed.map((item) => ({
@@ -209,14 +240,16 @@ function normalizeAndValidate(questions) {
         ? answerFormatRaw
         : "multiple_choice";
 
-    // Live trivia questions use a plain `answer` string; store as options[0] with correct_answer=0.
+    // Live trivia keeps options[0] as the canonical reveal answer. Any later
+    // options are explicit accepted write-in alternatives.
     if (answer_format !== "multiple_choice") {
       const answer = String(item.answer ?? (Array.isArray(item.options) ? item.options[0] : "") ?? "").trim();
       assert(answer.length > 0, `Row ${rowNumber}${source}: answer is required for non-MC questions.`);
+      const acceptableAnswers = coerceAcceptableAnswers(item, answer, `Row ${rowNumber}${source}`);
       return {
         slug,
         question,
-        options: [answer],
+        options: [answer, ...acceptableAnswers],
         correct_answer: 0,
         category: category || null,
         difficulty: difficulty || null,
@@ -794,7 +827,13 @@ async function main() {
   await upsertRows(allRows, { prune: args.prune });
 }
 
-main().catch((error) => {
-  console.error(describeError(error));
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(describeError(error));
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  normalizeAndValidate,
+};

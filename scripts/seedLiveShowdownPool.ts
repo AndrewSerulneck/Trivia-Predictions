@@ -9,6 +9,7 @@ type TriviaQuestionRow = {
   category: string | null;
   difficulty: string | null;
   question_pool: "anytime_blitz" | "live_showdown";
+  status?: string | null;
   answer?: unknown;
   correctAnswerText?: unknown;
 };
@@ -89,7 +90,7 @@ async function main() {
 
   const { data, error } = await admin
     .from("trivia_questions")
-    .select("id, slug, question, options, correct_answer, category, difficulty, question_pool");
+    .select("id, slug, question, options, correct_answer, category, difficulty, question_pool, status");
 
   if (error) {
     throw new Error(`Failed to load trivia_questions: ${JSON.stringify(error)}`);
@@ -99,6 +100,7 @@ async function main() {
   const existingSlugs = new Set(rows.map((row) => String(row.slug ?? "").trim()).filter(Boolean));
 
   const eligibleRows = rows.filter((row) => {
+    if (row.status === "deleted") return false;
     const answer = extractCorrectAnswerText(row);
     return isLiveShowdownEligibleAnswer(answer);
   });

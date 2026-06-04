@@ -100,6 +100,32 @@ function coerceOptions(value: unknown): string[] {
   return value.map((entry) => String(entry ?? "").trim());
 }
 
+function normalizeAnswerKey(value: string): string {
+  return String(value ?? "").toLowerCase().trim().replace(/\s+/g, " ");
+}
+
+function resolveAdditionalAcceptableAnswers(options: string[], correctAnswerIndex: number): {
+  targets: string[];
+  indexes: number[];
+} {
+  const canonical = options[correctAnswerIndex] ?? "";
+  const seen = new Set([normalizeAnswerKey(canonical)]);
+  const targets: string[] = [];
+  const indexes: number[] = [];
+
+  options.forEach((option, index) => {
+    if (index === correctAnswerIndex) return;
+    const answer = String(option ?? "").trim();
+    const key = normalizeAnswerKey(answer);
+    if (!answer || !key || seen.has(key)) return;
+    seen.add(key);
+    targets.push(answer);
+    indexes.push(index);
+  });
+
+  return { targets, indexes };
+}
+
 async function getCorrectAnswerForScheduleSlot(
   scheduleId: string,
   roundNumber: number,
@@ -110,6 +136,8 @@ async function getCorrectAnswerForScheduleSlot(
   questionDbId: string;
   correctTarget: string;
   correctAnswerIndex: number;
+  acceptableTargets: string[];
+  acceptableAnswerIndexes: number[];
   closestGuessEligible: boolean;
 }> {
   const admin = supabaseAdmin;
@@ -193,12 +221,15 @@ async function getCorrectAnswerForScheduleSlot(
   if (!correctTarget) {
     throw new Error("Live Showdown question has no valid correct target.");
   }
+  const additionalAnswers = resolveAdditionalAcceptableAnswers(options, answerIndex);
 
   return {
     questionId: String(question.slug ?? question.id),
     questionDbId: String(question.id),
     correctTarget,
     correctAnswerIndex: answerIndex,
+    acceptableTargets: additionalAnswers.targets,
+    acceptableAnswerIndexes: additionalAnswers.indexes,
     closestGuessEligible: parseLargePureNumberAnswer(correctTarget) !== null,
   };
 }
@@ -314,7 +345,15 @@ export async function submitLiveShowdownAnswer(
   // the client-supplied hint for anything that writes to the DB.
   const occurrenceDate = state.occurrenceDate;
 
-  const { questionId, questionDbId, correctTarget, correctAnswerIndex, closestGuessEligible } =
+  const {
+    questionId,
+    questionDbId,
+    correctTarget,
+    correctAnswerIndex,
+    acceptableTargets,
+    acceptableAnswerIndexes,
+    closestGuessEligible,
+  } =
     await getCorrectAnswerForScheduleSlot(scheduleId, roundNumber, questionIndex, occurrenceDate);
 
   const { data: existingRow, error: existingError } = await runOccurrenceCompatibleQuery(
@@ -360,7 +399,14 @@ export async function submitLiveShowdownAnswer(
   const normalizedAnswer = normalizeWriteInForStorage(submittedAnswer);
   const isCorrect = closestGuessEligible
     ? false
-    : await gradeWriteInAnswerWithVariants(submittedAnswer, correctTarget, questionDbId, correctAnswerIndex);
+    : await gradeWriteInAnswerWithVariants(
+        submittedAnswer,
+        correctTarget,
+        questionDbId,
+        correctAnswerIndex,
+        acceptableTargets,
+        acceptableAnswerIndexes
+      );
 
   await trackLiveShowdownQuestionExposure([userId], questionId);
 

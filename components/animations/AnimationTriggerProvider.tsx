@@ -1,11 +1,12 @@
 "use client";
 
 import { createContext, useCallback, useContext, useMemo, useReducer } from "react";
-import type { AnimationType } from "@/types/animation";
+import type { AnimationPayload, AnimationType } from "@/types/animation";
 
 type QueuedAnimation = {
   id: number;
   type: AnimationType;
+  payload?: AnimationPayload;
 };
 
 type AnimationTriggerState = {
@@ -15,7 +16,7 @@ type AnimationTriggerState = {
 
 type AnimationTriggerContextValue = {
   active: QueuedAnimation | null;
-  triggerAnimation: (type: AnimationType) => void;
+  triggerAnimation: (type: AnimationType, payload?: AnimationPayload) => void;
   completeAnimation: (id: number) => void;
 };
 
@@ -62,10 +63,10 @@ function nextAnimationId(): number {
 export function AnimationTriggerProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(animationReducer, INITIAL_STATE);
 
-  const triggerAnimation = useCallback((type: AnimationType) => {
+  const triggerAnimation = useCallback((type: AnimationType, payload?: AnimationPayload) => {
     dispatch({
       type: "TRIGGER",
-      payload: { id: nextAnimationId(), type },
+      payload: { id: nextAnimationId(), type, payload },
     });
   }, []);
 

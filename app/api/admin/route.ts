@@ -334,6 +334,7 @@ export async function POST(request: Request) {
           resource: "trivia";
           question: string;
           options?: string[];
+          acceptableAnswers?: string[];
           correctAnswer?: number;
           category?: string;
           difficulty?: string;
@@ -594,6 +595,7 @@ export async function POST(request: Request) {
         const item = await createAdminTriviaQuestion({
           question: body.question,
           options: body.options,
+          acceptableAnswers: body.acceptableAnswers,
           correctAnswer: body.correctAnswer,
           category: body.category,
           difficulty: body.difficulty,
@@ -904,6 +906,7 @@ export async function PATCH(request: Request) {
           id: string;
           question: string;
           options?: string[];
+          acceptableAnswers?: string[];
           correctAnswer?: number;
           category?: string;
           difficulty?: string;
@@ -1053,6 +1056,7 @@ export async function PATCH(request: Request) {
             slug: body.id,
             question: body.question,
             answer,
+            acceptableAnswers: body.acceptableAnswers ?? body.options?.filter((_, index) => index !== (body.correctAnswer ?? 0)),
             category: body.category,
             difficulty: body.difficulty,
           });
@@ -1073,6 +1077,7 @@ export async function PATCH(request: Request) {
           id: body.id,
           question: body.question,
           options: body.options,
+          acceptableAnswers: body.acceptableAnswers,
           correctAnswer: body.correctAnswer,
           category: body.category,
           difficulty: body.difficulty,

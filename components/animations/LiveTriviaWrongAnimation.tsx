@@ -15,32 +15,27 @@ interface InputRect {
 
 // ─── Root component ───────────────────────────────────────────────────────────
 
-export function LiveTriviaWrongAnimation({ onComplete }: GameplayAnimationProps) {
+export function LiveTriviaWrongAnimation({ onComplete, payload }: GameplayAnimationProps) {
   const cancelledRef = useRef<boolean>(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // useState so setting it after DOM read triggers a re-render,
-  // letting Layers 1 mount with the correct fixed position.
-  const [inputRect, setInputRect] = useState<InputRect | null>(null);
+  // The input is captured at trigger time (before it unmounts on phase change)
+  // and passed in via payload. null means it was unavailable, so Layer 1 is
+  // skipped gracefully.
+  const sourceRect = payload?.inputRect ?? null;
+  const [inputRect] = useState<InputRect | null>(() =>
+    sourceRect === null
+      ? null
+      : {
+          left: sourceRect.left,
+          top: sourceRect.top,
+          width: sourceRect.width,
+          height: sourceRect.height,
+        }
+  );
 
-  // ─── Mount effect: read DOM rect, kick off glow sequence, schedule onComplete
+  // ─── Mount effect: schedule onComplete ──────────────────────────────────────
   useEffect(() => {
-    if (typeof document === "undefined") return;
-
-    const input = document.querySelector<HTMLInputElement>(
-      'input[placeholder="Type your answer..."]'
-    );
-
-    if (input !== null) {
-      const rect = input.getBoundingClientRect();
-      setInputRect({
-        left: rect.left,
-        top: rect.top,
-        width: rect.width,
-        height: rect.height,
-      });
-    }
-
     timerRef.current = setTimeout(() => {
       if (!cancelledRef.current) {
         onComplete();

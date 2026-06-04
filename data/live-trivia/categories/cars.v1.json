@@ -1,0 +1,385 @@
+{
+  "categoryName": "Cars",
+  "questions": [
+    
+  {
+    "slug": "first-mass-produced-car",
+    "question": "What was the first car to be mass-produced on an assembly line?",
+    "answer": "Ford Model T",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "founder-of-tesla",
+    "question": "Who co-founded Tesla, Inc. in 2003?",
+    "answer": "Elon Musk",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "iconic-volkswagen-model",
+    "question": "Which Volkswagen model is famously known as the 'Beetle'?",
+    "answer": "Type 1",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "japanese-luxury-brand",
+    "question": "What is the luxury vehicle division of Toyota?",
+    "answer": "Lexus",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "italian-sports-car-maker",
+    "question": "Which Italian automaker produces the 911 model?",
+    "answer": "Porsche",
+    "category": "Cars",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "first-electric-car-company",
+    "question": "Which company produced the first mass-market electric car, the EV1, in the 1990s?",
+    "answer": "General Motors",
+    "category": "Cars",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "famous-muscle-car",
+    "question": "What is the name of the iconic Ford muscle car introduced in 1964?",
+    "answer": "Mustang",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "german-engineering-brand",
+    "question": "Which German automaker is known for the slogan 'The Ultimate Driving Machine'?",
+    "answer": "BMW",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "first-self-driving-car",
+    "question": "What was the name of Google's first self-driving car project?",
+    "answer": "Waymo",
+    "category": "Cars",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "british-luxury-car",
+    "question": "Which British car manufacturer is famous for the Phantom model?",
+    "answer": "Rolls-Royce",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "classic-chevy-model",
+    "question": "Which Chevrolet model is often referred to as the 'Bel Air'?",
+    "answer": "Impala",
+    "category": "Cars",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "swedish-automaker",
+    "question": "Which Swedish automaker is known for its focus on safety and produces the XC90?",
+    "answer": "Volvo",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "first-hybrid-car",
+    "question": "What was the first mass-produced hybrid car, introduced by Toyota in 1997?",
+    "answer": "Prius",
+    "category": "Cars",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "german-supercar",
+    "question": "Which German automaker produces the Chiron supercar?",
+    "answer": "Bugatti",
+    "category": "Cars",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "american-luxury-brand",
+    "question": "What is the luxury vehicle division of General Motors?",
+    "answer": "Cadillac",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "italian-supercar-maker",
+    "question": "Which Italian automaker produces the Huracán and Aventador models?",
+    "answer": "Lamborghini",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "first-minivan",
+    "question": "Which automaker introduced the first modern minivan, the Voyager, in 1984?",
+    "answer": "Chrysler",
+    "category": "Cars",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "korean-automaker",
+    "question": "Which Korean automaker produces the Telluride SUV?",
+    "answer": "Kia",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "first-production-suv",
+    "question": "What was the first mass-produced SUV, introduced by Jeep in 1963?",
+    "answer": "Wagoneer",
+    "category": "Cars",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "electric-car-pioneer",
+    "question": "Which company produced the first highway-legal electric car in the modern era, the Roadster, in 2008?",
+    "answer": "Tesla",
+    "category": "Cars",
+    "difficulty": "medium"
+  },
+    {
+    "slug": "toyota-corolla-model",
+    "question": "What is Toyota's best-selling car model of all time?",
+    "answer": "Corolla",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+   {
+    "slug": "honda-civic-model",
+    "question": "What is Honda's compact car model called?",
+    "answer": "Civic",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "ford-f-series-truck",
+    "question": "What is Ford's best-selling truck series?",
+    "answer": "F-Series",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "chevy-silverado",
+    "question": "What is Chevrolet's full-size pickup truck called?",
+    "answer": "Silverado",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "first-car-with-seatbelts",
+    "question": "Which car manufacturer was the first to offer seatbelts as standard equipment in 1959?",
+    "answer": "Volvo",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "first-car-with-airbags",
+    "question": "Which car manufacturer introduced the first commercial airbag in 1971?",
+    "answer": "Ford",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "most-stolen-car",
+    "question": "Which car model is historically the most stolen in the United States? Name the make and model.",
+    "answer": "Honda Civic",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "first-car-with-gps",
+    "question": "Which car manufacturer offered the first built-in GPS navigation system in 1981?",
+    "answer": "Honda",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "first-car-with-cup-holders",
+    "question": "Which car manufacturer was the first to introduce cup holders in 1983?",
+    "answer": "Chrysler",
+    "category": "Cars",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "most-produced-car-model",
+    "question": "Which car model is the most produced in automotive history?",
+    "answer": "Toyota Corolla",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "first-car-with-remote-keyless-entry",
+    "question": "Which car manufacturer introduced the first remote keyless entry system in 1980?",
+    "answer": "Ford",
+    "category": "Cars",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "first-car-with-adaptive-cruise-control",
+    "question": "Which car manufacturer introduced the first adaptive cruise control system in 1999?",
+    "answer": "Mercedes-Benz",
+    "category": "Cars",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "first-car-with-led-headlights",
+    "question": "Which car manufacturer introduced the first production car with LED headlights in 2004?",
+    "answer": "Lexus",
+    "category": "Cars",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "first-car-with-backup-camera",
+    "question": "Which car manufacturer introduced the first backup camera in 1991?",
+    "answer": "Mitsubishi",
+    "category": "Cars",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "first-car-with-automatic-transmission",
+    "question": "Which car manufacturer introduced the first automatic transmission in 1939?",
+    "answer": "General Motors",
+    "category": "Cars",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "first-car-with-abs",
+    "question": "Which car manufacturer introduced the first production car with anti-lock braking system (ABS) in 1978?",
+    "answer": "Mercedes-Benz",
+    "category": "Cars",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "first-car-with-power-steering",
+    "question": "Which car manufacturer introduced the first production car with power steering in 1951?",
+    "answer": "Chrysler",
+    "category": "Cars",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "first-car-with-fuel-injection",
+    "question": "Which car manufacturer introduced the first production car with electronic fuel injection in 1957?",
+    "answer": "Chevrolet",
+    "category": "Cars",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "first-car-with-rearview-mirror",
+    "question": "Which car manufacturer introduced the first car with a rearview mirror in 1911?",
+    "answer": "Marmon",
+    "category": "Cars",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "first-car-with-turn-signals",
+    "question": "Which car manufacturer introduced the first electric turn signals in 1938?",
+    "answer": "Buick",
+    "category": "Cars",
+    "difficulty": "hard"
+  },
+   {
+    "slug": "back-to-the-future-car",
+    "question": "What is the model of the time-traveling car in the 'Back to the Future' trilogy?",
+    "answer": "DeLorean",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "herbie-the-love-bug",
+    "question": "What is the name of the sentient Volkswagen Beetle in Disney's 'The Love Bug'?",
+    "answer": "Herbie",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "knight-rider-car",
+    "question": "What is the name of the talking car in the TV series 'Knight Rider'?",
+    "answer": "KITT",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "fast-and-furious-toyota",
+    "question": "What is the model of Brian O'Conner's iconic green car in 'The Fast and the Furious'?",
+    "answer": "Toyota Supra",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-italian-job-mini",
+    "question": "What model of car is used in the heist scenes of 'The Italian Job' (2003)?",
+    "answer": "Mini Cooper",
+     "acceptableAnswers": ["Mini Coop"],
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "waynes-world-aurora",
+    "question": "What is the name of the car Wayne and Garth drive in 'Wayne's World'?",
+    "answer": "Mirthmobile",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-dude-lebaron",
+    "question": "What type of car does 'The Dude' drive in 'The Big Lebowski'?",
+    "answer": "Gran Torino",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "ferrari-daytona-spyder",
+    "question": "In 'Ferris Bueller's Day Off,' what kind of car do the characters steal from Cameron's father?",
+    "answer": "Ferrari",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "greased-lightning",
+    "question": "What is the name of the car in the musical 'Grease'?",
+    "answer": "Greased Lightning",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "dukes-of-hazzard-charger",
+    "question": "What make and model is the General Lee in 'The Dukes of Hazzard'?",
+    "answer": "Dodge Charger",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "speed-racer-mach-5",
+    "question": "What is the name of Speed Racer's car in the anime cartoon and movie?",
+    "answer": "Mach 5",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "thelma-and-louise-thunderbird",
+    "question": "What make and model of car do Thelma and Louise drive in their famous road trip movie?",
+    "answer": "Ford Thunderbird",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "drive-ryan-gosling-car",
+    "question": "What make and model of car does Ryan Gosling's character drive in the movie 'Drive'?",
+    "answer": "Chevrolet Impala",
+    "category": "Cars",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "bttf-deLorean-speed",
+    "question": "What speed does the DeLorean need to reach to time travel in 'Back to the Future'?",
+    "answer": "88 mph",
+    "category": "Cars",
+    "difficulty": "easy"
+  }
+]
+}

@@ -70,6 +70,7 @@ export interface TriviaQuestion {
   question: string;
   options: string[];
   correctAnswer: number;
+  acceptableAnswers?: string[];
   category?: string;
   difficulty?: string;
   questionPool?: "anytime_blitz" | "live_showdown";

@@ -16,37 +16,31 @@ interface InputRect {
 
 // ─── Root component ───────────────────────────────────────────────────────────
 
-export function LiveTriviaCorrectAnimation({ onComplete }: GameplayAnimationProps) {
+export function LiveTriviaCorrectAnimation({ onComplete, payload }: GameplayAnimationProps) {
   const cancelledRef = useRef<boolean>(false);
   const timer1Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // State (not ref) so that setting it after DOM read triggers a render,
-  // letting Layer 1 and Layer 2 mount with correct positions.
-  const [inputRect, setInputRect] = useState<InputRect | null>(null);
+  // The input is captured at trigger time (before it unmounts on phase change)
+  // and passed in via payload. Derive our local rect from it — null means the
+  // input was unavailable, so Layers 1 and 2 are skipped gracefully.
+  const sourceRect = payload?.inputRect ?? null;
+  const [inputRect] = useState<InputRect | null>(() =>
+    sourceRect === null
+      ? null
+      : {
+          left: sourceRect.left,
+          top: sourceRect.top,
+          width: sourceRect.width,
+          height: sourceRect.height,
+          centerX: sourceRect.left + sourceRect.width / 2,
+        }
+  );
 
   // Ref to the glow overlay div; used for imperative box-shadow animation.
-  // Attached after inputRect is set (second render).
   const glowDivRef = useRef<HTMLDivElement | null>(null);
 
-  // ─── Mount effect: read DOM, start glow animation, schedule onComplete ──────
+  // ─── Mount effect: schedule onComplete ──────────────────────────────────────
   useEffect(() => {
-    if (typeof document === "undefined") return;
-
-    const input = document.querySelector<HTMLInputElement>(
-      'input[placeholder="Type your answer..."]'
-    );
-
-    if (input !== null) {
-      const rect = input.getBoundingClientRect();
-      setInputRect({
-        left: rect.left,
-        top: rect.top,
-        width: rect.width,
-        height: rect.height,
-        centerX: rect.left + rect.width / 2,
-      });
-    }
-
     // Schedule onComplete at end of total lifecycle
     timer1Ref.current = setTimeout(() => {
       if (!cancelledRef.current) {
