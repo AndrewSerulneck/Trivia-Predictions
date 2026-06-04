@@ -33,7 +33,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Fetches every slug for the given pool, paginating through all rows.
+// Fetches every active slug for the given pool, paginating through all rows.
 async function fetchActiveSlugs(pool) {
   const slugs = new Set();
   let from = 0;
@@ -42,6 +42,7 @@ async function fetchActiveSlugs(pool) {
       .from("trivia_questions")
       .select("slug")
       .eq("question_pool", pool)
+      .eq("status", "active")
       .range(from, from + PAGE_SIZE - 1);
     if (error) throw new Error(`Failed to fetch ${pool} slugs: ${error.message}`);
     if (!data || data.length === 0) break;

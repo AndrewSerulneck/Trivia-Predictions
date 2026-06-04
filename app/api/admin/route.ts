@@ -62,9 +62,14 @@ import {
   createAdminLiveShowdownSchedule,
   deleteAdminLiveShowdownSchedule,
   forceAdvanceLiveShowdownToNextQuestion,
+  getAdminLiveShowdownSessionQuestions,
+  getLiveShowdownRoundCategories,
   listAdminLiveShowdownSchedules,
+  replaceRoundQuestionsWithCategory,
+  replaceSingleSessionQuestion,
   resetLiveShowdownAnswersForSchedule,
   updateAdminLiveShowdownSchedule,
+  updateAdminLiveShowdownSessionQuestions,
 } from "@/lib/liveShowdownAdmin";
 
 export async function GET(request: Request) {
@@ -86,7 +91,7 @@ export async function GET(request: Request) {
       const sortByRaw = String(searchParams.get("sortBy") ?? "").trim();
       const sortDirectionRaw = String(searchParams.get("sortDirection") ?? "").trim().toLowerCase();
       const sortBy =
-        sortByRaw === "category" || sortByRaw === "question_pool" || sortByRaw === "answer_format" || sortByRaw === "created_at"
+        sortByRaw === "category" || sortByRaw === "difficulty" || sortByRaw === "question_pool" || sortByRaw === "answer_format" || sortByRaw === "created_at"
           ? sortByRaw
           : undefined;
       const sortDirection = sortDirectionRaw === "asc" || sortDirectionRaw === "desc" ? sortDirectionRaw : undefined;
@@ -272,6 +277,20 @@ export async function GET(request: Request) {
       const search = String(searchParams.get("search") ?? "").trim();
       const result = await listAdminAccounts({ page, pageSize, search });
       return NextResponse.json({ ok: true, ...result, page, pageSize, totalPages: Math.max(1, Math.ceil(result.total / pageSize)) });
+    }
+
+    if (resource === "live-showdown-session-questions") {
+      const scheduleId = String(searchParams.get("scheduleId") ?? "").trim();
+      if (!scheduleId) {
+        return NextResponse.json({ ok: false, error: "scheduleId is required." }, { status: 400 });
+      }
+      const items = await getAdminLiveShowdownSessionQuestions(scheduleId);
+      return NextResponse.json({ ok: true, items });
+    }
+
+    if (resource === "live-showdown-categories") {
+      const categories = await getLiveShowdownRoundCategories();
+      return NextResponse.json({ ok: true, categories });
     }
 
     if (resource === "live-showdown-schedules") {
@@ -993,6 +1012,25 @@ export async function PATCH(request: Request) {
           answerFormat?: "multiple_choice" | "write_in" | "numeric" | "true_false";
         }
       | {
+          resource: "live-showdown-session-questions";
+          scheduleId: string;
+          questions: Array<{ id: string; roundNumber: number; questionIndex: number; questionId: string }>;
+        }
+      | {
+          resource: "live-showdown-replace-round";
+          scheduleId: string;
+          roundNumber: number;
+          category: string;
+        }
+      | {
+          resource: "live-showdown-replace-question";
+          scheduleId: string;
+          roundNumber: number;
+          questionIndex: number;
+          excludeSlug: string;
+          category: string;
+        }
+      | {
           resource: "live-showdown-schedules";
           id: string;
           title: string;
@@ -1187,6 +1225,61 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ ok: true, updated });
       }
       return NextResponse.json({ ok: false, error: "Invalid bulk ads action." }, { status: 400 });
+    }
+
+    if (body.resource === "live-showdown-session-questions") {
+      const scheduleId = String(body.scheduleId ?? "").trim();
+      const questions = body.questions as Array<{ id: string; roundNumber: number; questionIndex: number; questionId: string }> | undefined;
+      if (!scheduleId) {
+        return NextResponse.json({ ok: false, error: "scheduleId is required." }, { status: 400 });
+      }
+      if (!Array.isArray(questions) || questions.length === 0) {
+        return NextResponse.json({ ok: false, error: "questions array is required." }, { status: 400 });
+      }
+      await updateAdminLiveShowdownSessionQuestions(scheduleId, questions);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (body.resource === "live-showdown-replace-round") {
+      const scheduleId = String(body.scheduleId ?? "").trim();
+      const roundNumber = Number(body.roundNumber);
+      const category = String(body.category ?? "").trim();
+      if (!scheduleId) {
+        return NextResponse.json({ ok: false, error: "scheduleId is required." }, { status: 400 });
+      }
+      if (!Number.isInteger(roundNumber) || roundNumber < 1) {
+        return NextResponse.json({ ok: false, error: "roundNumber must be a positive integer." }, { status: 400 });
+      }
+      if (!category) {
+        return NextResponse.json({ ok: false, error: "category is required." }, { status: 400 });
+      }
+      const items = await replaceRoundQuestionsWithCategory(scheduleId, roundNumber, category);
+      return NextResponse.json({ ok: true, items });
+    }
+
+    if (body.resource === "live-showdown-replace-question") {
+      const scheduleId = String(body.scheduleId ?? "").trim();
+      const roundNumber = Number(body.roundNumber);
+      const questionIndex = Number(body.questionIndex);
+      const excludeSlug = String(body.excludeSlug ?? "").trim();
+      const category = String(body.category ?? "").trim();
+      if (!scheduleId) {
+        return NextResponse.json({ ok: false, error: "scheduleId is required." }, { status: 400 });
+      }
+      if (!Number.isInteger(roundNumber) || roundNumber < 1) {
+        return NextResponse.json({ ok: false, error: "roundNumber must be a positive integer." }, { status: 400 });
+      }
+      if (!Number.isInteger(questionIndex) || questionIndex < 1) {
+        return NextResponse.json({ ok: false, error: "questionIndex must be a positive integer." }, { status: 400 });
+      }
+      if (!excludeSlug) {
+        return NextResponse.json({ ok: false, error: "excludeSlug is required." }, { status: 400 });
+      }
+      if (!category) {
+        return NextResponse.json({ ok: false, error: "category is required." }, { status: 400 });
+      }
+      const item = await replaceSingleSessionQuestion(scheduleId, roundNumber, questionIndex, excludeSlug, category);
+      return NextResponse.json({ ok: true, item });
     }
 
     if (body.resource === "live-showdown-schedules") {

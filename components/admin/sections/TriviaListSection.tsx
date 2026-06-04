@@ -8,7 +8,7 @@ const PAGE_SIZE = 25;
 
 type QuestionType = "speed" | "live";
 type AnswerFormatFilter = "all" | "multiple_choice" | "write_in" | "numeric" | "true_false";
-type SortField = "created_at" | "category" | "question_pool" | "answer_format";
+type SortField = "created_at" | "category" | "difficulty" | "question_pool" | "answer_format";
 type SortDirection = "asc" | "desc";
 
 type EditFormState = {
@@ -402,6 +402,7 @@ export function TriviaListSection() {
               >
                 <option value="created_at">Created</option>
                 <option value="category">Category</option>
+                <option value="difficulty">Difficulty</option>
                 <option value="question_pool">Pool</option>
                 <option value="answer_format">Format</option>
               </select>
@@ -459,6 +460,7 @@ export function TriviaListSection() {
                 </th>
                 <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("created_at")}>Question</th>
                 <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("category")}>Category</th>
+                <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("difficulty")}>Difficulty</th>
                 <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("question_pool")}>Pool</th>
                 <th className={`${TH} cursor-pointer`} onClick={() => toggleSort("answer_format")}>Format</th>
                 <th className={TH}>Created</th>
@@ -468,11 +470,11 @@ export function TriviaListSection() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-sm text-slate-400">Loading...</td>
+                  <td colSpan={8} className="py-12 text-center text-sm text-slate-400">Loading...</td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-sm text-slate-400">No trivia questions found.</td>
+                  <td colSpan={8} className="py-12 text-center text-sm text-slate-400">No trivia questions found.</td>
                 </tr>
               ) : (
                 items.map((item, index) => {
@@ -490,9 +492,24 @@ export function TriviaListSection() {
                           />
                         </td>
                         <td className={`${TD} max-w-[560px]`}>
-                          <p className="truncate font-medium text-slate-900">{item.question}</p>
+                          <p className="font-medium text-slate-900">{item.question}</p>
                         </td>
                         <td className={`${TD} text-slate-600`}>{item.category ?? "Uncategorized"}</td>
+                        <td className={TD}>
+                          {item.difficulty ? (
+                            <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                              item.difficulty === "easy"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : item.difficulty === "medium"
+                                  ? "bg-amber-100 text-amber-800"
+                                  : "bg-red-100 text-red-800"
+                            }`}>
+                              {item.difficulty}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
                         <td className={TD}>{labelPool(item.questionPool)}</td>
                         <td className={TD}>{labelAnswerFormat(item.answerFormat)}</td>
                         <td className={`${TD} text-slate-500`}>
@@ -521,7 +538,7 @@ export function TriviaListSection() {
 
                       {isEditing && editing ? (
                         <tr className="border-b border-slate-100 bg-slate-50/60">
-                          <td colSpan={7} className="px-4 py-4">
+                          <td colSpan={8} className="px-4 py-4">
                             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                               <div className="md:col-span-2">
                                 <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Question</label>

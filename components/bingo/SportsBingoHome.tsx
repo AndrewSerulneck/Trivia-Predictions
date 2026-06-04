@@ -16,6 +16,7 @@ import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { ActionPop, type ActionPopTone } from "@/components/bingo/ActionPop";
 import { BackButton } from "@/components/navigation/BackButton";
+import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 
 type BingoCardSquare = {
   id: string;
@@ -673,6 +674,8 @@ function LoadingState({ label }: { label: string }) {
 
 export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const { triggerAnimation } = useAnimationTrigger();
+  const prevCardsRef = useRef<BingoCard[]>([]);
   const [userId, setUserId] = useState("");
   const [venueId, setVenueId] = useState("");
   const [cards, setCards] = useState<BingoCard[]>([]);
@@ -961,6 +964,7 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
             },
           })
         );
+        triggerAnimation("BINGO_SQUARE");
       }
 
       queueVisualEvents(
@@ -1003,7 +1007,7 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
         clearSquarePopTimerRef.current = null;
       }, 2200);
     },
-    [queueVisualEvents]
+    [queueVisualEvents, triggerAnimation]
   );
 
   const loadCards = useCallback(async ({ background = false, refreshProgress = true }: { background?: boolean; refreshProgress?: boolean } = {}) => {
@@ -1081,6 +1085,28 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
   useEffect(() => {
     void loadCards();
   }, [loadCards]);
+
+  // Detect card-level transitions (won, near-win) by comparing to previous snapshot.
+  useEffect(() => {
+    const prev = prevCardsRef.current;
+    prevCardsRef.current = cards;
+
+    const prevWonIds = new Set(prev.filter((c) => c.status === "won").map((c) => c.id));
+    const newlyWon = cards.some((c) => c.status === "won" && !prevWonIds.has(c.id));
+    if (newlyWon) {
+      triggerAnimation("BINGO_WIN");
+    }
+
+    const prevNearWinIds = new Set(
+      prev.filter((c) => summarizeCardState(c).nearWin).map((c) => c.id)
+    );
+    const newlyNearWin = cards.some(
+      (c) => c.status === "active" && summarizeCardState(c).nearWin && !prevNearWinIds.has(c.id)
+    );
+    if (newlyNearWin) {
+      triggerAnimation("BINGO_NEAR_WIN");
+    }
+  }, [cards, triggerAnimation]);
 
   useEffect(() => {
     const updateFreshness = () => {

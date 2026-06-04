@@ -340,6 +340,7 @@ async function upsertRows(rows, { prune = false } = {}) {
   await verifyConnectivity(supabaseUrl);
 
   let processed = 0;
+  let skippedDeleted = 0;
   for (let start = 0; start < rows.length; start += CHUNK_SIZE) {
     const chunkNumber = Math.floor(start / CHUNK_SIZE) + 1;
     const chunk = rows.slice(start, start + CHUNK_SIZE);
@@ -348,10 +349,13 @@ async function upsertRows(rows, { prune = false } = {}) {
     // Determine which slugs already exist so we never overwrite an existing
     // question's review status. Only brand-new questions land as pending_review;
     // existing rows are updated WITHOUT touching their status column.
+    // Admin-deleted questions are skipped entirely so local JSON cannot
+    // resurrect them on the next import.
     const existingSlugs = new Set();
+    const deletedSlugs = new Set();
     if (chunkSlugs.length > 0) {
       const { data: existingData, error: existingError } = await retryAsync(
-        async () => supabase.from("trivia_questions").select("slug").in("slug", chunkSlugs),
+        async () => supabase.from("trivia_questions").select("slug, status").in("slug", chunkSlugs),
         { operation: `lookup existing slugs chunk ${chunkNumber}` }
       );
       if (existingError) {
@@ -359,13 +363,17 @@ async function upsertRows(rows, { prune = false } = {}) {
       }
       for (const row of existingData ?? []) {
         if (row.slug) existingSlugs.add(row.slug);
+        if (row.slug && row.status === "deleted") deletedSlugs.add(row.slug);
       }
     }
 
-    const newRows = chunk
+    const importableRows = chunk.filter((row) => !deletedSlugs.has(row.slug));
+    skippedDeleted += chunk.length - importableRows.length;
+
+    const newRows = importableRows
       .filter((row) => !existingSlugs.has(row.slug))
       .map((row) => ({ ...row, status: "pending_review" }));
-    const existingRows = chunk.filter((row) => existingSlugs.has(row.slug));
+    const existingRows = importableRows.filter((row) => existingSlugs.has(row.slug));
 
     if (newRows.length > 0) {
       await retryAsync(
@@ -396,9 +404,9 @@ async function upsertRows(rows, { prune = false } = {}) {
       );
     }
 
-    processed += chunk.length;
+    processed += importableRows.length;
     console.log(
-      `Upserted ${processed}/${rows.length} questions (${newRows.length} new → pending_review, ${existingRows.length} updated)...`
+      `Upserted ${processed}/${rows.length - skippedDeleted} importable questions (${newRows.length} new → pending_review, ${existingRows.length} updated, ${chunk.length - importableRows.length} skipped as deleted)...`
     );
   }
 
@@ -426,6 +434,9 @@ async function upsertRows(rows, { prune = false } = {}) {
 
   await autoFillUpcomingLiveShowdownSchedules(supabase);
 
+  if (skippedDeleted > 0) {
+    console.log(`Skipped ${skippedDeleted} question(s) already marked deleted in Supabase.`);
+  }
   console.log(`Done. trivia_questions total rows: ${count ?? "unknown"}`);
 }
 

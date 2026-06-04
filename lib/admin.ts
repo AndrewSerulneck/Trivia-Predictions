@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "fs";
+import { readFileSync, readdirSync, writeFileSync } from "fs";
 import { join } from "path";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getInlineSlotRegistryEntries } from "@/lib/adSlotRegistry";
@@ -504,7 +504,7 @@ export async function listAdminTriviaQuestions(opts?: {
   category?: string;
   startDate?: string;
   endDate?: string;
-  sortBy?: "created_at" | "category" | "question_pool" | "answer_format";
+  sortBy?: "created_at" | "category" | "difficulty" | "question_pool" | "answer_format";
   sortDirection?: "asc" | "desc";
 }): Promise<PaginatedResult<TriviaQuestion>> {
   assertAdminConfigured();
@@ -550,6 +550,7 @@ export async function listAdminTriviaQuestions(opts?: {
 
   const sortBy =
     opts?.sortBy === "category" ||
+    opts?.sortBy === "difficulty" ||
     opts?.sortBy === "question_pool" ||
     opts?.sortBy === "answer_format"
       ? opts.sortBy
@@ -558,7 +559,7 @@ export async function listAdminTriviaQuestions(opts?: {
 
   const { data, error, count } = await query
     .order(sortBy, { ascending, nullsFirst: false })
-    .order("created_at", { ascending: false, nullsFirst: false })
+    .order("id", { ascending: true, nullsFirst: false })
     .range(from, to);
 
   if (error || !data) {
@@ -2784,10 +2785,190 @@ function sortFileQuestions(
   ascending: boolean
 ): TriviaQuestion[] {
   return [...questions].sort((a, b) => {
-    const av = (sortBy === "category" ? a.category : a.question) ?? "";
-    const bv = (sortBy === "category" ? b.category : b.question) ?? "";
-    return ascending ? av.localeCompare(bv) : bv.localeCompare(av);
+    const av = sortBy === "category" ? a.category : sortBy === "difficulty" ? a.difficulty : a.question;
+    const bv = sortBy === "category" ? b.category : sortBy === "difficulty" ? b.difficulty : b.question;
+    return ascending
+      ? (av ?? "").localeCompare(bv ?? "")
+      : (bv ?? "").localeCompare(av ?? "");
   });
+}
+
+/**
+ * Find a live-trivia question in the JSON files by slug and return
+ * the file info and its index within the questions array.
+ * Returns null if not found in any file.
+ */
+function findLiveTriviaQuestionInFile(
+  slug: string
+): { file: string; index: number; question: LiveTriviaFileQuestion } | null {
+  const dir = getLiveTriviaDir();
+  const files = readdirSync(dir)
+    .filter((f) => f.endsWith(".json"))
+    .sort();
+  for (const file of files) {
+    const raw = JSON.parse(readFileSync(join(dir, file), "utf-8")) as {
+      categoryName?: string;
+      questions: LiveTriviaFileQuestion[];
+    };
+    const questions = Array.isArray(raw.questions) ? raw.questions : [];
+    const index = questions.findIndex((q) => q.slug === slug);
+    if (index !== -1) {
+      return { file, index, question: questions[index] };
+    }
+  }
+  return null;
+}
+
+/**
+ * Find a speed-trivia question in the JSON files by slug and return
+ * the file info and its index within the normal_multiple_choice array.
+ * Returns null if not found in any file.
+ */
+function findSpeedTriviaQuestionInFile(
+  slug: string
+): { file: string; index: number; question: SpeedTriviaFileQuestion } | null {
+  const dir = getSpeedTriviaDir();
+  const files = readdirSync(dir)
+    .filter((f) => f.endsWith(".json"))
+    .sort();
+  for (const file of files) {
+    const raw = JSON.parse(readFileSync(join(dir, file), "utf-8")) as {
+      categoryName?: string;
+      normal_multiple_choice: SpeedTriviaFileQuestion[];
+    };
+    const questions = Array.isArray(raw.normal_multiple_choice) ? raw.normal_multiple_choice : [];
+    const index = questions.findIndex((q) => q.slug === slug);
+    if (index !== -1) {
+      return { file, index, question: questions[index] };
+    }
+  }
+  return null;
+}
+
+/**
+ * Update a live-trivia question directly in its JSON file by slug.
+ * Returns the updated question mapped to TriviaQuestion shape.
+ */
+function updateLiveTriviaQuestionFileBySlug(
+  slug: string,
+  patch: { question: string; answer: string; category?: string | null; difficulty?: string | null }
+): TriviaQuestion {
+  const found = findLiveTriviaQuestionInFile(slug);
+  if (!found) {
+    throw new Error(`Live trivia question with slug "${slug}" not found in any JSON file.`);
+  }
+
+  const filePath = join(getLiveTriviaDir(), found.file);
+  const raw = JSON.parse(readFileSync(filePath, "utf-8")) as {
+    categoryName?: string;
+    questions: LiveTriviaFileQuestion[];
+  };
+
+  raw.questions[found.index] = {
+    ...raw.questions[found.index],
+    slug,
+    question: patch.question,
+    answer: patch.answer,
+    answer_format: "write_in" as const,
+    category: patch.category !== undefined ? patch.category ?? "" : raw.questions[found.index].category,
+    difficulty: patch.difficulty !== undefined ? patch.difficulty ?? "" : raw.questions[found.index].difficulty,
+  };
+
+  writeFileSync(filePath, JSON.stringify(raw, null, 2), "utf-8");
+
+  const updated = raw.questions[found.index];
+  return {
+    id: updated.slug,
+    question: updated.question,
+    options: [updated.answer],
+    correctAnswer: 0,
+    category: raw.categoryName || updated.category,
+    difficulty: updated.difficulty,
+    questionPool: "live_showdown",
+    answerFormat: "write_in",
+  };
+}
+
+/**
+ * Update a speed-trivia question directly in its JSON file by slug.
+ * Returns the updated question mapped to TriviaQuestion shape.
+ */
+function updateSpeedTriviaQuestionFileBySlug(
+  slug: string,
+  patch: { question: string; options: string[]; correctAnswer: number; category?: string | null; difficulty?: string | null }
+): TriviaQuestion {
+  const found = findSpeedTriviaQuestionInFile(slug);
+  if (!found) {
+    throw new Error(`Speed trivia question with slug "${slug}" not found in any JSON file.`);
+  }
+
+  const filePath = join(getSpeedTriviaDir(), found.file);
+  const raw = JSON.parse(readFileSync(filePath, "utf-8")) as {
+    categoryName?: string;
+    normal_multiple_choice: SpeedTriviaFileQuestion[];
+  };
+
+  raw.normal_multiple_choice[found.index] = {
+    ...raw.normal_multiple_choice[found.index],
+    slug,
+    question: patch.question,
+    options: patch.options,
+    correctAnswer: patch.correctAnswer,
+    category: patch.category !== undefined ? patch.category ?? "" : raw.normal_multiple_choice[found.index].category,
+    difficulty: patch.difficulty !== undefined ? patch.difficulty ?? "" : raw.normal_multiple_choice[found.index].difficulty,
+  };
+
+  writeFileSync(filePath, JSON.stringify(raw, null, 2), "utf-8");
+
+  const updated = raw.normal_multiple_choice[found.index];
+  return {
+    id: updated.slug,
+    question: updated.question,
+    options: updated.options,
+    correctAnswer: updated.correctAnswer,
+    category: raw.categoryName || updated.category,
+    difficulty: updated.difficulty,
+    questionPool: "anytime_blitz",
+    answerFormat: "multiple_choice",
+  };
+}
+
+/**
+ * Delete a live-trivia question directly from its JSON file by slug.
+ * Returns true if found and deleted.
+ */
+function deleteLiveTriviaQuestionFileBySlug(slug: string): boolean {
+  const found = findLiveTriviaQuestionInFile(slug);
+  if (!found) return false;
+
+  const filePath = join(getLiveTriviaDir(), found.file);
+  const raw = JSON.parse(readFileSync(filePath, "utf-8")) as {
+    categoryName?: string;
+    questions: LiveTriviaFileQuestion[];
+  };
+
+  raw.questions.splice(found.index, 1);
+  writeFileSync(filePath, JSON.stringify(raw, null, 2), "utf-8");
+  return true;
+}
+
+/**
+ * Delete a speed-trivia question directly from its JSON file by slug.
+ * Returns true if found and deleted.
+ */
+function deleteSpeedTriviaQuestionFileBySlug(slug: string): boolean {
+  const found = findSpeedTriviaQuestionInFile(slug);
+  if (!found) return false;
+
+  const filePath = join(getSpeedTriviaDir(), found.file);
+  const raw = JSON.parse(readFileSync(filePath, "utf-8")) as {
+    categoryName?: string;
+    normal_multiple_choice: SpeedTriviaFileQuestion[];
+  };
+
+  raw.normal_multiple_choice.splice(found.index, 1);
+  writeFileSync(filePath, JSON.stringify(raw, null, 2), "utf-8");
+  return true;
 }
 
 function isUuidLike(value: string): boolean {
@@ -2830,6 +3011,7 @@ async function listAdminTriviaQuestionsByPool(opts: {
     sortBy:
       opts.sortBy === "created_at" ||
       opts.sortBy === "category" ||
+      opts.sortBy === "difficulty" ||
       opts.sortBy === "question_pool" ||
       opts.sortBy === "answer_format"
         ? opts.sortBy
@@ -3132,21 +3314,56 @@ export async function updateAdminLiveTriviaQuestionInFile(input: {
     patch.difficulty = input.difficulty.trim() || null;
   }
 
-  return updateTriviaBankQuestionByIdOrSlug({
-    questionType: "live",
-    identifier: slug,
-    patch,
-    categoryForLog: input.category,
+  // Try Supabase first; fall back to direct file update on failure
+  try {
+    return await updateTriviaBankQuestionByIdOrSlug({
+      questionType: "live",
+      identifier: slug,
+      patch,
+      categoryForLog: input.category,
+    });
+  } catch (error) {
+    logAdminTriviaBankError({
+      action: "update",
+      questionType: "live",
+      questionId: slug,
+      category: input.category,
+      error,
+    });
+  }
+
+  return updateLiveTriviaQuestionFileBySlug(slug, {
+    question,
+    answer,
+    category: input.category !== undefined ? (input.category.trim() || null) : undefined,
+    difficulty: input.difficulty !== undefined ? (input.difficulty.trim() || null) : undefined,
   });
 }
 
 export async function deleteAdminLiveTriviaQuestionInFile(slug: string): Promise<void> {
   const normalizedSlug = String(slug ?? "").trim();
   if (!normalizedSlug) throw new Error("slug is required.");
-  return deleteTriviaBankQuestionByIdOrSlug({
-    questionType: "live",
-    identifier: normalizedSlug,
-  });
+
+  // Try Supabase first; fall back to direct file deletion on failure
+  try {
+    await deleteTriviaBankQuestionByIdOrSlug({
+      questionType: "live",
+      identifier: normalizedSlug,
+    });
+    return;
+  } catch (error) {
+    logAdminTriviaBankError({
+      action: "delete",
+      questionType: "live",
+      questionId: normalizedSlug,
+      error,
+    });
+  }
+
+  const deleted = deleteLiveTriviaQuestionFileBySlug(normalizedSlug);
+  if (!deleted) {
+    throw new Error(`Live trivia question with slug "${normalizedSlug}" not found in database or any JSON file.`);
+  }
 }
 
 export async function updateAdminSpeedTriviaQuestionInFile(input: {
@@ -3180,21 +3397,57 @@ export async function updateAdminSpeedTriviaQuestionInFile(input: {
     patch.difficulty = input.difficulty.trim() || null;
   }
 
-  return updateTriviaBankQuestionByIdOrSlug({
-    questionType: "speed",
-    identifier: slug,
-    patch,
-    categoryForLog: input.category,
+  // Try Supabase first; fall back to direct file update on failure
+  try {
+    return await updateTriviaBankQuestionByIdOrSlug({
+      questionType: "speed",
+      identifier: slug,
+      patch,
+      categoryForLog: input.category,
+    });
+  } catch (error) {
+    logAdminTriviaBankError({
+      action: "update",
+      questionType: "speed",
+      questionId: slug,
+      category: input.category,
+      error,
+    });
+  }
+
+  return updateSpeedTriviaQuestionFileBySlug(slug, {
+    question,
+    options,
+    correctAnswer,
+    category: input.category !== undefined ? (input.category.trim() || null) : undefined,
+    difficulty: input.difficulty !== undefined ? (input.difficulty.trim() || null) : undefined,
   });
 }
 
 export async function deleteAdminSpeedTriviaQuestionInFile(slug: string): Promise<void> {
   const normalizedSlug = String(slug ?? "").trim();
   if (!normalizedSlug) throw new Error("slug is required.");
-  return deleteTriviaBankQuestionByIdOrSlug({
-    questionType: "speed",
-    identifier: normalizedSlug,
-  });
+
+  // Try Supabase first; fall back to direct file deletion on failure
+  try {
+    await deleteTriviaBankQuestionByIdOrSlug({
+      questionType: "speed",
+      identifier: normalizedSlug,
+    });
+    return;
+  } catch (error) {
+    logAdminTriviaBankError({
+      action: "delete",
+      questionType: "speed",
+      questionId: normalizedSlug,
+      error,
+    });
+  }
+
+  const deleted = deleteSpeedTriviaQuestionFileBySlug(normalizedSlug);
+  if (!deleted) {
+    throw new Error(`Speed trivia question with slug "${normalizedSlug}" not found in database or any JSON file.`);
+  }
 }
 
 async function resolvePendingPredictionMarketLegacy(params: {

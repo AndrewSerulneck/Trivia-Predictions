@@ -1,5 +1,8 @@
 import "server-only";
 
+import { readFileSync, readdirSync } from "fs";
+import { join } from "path";
+
 import { djb2, getLiveShowdownState } from "@/lib/liveShowdownEngine";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -34,6 +37,19 @@ type TriviaScheduleRow = {
 };
 
 type TriviaScheduleRowLegacy = Omit<TriviaScheduleRow, "recurring_type" | "recurring_days">;
+
+export type AdminLiveShowdownScheduleQuestion = {
+  id: string;
+  scheduleId: string;
+  questionId: string;
+  roundNumber: number;
+  questionIndex: number;
+  question: string;
+  category: string | null;
+  options: string[];
+  correctAnswer: number;
+  difficulty: string | null;
+};
 
 export type AdminLiveShowdownSchedule = {
   id: string;
@@ -845,4 +861,532 @@ export async function forceAdvanceLiveShowdownToNextQuestion(scheduleIdRaw: stri
   }
 
   return { updatedStartTime: newStartTimeIso };
+}
+
+export async function getAdminLiveShowdownSessionQuestions(
+  scheduleIdRaw: string
+): Promise<AdminLiveShowdownScheduleQuestion[]> {
+  const admin = getAdminClient();
+  const scheduleId = String(scheduleIdRaw ?? "").trim();
+  if (!scheduleId) {
+    throw new Error("scheduleId is required.");
+  }
+
+  // Fetch all session questions for this schedule
+  const { data: sessionRows, error: sessionError } = await admin
+    .from("trivia_session_questions")
+    .select("id, schedule_id, question_id, round_number, question_index")
+    .eq("schedule_id", scheduleId)
+    .order("round_number", { ascending: true })
+    .order("question_index", { ascending: true });
+
+  if (sessionError) {
+    throw new Error(sessionError.message || "Failed to load session questions.");
+  }
+
+  const rows = (sessionRows ?? []) as Array<{
+    id: string;
+    schedule_id: string;
+    question_id: string | null;
+    round_number: number;
+    question_index: number;
+  }>;
+
+  if (rows.length === 0) return [];
+
+  // Deduplicate question slugs and fetch their details
+  const slugs = Array.from(
+    new Set(rows.map((r) => String(r.question_id ?? "").trim()).filter(Boolean))
+  );
+
+  if (slugs.length === 0) return [];
+
+  const { data: questionData, error: questionError } = await admin
+    .from("trivia_questions")
+    .select("slug, question, category, options, correct_answer, difficulty")
+    .in("slug", slugs);
+
+  if (questionError) {
+    throw new Error(questionError.message || "Failed to load question details.");
+  }
+
+  const questionBySlug = new Map(
+    ((questionData ?? []) as Array<{
+      slug: string;
+      question: string;
+      category: string | null;
+      options: unknown;
+      correct_answer: number;
+      difficulty: string | null;
+    }>).map((row) => [
+      row.slug,
+      {
+        question: row.question,
+        category: row.category,
+        options: Array.isArray(row.options) ? row.options.map((o) => String(o ?? "")) : [],
+        correctAnswer: row.correct_answer,
+        difficulty: row.difficulty,
+      },
+    ])
+  );
+
+  return rows.map((row) => {
+    const slug = String(row.question_id ?? "").trim();
+    const details = questionBySlug.get(slug);
+    return {
+      id: row.id,
+      scheduleId: row.schedule_id,
+      questionId: slug,
+      roundNumber: row.round_number,
+      questionIndex: row.question_index,
+      question: details?.question ?? "(Question not found)",
+      category: details?.category ?? null,
+      options: details?.options ?? [],
+      correctAnswer: details?.correctAnswer ?? 0,
+      difficulty: details?.difficulty ?? null,
+    };
+  });
+}
+
+export async function updateAdminLiveShowdownSessionQuestions(
+  scheduleIdRaw: string,
+  updates: Array<{
+    id: string;
+    roundNumber: number;
+    questionIndex: number;
+    questionId: string;
+  }>
+): Promise<void> {
+  const admin = getAdminClient();
+  const scheduleId = String(scheduleIdRaw ?? "").trim();
+  if (!scheduleId) {
+    throw new Error("scheduleId is required.");
+  }
+  if (!Array.isArray(updates) || updates.length === 0) {
+    throw new Error("At least one question update is required.");
+  }
+
+  const { error } = await admin
+    .from("trivia_session_questions")
+    .upsert(
+      updates.map((u) => ({
+        id: u.id,
+        schedule_id: scheduleId,
+        question_id: u.questionId,
+        round_number: u.roundNumber,
+        question_index: u.questionIndex,
+      })),
+      { onConflict: "id", ignoreDuplicates: false }
+    );
+
+  if (error) {
+    throw new Error(error.message || "Failed to update session question ordering.");
+  }
+}
+
+// ─── Single Question Replacement ────────────────────────────────────────────
+
+/**
+ * Replace a single question in a scheduled (non-occurrence) round with a
+ * different question from the same category.  Used by the admin manage-view
+ * "delete & replace" button so the round always stays full.
+ *
+ * The replaced question is **permanently deleted** from the `trivia_questions`
+ * table so it will never appear in any future game.
+ *
+ * 1. Look up all question slugs already present in this schedule + round
+ *    so we don't introduce a duplicate.
+ * 2. Fetch eligible questions from `trivia_questions` that belong to the
+ *    requested category.
+ * 3. Exclude the slug being removed and any slug already used in this round.
+ * 4. Check answer eligibility via `isLiveShowdownEligibleAnswer`.
+ * 5. Pick a random candidate, UPDATE the session-question row's question_id.
+ * 6. **Delete** the old question from `trivia_questions` permanently.
+ * 7. Return the full question details.
+ */
+export async function replaceSingleSessionQuestion(
+  scheduleIdRaw: string,
+  roundNumber: number,
+  questionIndex: number,
+  excludeSlug: string,
+  category: string,
+): Promise<AdminLiveShowdownScheduleQuestion> {
+  const admin = getAdminClient();
+  const scheduleId = String(scheduleIdRaw ?? "").trim();
+  if (!scheduleId) throw new Error("scheduleId is required.");
+  if (!Number.isInteger(roundNumber) || roundNumber < 1) {
+    throw new Error("roundNumber must be a positive integer.");
+  }
+  if (!Number.isInteger(questionIndex) || questionIndex < 1) {
+    throw new Error("questionIndex must be a positive integer.");
+  }
+  const safeExclude = String(excludeSlug ?? "").trim();
+  if (!safeExclude) throw new Error("excludeSlug is required.");
+  const targetCategory = String(category ?? "").trim();
+  if (!targetCategory) throw new Error("category is required.");
+
+  // 1. Slugs already used in this schedule + round (so we don't repeat).
+  const { data: usedData, error: usedError } = await admin
+    .from("trivia_session_questions")
+    .select("question_id")
+    .eq("schedule_id", scheduleId)
+    .eq("round_number", roundNumber);
+  if (usedError) {
+    throw new Error(usedError.message || "Failed to load round question usage.");
+  }
+  const usedSlugs = new Set(
+    ((usedData ?? []) as Array<{ question_id: string | null }>)
+      .map((r) => String(r.question_id ?? "").trim())
+      .filter(Boolean),
+  );
+  usedSlugs.add(safeExclude);
+
+  // 2. Fetch eligible questions from the same category.
+  const { data, error } = await admin
+    .from("trivia_questions")
+    .select("id, slug, question, category, options, correct_answer, question_pool, difficulty")
+    .in("question_pool", ["live_showdown", "anytime_blitz"])
+    .eq("status", "active");
+
+  if (error) {
+    throw new Error(error.message || "Failed to load question pool.");
+  }
+
+  type EligibleRow = LiveShowdownQuestionRow & { slug: string; difficulty: string | null; question: string };
+
+  const catCandidates = ((data ?? []) as Array<LiveShowdownQuestionRow & { difficulty: string | null; question: string }>)
+    .filter((row) => {
+      const slug = String(row.slug ?? "").trim();
+      if (!slug) return false;
+      if (usedSlugs.has(slug)) return false;
+      if (normalizeCategory(row.category) !== targetCategory) return false;
+      if (isBlockedLiveShowdownCategory(row.category)) return false;
+      return isLiveShowdownEligibleAnswer(getCorrectAnswer(row));
+    })
+    .map((row) => ({ ...row, slug: String(row.slug ?? "").trim() }) as EligibleRow);
+
+  if (catCandidates.length === 0) {
+    throw new Error(
+      `No eligible replacement question available in category "${targetCategory}" for this round. ` +
+      `All questions in this category may already be in use or ineligible.`
+    );
+  }
+
+  // 3. Pick a random candidate.
+  const picked = catCandidates[Math.floor(Math.random() * catCandidates.length)];
+
+  // Sanity-check the replacement slug before sending to the DB.
+  const replacementSlug = String(picked.slug ?? "").trim();
+  if (!replacementSlug) {
+    throw new Error("Replacement question has an empty slug – cannot update session row.");
+  }
+
+  // 4. Update the session-question row in place (preserves id / round / index).
+  const { error: updateError } = await admin
+    .from("trivia_session_questions")
+    .update({ question_id: replacementSlug })
+    .eq("schedule_id", scheduleId)
+    .eq("round_number", roundNumber)
+    .eq("question_index", questionIndex);
+
+  if (updateError) {
+    throw new Error(updateError.message || "Failed to replace session question.");
+  }
+
+  // 5. Permanently delete the old question from the trivia_questions table.
+  const { error: deleteError } = await admin
+    .from("trivia_questions")
+    .delete()
+    .eq("slug", safeExclude);
+
+  if (deleteError) {
+    throw new Error(deleteError.message || "Failed to permanently delete the replaced question.");
+  }
+
+  return {
+    id: "",
+    scheduleId,
+    questionId: picked.slug,
+    roundNumber,
+    questionIndex,
+    question: picked.question,
+    category: picked.category,
+    options: coerceOptions(picked.options),
+    correctAnswer: picked.correct_answer,
+    difficulty: picked.difficulty,
+  };
+}
+
+// ─── Round Category Replacement ──────────────────────────────────────────────
+
+type CategoryCount = {
+  category: string;
+  count: number;
+};
+
+export async function getLiveShowdownRoundCategories(): Promise<CategoryCount[]> {
+  const admin = getAdminClient();
+
+  // 1. Fetch all active live_showdown / anytime_blitz questions from the DB.
+  // We deliberately do NOT filter by isLiveShowdownEligibleAnswer here so that
+  // every category present in the pool appears in the dropdown. The
+  // replaceRoundQuestionsWithCategory function will validate eligibility at
+  // replacement time and fail with a clear error if too few questions are usable.
+  const { data, error } = await admin
+    .from("trivia_questions")
+    .select("id, slug, question, category, options, correct_answer, question_pool")
+    .in("question_pool", ["live_showdown", "anytime_blitz"])
+    .eq("status", "active");
+
+  if (error) {
+    throw new Error(error.message || "Failed to load categories.");
+  }
+
+  const byCategory = new Map<string, number>();
+  for (const row of ((data ?? []) as LiveShowdownQuestionRow[])) {
+    if (!String(row.slug ?? "").trim()) continue;
+    if (isBlockedLiveShowdownCategory(row.category)) continue;
+    const cat = normalizeCategory(row.category);
+    byCategory.set(cat, (byCategory.get(cat) ?? 0) + 1);
+  }
+
+  // 2. Also read file-based categories (e.g. us-states.v1.json) that may not
+  //    exist in the database yet.  Only add a category if it isn't already
+  //    present from the DB – the DB count is authoritative for existing ones.
+  try {
+    const filesDir = join(process.cwd(), "data", "live-trivia", "categories");
+    const files = readdirSync(filesDir)
+      .filter((f) => f.endsWith(".json"))
+      .sort();
+    for (const file of files) {
+      const raw = JSON.parse(readFileSync(join(filesDir, file), "utf-8")) as {
+        categoryName?: string;
+        questions: Array<{ slug: string }>;
+      };
+      const categoryName = String(raw.categoryName || "").trim() ||
+        file.replace(/\.v\d+\.json$/i, "").replace(/-/g, " ");
+      if (!categoryName || isBlockedLiveShowdownCategory(categoryName)) continue;
+      if (!byCategory.has(categoryName)) {
+        byCategory.set(categoryName, Array.isArray(raw.questions) ? raw.questions.length : 0);
+      }
+    }
+  } catch {
+    // If the files directory can't be read, fall back to DB-only categories
+  }
+
+  return Array.from(byCategory.entries())
+    .map(([category, count]) => ({ category, count }))
+    .sort((a, b) => a.category.localeCompare(b.category));
+}
+
+export async function replaceRoundQuestionsWithCategory(
+  scheduleIdRaw: string,
+  roundNumber: number,
+  category: string
+): Promise<AdminLiveShowdownScheduleQuestion[]> {
+  const admin = getAdminClient();
+  const scheduleId = String(scheduleIdRaw ?? "").trim();
+  if (!scheduleId) throw new Error("scheduleId is required.");
+  if (!Number.isInteger(roundNumber) || roundNumber < 1) {
+    throw new Error("roundNumber must be a positive integer.");
+  }
+  const targetCategory = String(category ?? "").trim();
+  if (!targetCategory) throw new Error("category is required.");
+
+  // ---- Check if this category comes from a file-based bank ----
+  type FileBasedQuestion = { slug: string; question: string; answer: string; answer_format: string; category: string; difficulty: string };
+  let fileQuestions: FileBasedQuestion[] | null = null;
+
+  try {
+    const filesDir = join(process.cwd(), "data", "live-trivia", "categories");
+    const files = readdirSync(filesDir)
+      .filter((f) => f.endsWith(".json"))
+      .sort();
+    for (const file of files) {
+      const raw = JSON.parse(readFileSync(join(filesDir, file), "utf-8")) as {
+        categoryName?: string;
+        questions: FileBasedQuestion[];
+      };
+      const catName = String(raw.categoryName || "").trim() ||
+        file.replace(/\.v\d+\.json$/i, "").replace(/-/g, " ");
+      if (catName === targetCategory) {
+        fileQuestions = Array.isArray(raw.questions) ? raw.questions : [];
+        break;
+      }
+    }
+  } catch {
+    // If files can't be read, fall through to DB-only logic below
+  }
+
+  // If we found the category in a file, upsert those questions into the DB
+  // so the runtime engine can find them by slug.
+  if (fileQuestions) {
+    const eligible = fileQuestions.filter((q) => {
+      const answer = String(q.answer ?? "").trim();
+      return answer.length > 0 && isLiveShowdownEligibleAnswer(answer);
+    });
+
+    if (eligible.length < QUESTIONS_PER_ROUND) {
+      throw new Error(
+        `Category "${targetCategory}" only has ${eligible.length} eligible file-based questions; ${QUESTIONS_PER_ROUND} are required to fill a round.`
+      );
+    }
+
+    // Upsert each eligible question into trivia_questions so slugs exist at runtime
+    for (const q of eligible) {
+      const answer = String(q.answer ?? "").trim();
+      const upsertPayload = {
+        slug: q.slug,
+        question: q.question,
+        category: targetCategory,
+        options: JSON.stringify([answer]),
+        correct_answer: 0,
+        question_pool: "live_showdown" as const,
+        status: "active",
+        difficulty: q.difficulty || "medium",
+        answer_format: "write_in",
+      };
+      const { error: upsertError } = await admin
+        .from("trivia_questions")
+        .upsert(upsertPayload, { onConflict: "slug", ignoreDuplicates: false });
+
+      if (upsertError) {
+        throw new Error(upsertError.message || `Failed to upsert question "${q.slug}" into the question bank.`);
+      }
+    }
+
+    // After upserting, re-fetch from DB to get full rows (including difficulty)
+    const { data: refetched, error: refetchError } = await admin
+      .from("trivia_questions")
+      .select("id, slug, question, category, options, correct_answer, question_pool, difficulty")
+      .in("slug", eligible.map((q) => q.slug));
+
+    if (refetchError) {
+      throw new Error(refetchError.message || "Failed to re-fetch upserted questions.");
+    }
+
+    type EligibleRow = LiveShowdownQuestionRow & { slug: string; difficulty: string | null; question: string };
+
+    const picked = shuffleInPlace(
+      ((refetched ?? []) as Array<LiveShowdownQuestionRow & { difficulty: string | null; question: string }>)
+        .filter((row) => String(row.slug ?? "").trim().length > 0)
+        .map((row) => ({ ...row, slug: String(row.slug ?? "").trim() }) as EligibleRow)
+    ).slice(0, QUESTIONS_PER_ROUND);
+
+    // Delete existing session questions for this schedule + round
+    const { error: deleteError } = await admin
+      .from("trivia_session_questions")
+      .delete()
+      .eq("schedule_id", scheduleId)
+      .eq("round_number", roundNumber);
+
+    if (deleteError) {
+      throw new Error(deleteError.message || "Failed to delete existing round questions.");
+    }
+
+    // Insert new questions
+    const inserts = picked.map((row, idx) => ({
+      schedule_id: scheduleId,
+      question_id: row.slug,
+      round_number: roundNumber,
+      question_index: idx + 1,
+    }));
+
+    const { error: insertError } = await admin
+      .from("trivia_session_questions")
+      .insert(inserts);
+
+    if (insertError) {
+      throw new Error(insertError.message || "Failed to insert new round questions.");
+    }
+
+    return picked.map((row, idx) => ({
+      id: "",
+      scheduleId,
+      questionId: row.slug,
+      roundNumber,
+      questionIndex: idx + 1,
+      question: row.question,
+      category: row.category,
+      options: coerceOptions(row.options),
+      correctAnswer: row.correct_answer,
+      difficulty: row.difficulty,
+    }));
+  }
+
+  // ---- DB-only fallback for categories already in the database ----
+  const { data, error } = await admin
+    .from("trivia_questions")
+    .select("id, slug, question, category, options, correct_answer, question_pool, difficulty")
+    .in("question_pool", ["live_showdown", "anytime_blitz"])
+    .eq("status", "active");
+
+  if (error) {
+    throw new Error(error.message || "Failed to load question pool.");
+  }
+
+  type EligibleRow = LiveShowdownQuestionRow & { slug: string; difficulty: string | null; question: string };
+
+  const rows = ((data ?? []) as Array<LiveShowdownQuestionRow & { difficulty: string | null; question: string }>)
+    .filter((row) => String(row.slug ?? "").trim().length > 0)
+    .map((row) => ({ ...row, slug: String(row.slug ?? "").trim() }) as EligibleRow);
+
+  // Filter to the requested category
+  const catRows = rows.filter(
+    (row) =>
+      normalizeCategory(row.category) === targetCategory &&
+      !isBlockedLiveShowdownCategory(row.category) &&
+      isLiveShowdownEligibleAnswer(getCorrectAnswer(row))
+  );
+
+  if (catRows.length < QUESTIONS_PER_ROUND) {
+    throw new Error(
+      `Category "${targetCategory}" only has ${catRows.length} eligible questions; ${QUESTIONS_PER_ROUND} are required to fill a round.`
+    );
+  }
+
+  // Shuffle and pick QUESTIONS_PER_ROUND questions
+  const shuffled = shuffleInPlace([...catRows]);
+  const picked = shuffled.slice(0, QUESTIONS_PER_ROUND);
+
+  // Delete existing session questions for this schedule + round
+  const { error: deleteError } = await admin
+    .from("trivia_session_questions")
+    .delete()
+    .eq("schedule_id", scheduleId)
+    .eq("round_number", roundNumber);
+
+  if (deleteError) {
+    throw new Error(deleteError.message || "Failed to delete existing round questions.");
+  }
+
+  // Insert new questions
+  const inserts = picked.map((row, idx) => ({
+    schedule_id: scheduleId,
+    question_id: row.slug,
+    round_number: roundNumber,
+    question_index: idx + 1,
+  }));
+
+  const { error: insertError } = await admin
+    .from("trivia_session_questions")
+    .insert(inserts);
+
+  if (insertError) {
+    throw new Error(insertError.message || "Failed to insert new round questions.");
+  }
+
+  // Build and return the inserted questions with full details
+  return picked.map((row, idx) => ({
+    id: "", // id won't be available since we didn't select after insert
+    scheduleId,
+    questionId: row.slug,
+    roundNumber,
+    questionIndex: idx + 1,
+    question: row.question,
+    category: row.category,
+    options: coerceOptions(row.options),
+    correctAnswer: row.correct_answer,
+    difficulty: row.difficulty,
+  }));
 }

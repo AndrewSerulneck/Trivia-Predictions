@@ -1,44 +1,5 @@
 [
   {
-    "slug": "science-red-planet",
-    "question": "Which planet in our solar system is known as the Red Planet?",
-    "options": [
-      "Mars",
-      "Jupiter",
-      "Venus",
-      "Mercury"
-    ],
-    "correctAnswer": 0,
-    "category": "Science",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "technology-first-iphone-year",
-    "question": "What year did the first iPhone launch?",
-    "options": [
-      "2005",
-      "2007",
-      "2009",
-      "2011"
-    ],
-    "correctAnswer": 1,
-    "category": "Technology",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "geography-eiffel-tower-city",
-    "question": "Which city hosts the Eiffel Tower?",
-    "options": [
-      "Rome",
-      "Berlin",
-      "Madrid",
-      "Paris"
-    ],
-    "correctAnswer": 3,
-    "category": "Geography",
-    "difficulty": "easy"
-  },
-  {
     "slug": "super-bowl-li-winner",
     "question": "Which team overcame a 28-3 deficit to win Super Bowl LI?",
     "options": [

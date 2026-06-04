@@ -2,136 +2,6 @@
   "categoryName": "General Knowledge",
   "normal_multiple_choice": [
     {
-      "slug": "what-is-the-capital-city-of-france",
-      "question": "What is the capital city of France?",
-      "options": [
-        "Paris",
-        "Rome",
-        "Berlin",
-        "Madrid"
-      ],
-      "correctAnswer": 0,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "who-painted-the-mona-lisa",
-      "question": "Who painted the Mona Lisa?",
-      "options": [
-        "Vincent van Gogh",
-        "Leonardo da Vinci",
-        "Pablo Picasso",
-        "Claude Monet"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "how-many-days-are-in-a-leap-year",
-      "question": "How many days are in a leap year?",
-      "options": [
-        "365",
-        "366",
-        "360",
-        "364"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "which-author-wrote-romeo-and-juliet",
-      "question": "Which author wrote 'Romeo and Juliet'?",
-      "options": [
-        "Charles Dickens",
-        "William Shakespeare",
-        "Jane Austen",
-        "Mark Twain"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "which-continent-is-the-largest-by-land-area",
-      "question": "Which continent is the largest by land area?",
-      "options": [
-        "Africa",
-        "Europe",
-        "Asia",
-        "North America"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "how-many-players-are-on-a-standard-soccer-team-on-the-field",
-      "question": "How many players are on a standard soccer team on the field?",
-      "options": [
-        "9",
-        "10",
-        "11",
-        "12"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "in-which-year-did-world-war-ii-officially-end",
-      "question": "In which year did World War II officially end?",
-      "options": [
-        "1943",
-        "1945",
-        "1947",
-        "1950"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "what-is-the-largest-mammal-in-the-world",
-      "question": "What is the largest mammal in the world?",
-      "options": [
-        "Elephant",
-        "Blue Whale",
-        "Great White Shark",
-        "Giraffe"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "what-gas-do-plants-absorb-from-the-atmosphere",
-      "question": "What gas do plants absorb from the atmosphere?",
-      "options": [
-        "Oxygen",
-        "Nitrogen",
-        "Carbon Dioxide",
-        "Hydrogen"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "which-desert-is-the-largest-hot-desert-in-the-world",
-      "question": "Which desert is the largest hot desert in the world?",
-      "options": [
-        "Gobi Desert",
-        "Sahara Desert",
-        "Arabian Desert",
-        "Atacama Desert"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
       "slug": "what-is-the-main-organ-of-the-human-respiratory-system",
       "question": "What is the main organ of the human respiratory system?",
       "options": [
@@ -143,32 +13,6 @@
       "correctAnswer": 2,
       "category": "General Knowledge",
       "difficulty": "easy"
-    },
-    {
-      "slug": "who-invented-the-light-bulb",
-      "question": "Who invented the light bulb?",
-      "options": [
-        "Isaac Newton",
-        "Albert Einstein",
-        "Thomas Edison",
-        "Nikola Tesla"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "which-classic-novel-begins-with-the-line-call-me-ishmael",
-      "question": "Which classic novel begins with the line \"Call me Ishmael\"?",
-      "options": [
-        "Moby Dick",
-        "Great Expectations",
-        "Pride and Prejudice",
-        "The Catcher in the Rye"
-      ],
-      "correctAnswer": 0,
-      "category": "General Knowledge",
-      "difficulty": "hard"
     },
     {
       "slug": "which-fruit-is-famous-for-keeping-the-doctor-away",
@@ -197,45 +41,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "which-fictional-detective-lives-at-221b-baker-street",
-      "question": "Which fictional detective lives at 221B Baker Street?",
-      "options": [
-        "Hercule Poirot",
-        "Sherlock Holmes",
-        "Miss Marple",
-        "Philip Marlowe"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "who-was-the-first-person-to-step-on-the-moon",
-      "question": "Who was the first person to step on the Moon?",
-      "options": [
-        "Buzz Aldrin",
-        "Yuri Gagarin",
-        "Neil Armstrong",
-        "Michael Collins"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "which-of-these-cities-is-not-a-capital-city",
-      "question": "Which of these cities is NOT a capital city?",
-      "options": [
-        "London",
-        "Sydney",
-        "Tokyo",
-        "Cairo"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
       "slug": "what-is-a-group-of-lions-called",
       "question": "What is a group of lions called?",
       "options": [
@@ -258,19 +63,6 @@
         "Quartz"
       ],
       "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "which-ancient-wonder-was-a-massive-lighthouse",
-      "question": "Which ancient wonder was a massive lighthouse?",
-      "options": [
-        "Pyramids of Giza",
-        "Hanging Gardens of Babylon",
-        "Colossus of Rhodes",
-        "Lighthouse of Alexandria"
-      ],
-      "correctAnswer": 3,
       "category": "General Knowledge",
       "difficulty": "hard"
     },
@@ -301,84 +93,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "which-famous-tower-is-located-in-paris-france",
-      "question": "Which famous tower is located in Paris, France?",
-      "options": [
-        "Big Ben",
-        "Leaning Tower of Pisa",
-        "Eiffel Tower",
-        "Empire State Building"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "who-developed-the-theory-of-relativity",
-      "question": "Who developed the theory of relativity?",
-      "options": [
-        "Isaac Newton",
-        "Albert Einstein",
-        "Stephen Hawking",
-        "Nikola Tesla"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "what-is-the-capital-city-of-japan",
-      "question": "What is the capital city of Japan?",
-      "options": [
-        "Beijing",
-        "Seoul",
-        "Tokyo",
-        "Bangkok"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "what-is-the-chemical-symbol-for-water",
-      "question": "What is the chemical symbol for water?",
-      "options": [
-        "O2",
-        "H2O",
-        "CO2",
-        "NaCl"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "who-wrote-the-classic-novel-don-quixote",
-      "question": "Who wrote the classic novel \"Don Quixote\"?",
-      "options": [
-        "William Shakespeare",
-        "Miguel de Cervantes",
-        "Leo Tolstoy",
-        "Charles Dickens"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "in-which-year-did-the-titanic-sink",
-      "question": "In which year did the Titanic sink?",
-      "options": [
-        "1905",
-        "1912",
-        "1923",
-        "1931"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
       "slug": "which-vegetable-is-known-for-making-people-cry-when-sliced",
       "question": "Which vegetable is known for making people cry when sliced?",
       "options": [
@@ -392,110 +106,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "which-artist-painted-the-starry-night",
-      "question": "Which artist painted \"The Starry Night\"?",
-      "options": [
-        "Claude Monet",
-        "Pablo Picasso",
-        "Vincent van Gogh",
-        "Leonardo da Vinci"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "what-is-the-largest-ocean-on-earth",
-      "question": "What is the largest ocean on Earth?",
-      "options": [
-        "Atlantic Ocean",
-        "Indian Ocean",
-        "Arctic Ocean",
-        "Pacific Ocean"
-      ],
-      "correctAnswer": 3,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "who-was-the-last-queen-of-france-before-the-french-revolution",
-      "question": "Who was the last Queen of France before the French Revolution?",
-      "options": [
-        "Catherine the Great",
-        "Queen Victoria",
-        "Marie Antoinette",
-        "Elizabeth I"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "what-planet-is-known-as-the-red-planet",
-      "question": "What planet is known as the \"Red Planet\"?",
-      "options": [
-        "Jupiter",
-        "Mars",
-        "Venus",
-        "Saturn"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "which-fast-food-company-is-known-for-its-golden-arches-logo",
-      "question": "Which fast-food company is known for its \"golden arches\" logo?",
-      "options": [
-        "Burger King",
-        "Wendy's",
-        "McDonald's",
-        "KFC"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "who-is-the-author-of-the-dystopian-novel-1984",
-      "question": "Who is the author of the dystopian novel \"1984\"?",
-      "options": [
-        "Aldous Huxley",
-        "George Orwell",
-        "F. Scott Fitzgerald",
-        "Ernest Hemingway"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "what-is-the-process-by-which-plants-make-their-own-food",
-      "question": "What is the process by which plants make their own food?",
-      "options": [
-        "Respiration",
-        "Digestion",
-        "Photosynthesis",
-        "Transpiration"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "the-magna-carta-was-signed-in-which-year",
-      "question": "The Magna Carta was signed in which year?",
-      "options": [
-        "1066",
-        "1215",
-        "1492",
-        "1776"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
       "slug": "what-type-of-animal-is-a-killer-whale",
       "question": "What type of animal is a 'killer whale'?",
       "options": [
@@ -507,32 +117,6 @@
       "correctAnswer": 2,
       "category": "General Knowledge",
       "difficulty": "medium"
-    },
-    {
-      "slug": "which-country-hosted-the-2016-summer-olympics",
-      "question": "Which country hosted the 2016 Summer Olympics?",
-      "options": [
-        "China",
-        "Brazil",
-        "United Kingdom",
-        "Russia"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "what-is-the-only-letter-in-the-alphabet-not-appearing-in-the-name-of-any-us-state",
-      "question": "What is the only letter in the alphabet not appearing in the name of any US state?",
-      "options": [
-        "Z",
-        "Q",
-        "X",
-        "J"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "hard"
     },
     {
       "slug": "what-is-sushi-traditionally-wrapped-in",
@@ -561,32 +145,6 @@
       "difficulty": "hard"
     },
     {
-      "slug": "which-film-won-the-first-academy-award-for-best-picture",
-      "question": "Which film won the first Academy Award for Best Picture?",
-      "options": [
-        "Wings",
-        "Sunrise: A Song of Two Humans",
-        "The Circus",
-        "The Broadway Melody"
-      ],
-      "correctAnswer": 0,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "which-city-is-famous-for-its-leaning-tower",
-      "question": "Which city is famous for its leaning tower?",
-      "options": [
-        "Rome",
-        "Venice",
-        "Florence",
-        "Pisa"
-      ],
-      "correctAnswer": 3,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
       "slug": "what-is-the-speed-of-light-in-a-vacuum-approximately",
       "question": "What is the speed of light in a vacuum, approximately?",
       "options": [
@@ -600,71 +158,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "who-wrote-don-quixote",
-      "question": "Who wrote 'Don Quixote'?",
-      "options": [
-        "Miguel de Cervantes",
-        "William Shakespeare",
-        "Leo Tolstoy",
-        "Charles Dickens"
-      ],
-      "correctAnswer": 0,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "who-is-credited-with-inventing-the-world-wide-web",
-      "question": "Who is credited with inventing the World Wide Web?",
-      "options": [
-        "Bill Gates",
-        "Steve Jobs",
-        "Tim Berners-Lee",
-        "Mark Zuckerberg"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "which-of-the-following-is-the-largest-ocean-on-earth",
-      "question": "Which of the following is the largest ocean on Earth?",
-      "options": [
-        "Atlantic Ocean",
-        "Indian Ocean",
-        "Arctic Ocean",
-        "Pacific Ocean"
-      ],
-      "correctAnswer": 3,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "which-famous-landmark-is-located-in-paris-france",
-      "question": "Which famous landmark is located in Paris, France?",
-      "options": [
-        "Colosseum",
-        "Big Ben",
-        "Eiffel Tower",
-        "Statue of Liberty"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "which-country-is-famous-for-the-great-barrier-reef",
-      "question": "Which country is famous for the Great Barrier Reef?",
-      "options": [
-        "Brazil",
-        "Australia",
-        "Mexico",
-        "Thailand"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
       "slug": "what-color-is-formed-when-blue-and-yellow-pigments-are-mixed",
       "question": "What color is formed when blue and yellow pigments are mixed?",
       "options": [
@@ -676,123 +169,6 @@
       "correctAnswer": 2,
       "category": "General Knowledge",
       "difficulty": "easy"
-    },
-    {
-      "slug": "which-continent-is-home-to-the-sahara-desert",
-      "question": "Which continent is home to the Sahara Desert?",
-      "options": [
-        "Asia",
-        "Africa",
-        "South America",
-        "Australia"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "what-is-the-primary-language-spoken-in-brazil",
-      "question": "What is the primary language spoken in Brazil?",
-      "options": [
-        "Spanish",
-        "English",
-        "Portuguese",
-        "French"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "what-is-the-currency-of-japan",
-      "question": "What is the currency of Japan?",
-      "options": [
-        "Yuan",
-        "Won",
-        "Yen",
-        "Dollar"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "which-famous-scientist-developed-the-theory-of-gravity-after-observing-an-apple-fall",
-      "question": "Which famous scientist developed the theory of gravity after observing an apple fall?",
-      "options": [
-        "Isaac Newton",
-        "Galileo Galilei",
-        "Albert Einstein",
-        "Stephen Hawking"
-      ],
-      "correctAnswer": 0,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "what-is-the-chemical-formula-for-table-salt",
-      "question": "What is the chemical formula for table salt?",
-      "options": [
-        "H2O",
-        "CO2",
-        "NaCl",
-        "C6H12O6"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "who-painted-the-famous-artwork-the-starry-night",
-      "question": "Who painted the famous artwork 'The Starry Night'?",
-      "options": [
-        "Claude Monet",
-        "Vincent van Gogh",
-        "Pablo Picasso",
-        "Leonardo da Vinci"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "which-major-river-flows-through-the-city-of-cairo-egypt",
-      "question": "Which major river flows through the city of Cairo, Egypt?",
-      "options": [
-        "Nile River",
-        "Amazon River",
-        "Mississippi River",
-        "Yangtze River"
-      ],
-      "correctAnswer": 0,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "in-which-year-did-the-first-man-walk-on-the-moon",
-      "question": "In which year did the first man walk on the moon?",
-      "options": [
-        "1965",
-        "1972",
-        "1969",
-        "1960"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "who-composed-the-four-seasons",
-      "question": "Who composed the 'Four Seasons'?",
-      "options": [
-        "Ludwig van Beethoven",
-        "Johann Sebastian Bach",
-        "Antonio Vivaldi",
-        "Wolfgang Amadeus Mozart"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "medium"
     },
     {
       "slug": "what-is-the-name-of-the-device-used-to-measure-earthquakes",
@@ -821,97 +197,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "which-ocean-is-the-smallest-and-shallowest-of-the-worlds-five-major-oceans",
-      "question": "Which ocean is the smallest and shallowest of the world's five major oceans?",
-      "options": [
-        "Atlantic Ocean",
-        "Indian Ocean",
-        "Arctic Ocean",
-        "Southern Ocean"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "what-is-the-name-of-the-phenomenon-where-light-bends-as-it-passes-from-one-medium-to-another",
-      "question": "What is the name of the phenomenon where light bends as it passes from one medium to another?",
-      "options": [
-        "Reflection",
-        "Diffraction",
-        "Refraction",
-        "Absorption"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "which-of-the-seven-wonders-of-the-ancient-world-was-located-in-alexandria-egypt",
-      "question": "Which of the Seven Wonders of the Ancient World was located in Alexandria, Egypt?",
-      "options": [
-        "Hanging Gardens of Babylon",
-        "Statue of Zeus at Olympia",
-        "Colossus of Rhodes",
-        "Lighthouse of Alexandria"
-      ],
-      "correctAnswer": 3,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "who-wrote-the-odyssey",
-      "question": "Who wrote 'The Odyssey'?",
-      "options": [
-        "Virgil",
-        "Homer",
-        "Plato",
-        "Sophocles"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "what-is-the-deepest-oceanic-trench-on-earth",
-      "question": "What is the deepest oceanic trench on Earth?",
-      "options": [
-        "Puerto Rico Trench",
-        "Java Trench",
-        "Mariana Trench",
-        "Kermadec Trench"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "which-chemical-element-has-the-highest-melting-point",
-      "question": "Which chemical element has the highest melting point?",
-      "options": [
-        "Carbon",
-        "Iron",
-        "Tungsten",
-        "Titanium"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "what-is-the-capital-of-france",
-      "question": "What is the capital of France?",
-      "options": [
-        "Berlin",
-        "Rome",
-        "Paris",
-        "Madrid"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
       "slug": "which-animal-lays-eggs-and-is-a-mammal",
       "question": "Which animal lays eggs and is a mammal?",
       "options": [
@@ -919,45 +204,6 @@
         "Dolphin",
         "Platypus",
         "Kangaroo"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "what-is-the-name-of-the-largest-ocean-on-earth",
-      "question": "What is the name of the largest ocean on Earth?",
-      "options": [
-        "Atlantic",
-        "Indian",
-        "Arctic",
-        "Pacific"
-      ],
-      "correctAnswer": 3,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "who-wrote-the-childrens-book-the-very-hungry-caterpillar",
-      "question": "Who wrote the children's book 'The Very Hungry Caterpillar'?",
-      "options": [
-        "Beatrix Potter",
-        "Dr. Seuss",
-        "Eric Carle",
-        "A.A. Milne"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "what-is-the-currency-of-the-united-kingdom",
-      "question": "What is the currency of the United Kingdom?",
-      "options": [
-        "Euro",
-        "Dollar",
-        "Pound Sterling",
-        "Yen"
       ],
       "correctAnswer": 2,
       "category": "General Knowledge",
@@ -977,19 +223,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "what-is-the-name-of-the-famous-clock-tower-in-london",
-      "question": "What is the name of the famous clock tower in London?",
-      "options": [
-        "Big Ben",
-        "Eiffel Tower",
-        "Empire State Building",
-        "Tower of London"
-      ],
-      "correctAnswer": 0,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
       "slug": "which-ancient-civilization-built-the-pyramids",
       "question": "Which ancient civilization built the pyramids?",
       "options": [
@@ -997,32 +230,6 @@
         "Greek",
         "Egyptian",
         "Mayan"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "which-continent-is-home-to-the-amazon-rainforest",
-      "question": "Which continent is home to the Amazon Rainforest?",
-      "options": [
-        "Africa",
-        "Asia",
-        "South America",
-        "Australia"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "what-is-the-name-of-the-fictional-city-where-batman-operates",
-      "question": "What is the name of the fictional city where Batman operates?",
-      "options": [
-        "Metropolis",
-        "Star City",
-        "Gotham City",
-        "Central City"
       ],
       "correctAnswer": 2,
       "category": "General Knowledge",
@@ -1042,123 +249,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "who-composed-the-opera-the-marriage-of-figaro",
-      "question": "Who composed the opera 'The Marriage of Figaro'?",
-      "options": [
-        "Ludwig van Beethoven",
-        "Wolfgang Amadeus Mozart",
-        "Johann Sebastian Bach",
-        "Franz Schubert"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "what-is-the-capital-of-new-zealand",
-      "question": "What is the capital of New Zealand?",
-      "options": [
-        "Auckland",
-        "Christchurch",
-        "Wellington",
-        "Queenstown"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "who-was-the-first-person-to-circumnavigate-the-earth",
-      "question": "Who was the first person to circumnavigate the Earth?",
-      "options": [
-        "Christopher Columbus",
-        "Vasco da Gama",
-        "Ferdinand Magellan",
-        "James Cook"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "which-element-has-the-atomic-number-1",
-      "question": "Which element has the atomic number 1?",
-      "options": [
-        "Helium",
-        "Oxygen",
-        "Hydrogen",
-        "Carbon"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "which-famous-novel-begins-with-the-line-call-me-ishmael",
-      "question": "Which famous novel begins with the line 'Call me Ishmael.'?",
-      "options": [
-        "Great Expectations",
-        "Moby Dick",
-        "The Great Gatsby",
-        "Pride and Prejudice"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "what-is-the-highest-active-volcano-in-europe",
-      "question": "What is the highest active volcano in Europe?",
-      "options": [
-        "Mount Vesuvius",
-        "Stromboli",
-        "Mount Etna",
-        "Santorini"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "which-gas-is-responsible-for-the-characteristic-smell-of-rotten-eggs",
-      "question": "Which gas is responsible for the characteristic smell of rotten eggs?",
-      "options": [
-        "Methane",
-        "Ammonia",
-        "Hydrogen Sulfide",
-        "Sulfur Dioxide"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "who-developed-the-first-successful-polio-vaccine",
-      "question": "Who developed the first successful polio vaccine?",
-      "options": [
-        "Louis Pasteur",
-        "Alexander Fleming",
-        "Jonas Salk",
-        "Robert Koch"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "which-country-has-the-most-natural-lakes",
-      "question": "Which country has the most natural lakes?",
-      "options": [
-        "United States",
-        "Russia",
-        "Canada",
-        "China"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
       "slug": "which-animal-is-known-as-the-king-of-the-jungle",
       "question": "Which animal is known as the 'king of the jungle'?",
       "options": [
@@ -1172,58 +262,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "what-is-the-name-of-the-longest-river-in-the-world",
-      "question": "What is the name of the longest river in the world?",
-      "options": [
-        "Amazon River",
-        "Nile River",
-        "Yangtze River",
-        "Mississippi River"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "which-famous-scientist-developed-the-theory-of-relativity",
-      "question": "Which famous scientist developed the theory of relativity?",
-      "options": [
-        "Isaac Newton",
-        "Albert Einstein",
-        "Stephen Hawking",
-        "Marie Curie"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "which-country-is-famous-for-the-great-wall",
-      "question": "Which country is famous for the Great Wall?",
-      "options": [
-        "India",
-        "Japan",
-        "China",
-        "Russia"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "what-is-the-smallest-country-in-the-world-by-land-area",
-      "question": "What is the smallest country in the world by land area?",
-      "options": [
-        "Monaco",
-        "San Marino",
-        "Vatican City",
-        "Liechtenstein"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "medium"
-    },
-    {
       "slug": "what-is-the-main-ingredient-in-guacamole",
       "question": "What is the main ingredient in guacamole?",
       "options": [
@@ -1235,71 +273,6 @@
       "correctAnswer": 2,
       "category": "General Knowledge",
       "difficulty": "medium"
-    },
-    {
-      "slug": "who-wrote-the-play-romeo-and-juliet",
-      "question": "Who wrote the play \"Romeo and Juliet\"?",
-      "options": [
-        "Charles Dickens",
-        "William Shakespeare",
-        "Jane Austen",
-        "Mark Twain"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "what-is-the-name-of-the-deepest-point-in-earths-oceans",
-      "question": "What is the name of the deepest point in Earth's oceans?",
-      "options": [
-        "Challenger Deep",
-        "Mariana Trench",
-        "Puerto Rico Trench",
-        "Sunda Trench"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "which-element-is-represented-by-the-symbol-au",
-      "question": "Which element is represented by the symbol Au?",
-      "options": [
-        "Silver",
-        "Gold",
-        "Aluminum",
-        "Argon"
-      ],
-      "correctAnswer": 1,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "what-is-the-only-letter-in-the-english-alphabet-that-is-not-in-the-name-of-any-us-state",
-      "question": "What is the only letter in the English alphabet that is not in the name of any U.S. state?",
-      "options": [
-        "Z",
-        "X",
-        "Q",
-        "J"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "what-is-the-longest-bone-in-the-human-body",
-      "question": "What is the longest bone in the human body?",
-      "options": [
-        "Tibia",
-        "Humerus",
-        "Femur",
-        "Fibula"
-      ],
-      "correctAnswer": 2,
-      "category": "General Knowledge",
-      "difficulty": "hard"
     },
     {
       "slug": "which-major-world-religion-originated-in-india-and-includes-the-four-noble-truths",

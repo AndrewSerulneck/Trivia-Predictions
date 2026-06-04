@@ -7,6 +7,7 @@ import { getGodMode, getUserId, getVenueId } from "@/lib/storage";
 import { calculateDistanceMeters, getCurrentLocation } from "@/lib/geolocation";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { supabase } from "@/lib/supabase";
+import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import type { FantasyEntry, FantasyGame, FantasyLeaderboardEntry, FantasyPlayerPoolItem } from "@/lib/fantasy";
@@ -638,6 +639,7 @@ type FantasyHomeProps = {
 };
 
 export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) {
+  const { triggerAnimation } = useAnimationTrigger();
   const [userId, setUserId] = useState("");
   const [venueId, setVenueId] = useState("");
   const [games, setGames] = useState<FantasyGame[]>([]);
@@ -1390,6 +1392,7 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
       const awarded = data.result?.platformPointsAwarded ?? 0;
       setLastCollectedPoints((prev) => prev + awarded);
       if (awarded > 0) {
+        triggerAnimation("FANTASY_LIVE_COLLECT");
         window.dispatchEvent(new CustomEvent("tp:coin-flight", { detail: { delta: awarded } }));
         window.dispatchEvent(new CustomEvent("tp:points-updated", { detail: { source: "fantasy-live-collect", delta: awarded } }));
         window.dispatchEvent(new CustomEvent("tp:success-particles"));
@@ -1402,7 +1405,7 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
     } finally {
       setIsCollectingLive(false);
     }
-  }, [isCollectingLive, isGeofencePaused, trackedEntry, uncollectedPoints, userId]);
+  }, [isCollectingLive, isGeofencePaused, trackedEntry, triggerAnimation, uncollectedPoints, userId]);
 
   useEffect(() => {
     if (!selectedGameId) {
@@ -1640,6 +1643,11 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
               triggerTotalScorePop(tone);
             });
             pushStatFlash(change.flashLabel, change.pointsDelta);
+            if (change.pointsDelta > 0) {
+              window.__fantasyStatFlash   = change.flashLabel;
+              window.__fantasyPointsDelta = change.pointsDelta;
+              triggerAnimation("FANTASY_SCORE_UP");
+            }
           }
 
           setLastRealtimeMessageAt(Date.now());
@@ -1651,7 +1659,7 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
       active = false;
       void client.removeChannel(channel);
     };
-  }, [markPlayersAsHot, pushStatFlash, triggerPlayerScorePop, triggerTotalScorePop]);
+  }, [markPlayersAsHot, pushStatFlash, triggerAnimation, triggerPlayerScorePop, triggerTotalScorePop]);
 
   useEffect(() => {
     if (!userId || supabase) {

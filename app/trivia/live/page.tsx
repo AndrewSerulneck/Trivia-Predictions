@@ -14,6 +14,7 @@ import {
   type LiveShowdownCommentTrigger,
 } from "@/lib/liveShowdownComments";
 import { ReadyPrompt } from "@/components/trivia/ReadyPrompt";
+import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 
 type Phase = "answering" | "rest_warning" | "mid_game_break" | "pre_game";
 
@@ -191,6 +192,7 @@ const RankBadge = ({ rank }: { rank: number }) => {
 
 export default function LiveShowdownPage() {
   const searchParams = useSearchParams();
+  const { triggerAnimation } = useAnimationTrigger();
   const [state, setState] = useState<LiveState | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -785,6 +787,9 @@ export default function LiveShowdownPage() {
           setSubmitMessage("Forfeited Question. No closing your browser or changing tabs during Live Trivia!");
         } else {
           setSubmittedKey(activeKey);
+          if (!nextResult.pendingClosestGuess) {
+            triggerAnimation(nextResult.isCorrect ? "LIVE_TRIVIA_CORRECT" : "LIVE_TRIVIA_WRONG");
+          }
         }
       } catch (e) {
         setSubmitMessage(e instanceof Error ? e.message : "Submission failed.");
@@ -792,7 +797,7 @@ export default function LiveShowdownPage() {
         setIsSubmitting(false);
       }
     },
-    [activeKey, resolvedVenueId, state]
+    [activeKey, resolvedVenueId, state, triggerAnimation]
   );
 
   // Keep refs in sync so the stable forfeit listener always reads the freshest
@@ -971,7 +976,19 @@ export default function LiveShowdownPage() {
         eventKey: nextCommentEvent.key,
       })
     );
-  }, [commentEventKey, nextCommentEvent]);
+    if (nextCommentEvent.trigger === "scoring_streak") {
+      triggerAnimation("LIVE_TRIVIA_STREAK");
+    }
+  }, [commentEventKey, nextCommentEvent, triggerAnimation]);
+
+  const prevPhaseRef = useRef<Phase | null>(null);
+  useEffect(() => {
+    const prev = prevPhaseRef.current;
+    prevPhaseRef.current = state?.activePhase ?? null;
+    if (state?.activePhase === "mid_game_break" && prev !== "mid_game_break") {
+      triggerAnimation("LIVE_TRIVIA_ROUND_BREAK");
+    }
+  }, [state?.activePhase, triggerAnimation]);
 
   if (loading) {
     return (

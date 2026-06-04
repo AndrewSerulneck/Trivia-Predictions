@@ -21,9 +21,23 @@ type AdminLiveShowdownSchedule = {
   updatedAt: string;
 };
 
+type SessionQuestion = {
+  id: string;
+  scheduleId: string;
+  questionId: string;
+  roundNumber: number;
+  questionIndex: number;
+  question: string;
+  category: string | null;
+  options: string[];
+  correctAnswer: number;
+  difficulty: string | null;
+};
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 25;
+const QUESTIONS_PER_ROUND = 15;
 
 const TIMEZONES = [
   "America/New_York",
@@ -57,6 +71,8 @@ const WEEKDAY_OPTIONS = [
   { key: "sat", label: "Sat" },
 ] as const;
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 function formatStartTime(iso: string, tz: string): string {
   try {
     return new Date(iso).toLocaleString("en-US", {
@@ -77,13 +93,252 @@ function isUpcoming(iso: string): boolean {
   return new Date(iso) > new Date();
 }
 
+function difficultyBadge(difficulty: string | null) {
+  if (!difficulty) return null;
+  const colors: Record<string, string> = {
+    easy: "bg-emerald-100 text-emerald-800",
+    medium: "bg-amber-100 text-amber-800",
+    hard: "bg-red-100 text-red-800",
+  };
+  return (
+    <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${colors[difficulty] ?? "bg-slate-100 text-slate-600"}`}>
+      {difficulty}
+    </span>
+  );
+}
+
+// ─── Round / Question Manager Sub-Component ──────────────────────────────────
+
+type CategoryOption = { category: string; count: number };
+
+function RoundBlock({
+  roundNumber,
+  questions,
+  collapsed,
+  onToggleCollapse,
+  onMoveQuestion,
+  onMoveRound,
+  roundIndex,
+  totalRounds,
+  categories,
+  onReplaceRound,
+  replacing,
+  onReplaceQuestion,
+  replacingQuestions,
+}: {
+  roundNumber: number;
+  questions: SessionQuestion[];
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+  onMoveQuestion: (qId: string, direction: -1 | 1) => void;
+  onMoveRound: (direction: -1 | 1) => void;
+  roundIndex: number;
+  totalRounds: number;
+  categories: CategoryOption[];
+  onReplaceRound: (category: string) => void;
+  replacing: boolean;
+  onReplaceQuestion: (qId: string, roundNumber: number, questionIndex: number, category: string | null) => void;
+  replacingQuestions: Set<string>;
+}) {
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  // Group questions by category
+  const groups = useMemo(() => {
+    const map = new Map<string, SessionQuestion[]>();
+    for (const q of questions) {
+      const cat = q.category ?? "Uncategorized";
+      const list = map.get(cat) ?? [];
+      list.push(q);
+      map.set(cat, list);
+    }
+    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [questions]);
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white">
+      {/* Round header — collapsible */}
+      <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
+        {/* Clickable collapse area */}
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className="flex flex-1 items-center gap-3 text-left"
+        >
+          <span className="text-sm font-semibold text-slate-800">
+            Round {roundNumber}
+          </span>
+          <span className="text-xs text-slate-400">
+            {questions.length} question{questions.length !== 1 ? "s" : ""}
+            {groups.length > 0 && (
+              <span className="ml-1">
+                · {groups.length} categor{groups.length === 1 ? "y" : "ies"}
+              </span>
+            )}
+          </span>
+        </button>
+
+        <div className="flex items-center gap-1">
+          {/* Replace Round button */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setShowCategoryPicker((v) => !v); }}
+              disabled={replacing || categories.length === 0}
+              className="rounded px-2 py-1 text-[11px] font-medium text-indigo-600 hover:bg-indigo-50 disabled:opacity-40"
+              title="Replace round questions with a different category"
+            >
+              {replacing ? "…" : "Replace"}
+            </button>
+            {showCategoryPicker && (
+              <div className="absolute right-0 top-full z-50 mt-1 max-h-60 w-56 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+                <div className="border-b border-slate-100 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                  Pick a category
+                </div>
+                {categories.map((cat) => (
+                  <button
+                    key={cat.category}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowCategoryPicker(false);
+                      onReplaceRound(cat.category);
+                    }}
+                    className="flex w-full items-center justify-between px-3 py-2 text-left text-xs text-slate-700 hover:bg-indigo-50"
+                  >
+                    <span>{cat.category}</span>
+                    <span className="text-[10px] text-slate-400">{cat.count}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Round reorder buttons */}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onMoveRound(-1); }}
+            disabled={roundIndex === 0}
+            className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-20 disabled:cursor-not-allowed"
+            title="Move round up"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onMoveRound(1); }}
+            disabled={roundIndex === totalRounds - 1}
+            className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-20 disabled:cursor-not-allowed"
+            title="Move round down"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="rounded p-1 text-slate-400 hover:bg-slate-100"
+            title={collapsed ? "Expand" : "Collapse"}
+          >
+            <svg
+              className={`h-4 w-4 transition-transform ${collapsed ? "" : "rotate-180"}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Round body */}
+      {!collapsed && (
+        <div className="border-t border-slate-100 px-4 py-3">
+          {groups.length === 0 ? (
+            <p className="text-xs text-slate-400">No questions in this round.</p>
+          ) : (
+            <div className="space-y-3">
+              {groups.map(([category, catQuestions]) => (
+                <div key={category}>
+                  <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-indigo-600">
+                    {category}
+                  </h4>
+                  <div className="space-y-1">
+                    {catQuestions.map((q, qIdx) => (
+                      <div
+                        key={q.id}
+                        className="group flex items-center gap-2 rounded-md border border-slate-100 bg-slate-50/50 px-3 py-2 text-sm"
+                      >
+                        {/* Drag handle area */}
+                        <div className="flex flex-col items-center gap-0.5">
+                          <button
+                            type="button"
+                            onClick={() => onMoveQuestion(q.id, -1)}
+                            disabled={qIdx === 0}
+                            className="rounded p-0.5 text-slate-300 hover:text-slate-600 disabled:opacity-20 disabled:cursor-not-allowed"
+                          >
+                            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                          </button>
+                          <span className="text-[10px] font-medium text-slate-400 select-none">
+                            {q.questionIndex}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => onMoveQuestion(q.id, 1)}
+                            disabled={qIdx === catQuestions.length - 1}
+                            className="rounded p-0.5 text-slate-300 hover:text-slate-600 disabled:opacity-20 disabled:cursor-not-allowed"
+                          >
+                            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                        </div>
+
+                        {/* Question text */}
+                        <span className="flex-1 text-slate-700 leading-relaxed">
+                          {q.question}
+                        </span>
+
+                        {/* Meta badges & actions */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {difficultyBadge(q.difficulty)}
+                          <span className="text-[10px] text-slate-400">idx:{q.questionIndex}</span>
+                          <button
+                            type="button"
+                            onClick={() => onReplaceQuestion(q.questionId, q.roundNumber, q.questionIndex, q.category)}
+                            disabled={replacingQuestions.has(q.questionId)}
+                            className="ml-1 rounded p-1 text-slate-300 opacity-0 group-hover:opacity-100 hover:text-red-500 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+                            title="Delete and replace with a new question from the same category"
+                          >
+                            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Section ─────────────────────────────────────────────────────────────
 
 type SchedulesSectionProps = {
   venues: Venue[];
 };
 
-type ViewMode = "list" | "create" | "edit";
+type ViewMode = "list" | "create" | "edit" | "manage";
 type SortField = "title" | "venue" | "rounds" | "timezone" | "city" | "state";
 type SortDirection = "asc" | "desc";
 
@@ -101,7 +356,7 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
   const [sortField, setSortField] = useState<SortField>("title");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
-  // Create form
+  // Create / Edit form
   const [formTitle, setFormTitle] = useState("");
   const [formDate, setFormDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [formTime, setFormTime] = useState("19:00");
@@ -115,6 +370,20 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
   const [createBusy, setCreateBusy] = useState(false);
   const [createError, setCreateError] = useState("");
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
+
+  // Manage questions state
+  const [manageSchedule, setManageSchedule] = useState<AdminLiveShowdownSchedule | null>(null);
+  const [sessionQuestions, setSessionQuestions] = useState<SessionQuestion[]>([]);
+  const [manageLoading, setManageLoading] = useState(false);
+  const [manageSaving, setManageSaving] = useState(false);
+  const [manageError, setManageError] = useState("");
+  const [manageSuccess, setManageSuccess] = useState("");
+  const [collapsedRounds, setCollapsedRounds] = useState<Set<number>>(new Set());
+  const [allCategories, setAllCategories] = useState<CategoryOption[]>([]);
+  const [replacingRound, setReplacingRound] = useState<number | null>(null);
+  const [replacingQuestions, setReplacingQuestions] = useState<Set<string>>(new Set());
+
+  // ── Fetch schedules ───────────────────────────────────────────────────────
 
   const fetchSchedules = useCallback(async (targetPage: number) => {
     setLoading(true);
@@ -144,6 +413,231 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
   useEffect(() => {
     fetchSchedules(page);
   }, [page, fetchSchedules]);
+
+  // ── Manage Questions ──────────────────────────────────────────────────────
+
+  const openManageQuestions = useCallback(async (schedule: AdminLiveShowdownSchedule) => {
+    setManageSchedule(schedule);
+    setManageLoading(true);
+    setManageError("");
+    setManageSuccess("");
+    setSessionQuestions([]);
+    setCollapsedRounds(new Set());
+    setReplacingRound(null);
+    try {
+      // Fetch questions and available categories in parallel
+      const [questionsRes, categoriesRes] = await Promise.all([
+        fetch(
+          `/api/admin?resource=live-showdown-session-questions&scheduleId=${encodeURIComponent(schedule.id)}`,
+          { cache: "no-store" }
+        ),
+        fetch("/api/admin?resource=live-showdown-categories", { cache: "no-store" }),
+      ]);
+      const questionsPayload = (await questionsRes.json()) as { ok: boolean; items?: SessionQuestion[]; error?: string };
+      if (!questionsPayload.ok) throw new Error(questionsPayload.error ?? "Failed to load questions.");
+      const categoriesPayload = (await categoriesRes.json()) as { ok: boolean; categories?: CategoryOption[]; error?: string };
+      setSessionQuestions(questionsPayload.items ?? []);
+      setAllCategories(categoriesPayload.categories ?? []);
+      setMode("manage");
+    } catch (err) {
+      setManageError(err instanceof Error ? err.message : "Failed to load questions.");
+    } finally {
+      setManageLoading(false);
+    }
+  }, []);
+
+  const closeManageQuestions = useCallback(() => {
+    setManageSchedule(null);
+    setSessionQuestions([]);
+    setMode("list");
+    setManageError("");
+    setManageSuccess("");
+  }, []);
+
+  // Derive rounds from session questions
+  const rounds = useMemo(() => {
+    const map = new Map<number, SessionQuestion[]>();
+    for (const q of sessionQuestions) {
+      const list = map.get(q.roundNumber) ?? [];
+      list.push(q);
+      map.set(q.roundNumber, list);
+    }
+    // Sort rounds numerically, and sort questions by their index within each round
+    const sorted = Array.from(map.entries()).sort(([a], [b]) => a - b);
+    for (const [, questions] of sorted) {
+      questions.sort((a, b) => a.questionIndex - b.questionIndex);
+    }
+    return sorted.map(([round, qs]) => ({ roundNumber: round, questions: qs }));
+  }, [sessionQuestions]);
+
+  function toggleRoundCollapse(round: number) {
+    setCollapsedRounds((prev) => {
+      const next = new Set(prev);
+      if (next.has(round)) next.delete(round);
+      else next.add(round);
+      return next;
+    });
+  }
+
+  // Move a question up/down within its round
+  function moveQuestion(questionId: string, direction: -1 | 1) {
+    setSessionQuestions((prev) => {
+      const idx = prev.findIndex((q) => q.id === questionId);
+      if (idx === -1) return prev;
+      const q = prev[idx];
+      // Find other questions in the same round
+      const sameRound = prev.filter((x) => x.roundNumber === q.roundNumber);
+      const myIdx = sameRound.findIndex((x) => x.id === questionId);
+      const targetIdx = myIdx + direction;
+      if (targetIdx < 0 || targetIdx >= sameRound.length) return prev;
+
+      // Swap question_index between the two questions
+      const next = [...prev];
+      const other = sameRound[targetIdx];
+      const otherIdx = next.findIndex((x) => x.id === other.id);
+
+      const tempIndex = next[idx].questionIndex;
+      next[idx] = { ...next[idx], questionIndex: next[otherIdx].questionIndex };
+      next[otherIdx] = { ...next[otherIdx], questionIndex: tempIndex };
+
+      return next;
+    });
+  }
+
+  // Move an entire round up/down
+  function moveRound(roundNumber: number, direction: -1 | 1) {
+    setSessionQuestions((prev) => {
+      const roundQs = prev.filter((q) => q.roundNumber === roundNumber);
+      const otherRound = roundNumber + direction;
+      const otherQs = prev.filter((q) => q.roundNumber === otherRound);
+      if (otherQs.length === 0) return prev;
+
+      const next = prev.map((q) => {
+        if (q.roundNumber === roundNumber) {
+          return { ...q, roundNumber: otherRound };
+        }
+        if (q.roundNumber === otherRound) {
+          return { ...q, roundNumber: roundNumber };
+        }
+        return q;
+      });
+      return next;
+    });
+  }
+
+  async function saveQuestionOrder() {
+    if (!manageSchedule) return;
+    setManageSaving(true);
+    setManageError("");
+    setManageSuccess("");
+    try {
+      const updates = sessionQuestions.map((q) => ({
+        id: q.id,
+        roundNumber: q.roundNumber,
+        questionIndex: q.questionIndex,
+        questionId: q.questionId,
+      }));
+      const res = await fetch("/api/admin", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resource: "live-showdown-session-questions",
+          scheduleId: manageSchedule.id,
+          questions: updates,
+        }),
+      });
+      const payload = (await res.json()) as { ok: boolean; error?: string };
+      if (!payload.ok) throw new Error(payload.error ?? "Failed to save question order.");
+      setManageSuccess("Question order saved successfully.");
+      // Refresh the schedule data
+      await fetchSchedules(page);
+    } catch (err) {
+      setManageError(err instanceof Error ? err.message : "Failed to save question order.");
+    } finally {
+      setManageSaving(false);
+    }
+  }
+
+  async function handleReplaceRound(roundNumber: number, category: string) {
+    if (!manageSchedule) return;
+    setReplacingRound(roundNumber);
+    setManageError("");
+    setManageSuccess("");
+    try {
+      const res = await fetch("/api/admin", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resource: "live-showdown-replace-round",
+          scheduleId: manageSchedule.id,
+          roundNumber,
+          category,
+        }),
+      });
+      const payload = (await res.json()) as { ok: boolean; items?: SessionQuestion[]; error?: string };
+      if (!payload.ok) throw new Error(payload.error ?? "Failed to replace round.");
+      // Re-fetch the full questions list
+      const refreshRes = await fetch(
+        `/api/admin?resource=live-showdown-session-questions&scheduleId=${encodeURIComponent(manageSchedule.id)}`,
+        { cache: "no-store" }
+      );
+      const refreshPayload = (await refreshRes.json()) as { ok: boolean; items?: SessionQuestion[]; error?: string };
+      if (!refreshPayload.ok) throw new Error(refreshPayload.error ?? "Failed to refresh questions.");
+      setSessionQuestions(refreshPayload.items ?? []);
+      setManageSuccess(`Round ${roundNumber} replaced with "${category}" questions.`);
+      setCollapsedRounds((prev) => { const next = new Set(prev); next.delete(roundNumber); return next; });
+    } catch (err) {
+      setManageError(err instanceof Error ? err.message : "Failed to replace round.");
+    } finally {
+      setReplacingRound(null);
+    }
+  }
+
+  async function handleReplaceQuestion(questionId: string, roundNumber: number, questionIndex: number, category: string | null) {
+    if (!manageSchedule || !category) return;
+    setReplacingQuestions((prev) => { const next = new Set(prev); next.add(questionId); return next; });
+    setManageError("");
+    setManageSuccess("");
+    try {
+      const res = await fetch("/api/admin", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resource: "live-showdown-replace-question",
+          scheduleId: manageSchedule.id,
+          roundNumber,
+          questionIndex,
+          excludeSlug: questionId,
+          category,
+        }),
+      });
+      const payload = (await res.json()) as { ok: boolean; item?: SessionQuestion; error?: string };
+      if (!payload.ok) throw new Error(payload.error ?? "Failed to replace question.");
+      // Replace the question in local state with the new question data
+      if (payload.item) {
+        setSessionQuestions((prev) =>
+          prev.map((q) =>
+            q.questionId === questionId
+              ? {
+                  ...q,
+                  questionId: payload.item!.questionId,
+                  question: payload.item!.question,
+                  category: payload.item!.category,
+                  options: payload.item!.options,
+                  correctAnswer: payload.item!.correctAnswer,
+                  difficulty: payload.item!.difficulty,
+                }
+              : q
+          )
+        );
+      }
+      setManageSuccess("Question replaced successfully.");
+    } catch (err) {
+      setManageError(err instanceof Error ? err.message : "Failed to replace question.");
+    } finally {
+      setReplacingQuestions((prev) => { const next = new Set(prev); next.delete(questionId); return next; });
+    }
+  }
 
   // ── Selection ────────────────────────────────────────────────────────────
 
@@ -198,7 +692,7 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
     }
   }
 
-  // ── Create ───────────────────────────────────────────────────────────────
+  // ── Create / Edit ────────────────────────────────────────────────────────
 
   function resetCreateForm() {
     setFormTitle("");
@@ -272,7 +766,7 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
 
   function openEditForm(s: AdminLiveShowdownSchedule) {
     const startDate = new Date(s.startTime);
-    const localDate = startDate.toLocaleDateString("en-CA", { timeZone: s.timezone }); // YYYY-MM-DD
+    const localDate = startDate.toLocaleDateString("en-CA", { timeZone: s.timezone });
     const localTime = startDate.toLocaleTimeString("en-US", {
       timeZone: s.timezone,
       hour: "2-digit",
@@ -348,7 +842,7 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
     }
   }
 
-  // ── Derived data (must be before any early return) ───────────────────────
+  // ── Derived data ─────────────────────────────────────────────────────────
 
   const venueById = useMemo(() => new Map(venues.map((v) => [v.id, v])), [venues]);
 
@@ -406,7 +900,23 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
     return sorted;
   }, [schedules, searchQuery, sortField, sortDirection, venueById]);
 
-  // ── Create form render ────────────────────────────────────────────────────
+  // ── Toggle sort ──────────────────────────────────────────────────────────
+
+  function toggleSort(field: SortField) {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setSortField(field);
+    setSortDirection("asc");
+  }
+
+  function sortLabel(field: SortField, label: string) {
+    if (sortField !== field) return label;
+    return `${label}${sortDirection === "asc" ? " ▲" : " ▼"}`;
+  }
+
+  // ── Create / Edit form render ────────────────────────────────────────────
 
   if (mode === "create" || mode === "edit") {
     const isEditMode = mode === "edit";
@@ -591,21 +1101,105 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
     );
   }
 
+  // ── Manage Questions render ──────────────────────────────────────────────
+
+  if (mode === "manage" && manageSchedule) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">
+                Manage Questions: {manageSchedule.title}
+              </h2>
+              <p className="text-xs text-slate-500">
+                {manageSchedule.numRounds} round{manageSchedule.numRounds !== 1 ? "s" : ""} ·{" "}
+                {sessionQuestions.length} question{sessionQuestions.length !== 1 ? "s" : ""} total
+              </p>
+            </div>
+            <button
+              onClick={closeManageQuestions}
+              className="text-sm text-slate-500 hover:text-slate-800"
+            >
+              ← Back to schedule list
+            </button>
+          </div>
+
+          {/* Loading state */}
+          {manageLoading && (
+            <div className="px-6 py-12 text-center text-sm text-slate-400">Loading questions...</div>
+          )}
+
+          {/* Error / Success messages */}
+          {manageError && (
+            <div className="mx-6 mt-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">{manageError}</div>
+          )}
+          {manageSuccess && (
+            <div className="mx-6 mt-4 rounded-lg bg-emerald-50 px-4 py-2 text-sm text-emerald-700">{manageSuccess}</div>
+          )}
+
+          {/* Question management content */}
+          {!manageLoading && (
+            <div className="px-6 py-4">
+              {/* Summary stats */}
+              <div className="mb-4 flex flex-wrap gap-4 text-xs text-slate-500">
+                <span>Round reorder: use ▲ ▼ buttons on each round header</span>
+                <span>Question reorder: use ▲ ▼ buttons on each question</span>
+                <span>Click a round header to collapse/expand</span>
+              </div>
+
+              {/* Rounds */}
+              <div className="space-y-3">
+                {rounds.length === 0 ? (
+                  <p className="text-sm text-slate-400">No questions loaded for this schedule.</p>
+                ) : (
+                  rounds.map((round, rIdx) => (
+                    <RoundBlock
+                      key={round.roundNumber}
+                      roundNumber={round.roundNumber}
+                      questions={round.questions}
+                      collapsed={collapsedRounds.has(round.roundNumber)}
+                      onToggleCollapse={() => toggleRoundCollapse(round.roundNumber)}
+                      onMoveQuestion={(qId, dir) => moveQuestion(qId, dir)}
+                      onMoveRound={(dir) => moveRound(round.roundNumber, dir)}
+                      roundIndex={rIdx}
+                      totalRounds={rounds.length}
+                      categories={allCategories}
+                      onReplaceRound={(cat) => handleReplaceRound(round.roundNumber, cat)}
+                      replacing={replacingRound === round.roundNumber}
+                      onReplaceQuestion={handleReplaceQuestion}
+                      replacingQuestions={replacingQuestions}
+                    />
+                  ))
+                )}
+              </div>
+
+              {/* Action buttons */}
+              <div className="mt-6 flex gap-3 border-t border-slate-200 pt-4">
+                <button
+                  onClick={saveQuestionOrder}
+                  disabled={manageSaving || sessionQuestions.length === 0}
+                  className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  {manageSaving ? "Saving…" : "Save Question Order"}
+                </button>
+                <button
+                  onClick={closeManageQuestions}
+                  disabled={manageSaving}
+                  className="rounded-lg border border-slate-300 px-5 py-2 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   // ── List render ───────────────────────────────────────────────────────────
-
-  function toggleSort(field: SortField) {
-    if (sortField === field) {
-      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
-      return;
-    }
-    setSortField(field);
-    setSortDirection("asc");
-  }
-
-  function sortLabel(field: SortField, label: string) {
-    if (sortField !== field) return label;
-    return `${label}${sortDirection === "asc" ? " ▲" : " ▼"}`;
-  }
 
   return (
     <div className="space-y-4">
@@ -760,6 +1354,14 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
                             className="rounded border border-indigo-200 px-2 py-1 text-xs text-indigo-600 hover:bg-indigo-50"
                           >
                             Edit
+                          </button>
+                          <button
+                            onClick={() => {
+                              void openManageQuestions(s);
+                            }}
+                            className="rounded border border-emerald-200 px-2 py-1 text-xs text-emerald-600 hover:bg-emerald-50"
+                          >
+                            Questions
                           </button>
                           <button
                             onClick={() => deleteSchedule(s.id, s.title)}

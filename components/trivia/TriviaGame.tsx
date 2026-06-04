@@ -8,6 +8,7 @@ import { getVenueId } from "@/lib/storage";
 import { readWarmTriviaCache } from "@/lib/warmupCache";
 import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
 import { canAdvanceToNextTriviaQuestion } from "@/lib/triviaRoundProgress";
+import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 import type { TriviaQuestion } from "@/types";
 
 type TriviaApiResponse = {
@@ -313,6 +314,7 @@ function AnswerButton({
 
 export function TriviaGame({ questions: initialQuestions = [] }: { questions?: TriviaQuestion[] }) {
   const router = useRouter();
+  const { triggerAnimation } = useAnimationTrigger();
   const gameRootRef = useRef<HTMLDivElement>(null);
   const nextQuestionButtonRef = useRef<HTMLButtonElement>(null);
   const [questions, setQuestions] = useState<TriviaQuestion[]>(initialQuestions);
@@ -946,6 +948,12 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
       triggerCelebration(localOutcome === "correct");
 
+      if (localOutcome === "correct") {
+        triggerAnimation("SPEED_TRIVIA_CORRECT");
+      } else if (localOutcome === "incorrect") {
+        triggerAnimation("SPEED_TRIVIA_WRONG");
+      }
+
       try {
         const response = await fetch("/api/trivia", {
           method: "POST",
@@ -1048,6 +1056,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
       question,
       quotaSecondsRemaining,
       selectedAnswer,
+      triggerAnimation,
       triggerCelebration,
       triggerPointsFlow,
       triviaQuotaLocked,
@@ -1166,6 +1175,13 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
           },
         })
       );
+
+      window.__triviaRoundStats = {
+        correctCount: correctAnswers,
+        attempted,
+        pointsWon: roundPointsAwarded > 0 ? roundPointsAwarded : correctAnswers * POINTS_PER_CORRECT,
+      };
+      triggerAnimation("SPEED_TRIVIA_ROUND_COMPLETE");
     }
 
     const userId = getUserId() ?? "";
@@ -1191,7 +1207,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     };
 
     void loadTotalPoints();
-  }, [finished]);
+  }, [attempted, correctAnswers, finished, roundPointsAwarded, triggerAnimation]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
