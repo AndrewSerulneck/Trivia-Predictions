@@ -57,9 +57,9 @@ export function ReadyPrompt({ type, roundNumber, category, secondsRemaining, isV
             <motion.p
               animate={{ scale: [1, 1.1, 1] }}
               transition={{ duration: 0.65, repeat: Infinity, ease: "easeInOut" }}
-              className={`mt-5 bg-gradient-to-r ${gradientClass} bg-clip-text text-9xl font-black tabular-nums text-transparent`}
+              className={`mt-5 bg-gradient-to-r ${gradientClass} bg-clip-text font-black text-transparent ${secondsRemaining <= 0 ? "text-3xl" : "text-9xl tabular-nums"}`}
             >
-              {Math.max(0, secondsRemaining)}
+              {secondsRemaining <= 0 ? "Game Loading..." : Math.max(0, secondsRemaining)}
             </motion.p>
             <p className="mt-3 text-lg font-semibold text-slate-400 sm:text-xl">Are you ready?</p>
           </motion.div>
