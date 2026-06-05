@@ -610,14 +610,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "first-crusade-pope",
-      "question": "Which Pope called for the First Crusade in 1095?",
-      "answer": "Urban II",
-      "answer_format": "write_in",
-      "category": "History",
-      "difficulty": "hard"
-    },
-    {
       "slug": "spanish-civil-war-start-year",
       "question": "In what year did the Spanish Civil War begin?",
       "answer": "1936",
