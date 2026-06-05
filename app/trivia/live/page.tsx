@@ -545,7 +545,7 @@ export default function LiveShowdownPage() {
   // first question within ~1 second of game start rather than up to 15 seconds.
   useEffect(() => {
     if (isGameActive) return;
-    if (localSecondsRemaining > 0) return;
+    if (localSecondsRemaining > 10) return;
     if (!state?.nextSchedule) return;
 
     void fetchState();
@@ -1102,7 +1102,6 @@ export default function LiveShowdownPage() {
     hasOnboarded &&
     !state.isGameActive &&
     state.nextSchedule &&
-    preGameSecondsRemaining > 0 &&
     preGameSecondsRemaining <= 10
   );
   const showRoundStartPrompt = Boolean(
