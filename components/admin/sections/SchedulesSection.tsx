@@ -1200,6 +1200,29 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
           {/* Question management content */}
           {!manageLoading && (
             <div className="px-6 py-4">
+              {/* Category summary */}
+              {rounds.length > 0 && (
+                <div className="mb-4 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3">
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Categories</p>
+                  <div className="flex flex-wrap gap-2">
+                    {rounds.map((round) => {
+                      const categoryCounts = new Map<string, number>();
+                      for (const q of round.questions) {
+                        const cat = q.category ?? "Unknown";
+                        categoryCounts.set(cat, (categoryCounts.get(cat) ?? 0) + 1);
+                      }
+                      const primaryCategory = [...categoryCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "Unknown";
+                      return (
+                        <span key={round.roundNumber} className="inline-flex items-center gap-1.5 rounded-full bg-white border border-slate-200 px-2.5 py-1 text-xs text-slate-700 shadow-sm">
+                          <span className="font-medium text-slate-400">R{round.roundNumber}</span>
+                          {primaryCategory}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Summary stats */}
               <div className="mb-4 flex flex-wrap gap-4 text-xs text-slate-500">
                 <span>Round reorder: use ▲ ▼ buttons on each round header</span>
