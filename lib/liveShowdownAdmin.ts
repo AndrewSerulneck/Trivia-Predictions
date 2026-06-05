@@ -329,7 +329,7 @@ async function buildLiveShowdownQuestionMatrix(numRounds: number): Promise<strin
   const { data, error } = await admin
     .from("trivia_questions")
     .select("id, slug, question, category, options, correct_answer, question_pool")
-    .in("question_pool", ["live_showdown", "anytime_blitz"])
+    .eq("question_pool", "live_showdown")
     .eq("status", "active");
 
   if (error) {
@@ -343,15 +343,12 @@ async function buildLiveShowdownQuestionMatrix(numRounds: number): Promise<strin
     .map((row) => ({ ...row, slug: String(row.slug ?? "").trim() }) as EligibleRow);
 
   const liveEligible = rows.filter(
-    (row) => row.question_pool === "live_showdown" && isLiveShowdownEligibleAnswer(getCorrectAnswer(row))
-  );
-  const anytimeEligible = rows.filter(
-    (row) => row.question_pool === "anytime_blitz" && isLiveShowdownEligibleAnswer(getCorrectAnswer(row))
+    (row) => isLiveShowdownEligibleAnswer(getCorrectAnswer(row))
   );
 
   // Build per-category buckets; shuffle each bucket for variety within the category.
   const byCategory = new Map<string, EligibleRow[]>();
-  for (const row of rows) {
+  for (const row of liveEligible) {
     if (isBlockedLiveShowdownCategory(row.category)) {
       continue;
     }
@@ -422,13 +419,7 @@ async function buildLiveShowdownQuestionMatrix(numRounds: number): Promise<strin
     if (preferredCategory) {
       // 1. Live-eligible questions from preferred category.
       roundSlugs.push(...takeFrom(liveEligible, QUESTIONS_PER_ROUND, preferredCategory, numericUsed));
-      // 2. Anytime-eligible questions from preferred category.
-      if (roundSlugs.length < QUESTIONS_PER_ROUND) {
-        roundSlugs.push(
-          ...takeFrom(anytimeEligible, QUESTIONS_PER_ROUND - roundSlugs.length, preferredCategory, numericUsed)
-        );
-      }
-      // 3. Any question from preferred category (broadest fallback within category).
+      // 2. Any live question from preferred category (broadest fallback within category).
       if (roundSlugs.length < QUESTIONS_PER_ROUND) {
         const catAll = byCategory.get(preferredCategory) ?? [];
         roundSlugs.push(
