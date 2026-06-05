@@ -212,6 +212,12 @@ export async function getAnswerVariantsStats(): Promise<{
     event_name: 0,
     pluralization: 0,
     generated: 0,
+    nickname: 0,
+    year_shorthand: 0,
+    team_short_name: 0,
+    roman_numeric: 0,
+    suffix_variant: 0,
+    article_variant: 0,
   };
 
   if (!supabaseAdmin) {
