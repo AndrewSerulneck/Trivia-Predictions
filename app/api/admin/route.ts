@@ -67,6 +67,7 @@ import {
   listAdminLiveShowdownSchedules,
   replaceRoundQuestionsWithCategory,
   replaceSingleSessionQuestion,
+  swapSessionQuestion,
   resetLiveShowdownAnswersForSchedule,
   updateAdminLiveShowdownSchedule,
   updateAdminLiveShowdownSessionQuestions,
@@ -1034,6 +1035,14 @@ export async function PATCH(request: Request) {
           category: string;
         }
       | {
+          resource: "live-showdown-swap-question";
+          scheduleId: string;
+          roundNumber: number;
+          questionIndex: number;
+          excludeSlug: string;
+          category: string;
+        }
+      | {
           resource: "live-showdown-schedules";
           id: string;
           title: string;
@@ -1284,6 +1293,21 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ ok: false, error: "category is required." }, { status: 400 });
       }
       const item = await replaceSingleSessionQuestion(scheduleId, roundNumber, questionIndex, excludeSlug, category);
+      return NextResponse.json({ ok: true, item });
+    }
+
+    if (body.resource === "live-showdown-swap-question") {
+      const scheduleId = String(body.scheduleId ?? "").trim();
+      const roundNumber = Number(body.roundNumber);
+      const questionIndex = Number(body.questionIndex);
+      const excludeSlug = String(body.excludeSlug ?? "").trim();
+      const category = String(body.category ?? "").trim();
+      if (!scheduleId) return NextResponse.json({ ok: false, error: "scheduleId is required." }, { status: 400 });
+      if (!Number.isInteger(roundNumber) || roundNumber < 1) return NextResponse.json({ ok: false, error: "roundNumber must be a positive integer." }, { status: 400 });
+      if (!Number.isInteger(questionIndex) || questionIndex < 1) return NextResponse.json({ ok: false, error: "questionIndex must be a positive integer." }, { status: 400 });
+      if (!excludeSlug) return NextResponse.json({ ok: false, error: "excludeSlug is required." }, { status: 400 });
+      if (!category) return NextResponse.json({ ok: false, error: "category is required." }, { status: 400 });
+      const item = await swapSessionQuestion(scheduleId, roundNumber, questionIndex, excludeSlug, category);
       return NextResponse.json({ ok: true, item });
     }
 

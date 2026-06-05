@@ -125,6 +125,7 @@ function RoundBlock({
   replacing,
   onReplaceQuestion,
   replacingQuestions,
+  onSwapQuestion,
 }: {
   roundNumber: number;
   questions: SessionQuestion[];
@@ -139,6 +140,7 @@ function RoundBlock({
   replacing: boolean;
   onReplaceQuestion: (qId: string, roundNumber: number, questionIndex: number, category: string | null) => void;
   replacingQuestions: Set<string>;
+  onSwapQuestion: (qId: string, roundNumber: number, questionIndex: number, category: string | null) => void;
 }) {
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   // Group questions by category
@@ -309,9 +311,20 @@ function RoundBlock({
                           <span className="text-[10px] text-slate-400">idx:{q.questionIndex}</span>
                           <button
                             type="button"
+                            onClick={() => onSwapQuestion(q.questionId, q.roundNumber, q.questionIndex, q.category)}
+                            disabled={replacingQuestions.has(q.questionId)}
+                            className="ml-1 rounded p-1 text-slate-300 opacity-0 group-hover:opacity-100 hover:text-blue-500 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+                            title="Swap with a different question (keeps this question in the pool)"
+                          >
+                            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => onReplaceQuestion(q.questionId, q.roundNumber, q.questionIndex, q.category)}
                             disabled={replacingQuestions.has(q.questionId)}
-                            className="ml-1 rounded p-1 text-slate-300 opacity-0 group-hover:opacity-100 hover:text-red-500 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+                            className="rounded p-1 text-slate-300 opacity-0 group-hover:opacity-100 hover:text-red-500 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
                             title="Delete and replace with a new question from the same category"
                           >
                             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -590,6 +603,51 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
       setManageError(err instanceof Error ? err.message : "Failed to replace round.");
     } finally {
       setReplacingRound(null);
+    }
+  }
+
+  async function handleSwapQuestion(questionId: string, roundNumber: number, questionIndex: number, category: string | null) {
+    if (!manageSchedule || !category) return;
+    setReplacingQuestions((prev) => { const next = new Set(prev); next.add(questionId); return next; });
+    setManageError("");
+    setManageSuccess("");
+    try {
+      const res = await fetch("/api/admin", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resource: "live-showdown-swap-question",
+          scheduleId: manageSchedule.id,
+          roundNumber,
+          questionIndex,
+          excludeSlug: questionId,
+          category,
+        }),
+      });
+      const payload = (await res.json()) as { ok: boolean; item?: SessionQuestion; error?: string };
+      if (!payload.ok) throw new Error(payload.error ?? "Failed to swap question.");
+      if (payload.item) {
+        setSessionQuestions((prev) =>
+          prev.map((q) =>
+            q.questionId === questionId
+              ? {
+                  ...q,
+                  questionId: payload.item!.questionId,
+                  question: payload.item!.question,
+                  category: payload.item!.category,
+                  options: payload.item!.options,
+                  correctAnswer: payload.item!.correctAnswer,
+                  difficulty: payload.item!.difficulty,
+                }
+              : q
+          )
+        );
+      }
+      setManageSuccess("Question swapped successfully.");
+    } catch (err) {
+      setManageError(err instanceof Error ? err.message : "Failed to swap question.");
+    } finally {
+      setReplacingQuestions((prev) => { const next = new Set(prev); next.delete(questionId); return next; });
     }
   }
 
@@ -1170,6 +1228,7 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
                       replacing={replacingRound === round.roundNumber}
                       onReplaceQuestion={handleReplaceQuestion}
                       replacingQuestions={replacingQuestions}
+                      onSwapQuestion={handleSwapQuestion}
                     />
                   ))
                 )}

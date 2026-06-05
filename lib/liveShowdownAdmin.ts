@@ -1139,6 +1139,106 @@ export async function replaceSingleSessionQuestion(
   };
 }
 
+// Swaps a single session slot for a different question from the same category
+// WITHOUT soft-deleting the old question. Use this when you want to rotate a
+// question out of a schedule while keeping it available for future sessions.
+export async function swapSessionQuestion(
+  scheduleIdRaw: string,
+  roundNumber: number,
+  questionIndex: number,
+  excludeSlug: string,
+  category: string,
+): Promise<AdminLiveShowdownScheduleQuestion> {
+  const admin = getAdminClient();
+  const scheduleId = String(scheduleIdRaw ?? "").trim();
+  if (!scheduleId) throw new Error("scheduleId is required.");
+  if (!Number.isInteger(roundNumber) || roundNumber < 1) {
+    throw new Error("roundNumber must be a positive integer.");
+  }
+  if (!Number.isInteger(questionIndex) || questionIndex < 1) {
+    throw new Error("questionIndex must be a positive integer.");
+  }
+  const safeExclude = String(excludeSlug ?? "").trim();
+  if (!safeExclude) throw new Error("excludeSlug is required.");
+  const targetCategory = String(category ?? "").trim();
+  if (!targetCategory) throw new Error("category is required.");
+
+  const { data: usedData, error: usedError } = await admin
+    .from("trivia_session_questions")
+    .select("question_id")
+    .eq("schedule_id", scheduleId)
+    .eq("round_number", roundNumber);
+  if (usedError) {
+    throw new Error(usedError.message || "Failed to load round question usage.");
+  }
+  const usedSlugs = new Set(
+    ((usedData ?? []) as Array<{ question_id: string | null }>)
+      .map((r) => String(r.question_id ?? "").trim())
+      .filter(Boolean),
+  );
+  usedSlugs.add(safeExclude);
+
+  const { data, error } = await admin
+    .from("trivia_questions")
+    .select("id, slug, question, category, options, correct_answer, question_pool, difficulty")
+    .eq("question_pool", "live_showdown")
+    .eq("status", "active");
+
+  if (error) {
+    throw new Error(error.message || "Failed to load question pool.");
+  }
+
+  type EligibleRow = LiveShowdownQuestionRow & { slug: string; difficulty: string | null; question: string };
+
+  const catCandidates = ((data ?? []) as Array<LiveShowdownQuestionRow & { difficulty: string | null; question: string }>)
+    .filter((row) => {
+      const slug = String(row.slug ?? "").trim();
+      if (!slug) return false;
+      if (usedSlugs.has(slug)) return false;
+      if (normalizeCategory(row.category) !== targetCategory) return false;
+      if (isBlockedLiveShowdownCategory(row.category)) return false;
+      return isLiveShowdownEligibleAnswer(getCorrectAnswer(row));
+    })
+    .map((row) => ({ ...row, slug: String(row.slug ?? "").trim() }) as EligibleRow);
+
+  if (catCandidates.length === 0) {
+    throw new Error(
+      `No eligible swap question available in category "${targetCategory}" for this round. ` +
+      `All questions in this category may already be in use or ineligible.`
+    );
+  }
+
+  const picked = catCandidates[Math.floor(Math.random() * catCandidates.length)];
+  const replacementSlug = String(picked.slug ?? "").trim();
+  if (!replacementSlug) {
+    throw new Error("Replacement question has an empty slug – cannot update session row.");
+  }
+
+  const { error: updateError } = await admin
+    .from("trivia_session_questions")
+    .update({ question_id: replacementSlug })
+    .eq("schedule_id", scheduleId)
+    .eq("round_number", roundNumber)
+    .eq("question_index", questionIndex);
+
+  if (updateError) {
+    throw new Error(updateError.message || "Failed to swap session question.");
+  }
+
+  return {
+    id: "",
+    scheduleId,
+    questionId: picked.slug,
+    roundNumber,
+    questionIndex,
+    question: picked.question,
+    category: picked.category,
+    options: coerceOptions(picked.options),
+    correctAnswer: picked.correct_answer,
+    difficulty: picked.difficulty,
+  };
+}
+
 // ─── Round Category Replacement ──────────────────────────────────────────────
 
 type CategoryCount = {
