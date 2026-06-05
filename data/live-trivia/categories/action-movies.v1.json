@@ -1,679 +1,683 @@
 {
   "categoryName": "Action Movies",
   "questions": [
-
-  {
-"slug": "action-movie-die-hard-mcclane",
-"question": "What is the name of the fictional Los Angeles skyscraper where NYPD detective John McClane fights terrorists on Christmas Eve in the 1988 film 'Die Hard'?",
-"answer": "Nakatomi Plaza",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-terminator-schwarzenegger",
-"question": "What is the specific alphanumeric model number of the original cybernetic assassin played by Arnold Schwarzenegger in the 1984 sci-fi action film 'The Terminator'?",
-"answer": "T-800",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-matrix-neo",
-"question": "What is the civilian birth name of the hacker protagonist played by Keanu Reeves before he adopts the alias 'Neo' in the 1999 action film 'The Matrix'?",
-"answer": "Thomas Anderson",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-john-wick-dog",
-"question": "What specific breed of dog is the puppy named Daisy, whose tragic death sets off John Wick's violent quest for vengeance in the 2014 action film?",
-"answer": "Beagle",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-indiana-jones-ark",
-"question": "In the 1981 adventure film 'Raiders of the Lost Ark', Indiana Jones races against the Nazis to locate which legendary, gold-plated biblical artifact?",
-"answer": "Ark of the Covenant",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-top-gun-cruise",
-"question": "What is the fictional military call sign of Pete Mitchell, the elite naval aviator played by Tom Cruise in the 1986 action drama 'Top Gun'?",
-"answer": "Maverick",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-mad-max-fury",
-"question": "What is the name of the tyrannical, mask-wearing warlord who controls the water supply in the 2015 post-apocalyptic action film 'Mad Max: Fury Road'?",
-"answer": "Immortan Joe",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-james-bond-casino",
-"question": "What is the name of the international terrorist organization traditionally led by the villain Ernst Stavro Blofeld in the classic James Bond film franchise?",
-"answer": "Spectre",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-gladiator-crowe",
-"question": "What is the first name of the betrayed Roman general played by Russell Crowe who becomes a vengeful arena fighter in the 2000 epic 'Gladiator'?",
-"answer": "Maximus",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-speed-reeves",
-"question": "In the 1994 high-concept action thriller 'Speed', a city transit bus is rigged with a bomb that will detonate if the vehicle's speed drops below how many miles per hour?",
-"answer": "50",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-rambo-first-blood",
-"question": "What is the full name of the troubled Vietnam War veteran and elite Green Beret soldier played by Sylvester Stallone in 'First Blood'?",
-"answer": "John Rambo",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-kill-bill-tarantino",
-"question": "What is the iconic color of the matching, striped motorcycle jumpsuit worn by Uma Thurman's character during her sword fights in 'Kill Bill: Volume 1'?",
-"answer": "Yellow",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-taken-neeson",
-"question": "Liam Neeson says he has a 'very particular set of __________' in 'Taken.",
-"answer": "Skills",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-jurassic-park-island",
-"question": "What is the name of the fictional Costa Rican island where a billionaire builds a disastrous theme park filled with cloned dinosaurs in the 1993 film 'Jurassic Park'?",
-"answer": "Isla Nublar",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-avengers-thanos",
-"question": "What is the specific name of the six powerful, color-coded cosmic gems that the warlord Thanos seeks to collect in the Marvel Studios film 'Avengers: Infinity War'?",
-"answer": "Infinity Stones",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-bourne-identity",
-"question": "What is the first name of the amnesiac black-ops assassin played by Matt Damon in a film franchise based on novels by Robert Ludlum?",
-"answer": "Jason",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-rush-hour-chan",
-"question": "In the 1998 buddy-cop action comedy 'Rush Hour', Inspector Lee travels to Los Angeles from which major Asian city to investigate a high-profile kidnapping?",
-"answer": "Hong Kong",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-lethal-weapon-gibson",
-"question": "What is the last name of the volatile, grief-stricken LAPD narcotics detective played by Mel Gibson in the 1987 buddy-cop classic 'Lethal Weapon'?",
-"answer": "Riggs",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-robocop-detroit",
-"question": "The 1987 sci-fi action film 'RoboCop' takes place in a crime-ridden, dystopian version of which major Midwestern United States city?",
-"answer": "Detroit",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-bad-boys-smith",
-"question": "The high-octane action franchise 'Bad Boys', starring Will Smith and Martin Lawrence as narcotics detectives, is set in which major Florida city?",
-"answer": "Miami",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-avatar-pandora",
-"question": "In James Cameron's 2009 sci-fi action film 'Avatar', human military forces invade a lush, habitable moon known by what name?",
-"answer": "Pandora",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-face-off-cage",
-"question": "In the 1997 John Woo action film 'Face/Off', John Travolta plays an FBI agent who undergoes an experimental surgery to swap faces with a terrorist played by which actor?",
-"answer": "Nicolas Cage",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-independence-day-alien",
-"question": "In the 1996 action film 'Independence Day', humanity launches a desperate counter-attack against an invading alien force on which specific date in July?",
-"answer": "4",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-mission-impossible-cruise",
-"question": "What is the first name of the elite secret agent played by Tom Cruise in the 'Mission: Impossible' film franchise?",
-"answer": "Ethan",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-matrix-pill",
-"question": "What color is the pill that Morpheus offers Neo to reveal the true reality of the world in 'The Matrix'?",
-"answer": "Red",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-john-wick-reeves",
-"question": "What is the last name of the retired legendary hitman played by Keanu Reeves in a neon-lit, high-octane film franchise?",
-"answer": "Wick",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-avengers-thor",
-"question": "What is the name of the Norse god of thunder played by Chris Hemsworth in the Marvel Studios action films?",
-"answer": "Thor",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-die-hard-gruber",
-"question": "What is the name of the cold, calculating German terrorist villain played by Alan Rickman in the original 'Die Hard'?",
-"answer": "Hans Gruber",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-terminator-judgment",
-"question": "In the 1991 action sequel 'Terminator 2', Arnold Schwarzenegger's character returns to protect a young boy named John with what last name?",
-"answer": "Connor",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-skyfall-craig",
-"question": "What secret agent code number is assigned to James Bond?",
-"answer": "007",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-indiana-jones-weapon",
-"question": "What specific type of flexible, leather weapon is famously used by Indiana Jones to swing across gaps and disarm enemies?",
-"answer": "Whip",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-mad-max-theron",
-"question": "What is the name of the fierce, one-armed rebel warrior captain played by Charlize Theron in 'Mad Max: Fury Road'?",
-"answer": "Imperator Furiosa",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-gladiator-phoenix",
-"question": "What is the name of the corrupt, patricidal Roman emperor played by Joaquin Phoenix in the 2000 historical action epic 'Gladiator'?",
-"answer": "Commodus",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-taken-kidnap",
-"question": "In the 2008 action thriller 'Taken', Liam Neeson's daughter is kidnapped while on vacation in which major European capital city?",
-"answer": "Paris",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-kill-bill-sword",
-"question": "What is the last name of the legendary Japanese swordsmith who crafts the masterwork katana for the Bride in 'Kill Bill'?",
-"answer": "Hattori",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-predator-schwarzenegger",
-"question": "What is the military nickname of Major Alan Schaefer, the rescue team leader played by Arnold Schwarzenegger in 'Predator'?",
-"answer": "Dutch",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-rush-hour-tucker",
-"question": "What is the last name of the fast-talking LAPD detective James, played by comedian Chris Tucker in the 'Rush Hour' franchise?",
-"answer": "Carter",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-speed-bullock",
-"question": "What is the first name of the passenger played by Sandra Bullock who is forced to drive the runaway bus in 'Speed'?",
-"answer": "Annie",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-jurassic-park-malcolm",
-"question": "What is the last name of the smooth-talking 'chaos theorist' mathematician played by Jeff Goldblum in 'Jurassic Park'?",
-"answer": "Malcolm",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-lethal-weapon-glover",
-"question": "What is the last name of Roger, the veteran, family-man LAPD homicide detective played by Danny Glover in 'Lethal Weapon'?",
-"answer": "Murtaugh",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-robocop-murphy",
-"question": "What is the last name of Alex, the Detroit police officer who is brutally gunned down and rebuilt into the cyborg 'RoboCop'?",
-"answer": "Murphy",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-bad-boys-lawrence",
-"question": "What is the last name of Marcus, the anxious and family-oriented Miami narcotics detective played by Martin Lawrence in 'Bad Boys'?",
-"answer": "Burnett",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-avatar-sulley",
-"question": "What is the first name of the paraplegic former Marine played by Sam Worthington who operates a Na'vi body in 'Avatar'?",
-"answer": "Jake",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-top-gun-iceman",
-"question": "What is the fictional military call sign of Tom Kazansky, Maverick's elite rival pilot played by Val Kilmer in 'Top Gun'?",
-"answer": "Iceman",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-dark-knight-ledger",
-"question": "Which actor won a posthumous Academy Award for his legendary portrayal of the Joker in the 2008 action film 'The Dark Knight'?",
-"answer": "Heath Ledger",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-point-break-reeves",
-"question": "What is the full name of the rookie FBI agent and former football player played by Keanu Reeves in 'Point Break'?",
-"answer": "Johnny Utah",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-iron-man-stark",
-"question": "What is the first name of the billionaire industrialist who builds a high-tech suit of armor to become Iron Man?",
-"answer": "Tony",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-bournesupremacy-berlin",
-"question": "In the 2004 action-packed spy sequel 'The Bourne Supremacy', Jason Bourne travels to which capital city of Germany to uncover his past?",
-"answer": "Berlin",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-con-air-cage",
-"question": "What is the first name of Cameron, the honorably discharged Army Ranger played by Nicolas Cage who traps himself on a hijacked prison plane in 'Con Air'?",
-"answer": "Cameron",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-john-wick-hotel",
-"question": "What is the name of the exclusive, international hotel chain that serves as a neutral safe haven for the criminal underworld in the 'John Wick' franchise?",
-"answer": "The Continental",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-indiana-jones-grail",
-"question": "In the 1989 action-adventure film 'Indiana Jones and the Last Crusade', Indy races against time to discover which mythical, life-giving chalice?",
-"answer": "Holy Grail",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-matrix-morpheus",
-"question": "What is the name of the resistance leader played by Laurence Fishburne who frees Neo from the machine-controlled simulation in 'The Matrix'?",
-"answer": "Morpheus",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-die-hard-argyle",
-"question": "What is the first name of the upbeat, chatty limousine driver who waits out the entire terrorist siege in the Nakatomi parking garage in 'Die Hard'?",
-"answer": "Argyle",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-terminator-liquid-metal",
-"question": "What alphanumeric model designation is given to the shapeshifting, liquid-metal assassin played by Robert Patrick in 'Terminator 2: Judgment Day'?",
-"answer": "T-1000",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-first-blood-sheriff",
-"question": "What is the last name of the hostile small-town sheriff Will, played by Brian Dennehy, who kicks John Rambo out of town in 'First Blood'?",
-"answer": "Teasle",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-top-gun-goose",
-"question": "What is the tragic military call sign of Nick Bradshaw, Maverick's beloved Radar Intercept Officer and best friend in 'Top Gun'?",
-"answer": "Goose",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-spider-man-maguire",
-"question": "What is the full civilian name of the high school student bitten by a genetically modified spider in Sam Raimi's 2002 superhero action film?",
-"answer": "Peter Parker",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-mad-max-interceptor",
-"question": "In the original 'Mad Max' film franchise, Max Rockatansky drives a heavily modified black pursuit muscle car known by what specific name?",
-"answer": "V8 Interceptor",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-gladiator-proximo",
-"question": "What is the name of the grizzled, elderly gladiator trainer and promoter played by Oliver Reed in the 2000 historical action epic 'Gladiator'?",
-"answer": "Proximo",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-kill-bill-madsen",
-"question": "What is the name of Bill's brother, the trailer-dwelling former assassin played by Michael Madsen who buries the Bride alive in 'Kill Bill: Volume 2'?",
-"answer": "Budd",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-taken-milligan",
-"question": "What is the first name of Bryan Mills' ex-wife, played by Famke Janssen, whose daughter's kidnapping sets off the action in 'Taken'?",
-"answer": "Lenore",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-speed-hopper",
-"question": "What is the last name of Howard, the disgruntled ex-cop and bomb maker who plays a deadly game with LAPD SWAT in the 1994 film 'Speed'?",
-"answer": "Payne",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-jurassic-park-raptor",
-"question": "What is the shortened common name of the highly intelligent, pack-hunting dinosaur species that opens kitchen doors in 'Jurassic Park'?",
-"answer": "Velociraptor",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-lethal-weapon-murtaugh",
-"question": "In the 'Lethal Weapon' movies, what is the first name of the volatile and unpredictable partner paired with Detective Roger Murtaugh?",
-"answer": "Martin",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-robocop-boddicker",
-"question": "What is the first name of the ruthless, cackling street gang leader played by Kurtwood Smith who executes Alex Murphy in 'RoboCop'?",
-"answer": "Clarence",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-bad-boys-car",
-"question": "In the opening scene of the 1995 action movie 'Bad Boys', Mike Lowrey famously drives a sports car made by which German manufacturer?",
-"answer": "Porsche",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-avatar-quaritch",
-"question": "What is the last name of the ruthless military colonel and security chief who serves as the main antagonist in James Cameron's 'Avatar'?",
-"answer": "Quaritch",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-dark-knight-gordon",
-"question": "What is the last name of the honest Gotham City police lieutenant played by Gary Oldman in the 2008 film 'The Dark Knight'?",
-"answer": "Gordon",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-point-break-ex-presidents",
-"question": "In the 1991 action thriller 'Point Break', Johnny Utah infiltrates a gang of bank robbers who disguise themselves using rubber masks of what?",
-"answer": "US Presidents",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-iron-man-assistant",
-"question": "What is the nickname of Tony Stark's loyal assistant and eventual romantic partner, played by Gwyneth Paltrow in the MCU?",
-"answer": "Pepper Potts",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-bourne-identity-wombosi",
-"question": "What is the first name of the exiled African dictator Nykwana, whose failed assassination by Jason Bourne leaves Bourne with amnesia?",
-"answer": "Nykwana",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-independence-day-smith",
-"question": "What is the last name of the hotshot Marine fighter pilot Captain Steven, played by Will Smith in the 1996 film 'Independence Day'?",
-"answer": "Hiller",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-rush-hour-consul",
-"question": "In the 1998 action comedy 'Rush Hour', Inspector Lee is called to Los Angeles because the daughter of which Chinese diplomat has been kidnapped?",
-"answer": "Consul Han",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-heat-pacino",
-"question": "What is the last name of the obsessive LAPD robbery-homicide detective Vincent, played by Al Pacino in the 1995 crime action epic 'Heat'?",
-"answer": "Hanna",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-casino-royale-craig",
-"question": "In the 2006 action thriller 'Casino Royale', James Bond enters a high-stakes tournament of which specific poker variant to bankrupt a terrorist financier?",
-"answer": "Texas Hold'em",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-sicario-blunt",
-"question": "What is the acronym of the US federal law enforcement agency that employs Emily Blunt's character, Kate Macer, at the start of 'Sicario'?",
-"answer": "FBI",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-hard-boiled-chow",
-"question": "What is the iconic musical instrument nickname of the tough-as-nails inspector played by Chow Yun-fat in John Woo's 1992 masterpiece 'Hard Boiled'?",
-"answer": "Tequila",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-cliffhanger-stallone",
-"question": "In the 1993 mountain rescue action thriller 'Cliffhanger', Sylvester Stallone plays a ranger who is forced to locate stolen briefcases filled with what?",
-"answer": "Cash",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-crouching-tiger-sword",
-"question": "What is the poetic, two-word name of the legendary 400-year-old green jade sword that is stolen in 'Crouching Tiger, Hidden Dragon'?",
-"answer": "Green Destiny",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-bullet-train-pitt",
-"question": "What is the code name of the unlucky, bucket-hat-wearing assassin played by Brad Pitt in the 2022 stylized action comedy 'Bullet Train'?",
-"answer": "Ladybug",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-total-recall-planet",
-"question": "In Paul Verhoeven's 1990 sci-fi action film 'Total Recall', Arnold Schwarzenegger's character uncovers a massive conspiracy on which planet?",
-"answer": "Mars",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-baby-driver-playlist",
-"question": "In Edgar Wright's high-speed 2017 action film 'Baby Driver', the young getaway driver relies on what specific item to drown out his severe tinnitus?",
-"answer": "iPod",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-equalizer-washington",
-"question": "What is the first name of the deadly, book-reading retired intelligence operative played by Denzel Washington in 'The Equalizer'?",
-"answer": "Robert",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-minority-report-cruise",
-"question": "In the 2002 sci-fi action thriller 'Minority Report', Tom Cruise operates a Washington D.C. police department known by what specialized name?",
-"answer": "Precrime",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-ong-bak-tony",
-"question": "What is the name of the traditional, devastating Southeast Asian martial art used by Tony Jaa to retrieve a stolen village statue head in 'Ong-Bak'?",
-"answer": "Muay Thai",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-dirty-harry-eastwood",
-"question": "What is the last name of the cynical, rule-breaking San Francisco inspector played by Clint Eastwood in the 1971 classic crime action film?",
-"answer": "Callahan",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-extraction-hemsworth",
-"question": "What is the first name of Tyler, the fearless black-market mercenary played by Chris Hemsworth in the relentless 2020 action film 'Extraction'?",
-"answer": "Tyler",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-demolition-man-taco",
-"question": "In the futuristic 1993 sci-fi action film 'Demolition Man', what is the name of the lone fast-food chain left on Earth after winning the franchise wars?",
-"answer": "Taco Bell",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-the-rock-prison",
-"question": "In Michael Bay's 1996 action thriller 'The Rock', rogue military forces seize control of which notorious, isolated former federal prison island?",
-"answer": "Alcatraz",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-air-force-one-ford",
-"question": "What is the last name of James, the decisive United States President played by Harrison Ford who takes on hijackers aboard his official plane?",
-"answer": "Marshall",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-dredd-urban",
-"question": "In the 2012 sci-fi action film 'Dredd', Karl Urban plays a futuristic law enforcer who holds the combined power of police, judge, jury, and what else?",
-"answer": "Executioner",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-under-siege-seagal",
-"question": "In the 1992 naval action thriller 'Under Siege', Steven Seagal plays a deadly former Navy SEAL who is currently assigned to work as what on the battleship?",
-"answer": "Cook",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-nobody-odenkirk",
-"question": "What is the first name of Hutch, the suburban family man with a hidden black-ops past played by Bob Odenkirk in the 2021 action film 'Nobody'?",
-"answer": "Hutch",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-the-raid-jakarta",
-"question": "The 2011 martial arts action masterpiece 'The Raid: Redemption' follows an elite tactical squad as they storm a high-rise apartment building in which Asian capital city?",
-"answer": "Jakarta",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-man-on-fire-creasy",
-"question": "What is the last name of the guilt-ridden former CIA operative John, played by Denzel Washington, who wages war on kidnappers in 'Man on Fire'?",
-"answer": "Creasy",
-"category": "Action Movies",
-"difficulty": "easy"
-},
-{
-"slug": "action-movie-coba-kai-karate-kid",
-"question": "What is the name of the rival, aggressive karate dojo led by Sensei John Kreese that opposes Daniel LaRusso in the original 1984 martial arts action drama?",
-"answer": "Cobra Kai",
-"category": "Action Movies",
-"difficulty": "easy"
-}
-
+    {
+      "slug": "action-movie-die-hard-mcclane",
+      "question": "What is the name of the fictional Los Angeles skyscraper where NYPD detective John McClane fights terrorists on Christmas Eve in the 1988 film 'Die Hard'?",
+      "answer": "Nakatomi Plaza",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-terminator-schwarzenegger",
+      "question": "What is the specific alphanumeric model number of the original cybernetic assassin played by Arnold Schwarzenegger in the 1984 sci-fi action film 'The Terminator'?",
+      "answer": "T-800",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-matrix-neo",
+      "question": "What is the civilian birth name of the hacker protagonist played by Keanu Reeves before he adopts the alias 'Neo' in the 1999 action film 'The Matrix'?",
+      "answer": "Thomas Anderson",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-john-wick-dog",
+      "question": "What specific breed of dog is the puppy named Daisy, whose tragic death sets off John Wick's violent quest for vengeance in the 2014 action film?",
+      "answer": "Beagle",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-indiana-jones-ark",
+      "question": "In the 1981 adventure film 'Raiders of the Lost Ark', Indiana Jones races against the Nazis to locate which legendary, gold-plated biblical artifact?",
+      "answer": "Ark of the Covenant",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-top-gun-cruise",
+      "question": "What is the fictional military call sign of Pete Mitchell, the elite naval aviator played by Tom Cruise in the 1986 action drama 'Top Gun'?",
+      "answer": "Maverick",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-mad-max-fury",
+      "question": "What is the name of the tyrannical, mask-wearing warlord who controls the water supply in the 2015 post-apocalyptic action film 'Mad Max: Fury Road'?",
+      "answer": "Immortan Joe",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-james-bond-casino",
+      "question": "What is the name of the international terrorist organization traditionally led by the villain Ernst Stavro Blofeld in the classic James Bond film franchise?",
+      "answer": "Spectre",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-gladiator-crowe",
+      "question": "What is the first name of the betrayed Roman general played by Russell Crowe who becomes a vengeful arena fighter in the 2000 epic 'Gladiator'?",
+      "answer": "Maximus",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-speed-reeves",
+      "question": "In the 1994 high-concept action thriller 'Speed', a city transit bus is rigged with a bomb that will detonate if the vehicle's speed drops below how many miles per hour?",
+      "answer": "50",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-rambo-first-blood",
+      "question": "What is the full name of the troubled Vietnam War veteran and elite Green Beret soldier played by Sylvester Stallone in 'First Blood'?",
+      "answer": "John Rambo",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-kill-bill-tarantino",
+      "question": "What is the iconic color of the matching, striped motorcycle jumpsuit worn by Uma Thurman's character during her sword fights in 'Kill Bill: Volume 1'?",
+      "answer": "Yellow",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-taken-neeson",
+      "question": "Liam Neeson says he has a 'very particular set of __________' in 'Taken.",
+      "answer": "Skills",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-jurassic-park-island",
+      "question": "What is the name of the fictional Costa Rican island where a billionaire builds a disastrous theme park filled with cloned dinosaurs in the 1993 film 'Jurassic Park'?",
+      "answer": "Isla Nublar",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-avengers-thanos",
+      "question": "What is the specific name of the six powerful, color-coded cosmic gems that the warlord Thanos seeks to collect in the Marvel Studios film 'Avengers: Infinity War'?",
+      "answer": "Infinity Stones",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-bourne-identity",
+      "question": "What is the first name of the amnesiac black-ops assassin played by Matt Damon in a film franchise based on novels by Robert Ludlum?",
+      "answer": "Jason",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-rush-hour-chan",
+      "question": "In the 1998 buddy-cop action comedy 'Rush Hour', Inspector Lee travels to Los Angeles from which major Asian city to investigate a high-profile kidnapping?",
+      "answer": "Hong Kong",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-lethal-weapon-gibson",
+      "question": "What is the last name of the volatile, grief-stricken LAPD narcotics detective played by Mel Gibson in the 1987 buddy-cop classic 'Lethal Weapon'?",
+      "answer": "Riggs",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-robocop-detroit",
+      "question": "The 1987 sci-fi action film 'RoboCop' takes place in a crime-ridden, dystopian version of which major Midwestern United States city?",
+      "answer": "Detroit",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-bad-boys-smith",
+      "question": "The high-octane action franchise 'Bad Boys', starring Will Smith and Martin Lawrence as narcotics detectives, is set in which major Florida city?",
+      "answer": "Miami",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-avatar-pandora",
+      "question": "In James Cameron's 2009 sci-fi action film 'Avatar', human military forces invade a lush, habitable moon known by what name?",
+      "answer": "Pandora",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-face-off-cage",
+      "question": "In the 1997 John Woo action film 'Face/Off', John Travolta plays an FBI agent who undergoes an experimental surgery to swap faces with a terrorist played by which actor?",
+      "answer": "Nicolas Cage",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-independence-day-alien",
+      "question": "In the 1996 action film 'Independence Day', humanity launches a desperate counter-attack against an invading alien force on which specific date in July?",
+      "answer": "4",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-mission-impossible-cruise",
+      "question": "What is the first name of the elite secret agent played by Tom Cruise in the 'Mission: Impossible' film franchise?",
+      "answer": "Ethan",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-matrix-pill",
+      "question": "What color is the pill that Morpheus offers Neo to reveal the true reality of the world in 'The Matrix'?",
+      "answer": "Red",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-john-wick-reeves",
+      "question": "What is the last name of the retired legendary hitman played by Keanu Reeves in a neon-lit, high-octane film franchise?",
+      "answer": "Wick",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-avengers-thor",
+      "question": "What is the name of the Norse god of thunder played by Chris Hemsworth in the Marvel Studios action films?",
+      "answer": "Thor",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-die-hard-gruber",
+      "question": "What is the name of the cold, calculating German terrorist villain played by Alan Rickman in the original 'Die Hard'?",
+      "answer": "Hans Gruber",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-terminator-judgment",
+      "question": "In the 1991 action sequel 'Terminator 2', Arnold Schwarzenegger's character returns to protect a young boy named John with what last name?",
+      "answer": "Connor",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-skyfall-craig",
+      "question": "What secret agent code number is assigned to James Bond?",
+      "answer": "007",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-indiana-jones-weapon",
+      "question": "What specific type of flexible, leather weapon is famously used by Indiana Jones to swing across gaps and disarm enemies?",
+      "answer": "Whip",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-mad-max-theron",
+      "question": "What is the name of the fierce, one-armed rebel warrior captain played by Charlize Theron in 'Mad Max: Fury Road'?",
+      "answer": "Imperator Furiosa",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-gladiator-phoenix",
+      "question": "What is the name of the corrupt, patricidal Roman emperor played by Joaquin Phoenix in the 2000 historical action epic 'Gladiator'?",
+      "answer": "Commodus",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-taken-kidnap",
+      "question": "In the 2008 action thriller 'Taken', Liam Neeson's daughter is kidnapped while on vacation in which major European capital city?",
+      "answer": "Paris",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-kill-bill-sword",
+      "question": "What is the last name of the legendary Japanese swordsmith who crafts the masterwork katana for the Bride in 'Kill Bill'?",
+      "answer": "Hattori",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-predator-schwarzenegger",
+      "question": "What is the military nickname of Major Alan Schaefer, the rescue team leader played by Arnold Schwarzenegger in 'Predator'?",
+      "answer": "Dutch",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-rush-hour-tucker",
+      "question": "What is the last name of the fast-talking LAPD detective James, played by comedian Chris Tucker in the 'Rush Hour' franchise?",
+      "answer": "Carter",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-speed-bullock",
+      "question": "What is the first name of the passenger played by Sandra Bullock who is forced to drive the runaway bus in 'Speed'?",
+      "answer": "Annie",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-jurassic-park-malcolm",
+      "question": "What is the last name of the smooth-talking 'chaos theorist' mathematician played by Jeff Goldblum in 'Jurassic Park'?",
+      "answer": "Malcolm",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-lethal-weapon-glover",
+      "question": "What is the last name of Roger, the veteran, family-man LAPD homicide detective played by Danny Glover in 'Lethal Weapon'?",
+      "answer": "Murtaugh",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-robocop-murphy",
+      "question": "What is the last name of Alex, the Detroit police officer who is brutally gunned down and rebuilt into the cyborg 'RoboCop'?",
+      "answer": "Murphy",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-bad-boys-lawrence",
+      "question": "What is the last name of Marcus, the anxious and family-oriented Miami narcotics detective played by Martin Lawrence in 'Bad Boys'?",
+      "answer": "Burnett",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-avatar-sulley",
+      "question": "What is the first name of the paraplegic former Marine played by Sam Worthington who operates a Na'vi body in 'Avatar'?",
+      "answer": "Jake",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-top-gun-iceman",
+      "question": "What is the fictional military call sign of Tom Kazansky, Maverick's elite rival pilot played by Val Kilmer in 'Top Gun'?",
+      "answer": "Iceman",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-dark-knight-ledger",
+      "question": "Which actor won a posthumous Academy Award for his legendary portrayal of the Joker in the 2008 action film 'The Dark Knight'?",
+      "answer": "Heath Ledger",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-point-break-reeves",
+      "question": "What is the full name of the rookie FBI agent and former football player played by Keanu Reeves in 'Point Break'?",
+      "answer": "Johnny Utah",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-iron-man-stark",
+      "question": "What is the first name of the billionaire industrialist who builds a high-tech suit of armor to become Iron Man?",
+      "answer": "Tony",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-bournesupremacy-berlin",
+      "question": "In the 2004 action-packed spy sequel 'The Bourne Supremacy', Jason Bourne travels to which capital city of Germany to uncover his past?",
+      "answer": "Berlin",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-con-air-cage",
+      "question": "What is the first name of Cameron, the honorably discharged Army Ranger played by Nicolas Cage who traps himself on a hijacked prison plane in 'Con Air'?",
+      "answer": "Cameron",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-john-wick-hotel",
+      "question": "What is the name of the exclusive, international hotel chain that serves as a neutral safe haven for the criminal underworld in the 'John Wick' franchise?",
+      "answer": "The Continental",
+      "category": "Action Movies",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Continental"
+      ]
+    },
+    {
+      "slug": "action-movie-indiana-jones-grail",
+      "question": "In the 1989 action-adventure film 'Indiana Jones and the Last Crusade', Indy races against time to discover which mythical, life-giving chalice?",
+      "answer": "Holy Grail",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-matrix-morpheus",
+      "question": "What is the name of the resistance leader played by Laurence Fishburne who frees Neo from the machine-controlled simulation in 'The Matrix'?",
+      "answer": "Morpheus",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-die-hard-argyle",
+      "question": "What is the first name of the upbeat, chatty limousine driver who waits out the entire terrorist siege in the Nakatomi parking garage in 'Die Hard'?",
+      "answer": "Argyle",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-terminator-liquid-metal",
+      "question": "What alphanumeric model designation is given to the shapeshifting, liquid-metal assassin played by Robert Patrick in 'Terminator 2: Judgment Day'?",
+      "answer": "T-1000",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-first-blood-sheriff",
+      "question": "What is the last name of the hostile small-town sheriff Will, played by Brian Dennehy, who kicks John Rambo out of town in 'First Blood'?",
+      "answer": "Teasle",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-top-gun-goose",
+      "question": "What is the tragic military call sign of Nick Bradshaw, Maverick's beloved Radar Intercept Officer and best friend in 'Top Gun'?",
+      "answer": "Goose",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-spider-man-maguire",
+      "question": "What is the full civilian name of the high school student bitten by a genetically modified spider in Sam Raimi's 2002 superhero action film?",
+      "answer": "Peter Parker",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-mad-max-interceptor",
+      "question": "In the original 'Mad Max' film franchise, Max Rockatansky drives a heavily modified black pursuit muscle car known by what specific name?",
+      "answer": "V8 Interceptor",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-gladiator-proximo",
+      "question": "What is the name of the grizzled, elderly gladiator trainer and promoter played by Oliver Reed in the 2000 historical action epic 'Gladiator'?",
+      "answer": "Proximo",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-kill-bill-madsen",
+      "question": "What is the name of Bill's brother, the trailer-dwelling former assassin played by Michael Madsen who buries the Bride alive in 'Kill Bill: Volume 2'?",
+      "answer": "Budd",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-taken-milligan",
+      "question": "What is the first name of Bryan Mills' ex-wife, played by Famke Janssen, whose daughter's kidnapping sets off the action in 'Taken'?",
+      "answer": "Lenore",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-speed-hopper",
+      "question": "What is the last name of Howard, the disgruntled ex-cop and bomb maker who plays a deadly game with LAPD SWAT in the 1994 film 'Speed'?",
+      "answer": "Payne",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-jurassic-park-raptor",
+      "question": "What is the shortened common name of the highly intelligent, pack-hunting dinosaur species that opens kitchen doors in 'Jurassic Park'?",
+      "answer": "Velociraptor",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-lethal-weapon-murtaugh",
+      "question": "In the 'Lethal Weapon' movies, what is the first name of the volatile and unpredictable partner paired with Detective Roger Murtaugh?",
+      "answer": "Martin",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-robocop-boddicker",
+      "question": "What is the first name of the ruthless, cackling street gang leader played by Kurtwood Smith who executes Alex Murphy in 'RoboCop'?",
+      "answer": "Clarence",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-bad-boys-car",
+      "question": "In the opening scene of the 1995 action movie 'Bad Boys', Mike Lowrey famously drives a sports car made by which German manufacturer?",
+      "answer": "Porsche",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-avatar-quaritch",
+      "question": "What is the last name of the ruthless military colonel and security chief who serves as the main antagonist in James Cameron's 'Avatar'?",
+      "answer": "Quaritch",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-dark-knight-gordon",
+      "question": "What is the last name of the honest Gotham City police lieutenant played by Gary Oldman in the 2008 film 'The Dark Knight'?",
+      "answer": "Gordon",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-point-break-ex-presidents",
+      "question": "In the 1991 action thriller 'Point Break', Johnny Utah infiltrates a gang of bank robbers who disguise themselves using rubber masks of what?",
+      "answer": "US Presidents",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-iron-man-assistant",
+      "question": "What is the nickname of Tony Stark's loyal assistant and eventual romantic partner, played by Gwyneth Paltrow in the MCU?",
+      "answer": "Pepper Potts",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-bourne-identity-wombosi",
+      "question": "What is the first name of the exiled African dictator Nykwana, whose failed assassination by Jason Bourne leaves Bourne with amnesia?",
+      "answer": "Nykwana",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-independence-day-smith",
+      "question": "What is the last name of the hotshot Marine fighter pilot Captain Steven, played by Will Smith in the 1996 film 'Independence Day'?",
+      "answer": "Hiller",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-rush-hour-consul",
+      "question": "In the 1998 action comedy 'Rush Hour', Inspector Lee is called to Los Angeles because the daughter of which Chinese diplomat has been kidnapped?",
+      "answer": "Consul Han",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-heat-pacino",
+      "question": "What is the last name of the obsessive LAPD robbery-homicide detective Vincent, played by Al Pacino in the 1995 crime action epic 'Heat'?",
+      "answer": "Hanna",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-casino-royale-craig",
+      "question": "In the 2006 action thriller 'Casino Royale', James Bond enters a high-stakes tournament of which specific poker variant to bankrupt a terrorist financier?",
+      "answer": "Texas Hold'em",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-sicario-blunt",
+      "question": "What is the acronym of the US federal law enforcement agency that employs Emily Blunt's character, Kate Macer, at the start of 'Sicario'?",
+      "answer": "FBI",
+      "category": "Action Movies",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Federal Bureau of Investigation"
+      ]
+    },
+    {
+      "slug": "action-movie-hard-boiled-chow",
+      "question": "What is the iconic musical instrument nickname of the tough-as-nails inspector played by Chow Yun-fat in John Woo's 1992 masterpiece 'Hard Boiled'?",
+      "answer": "Tequila",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-cliffhanger-stallone",
+      "question": "In the 1993 mountain rescue action thriller 'Cliffhanger', Sylvester Stallone plays a ranger who is forced to locate stolen briefcases filled with what?",
+      "answer": "Cash",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-crouching-tiger-sword",
+      "question": "What is the poetic, two-word name of the legendary 400-year-old green jade sword that is stolen in 'Crouching Tiger, Hidden Dragon'?",
+      "answer": "Green Destiny",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-bullet-train-pitt",
+      "question": "What is the code name of the unlucky, bucket-hat-wearing assassin played by Brad Pitt in the 2022 stylized action comedy 'Bullet Train'?",
+      "answer": "Ladybug",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-total-recall-planet",
+      "question": "In Paul Verhoeven's 1990 sci-fi action film 'Total Recall', Arnold Schwarzenegger's character uncovers a massive conspiracy on which planet?",
+      "answer": "Mars",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-baby-driver-playlist",
+      "question": "In Edgar Wright's high-speed 2017 action film 'Baby Driver', the young getaway driver relies on what specific item to drown out his severe tinnitus?",
+      "answer": "iPod",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-equalizer-washington",
+      "question": "What is the first name of the deadly, book-reading retired intelligence operative played by Denzel Washington in 'The Equalizer'?",
+      "answer": "Robert",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-minority-report-cruise",
+      "question": "In the 2002 sci-fi action thriller 'Minority Report', Tom Cruise operates a Washington D.C. police department known by what specialized name?",
+      "answer": "Precrime",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-ong-bak-tony",
+      "question": "What is the name of the traditional, devastating Southeast Asian martial art used by Tony Jaa to retrieve a stolen village statue head in 'Ong-Bak'?",
+      "answer": "Muay Thai",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-dirty-harry-eastwood",
+      "question": "What is the last name of the cynical, rule-breaking San Francisco inspector played by Clint Eastwood in the 1971 classic crime action film?",
+      "answer": "Callahan",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-extraction-hemsworth",
+      "question": "What is the first name of Tyler, the fearless black-market mercenary played by Chris Hemsworth in the relentless 2020 action film 'Extraction'?",
+      "answer": "Tyler",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-demolition-man-taco",
+      "question": "In the futuristic 1993 sci-fi action film 'Demolition Man', what is the name of the lone fast-food chain left on Earth after winning the franchise wars?",
+      "answer": "Taco Bell",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-the-rock-prison",
+      "question": "In Michael Bay's 1996 action thriller 'The Rock', rogue military forces seize control of which notorious, isolated former federal prison island?",
+      "answer": "Alcatraz",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-air-force-one-ford",
+      "question": "What is the last name of James, the decisive United States President played by Harrison Ford who takes on hijackers aboard his official plane?",
+      "answer": "Marshall",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-dredd-urban",
+      "question": "In the 2012 sci-fi action film 'Dredd', Karl Urban plays a futuristic law enforcer who holds the combined power of police, judge, jury, and what else?",
+      "answer": "Executioner",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-under-siege-seagal",
+      "question": "In the 1992 naval action thriller 'Under Siege', Steven Seagal plays a deadly former Navy SEAL who is currently assigned to work as what on the battleship?",
+      "answer": "Cook",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-nobody-odenkirk",
+      "question": "What is the first name of Hutch, the suburban family man with a hidden black-ops past played by Bob Odenkirk in the 2021 action film 'Nobody'?",
+      "answer": "Hutch",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-the-raid-jakarta",
+      "question": "The 2011 martial arts action masterpiece 'The Raid: Redemption' follows an elite tactical squad as they storm a high-rise apartment building in which Asian capital city?",
+      "answer": "Jakarta",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-man-on-fire-creasy",
+      "question": "What is the last name of the guilt-ridden former CIA operative John, played by Denzel Washington, who wages war on kidnappers in 'Man on Fire'?",
+      "answer": "Creasy",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "action-movie-coba-kai-karate-kid",
+      "question": "What is the name of the rival, aggressive karate dojo led by Sensei John Kreese that opposes Daniel LaRusso in the original 1984 martial arts action drama?",
+      "answer": "Cobra Kai",
+      "category": "Action Movies",
+      "difficulty": "easy"
+    }
   ]
-      }   
+}

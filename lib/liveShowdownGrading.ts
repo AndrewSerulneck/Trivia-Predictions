@@ -123,6 +123,7 @@ const PERSON_NAME_ALIASES = new Map<string, string[]>([
   ["theodore roosevelt", ["teddy roosevelt", "ted roosevelt"]],
   ["thomas jefferson", ["t.j.", "tom jefferson"]],
   ["benjamin franklin", ["ben franklin"]],
+  ["stephen curry", ["steph curry"]],
   ["alexander hamilton", ["hamilton"]],
   ["george washington", ["washington"]],
   ["abraham lincoln", ["lincoln", "abe lincoln"]],
@@ -490,6 +491,20 @@ function userWordsSubsetOfCorrect(userNorm: string, correctNorm: string): boolea
   return true;
 }
 
+function parseLeadingYearAnswer(normalized: string): { year: string; shortYear: string } | null {
+  const match = normalized.match(/^(\d{4})\s+.+$/);
+  if (!match) return null;
+  const year = match[1]!;
+  return { year, shortYear: year.slice(-2) };
+}
+
+function submittedContainsRequiredYear(userNorm: string, correctNorm: string): boolean {
+  const parsed = parseLeadingYearAnswer(correctNorm);
+  if (!parsed) return true;
+  const { year, shortYear } = parsed;
+  return new RegExp(`\\b(?:${year}|${shortYear})\\b`).test(userNorm);
+}
+
 // Words that are too generic to count as an identifying match on their own.
 // If a user submits only generic tokens (e.g. "New" for "New York") it should
 // not pass — the substantive identifying word (e.g. "York") must also match.
@@ -644,6 +659,15 @@ export function gradeWriteInAnswer(userSubmitted: string, correctTarget: string)
       isStandaloneNumber(normalizedSubmitted) &&
       normalizedSubmitted === normalizedTarget
     );
+  }
+
+  // 8b. If the canonical answer starts with a specific four-digit year, require
+  // the submission to preserve that year information using either the full year
+  // or an approved two-digit shorthand. This prevents "Dolphins" from passing
+  // for "1972 Dolphins" while still allowing exact stored variants like
+  // "72 Dolphins" or subset matches such as "2016 Warriors".
+  if (!submittedContainsRequiredYear(normalizedSubmitted, normalizedTarget)) {
+    return false;
   }
 
   // 9. Partial word match: user's answer is a meaningful subset of the correct answer

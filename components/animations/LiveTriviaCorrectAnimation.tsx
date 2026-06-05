@@ -1,217 +1,158 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { motion, animate } from "framer-motion";
+import { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import type { GameplayAnimationProps } from "@/types/animation";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// 250ms pop-in + 5000ms hold + 300ms exit = 5550ms
+// Add 100ms buffer so onComplete fires AFTER the exit animation fully renders
+const DURATION_MS = 5550;
+const COMPLETE_DELAY_MS = DURATION_MS + 100;
 
-interface InputRect {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-  centerX: number;
-}
-
-// ─── Root component ───────────────────────────────────────────────────────────
-
-export function LiveTriviaCorrectAnimation({ onComplete, payload }: GameplayAnimationProps) {
+export function LiveTriviaCorrectAnimation({ onComplete }: GameplayAnimationProps) {
   const cancelledRef = useRef<boolean>(false);
-  const timer1Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // The input is captured at trigger time (before it unmounts on phase change)
-  // and passed in via payload. Derive our local rect from it — null means the
-  // input was unavailable, so Layers 1 and 2 are skipped gracefully.
-  const sourceRect = payload?.inputRect ?? null;
-  const [inputRect] = useState<InputRect | null>(() =>
-    sourceRect === null
-      ? null
-      : {
-          left: sourceRect.left,
-          top: sourceRect.top,
-          width: sourceRect.width,
-          height: sourceRect.height,
-          centerX: sourceRect.left + sourceRect.width / 2,
-        }
-  );
-
-  // Ref to the glow overlay div; used for imperative box-shadow animation.
-  const glowDivRef = useRef<HTMLDivElement | null>(null);
-
-  // ─── Mount effect: schedule onComplete ──────────────────────────────────────
   useEffect(() => {
-    // Schedule onComplete at end of total lifecycle
-    timer1Ref.current = setTimeout(() => {
-      if (!cancelledRef.current) {
-        onComplete();
-      }
-    }, 1200);
-
+    timerRef.current = setTimeout(() => {
+      if (!cancelledRef.current) onComplete();
+    }, COMPLETE_DELAY_MS);
     return () => {
       cancelledRef.current = true;
-      if (timer1Ref.current !== null) clearTimeout(timer1Ref.current);
+      if (timerRef.current !== null) clearTimeout(timerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ─── Glow animation fires once the glowDiv is mounted (inputRect set) ───────
-  useEffect(() => {
-    const glowEl = glowDivRef.current;
-    if (glowEl === null || inputRect === null) return;
-
-    animate(
-      glowEl,
-      {
-        boxShadow: [
-          "0px 0px 0px 0px rgba(52,211,153,0)",
-          "0px 0px 0px 8px rgba(52,211,153,0.6)",
-          "0px 0px 0px 16px rgba(52,211,153,0)",
-        ],
-      },
-      {
-        duration: 0.8,
-        ease: "easeInOut",
-      }
-    );
-  }, [inputRect]);
+  // Normalised keyframe times over 5.55s total:
+  //   t=0ms     (0.000): initial
+  //   t=250ms   (0.045): pop-in complete
+  //   t=5250ms  (0.946): hold ends, exit begins
+  //   t=5550ms  (1.000): gone
+  const times = [0, 0.045, 0.946, 1] as const;
 
   return (
     <>
-      {/* ── LAYER 1: Input border glow overlay ──────────────────────────────── */}
-      {inputRect !== null && (
-        <div
-          ref={glowDivRef}
-          style={{
-            position: "fixed",
-            left: inputRect.left,
-            top: inputRect.top,
-            width: inputRect.width,
-            height: inputRect.height,
-            borderRadius: "0.75rem",                 // rounded-xl (12px)
-            border: "2px solid rgba(52,211,153,1)",  // emerald-400
-            pointerEvents: "none",
-            willChange: "box-shadow",
-            zIndex: 9998,
-          }}
-        />
-      )}
-
-      {/* ── LAYER 2: "+10" counter floating up from input origin ────────────── */}
-      {inputRect !== null && <FloatingCounter inputRect={inputRect} />}
-
-      {/* ── LAYER 3: "RIGHT" stamp centred on screen ────────────────────────── */}
-      <RightStamp />
-    </>
-  );
-}
-
-// ─── Layer 2: Floating +10 counter ───────────────────────────────────────────
-
-interface FloatingCounterProps {
-  inputRect: InputRect;
-}
-
-function FloatingCounter({ inputRect }: FloatingCounterProps) {
-  return (
-    <motion.div
-      style={{
-        position: "fixed",
-        // Centre horizontally on the input field
-        left: inputRect.centerX,
-        // Sit 20px above the top edge of the input
-        top: inputRect.top - 20,
-        // Pull back the natural left offset so text is centred
-        x: "-50%",
-        pointerEvents: "none",
-        willChange: "transform, opacity",
-        zIndex: 9999,
-        color: "#34d399",
-        fontWeight: 900,
-        fontSize: "52px",
-        lineHeight: 1,
-        textShadow: "0 0 24px rgba(52,211,153,0.9)",
-        whiteSpace: "nowrap",
-        userSelect: "none",
-      }}
-      initial={{ y: 0, opacity: 0 }}
-      animate={{
-        y: [0, -45, -90],
-        opacity: [0, 1, 0],
-      }}
-      transition={{
-        duration: 0.9,
-        ease: [0.22, 1, 0.36, 1],
-        times: [0, 0.5, 1],
-      }}
-    >
-      +10
-    </motion.div>
-  );
-}
-
-// ─── Layer 3: "RIGHT" stamp ───────────────────────────────────────────────────
-
-function RightStamp() {
-  return (
-    // Full-screen centering wrapper — fades the whole stamp out at the end
-    <motion.div
-      style={{
-        position: "fixed",
-        inset: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        pointerEvents: "none",
-        zIndex: 10000,
-      }}
-      // Wrapper handles only the exit fade so the inner pill doesn't double-fade
-      initial={{ opacity: 1 }}
-      animate={{ opacity: [1, 1, 0] }}
-      transition={{
-        duration: 1.2,
-        times: [0, 0.792, 1],   // hold until 950ms (0.792×1200ms), then exit
-        ease: "easeIn",
-      }}
-    >
-      {/* Pill: scale pop-in → hold → slight shrink on exit */}
+      {/* Screen-wide green flash */}
       <motion.div
         style={{
-          backgroundColor: "rgba(16,185,129,0.25)",  // emerald-500/25
-          border: "2px solid rgba(52,211,153,0.8)",   // emerald-400/80
-          borderRadius: "1rem",                        // rounded-2xl (16px)
-          paddingLeft: "2.5rem",
-          paddingRight: "2.5rem",
-          paddingTop: "1.25rem",
-          paddingBottom: "1.25rem",
-          color: "rgba(236,253,245,1)",                // emerald-100
-          fontSize: "2.25rem",                         // text-4xl
-          fontWeight: 900,
-          textTransform: "uppercase",
-          letterSpacing: "0.14em",
-          willChange: "transform, opacity",
-          userSelect: "none",
+          position: "fixed",
+          inset: 0,
+          backgroundColor: "rgba(16,185,129,0.18)",
+          pointerEvents: "none",
+          zIndex: 9997,
         }}
-        // scale: spring-pop enter (1.6→1), hold, gentle shrink exit (1→0.85)
-        initial={{ scale: 1.6, opacity: 0 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0, 1, 1, 0] }}
+        transition={{
+          duration: DURATION_MS / 1000,
+          times: [...times],
+          ease: "easeOut",
+        }}
+      />
+
+      {/* Radial glow burst behind the stamp */}
+      <motion.div
+        style={{
+          position: "fixed",
+          inset: 0,
+          background:
+            "radial-gradient(ellipse 60% 40% at 50% 50%, rgba(52,211,153,0.35) 0%, transparent 70%)",
+          pointerEvents: "none",
+          zIndex: 9998,
+        }}
+        initial={{ opacity: 0, scale: 0.6 }}
         animate={{
-          scale:   [1.6, 1,   1,    0.85],
-          opacity: [0,   1,   1,    0   ],
+          opacity: [0, 1, 1, 0],
+          scale: [0.6, 1.1, 1.05, 1.2],
         }}
         transition={{
-          duration: 1.2,
-          // keyframe timing: 0ms, 200ms, 950ms, 1200ms → normalised
-          times: [0, 0.167, 0.792, 1],
-          scale: {
-            ease: ["backOut", "linear", "easeIn"],
-          },
-          opacity: {
-            ease: ["easeOut", "linear", "easeIn"],
-          },
+          duration: DURATION_MS / 1000,
+          times: [...times],
+          ease: ["backOut", "linear", "easeIn"],
+        }}
+      />
+
+      {/* Centre stamp */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          pointerEvents: "none",
+          zIndex: 10000,
         }}
       >
-        ✓ RIGHT
+        <motion.div
+          style={{
+            backgroundColor: "rgba(6,78,59,0.85)",
+            border: "3px solid rgba(52,211,153,1)",
+            borderRadius: "1.5rem",
+            paddingLeft: "3.5rem",
+            paddingRight: "3.5rem",
+            paddingTop: "1.75rem",
+            paddingBottom: "1.75rem",
+            color: "rgba(236,253,245,1)",
+            fontSize: "3rem",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: "0.14em",
+            textShadow: "0 0 32px rgba(52,211,153,0.9), 0 2px 8px rgba(0,0,0,0.6)",
+            boxShadow:
+              "0 0 0 0px rgba(52,211,153,0.4), 0 0 60px rgba(52,211,153,0.3), inset 0 1px 0 rgba(255,255,255,0.1)",
+            whiteSpace: "nowrap",
+            userSelect: "none",
+            willChange: "transform, opacity",
+          }}
+          initial={{ scale: 2.2, opacity: 0, y: 0 }}
+          animate={{
+            scale:   [2.2, 1,    1,    0.9],
+            opacity: [0,   1,    1,    0  ],
+            y:       [0,   0,    0,    -24],
+          }}
+          transition={{
+            duration: DURATION_MS / 1000,
+            times: [...times],
+            ease: ["backOut", "linear", "easeIn"],
+          }}
+        >
+          ✓ CORRECT
+        </motion.div>
+      </div>
+
+      {/* "+10" floating up from centre */}
+      <motion.div
+        style={{
+          position: "fixed",
+          left: "50%",
+          top: "38%",
+          x: "-50%",
+          pointerEvents: "none",
+          zIndex: 9999,
+          color: "#34d399",
+          fontWeight: 900,
+          fontSize: "3.5rem",
+          lineHeight: 1,
+          textShadow: "0 0 28px rgba(52,211,153,1)",
+          whiteSpace: "nowrap",
+          userSelect: "none",
+          willChange: "transform, opacity",
+        }}
+        initial={{ y: 0, opacity: 0 }}
+        animate={{
+          y:       [0, -30, -90],
+          opacity: [0,  1,   0 ],
+        }}
+        transition={{
+          duration: 1.4,
+          times: [0, 0.15, 1],
+          ease: [0.22, 1, 0.36, 1],
+        }}
+      >
+        +10
       </motion.div>
-    </motion.div>
+    </>
   );
 }

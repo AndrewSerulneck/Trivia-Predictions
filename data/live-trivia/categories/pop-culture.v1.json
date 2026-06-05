@@ -47,7 +47,10 @@
       "answer": "South Korea",
       "answer_format": "write_in",
       "category": "Pop Culture",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Korea"
+      ]
     },
     {
       "slug": "met-gala-annual-date",
@@ -159,7 +162,10 @@
       "answer": "The Beef",
       "answer_format": "write_in",
       "category": "Pop Culture",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Beef"
+      ]
     },
     {
       "slug": "tiktok-renegade-creator",
@@ -271,7 +277,10 @@
       "answer": "The Way of Water",
       "answer_format": "write_in",
       "category": "Pop Culture",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Way of Water"
+      ]
     },
     {
       "slug": "glass-onion-detective-name",
@@ -287,7 +296,10 @@
       "answer": "The Arconia",
       "answer_format": "write_in",
       "category": "Pop Culture",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Arconia"
+      ]
     },
     {
       "slug": "everything-everywhere-lead-actress",
@@ -383,7 +395,11 @@
       "answer": "Robert Downey Jr.",
       "answer_format": "write_in",
       "category": "Pop Culture",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Robert Downey Junior",
+        "Robert Downey"
+      ]
     },
     {
       "slug": "selena-gomez-benny-blanco-marriage",
@@ -415,7 +431,10 @@
       "answer": "Thailand",
       "answer_format": "write_in",
       "category": "Pop Culture",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Siam"
+      ]
     },
     {
       "slug": "28-years-later-lead-actor",
@@ -535,7 +554,10 @@
       "answer": "The Valley",
       "answer_format": "write_in",
       "category": "Pop Culture",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Valley"
+      ]
     },
     {
       "slug": "bluey-special-episode-sign",
@@ -543,7 +565,10 @@
       "answer": "The Sign",
       "answer_format": "write_in",
       "category": "Pop Culture",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Sign"
+      ]
     },
     {
       "slug": "jeremy-allen-white-bruce-springsteen",
@@ -559,7 +584,10 @@
       "answer": "The Garden of Time",
       "answer_format": "write_in",
       "category": "Pop Culture",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Garden of Time"
+      ]
     },
     {
       "slug": "mr-beast-youtube-subscriber-record",
@@ -663,7 +691,10 @@
       "answer": "The Dance of the Dragons",
       "answer_format": "write_in",
       "category": "Pop Culture",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Dance of the Dragons"
+      ]
     },
     {
       "slug": "furiosa-mad-max-star",

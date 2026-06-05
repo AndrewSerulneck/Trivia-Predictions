@@ -132,7 +132,14 @@
       "question": "For four months in 1783, the Continental Congress met at Princeton University's Nassau Hall, making Princeton the temporary capital of which entity?",
       "answer": "United States",
       "category": "New Jersey",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "US",
+        "U.S.",
+        "USA",
+        "U.S.A.",
+        "United States of America"
+      ]
     },
     {
       "slug": "nj-history-pinelands-fruit",
@@ -223,14 +230,20 @@
       "question": "What is the specific geologic name of the line of steep, line-of-sight cliffs overlooking the western side of the Hudson River in northeastern New Jersey?",
       "answer": "The Palisades",
       "category": "New Jersey",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Palisades"
+      ]
     },
     {
       "slug": "nj-music-asbury-park-club",
       "question": "Which iconic Asbury Park rock music club, opened in 1974, famously served as a launching pad for the musical careers of Bruce Springsteen and Bon Jovi?",
       "answer": "The Stone Pony",
       "category": "New Jersey",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Stone Pony"
+      ]
     },
     {
       "slug": "nj-sports-nets-first-arena",
@@ -734,7 +747,10 @@
       "question": "What is the specific proper name of the legendary Asbury Park rock music club opened in 1974 that served as a launching pad for both Bruce Springsteen and Southside Johnny?",
       "answer": "The Stone Pony",
       "category": "New Jersey",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Stone Pony"
+      ]
     },
     {
       "slug": "nj-celebrity-michael-douglas-new-brunswick",
@@ -832,7 +848,10 @@
       "question": "Which influential 1980s alternative rock band, famous for power-pop hits like 'A Girl Like You' and 'Too Much Passion,' was formed in Carteret, New Jersey?",
       "answer": "The Smithereens",
       "category": "New Jersey",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Smithereens"
+      ]
     },
     {
       "slug": "nj-celebrity-jane-krakowski-parsippany",

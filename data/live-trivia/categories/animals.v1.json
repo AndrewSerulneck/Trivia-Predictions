@@ -79,7 +79,10 @@
       "answer": "The Waggle Dance",
       "answer_format": "write_in",
       "category": "Animals",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Waggle Dance"
+      ]
     },
     {
       "slug": "animals-only-continent-no-ants",

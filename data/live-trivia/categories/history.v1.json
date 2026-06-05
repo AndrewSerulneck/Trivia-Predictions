@@ -55,7 +55,13 @@
       "answer": "Great Britain",
       "answer_format": "write_in",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "UK",
+        "U.K.",
+        "United Kingdom",
+        "Britain"
+      ]
     },
     {
       "slug": "discovery-of-penicillin",
@@ -295,7 +301,11 @@
       "answer": "China",
       "answer_format": "write_in",
       "category": "History",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "PRC",
+        "People's Republic of China"
+      ]
     },
     {
       "slug": "first-woman-nobel-prize",
@@ -551,7 +561,13 @@
       "answer": "Great Britain",
       "answer_format": "write_in",
       "category": "History",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "UK",
+        "U.K.",
+        "United Kingdom",
+        "Britain"
+      ]
     },
     {
       "slug": "protestant-reformation-starter",

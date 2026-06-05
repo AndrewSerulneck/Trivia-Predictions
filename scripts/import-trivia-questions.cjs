@@ -133,7 +133,19 @@ function readLiveCategoryPayload(parsed, sourceLabel) {
   assert(isPlainObject(parsed), `${sourceLabel} must contain an object.`);
   const questions = parsed.questions || [];
   assert(Array.isArray(questions), `${sourceLabel}: "questions" must be an array.`);
-  return questions.map((item) => ({ ...item, __questionPool: LIVE_POOL, __answerFormat: "write_in" }));
+  // The file's `categoryName` is the single source of truth for category — every
+  // question in this file is stamped with it, so per-question `category` values
+  // can drift in the JSON without affecting the DB. Falls back to the filename
+  // (matching the admin UI's derivation) when `categoryName` is absent.
+  const categoryName =
+    String(parsed.categoryName || "").trim() ||
+    path.basename(sourceLabel).replace(/\.v\d+\.json$/i, "").replace(/-/g, " ");
+  return questions.map((item) => ({
+    ...item,
+    __questionPool: LIVE_POOL,
+    __answerFormat: "write_in",
+    __categoryName: categoryName,
+  }));
 }
 
 function readQuestionFile(filePath) {
@@ -223,7 +235,9 @@ function normalizeAndValidate(questions) {
     const question = String(item.question ?? "").trim();
     assert(question.length > 0, `Row ${rowNumber}${source}: question is required.`);
 
-    const category = String(item.category ?? "").trim();
+    // For live-trivia files, `__categoryName` (the file's categoryName) is
+    // authoritative and overrides any per-question `category` value.
+    const category = String(item.__categoryName ?? item.category ?? "").trim();
     const difficulty = String(item.difficulty ?? "").trim();
 
     const providedSlug = String(item.slug ?? "").trim();

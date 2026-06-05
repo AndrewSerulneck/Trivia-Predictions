@@ -1,17 +1,14 @@
 import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import {
+  normalizeSuggestedAnswer,
+  suggestAnswerVariants,
+  type SuggestedAnswerVariantType,
+} from "@/lib/triviaAnswerSuggestions";
 
 export type AnswerVariantType =
-  | "abbreviation"
-  | "spelling"
-  | "alias"
-  | "country_name"
-  | "historical"
-  | "person_name"
-  | "event_name"
-  | "pluralization"
-  | "generated";
+  | SuggestedAnswerVariantType;
 
 type AnswerVariant = {
   variant_text: string;
@@ -33,47 +30,8 @@ function isAnswerVariantsTableMissing(error: { code?: string; message?: string }
   return message.includes("answer_variants") && (message.includes("could not find the table") || message.includes("relation"));
 }
 
-const COUNTRY_ABBREVIATIONS: Record<string, string[]> = {
-  "great britain": ["uk", "u.k.", "u k", "united kingdom", "britain"],
-  "united kingdom": ["uk", "u.k.", "u k", "great britain", "britain"],
-  "united states": ["us", "u.s.", "u s", "usa", "u.s.a.", "u s a", "united states of america"],
-  russia: ["ussr", "u.s.s.r.", "soviet union", "russian federation"],
-  iran: ["persia"],
-  thailand: ["siam"],
-  ireland: ["eire", "republic of ireland"],
-  "south korea": ["korea"],
-  china: ["prc", "peoples republic of china"],
-  zimbabwe: ["rhodesia"],
-  germany: ["deutsch", "deutschland"],
-};
-
-const HISTORICAL_NAME_MAPPINGS: Record<string, string[]> = {
-  iraq: ["mesopotamia"],
-  iran: ["persia"],
-  thailand: ["siam"],
-  zimbabwe: ["rhodesia"],
-  benin: ["dahomey"],
-  "burkina faso": ["upper volta"],
-  congo: ["belgian congo", "zaire"],
-};
-
-const PERSON_NAME_PATTERNS: Record<string, string[]> = {
-  "john f. kennedy": ["jfk", "j.f.k.", "john fitzgerald kennedy"],
-  "franklin d. roosevelt": ["fdr", "f.d.r.", "franklin delano roosevelt"],
-  "martin luther king": ["mlk", "m.l.k.", "martin luther king jr"],
-  "theodore roosevelt": ["teddy roosevelt"],
-  "benjamin franklin": ["ben franklin"],
-};
-
-const EVENT_NAME_PATTERNS: Record<string, string[]> = {
-  "world war ii": ["world war 2", "ww2", "wwii", "second world war"],
-  "world war i": ["world war 1", "ww1", "wwi", "first world war"],
-  "north atlantic treaty organization": ["nato"],
-  "united nations": ["un", "u.n."],
-};
-
 function normalize(value: string): string {
-  return String(value ?? "").toLowerCase().trim().replace(/\s+/g, " ");
+  return normalizeSuggestedAnswer(value);
 }
 
 function coerceOptions(value: unknown): string[] {
@@ -108,205 +66,14 @@ function getVariantSeedAnswers(question: TriviaQuestionVariantSeedRow): Array<{ 
   return correctAnswer ? [{ answer: correctAnswer, index: correctAnswerIndex }] : [];
 }
 
-function generateAbbreviations(text: string): AnswerVariant[] {
-  const variants: AnswerVariant[] = [];
-  const lower = normalize(text);
-
-  if (COUNTRY_ABBREVIATIONS[lower]) {
-    for (const abbrev of COUNTRY_ABBREVIATIONS[lower]) {
-      variants.push({
-        variant_text: normalize(abbrev),
-        variant_type: "abbreviation",
-        confidence_score: 0.95,
-      });
-    }
-  }
-
-  const words = text.split(/\s+/).map((word) => word.trim()).filter(Boolean);
-  if (words.length >= 2) {
-    const acronym = words.map((word) => word[0] ?? "").join("").toLowerCase();
-    if (acronym.length >= 2 && acronym.length <= 5) {
-      variants.push({
-        variant_text: acronym,
-        variant_type: "abbreviation",
-        confidence_score: 0.85,
-      });
-    }
-  }
-
-  return variants;
-}
-
-function generateSpellingVariants(text: string): AnswerVariant[] {
-  const variants: AnswerVariant[] = [];
-  const lower = normalize(text);
-
-  const britishToAmerican: Record<string, string> = {
-    colour: "color",
-    favour: "favor",
-    honour: "honor",
-    theatre: "theater",
-    centre: "center",
-    metre: "meter",
-    litre: "liter",
-  };
-
-  for (const [british, american] of Object.entries(britishToAmerican)) {
-    if (lower.includes(british)) {
-      const variant = normalize(lower.replace(british, american));
-      if (variant !== lower) {
-        variants.push({
-          variant_text: variant,
-          variant_type: "spelling",
-          confidence_score: 0.9,
-        });
-      }
-    }
-    if (lower.includes(american)) {
-      const variant = normalize(lower.replace(american, british));
-      if (variant !== lower) {
-        variants.push({
-          variant_text: variant,
-          variant_type: "spelling",
-          confidence_score: 0.9,
-        });
-      }
-    }
-  }
-
-  return variants;
-}
-
-function generateAliases(text: string): AnswerVariant[] {
-  const variants: AnswerVariant[] = [];
-  const lower = normalize(text);
-
-  for (const [modern, historical] of Object.entries(HISTORICAL_NAME_MAPPINGS)) {
-    if (lower === modern) {
-      for (const hist of historical) {
-        variants.push({
-          variant_text: normalize(hist),
-          variant_type: "historical",
-          confidence_score: 0.85,
-        });
-      }
-    }
-    if (historical.includes(lower)) {
-      variants.push({
-        variant_text: modern,
-        variant_type: "historical",
-        confidence_score: 0.85,
-      });
-    }
-  }
-
-  for (const [fullName, aliases] of Object.entries(PERSON_NAME_PATTERNS)) {
-    if (lower === fullName) {
-      for (const alias of aliases) {
-        variants.push({
-          variant_text: normalize(alias),
-          variant_type: "person_name",
-          confidence_score: 0.9,
-        });
-      }
-    }
-    if (aliases.some((alias) => normalize(alias) === lower)) {
-      variants.push({
-        variant_text: fullName,
-        variant_type: "person_name",
-        confidence_score: 0.9,
-      });
-    }
-  }
-
-  for (const [eventName, aliases] of Object.entries(EVENT_NAME_PATTERNS)) {
-    if (lower === eventName) {
-      for (const alias of aliases) {
-        variants.push({
-          variant_text: normalize(alias),
-          variant_type: "event_name",
-          confidence_score: 0.9,
-        });
-      }
-    }
-    if (aliases.some((alias) => normalize(alias) === lower)) {
-      variants.push({
-        variant_text: eventName,
-        variant_type: "event_name",
-        confidence_score: 0.9,
-      });
-    }
-  }
-
-  return variants;
-}
-
-function generatePluralizationVariants(text: string): AnswerVariant[] {
-  const variants: AnswerVariant[] = [];
-  const lower = normalize(text);
-  if (!lower) return variants;
-
-  let plural = lower;
-  if (lower.endsWith("y") && lower.length > 2 && !lower.endsWith("ay") && !lower.endsWith("ey")) {
-    plural = `${lower.slice(0, -1)}ies`;
-  } else if (/(s|x|z|ch|sh)$/.test(lower)) {
-    plural = `${lower}es`;
-  } else {
-    plural = `${lower}s`;
-  }
-
-  if (plural !== lower) {
-    variants.push({
-      variant_text: plural,
-      variant_type: "pluralization",
-      confidence_score: 0.8,
-    });
-  }
-
-  let singular = lower;
-  if (lower.endsWith("ies") && lower.length > 4) {
-    singular = `${lower.slice(0, -3)}y`;
-  } else if (lower.endsWith("es") && lower.length > 3) {
-    singular = lower.slice(0, -2);
-  } else if (lower.endsWith("s") && !lower.endsWith("ss") && lower.length > 2) {
-    singular = lower.slice(0, -1);
-  }
-
-  if (singular !== lower && singular.length > 1) {
-    variants.push({
-      variant_text: singular,
-      variant_type: "pluralization",
-      confidence_score: 0.75,
-    });
-  }
-
-  return variants;
-}
-
 export function generateAnswerVariants(answerText: string): AnswerVariant[] {
   const text = String(answerText ?? "").trim();
   if (!text) return [];
-
-  const variants: AnswerVariant[] = [];
-  const seen = new Set<string>();
-  const base = normalize(text);
-
-  const pushUnique = (variant: AnswerVariant) => {
-    const key = normalize(variant.variant_text);
-    if (!key || key === base || seen.has(key)) return;
-    seen.add(key);
-    variants.push({
-      ...variant,
-      variant_text: key,
-    });
-  };
-
-  generateAbbreviations(text).forEach(pushUnique);
-  generateSpellingVariants(text).forEach(pushUnique);
-  generateAliases(text).forEach(pushUnique);
-  generatePluralizationVariants(text).forEach(pushUnique);
-
-  return variants;
+  return suggestAnswerVariants(text).map((variant) => ({
+    variant_text: normalize(variant.variantText),
+    variant_type: variant.variantType,
+    confidence_score: variant.confidenceScore,
+  }));
 }
 
 export async function storeAnswerVariants(

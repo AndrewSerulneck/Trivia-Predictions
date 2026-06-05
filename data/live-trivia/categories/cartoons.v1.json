@@ -69,7 +69,10 @@
       "question": "Danny Fenton gains his supernatural ghost powers after stepping inside a portal created by his eccentric parents. What is the name of this portal?",
       "answer": "The Fenton Portal",
       "category": "Cartoons",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Fenton Portal"
+      ]
     },
     {
       "slug": "bojack-horseman-underwater-episode-award-show",
@@ -272,7 +275,10 @@
       "question": "Virgil Hawkins gains his signature electromagnetic abilities after being exposed to a highly toxic, experimental gas during a gang riot. What is this street event commonly called?",
       "answer": "The Big Bang",
       "category": "Cartoons",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Big Bang"
+      ]
     },
     {
       "slug": "captain-planet-ma-ti-heart-ring-pet",
@@ -349,7 +355,10 @@
       "question": "In a memorable Gravity Falls investigation, Mabel crafts a lifesize wax replica of Grunkle Stan, which is tragically decapitated by a mysterious thief looking for what hidden artifact?",
       "answer": "The cursed wax figures",
       "category": "Cartoons",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "cursed wax figures"
+      ]
     },
     {
       "slug": "clones-high-gandhi-kid-fraction-catchphrase",
@@ -412,7 +421,10 @@
       "question": "Daria's superficial, hyper-popular younger sister Quinn serves as the vice president of which high school extracurricular organization at Lawndale High?",
       "answer": "The Fashion Club",
       "category": "Cartoons",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Fashion Club"
+      ]
     },
     {
       "slug": "grim-adventures-billy-mandy-end-of-bet",
@@ -433,7 +445,10 @@
       "question": "Aaahh!!! Real Monsters tracks young scares-in-training navigating the structural sewers of New York City under the strict tutelage of their multi-legged, high-heeled headmaster. What is his name?",
       "answer": "The Gromble",
       "category": "Cartoons",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Gromble"
+      ]
     },
     {
       "slug": "the-tick-arthur-moth-suit-confusion",
@@ -461,7 +476,10 @@
       "question": "The extreme sports kids of Ocean Shores routinely unwind after skating sessions by eating burgers at a beachside establishment run by Tito Makani. What is the shack's name?",
       "answer": "The Shore Shack",
       "category": "Cartoons",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Shore Shack"
+      ]
     },
     {
       "slug": "courage-cowardly-dog-computer-personality",
@@ -496,14 +514,20 @@
       "question": "The fraudulent, white-haired child psychic Lil' Gideon operates his telepathic business rivaling the Mystery Shack out of what temporary, indoor theater structure?",
       "answer": "The Tent of Telepathy",
       "category": "Cartoons",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Tent of Telepathy"
+      ]
     },
     {
       "slug": "regular-show-skips-yeti-immortality-dance",
       "question": "Skips is a wise, immortal yeti working at the park who maintains his eternal life by performing a highly specific ceremonial dance on his birthday every year around what object?",
       "answer": "The Guardians of Eternal Youth",
       "category": "Cartoons",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Guardians of Eternal Youth"
+      ]
     },
     {
       "slug": "super-friends-wonder-twins-monkey-name",
@@ -552,7 +576,10 @@
       "question": "Before joining Aang's team as his Earthbending teacher, Toph Beifong dominates an underground bending tournament circuit under what theatrical wrestling pseudonym?",
       "answer": "The Blind Bandit",
       "category": "Cartoons",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Blind Bandit"
+      ]
     },
     {
       "slug": "south-park-chef-musical-performance-food",

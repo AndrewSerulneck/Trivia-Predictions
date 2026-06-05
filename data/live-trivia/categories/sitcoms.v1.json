@@ -5,15 +5,16 @@
       "slug": "himym-barney-playbook-alias",
       "question": "In How I Met Your Mother, what is the title of the legendary notebook Barney Stinson uses to track his complex scams and strategies for picking up women?",
       "answer": "The Playbook",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Playbook"
+      ]
     },
     {
       "slug": "big-bang-theory-soft-kitty-illness",
       "question": "In The Big Bang Theory, what specific childhood comfort song must be sung to Sheldon Cooper whenever he falls ill?",
       "answer": "Soft Kitty",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -21,7 +22,6 @@
       "slug": "the-office-dunder-mifflin-city",
       "question": "In which specific Pennsylvania city is the main branch of the Dunder Mifflin Paper Company located in The Office?",
       "answer": "Scranton",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -29,7 +29,6 @@
       "slug": "seinfeld-kramer-first-name",
       "question": "For the first few seasons of Seinfeld, Kramer's first name is kept a total mystery. What is his actual first name revealed in Season 6?",
       "answer": "Cosmo",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -37,7 +36,6 @@
       "slug": "himym-robin-pop-star-alias",
       "question": "Before moving to New York, Robin Scherbatsky was a teenage Canadian pop star. What was her stage name?",
       "answer": "Robin Sparkles",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -45,7 +43,6 @@
       "slug": "parks-and-rec-ron-swanson-bacon",
       "question": "In Parks and Recreation, what is the name of Ron Swanson's ultra-patriotic, heavily restricted, breakfast-loving direct boss and department director?",
       "answer": "Ron Swanson",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -53,7 +50,6 @@
       "slug": "himym-marshall-lily-college",
       "question": "Ted, Marshall, and Lily all met and became best friends while attending which specific Connecticut higher education institution?",
       "answer": "Wesleyan University",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -61,7 +57,6 @@
       "slug": "brooklyn-nine-nine-captain-dog",
       "question": "What is the name of Captain Raymond Holt's beloved, highly disciplined Pembroke Welsh Corgi in Brooklyn Nine-Nine?",
       "answer": "Cheddar",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -69,7 +64,6 @@
       "slug": "the-office-pretzel-day-character",
       "question": "Which Dunder Mifflin employee is famously willing to wait in a massive lobby line for \"Pretzel Day\" because it is the only day of the year he truly enjoys?",
       "answer": "Stanley Hudson",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -77,7 +71,6 @@
       "slug": "seinfeld-festivus-holiday-date",
       "question": "On what specific calendar date in December does Frank Costanza's alternative holiday \"Festivus\" officially take place?",
       "answer": "December 23",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -85,7 +78,6 @@
       "slug": "new-girl-apartment-loft-number",
       "question": "In New Girl, Jess moves into a sprawling downtown Los Angeles arts district loft with three single guys. What is the specific number of this loft apartment?",
       "answer": "4D",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -93,7 +85,6 @@
       "slug": "big-bang-theory-penny-hometown-state",
       "question": "Before moving to Los Angeles to pursue an acting career, Penny grew up on a rural farm in which Midwestern U.S. state?",
       "answer": "Nebraska",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -101,7 +92,6 @@
       "slug": "himym-slap-bet-total-count",
       "question": "As a result of losing the \"Slap Bet\" over Robin's past, how many total times is Marshall legally allowed to slap Barney across the face throughout the series?",
       "answer": "8",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "hard"
     },
@@ -109,7 +99,6 @@
       "slug": "friends-smelly-cat-singer",
       "question": "Which main character on Friends routinely performs the acoustic song \"Smelly Cat\" at Central Perk?",
       "answer": "Phoebe Buffay",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -117,7 +106,6 @@
       "slug": "seinfeld-jerry-car-theft-mechanic",
       "question": "In a famous multi-part Seinfeld episode, Jerry's car is stolen by his highly erratic auto mechanic, played by Brad Garrett. What is the mechanic's first name?",
       "answer": "Tony",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "hard"
     },
@@ -125,7 +113,6 @@
       "slug": "big-bang-theory-comic-book-shop-owner",
       "question": "What is the first name of the lonely, down-on-his-luck owner of the local comic book shop that the guys frequent in The Big Bang Theory?",
       "answer": "Stuart",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -133,7 +120,6 @@
       "slug": "brooklyn-nine-nine-jake-peralta-die-hard",
       "question": "Detective Jake Peralta's entire law enforcement career and personal philosophy are inspired by which specific 1980s action movie?",
       "answer": "Die Hard",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -141,7 +127,6 @@
       "slug": "friends-joey-tribbiani-soap-opera-character",
       "question": "Joey Tribbiani scores his big acting break on Days of Our Lives playing a fictional neurosurgeon. What is the character's name?",
       "answer": "Dr. Drake Ramoray",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -149,7 +134,6 @@
       "slug": "seinfeld-puddy-favorite-nj-sports-team",
       "question": "Elaine's on-again, off-again boyfriend David Puddy is an incredibly intense sports fan who famously paints his face to support which NHL hockey team?",
       "answer": "New Jersey Devils",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -157,7 +141,6 @@
       "slug": "modern-family-cam-clown-name",
       "question": "In Modern Family, Cameron Tucker occasionally dresses up as his theatrical clown alter-ego for children's parties. What is his clown name?",
       "answer": "Fizbo",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -165,7 +148,6 @@
       "slug": "new-girl-drinking-game-name",
       "question": "What is the name of the highly complex, chaotic, and fictional drinking game played by the roommates in the New Girl loft?",
       "answer": "True American",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -173,7 +155,6 @@
       "slug": "schitts-creek-david-rose-store",
       "question": "What is the name of the curated, high-end general store that David Rose opens up in Schitt's Creek?",
       "answer": "Rose Apothecary",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -181,7 +162,6 @@
       "slug": "friends-monica-geller-middle-name",
       "question": "While Chandler's middle name is Muriel, what is Monica Geller's middle name, which is briefly revealed during the show?",
       "answer": "E.M.",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "hard"
     },
@@ -189,7 +169,6 @@
       "slug": "seinfeld-newman-usps-profession",
       "question": "Jerry's sinister apartment building nemesis, Newman, works for which United States federal government agency?",
       "answer": "United States Postal Service",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -197,7 +176,6 @@
       "slug": "himym-maclarens-pub-basement-laser-tag",
       "question": "What is the name of the fictional neighborhood Irish pub located directly underneath Ted and Marshall's apartment where the gang hangs out?",
       "answer": "MacLaren's Pub",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -205,7 +183,6 @@
       "slug": "parks-and-rec-tom-haverford-entertainment-company",
       "question": "Tom Haverford and Jean-Ralphio Saperstein launch a short-lived, wildly extravagant multimedia entertainment company in Pawnee called what?",
       "answer": "Entertainment 720",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -213,7 +190,6 @@
       "slug": "scrubs-sacred-heart-hospital-city",
       "question": "The medical sitcom Scrubs takes place at the fictional Sacred Heart Hospital, which is located in which major U.S. state?",
       "answer": "California",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -221,15 +197,16 @@
       "slug": "community-greendale-mascot",
       "question": "What is the name of the deeply unsettling, featureless, gray mascot designed to represent Greendale Community College?",
       "answer": "The Greendale Human Being",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Greendale Human Being"
+      ]
     },
     {
       "slug": "that-70s-show-basement-circle",
       "question": "What is the first name of Eric Forman's formidable, hyper-strict, war-veteran father who constantly threatens to kick Eric's butt?",
       "answer": "Red",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -237,7 +214,6 @@
       "slug": "veep-selina-meyer-daughter-name",
       "question": "In the political satire Veep, what is the first name of Vice President Selina Meyer's routinely ignored and emotionally exhausted daughter?",
       "answer": "Catherine",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "hard"
     },
@@ -245,7 +221,6 @@
       "slug": "frasier-kacl-radio-station-city",
       "question": "Dr. Frasier Crane hosts his daily, call-in psychological therapeutic talk show on KACL 780 AM talk radio in which major U.S. city?",
       "answer": "Seattle",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -253,7 +228,6 @@
       "slug": "abbott-elementary-philadelphia-setting",
       "question": "The mockumentary sitcom Abbott Elementary centers on the dedicated teachers working at an underfunded public school located in which major U.S. city?",
       "answer": "Philadelphia",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -261,7 +235,6 @@
       "slug": "superstore-cloud-nine-store-number",
       "question": "The retail comedy Superstore tracks the eccentric employees working at the fictional Cloud 9 big-box store located in which Midwestern city?",
       "answer": "St. Louis",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -269,7 +242,6 @@
       "slug": "silicon-valley-compression-algorithm",
       "question": "In the tech-industry satire Silicon Valley, Richard Hendricks develops a revolutionary, record-breaking data compression platform named what?",
       "answer": "Pied Piper",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -277,7 +249,6 @@
       "slug": "hacks-deborah-vance-city",
       "question": "In the comedy-drama Hacks, legendary stand-up comic Deborah Vance fights to maintain her decades-long performance residency in which city?",
       "answer": "Las Vegas",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -285,7 +256,6 @@
       "slug": "peep-show-mark-jeremy-flat-location",
       "question": "The long-running British cult sitcom Peep Show follows the deeply awkward lives of roommates Mark and Jeremy sharing a flat in which area of London?",
       "answer": "Croydon",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -293,7 +263,6 @@
       "slug": "fleabag-hot-priest-drink",
       "question": "In Season 2 of Fleabag, the titular character bonds with the \"Hot Priest\" over canned gin and tonics from which upscale British supermarket chain?",
       "answer": "Marks & Spencer",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "hard"
     },
@@ -301,7 +270,6 @@
       "slug": "derry-girls-catholic-school-setting",
       "question": "The comedy Derry Girls follows a group of teenagers navigating high school during the end of the Troubles in the 1990s in which country?",
       "answer": "Northern Ireland",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -309,7 +277,6 @@
       "slug": "unbreakable-kimmy-schmidt-bunker-state",
       "question": "Before escaping to New York City, Kimmy Schmidt spent 15 years trapped inside a doomsday cult's underground bunker located in which U.S. state?",
       "answer": "Indiana",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -317,7 +284,6 @@
       "slug": "broad-city-abbi-ilana-workplace",
       "question": "In Broad City, Abbi Abrams works an unglamorous job cleaning up messes and folding towels at an upscale fitness fitness club named what?",
       "answer": "Soulstice",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -325,7 +291,6 @@
       "slug": "bojack-horseman-todd-chavez-voice-actor",
       "question": "Which Emmy-winning Breaking Bad actor provides the voice for BoJack Horseman's freeloading, couch-surfing human best friend Todd Chavez?",
       "answer": "Aaron Paul",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -333,7 +298,6 @@
       "slug": "the-mick-greenwich-mansion-setting",
       "question": "In the dark comedy The Mick, Kaitlin Olson's character Mackenzie is forced to move into a massive luxury mansion to raise her sister's kids in which wealthy Connecticut town?",
       "answer": "Greenwich",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -341,7 +305,6 @@
       "slug": "right-eous-gemstones-megachurch-state",
       "question": "The Righteous Gemstones follows a dysfunctional, world-famous family of televangelists running a network of megachurches based in which Southern U.S. state?",
       "answer": "South Carolina",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -349,7 +312,6 @@
       "slug": "catastrophe-rob-sharon-hometowns",
       "question": "In the sitcom Catastrophe, an accidental pregnancy forces an American businessman and an Irish schoolteacher to marry and build a life together in which city?",
       "answer": "London",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -357,7 +319,6 @@
       "slug": "insecure-issa-dee-nonprofit",
       "question": "At the start of Issa Rae's Insecure, Issa Dee works at a frustrating, out-of-touch youth non-profit organization named what?",
       "answer": "We Got Y'all",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -365,7 +326,6 @@
       "slug": "reservation-dogs-oklahoma-reservation",
       "question": "The critically acclaimed comedy-drama Reservation Dogs follows four Indigenous teenagers living on a reservation in rural parts of which U.S. state?",
       "answer": "Oklahoma",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -373,7 +333,6 @@
       "slug": "man-seeking-woman-josh-sister",
       "question": "In FXX's surreal dating comedy Man Seeking Woman, Josh Greenberg relies heavily on dating advice from his highly successful older sister. What is her first name?",
       "answer": "Liz",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "hard"
     },
@@ -381,7 +340,6 @@
       "slug": "kim-convenience-toronto-neighborhood",
       "question": "The Canadian sitcom Kim's Convenience showcases a Korean-Canadian family operating a retail grocery store in which specific historic neighborhood of Toronto?",
       "answer": "Regent Park",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "hard"
     },
@@ -389,7 +347,6 @@
       "slug": "3rd-rock-sun-high-commander-earth-name",
       "question": "What is the human name adopted by the alien High Commander of the expeditionary force in 3rd Rock from the Sun?",
       "answer": "Dick Solomon",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -397,7 +354,6 @@
       "slug": "3rd-rock-sun-oldest-alien-youngest-body",
       "question": "In 3rd Rock from the Sun, which member of the crew is actually the oldest alien in the group, despite being trapped in the body of a human teenager?",
       "answer": "Tommy",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -405,15 +361,16 @@
       "slug": "3rd-rock-sun-harry-transmission-boss",
       "question": "Harry Solomon routinely acts as the crew's communication receiver, experiencing erratic physical fits whenever he receives a transmission from their supreme cosmic boss. What is the boss's name?",
       "answer": "The Big Giant Head",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Big Giant Head"
+      ]
     },
     {
       "slug": "3rd-rock-sun-dick-love-interest-office",
       "question": "Dick Solomon shares an office at Pendelton State University with an anthropology professor who becomes his main romantic interest. What is her name?",
       "answer": "Dr. Mary Albright",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -421,7 +378,6 @@
       "slug": "two-and-a-half-men-sharp-tongued-housekeeper",
       "question": "What is the first name of Charlie's highly cynical, sharp-tongued, and fiercely independent housekeeper?",
       "answer": "Berta",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -429,7 +385,6 @@
       "slug": "modern-family-phil-dunphy-real-estate-rival",
       "question": "Phil Dunphy is a fiercely competitive real estate agent who is constantly annoyed by his smug professional rival. What is this rival's name?",
       "answer": "Gil Thorpe",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -437,7 +392,6 @@
       "slug": "modern-family-jay-pritchett-closet-company",
       "question": "What is the name of the long-standing manufacturing company founded and managed by family patriarch Jay Pritchett?",
       "answer": "Pritchett's Closets & Blinds",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -445,7 +399,6 @@
       "slug": "modern-family-manny-delgado-biological-father",
       "question": "Manny Delgado's biological father is a charming, unreliable, and smooth-talking Colombian man who occasionally drops in to disrupt the family. What is his first name?",
       "answer": "Javier",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -453,7 +406,6 @@
       "slug": "modern-family-claire-dunphy-college-boyfriend",
       "question": "Before marrying Phil, Claire Dunphy had a serious, wild college relationship with a man who later becomes a wealthy professor and returns in multiple episodes. What is his name?",
       "answer": "Professor Ronnie LaFontaine",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "hard"
     },
@@ -461,7 +413,6 @@
       "slug": "the-simpsons-homer-bar-hangout",
       "question": "What is the name of the dingy Springfield tavern where Homer Simpson routinely drinks Duff Beer with his friends?",
       "answer": "Moe's Tavern",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -469,15 +420,16 @@
       "slug": "the-simpsons-ned-flanders-left-handed-store",
       "question": "Ned Flanders quits his regular corporate job to open a specialized retail store in the Springfield Mall. What is the name of the store?",
       "answer": "The Leftorium",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Leftorium"
+      ]
     },
     {
       "slug": "the-simpsons-comic-book-guy-real-name",
       "question": "The cynical, sarcastic proprietor of The Android's Dungeon & Baseball Card Shop is universally known as Comic Book Guy, but what is his actual canonical first and last name?",
       "answer": "Jeff Albertson",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "hard"
     },
@@ -485,7 +437,6 @@
       "slug": "the-simpsons-springfield-founder-statue",
       "question": "The center of Springfield features a prominent bronze statue dedicated to the town's legendary, pirate-turned-pioneer founder. What was his name?",
       "answer": "Jebediah Springfield",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -493,7 +444,6 @@
       "slug": "family-guy-peter-griffin-quahog-brewery",
       "question": "After losing his job at the toy factory, Peter Griffin spends much of his adult professional life working at which local Quahog beverage company?",
       "answer": "Pawtucket Brewery",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -501,7 +451,6 @@
       "slug": "family-guy-brian-griffin-prized-possession-car",
       "question": "The highly intellectual family dog Brian Griffin drives a specific, eco-friendly vehicle throughout the series. What make and model is it?",
       "answer": "Toyota Prius",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -509,7 +458,6 @@
       "slug": "family-guy-news-anchors-tom-tricia",
       "question": "The local Quahog Channel 5 news broadcasts are anchored by a slick, condescending man named Tom Tucker and his intense investigative co-anchor. What is her name?",
       "answer": "Tricia Takanawa",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -517,7 +465,6 @@
       "slug": "arrested-development-gob-bluth-segway",
       "question": "George Oscar \"Gob\" Bluth routinely fails at his career as a professional magician and prefers to travel around town using what specific motorized vehicle?",
       "answer": "Segway",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -525,7 +472,6 @@
       "slug": "arrested-development-tobias-funke-hybrid-profession",
       "question": "Tobias Fünke loses his medical license and attempts to combine his skills as an analyst and a therapist into one disastrously named new profession. What is the term?",
       "answer": "Analrapist",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -533,7 +479,6 @@
       "slug": "arrested-development-lucille-bluth-private-investigator",
       "question": "Lucille Bluth hires a slick, smooth-talking private investigator played by Martin Short to spy on her family, though he operates entirely from a small motorized wheelchair. What is his name?",
       "answer": "Uncle Jack",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "hard"
     },
@@ -541,7 +486,6 @@
       "slug": "arrested-development-george-michael-fake-girlfriend",
       "question": "To prove his maturity, George Michael fabricates a completely fictional girlfriend supposedly living in Canada. What is the hilarious name he invents for her?",
       "answer": "Ann Hog",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "hard"
     },
@@ -549,7 +493,6 @@
       "slug": "always-sunny-charlie-kelly-favorite-food",
       "question": "Charlie Kelly frequently mentions his absolute favorite food, which he insists on eating raw or boiling with jellybeans. What is this food item?",
       "answer": "Milk steak",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -557,7 +500,6 @@
       "slug": "always-sunny-mac-real-first-name",
       "question": "While universally known simply as \"Mac,\" the character's deeply embarrassing full legal first name is finally revealed in Season 7. What is it?",
       "answer": "Ronald",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -565,15 +507,16 @@
       "slug": "always-sunny-dee-reynolds-college-mascot",
       "question": "Before dropping out to pursue acting, Sweet Dee attended the University of Pennsylvania where her severe stage fright caused her to violently vomit while performing as what school mascot?",
       "answer": "The Quaker",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Quaker"
+      ]
     },
     {
       "slug": "always-sunny-lethal-weapon-sequel-number",
       "question": "The gang independently produces, directs, and stars in their own highly offensive, unauthorized cinematic sequels to which classic action movie franchise?",
       "answer": "Lethal Weapon",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -581,7 +524,6 @@
       "slug": "i-love-lucy-ricky-ricardo-nightclub",
       "question": "Ricky Ricardo works as a prominent orchestra leader and entertainer at which famous fictional New York City nightclub?",
       "answer": "Tropicana",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -589,7 +531,6 @@
       "slug": "i-love-lucy-ethel-mertz-middle-name",
       "question": "While Fred Mertz's middle name is Hobart, what is his wife Ethel's middle name, which is used to mock her in a few episodes?",
       "answer": "Roberta",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "hard"
     },
@@ -597,7 +538,6 @@
       "slug": "new-girl-winston-bishop-beloved-cat",
       "question": "Winston Bishop forms an incredibly intense, borderline-unhealthy emotional bond with a pet cat he takes custody of. What is the cat's name?",
       "answer": "Ferguson",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -605,7 +545,6 @@
       "slug": "new-girl-schmidt-first-name-reveal",
       "question": "For the vast majority of the series, Schmidt is referred to solely by his last name. In Season 6, his actual first name is revealed to be the exact same first name as which other main loft roommate?",
       "answer": "Winston",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -613,15 +552,16 @@
       "slug": "new-girl-nick-miller-zombie-novel",
       "question": "Nick Miller spends years struggling to write a terribly incoherent, semi-autobiographical chronicle about a zombie zoo. What is the title of his novel?",
       "answer": "The Pepperwood Chronicles",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Pepperwood Chronicles"
+      ]
     },
     {
       "slug": "new-girl-coach-real-name-ernie",
       "question": "The athlete and personal trainer roommate universally known as \"Coach\" returns to the loft in later seasons. What is his actual canonical first name?",
       "answer": "Ernie",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "hard"
     },
@@ -629,7 +569,6 @@
       "slug": "happy-endings-max-blum-college-fraternity",
       "question": "Max Blum breaks typical TV tropes by being a messy, sports-loving, un-stereotypical gay man. At which major university did he and Dave row crew and join a fraternity?",
       "answer": "University of Illinois",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "hard"
     },
@@ -637,7 +576,6 @@
       "slug": "happy-endings-jane-williams-extreme-perfectionism",
       "question": "Jane Kerkovich-Williams is a fiercely organized, hyper-competitive corporate executive who is married to which laid-back, sweet member of the friend group?",
       "answer": "Brad Williams",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     },
@@ -645,7 +583,6 @@
       "slug": "happy-endings-alex-kerkovich-boutique-shop",
       "question": "Alex Kerkovich, who famously leaves Dave at the altar in the pilot episode, operates a quirky, under-patronized retail clothing boutique named what?",
       "answer": "Xanadu",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -653,7 +590,6 @@
       "slug": "i-love-lucy-fred-mertz-former-vaudeville",
       "question": "Before becoming the Ricardos' landlord, Fred Mertz spent his early professional life touring the country in what specific entertainment field?",
       "answer": "Vaudeville",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "medium"
     },
@@ -661,18 +597,18 @@
       "slug": "new-girl-the-douchebag-jar-fine",
       "question": "The roommates force Schmidt to physical insert paper currency into a specialized glass container whenever he makes an arrogant or pretentious remark. What is this container called?",
       "answer": "The Douchebag Jar",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Douchebag Jar"
+      ]
     },
     {
       "slug": "happy-endings-chicago-neighborhood-setting",
       "question": "The rapid-fire ensemble comedy Happy Endings tracks the lives of six best friends living and dating in which major Midwestern city?",
       "answer": "Chicago",
-      "answer_format": "write_in",
       "category": "Classic TV sitcoms",
       "difficulty": "easy"
     }
-  ],
-  "familiarity": "mainstream"
+  ]
 }

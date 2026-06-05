@@ -539,6 +539,28 @@ export default function LiveShowdownPage() {
     return () => window.clearInterval(ticker);
   }, [isGameActive]);
 
+  // When the countdown reaches zero and the game still hasn't started (because
+  // the main polling interval is slow at 15s during pre-game), switch to
+  // aggressive 1-second fetches for up to 10 seconds so lobby players see the
+  // first question within ~1 second of game start rather than up to 15 seconds.
+  useEffect(() => {
+    if (isGameActive) return;
+    if (localSecondsRemaining > 0) return;
+    if (!state?.nextSchedule) return;
+
+    void fetchState();
+    let elapsed = 0;
+    const booster = window.setInterval(() => {
+      elapsed += 1;
+      if (elapsed >= 10) {
+        window.clearInterval(booster);
+        return;
+      }
+      void fetchState();
+    }, 1000);
+    return () => window.clearInterval(booster);
+  }, [fetchState, isGameActive, localSecondsRemaining, state?.nextSchedule]);
+
   useEffect(() => {
     setAnswer("");
     setSubmitMessage("");
@@ -787,18 +809,6 @@ export default function LiveShowdownPage() {
           setSubmitMessage("Forfeited Question. No closing your browser or changing tabs during Live Trivia!");
         } else {
           setSubmittedKey(activeKey);
-          if (!nextResult.pendingClosestGuess) {
-            // Capture the input's rect now — the phase transition that follows
-            // submission unmounts the input before the animation can measure it.
-            const inputEl = document.querySelector<HTMLInputElement>(
-              'input[placeholder="Type your answer..."]'
-            );
-            const inputRect = inputEl?.getBoundingClientRect() ?? null;
-            triggerAnimation(
-              nextResult.isCorrect ? "LIVE_TRIVIA_CORRECT" : "LIVE_TRIVIA_WRONG",
-              { inputRect }
-            );
-          }
         }
       } catch (e) {
         setSubmitMessage(e instanceof Error ? e.message : "Submission failed.");
@@ -987,8 +997,20 @@ export default function LiveShowdownPage() {
     );
     if (nextCommentEvent.trigger === "scoring_streak") {
       triggerAnimation("LIVE_TRIVIA_STREAK");
+    } else if (
+      nextCommentEvent.trigger === "answer_correct" ||
+      nextCommentEvent.trigger === "answer_incorrect"
+    ) {
+      if (correctWrongFiredForKeyRef.current !== activeKey) {
+        correctWrongFiredForKeyRef.current = activeKey ?? null;
+        triggerAnimation(
+          nextCommentEvent.trigger === "answer_correct" ? "LIVE_TRIVIA_CORRECT" : "LIVE_TRIVIA_WRONG"
+        );
+      }
     }
   }, [commentEventKey, nextCommentEvent, triggerAnimation]);
+
+  const correctWrongFiredForKeyRef = useRef<string | null>(null);
 
   const prevPhaseRef = useRef<Phase | null>(null);
   useEffect(() => {
@@ -1136,6 +1158,7 @@ export default function LiveShowdownPage() {
             <h1 className="text-3xl font-black tracking-wide text-cyan-300">Live Showdown</h1>
           </div>
         </header>
+
 
         {!hasOnboarded ? (
           <>
@@ -1516,12 +1539,15 @@ export default function LiveShowdownPage() {
           </>
         ) : isSpectatingActiveBlock || joinState === "spectating_active_block" ? (
           <section className="rounded-2xl border border-sky-400/60 bg-slate-900 p-4">
+            {/* Explanation banner — tells the late joiner exactly why they can't play */}
             <div className="mb-3 rounded-xl border border-sky-400/40 bg-sky-950/40 p-3 text-center">
-              <p className="text-xs uppercase tracking-[0.14em] text-sky-300">Spectating Current Question</p>
+              <p className="text-xs uppercase tracking-[0.14em] text-sky-300">You Joined Mid-Game</p>
               <p className="mt-1 text-sm font-semibold text-sky-100/90">
-                You will automatically join the action on the next question — no penalty for this one.
+                You joined while a question was in progress, so you&apos;re spectating this one.
+                You&apos;ll be able to answer starting with the next question.
               </p>
             </div>
+
             {state.activeQuestion ? (
               <>
                 <p className="text-base font-black uppercase tracking-[0.14em] text-slate-400">
@@ -1540,24 +1566,42 @@ export default function LiveShowdownPage() {
                 <p className="mt-2 text-3xl font-extrabold tracking-tight leading-tight text-slate-300">
                   {state.activeQuestion.question}
                 </p>
-                <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-slate-800">
-                  <div className="h-full bg-sky-600 transition-all duration-700" style={{ width: `${progressPct}%` }} />
-                </div>
-                <p className="mt-1 text-2xl font-black text-sky-400/70">{state.secondsRemaining}s</p>
-                <input
-                  value=""
-                  disabled
-                  readOnly
-                  placeholder="Answer input disabled for this question"
-                  className="mt-3 w-full cursor-not-allowed rounded-xl border border-slate-700 bg-slate-800/50 px-3 py-3 text-xl font-semibold text-slate-500 opacity-50"
-                />
-                <button
-                  type="button"
-                  disabled
-                  className="tp-clean-button mt-3 w-full cursor-not-allowed rounded-xl bg-slate-700 py-3 text-2xl font-black text-slate-500 opacity-50"
-                >
-                  Submit
-                </button>
+
+                {/* Phase-aware lower section */}
+                {restWarning && state.revealedAnswer ? (
+                  /* Answer has been revealed — show it clearly */
+                  <div className="mt-4 rounded-xl border border-emerald-400/50 bg-emerald-950/40 p-4 text-center">
+                    <p className="text-xs font-black uppercase tracking-[0.14em] text-emerald-400">Answer Revealed</p>
+                    <p className="mt-2 text-3xl font-black text-emerald-200">{state.revealedAnswer}</p>
+                    <p className="mt-2 text-sm font-semibold text-emerald-300/70">
+                      Next question in {state.secondsRemaining}s
+                    </p>
+                  </div>
+                ) : (
+                  /* Answering phase — show the live countdown and locked input */
+                  <>
+                    <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-slate-800">
+                      <div className="h-full bg-sky-600 transition-all duration-700" style={{ width: `${progressPct}%` }} />
+                    </div>
+                    <p className="mt-1 text-sm font-semibold text-sky-400/70">
+                      Answer period — {state.secondsRemaining}s remaining
+                    </p>
+                    <input
+                      value=""
+                      disabled
+                      readOnly
+                      placeholder="Answer input disabled for this question"
+                      className="mt-3 w-full cursor-not-allowed rounded-xl border border-slate-700 bg-slate-800/50 px-3 py-3 text-xl font-semibold text-slate-500 opacity-50"
+                    />
+                    <button
+                      type="button"
+                      disabled
+                      className="tp-clean-button mt-3 w-full cursor-not-allowed rounded-xl bg-slate-700 py-3 text-2xl font-black text-slate-500 opacity-50"
+                    >
+                      Submit
+                    </button>
+                  </>
+                )}
               </>
             ) : (
               <p className="text-sm font-semibold text-sky-300/70">Syncing question from server…</p>

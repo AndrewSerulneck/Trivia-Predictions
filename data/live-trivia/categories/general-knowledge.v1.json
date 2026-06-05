@@ -583,7 +583,11 @@
       "answer": "China",
       "answer_format": "write_in",
       "category": "General Knowledge",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "PRC",
+        "People's Republic of China"
+      ]
     },
     {
       "slug": "what-is-the-smallest-country-in-the-world-by-land-area",

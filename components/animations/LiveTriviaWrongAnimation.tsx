@@ -1,47 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { motion, animate, useAnimationControls } from "framer-motion";
+import { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import type { GameplayAnimationProps } from "@/types/animation";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// 250ms pop-in + 5000ms hold + 300ms exit = 5550ms
+// Add 100ms buffer so onComplete fires AFTER the exit animation fully renders
+const DURATION_MS = 5550;
+const COMPLETE_DELAY_MS = DURATION_MS + 100;
 
-interface InputRect {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-}
-
-// ─── Root component ───────────────────────────────────────────────────────────
-
-export function LiveTriviaWrongAnimation({ onComplete, payload }: GameplayAnimationProps) {
+export function LiveTriviaWrongAnimation({ onComplete }: GameplayAnimationProps) {
   const cancelledRef = useRef<boolean>(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // The input is captured at trigger time (before it unmounts on phase change)
-  // and passed in via payload. null means it was unavailable, so Layer 1 is
-  // skipped gracefully.
-  const sourceRect = payload?.inputRect ?? null;
-  const [inputRect] = useState<InputRect | null>(() =>
-    sourceRect === null
-      ? null
-      : {
-          left: sourceRect.left,
-          top: sourceRect.top,
-          width: sourceRect.width,
-          height: sourceRect.height,
-        }
-  );
-
-  // ─── Mount effect: schedule onComplete ──────────────────────────────────────
   useEffect(() => {
     timerRef.current = setTimeout(() => {
-      if (!cancelledRef.current) {
-        onComplete();
-      }
-    }, 1100);
-
+      if (!cancelledRef.current) onComplete();
+    }, COMPLETE_DELAY_MS);
     return () => {
       cancelledRef.current = true;
       if (timerRef.current !== null) clearTimeout(timerRef.current);
@@ -51,174 +26,97 @@ export function LiveTriviaWrongAnimation({ onComplete, payload }: GameplayAnimat
 
   return (
     <>
-      {/* ── LAYER 1: Shake ring anchored to the input field ─────────────────── */}
-      {inputRect !== null && <ShakeRing inputRect={inputRect} />}
-
-      {/* ── LAYER 2: Full-screen rose flash ─────────────────────────────────── */}
-      <ScreenFlash />
-
-      {/* ── LAYER 3: "✗ WRONG" stamp at screen centre ───────────────────────── */}
-      <WrongStamp />
-    </>
-  );
-}
-
-// ─── Layer 1: Shake ring ──────────────────────────────────────────────────────
-
-interface ShakeRingProps {
-  inputRect: InputRect;
-}
-
-function ShakeRing({ inputRect }: ShakeRingProps) {
-  const controls = useAnimationControls();
-  const ringRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    // Phase 1 — horizontal shake (450ms)
-    const runSequence = async (): Promise<void> => {
-      await controls.start({
-        x: [0, -14, 14, -10, 10, -6, 6, -3, 3, 0],
-        transition: {
-          duration: 0.45,
-          ease: "linear",
-          times: [0, 0.08, 0.18, 0.28, 0.38, 0.48, 0.58, 0.68, 0.78, 1.0],
-        },
-      });
-
-      // Phase 2 — pulse glow (500ms) after shake settles
-      const el = ringRef.current;
-      if (el !== null) {
-        animate(
-          el,
-          {
-            boxShadow: [
-              "0px 0px 0px 0px rgba(251,113,133,0)",
-              "0px 0px 0px 10px rgba(251,113,133,0.5)",
-              "0px 0px 0px 0px rgba(251,113,133,0)",
-            ],
-          },
-          {
-            duration: 0.5,
-            ease: "easeInOut",
-          }
-        );
-      }
-    };
-
-    void runSequence();
-  // controls identity is stable; no deps needed
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return (
-    <motion.div
-      ref={ringRef}
-      animate={controls}
-      style={{
-        position: "fixed",
-        left: inputRect.left,
-        top: inputRect.top,
-        width: inputRect.width,
-        height: inputRect.height,
-        borderRadius: "0.75rem",                      // rounded-xl
-        border: "2px solid rgba(251,113,133,0.8)",    // rose-400/80
-        pointerEvents: "none",
-        willChange: "transform",
-        zIndex: 9998,
-      }}
-    />
-  );
-}
-
-// ─── Layer 2: Screen flash ────────────────────────────────────────────────────
-
-function ScreenFlash() {
-  return (
-    <motion.div
-      style={{
-        position: "fixed",
-        inset: 0,
-        backgroundColor: "rgba(244,63,94,0.20)",  // rose-500/20
-        pointerEvents: "none",
-        willChange: "opacity",
-        zIndex: 9999,
-      }}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: [0, 0.6, 0] }}
-      transition={{
-        duration: 0.6,
-        times: [0, 0.1, 1],
-        ease: "easeOut",
-      }}
-    />
-  );
-}
-
-// ─── Layer 3: "✗ WRONG" stamp ─────────────────────────────────────────────────
-
-function WrongStamp() {
-  return (
-    // Outer wrapper: full-screen centering, no opacity of its own
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        pointerEvents: "none",
-        zIndex: 10000,
-      }}
-    >
-      {/*
-        Inner pill: spring pop-in (scale 1.5→1, opacity 0→1, 220ms)
-        Hold 600ms (total 820ms / 1100ms = 0.745 of duration)
-        Exit: y −30, opacity 0, 250ms ease-in (820ms→1100ms)
-      */}
+      {/* Screen-wide red flash */}
       <motion.div
         style={{
-          backgroundColor: "rgba(244,63,94,0.25)",   // rose-500/25
-          border: "2px solid rgba(251,113,133,0.8)", // rose-400/80
-          borderRadius: "1rem",                       // rounded-2xl
-          paddingLeft: "2.5rem",
-          paddingRight: "2.5rem",
-          paddingTop: "1.25rem",
-          paddingBottom: "1.25rem",
-          color: "rgba(255,241,242,1)",               // rose-100
-          fontSize: "2.25rem",                        // text-4xl
-          fontWeight: 900,
-          textTransform: "uppercase",
-          letterSpacing: "0.14em",
-          willChange: "transform, opacity",
-          userSelect: "none",
+          position: "fixed",
+          inset: 0,
+          backgroundColor: "rgba(244,63,94,0.22)",
+          pointerEvents: "none",
+          zIndex: 9997,
         }}
-        // Keyframe map:
-        //   t=0ms    (0.000): scale 1.5, y 0,   opacity 0   — initial
-        //   t=220ms  (0.200): scale 1.0, y 0,   opacity 1   — enter complete
-        //   t=820ms  (0.745): scale 1.0, y 0,   opacity 1   — hold complete
-        //   t=1100ms (1.000): scale 1.0, y -30, opacity 0   — exit complete
-        initial={{ scale: 1.5, y: 0, opacity: 0 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0, 1, 1, 0] }}
+        transition={{
+          duration: DURATION_MS / 1000,
+          times: [0, 0.045, 0.946, 1],
+          ease: "easeOut",
+        }}
+      />
+
+      {/* Radial glow burst behind the stamp */}
+      <motion.div
+        style={{
+          position: "fixed",
+          inset: 0,
+          background:
+            "radial-gradient(ellipse 60% 40% at 50% 50%, rgba(244,63,94,0.30) 0%, transparent 70%)",
+          pointerEvents: "none",
+          zIndex: 9998,
+        }}
+        initial={{ opacity: 0, scale: 0.6 }}
         animate={{
-          scale:   [1.5, 1,   1,   1  ],
-          y:       [0,   0,   0,   -30],
-          opacity: [0,   1,   1,   0  ],
+          opacity: [0, 1, 1, 0],
+          scale:   [0.6, 1.1, 1.05, 1.2],
         }}
         transition={{
-          duration: 1.1,
-          times: [0, 0.2, 0.745, 1],
-          scale: {
-            ease: ["backOut", "linear", "linear"],
-          },
-          y: {
-            ease: ["linear", "linear", "easeIn"],
-          },
-          opacity: {
-            ease: ["easeOut", "linear", "easeIn"],
-          },
+          duration: DURATION_MS / 1000,
+          times: [0, 0.045, 0.946, 1],
+          ease: ["backOut", "linear", "easeIn"],
+        }}
+      />
+
+      {/* Centre stamp — shakes on entry */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          pointerEvents: "none",
+          zIndex: 10000,
         }}
       >
-        ✗ WRONG
-      </motion.div>
-    </div>
-  )
+        <motion.div
+          style={{
+            backgroundColor: "rgba(76,5,25,0.85)",
+            border: "3px solid rgba(251,113,133,1)",
+            borderRadius: "1.5rem",
+            paddingLeft: "3.5rem",
+            paddingRight: "3.5rem",
+            paddingTop: "1.75rem",
+            paddingBottom: "1.75rem",
+            color: "rgba(255,241,242,1)",
+            fontSize: "3rem",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: "0.14em",
+            textShadow: "0 0 32px rgba(251,113,133,0.9), 0 2px 8px rgba(0,0,0,0.6)",
+            boxShadow:
+              "0 0 60px rgba(244,63,94,0.3), inset 0 1px 0 rgba(255,255,255,0.08)",
+            whiteSpace: "nowrap",
+            userSelect: "none",
+            willChange: "transform, opacity",
+          }}
+          initial={{ scale: 2.2, opacity: 0, x: 0, y: 0 }}
+          animate={{
+            scale:   [2.2,  1,     1,      1,      1,     1,     1,    0.9],
+            opacity: [0,    1,     1,      1,      1,     1,     1,    0  ],
+            x:       [0,    0,    -18,    18,    -14,    14,    0,    0  ],
+            y:       [0,    0,     0,      0,      0,     0,     0,   -24],
+          }}
+          transition={{
+            duration: DURATION_MS / 1000,
+            // shake runs 250ms–900ms (absolute); normalised to 5550ms total
+            // t=0ms(0), 250ms(0.045), 395ms(0.071), 541ms(0.097), 661ms(0.119), 781ms(0.141), 900ms(0.162), 5550ms(1)
+            times: [0, 0.045, 0.071, 0.097, 0.119, 0.141, 0.162, 1],
+            ease: ["backOut", "linear", "linear", "linear", "linear", "linear", "easeIn"],
+          }}
+        >
+          ✗ WRONG
+        </motion.div>
+      </div>
+    </>
+  );
 }

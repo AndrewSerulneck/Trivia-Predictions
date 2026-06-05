@@ -220,6 +220,12 @@
   - Vitest, ESLint, PostCSS, TypeScript compiler.
 
 ## 12. Known Constraints and Architectural Rules
+- **Trivia source-of-truth rule:** Files under `data/live-trivia/categories/` and `data/trivia/categories/` are the canonical source of truth for trivia question content, answers, and acceptable answers.
+- **No reverse sync into local trivia JSON:** Supabase, local dev database state, production database state, or other remote sources must never overwrite or regenerate those local trivia JSON files.
+- **No historical snapshot rewrites for trivia JSON:** Do not use `git show`, `HEAD`, or any older snapshot as the input source for trivia JSON rewrite/backfill scripts unless the user explicitly asks for a history restore.
+- **Question edits belong in local JSON first:** If the user asks to add, remove, revise, or audit trivia questions or answers, the intended changes should be made in the local JSON files.
+- **Sync direction is outward from local JSON:** Import/sync workflows should push current local trivia JSON into the database and website environments, not pull database content back into local JSON.
+- **Preserve on-disk trivia JSON in scripts:** Any script that updates trivia JSON must read the current local file contents first and only make incremental requested changes.
 - **Naming rule — Live Trivia:** Always "Live Trivia" or "Live Trivia Showdown." Never "Live Showdown." Internal lib files use `liveShowdown*` naming but this must not surface in UI copy, comments, or documentation.
 - **Naming rule — Speed Trivia:** Always "Speed Trivia." Never "Anytime Blitz" (old internal name).
 - **Predictions is deprecated:** The old Predictions feature (Polymarket-backed, any-category picks) is no longer user-facing. Polymarket (`lib/polymarket.ts`) is only used as a fallback to enrich legacy pick records in `/api/picks`. Do not reactivate or expand this system. Pick'em is its functional replacement.

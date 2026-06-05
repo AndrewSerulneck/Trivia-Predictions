@@ -1,6 +1,6 @@
 import { createRequire } from "node:module";
 import { describe, expect, it, vi } from "vitest";
-import { gradeWriteInAnswerWithVariants } from "@/lib/liveShowdownGrading";
+import { gradeWriteInAnswer, gradeWriteInAnswerWithVariants } from "@/lib/liveShowdownGrading";
 
 vi.mock("server-only", () => ({}));
 
@@ -57,5 +57,20 @@ describe("live showdown acceptable answers", () => {
 
     expect(row.options).toEqual(["This", "That", "Another"]);
     expect(row.correct_answer).toBe(0);
+  });
+
+  it("rejects bare team-name subsets when the correct answer includes a required year", () => {
+    expect(gradeWriteInAnswer("Dolphins", "1972 Dolphins")).toBe(false);
+    expect(gradeWriteInAnswer("19 Dolphins", "1972 Dolphins")).toBe(false);
+  });
+
+  it("accepts year-preserving shorthand for year-specific team answers", () => {
+    expect(gradeWriteInAnswer("2016 Warriors", "2016 Golden State Warriors")).toBe(true);
+  });
+
+  it("accepts explicit year-shorthand acceptable answers", async () => {
+    await expect(
+      gradeWriteInAnswerWithVariants("72 Dolphins", "1972 Dolphins", undefined, undefined, ["72 Dolphins"])
+    ).resolves.toBe(true);
   });
 });

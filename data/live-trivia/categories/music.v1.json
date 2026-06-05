@@ -95,7 +95,10 @@
       "answer": "The Wailers",
       "answer_format": "write_in",
       "category": "Music",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Wailers"
+      ]
     },
     {
       "slug": "pink-floyd-prism-album",
@@ -103,7 +106,10 @@
       "answer": "The Dark Side of the Moon",
       "answer_format": "write_in",
       "category": "Music",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Dark Side of the Moon"
+      ]
     },
     {
       "slug": "mozart-first-name",
@@ -127,7 +133,10 @@
       "answer": "The Star-Spangled Banner",
       "answer_format": "write_in",
       "category": "Music",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Star-Spangled Banner"
+      ]
     },
     {
       "slug": "amy-winehouse-back-to-black-producer",
@@ -191,7 +200,10 @@
       "answer": "The Cloud Guitar",
       "answer_format": "write_in",
       "category": "Music",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Cloud Guitar"
+      ]
     },
     {
       "slug": "radiohead-ok-computer-year",
@@ -303,7 +315,10 @@
       "answer": "The Edge",
       "answer_format": "write_in",
       "category": "Music",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Edge"
+      ]
     },
     {
       "slug": "guns-n-roses-debut-album",
@@ -543,7 +558,10 @@
       "answer": "The Zutons",
       "answer_format": "write_in",
       "category": "Music",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Zutons"
+      ]
     },
     {
       "slug": "nirvana-nevermind-baby-name",
@@ -599,7 +617,10 @@
       "answer": "The Fame",
       "answer_format": "write_in",
       "category": "Music",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Fame"
+      ]
     },
     {
       "slug": "fleetwood-mac-the-chain-writer",
@@ -607,7 +628,10 @@
       "answer": "The Chain",
       "answer_format": "write_in",
       "category": "Music",
-      "difficulty": "hard"
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Chain"
+      ]
     },
     {
       "slug": "dr-dre-the-chronic-year",
@@ -670,15 +694,18 @@
       "question": "Hailing from Liverpool, England, this legendary 1960s rock band consisting of John, Paul, George, and Ringo became the best-selling musical act in history.",
       "answer": "The Beatles",
       "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "easy"
+      "category": "Music History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Beatles"
+      ]
     },
     {
       "slug": "music-easy-king-of-pop",
       "question": "Known worldwide as the 'King of Pop', this iconic American singer and dancer released 'Thriller', the best-selling album of all time.",
       "answer": "Michael Jackson",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Pop Music",
       "difficulty": "easy"
     },
     {
@@ -686,7 +713,7 @@
       "question": "Fronted by the legendary Freddie Mercury, this British rock band is world-famous for massive stadium anthems like 'Bohemian Rhapsody' and 'We Will Rock You'.",
       "answer": "Queen",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Rock Music",
       "difficulty": "easy"
     },
     {
@@ -694,7 +721,7 @@
       "question": "This global pop superstar shattered industry records with her massive career-spanning 'Eras Tour' and hit albums like '1989' and 'Midnights'.",
       "answer": "Taylor Swift",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Pop Music",
       "difficulty": "easy"
     },
     {
@@ -702,7 +729,7 @@
       "question": "Universally referred to as the 'King of Rock and Roll', this hip-swiveling 1950s icon culturalized music with hits like 'Hound Dog' and 'Jailhouse Rock'.",
       "answer": "Elvis Presley",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Music History",
       "difficulty": "easy"
     },
     {
@@ -710,7 +737,7 @@
       "question": "This legendary 18th-century Austrian child prodigy and classical composer wrote timeless masterpieces like 'The Marriage of Figaro' and 'Twinkle, Twinkle, Little Star'.",
       "answer": "Wolfgang Amadeus Mozart",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Classical Music",
       "difficulty": "easy"
     },
     {
@@ -718,7 +745,7 @@
       "question": "A standard modern acoustic piano features a total layout of how many black and white keys?",
       "answer": "88",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Musical Instruments",
       "difficulty": "easy"
     },
     {
@@ -726,7 +753,7 @@
       "question": "Originally rising to fame as the frontwoman of Destiny's Child, this cultural icon became a solo powerhouse known to fans worldwide as 'Queen Bey'.",
       "answer": "Beyoncé",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Pop Music",
       "difficulty": "easy"
     },
     {
@@ -734,7 +761,7 @@
       "question": "This legendary Jamaican singer-songwriter popularized reggae music globally with his band The Wailers and iconic songs like 'Three Little Birds'.",
       "answer": "Bob Marley",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Music History",
       "difficulty": "easy"
     },
     {
@@ -742,7 +769,7 @@
       "question": "How many strings are found on a standard, traditional acoustic or electric guitar?",
       "answer": "6",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Musical Instruments",
       "difficulty": "easy"
     },
     {
@@ -750,7 +777,7 @@
       "question": "This legendary British piano-playing singer-songwriter is famous for hit songs like 'Rocket Man' and his touching tribute 'Candle in the Wind'.",
       "answer": "Elton John",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Pop Music",
       "difficulty": "easy"
     },
     {
@@ -758,7 +785,7 @@
       "question": "Despite tragically losing his hearing later in life, this iconic German composer created masterpieces like his famous 'Fifth Symphony'.",
       "answer": "Ludwig van Beethoven",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Classical Music",
       "difficulty": "easy"
     },
     {
@@ -766,7 +793,7 @@
       "question": "Also known by his alter ego Slim Shady, this Detroit rapper dominated the 2000s with hits like 'Lose Yourself' and 'Without Me'.",
       "answer": "Eminem",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Hip Hop",
       "difficulty": "easy"
     },
     {
@@ -774,15 +801,18 @@
       "question": "Fronted by the energetic Mick Jagger, this legendary British rock band has been performing together for over 60 years and is famous for the hit '(I Can't Get No) Satisfaction'.",
       "answer": "The Rolling Stones",
       "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "easy"
+      "category": "Rock Music",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Rolling Stones"
+      ]
     },
     {
       "slug": "music-easy-madonna",
       "question": "An absolute icon of visual reinvention and pop culture, this singer is widely recognized as the 'Queen of Pop' with hits like 'Like a Virgin'.",
       "answer": "Madonna",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Pop Music",
       "difficulty": "easy"
     },
     {
@@ -790,7 +820,7 @@
       "question": "This Canadian rapper and singer, often called 'Champagne Papi', has dominated the modern streaming era with hits like 'God's Plan' and 'Hotline Bling'.",
       "answer": "Drake",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Hip Hop",
       "difficulty": "easy"
     },
     {
@@ -798,7 +828,7 @@
       "question": "Fronted by the late Kurt Cobain, this 1990s Seattle band brought grunge music into the mainstream with their anthem 'Smells Like Teen Spirit'.",
       "answer": "Nirvana",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Rock Music",
       "difficulty": "easy"
     },
     {
@@ -806,7 +836,7 @@
       "question": "This British powerhouse singer named her record-breaking studio albums '19', '21', '25', and '30' after the ages she was when she wrote them.",
       "answer": "Adele",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Pop Music",
       "difficulty": "easy"
     },
     {
@@ -814,7 +844,7 @@
       "question": "In August 1969, nearly half a million people gathered on a dairy farm in upstate New York for this legendary, defining rock festival of the counterculture era.",
       "answer": "Woodstock",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Music History",
       "difficulty": "easy"
     },
     {
@@ -822,7 +852,7 @@
       "question": "This Swedish pop group swept the world in the 1970s with infectious hits like 'Dancing Queen' and 'Mamma Mia'.",
       "answer": "ABBA",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Pop Music",
       "difficulty": "easy"
     },
     {
@@ -830,7 +860,7 @@
       "question": "This young alternative-pop sensation swept all four major categories at the 2020 Grammys with her debut album made alongside her brother, Finneas.",
       "answer": "Billie Eilish",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Pop Music",
       "difficulty": "easy"
     },
     {
@@ -838,7 +868,7 @@
       "question": "Known affectionately as 'The Man in Black', this deep-voiced country music icon famously performed live concerts for inmates at Folsom Prison.",
       "answer": "Johnny Cash",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Music History",
       "difficulty": "easy"
     },
     {
@@ -846,7 +876,7 @@
       "question": "This Barbadian singer and business mogul dominated the global charts with massive pop and R&B hits like 'Umbrella', 'Diamonds', and 'Work'.",
       "answer": "Rihanna",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Pop Music",
       "difficulty": "easy"
     },
     {
@@ -854,7 +884,7 @@
       "question": "Featuring the iconic guitar work of Jimmy Page and vocals of Robert Plant, this legendary hard rock band recorded the heavy masterpiece 'Stairway to Heaven'.",
       "answer": "Led Zeppelin",
       "answer_format": "write_in",
-      "category": "Music",
+      "category": "Rock Music",
       "difficulty": "easy"
     }
   ],

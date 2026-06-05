@@ -20,6 +20,14 @@
 - `lib/supabaseAdmin.ts`: Security boundary. Do not modify without explicit instruction.
 - `vercel.json`: Cron configurations. Do not alter without instruction.
 
+## Trivia Source of Truth
+- **Local trivia JSON is canonical:** Files under `data/live-trivia/categories/` and `data/trivia/categories/` are the source of truth for trivia question content.
+- **Never rebuild local trivia JSON from Supabase:** Database state must not overwrite, regenerate, or "restore" those local JSON files.
+- **Never rebuild local trivia JSON from stale git snapshots:** Do not use `git show`, `HEAD`, or other historical snapshots as the input source when editing or backfilling current trivia JSON unless the user explicitly asks for a restore from history.
+- **Question edits belong in local JSON first:** If the user asks to add, remove, rewrite, or audit questions/answers/acceptable answers, make those changes in the local JSON files.
+- **Sync direction is one-way:** Import/sync flows should push local JSON into local dev DB / Supabase / production, not pull remote DB state back into local JSON.
+- **Preserve current local file contents when scripting:** Any script that updates trivia JSON must read the current on-disk file first and only make the requested incremental changes.
+
 ## Architecture & Database Patterns
 - **Client Queries:** Use `lib/supabase.ts` via `createClient(url, anonKey)`. Subject to RLS.
 - **Server/API Queries:** Use `lib/supabaseAdmin.ts` via `createClient(url, serviceRoleKey)`. Guarded by `"server-only"`, bypasses RLS. Used for server-side mutations inside API routes.

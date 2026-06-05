@@ -367,7 +367,10 @@
       "answer": "The Moon",
       "answer_format": "write_in",
       "category": "Science",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Moon"
+      ]
     },
     {
       "slug": "noble-gas-argon-symbol",
