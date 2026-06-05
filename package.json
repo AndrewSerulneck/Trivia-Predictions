@@ -24,7 +24,8 @@
     "live-trivia:check": "node scripts/import-trivia-questions.cjs --live-dir data/live-trivia/categories --check",
     "headshots:sync": "node scripts/sync-headshots.js",
     "apisports:probe:nba": "node --env-file=.env.local scripts/probe-apisports-nba.cjs",
-    "live-showdown:seed": "node --env-file=.env.local --import tsx scripts/seedLiveShowdownPool.ts"
+    "live-showdown:seed": "node --env-file=.env.local --import tsx scripts/seedLiveShowdownPool.ts",
+    "trivia:restore-speed": "node --env-file=.env.local scripts/restore-deleted-speed-trivia.cjs"
   },
   "repository": {
     "type": "git",

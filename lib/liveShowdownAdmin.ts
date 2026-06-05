@@ -1073,7 +1073,7 @@ export async function replaceSingleSessionQuestion(
   const { data, error } = await admin
     .from("trivia_questions")
     .select("id, slug, question, category, options, correct_answer, question_pool, difficulty")
-    .in("question_pool", ["live_showdown", "anytime_blitz"])
+    .eq("question_pool", "live_showdown")
     .eq("status", "active");
 
   if (error) {

@@ -10,22 +10,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "animals-cat-vision-type",
-      "question": "What allows cats to see clearly in near-total darkness?",
-      "answer": "Tapetum lucidum",
-      "answer_format": "write_in",
-      "category": "Animals",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "animals-axolotl-habitat",
-      "question": "The axolotl, a salamander that retains its gills into adulthood, is native to only one country. Which one?",
-      "answer": "Mexico",
-      "answer_format": "write_in",
-      "category": "Animals",
-      "difficulty": "medium"
-    },
-    {
       "slug": "animals-sperm-whale-brain-size",
       "question": "Which animal has the largest brain of any living species?",
       "answer": "Sperm Whale",
@@ -48,14 +32,6 @@
       "answer_format": "write_in",
       "category": "Animals",
       "difficulty": "easy"
-    },
-    {
-      "slug": "animals-largest-invertebrate",
-      "question": "Which elusive deep-sea creature is the largest known invertebrate on Earth?",
-      "answer": "Colossal Squid",
-      "answer_format": "write_in",
-      "category": "Animals",
-      "difficulty": "medium"
     },
     {
       "slug": "animals-peregrine-falcon-nictitating-membrane",
@@ -389,14 +365,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "which-american-zoologist-and-conservationist-was-known-for-her-groundbreaking-study-of-mountain-gorillas-in-rwanda-and-was-tragically-murdered-there",
-      "question": "Which American zoologist and conservationist was known for her groundbreaking study of mountain gorillas in Rwanda, and was tragically murdered there?",
-      "answer": "Dian Fossey",
-      "answer_format": "write_in",
-      "category": "Animals",
-      "difficulty": "medium"
-    },
-    {
       "slug": "what-is-the-scientific-name-for-the-atlantic-cod-a-commercially-important-fish-species",
       "question": "What is the scientific name for the Atlantic cod, a commercially important fish species?",
       "answer": "Gadus morhua",
@@ -608,14 +576,6 @@
       "slug": "what-is-the-scientific-name-for-the-common-earthworm",
       "question": "What is the scientific name for the common earthworm?",
       "answer": "Lumbricus terrestris",
-      "answer_format": "write_in",
-      "category": "Animals",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "what-is-the-specific-term-for-the-specialized-cells-in-cnidarians-such-as-jellyfish-and-sea-anemones-that-contain-stinging-organelles",
-      "question": "What is the specific term for the specialized cells in cnidarians, such as jellyfish and sea anemones, that contain stinging organelles?",
-      "answer": "Cnidocytes",
       "answer_format": "write_in",
       "category": "Animals",
       "difficulty": "hard"
