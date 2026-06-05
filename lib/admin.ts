@@ -3420,6 +3420,8 @@ export async function deleteAdminLiveTriviaQuestionInFile(slug: string): Promise
       questionType: "live",
       identifier: normalizedSlug,
     });
+    // Also remove from the local JSON file so re-imports don't resurrect it.
+    deleteLiveTriviaQuestionFileBySlug(normalizedSlug);
     return;
   } catch (error) {
     logAdminTriviaBankError({

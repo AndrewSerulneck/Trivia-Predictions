@@ -2149,9 +2149,27 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
     ((hasStartedGame && !existingEntryForSelectedGame) || Boolean(existingEntryForSelectedGame) || (canEditExistingEntryLineup && isEditingRoster));
   const isSubmittedRosterView = (Boolean(existingEntryForSelectedGame) || justSubmittedRoster) && !isEditingRoster;
   const canModifyRosterSelections = !isSubmittedRosterView;
+  const selectedPlayerCount = selectedPlayers.length;
+  const isLineupComplete = selectedPlayers.length === requiredLineupSize;
+  const remainingLineupSlots = Math.max(0, requiredLineupSize - selectedPlayerCount);
+  const showFloatingRosterCta =
+    isFantasyLineupSport &&
+    Boolean(selectedGameId) &&
+    !isPastSelectedDate &&
+    canModifyRosterSelections &&
+    selectedPlayerCount > 0;
+  const floatingRosterCtaLabel = isLineupComplete
+    ? `${existingEntryForSelectedGame ? "Update" : "Submit"} Roster!`
+    : `Draft ${remainingLineupSlots} player${remainingLineupSlots === 1 ? "" : "s"}!`;
+  const fantasyBottomPadding = showFloatingRosterCta
+    ? "calc(7rem + env(safe-area-inset-bottom, 0px))"
+    : "max(env(safe-area-inset-bottom, 0px), 2rem)";
 
   return (
-    <div className="tp-fantasy-compact min-h-[100dvh] touch-pan-y bg-[#020617] pb-28 text-[#f8fafc]">
+    <div
+      className="tp-fantasy-compact min-h-[100dvh] touch-pan-y bg-[#020617] text-[#f8fafc]"
+      style={{ paddingBottom: fantasyBottomPadding }}
+    >
       {/* Stat flash toasts */}
       <div className="pointer-events-none fixed left-1/2 top-[5.25rem] z-[2200] -translate-x-1/2 space-y-2">
         <AnimatePresence initial={false}>
@@ -2890,7 +2908,8 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
             }
             exit={{ opacity: 0, scale: 0.98, y: -4 }}
             transition={{ duration: submissionAnimationComplete ? 0.65 : 0.3, ease: "easeOut" }}
-            className="fixed bottom-24 left-1/2 z-[2400] w-[min(92vw,28rem)] -translate-x-1/2 rounded-xl border border-emerald-400/60 bg-emerald-500/20 px-3 py-3 shadow-[0_14px_32px_rgba(16,185,129,0.35)]"
+            className="fixed left-1/2 z-[2400] w-[min(92vw,28rem)] -translate-x-1/2 rounded-xl border border-emerald-400/60 bg-emerald-500/20 px-3 py-3 shadow-[0_14px_32px_rgba(16,185,129,0.35)]"
+            style={{ bottom: "calc(6.75rem + env(safe-area-inset-bottom, 0px))" }}
             role="status"
             aria-live="polite"
           >
@@ -2912,31 +2931,47 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
       </AnimatePresence>
 
       {/* ── Sticky Submit Button ── */}
-      {showLineupBuilder && canModifyRosterSelections ? (
-        <div className="fixed inset-x-0 bottom-0 z-50 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent px-4 pb-6 pt-3">
-          <button
-            type="button"
-            onClick={() => void handleSubmitRoster()}
-            disabled={submitting || selectedPlayers.length !== requiredLineupSize}
-            className={`flex w-full items-center justify-center gap-2.5 rounded-[14px] py-4 text-base font-black uppercase tracking-[0.04em] transition-all active:scale-[0.98] disabled:opacity-50 ${
-              selectedPlayers.length === requiredLineupSize && !submitting
-                ? "bg-[#8b5cf6] text-white shadow-[0_8px_24px_rgba(139,92,246,0.35)]"
-                : "bg-slate-800 text-slate-400"
-            }`}
-          >
-            {submitting ? (
-              "Saving…"
-            ) : (
-              <>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M5 12l5 5L20 7" />
-                </svg>
-                {`${existingEntryForSelectedGame ? "Update lineup" : "Submit lineup"} · ${selectedPlayers.length}/${requiredLineupSize}`}
-              </>
-            )}
-          </button>
-        </div>
-      ) : null}
+      {isMounted && showFloatingRosterCta
+        ? createPortal(
+            <div
+              data-fantasy-submit-cta
+              className="pointer-events-none bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent px-4 pt-3"
+              style={{
+                position: "fixed",
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 1000,
+                paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1.5rem)",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => void handleSubmitRoster()}
+                disabled={submitting || !isLineupComplete}
+                className={`pointer-events-auto flex w-full items-center justify-center gap-2.5 rounded-[14px] py-4 text-base font-black uppercase tracking-[0.04em] transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-65 ${
+                  isLineupComplete && !submitting
+                    ? "bg-[#8b5cf6] text-white shadow-[0_8px_24px_rgba(139,92,246,0.35)]"
+                    : "bg-slate-800 text-slate-400"
+                }`}
+              >
+                {submitting ? (
+                  "Saving..."
+                ) : (
+                  <>
+                    {isLineupComplete ? (
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M5 12l5 5L20 7" />
+                      </svg>
+                    ) : null}
+                    {floatingRosterCtaLabel}
+                  </>
+                )}
+              </button>
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   );
 }

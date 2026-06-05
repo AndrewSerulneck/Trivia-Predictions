@@ -1,12 +1,39 @@
 import "server-only";
 
-import { readFileSync, readdirSync } from "fs";
+import { readFileSync, readdirSync, writeFileSync } from "fs";
 import { join } from "path";
 
 import { djb2, getLiveShowdownState } from "@/lib/liveShowdownEngine";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const QUESTIONS_PER_ROUND = 15;
+
+function removeLiveTriviaQuestionFromJson(slug: string): void {
+  const dir = join(process.cwd(), "data", "live-trivia", "categories");
+  let files: string[];
+  try {
+    files = readdirSync(dir).filter((f) => f.endsWith(".json"));
+  } catch {
+    return;
+  }
+  for (const file of files) {
+    const filePath = join(dir, file);
+    try {
+      const raw = JSON.parse(readFileSync(filePath, "utf-8")) as {
+        categoryName?: string;
+        questions: Array<{ slug?: string }>;
+      };
+      const before = raw.questions.length;
+      raw.questions = raw.questions.filter((q) => String(q.slug ?? "").trim() !== slug);
+      if (raw.questions.length !== before) {
+        writeFileSync(filePath, JSON.stringify(raw, null, 2), "utf-8");
+        return;
+      }
+    } catch {
+      // skip unreadable files
+    }
+  }
+}
 const QUESTION_BLOCK_MS = 60_000;
 const ROUND_MS = 20 * 60_000;
 const BLOCKED_LIVE_SHOWDOWN_CATEGORIES = new Set(["fantasy epics"]);
@@ -123,6 +150,7 @@ export async function replaceSessionQuestion(
     .from("trivia_questions")
     .select("slug")
     .eq("status", "active")
+    .eq("question_pool", "live_showdown")
     .neq("slug", safeExcludeSlug)
     .not("slug", "is", null)
     .order("slug", { ascending: true })
@@ -1103,6 +1131,9 @@ export async function replaceSingleSessionQuestion(
     throw new Error(deleteError.message || "Failed to mark the replaced question as deleted.");
   }
 
+  // Also remove from local JSON so re-imports don't resurrect it.
+  removeLiveTriviaQuestionFromJson(safeExclude);
+
   return {
     id: "",
     scheduleId,
@@ -1262,6 +1293,28 @@ export async function replaceRoundQuestionsWithCategory(
     }
 
     const importable = eligible.filter((q) => !deletedSlugs.has(String(q.slug ?? "").trim()));
+
+    // Mark DB-active questions for this category that no longer exist in the JSON as deleted.
+    // This handles the case where a question was manually removed from the JSON file.
+    const jsonSlugSet = new Set(
+      (fileQuestions ?? []).map((q) => String(q.slug ?? "").trim()).filter(Boolean)
+    );
+    const { data: dbActiveRows } = await admin
+      .from("trivia_questions")
+      .select("slug")
+      .eq("question_pool", "live_showdown")
+      .eq("status", "active")
+      .eq("category", targetCategory);
+    const slugsRemovedFromJson = ((dbActiveRows ?? []) as Array<{ slug: string | null }>)
+      .map((r) => String(r.slug ?? "").trim())
+      .filter((s) => s && !jsonSlugSet.has(s));
+    if (slugsRemovedFromJson.length > 0) {
+      await admin
+        .from("trivia_questions")
+        .update({ status: "deleted" })
+        .in("slug", slugsRemovedFromJson);
+    }
+
     if (importable.length < QUESTIONS_PER_ROUND) {
       throw new Error(
         `Category "${targetCategory}" only has ${importable.length} eligible non-deleted file-based questions; ${QUESTIONS_PER_ROUND} are required to fill a round.`

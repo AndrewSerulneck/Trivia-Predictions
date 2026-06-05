@@ -1083,6 +1083,7 @@ export async function seedOccurrenceQuestions(
     .from("trivia_questions")
     .select("slug")
     .eq("status", "active")
+    .eq("question_pool", "live_showdown")
     .not("slug", "is", null)
     .order("slug", { ascending: true })
     .limit(5000);

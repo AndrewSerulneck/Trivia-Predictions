@@ -207,13 +207,6 @@
       ]
     },
     {
-      "slug": "last-words-person-steve-jobs",
-      "question": "What co-founder of Apple stared past his family members in 2011 and repeatedly gasped his monosyllabic final words: \"Oh wow. Oh wow. Oh wow\"?",
-      "answer": "Steve Jobs",
-      "category": "Famous Last Words",
-      "difficulty": "easy"
-    },
-    {
       "slug": "last-words-book-frankenstein",
       "question": "Mary Shelley's Gothic masterpiece concludes with a tortured creature traveling north across the ice fields, where he is ultimately \"lost in darkness and distance\" at the end of which novel?",
       "answer": "Frankenstein",
@@ -321,13 +314,6 @@
       "difficulty": "hard"
     },
     {
-      "slug": "last-words-person-jane-austen",
-      "question": "When asked by her sister Cassandra if she required anything to make her comfortable on her deathbed in 1817, what brilliant English novelist simply replied, \"I want nothing but death\"?",
-      "answer": "Jane Austen",
-      "category": "Famous Last Words",
-      "difficulty": "hard"
-    },
-    {
       "slug": "last-words-song-hotel-california",
       "question": "Which 1976 Eagles masterpiece finishes its long narrative with the eerie warning, \"You can check out any time you like, but you can never leave!\" followed by an extended dual-guitar solo?",
       "answer": "Hotel California",
@@ -340,16 +326,6 @@
       "answer": "Sunset Boulevard",
       "category": "Famous Last Words",
       "difficulty": "easy"
-    },
-    {
-      "slug": "last-words-play-the-crucible",
-      "question": "John Proctor is led away to the gallows after refusing to sign a false confession, while his wife Elizabeth tearfully refuses to stop him, crying, \"He have his goodness now. God forbid I take it from him!\" to end which Arthur Miller play?",
-      "answer": "The Crucible",
-      "category": "Famous Last Words",
-      "difficulty": "medium",
-      "acceptableAnswers": [
-        "Crucible"
-      ]
     },
     {
       "slug": "last-words-person-george-washington",
@@ -449,13 +425,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "last-words-film-se7en",
-      "question": "Morgan Freeman delivers a weary voiceover quoting Ernest Hemingway: \"'The world is a fine place and worth fighting for.' I agree with the second part\" to end which gritty thriller?",
-      "answer": "Se7en",
-      "category": "Famous Last Words",
-      "difficulty": "medium"
-    },
-    {
       "slug": "last-words-person-sir-arthur-conan-doyle",
       "question": "What literary creator of Sherlock Holmes passed away in his garden in 1930, using his absolute final words to look at his wife and whisper, \"You are wonderful\"?",
       "answer": "Arthur Conan Doyle",
@@ -513,13 +482,6 @@
       "answer": "James Brown",
       "category": "Famous Last Words",
       "difficulty": "medium"
-    },
-    {
-      "slug": "last-words-song-yesterday",
-      "question": "Which short, melancholic 1965 Beatles acoustic guitar track famously concludes with Paul McCartney humming a soft, wordless vocal refrain alongside a lone acoustic string quartet?",
-      "answer": "Yesterday",
-      "category": "Famous Last Words",
-      "difficulty": "easy"
     },
     {
       "slug": "last-words-film-american-psycho",
@@ -606,13 +568,6 @@
       ]
     },
     {
-      "slug": "last-words-person-frank-gautier-matthew-hopkins",
-      "question": "What 1920s Chicago gangster, right before being shot down in a phone booth, allegedly gave the hardboiled final warning, \"They can't shoot a guy while he's making a call\"?",
-      "answer": "Frank Miller",
-      "category": "Famous Last Words",
-      "difficulty": "hard"
-    },
-    {
       "slug": "last-words-film-avengers-infinity-war",
       "question": "What massive superhero crossover film ends with total silence as a victorious cosmic villain sits entirely alone on a porch, smiling as he watches the sunset?",
       "answer": "Avengers: Infinity War",
@@ -686,32 +641,11 @@
       "difficulty": "medium"
     },
     {
-      "slug": "last-words-film-whiplash",
-      "question": "What intense 2014 musical drama ends on a tight, ecstatic close-up of Miles Teller delivering a ferocious drum solo, locking eyes with a smiling J.K. Simmons?",
-      "answer": "Whiplash",
-      "category": "Famous Last Words",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "last-words-book-les-miserables",
-      "question": "What massive Victor Hugo masterpiece concludes its epic story with a poetic stanza describing Jean Valjean's simple grave, ending with the line, \"The night comes on, the day goes by\"?",
-      "answer": "Les Misérables",
-      "category": "Famous Last Words",
-      "difficulty": "medium"
-    },
-    {
       "slug": "last-words-person-bob-hope",
       "question": "When his wife Dolores tenderly asked him where he wanted to be buried when his time came, what legendary American comedian quipped his final words: \"Surprise me\"?",
       "answer": "Bob Hope",
       "category": "Famous Last Words",
       "difficulty": "medium"
-    },
-    {
-      "slug": "last-words-song-comfortably-numb",
-      "question": "Which iconic 1979 Pink Floyd track concludes with David Gilmour executing a legendary, multi-minute, emotionally soaring electric guitar solo that fades out into blackness?",
-      "answer": "Comfortably Numb",
-      "category": "Famous Last Words",
-      "difficulty": "easy"
     },
     {
       "slug": "last-words-film-psycho-american-beauty",
@@ -793,13 +727,6 @@
       "difficulty": "hard"
     },
     {
-      "slug": "last-words-person-malcolm-x",
-      "question": "What civil rights icon desperately attempted to calm a staged disturbance in the Audubon Ballroom crowd in 1965, uttering his final words, \"Let's cool it, brothers,\" seconds before being assassinated?",
-      "answer": "Malcolm X",
-      "category": "Famous Last Words",
-      "difficulty": "easy"
-    },
-    {
       "slug": "last-words-film-the-good-the-bad-and-the-ugly",
       "question": "Clint Eastwood gallops away into the desert while Eli Wallach stands balancing atop a wooden cross with a rope around his neck, screaming a furious profanity to close out which legendary Spaghetti Western?",
       "answer": "The Good, the Bad and the Ugly",
@@ -822,13 +749,6 @@
       "answer": "Che Guevara",
       "category": "Famous Last Words",
       "difficulty": "easy"
-    },
-    {
-      "slug": "last-words-play-pygmalion",
-      "question": "Professor Henry Higgins bursts into a hearty, arrogant laugh after Eliza Doolittle defiantly walks out of his life forever to marry Freddy Eynsford-Hill at the conclusion of which George Bernard Shaw stage play?",
-      "answer": "Pygmalion",
-      "category": "Famous Last Words",
-      "difficulty": "medium"
     },
     {
       "slug": "last-words-film-seven-samurai",
@@ -866,13 +786,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "last-words-person-richard-feynman",
-      "question": "What brilliant, eccentric theoretical physicist looked at his family from his hospital bed in 1988 and dryly joked his ultimate final words, \"I'd hate to die twice. It's so boring\"?",
-      "answer": "Richard Feynman",
-      "category": "Famous Last Words",
-      "difficulty": "hard"
-    },
-    {
       "slug": "last-words-film-la-la-land",
       "question": "Ryan Gosling sits behind a jazz club piano and exchanges a bittersweet, silent nod of mutual understanding with Emma Stone right before she exits the venue to conclude which 2016 musical romance?",
       "answer": "La La Land",
@@ -885,13 +798,6 @@
       "answer": "Heart of Darkness",
       "category": "Famous Last Words",
       "difficulty": "medium"
-    },
-    {
-      "slug": "last-words-person-jane-wyman",
-      "question": "What legendary Hollywood actress and first wife of Ronald Reagan passed away in 2007, leaving a handwritten message to be read after her death that stated, \"The world has lost a wonderful, gentle man\"?",
-      "answer": "Jane Wyman",
-      "category": "Famous Last Words",
-      "difficulty": "hard"
     },
     {
       "slug": "last-words-song-heroes",
