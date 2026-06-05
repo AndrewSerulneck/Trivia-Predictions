@@ -1075,11 +1075,11 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
     if (selectedDate < serverTodayDate) {
       return false;
     }
-    if (existingEntryForSelectedGame.status === "canceled" || existingEntryForSelectedGame.status === "final") {
+    if (existingEntryForSelectedGame.status !== "pending") {
       return false;
     }
-    return !existingEntryForSelectedGame.lineup.some((playerName) => !playerPoolKeys.has(normalizePlayerKey(playerName)));
-  }, [existingEntryForSelectedGame, playerPoolKeys, selectedDate, serverTodayDate]);
+    return true;
+  }, [existingEntryForSelectedGame, selectedDate, serverTodayDate]);
 
   // Persist in-progress draft to localStorage on every selection change
   useEffect(() => {
@@ -1883,6 +1883,13 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
     }
   }, [existingEntryForSelectedGame, persistLineup, selectedPlayers]);
 
+  const startEditingRoster = useCallback(() => {
+    setJustSubmittedRoster(false);
+    setIsEditingRoster(true);
+    setStatusMessage("");
+    setErrorMessage("");
+  }, []);
+
   const claimReward = useCallback(
     async (entry: FantasyEntry, sourceRect?: DOMRect) => {
       if (!userId || !entry.id || claimingEntryId) {
@@ -2560,6 +2567,15 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
                   );
                 })}
               </div>
+              {existingEntryForSelectedGame && canEditExistingEntryLineup && !isEditingRoster ? (
+                <button
+                  type="button"
+                  onClick={startEditingRoster}
+                  className="mt-2.5 flex min-h-[44px] w-full items-center justify-center rounded-[12px] border border-[#fde68a]/50 bg-[#fde68a]/15 text-[12.5px] font-black uppercase tracking-[0.08em] text-[#fde68a] active:scale-[0.98]"
+                >
+                  Edit Roster
+                </button>
+              ) : null}
             </div>
 
             {/* Venue leaderboard */}
@@ -2622,16 +2638,6 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
                 <p className="text-[11px] font-semibold text-[#6ee7b7]">Live · Streaming updates</p>
               </div>
-            ) : null}
-
-            {existingEntryForSelectedGame && canEditExistingEntryLineup ? (
-              <button
-                type="button"
-                onClick={() => { setJustSubmittedRoster(false); setIsEditingRoster(true); }}
-                className="text-[11px] font-bold text-[#fde68a] underline"
-              >
-                Edit roster before tipoff →
-              </button>
             ) : null}
 
             {isFantasyLineupSport && finalUnclaimedEntries.length > 1 ? (
@@ -2712,7 +2718,7 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
                       {isSubmittedRosterView && canEditExistingEntryLineup ? (
                         <button
                           type="button"
-                          onClick={() => { setJustSubmittedRoster(false); setIsEditingRoster(true); }}
+                          onClick={startEditingRoster}
                           className="text-[10px] font-bold text-[#fde68a] underline"
                         >
                           Edit
@@ -2751,6 +2757,15 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
                         );
                       })}
                     </div>
+                    {isSubmittedRosterView && canEditExistingEntryLineup ? (
+                      <button
+                        type="button"
+                        onClick={startEditingRoster}
+                        className="mt-2.5 flex min-h-[42px] w-full items-center justify-center rounded-[12px] border border-[#fde68a]/50 bg-[#fde68a]/15 text-[12px] font-black uppercase tracking-[0.08em] text-[#fde68a] active:scale-[0.98]"
+                      >
+                        Edit Roster
+                      </button>
+                    ) : null}
                     {!canModifyRosterSelections ? (
                       <p className="mt-2.5 text-[10.5px] text-[#fef3c7]/55">
                         {canEditExistingEntryLineup
