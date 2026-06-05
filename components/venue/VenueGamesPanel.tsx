@@ -4,7 +4,6 @@ import React from "react";
 import type { VenueGameCardConfig, VenueGameKey } from "@/lib/venueGameCards";
 import {
   formatBadgeCount,
-  formatCountdown,
   GAME_TITLE_LINES_BY_KEY,
   VENUE_HUB_TILE_GRADIENT_BY_KEY,
   VENUE_HUB_TILE_SUBTITLE_BY_KEY,
@@ -24,8 +23,6 @@ type VenueGamesPanelProps = {
   pendingDestination: VenueGameKey | null;
   orderedHomeCards: VenueGameCardConfig[];
   visibleBadgeByGame: Map<VenueGameKey, string>;
-  triviaUnlockCountdown: number;
-  triviaGateNotice: string;
   badgeError: string;
   onTriggerPulse: () => void;
   onGoTo: (dest: VenueGameKey, sourceElement: HTMLElement | null) => void;
@@ -44,8 +41,6 @@ function VenueGamesPanelInner({
   pendingDestination,
   orderedHomeCards,
   visibleBadgeByGame,
-  triviaUnlockCountdown,
-  triviaGateNotice,
   badgeError,
   onTriggerPulse,
   onGoTo,
@@ -156,16 +151,6 @@ function VenueGamesPanelInner({
           </div>
         </div>
 
-        {triviaUnlockCountdown > 0 ? (
-          <div className="mx-auto mt-3 max-w-[24rem] rounded-full border border-amber-400/40 bg-amber-950/30 px-3 py-1.5 text-center text-[11px] font-black tracking-[0.08em] text-amber-200">
-            Trivia unlocks in {formatCountdown(triviaUnlockCountdown)}
-          </div>
-        ) : null}
-        {triviaGateNotice ? (
-          <div className="mx-auto mt-2 max-w-[24rem] rounded-xl border border-rose-400/60 bg-rose-950/30 px-3 py-2 text-center text-xs font-semibold text-rose-200">
-            {triviaGateNotice}
-          </div>
-        ) : null}
         {badgeError ? (
           <button
             type="button"

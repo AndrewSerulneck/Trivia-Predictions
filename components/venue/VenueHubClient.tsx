@@ -31,7 +31,6 @@ import { VenueChallengesPanel } from "@/components/venue/VenueChallengesPanel";
 import { VenueLeaderboardPanel } from "@/components/venue/VenueLeaderboardPanel";
 import {
   formatBadgeCount,
-  formatCountdown,
   type ChallengeCampaignCard,
   type HomeScreenIndex,
   type LiveTriviaStatus,
@@ -123,7 +122,6 @@ const BADGE_FETCH_TIMEOUT_MS = 3500;
 const ARRIVAL_CORE_MAX_WAIT_MS = 1800;
 const ARRIVAL_WATCHDOG_TIMEOUT_MS = 8000;
 const ARRIVAL_RECOVERY_ATTEMPT_KEY = "tp:venue-arrival-recovery-attempt";
-const BOOTSTRAP_QUOTA_FRESH_MS = 30_000;
 // Enable with ?tpDebug=1 in the URL — off by default so polling logs don't
 // fire in dev and saturate the console / log-forwarding overhead.
 const SHOULD_DEBUG_LIVE_TRIVIA =
@@ -287,17 +285,6 @@ function isPasskeyUserCancel(error: unknown): boolean {
   return false;
 }
 
-function hasFreshBootstrapTriviaQuota(snapshot: VenueHomeBootstrapSnapshot | null): boolean {
-  if (!snapshot?.triviaQuota) {
-    return false;
-  }
-  const fetchedAt = Number(snapshot.fetchedAt ?? 0);
-  if (!Number.isFinite(fetchedAt) || fetchedAt <= 0) {
-    return false;
-  }
-  return Date.now() - fetchedAt <= BOOTSTRAP_QUOTA_FRESH_MS;
-}
-
 const venueDebugEnabled =
   process.env.NODE_ENV === "development" &&
   typeof window !== "undefined" &&
@@ -331,9 +318,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   // All state below is initialized to server-safe "no bootstrap" defaults.
   // The useEffect at the top of the effect list reads sessionStorage and corrects
   // these values on the client immediately after mount.
-  const [triviaQuota, setTriviaQuota] = useState<TriviaQuotaSnapshot | null>(null);
-  const [triviaUnlockSeconds, setTriviaUnlockSeconds] = useState(0);
-  const [triviaGateNotice, setTriviaGateNotice] = useState("");
   const [homeBadgeCounts, setHomeBadgeCounts] = useState<HomeBadgeCounts>({});
   const [dismissedBadgeGames, setDismissedBadgeGames] = useState<Set<VenueGameKey>>(new Set());
   const [challengeCards, setChallengeCards] = useState<ChallengeCampaignCard[]>([]);
@@ -442,10 +426,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     entryHandoffRef.current = handoff;
 
     if (snapshot) {
-      setTriviaQuota(snapshot.triviaQuota ?? null);
-      const quota = snapshot.triviaQuota ?? null;
-      const isLocked = Boolean(quota && !quota.isAdminBypass && quota.questionsRemaining <= 0);
-      setTriviaUnlockSeconds(isLocked ? Math.max(0, Math.floor(quota?.windowSecondsRemaining ?? 0)) : 0);
       // Ignore cached badge snapshots so stale red bubbles never appear.
       // Badges are populated only from fresh unclaimed-points fetches.
       setHomeBadgeCounts({});
@@ -634,28 +614,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     return () => {
       window.removeEventListener("resize", onResize);
     };
-  }, []);
-
-  const loadTriviaQuota = useCallback(async (): Promise<TriviaQuotaSnapshot | null> => {
-    const userId = (getUserId() ?? "").trim();
-    if (!userId) {
-      setTriviaQuota(null);
-      setTriviaUnlockSeconds(0);
-      return null;
-    }
-    try {
-      const payload = await fetchJsonWithTimeout<{ ok?: boolean; quota?: TriviaQuotaSnapshot | null }>(
-        `/api/trivia/quota?userId=${encodeURIComponent(userId)}`
-      );
-      if (!payload?.ok) return null;
-      const nextQuota = payload.quota ?? null;
-      setTriviaQuota(nextQuota);
-      const isLocked = Boolean(nextQuota && !nextQuota.isAdminBypass && nextQuota.questionsRemaining <= 0);
-      setTriviaUnlockSeconds(isLocked ? Math.max(0, Math.floor(nextQuota?.windowSecondsRemaining ?? 0)) : 0);
-      return nextQuota;
-    } catch {
-      return null;
-    }
   }, []);
 
   const verifyActiveVenueSession = useCallback(async (): Promise<boolean> => {
@@ -1049,9 +1007,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         ]);
         if (quotaBody?.ok) {
           warmedTriviaQuota = quotaBody.quota ?? null;
-          setTriviaQuota(warmedTriviaQuota);
-          const isLocked = Boolean(warmedTriviaQuota && !warmedTriviaQuota.isAdminBypass && warmedTriviaQuota.questionsRemaining <= 0);
-          setTriviaUnlockSeconds(isLocked ? Math.max(0, Math.floor(warmedTriviaQuota?.windowSecondsRemaining ?? 0)) : 0);
         }
         if (body?.ok && Array.isArray(body.questions)) {
           try {
@@ -1096,8 +1051,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       setArrivalProgress(42);
       setArrivalStatusText("Loading your venue dashboard...");
       const bootstrapSnapshot = bootstrapSnapshotRef.current;
-      const hasFreshBootstrapQuota = hasFreshBootstrapTriviaQuota(bootstrapSnapshot);
-      if (!bootstrapSnapshot || !hasFreshBootstrapQuota) {
+      if (!bootstrapSnapshot) {
         // Validate credentials from local storage/cookie only — no blocking network call.
         // A network timeout returning null was being treated as "invalid session" and
         // wiping auth for users who had a perfectly valid cookie.
@@ -1119,9 +1073,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           return;
         }
         const coreLoadTasks: Array<Promise<unknown>> = [loadHomeBadges()];
-        if (!hasFreshBootstrapQuota) {
-          coreLoadTasks.push(loadTriviaQuota());
-        }
         const coreLoadPromise = Promise.allSettled(coreLoadTasks);
         await Promise.race([coreLoadPromise, wait(ARRIVAL_CORE_MAX_WAIT_MS)]);
         void coreLoadPromise.catch(() => {});
@@ -1158,7 +1109,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     return () => {
       cancelled = true;
     };
-  }, [arrivalInProgress, hasUserTokenInCookie, loadHomeBadges, loadTriviaQuota, router, runWarmup, venue.id]);
+  }, [arrivalInProgress, hasUserTokenInCookie, loadHomeBadges, router, runWarmup, venue.id]);
 
   useEffect(() => {
     if (!arrivalInProgress) {
@@ -1218,28 +1169,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       window.clearTimeout(revealTimer);
     };
   }, [arrivalCoreReady, arrivalInProgress, arrivalOverlayCleared]);
-
-  useEffect(() => {
-    if (triviaUnlockSeconds <= 0) return;
-    const timer = window.setTimeout(() => setTriviaUnlockSeconds((value) => Math.max(0, value - 1)), 1000);
-    return () => window.clearTimeout(timer);
-  }, [triviaUnlockSeconds]);
-
-  useEffect(() => {
-    const userId = (getUserId() ?? "").trim();
-    if (!userId) return;
-    const snapshot = bootstrapSnapshotRef.current;
-    if (hasFreshBootstrapTriviaQuota(snapshot)) {
-      return;
-    }
-    void loadTriviaQuota();
-  }, [loadTriviaQuota]);
-
-  useEffect(() => {
-    if (!triviaGateNotice) return;
-    const timer = window.setTimeout(() => setTriviaGateNotice(""), 3500);
-    return () => window.clearTimeout(timer);
-  }, [triviaGateNotice]);
 
   useEffect(() => {
     const userId = (getUserId() ?? "").trim();
@@ -1343,26 +1272,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       const targetPath =
         dest === "live_trivia" ? `${destination.path}?venueId=${encodeURIComponent(venue.id)}` : destination.path;
       triggerPulse();
-      if (dest === "speed-trivia") {
-        // Only block navigation when trivia is already known to be locked.
-        // If quota is null (not yet loaded), navigate immediately — the trivia page
-        // enforces limits itself. Awaiting a network call here caused the UI to freeze
-        // for up to 4.5 s and opened a window where the arrival pipeline could clear
-        // the session and bounce the user to login.
-        const knownLocked = Boolean(triviaQuota && !triviaQuota.isAdminBypass && triviaQuota.questionsRemaining <= 0);
-        if (knownLocked) {
-          const latestQuota = await loadTriviaQuota();
-          const stillLocked = Boolean(latestQuota && !latestQuota.isAdminBypass && latestQuota.questionsRemaining <= 0);
-          if (stillLocked) {
-            const unlockIn = Math.max(0, Math.floor(latestQuota?.windowSecondsRemaining ?? triviaUnlockSeconds));
-            setTriviaUnlockSeconds(unlockIn);
-            setTriviaGateNotice(unlockIn > 0 ? `Trivia is locked for now. Try again in ${formatCountdown(unlockIn)}.` : "Trivia is locked for now. Please try again soon.");
-            return;
-          }
-          // Quota has reset — fall through and navigate
-        }
-      }
-      setTriviaGateNotice("");
       setPendingDestination(dest);
       try {
         await runVenueGameOpenTransition({
@@ -1375,7 +1284,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         setPendingDestination(null);
       }
     },
-  [loadTriviaQuota, router, triggerPulse, triviaUnlockSeconds, triviaQuota, venue.id]
+  [router, triggerPulse, venue.id]
   );
 
   const homeCards = useMemo(() => VENUE_HOME_GAME_KEYS.map((key) => VENUE_GAME_CARD_BY_KEY[key]), []);
@@ -1409,8 +1318,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     [goTo]
   );
   const leaderboardInitialEntries = leaderboardBootstrapEntries.length > 0 ? leaderboardBootstrapEntries : initialEntries;
-  const triviaIsLocked = Boolean(triviaQuota && !triviaQuota.isAdminBypass && triviaQuota.questionsRemaining <= 0);
-  const triviaUnlockCountdown = triviaUnlockSeconds > 0 ? triviaUnlockSeconds : triviaIsLocked ? Math.max(0, Math.floor(triviaQuota?.windowSecondsRemaining ?? 0)) : 0;
   const nextLiveTriviaCountdownSeconds =
     liveTriviaStatus.nextStartAtMs != null
       ? Math.max(0, Math.floor((liveTriviaStatus.nextStartAtMs - liveCountdownNowMs) / 1000))
@@ -1490,8 +1397,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           pendingDestination={pendingDestination}
           orderedHomeCards={orderedHomeCards}
           visibleBadgeByGame={visibleBadgeByGame}
-          triviaUnlockCountdown={triviaUnlockCountdown}
-          triviaGateNotice={triviaGateNotice}
           badgeError={badgeError}
           onTriggerPulse={triggerPulse}
           onGoTo={handleGoTo}

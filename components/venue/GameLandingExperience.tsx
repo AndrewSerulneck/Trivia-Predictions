@@ -44,6 +44,9 @@ export function GameLandingExperience({
   showShellAlerts = true,
   playingBackgroundClassName,
   playingContainerClassName,
+  landingStatus,
+  playDisabled = false,
+  playDisabledLabel,
   children,
 }: {
   gameKey: VenueGameKey;
@@ -56,6 +59,9 @@ export function GameLandingExperience({
   showShellAlerts?: boolean;
   playingBackgroundClassName?: string;
   playingContainerClassName?: string;
+  landingStatus?: React.ReactNode;
+  playDisabled?: boolean;
+  playDisabledLabel?: string;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -135,6 +141,9 @@ export function GameLandingExperience({
   }, [gameKey, isPlaying]);
 
   const handlePlayClick = useCallback(() => {
+    if (playDisabled) {
+      return;
+    }
     if (playHref) {
       router.push(playHref);
       return;
@@ -145,7 +154,7 @@ export function GameLandingExperience({
       setRulesExiting(false);
       setIsPlaying(true);
     }, 300);
-  }, [playHref, router]);
+  }, [playDisabled, playHref, router]);
 
   const backToVenue = useCallback(() => {
     endCurrentGameSession("abandoned");
@@ -212,6 +221,7 @@ export function GameLandingExperience({
                   <GameRuleCardPanel gameKey={gameKey} layout="landing" className="h-full w-full" />
                 </div>
               </div>
+              {landingStatus ? <div className="shrink-0 pt-3 sm:pt-4">{landingStatus}</div> : null}
               <div className="grid shrink-0 grid-cols-2 gap-2 pt-3 sm:pt-4">
                 <button
                   type="button"
@@ -223,10 +233,10 @@ export function GameLandingExperience({
                 <button
                   type="button"
                   onClick={handlePlayClick}
-                  disabled={rulesExiting}
-                  className="tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-blue-700 px-3 py-2 text-base font-black text-white"
+                  disabled={rulesExiting || playDisabled}
+                  className="tp-clean-button inline-flex min-h-[52px] items-center justify-center rounded-full bg-blue-700 px-3 py-2 text-base font-black text-white disabled:opacity-60"
                 >
-                  {playLabel}
+                  {playDisabled && playDisabledLabel ? playDisabledLabel : playLabel}
                 </button>
               </div>
             </div>
