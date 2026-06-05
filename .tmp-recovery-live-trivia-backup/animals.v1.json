@@ -1,0 +1,808 @@
+{
+  "categoryName": "Animals",
+  "questions": [
+    {
+      "slug": "animals-komodo-dragon-location",
+      "question": "In which country can you find Komodo dragons in the wild?",
+      "answer": "Indonesia",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-cat-vision-type",
+      "question": "What allows cats to see clearly in near-total darkness?",
+      "answer": "Tapetum lucidum",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-axolotl-habitat",
+      "question": "The axolotl, a salamander that retains its gills into adulthood, is native to only one country. Which one?",
+      "answer": "Mexico",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-sperm-whale-brain-size",
+      "question": "Which animal has the largest brain of any living species?",
+      "answer": "Sperm Whale",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-arctic-tern-migration",
+      "question": "Which animal has the longest migration of any known species, traveling from the Arctic to the Antarctic?",
+      "answer": "Arctic Tern",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-rhino-horn-material",
+      "question": "What is a rhinoceros horn primarily made of?",
+      "answer": "Keratin",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-largest-invertebrate",
+      "question": "Which elusive deep-sea creature is the largest known invertebrate on Earth?",
+      "answer": "Colossal Squid",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "animals-peregrine-falcon-nictitating-membrane",
+      "question": "What specialized 'third eyelid' do falcons use to clear debris and moisten eyes during high-speed dives?",
+      "answer": "Nictitating membrane",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-pufferfish-toxin-name",
+      "question": "What is the name of the deadly neurotoxin found in pufferfish (Fugu)?",
+      "answer": "Tetrodotoxin",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "animals-honey-bee-dance-communication",
+      "question": "What is the name of the dance honey bees use to tell their hive mates where to find flowers?",
+      "answer": "The Waggle Dance",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Waggle Dance"
+      ]
+    },
+    {
+      "slug": "animals-only-continent-no-ants",
+      "question": "Which continent is the only one on Earth with no native ant species?",
+      "answer": "Antarctica",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "animals-largest-lizard-world",
+      "question": "Which species is the largest living lizard in the world?",
+      "answer": "Komodo Dragon",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "what-is-the-scientific-genus-name-for-all-species-of-modern-humans",
+      "question": "What is the scientific genus name for all species of modern humans?",
+      "answer": "Homo",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-gray-wolf",
+      "question": "What is the scientific name for the gray wolf?",
+      "answer": "Canis lupus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-domestic-cat",
+      "question": "What is the scientific name for the domestic cat?",
+      "answer": "Felis catus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-african-bush-elephant",
+      "question": "What is the scientific name for the African bush elephant?",
+      "answer": "Loxodonta africana",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-common-fruit-fly-widely-used-in-genetic-research",
+      "question": "What is the scientific name for the common fruit fly, widely used in genetic research?",
+      "answer": "Drosophila melanogaster",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-polar-bear",
+      "question": "What is the scientific name for the polar bear?",
+      "answer": "Ursus maritimus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-giant-panda",
+      "question": "What is the scientific name for the giant panda?",
+      "answer": "Ailuropoda melanoleuca",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-name-of-the-specialized-stinging-cells-found-in-cnidarians-like-jellyfish-and-sea-anemones",
+      "question": "What is the name of the specialized stinging cells found in cnidarians like jellyfish and sea anemones?",
+      "answer": "Cnidocytes",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-name-of-the-specialized-electroreceptors-found-in-sharks-and-rays-that-detect-electrical-fields",
+      "question": "What is the name of the specialized electroreceptors found in sharks and rays that detect electrical fields?",
+      "answer": "Ampullae of Lorenzini",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-name-of-the-enzyme-that-catalyzes-the-light-producing-reaction-in-fireflies-and-other-bioluminescent-organisms",
+      "question": "What is the name of the enzyme that catalyzes the light-producing reaction in fireflies and other bioluminescent organisms?",
+      "answer": "Luciferase",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-specific-name-for-the-structural-polysaccharide-that-makes-up-the-main-component-of-insect-exoskeletons-and-fungal-cell-walls",
+      "question": "What is the specific name for the structural polysaccharide that makes up the main component of insect exoskeletons and fungal cell walls?",
+      "answer": "Chitin",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-name-of-the-copper-based-protein-responsible-for-oxygen-transport-in-the-blood-of-horseshoe-crabs-and-some-mollusks",
+      "question": "What is the name of the copper-based protein responsible for oxygen transport in the blood of horseshoe crabs and some mollusks?",
+      "answer": "Hemocyanin",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-specific-neurotoxin-produced-by-black-widow-spiders-that-causes-muscle-pain-and-spasms",
+      "question": "What is the specific neurotoxin produced by black widow spiders that causes muscle pain and spasms?",
+      "answer": "Latrotoxin",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-specific-biological-process-by-which-bats-and-dolphins-navigate-and-hunt-using-reflected-sound-waves",
+      "question": "What is the specific biological process by which bats and dolphins navigate and hunt using reflected sound waves?",
+      "answer": "Echolocation",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "what-is-the-name-of-the-unique-bone-structure-found-in-the-penis-of-many-mammals-including-dogs-and-bears-but-not-humans",
+      "question": "What is the name of the unique bone structure found in the penis of many mammals, including dogs and bears, but not humans?",
+      "answer": "Baculum",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-term-for-the-shedding-of-an-exoskeleton-or-skin-by-arthropods-reptiles-and-amphibians",
+      "question": "What is the scientific term for the shedding of an exoskeleton or skin by arthropods, reptiles, and amphibians?",
+      "answer": "Ecdysis",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "on-which-specific-volcanic-archipelago-did-charles-darwin-conduct-much-of-his-research-on-finches-contributing-to-his-theory-of-natural-selection",
+      "question": "On which specific volcanic archipelago did Charles Darwin conduct much of his research on finches, contributing to his theory of natural selection?",
+      "answer": "Galápagos Islands",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-only-wild-population-of-mountain-gorillas-can-be-found-in-a-specific-region-of-central-africa-primarily-within-national-parks-across-three-countries-what-is-the-name-of-this-mountain-range",
+      "question": "The only wild population of mountain gorillas can be found in a specific region of central Africa, primarily within national parks across three countries. What is the name of this mountain range?",
+      "answer": "Virunga Mountains",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "which-large-african-national-park-primarily-located-in-tanzania-is-famous-for-its-annual-wildebeest-migration",
+      "question": "Which large African national park, primarily located in Tanzania, is famous for its annual wildebeest migration?",
+      "answer": "Serengeti National Park",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "the-unique-lemurs-of-the-world-are-exclusively-found-on-which-large-island-nation-off-the-southeast-coast-of-africa",
+      "question": "The unique lemurs of the world are exclusively found on which large island nation off the southeast coast of Africa?",
+      "answer": "Madagascar",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "which-swedish-botanist-developed-the-system-of-binomial-nomenclature-still-used-today-for-classifying-all-known-organisms",
+      "question": "Which Swedish botanist developed the system of binomial nomenclature, still used today for classifying all known organisms?",
+      "answer": "Carl Linnaeus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "who-is-the-british-naturalist-and-broadcaster-best-known-for-his-extensive-television-documentaries-on-wildlife-including-the-planet-earth-series",
+      "question": "Who is the British naturalist and broadcaster best known for his extensive television documentaries on wildlife, including the 'Planet Earth' series?",
+      "answer": "David Attenborough",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "what-is-the-name-of-the-distinct-breed-of-sheep-renowned-for-producing-very-fine-and-soft-wool-originating-in-spain",
+      "question": "What is the name of the distinct breed of sheep renowned for producing very fine and soft wool, originating in Spain?",
+      "answer": "Merino",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-name-of-the-specific-breed-of-domestic-pig-known-for-its-black-color-and-highly-prized-ham-originating-from-the-iberian-peninsula",
+      "question": "What is the name of the specific breed of domestic pig known for its black color and highly prized ham, originating from the Iberian Peninsula?",
+      "answer": "Iberian pig",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-name-of-the-specific-breed-of-large-black-and-white-dairy-cattle-known-for-its-high-milk-production-originating-in-the-netherlands",
+      "question": "What is the name of the specific breed of large, black-and-white dairy cattle known for its high milk production, originating in the Netherlands?",
+      "answer": "Holstein",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-species-of-honey-bee-most-commonly-managed-by-humans-for-honey-production",
+      "question": "What is the scientific name for the species of honey bee most commonly managed by humans for honey production?",
+      "answer": "Apis mellifera",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "which-specific-protein-is-the-primary-component-of-hair-nails-feathers-and-horns-in-animals",
+      "question": "Which specific protein is the primary component of hair, nails, feathers, and horns in animals?",
+      "answer": "Keratin",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-large-black-and-white-panda-native-to-south-central-china",
+      "question": "What is the scientific name for the large black-and-white panda native to south central China?",
+      "answer": "Ailuropoda melanoleuca",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "which-renowned-primatologist-is-famous-for-her-long-term-study-of-wild-chimpanzees-in-gombe-stream-national-park-tanzania",
+      "question": "Which renowned primatologist is famous for her long-term study of wild chimpanzees in Gombe Stream National Park, Tanzania?",
+      "answer": "Jane Goodall",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-common-domestic-cat",
+      "question": "What is the scientific name for the common domestic cat?",
+      "answer": "Felis catus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "what-is-the-scientific-genus-and-species-name-for-the-killer-whale-also-known-as-an-orca",
+      "question": "What is the scientific genus and species name for the killer whale, also known as an orca?",
+      "answer": "Orcinus orca",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-name-of-the-specific-international-treaty-that-aims-to-ensure-that-international-trade-in-specimens-of-wild-animals-and-plants-does-not-threaten-their-survival",
+      "question": "What is the name of the specific international treaty that aims to ensure that international trade in specimens of wild animals and plants does not threaten their survival?",
+      "answer": "CITES",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "which-specific-protein-is-responsible-for-oxygen-storage-in-muscle-tissue-giving-red-meat-its-color",
+      "question": "Which specific protein is responsible for oxygen storage in muscle tissue, giving red meat its color?",
+      "answer": "Myoglobin",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-european-rabbit-the-species-from-which-most-domestic-rabbits-are-descended",
+      "question": "What is the scientific name for the European rabbit, the species from which most domestic rabbits are descended?",
+      "answer": "Oryctolagus cuniculus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-specific-region-in-the-brain-of-sharks-and-rays-contains-electroreceptors-known-as-the-ampullae-of-lorenzini",
+      "question": "What specific region in the brain of sharks and rays contains electroreceptors known as the Ampullae of Lorenzini?",
+      "answer": "Ampullae of Lorenzini",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-monarch-butterfly-famous-for-its-long-migratory-journey",
+      "question": "What is the scientific name for the Monarch butterfly, famous for its long migratory journey?",
+      "answer": "Danaus plexippus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "which-american-zoologist-and-conservationist-was-known-for-her-groundbreaking-study-of-mountain-gorillas-in-rwanda-and-was-tragically-murdered-there",
+      "question": "Which American zoologist and conservationist was known for her groundbreaking study of mountain gorillas in Rwanda, and was tragically murdered there?",
+      "answer": "Dian Fossey",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-atlantic-cod-a-commercially-important-fish-species",
+      "question": "What is the scientific name for the Atlantic cod, a commercially important fish species?",
+      "answer": "Gadus morhua",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-specific-name-of-the-largest-known-living-single-celled-organism-a-marine-amoeba-often-found-in-deep-sea-trenches",
+      "question": "What is the specific name of the largest known living single-celled organism, a marine amoeba often found in deep-sea trenches?",
+      "answer": "Syringammina murrayi",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-african-elephant-the-largest-living-terrestrial-animal",
+      "question": "What is the scientific name for the African elephant, the largest living terrestrial animal?",
+      "answer": "Loxodonta africana",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-asiatic-lion-a-subspecies-primarily-found-in-indias-gir-forest-national-park",
+      "question": "What is the scientific name for the Asiatic lion, a subspecies primarily found in India's Gir Forest National Park?",
+      "answer": "Panthera leo persica",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-common-brown-rat-a-widespread-commensal-rodent",
+      "question": "What is the scientific name for the common brown rat, a widespread commensal rodent?",
+      "answer": "Rattus norvegicus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-specific-name-for-the-phenomenon-where-young-animals-particularly-birds-form-a-strong-rapid-and-irreversible-bond-with-the-first-moving-object-they-see",
+      "question": "What is the specific name for the phenomenon where young animals, particularly birds, form a strong, rapid, and irreversible bond with the first moving object they see?",
+      "answer": "Imprinting",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "which-specific-ocean-known-for-its-extreme-depths-and-unique-biodiversity-is-home-to-the-mariana-trench",
+      "question": "Which specific ocean, known for its extreme depths and unique biodiversity, is home to the Mariana Trench?",
+      "answer": "Pacific Ocean",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "what-is-the-specific-name-for-the-process-of-cell-division-that-results-in-two-daughter-cells-each-having-the-same-number-and-kind-of-chromosomes-as-the-parent-nucleus",
+      "question": "What is the specific name for the process of cell division that results in two daughter cells each having the same number and kind of chromosomes as the parent nucleus?",
+      "answer": "Mitosis",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-giant-pacific-octopus-the-largest-species-of-octopus",
+      "question": "What is the scientific name for the Giant Pacific Octopus, the largest species of octopus?",
+      "answer": "Enteroctopus dofleini",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-green-sea-turtle-a-large-herbivorous-marine-reptile",
+      "question": "What is the scientific name for the green sea turtle, a large herbivorous marine reptile?",
+      "answer": "Chelonia mydas",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-name-of-the-specific-breed-of-dog-known-for-its-distinctive-blue-black-tongue-and-dense-double-coat-originating-from-china",
+      "question": "What is the name of the specific breed of dog known for its distinctive blue-black tongue and dense double coat, originating from China?",
+      "answer": "Chow Chow",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-specific-type-of-rna-carries-genetic-information-from-dna-to-the-ribosome-where-it-specifies-the-amino-acid-sequence-of-a-protein",
+      "question": "What specific type of RNA carries genetic information from DNA to the ribosome, where it specifies the amino acid sequence of a protein?",
+      "answer": "Messenger RNA",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-unique-flightless-bird-endemic-to-new-zealand-known-for-its-long-beak-and-nocturnal-habits",
+      "question": "What is the scientific name for the unique, flightless bird endemic to New Zealand, known for its long beak and nocturnal habits?",
+      "answer": "Apteryx mantelli",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-scientific-genus-name-for-all-species-of-true-bears-including-the-polar-bear-and-grizzly-bear",
+      "question": "What is the scientific genus name for all species of true bears, including the polar bear and grizzly bear?",
+      "answer": "Ursus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-specific-scientific-name-for-the-domestic-dog-subspecies",
+      "question": "What is the specific scientific name for the domestic dog subspecies?",
+      "answer": "Canis lupus familiaris",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "which-flightless-parrot-endemic-to-new-zealand-is-the-only-parrot-in-the-world-that-cannot-fly",
+      "question": "Which flightless parrot, endemic to New Zealand, is the only parrot in the world that cannot fly?",
+      "answer": "Kakapo",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-technical-term-for-the-shedding-of-an-exoskeleton-by-arthropods-such-as-insects-and-crustaceans",
+      "question": "What is the technical term for the shedding of an exoskeleton by arthropods, such as insects and crustaceans?",
+      "answer": "Ecdysis",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-specific-common-name-for-the-only-extant-species-of-monotreme-found-in-mainland-australia-known-for-its-unique-snout",
+      "question": "What is the specific common name for the only extant species of monotreme found in mainland Australia, known for its unique snout?",
+      "answer": "Echidna",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-chimpanzee",
+      "question": "What is the scientific name for the chimpanzee?",
+      "answer": "Pan troglodytes",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-common-bottlenose-dolphin",
+      "question": "What is the scientific name for the common bottlenose dolphin?",
+      "answer": "Tursiops truncatus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-specific-name-of-the-specialized-sensory-organs-in-sharks-and-rays-that-detect-electric-fields-in-water",
+      "question": "What is the specific name of the specialized sensory organs in sharks and rays that detect electric fields in water?",
+      "answer": "Ampullae of Lorenzini",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-largest-known-living-fish-species-the-whale-shark",
+      "question": "What is the scientific name for the largest known living fish species, the whale shark?",
+      "answer": "Rhincodon typus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-red-fox",
+      "question": "What is the scientific name for the red fox?",
+      "answer": "Vulpes vulpes",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-common-housefly",
+      "question": "What is the scientific name for the common housefly?",
+      "answer": "Musca domestica",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "which-specific-american-national-park-located-primarily-in-wyoming-is-famous-for-its-wildlife-including-bison-wolves-and-grizzly-bears",
+      "question": "Which specific American national park, located primarily in Wyoming, is famous for its wildlife including bison, wolves, and grizzly bears?",
+      "answer": "Yellowstone National Park",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-african-wild-dog",
+      "question": "What is the scientific name for the African wild dog?",
+      "answer": "Lycaon pictus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-common-earthworm",
+      "question": "What is the scientific name for the common earthworm?",
+      "answer": "Lumbricus terrestris",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-specific-term-for-the-specialized-cells-in-cnidarians-such-as-jellyfish-and-sea-anemones-that-contain-stinging-organelles",
+      "question": "What is the specific term for the specialized cells in cnidarians, such as jellyfish and sea anemones, that contain stinging organelles?",
+      "answer": "Cnidocytes",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-common-goldfish",
+      "question": "What is the scientific name for the common goldfish?",
+      "answer": "Carassius auratus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-laboratory-mouse",
+      "question": "What is the scientific name for the laboratory mouse?",
+      "answer": "Mus musculus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-largest-living-reptile-the-saltwater-crocodile",
+      "question": "What is the scientific name for the largest living reptile, the saltwater crocodile?",
+      "answer": "Crocodylus porosus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-specific-common-name-for-the-egg-laying-mammal-endemic-to-eastern-australia-and-tasmania-known-for-its-duck-like-bill",
+      "question": "What is the specific common name for the egg-laying mammal endemic to eastern Australia and Tasmania, known for its duck-like bill?",
+      "answer": "Platypus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-grey-wolf",
+      "question": "What is the scientific name for the grey wolf?",
+      "answer": "Canis lupus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-common-raven",
+      "question": "What is the scientific name for the common raven?",
+      "answer": "Corvus corax",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-common-european-honey-bee",
+      "question": "What is the scientific name for the common European honey bee?",
+      "answer": "Apis mellifera",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-largest-living-land-animal-the-african-bush-elephant",
+      "question": "What is the scientific name for the largest living land animal, the African bush elephant?",
+      "answer": "Loxodonta africana",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-emperor-penguin",
+      "question": "What is the scientific name for the emperor penguin?",
+      "answer": "Aptenodytes forsteri",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-great-white-shark",
+      "question": "What is the scientific name for the great white shark?",
+      "answer": "Carcharodon carcharias",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-komodo-dragon",
+      "question": "What is the scientific name for the Komodo dragon?",
+      "answer": "Varanus komodoensis",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-blue-whale",
+      "question": "What is the scientific name for the blue whale?",
+      "answer": "Balaenoptera musculus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-monarch-butterfly",
+      "question": "What is the scientific name for the monarch butterfly?",
+      "answer": "Danaus plexippus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-fruit-fly-commonly-used-in-genetic-research",
+      "question": "What is the scientific name for the fruit fly commonly used in genetic research?",
+      "answer": "Drosophila melanogaster",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-common-laboratory-rat",
+      "question": "What is the scientific name for the common laboratory rat?",
+      "answer": "Rattus norvegicus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-specific-chemical-substance-released-by-an-animal-that-affects-the-behavior-or-physiology-of-others-of-its-species",
+      "question": "What is the specific chemical substance released by an animal that affects the behavior or physiology of others of its species?",
+      "answer": "Pheromone",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-specific-term-for-the-production-and-emission-of-light-by-a-living-organism",
+      "question": "What is the specific term for the production and emission of light by a living organism?",
+      "answer": "Bioluminescence",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-term-for-the-shedding-of-the-exoskeleton-in-arthropods",
+      "question": "What is the scientific term for the shedding of the exoskeleton in arthropods?",
+      "answer": "Ecdysis",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-african-lion",
+      "question": "What is the scientific name for the African lion?",
+      "answer": "Panthera leo",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-common-house-mouse",
+      "question": "What is the scientific name for the common house mouse?",
+      "answer": "Mus musculus",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-name-for-the-domestic-dog-recognized-as-a-subspecies-of-the-grey-wolf",
+      "question": "What is the scientific name for the domestic dog, recognized as a subspecies of the grey wolf?",
+      "answer": "Canis lupus familiaris",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "what-is-the-scientific-term-for-the-specialized-sensory-organ-in-snakes-that-detects-infrared-radiation-allowing-them-to-see-heat",
+      "question": "What is the scientific term for the specialized sensory organ in snakes that detects infrared radiation, allowing them to \"see\" heat?",
+      "answer": "Pit organ",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "what-specialized-electroreceptors-do-sharks-and-rays-possess-to-detect-the-bioelectrical-fields-of-prey",
+      "question": "What specialized electroreceptors do sharks and rays possess to detect the bioelectrical fields of prey?",
+      "answer": "Ampullae of Lorenzini",
+      "answer_format": "write_in",
+      "category": "Animals",
+      "difficulty": "hard"
+    }
+  ]
+}

@@ -50,7 +50,7 @@ describe("POST /api/admin/bootstrap", () => {
     expect(setCookie).toContain("admin_session=");
   });
 
-  it("supports the secondary admin login credentials", async () => {
+  it("rejects credentials that are not configured in env", async () => {
     const response = await POST(
       new Request("http://localhost/api/admin/bootstrap", {
         method: "POST",
@@ -59,11 +59,10 @@ describe("POST /api/admin/bootstrap", () => {
       })
     );
 
-    const body = (await response.json()) as { ok: boolean };
-    const setCookie = response.headers.get("set-cookie") ?? "";
+    const body = (await response.json()) as { ok: boolean; error?: string };
 
-    expect(response.status).toBe(200);
-    expect(body.ok).toBe(true);
-    expect(setCookie).toContain("admin_session=");
+    expect(response.status).toBe(403);
+    expect(body.ok).toBe(false);
+    expect(body.error).toBe("Invalid admin login credentials.");
   });
 });

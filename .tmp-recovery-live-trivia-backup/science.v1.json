@@ -1,0 +1,633 @@
+{
+  "categoryName": "Science",
+  "questions": [
+    {
+      "slug": "water-chemical-formula",
+      "question": "What is the chemical formula for water?",
+      "answer": "H2O",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "closest-planet-to-sun",
+      "question": "Which planet is closest to the Sun?",
+      "answer": "Mercury",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "gas-plants-absorb",
+      "question": "Which gas do plants primarily absorb from the atmosphere for photosynthesis?",
+      "answer": "Carbon Dioxide",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "noble-gas-symbol-he",
+      "question": "Which element is represented by the symbol 'He'?",
+      "answer": "Helium",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "powerhouse-of-the-cell",
+      "question": "Which organelle is known as the powerhouse of the cell?",
+      "answer": "Mitochondria",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "dna-structure-shape",
+      "question": "What is the shape of a DNA molecule?",
+      "answer": "Double Helix",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "gravity-discovery-scientist",
+      "question": "Which scientist is famously associated with the law of universal gravitation?",
+      "answer": "Isaac Newton",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "blood-type-universal-donor",
+      "question": "Which blood type is considered the universal donor?",
+      "answer": "O negative",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "most-abundant-gas-atmosphere",
+      "question": "What is the most abundant gas in Earth's atmosphere?",
+      "answer": "Nitrogen",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "subatomic-particle-negative-charge",
+      "question": "Which subatomic particle carries a negative electric charge?",
+      "answer": "Electron",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "planet-red-appearance",
+      "question": "Which planet is known as the Red Planet?",
+      "answer": "Mars",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "ph-scale-neutral-value",
+      "question": "What value represents a neutral pH?",
+      "answer": "7",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "absolute-zero-kelvin",
+      "question": "What temperature is considered absolute zero in Kelvin?",
+      "answer": "0 K",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "hardest-natural-substance",
+      "question": "What is the hardest known natural substance on Earth?",
+      "answer": "Diamond",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "galaxy-earth-location",
+      "question": "What is the name of the galaxy that contains our Solar System?",
+      "answer": "Milky Way",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "periodic-table-first-element",
+      "question": "What is the first element on the periodic table?",
+      "answer": "Hydrogen",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "cell-membrane-function",
+      "question": "Which component of the cell is responsible for regulating what enters and exits?",
+      "answer": "Cell Membrane",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "diamond-element",
+      "question": "Which chemical element is a diamond made of?",
+      "answer": "Carbon",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "jupiter-moons-count",
+      "question": "Which planet in our solar system has the largest number of moons?",
+      "answer": "Saturn",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "sound-wave-type",
+      "question": "What type of wave is a sound wave?",
+      "answer": "Longitudinal",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "earliest-antibiotic",
+      "question": "What was the first antibiotic to be discovered?",
+      "answer": "Penicillin",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "sun-energy-process",
+      "question": "By what process does the Sun produce energy?",
+      "answer": "Nuclear Fusion",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "human-bone-count-adult",
+      "question": "How many bones are in the adult human body?",
+      "answer": "206",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "light-refraction-definition",
+      "question": "What is the bending of light as it passes from one medium to another called?",
+      "answer": "Refraction",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "lithium-symbol",
+      "question": "What is the chemical symbol for the element Lithium?",
+      "answer": "Li",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "photosynthesis-byproduct",
+      "question": "What primary gas do plants release as a byproduct of photosynthesis?",
+      "answer": "Oxygen",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "noble-gas-neon-symbol",
+      "question": "What is the chemical symbol for Neon?",
+      "answer": "Ne",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "human-stomach-acid",
+      "question": "Which acid is primarily found in the human stomach?",
+      "answer": "Hydrochloric Acid",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "planet-rings-most-visible",
+      "question": "Which planet is famous for its large and visible ring system?",
+      "answer": "Saturn",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "electron-cloud-atom-center",
+      "question": "What is the center of an atom called?",
+      "answer": "Nucleus",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "radioactive-element-polonium-discoverer",
+      "question": "Who discovered the radioactive elements Polonium and Radium?",
+      "answer": "Marie Curie",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "solid-to-gas-transition",
+      "question": "What is the process called when a solid turns directly into a gas?",
+      "answer": "Sublimation",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "kelvin-boiling-point-water",
+      "question": "What is the boiling point of water in Kelvin?",
+      "answer": "373 K",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "earth-atmosphere-lowest-layer",
+      "question": "What is the lowest layer of Earth's atmosphere?",
+      "answer": "Troposphere",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "einstein-relativity-equation",
+      "question": "In the equation E=mc^2, what does the 'c' represent?",
+      "answer": "Speed of Light",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "human-eye-colored-part",
+      "question": "What is the name of the colored part of the human eye?",
+      "answer": "Iris",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "gold-symbol",
+      "question": "What is the chemical symbol for Gold?",
+      "answer": "Au",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "mars-moons-names",
+      "question": "What are the names of the two moons of Mars?",
+      "answer": "Phobos & Deimos",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "vitamin-c-chemical-name",
+      "question": "What is the chemical name for Vitamin C?",
+      "answer": "Ascorbic Acid",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "earth-crust-most-abundant-metal",
+      "question": "Which is the most abundant metal in the Earth's crust?",
+      "answer": "Aluminum",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "blood-circulation-discovery",
+      "question": "Who was the first person to describe the circulation of blood in detail?",
+      "answer": "William Harvey",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "seismic-waves-instrument",
+      "question": "What instrument is used to detect and record earthquakes?",
+      "answer": "Seismograph",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "dna-bases-cytosine-pair",
+      "question": "In DNA, which nitrogenous base always pairs with Cytosine?",
+      "answer": "Guanine",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "mercury-state-at-room-temperature",
+      "question": "Which metal is the only one that is liquid at room temperature?",
+      "answer": "Mercury",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "force-mass-acceleration-law",
+      "question": "Newton's Second Law states that Force equals mass times what?",
+      "answer": "Acceleration",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "ocean-tides-cause",
+      "question": "Which celestial body's gravity is primarily responsible for Earth's tides?",
+      "answer": "The Moon",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Moon"
+      ]
+    },
+    {
+      "slug": "noble-gas-argon-symbol",
+      "question": "What is the chemical symbol for Argon?",
+      "answer": "Ar",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "blood-clotting-cells",
+      "question": "Which component of blood is responsible for clotting?",
+      "answer": "Platelets",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "absolute-zero-celsius",
+      "question": "What is absolute zero expressed in degrees Celsius?",
+      "answer": "-273.15°C",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "largest-planet-solar-system",
+      "question": "Which is the largest planet in our solar system?",
+      "answer": "Jupiter",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "human-chromosome-count",
+      "question": "How many pairs of chromosomes do humans typically have?",
+      "answer": "23",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "alkali-metal-symbol-na",
+      "question": "Which element is represented by the symbol 'Na'?",
+      "answer": "Sodium",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "plant-cell-wall-material",
+      "question": "What is the primary material that makes up plant cell walls?",
+      "answer": "Cellulose",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "light-frequency-color-highest",
+      "question": "In the visible spectrum, which color has the highest frequency?",
+      "answer": "Violet",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "main-gas-in-the-sun",
+      "question": "What is the most abundant element in the Sun?",
+      "answer": "Hydrogen",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "silver-symbol",
+      "question": "What is the chemical symbol for Silver?",
+      "answer": "Ag",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "earliest-hominid-species",
+      "question": "Which species is widely considered the first of the 'Homo' genus?",
+      "answer": "Homo habilis",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "human-insulin-organ",
+      "question": "Which organ in the human body produces insulin?",
+      "answer": "Pancreas",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "functional-unit-of-kidney",
+      "question": "What is the basic functional unit of the human kidney?",
+      "answer": "Nephron",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "potassium-chemical-symbol",
+      "question": "What is the chemical symbol for Potassium?",
+      "answer": "K",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "moon-phases-new-moon",
+      "question": "In which moon phase is the moon positioned between the Earth and the Sun?",
+      "answer": "New Moon",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "rarest-blood-type",
+      "question": "Which is the rarest blood type in the human population?",
+      "answer": "AB Negative",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "ear-drum-scientific-name",
+      "question": "What is the medical term for the eardrum?",
+      "answer": "Tympanic membrane",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "earth-most-abundant-gas",
+      "question": "Which gas makes up approximately 78% of Earth's atmosphere?",
+      "answer": "Nitrogen",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mitosis-first-stage",
+      "question": "What is the first stage of mitosis?",
+      "answer": "Prophase",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "iron-chemical-symbol",
+      "question": "What is the chemical symbol for Iron?",
+      "answer": "Fe",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "study-of-fungi",
+      "question": "What is the scientific study of fungi called?",
+      "answer": "Mycology",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "dry-ice-composition",
+      "question": "Dry ice is the solid form of which substance?",
+      "answer": "Carbon Dioxide",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mercury-planet-atmosphere",
+      "question": "Which planet is known for having almost no atmosphere?",
+      "answer": "Mercury",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "magnesium-chemical-symbol",
+      "question": "What is the chemical symbol for Magnesium?",
+      "answer": "Mg",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "uranus-rotation-axis",
+      "question": "Which planet in our solar system rotates on its side, with its axis tilted at about 98 degrees?",
+      "answer": "Uranus",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "human-tailbone-name",
+      "question": "What is the scientific name for the human tailbone?",
+      "answer": "Coccyx",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "chemical-symbol-for-tin",
+      "question": "What is the chemical symbol for Tin?",
+      "answer": "Sn",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "blood-pressure-instrument",
+      "question": "What is the name of the instrument used to measure blood pressure?",
+      "answer": "Sphygmomanometer",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "photosynthesis-organelle",
+      "question": "In which plant cell organelle does photosynthesis occur?",
+      "answer": "Chloroplast",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "tungsten-chemical-symbol",
+      "question": "What is the chemical symbol for Tungsten?",
+      "answer": "W",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "earliest-living-organisms",
+      "question": "The earliest known life forms on Earth are believed to be what?",
+      "answer": "Cyanobacteria",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "blood-red-color-protein",
+      "question": "What is the name of the protein in red blood cells that carries oxygen?",
+      "answer": "Hemoglobin",
+      "answer_format": "write_in",
+      "category": "Science",
+      "difficulty": "easy"
+    }
+  ],
+  "familiarity": "moderate"
+}

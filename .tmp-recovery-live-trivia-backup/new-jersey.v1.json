@@ -1,0 +1,899 @@
+{
+  "categoryName": "New Jersey",
+  "questions": [
+    {
+      "slug": "nj-history-first-football-game",
+      "question": "On November 6, 1869, the first intercollegiate football game in history was played in New Jersey between Princeton University and which other school?",
+      "answer": "Rutgers University",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-history-edison-lab-town",
+      "question": "Thomas Edison established his world-famous industrial research laboratory in 1876 in which specific New Jersey unincorporated community?",
+      "answer": "Menlo Park",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-history-first-baseball-site",
+      "question": "The first officially recorded organized baseball game under modern rules was played in 1846 at which specific waterfront park area in Hoboken?",
+      "answer": "Elysian Fields",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-history-bill-of-rights",
+      "question": "On November 20, 1789, New Jersey became the very first state in the nation to ratify which foundational constitutional document?",
+      "answer": "Bill of Rights",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-history-state-dinosaur",
+      "question": "Discovered in Haddonfield in 1858, which specific genus of duck-billed dinosaur serves as the official state dinosaur of New Jersey?",
+      "answer": "Hadrosaurus",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-history-monopoly-boardwalk",
+      "question": "The real-world street and property names featured on the traditional American version of the Monopoly board game are located in which New Jersey resort city?",
+      "answer": "Atlantic City",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-history-revolutionary-crossing",
+      "question": "On Christmas night in 1776, General George Washington famously led continental troops across which river to launch a surprise attack on Trenton?",
+      "answer": "Delaware River",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-history-first-drive-in",
+      "question": "In June 1933, young entrepreneur Richard Hollingshead opened the world's very first commercial drive-in movie theater in which New Jersey municipality?",
+      "answer": "Camden",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-history-hindenburg-disaster",
+      "question": "On May 6, 1937, the German airship LZ 129 Hindenburg caught fire and was destroyed while attempting to dock at which New Jersey military base?",
+      "answer": "Lakehurst Naval Air Station",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-history-state-microbe",
+      "question": "In 2019, New Jersey designated which specific genus and species of soil-dwelling bacterium—critical to the discovery of streptomycin—as its official state microbe?",
+      "answer": "Streptomyces griseus",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-history-highest-point",
+      "question": "Located in the Kittatinny Mountains, what is the specific geographic name of the highest natural elevation point in the state of New Jersey?",
+      "answer": "High Point",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-history-first-mms-factory",
+      "question": "When Forrest Mars Sr. and Bruce Murrie first began mass manufacturing M&M's plain chocolate candies in 1941, the original factory was located in which New Jersey city?",
+      "answer": "Newark",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-history-morristown-hq",
+      "question": "During the brutal winter of 1779 to 1780, George Washington established his military headquarters at which specific, historic Morristown home estate?",
+      "answer": "Ford Mansion",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-history-only-president-born",
+      "question": "Born in Caldwell, New Jersey in 1837, who is the only individual born in the Garden State to serve as President of the United States?",
+      "answer": "Grover Cleveland",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-history-state-mineral",
+      "question": "Which iron-zinc-manganese oxide mineral, found almost exclusively in the deposits of Franklin and Ogdensburg, is the official state mineral of New Jersey?",
+      "answer": "Franklinite",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-history-first-miss-america",
+      "question": "In September 1921, 16-year-old Margaret Gorman was crowned the winner of the Inter-City Beauty contest, an event later renamed as what national pageant?",
+      "answer": "Miss America",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-history-first-submarine",
+      "question": "In 1878, Irish-American inventor John Philip Holland successfully launched and tested his first functional submarine prototype on which New Jersey river?",
+      "answer": "Passaic River",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-history-hamilton-burr-duel",
+      "question": "On July 11, 1804, Vice President Aaron Burr shot and mortally wounded Alexander Hamilton during an iconic duel held on the cliffs of which New Jersey town?",
+      "answer": "Weehawken",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-history-princeton-capital",
+      "question": "For four months in 1783, the Continental Congress met at Princeton University's Nassau Hall, making Princeton the temporary capital of which entity?",
+      "answer": "United States",
+      "category": "New Jersey",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "US",
+        "U.S.",
+        "USA",
+        "U.S.A.",
+        "United States of America"
+      ]
+    },
+    {
+      "slug": "nj-history-pinelands-fruit",
+      "question": "First successfully cultivated for commercial production by Elizabeth Coleman White at Whitesbog in 1916, what is New Jersey's official state fruit?",
+      "answer": "Blueberry",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-history-longest-boardwalk",
+      "question": "Constructed originally in 1870 to keep sand out of oceanfront hotels, which coastal structure holds the record as the longest boardwalk in the world?",
+      "answer": "Atlantic City Boardwalk",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-history-campbell-soup-hq",
+      "question": "Joseph Campbell and Abraham Anderson founded their famous preservation and canning company in 1869 within which industrial South Jersey city?",
+      "answer": "Camden",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-history-electric-guitar",
+      "question": "In 1940, legendary musician and inventor Les Paul built 'The Log,' one of the world's first solid-body electric guitars, while working in which Bergen County town?",
+      "answer": "Mahwah",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-history-bandaid-inventor",
+      "question": "In 1920, Johnson & Johnson employee Earle Dickson invented the Band-Aid adhesive bandage while working at the company's headquarters in which New Jersey city?",
+      "answer": "New Brunswick",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-history-battle-of-monmouth",
+      "question": "During the June 1778 Battle of Monmouth, which folk hero legendary figure reportedly carried pitchers of water to continental soldiers before taking over her fallen husband's cannon?",
+      "answer": "Molly Pitcher",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-geography-pine-barrens",
+      "question": "Covering over one million acres across southern New Jersey, what is the specific geographic name of the heavily forested area of pine trees famous for folklore and unique ecology?",
+      "answer": "Pine Barrens",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-sports-devils-arena",
+      "question": "The New Jersey Devils of the NHL play all of their home hockey games at which specific Newark sports and entertainment arena?",
+      "answer": "Prudential Center",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-history-princeton-founder",
+      "question": "Which prominent Great Awakening preacher and theologian served as the first president and co-founder of the College of New Jersey (now Princeton University)?",
+      "answer": "Jonathan Dickinson",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-culture-sopranos-diner",
+      "question": "Located in Bloomfield, New Jersey, what is the specific name of the real-world ice cream parlor and diner where the final scene of 'The Sopranos' was filmed?",
+      "answer": "Holsten's",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-science-bell-labs-horn",
+      "question": "In 1964, radio astronomers Arno Penzias and Robert Wilson used the Holmdel Horn Antenna at which New Jersey corporate research facility to discover cosmic microwave background radiation?",
+      "answer": "Bell Labs",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-history-elizabeth-town",
+      "question": "Founded in 1664 and named in honor of the wife of Sir George Carteret, what was the very first English settlement and original capital of the New Jersey colony?",
+      "answer": "Elizabeth",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-geography-hudson-cliffs",
+      "question": "What is the specific geologic name of the line of steep, line-of-sight cliffs overlooking the western side of the Hudson River in northeastern New Jersey?",
+      "answer": "The Palisades",
+      "category": "New Jersey",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Palisades"
+      ]
+    },
+    {
+      "slug": "nj-music-asbury-park-club",
+      "question": "Which iconic Asbury Park rock music club, opened in 1974, famously served as a launching pad for the musical careers of Bruce Springsteen and Bon Jovi?",
+      "answer": "The Stone Pony",
+      "category": "New Jersey",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Stone Pony"
+      ]
+    },
+    {
+      "slug": "nj-sports-nets-first-arena",
+      "question": "Before moving to Brooklyn, the New Jersey Nets NBA franchise played their home games from 1981 to 2010 at which specific East Rutherford sports arena?",
+      "answer": "Izod Center",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-history-morristown-national-park",
+      "question": "Established by Congress in 1933, what was the very first National Historical Park created in the United States?",
+      "answer": "Morristown National Historical Park",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-nature-jersey-devil",
+      "question": "According to Pine Barrens folklore, the legendary creature known as the Jersey Devil was allegedly born in 1735 to which local resident?",
+      "answer": "Mother Leeds",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-history-standard-oil-refinery",
+      "question": "John D. Rockefeller's Standard Oil trust established its massive, historically dominant petroleum refining facility in 1892 within which New Jersey city?",
+      "answer": "Bayonne",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-culture-action-park",
+      "question": "Infamous for dangerous attractions like the Cannonball Loop, which Vernon, New Jersey amusement park gained a legendary reputation for guest injuries in the 1980s and 1990s?",
+      "answer": "Action Park",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-history-pulaski-skyway",
+      "question": "Spanning the Passaic and Hackensack rivers, what is the specific geographic name of the iconic, landmark four-lane bridge highway structure opened in 1932?",
+      "answer": "Pulaski Skyway",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-science-gretchen-math-genius",
+      "question": "Which legendary Princeton, New Jersey research institute served as the long-term intellectual home for elite minds like Albert Einstein and Kurt Gödel?",
+      "answer": "Institute for Advanced Study",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-food-taylor-ham",
+      "question": "First developed by John Taylor of Trenton in 1856, what is the specific proper brand name used primarily in North Jersey for the state's iconic breakfast pork product?",
+      "answer": "Taylor Ham",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-sports-pga-baltusrol",
+      "question": "Which historic Springfield, New Jersey private country club has hosted multiple U.S. Opens and PGA Championships on its famous Lower Course?",
+      "answer": "Baltusrol Golf Club",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-history-lucy-elephant",
+      "question": "Constructed in 1881 by James V. Lafferty in Margate City, what is the specific name of the historic, six-story elephant-shaped architectural novelty structure?",
+      "answer": "Lucy the Elephant",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-history-first-governor",
+      "question": "Who was elected as the very first Governor of the independent State of New Jersey in 1776, serving throughout the duration of the American Revolutionary War?",
+      "answer": "William Livingston",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-culture-war-of-the-worlds",
+      "question": "Orson Welles' legendary 1938 'The War of the Worlds' radio broadcast caused panic by claiming a Martian invasion was actively occurring in which real New Jersey township hamlet?",
+      "answer": "Grover's Mill",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-geography-cape-may-lighthouse",
+      "question": "Guarding the intersection of the Delaware Bay and the Atlantic Ocean, which historic 1859 lighthouse stands at the southernmost tip of New Jersey?",
+      "answer": "Cape May Lighthouse",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-history-boxer-braddock",
+      "question": "Nicknamed 'The Cinderella Man,' which Bergen County boxing icon pulled off a historic upset to win the World Heavyweight Championship in 1935?",
+      "answer": "James J. Braddock",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-nature-delaware-water-gap",
+      "question": "What is the specific geographic name of the famous, scenic protected river protected area where the Delaware River cuts through the ridge of the Appalachian Mountains?",
+      "answer": "Delaware Water Gap",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-business-toys-r-us-hq",
+      "question": "Before its retail closure and subsequent brand relaunch, which global toy retail giant maintained its sprawling corporate world headquarters in Wayne, New Jersey?",
+      "answer": "Toys \"R\" Us",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-history-uss-new-jersey",
+      "question": "Permanently berthed as a museum ship on the Camden waterfront, which specific U.S. Navy Iowa-class battleship is the most decorated vessel in naval history?",
+      "answer": "USS New Jersey",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-history-princeton-cannon",
+      "question": "Buried muzzle-down in the ground behind Nassau Hall, what historic artillery piece was used in the Revolutionary War and contested for decades in a rivalry between Princeton and Rutgers?",
+      "answer": "Big Cannon",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-sports-metlife-stadium",
+      "question": "Opened in 2010 to replace Giants Stadium, what is the specific proper name of the East Rutherford sports venue that hosts both the New York Giants and New York Jets?",
+      "answer": "MetLife Stadium",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-culture-clerks-convenience",
+      "question": "Located in Leonardo, New Jersey, what is the specific real-world name of the convenience store where director Kevin Smith filmed his landmark 1994 indie movie 'Clerks'?",
+      "answer": "Quick Stop Groceries",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-geography-sandy-hook",
+      "question": "What is the specific geographic name of the barrier peninsula in Monmouth County that extends north into Lower New York Bay and contains the oldest continuously operating lighthouse in the United States?",
+      "answer": "Sandy Hook",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-science-telstar-satellite",
+      "question": "In July 1962, the very first active communications satellite to transmit transatlantic television signals was tracked by a massive horn antenna built by AT&T in which New Jersey township?",
+      "answer": "Holmdel",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-history-burlington-capital",
+      "question": "Before New Jersey was unified as a single royal colony in 1702, which Delaware River municipality served as the official capital of the West Jersey province?",
+      "answer": "Burlington",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-infrastructure-gw-bridge",
+      "question": "Spanning the Hudson River to connect Fort Lee, New Jersey with Upper Manhattan, what is the specific geographic name of the suspension bridge that holds the title of the world's busiest motor vehicle bridge?",
+      "answer": "George Washington Bridge",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-music-sinatra-birthplace",
+      "question": "Legendary crooner Frank Sinatra was born in 1915 and raised on Monroe Street within which Hudson County waterfront city?",
+      "answer": "Hoboken",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-sports-pottstown-nj-devils",
+      "question": "Before relocating to the Meadowlands and becoming the New Jersey Devils in 1982, the NHL franchise originally played in Denver under what specific proper team name?",
+      "answer": "Colorado Rockies",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-history-trenton-six",
+      "question": "In 1948, the arrest and conviction of six Black men for murder in Trenton triggered a landmark civil rights legal defense campaign championed by which iconic activist and performer?",
+      "answer": "Paul Robeson",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-nature-great-swamp",
+      "question": "Targeted in 1959 to become a massive jetport by the Port Authority, which specific Morris County wetland was saved by local activists and became the first National Wildlife Refuge designated in the US?",
+      "answer": "Great Swamp National Wildlife Refuge",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-industrial-roebling-bridge",
+      "question": "The massive steel cables used to build both the Brooklyn Bridge and the Golden Gate Bridge were manufactured by John A. Roebling's Sons company in which Mercer County city?",
+      "answer": "Trenton",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-culture-millman-center",
+      "question": "Located in Lakewood, New Jersey, what is the specific proper name of the internationally prominent institution recognized as one of the largest rabbinical yeshivas in the world outside of Israel?",
+      "answer": "Beth Medrash Govoha",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-history-jersey-city-black-tom",
+      "question": "On July 30, 1916, German saboteurs detonated a massive ammunition depot awaiting shipment to the Allies at which specific harbor island location in Jersey City?",
+      "answer": "Black Tom",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-science-valium-roche",
+      "question": "The blockbuster anti-anxiety medications Librium and Valium were both synthesized in the 1950s and 1960s by chemist Leo Sternbach at the US headquarters of Hoffmann-La Roche in which New Jersey town?",
+      "answer": "Nutley",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-food-jersey-mike-sub",
+      "question": "Founded originally as 'Mike's Subs' in 1956, which massive global fast-casual submarine sandwich chain trace its corporate roots and headquarters back to Manasquan, New Jersey?",
+      "answer": "Jersey Mike's Subs",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-sports-monmouth-park",
+      "question": "Opened originally in 1870 and home to the prestigious Haskell Stakes, what is the specific proper name of the historic thoroughbred horse racing track located in Oceanport?",
+      "answer": "Monmouth Park Racetrack",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-history-perth-amboy-capital",
+      "question": "Serving as the counterpart to Burlington, which coastal community served as the official provincial capital of East Jersey prior to the 1702 provincial merger?",
+      "answer": "Perth Amboy",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-history-nj-plan",
+      "question": "During the 1787 Constitutional Convention, which New Jersey statesman introduced the 'New Jersey Plan' to advocate for equal legislative representation for smaller states?",
+      "answer": "William Paterson",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-culture-wildwood-motels",
+      "question": "The coastal resort towns of the Wildwoods are internationally famous for preserving the largest concentration of mid-century commercial architecture in the US, known by what specific design style nickname?",
+      "answer": "Doo Wop",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-geography-barnegat-lighthouse",
+      "question": "Affectionately nicknamed 'Old Barney,' the historic 1859 lighthouse designed by George Meade stands at the northern tip of which New Jersey barrier island?",
+      "answer": "Long Beach Island",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-history-whitman-house",
+      "question": "Famed American poet Walt Whitman spent the final years of his life writing and revising 'Leaves of Grass' at his personal home located on Mickle Street in which South Jersey city?",
+      "answer": "Camden",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-nature-paterson-falls",
+      "question": "Formed by the Passaic River and harnessed by Alexander Hamilton to power America's first planned industrial city, what is the specific geographic name of the 77-foot-high waterfall in Passaic County?",
+      "answer": "Great Falls",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-business-johnson-hq",
+      "question": "Founded in 1886 by three brothers to manufacture sterile surgical dressings, which multi-national pharmaceutical and medical technologies corporation maintains its global headquarters in New Brunswick?",
+      "answer": "Johnson & Johnson",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-history-morven-estate",
+      "question": "Located in Princeton, which historic 18th-century mansion—built by Declaration of Independence signer Richard Stockton—served as the official first home executive residence for New Jersey's governors?",
+      "answer": "Morven",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-celebrity-bruce-springsteen-freehold",
+      "question": "Which iconic rock musician, known worldwide as 'The Boss,' grew up in Freehold, New Jersey, and detailed his working-class upbringing there in his 2016 autobiography?",
+      "answer": "Bruce Springsteen",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-celebrity-meryl-streep-summit",
+      "question": "Which record-breaking, three-time Academy Award-winning actress was born in Summit, New Jersey, and raised in Bernardsville, where she attended Bernards High School?",
+      "answer": "Meryl Streep",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-tv-jersey-shore-house-town",
+      "question": "The historic, neon-soaked beach house featured in the hit MTV reality series 'Jersey Shore' is located in which specific Ocean County borough?",
+      "answer": "Seaside Heights",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-celebrity-danny-devito-asbury",
+      "question": "Which beloved, diminutive actor, famous for playing Frank Reynolds on 'It's Always Sunny in Philadelphia,' was raised in Asbury Park, New Jersey, and worked at a salon there before acting?",
+      "answer": "Danny DeVito",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-tv-sopranos-strip-club",
+      "question": "In the HBO series 'The Sopranos,' Tony Soprano and his crew use a fictional strip club named the Bada Bing! as their primary headquarters, which was filmed at Satin Dolls in which real Bergen County borough?",
+      "answer": "Lodi",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-celebrity-jack-nicholson-neptune",
+      "question": "Which legendary Hollywood actor, a three-time Oscar winner famous for 'The Shining,' was born in Neptune, New Jersey, and raised in the coastal towns of Neptune City and Spring Lake?",
+      "answer": "Jack Nicholson",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-music-bon-jovi-sayreville",
+      "question": "Rock frontman Jon Bon Jovi, who formed his namesake band in 1983, spent his formative teenage years and went to high school in which Middlesex County borough?",
+      "answer": "Sayreville",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-celebrity-lauryn-hill-south-orange",
+      "question": "Which iconic multi-Grammy-winning R&B singer, rapper, and former frontwoman of the Fugees was raised in South Orange, New Jersey, and attended Columbia High School alongside actor Zach Braff?",
+      "answer": "Lauryn Hill",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-celebrity-bruce-willis-penns-grove",
+      "question": "Which action movie star, famous for playing John McClane in the 'Die Hard' franchise, moved to South Jersey as a child and grew up in the Salem County industrial town of Penns Grove?",
+      "answer": "Bruce Willis",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-celebrity-whitney-houston-newark",
+      "question": "Which legendary powerhouse vocalist, whose 1992 version of 'I Will Always Love You' became one of the best-selling singles ever, was born in Newark and famously grew up singing in East Orange?",
+      "answer": "Whitney Houston",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-tv-jersey-shore-snooki-chile",
+      "question": "Though she became a pop culture icon representing the Jersey Shore, breakout reality star Nicole 'Snooki' Polizzi was actually born in which South American country before being adopted?",
+      "answer": "Chile",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-celebrity-john-travolta-englewood",
+      "question": "Which Oscar-nominated actor and dance icon, famous for 'Saturday Night Fever' and 'Pulp Fiction,' was born and raised as the youngest of six children in Englewood, New Jersey?",
+      "answer": "John Travolta",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-celebrity-queen-latifah-newark",
+      "question": "Which pioneering hip-hop artist, Oscar-nominated actress, and talk show host was born Dana Owens in Newark and later attended Irvington Public Schools?",
+      "answer": "Queen Latifah",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-celebrity-anthony-bourdain-leonia",
+      "question": "Which late, legendary celebrity chef, author of 'Kitchen Confidential,' and beloved travel documentarian grew up in the Bergen County suburb of Leonia, New Jersey?",
+      "answer": "Anthony Bourdain",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-tv-sopranos-opening-toll",
+      "question": "During the iconic opening sequence of 'The Sopranos,' Tony Soprano is seen driving through the Lincoln Tunnel and paying a toll at an exit barrier on which major New Jersey highway?",
+      "answer": "New Jersey Turnpike",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-celebrity-peter-dinklage-morristown",
+      "question": "Which acclaimed, Emmy-winning actor, world-famous for playing Tyrion Lannister on HBO's 'Game of Thrones,' was born in Morristown and grew up in Brookside, New Jersey?",
+      "answer": "Peter Dinklage",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-celebrity-kelly-ripa-stratford",
+      "question": "Which long-running morning talk show host and former soap opera actress was born and raised in Camden County, graduating from Eastern Regional High School in Voorhees?",
+      "answer": "Kelly Ripa",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-celebrity-ice-t-newark",
+      "question": "Which legendary gangsta rap pioneer and long-running 'Law & Order: Special Victims Unit' actor was born Tracy Marrow in Newark, New Jersey, before moving to Los Angeles as a teenager?",
+      "answer": "Ice-T",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-music-my-chemical-romance-newark",
+      "question": "Which massive 2000s emo-pop punk band, famous for their theatrical concept album 'The Black Parade,' was formed in Newark in 2001 by brothers Gerard and Mikey Way?",
+      "answer": "My Chemical Romance",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-celebrity-buzz-aldrin-glen-ridge",
+      "question": "Which historic American astronaut, who became the second person to walk on the Moon during the 1969 Apollo 11 mission, was born and raised in Glen Ridge, New Jersey?",
+      "answer": "Buzz Aldrin",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-celebrity-jon-stewart-lawrenceville",
+      "question": "Which satirical political comedian and longtime host of 'The Daily Show' moved to New Jersey as a child, growing up in Lawrenceville and graduating from Lawrence High School?",
+      "answer": "Jon Stewart",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-celebrity-martha-stewart-nutley",
+      "question": "Which global lifestyle and homemaking mogul, media businesswoman, and author grew up as one of six children in the Essex County township of Nutley, New Jersey?",
+      "answer": "Martha Stewart",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-celebrity-paul-rudd-passaic",
+      "question": "Which famously ageless comedic actor and Marvel cinematic star, known for 'Anchorman' and 'Ant-Man,' was born to British parents in the city of Passaic, New Jersey?",
+      "answer": "Paul Rudd",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-celebrity-zoe-saldana-passaic",
+      "question": "Which box-office powerhouse actress, famous for starring roles in 'Avatar,' 'Guardians of the Galaxy,' and 'Star Trek,' was born in Passaic, New Jersey, before spending part of her childhood in the Dominican Republic?",
+      "answer": "Zoe Saldana",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-celebrity-shaquille-oneal-newark",
+      "question": "Which legendary, dominant Hall of Fame NBA center and sports broadcaster was born in Newark, New Jersey, where he frequently credits the local Boys & Girls Club for keeping him on the right path?",
+      "answer": "Shaquille O'Neal",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-celebrity-tom-cruise-glen-ridge",
+      "question": "Which mega-star action actor and 'Mission: Impossible' protagonist spent his crucial high school years in New Jersey, graduating from Glen Ridge High School in 1980?",
+      "answer": "Tom Cruise",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-celebrity-dionne-warwick-east-orange",
+      "question": "Which legendary R&B and pop vocalist, famous for 'Walk On By' and her iconic modern Twitter presence, was born into a gospel-singing family in East Orange, New Jersey?",
+      "answer": "Dionne Warwick",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-tv-sopranos-holstens",
+      "question": "The controversial, cut-to-black final scene of 'The Sopranos' series finale was filmed at what real-world, historic confectionery and ice cream parlor located in Bloomfield, New Jersey?",
+      "answer": "Holsten's",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-celebrity-anne-hathaway-millburn",
+      "question": "Which Academy Award-winning actress, famous for 'The Devil Wears Prada' and 'Les Misérables,' was raised in the affluent Essex County township of Millburn?",
+      "answer": "Anne Hathaway",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-music-stone-pony-asbury",
+      "question": "What is the specific proper name of the legendary Asbury Park rock music club opened in 1974 that served as a launching pad for both Bruce Springsteen and Southside Johnny?",
+      "answer": "The Stone Pony",
+      "category": "New Jersey",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Stone Pony"
+      ]
+    },
+    {
+      "slug": "nj-celebrity-michael-douglas-new-brunswick",
+      "question": "Which two-time Academy Award-winning actor and producer, famous for playing Gordon Gekko in 'Wall Street,' was born in New Brunswick, New Jersey, to acting royalty parents?",
+      "answer": "Michael Douglas",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-celebrity-gloria-gaynor-newark",
+      "question": "Which disco icon and powerhouse vocalist, world-famous for her definitive 1978 female empowerment anthem 'I Will Survive,' was born and raised in Newark, New Jersey?",
+      "answer": "Gloria Gaynor",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-celebrity-james-gandolfini-westwood",
+      "question": "The late, great actor James Gandolfini, immortalized as Tony Soprano, was born in Westwood, New Jersey, and famously graduated from high school in which Bergen County municipality?",
+      "answer": "Park Ridge",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-celebrity-christina-ricci-montclair",
+      "question": "Which actress, who found fame as a child playing Wednesday Addams in 'The Addams Family' and later starred in 'Yellowjackets,' grew up and attended high school in Montclair, New Jersey?",
+      "answer": "Christina Ricci",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-celebrity-redman-newark",
+      "question": "Which prominent East Coast hip-hop artist, famous for his solo work on Def Jam and his collaborative albums and stoner comedies with Method Man, was born and raised in Newark?",
+      "answer": "Redman",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-celebrity-chelsea-handler-livingston",
+      "question": "Which outspoken stand-up comedian, late-night talk show host, and bestselling author of 'Are You There, Vodka? It's Me, Chelsea' was raised as the youngest of six children in Livingston, New Jersey?",
+      "answer": "Chelsea Handler",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-celebrity-ray-liotta-newark",
+      "question": "Which late, intense actor, unforgettable as real-life mobster Henry Hill in Martin Scorsese's 1990 masterpiece 'Goodfellas,' was born in Newark and raised in Union, New Jersey?",
+      "answer": "Ray Liotta",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-celebrity-fugees-wyclef-jean-teaneck",
+      "question": "Before achieving global hip-hop stardom with the Fugees alongside Lauryn Hill, musician and producer Wyclef Jean moved to New Jersey and lived in which Bergen County township?",
+      "answer": "Teaneck",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-celebrity-kal-penn-montclair",
+      "question": "Which actor, famous for the 'Harold & Kumar' film franchise, was born in Montclair, raised in Freehold, and later left acting briefly to work inside the Obama administration?",
+      "answer": "Kal Penn",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-celebrity-brian-williams-rutherford",
+      "question": "Which prominent television journalist and former long-time anchor of NBC Nightly News spent his youth growing up in Middletown Township, New Jersey?",
+      "answer": "Brian Williams",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-celebrity-ashley-tisdale-ocean",
+      "question": "Which actress and singer, who skyrocketed to fame in the 2000s as Sharpay Evans in Disney's 'High School Musical' franchise, was born and raised in Monmouth County's Ocean Township?",
+      "answer": "Ashley Tisdale",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-celebrity-kevin-smith-red-bank",
+      "question": "Indie filmmaker Kevin Smith loves his home state so much that he owns and operates a famous comic book shop called Jay and Silent Bob’s Secret Stash in which Monmouth County borough?",
+      "answer": "Red Bank",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-celebrity-chris-rock-andrews",
+      "question": "Though tightly associated with Brooklyn, which brilliant stand-up comedian and actor lived for years in an upscale Alpine, New Jersey mansion during the height of his fame?",
+      "answer": "Chris Rock",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-music-smithereens-carteret",
+      "question": "Which influential 1980s alternative rock band, famous for power-pop hits like 'A Girl Like You' and 'Too Much Passion,' was formed in Carteret, New Jersey?",
+      "answer": "The Smithereens",
+      "category": "New Jersey",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Smithereens"
+      ]
+    },
+    {
+      "slug": "nj-celebrity-jane-krakowski-parsippany",
+      "question": "Which hilarious, Tony-winning and Emmy-nominated comedic actress, famous for playing Jenna Maroney on '30 Rock,' was born and raised in Parsippany-Troy Hills, New Jersey?",
+      "answer": "Jane Krakowski",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-celebrity-mancini-englewood",
+      "question": "Which legendary American film composer, who created the unforgettable 'Pink Panther Theme' and won four Oscars, was born in Cleveland but raised in the steel town of West Aliquippa before building his early musical career out of Englewood?",
+      "answer": "Henry Mancini",
+      "category": "New Jersey",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "nj-celebrity-brooke-shields-englewood",
+      "question": "Which iconic model and actress, who starred in 'The Blue Lagoon' and graduated from Princeton University, was born in New York City but raised in Englewood, New Jersey?",
+      "answer": "Brooke Shields",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-celebrity-jon-jonas-brothers-wyckoff",
+      "question": "The pop-rock phenomenon family band The Jonas Brothers spent their childhood years growing up in which affluent Bergen County township?",
+      "answer": "Wyckoff",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nj-celebrity-vera-farmiga-clifton",
+      "question": "Which Oscar-nominated actress, acclaimed for her roles in 'Up in the Air' and 'The Conjuring' horror franchise, was raised in a strict Ukrainian-American community in Clifton, New Jersey?",
+      "answer": "Vera Farmiga",
+      "category": "New Jersey",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "nj-celebrity-frankie-valli-newark",
+      "question": "Which legendary, falsetto-voiced frontman of The Four Seasons, whose life inspired the smash hit Broadway musical 'Jersey Boys,' was raised in the public housing projects of Newark?",
+      "answer": "Frankie Valli",
+      "category": "New Jersey",
+      "difficulty": "easy"
+    }
+  ]
+}

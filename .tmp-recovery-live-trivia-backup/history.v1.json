@@ -1,0 +1,734 @@
+{
+  "categoryName": "History",
+  "questions": [
+    {
+      "slug": "first-emperor-of-rome",
+      "question": "Who was the first official emperor of the Roman Empire?",
+      "answer": "Augustus",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "magna-carta-signing-year",
+      "question": "In what year was the Magna Carta signed?",
+      "answer": "1215",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "french-revolution-start",
+      "question": "The storming of which prison signaled the start of the French Revolution?",
+      "answer": "Bastille",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "last-egyptian-pharaoh",
+      "question": "Who was the last active pharaoh of Ptolemaic Egypt?",
+      "answer": "Cleopatra VII",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "cold-war-berlin-wall-fall",
+      "question": "In which year did the Berlin Wall fall?",
+      "answer": "1989",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "american-civil-war-start",
+      "question": "The first shots of the American Civil War were fired at which location?",
+      "answer": "Fort Sumter",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "industrial-revolution-origin",
+      "question": "In which country did the Industrial Revolution begin?",
+      "answer": "Great Britain",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "UK",
+        "U.K.",
+        "United Kingdom",
+        "Britain"
+      ]
+    },
+    {
+      "slug": "discovery-of-penicillin",
+      "question": "Who discovered penicillin in 1928?",
+      "answer": "Alexander Fleming",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "apartheid-end-south-africa",
+      "question": "Who was the first black president of South Africa after Apartheid?",
+      "answer": "Nelson Mandela",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "battle-of-hastings-date",
+      "question": "Which group won the Battle of Hastings in 1066?",
+      "answer": "Normans",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "ancient-greek-philosopher-plato-teacher",
+      "question": "Who was the teacher of Plato?",
+      "answer": "Socrates",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "aztec-empire-conqueror",
+      "question": "Which Spanish conquistador led the expedition that caused the fall of the Aztec Empire?",
+      "answer": "Hernán Cortés",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "world-war-one-trigger",
+      "question": "The assassination of which figure triggered World War I?",
+      "answer": "Archduke Franz Ferdinand",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "women-suffrage-us-amendment",
+      "question": "Which amendment to the US Constitution granted women the right to vote?",
+      "answer": "19th",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "mali-empire-richest-man",
+      "question": "Who was the 14th-century ruler of the Mali Empire, often cited as the wealthiest person in history?",
+      "answer": "Mansa Musa",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "ottoman-empire-fall-of-constantinople",
+      "question": "In what year did the Ottoman Empire capture Constantinople?",
+      "answer": "1453",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "voyage-of-beagle-scientist",
+      "question": "Which scientist traveled on the HMS Beagle?",
+      "answer": "Charles Darwin",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "invention-of-printing-press",
+      "question": "Who is credited with inventing the movable-type printing press in Europe?",
+      "answer": "Johannes Gutenberg",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "soviet-union-first-leader",
+      "question": "Who was the first leader of the Soviet Union?",
+      "answer": "Vladimir Lenin",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "american-revolution-tea-party-city",
+      "question": "In which city did the famous 'Tea Party' of 1773 take place?",
+      "answer": "Boston",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "battle-of-waterloo-loser",
+      "question": "Which leader was defeated at the Battle of Waterloo?",
+      "answer": "Napoleon Bonaparte",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "renaissance-birthplace",
+      "question": "In which city is the Renaissance generally considered to have started?",
+      "answer": "Florence",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "civil-rights-act-year",
+      "question": "In what year was the US Civil Rights Act signed into law?",
+      "answer": "1964",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "great-fire-of-london-year",
+      "question": "In what year did the Great Fire of London occur?",
+      "answer": "1666",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "mongol-empire-founder",
+      "question": "Who founded the Mongol Empire?",
+      "answer": "Genghis Khan",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-independence-day",
+      "question": "In which year did the United States declare independence from Great Britain?",
+      "answer": "1776",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-man-in-space",
+      "question": "Who was the first human to travel into space?",
+      "answer": "Yuri Gagarin",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "spanish-armada-defeat",
+      "question": "Which English monarch reigned during the defeat of the Spanish Armada?",
+      "answer": "Elizabeth I",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "inca-empire-capital",
+      "question": "What was the capital city of the Inca Empire?",
+      "answer": "Cusco",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "fall-of-berlin-wall-leader",
+      "question": "Who was the leader of the Soviet Union when the Berlin Wall fell?",
+      "answer": "Mikhail Gorbachev",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "vietnam-war-end-year",
+      "question": "In what year did the Vietnam War officially end with the fall of Saigon?",
+      "answer": "1975",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "first-circumnavigation-leader",
+      "question": "Who led the first expedition to circumnavigate the globe?",
+      "answer": "Ferdinand Magellan",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "rossetta-stone-discovery",
+      "question": "The Rosetta Stone was key to deciphering which ancient writing system?",
+      "answer": "Hieroglyphics",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "wwii-d-day-date",
+      "question": "In which month and year did the D-Day landings occur?",
+      "answer": "June 1944",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "emancipation-proclamation-president",
+      "question": "Which US President issued the Emancipation Proclamation?",
+      "answer": "Abraham Lincoln",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "meiji-restoration-country",
+      "question": "In which country did the Meiji Restoration take place?",
+      "answer": "Japan",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "boxing-rebellion-location",
+      "question": "In which country did the Boxer Rebellion occur at the end of the 19th century?",
+      "answer": "China",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "PRC",
+        "People's Republic of China"
+      ]
+    },
+    {
+      "slug": "first-woman-nobel-prize",
+      "question": "Who was the first woman to win a Nobel Prize?",
+      "answer": "Marie Curie",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "louisiana-purchase-seller",
+      "question": "From which country did the United States purchase the Louisiana Territory?",
+      "answer": "France",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "punic-wars-rivals",
+      "question": "The Punic Wars were fought between Rome and which other city-state?",
+      "answer": "Carthage",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "titanic-sinking-year",
+      "question": "In which year did the RMS Titanic sink?",
+      "answer": "1912",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mohandas-gandhi-title",
+      "question": "What honorific title, meaning 'Great Soul', was given to Mohandas Gandhi?",
+      "answer": "Mahatma",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "un-founding-year",
+      "question": "In what year was the United Nations (UN) founded?",
+      "answer": "1945",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "viking-explorer-america",
+      "question": "Which Viking explorer is credited with reaching North America before Columbus?",
+      "answer": "Leif Erikson",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "trail-of-tears-president",
+      "question": "Which US President signed the Indian Removal Act, leading to the Trail of Tears?",
+      "answer": "Andrew Jackson",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "code-of-hammurabi-origin",
+      "question": "The Code of Hammurabi originated from which ancient civilization?",
+      "answer": "Babylonian",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "hiroshima-bombing-date",
+      "question": "In which month and year was the atomic bomb dropped on Hiroshima?",
+      "answer": "August 1945",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "battle-of-thermopylae-king",
+      "question": "Which Spartan king led the 300 at the Battle of Thermopylae?",
+      "answer": "Leonidas",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "six-day-war-year",
+      "question": "In what year was the Six-Day War fought?",
+      "answer": "1967",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "magellan-strait-discovery",
+      "question": "Ferdinand Magellan was the first European to sail across which ocean?",
+      "answer": "Pacific",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "abolition-of-slavery-uk-year",
+      "question": "In what year did the Slavery Abolition Act pass in the British Empire?",
+      "answer": "1833",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "manhattan-project-leader",
+      "question": "Who was the scientific director of the Manhattan Project?",
+      "answer": "J. Robert Oppenheimer",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "ancient-library-of-alexandria-location",
+      "question": "In which modern-day country was the Library of Alexandria located?",
+      "answer": "Egypt",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "fall-of-the-bastille-date",
+      "question": "On which date is Bastille Day celebrated in France?",
+      "answer": "July 14",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "glorious-revolution-country",
+      "question": "In which country did the Glorious Revolution of 1688 take place?",
+      "answer": "England",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "crusades-target-city",
+      "question": "What was the main target city of the First Crusade?",
+      "answer": "Jerusalem",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "apartheid-country",
+      "question": "Which country enforced the system of racial segregation known as Apartheid?",
+      "answer": "South Africa",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "invention-of-the-telephone",
+      "question": "Who is officially credited with the invention of the telephone?",
+      "answer": "Alexander Graham Bell",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-man-on-moon-year",
+      "question": "In what year did Neil Armstrong walk on the moon?",
+      "answer": "1969",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "pearl-harbor-attack-year",
+      "question": "In which year did the attack on Pearl Harbor occur?",
+      "answer": "1941",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "great-depression-start-year",
+      "question": "In what year did the US stock market crash, sparking the Great Depression?",
+      "answer": "1929",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "tiananmen-square-protest-year",
+      "question": "In what year did the Tiananmen Square protests occur?",
+      "answer": "1989",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "conquest-of-england-duke",
+      "question": "Which Norman Duke became King of England in 1066?",
+      "answer": "William the Conqueror",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "bolshevik-revolution-leader",
+      "question": "Who led the Bolshevik Party during the Russian Revolution of 1917?",
+      "answer": "Vladimir Lenin",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "reign-of-terror-leader",
+      "question": "Who was the leading figure during the Reign of Terror in revolutionary France?",
+      "answer": "Maximilien Robespierre",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "boston-massacre-year",
+      "question": "In what year did the Boston Massacre occur?",
+      "answer": "1770",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "berlin-wall-construction-year",
+      "question": "In what year did construction on the Berlin Wall begin?",
+      "answer": "1961",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "mona-lisa-artist",
+      "question": "Which historical figure painted the Mona Lisa?",
+      "answer": "Leonardo da Vinci",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "war-of-1812-belligerents",
+      "question": "The War of 1812 was fought between the US and which other power?",
+      "answer": "Great Britain",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "UK",
+        "U.K.",
+        "United Kingdom",
+        "Britain"
+      ]
+    },
+    {
+      "slug": "protestant-reformation-starter",
+      "question": "Who started the Protestant Reformation by nailing his 95 Theses to a church door?",
+      "answer": "Martin Luther",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "panama-canal-completion-year",
+      "question": "In what year was the Panama Canal completed?",
+      "answer": "1914",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "cuban-missile-crisis-year",
+      "question": "In what year did the Cuban Missile Crisis occur?",
+      "answer": "1962",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "suez-crisis-year",
+      "question": "In what year did the Suez Crisis take place?",
+      "answer": "1956",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "battle-of-gettysburg-year",
+      "question": "In what year did the Battle of Gettysburg occur?",
+      "answer": "1863",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "first-crusade-pope",
+      "question": "Which Pope called for the First Crusade in 1095?",
+      "answer": "Urban II",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "spanish-civil-war-start-year",
+      "question": "In what year did the Spanish Civil War begin?",
+      "answer": "1936",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "byzantine-empire-capital",
+      "question": "What was the capital of the Byzantine Empire?",
+      "answer": "Constantinople",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "viet-minh-leader",
+      "question": "Who was the leader of the Viet Minh during the struggle against French colonial rule?",
+      "answer": "Ho Chi Minh",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "tokugawa-shogunate-end-year",
+      "question": "In what year did the Tokugawa Shogunate end?",
+      "answer": "1868",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "fall-of-the-incas-conquistador",
+      "question": "Which conquistador conquered the Inca Empire?",
+      "answer": "Francisco Pizarro",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "golden-age-of-pericles-city",
+      "question": "The Golden Age of Pericles is associated with which ancient city?",
+      "answer": "Athens",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "founding-of-rome-traditional-year",
+      "question": "According to tradition, in what year was Rome founded?",
+      "answer": "753 BC",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "gulf-war-operation-name",
+      "question": "What was the codename for the US-led air offensive in the 1991 Gulf War?",
+      "answer": "Desert Storm",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "invention-of-the-airplane",
+      "question": "In what year did the Wright brothers make their first powered flight?",
+      "answer": "1903",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "signing-of-treaty-of-versailles",
+      "question": "In what year was the Treaty of Versailles signed, ending WWI?",
+      "answer": "1919",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "first-us-president",
+      "question": "Who was the first president of the United States?",
+      "answer": "George Washington",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "hindenburg-disaster-year",
+      "question": "In what year did the Hindenburg airship disaster occur?",
+      "answer": "1937",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "reunification-of-germany-year",
+      "question": "In what year was Germany officially reunited?",
+      "answer": "1990",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "war-of-independence-mexico-start",
+      "question": "In what year did the Mexican War of Independence begin?",
+      "answer": "1810",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    }
+  ],
+  "familiarity": "moderate"
+}

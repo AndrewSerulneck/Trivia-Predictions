@@ -1,12 +1,9 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { ensureAnonymousSession } from "@/lib/auth";
+import React, { useCallback, useEffect, useState } from "react";
 import { ADMIN_SECTION_OPTIONS, type AdminSection } from "@/components/admin/adminSections";
 import { supabase } from "@/lib/supabase";
 import type { Venue } from "@/types";
-import { getVenueDisplayName } from "@/lib/venueDisplay";
 
 type LoadState = "idle" | "loading" | "error";
 
@@ -17,7 +14,6 @@ type AdminConsoleProps = {
 };
 
 export function AdminConsole({ venues, mode = "dashboard", initialSection }: AdminConsoleProps) {
-  const router = useRouter();
   const [state, setState] = useState<LoadState>("loading");
   const [errorMessage, setErrorMessage] = useState("");
   const [accessToken, setAccessToken] = useState("");
@@ -79,19 +75,9 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
   }, [checkSession]);
 
   const bootstrapAdmin = async () => {
-    if (!supabase) {
-      setAdminLoginMessage("Supabase client is not available.");
-      return;
-    }
     setBootstrappingAdmin(true);
     setAdminLoginMessage("");
-    const { error } = await supabase.auth.signInWithPassword({
-      email: adminLoginUsername,
-      password: adminLoginPassword,
-    });
-    if (error) {
-      setAdminLoginMessage(error.message);
-    } else {
+    try {
       const response = await fetch("/api/admin/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -104,6 +90,8 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
         setAdminLoginMessage("Logged in successfully. You can now use the admin panel.");
         void checkSession();
       }
+    } catch {
+      setAdminLoginMessage("Network error. Please try again.");
     }
     setBootstrappingAdmin(false);
   };
@@ -151,10 +139,11 @@ export function AdminConsole({ venues, mode = "dashboard", initialSection }: Adm
           </p>
           <div className="space-y-3">
             <input
-              type="email"
+              type="text"
               value={adminLoginUsername}
               onChange={(e) => setAdminLoginUsername(e.target.value)}
-              placeholder="Admin Email"
+              placeholder="Admin Username"
+              autoComplete="username"
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
             />
             <input

@@ -1,0 +1,997 @@
+{
+  "categoryName": "Famous Landmarks",
+  "questions": [
+    {
+      "slug": "landmark-effiel-tower",
+      "question": "Constructed as the grand entrance arch for the 1889 World's Fair, this towering iron lattice structure on the Champ de Mars has become the definitive architectural symbol of Paris, France.",
+      "answer": "Eiffel Tower",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-machu-picchu",
+      "question": "Perched on a narrow mountain ridge 7,970 feet above sea level, this astonishing 15th-century Incan citadel remained largely hidden from the outside world until its rediscovery by Hiram Bingham in 1911.",
+      "answer": "Machu Picchu",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-taj-mahal",
+      "question": "Commissioned in 1632 by the Mughal emperor Shah Jahan to house the tomb of his favorite wife, Mumtaz Mahal, this ivory-white marble mausoleum sits on the southern bank of the Yamuna River in Agra, India.",
+      "answer": "Taj Mahal",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-colosseum",
+      "question": "Constructed under the Flavian dynasty between 72 AD and 80 AD, this massive freestanding oval amphitheater in the center of Rome once held up to 80,000 spectators for gladiatorial combats.",
+      "answer": "Colosseum",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-sagrada-familia",
+      "question": "Designed by the visionary Catalan architect Antoni Gaudí, this breathtaking, organic-styled basilica in Barcelona has been under continuous construction since 1882.",
+      "answer": "Sagrada Família",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-petra",
+      "question": "Famous for its rock-cut architecture and innovative water conduit system, this ancient Nabataean caravan city in Jordan is entered through a narrow sandstone gorge known as the Siq.",
+      "answer": "Petra",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-angkor-wat",
+      "question": "Originally constructed in the early 12th century as a Hindu temple dedicated to Vishnu before transforming into a Buddhist site, this massive complex in Cambodia is the largest religious monument in the world.",
+      "answer": "Angkor Wat",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-statue-of-liberty",
+      "question": "Designed by Frédéric-Auguste Bartholdi and dedicated in 1886, this colossal copper sculpture on Liberty Island was a gift from the people of France to the United States.",
+      "answer": "Statue of Liberty",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-christ-the-redeemer",
+      "question": "Constructed out of reinforced concrete and soapstone between 1922 and 1931, this 98-foot-tall Art Deco statue of Jesus Christ stands atop the summit of Corcovado Mountain overlooking Rio de Janeiro, Brazil.",
+      "answer": "Christ the Redeemer",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-alhambra",
+      "question": "This sprawling hilltop palace and fortress complex in Granada, Spain, stands as one of the most famous surviving examples of Islamic architecture from the Nasrid dynasty.",
+      "answer": "Alhambra",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-chichen-itza",
+      "question": "Dominated by the massive step-pyramid known as El Castillo, this large pre-Columbian city built by the Maya civilization sits in the Mexican state of Yucatán.",
+      "answer": "Chichen Itza",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-golden-gate-bridge",
+      "question": "Engineered by Joseph Strauss and opened in 1937, this iconic suspension bridge painted in a signature 'International Orange' hue spans the one-mile-wide strait connecting San Francisco to Marin County.",
+      "answer": "Golden Gate Bridge",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-stonehenge",
+      "question": "Located on Salisbury Plain in Wiltshire, England, this prehistoric monument consists of an outer ring of vertical sarsen standing stones topped by horizontal lintels, erected around 2500 BC.",
+      "answer": "Stonehenge",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-burj-khalifa",
+      "question": "Piercing the sky at a staggering 2,717 feet, this neo-Futurist mega-tall skyscraper in Dubai, United Arab Emirates, has reigned as the world's tallest building since its completion in 2010.",
+      "answer": "Burj Khalifa",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-sydney-opera-house",
+      "question": "Designed by Danish architect Jørn Utzon and formally opened in 1973, this Expressionist masterpiece on Bennelong Point features a series of distinctive gleaming white concrete 'shells' resembling sails.",
+      "answer": "Sydney Opera House",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-great-sphinx-of-giza",
+      "question": "Carved directly out of a single ridge of limestone on the west bank of the Nile, this colossal monolith depicts a mythical creature with the body of a lion and the head of an Egyptian pharaoh.",
+      "answer": "Great Sphinx of Giza",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-neuschwanstein-castle",
+      "question": "Commissioned by the reclusive 'Mad' King Ludwig II of Bavaria in 1869 as a personal refuge, this Romanesque Revival cliffside palace served as the direct inspiration for Disney's Sleeping Beauty Castle.",
+      "answer": "Neuschwanstein Castle",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-acropolis-of-athens",
+      "question": "This ancient rocky citadel rises high above the Greek capital and contains the architectural remains of several historic structures of great universal significance, most notably the Parthenon.",
+      "answer": "Acropolis of Athens",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-mount-rushmore",
+      "question": "Sculpted by Gutzon Borglum into the granite face of the Black Hills in South Dakota, this massive national memorial features the 60-foot-tall faces of George Washington, Thomas Jefferson, Theodore Roosevelt, and Abraham Lincoln.",
+      "answer": "Mount Rushmore",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-hagia-sophia",
+      "question": "Built in 537 AD as the patriarchal cathedral of the Byzantine Empire's capital, this architectural marvel in Istanbul is world-renowned for its massive, revolutionary pendentive dome.",
+      "answer": "Hagia Sophia",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-st-basils-cathedral",
+      "question": "Commissioned by Ivan the Terrible in 1555 to commemorate the capture of Kazan, this vivid, geometric cathedral on Moscow's Red Square is famous for its uniquely shaped, brightly painted onion domes.",
+      "answer": "St. Basil's Cathedral",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-brandenburg-gate",
+      "question": "Commissioned by King Frederick William II to represent peace, this 18th-century neoclassical triumphal arch in Berlin stood stranded inside the exclusion zone of the Berlin Wall during the Cold War.",
+      "answer": "Brandenburg Gate",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-borobudur",
+      "question": "Dating back to the 9th century during the Sailendra Dynasty, this massive geometric step-pyramid on the island of Java, Indonesia, stands as the world's largest Buddhist temple.",
+      "answer": "Borobudur",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "landmark-mesa-verde",
+      "question": "Located in southwestern Colorado, this rugged National Park protects over 600 ancient Ancestral Puebloan cliff dwellings, including the massive 150-room Cliff Palace built under overhanging rock ledges.",
+      "answer": "Mesa Verde",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "landmark-potala-palace",
+      "question": "Rising dramatically over the Lhasa Valley from the side of Marpo Ri (Red Mountain), this massive, fortress-like sanctuary served as the winter residence of the Dalai Lamas until the 1959 Tibetan uprising.",
+      "answer": "Potala Palace",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "landmark-forbidden-city",
+      "question": "Serving as the imperial palace for twenty-four emperors across the Ming and Qing dynasties, this massive, walled palace complex in the center of Beijing contains 980 surviving buildings across 180 acres.",
+      "answer": "Forbidden City",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-st-peters-basilica",
+      "question": "Designed principally by Donato Bramante, Michelangelo, Carlo Maderno, and Gian Lorenzo Bernini, this Renaissance masterpiece in Vatican City stands as the largest church building in the world.",
+      "answer": "St. Peter's Basilica",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-leaning-tower-of-pisa",
+      "question": "Construction began in 1173 on this freestanding bell tower in Tuscany, Italy, which famously began to sink into its soft alluvial subsoil before the third of its eight stories was even completed.",
+      "answer": "Leaning Tower of Pisa",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-versailles",
+      "question": "Originally built as a humble hunting lodge, this sprawling, opulent chateau was transformed by King Louis XIV into the seat of absolute political power and courtly life in France.",
+      "answer": "Palace of Versailles",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-moai-easter-island",
+      "question": "Carved by the Rapa Nui people between 1250 and 1500 AD out of compressed volcanic ash, these hundreds of monolithic human figures with oversized heads guard a remote Polynesian island.",
+      "answer": "Moai",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-cn-tower",
+      "question": "Piercing the skyline at 1,815 feet, this concrete communications and observation tower in downtown Toronto, Canada, reigned as the world's tallest freestanding structure from 1975 until 2007.",
+      "answer": "CN Tower",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-timbuktu",
+      "question": "Home to the historic Djinguereber Mosque built from mud bricks and wood in 1327, this ancient trading hub in Mali flourished as a legendary center of Islamic scholarship under the Mali Empire.",
+      "answer": "Timbuktu",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "landmark-panama-canal",
+      "question": "Opened in 1914 after a grueling, disease-plagued construction effort by France and the United States, this artificial 51-mile waterway utilizes a system of stepped locks to bisect the Isthmus of Panama.",
+      "answer": "Panama Canal",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-louvre",
+      "question": "Housed inside a massive 12th-century fortress turned royal palace along the Seine River, this institution features a controversial 1989 glass pyramid entrance designed by I.M. Pei.",
+      "answer": "Louvre Museum",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-mount-fuji",
+      "question": "Rising to a symmetrical, snow-capped cone of 12,389 feet, this active stratovolcano southwest of Tokyo stands as an immortal cultural and spiritual symbol of Japan.",
+      "answer": "Mount Fuji",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-mont-saint-michel",
+      "question": "This stunning tidal island and medieval Benedictine abbey off the coast of Normandy, France, is completely cut off from the mainland at high tide, reachable only via a winding causeway.",
+      "answer": "Mont-Saint-Michel",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-empire-state-building",
+      "question": "Completed in a blistering 13 months during the Great Depression, this 102-story Art Deco skyscraper in Midtown Manhattan held the title of the world's tallest building for nearly 40 years.",
+      "answer": "Empire State Building",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-cappadocia",
+      "question": "Located on a high plateau in central Turkey, this volcanic landscape is famous for its towering 'fairy chimney' rock formations, ancient underground cities, and skies filled with hot air balloons.",
+      "answer": "Cappadocia",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-terracotta-army",
+      "question": "Discovered accidentally by local farmers digging a well in 1974, this massive collection of thousands of life-sized clay soldiers was buried in Xi'an to protect China's first emperor in the afterlife.",
+      "answer": "Terracotta Army",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-big-ben",
+      "question": "Officially renamed Elizabeth Tower in 2012, this neo-Gothic clock tower at the north end of the Houses of Parliament in London is universally known by the nickname of its massive, 13.7-ton main bell.",
+      "answer": "Big Ben",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-the-western-wall",
+      "question": "Also known as the Wailing Wall, this ancient limestone retaining wall in the Old City of Jerusalem was originally constructed by Herod the Great to support the outer courtyard of the Second Temple.",
+      "answer": "Western Wall",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-lascaux-cave",
+      "question": "Discovered by a teenager and his dog in 1940, this complex of caves in southwestern France contains exceptionally detailed, 17,000-year-old Paleolithic wall paintings, primarily depicting large animals.",
+      "answer": "Lascaux Cave",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "landmark-hagia-sophia-blue-mosque",
+      "question": "Constructed between 1609 and 1616 during the rule of Ahmed I, this historic Istanbul mosque is famous for its cascading domes, six minarets, and interior walls hand-painted with over 20,000 blue Iznik tiles.",
+      "answer": "Blue Mosque",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-cliff-of-moher",
+      "question": "Running for roughly 9 miles along the Atlantic coast of County Clare, these breathtaking, vertical shale and sandstone sea cliffs plunge up to 702 feet into the ocean as Ireland's most visited natural landmark.",
+      "answer": "Cliffs of Moher",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-space-needle",
+      "question": "Built as the futuristic centerpiece of the 1962 Century 21 Exposition World's Fair, this 605-foot-tall tower features a flying-saucer-shaped observation deck dominating the skyline of Seattle, Washington.",
+      "answer": "Space Needle",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-sigiriya",
+      "question": "Dominated by a massive, 660-foot-tall column of sheer rock, this ancient fortress complex in Sri Lanka features a gateway carved into the shape of an enormous lion, complete with massive stone paws.",
+      "answer": "Sigiriya",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "landmark-arc-de-triomphe",
+      "question": "Commissioned by Napoleon in 1806 following his victory at Austerlitz, this monumental neoclassical arch stands proudly at the center of the Place Charles de Gaulle at the western end of the Champs-Élysées.",
+      "answer": "Arc de Triomphe",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-karnak-temple",
+      "question": "Comprising a vast mix of decayed temples, chapels, and pylons, this massive open-air complex near Luxor, Egypt, is dominated by the awe-inspiring Great Hypostyle Hall, which contains 134 colossal sandstone columns.",
+      "answer": "Karnak Temple",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "landmark-hollywood-sign",
+      "question": "Spelling out its name in 45-foot-tall white capital letters across Mount Lee in the Santa Monica Mountains, this landmark was originally erected in 1923 as a temporary advertisement for a local real estate development.",
+      "answer": "Hollywood Sign",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-white-house",
+      "question": "Located at 1600 Pennsylvania Avenue in Washington, D.C., this iconic building serves as the official residence and workplace of the President of the United States.",
+      "answer": "The White House",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "White House"
+      ]
+    },
+    {
+      "slug": "landmark-easy-great-wall-of-china",
+      "question": "Visible from many aerial and satellite views, this ancient stone-and-brick fortification stretches thousands of miles across the northern borders of China to protect against historic invasions.",
+      "answer": "The Great Wall of China",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Great Wall of China"
+      ]
+    },
+    {
+      "slug": "landmark-easy-grand-canyon",
+      "question": "Carved out over millions of years by the Colorado River in Arizona, this immense, colorful, and deep natural gorge stands as one of the world's most famous natural wonders.",
+      "answer": "Grand Canyon",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-niagara-falls",
+      "question": "Straddling the border between New York state and Ontario, Canada, this massive and thunderous group of three waterfalls is a world-famous destination for sightseers and boat tours.",
+      "answer": "Niagara Falls",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-times-square",
+      "question": "Nicknamed 'The Crossroads of the World', this brightly illuminated commercial intersection in Midtown Manhattan, New York City, is famous for its massive digital billboards and annual New Year's Eve ball drop.",
+      "answer": "Times Square",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-pyramids-of-giza",
+      "question": "Built as massive stone tombs for ancient Egyptian pharaohs like Khufu, these three towering structures have stood on a desert plateau outside Cairo for over 4,500 years.",
+      "answer": "Pyramids of Giza",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-central-park",
+      "question": "Spanning 843 acres in the middle of Manhattan, this massive, world-famous urban park features sprawling lawns, artificial lakes, walking paths, and a famous zoo.",
+      "answer": "Central Park",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-mount-everest",
+      "question": "Located in the Himalayas on the border between Nepal and China, this towering, snow-capped peak holds the title of the tallest mountain above sea level on Earth.",
+      "answer": "Mount Everest",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-buckingham-palace",
+      "question": "Featuring 775 rooms and the famous 'Changing of the Guard' ceremony, this massive London estate serves as the official administrative headquarters of the British monarch.",
+      "answer": "Buckingham Palace",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-london-eye",
+      "question": "Standing on the South Bank of the River Thames, this massive, 443-foot-tall giant observation wheel offers tourists sweeping, panoramic views of London's skyline.",
+      "answer": "London Eye",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-las-vegas-strip",
+      "question": "This famous four-mile stretch of South Las Vegas Boulevard in Nevada is world-renowned for its concentration of massive resort hotels, bright neon lights, and sprawling casinos.",
+      "answer": "Las Vegas Strip",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-mount-fuji-rebound",
+      "question": "This active stratovolcano with a perfectly symmetrical, snow-capped cone stands as the tallest mountain in Japan and a legendary symbol of the country.",
+      "answer": "Mount Fuji",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-yellowstone",
+      "question": "Mainly located in Wyoming, this legendary wilderness area became the world's very first National Park in 1872 and is famous for its wildlife and the 'Old Faithful' geyser.",
+      "answer": "Yellowstone National Park",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-leaning-tower",
+      "question": "This famous freestanding bell tower in Italy is known worldwide because its weak foundations caused it to noticeably tilt to one side shortly after construction began.",
+      "answer": "Leaning Tower of Pisa",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-rio-statue",
+      "question": "This colossal, 98-foot-tall Art Deco statue of Jesus Christ stands with his arms wide open atop Corcovado Mountain, looking down over the city of Rio de Janeiro, Brazil.",
+      "answer": "Christ the Redeemer",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-golden-gate",
+      "question": "Painted in a bright 'International Orange' color to stand out in the fog, this massive suspension bridge spans the opening of San Francisco Bay in California.",
+      "answer": "Golden Gate Bridge",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-colosseum-rebound",
+      "question": "This giant stone oval amphitheater in the center of Rome, Italy, was built by the ancient Roman Empire to hold massive gladiatorial games and public spectacles.",
+      "answer": "Colosseum",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-eiffel-tower-rebound",
+      "question": "Originally built as a temporary attraction for the 1889 World's Fair, this massive iron lattice tower on the Champ de Mars has become the definitive symbol of Paris.",
+      "answer": "Eiffel Tower",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-statue-of-liberty-rebound",
+      "question": "Standing tall in New York Harbor, this colossal green copper sculpture of a torch-bearing woman was given to the United States as a historic gift of friendship from France.",
+      "answer": "Statue of Liberty",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-taj-mahal-rebound",
+      "question": "This iconic, white marble palace-like monument in Agra, India, was built by a grieving Mughal emperor in the 1600s to serve as a stunning tomb for his favorite wife.",
+      "answer": "Taj Mahal",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-big-ben-rebound",
+      "question": "Though the name technically refers only to the massive 13-ton bell inside, this iconic, historic clock tower at the Houses of Parliament is a universal symbol of London.",
+      "answer": "Big Ben",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-hollywood-sign-rebound",
+      "question": "Spelled out in massive 45-foot-tall white letters across Mount Lee in California, this landmark is the ultimate visual symbol of the American film industry.",
+      "answer": "Hollywood Sign",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-sydney-opera",
+      "question": "Located on the harbor in Australia's largest city, this iconic performing arts building is famous for its unique roof design, which looks like giant white sails or shells.",
+      "answer": "Sydney Opera House",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-empire-state",
+      "question": "This towering, 102-story Art Deco skyscraper in Midtown Manhattan is famous for its open-air observation deck and for being climbed by King Kong in classic cinema.",
+      "answer": "Empire State Building",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-stonehenge-rebound",
+      "question": "Located in a grassy field in Wiltshire, England, this famous prehistoric mystery consists of a circular ring of massive standing stones erected thousands of years ago.",
+      "answer": "Stonehenge",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-strait-of-gibraltar",
+      "question": "This famous, narrow waterway connects the Atlantic Ocean to the Mediterranean Sea, separating Spain from Morocco.",
+      "answer": "Strait of Gibraltar",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-notre-dame",
+      "question": "Located on an island in the Seine River, this iconic, medieval Catholic cathedral in Paris is famous for its Gothic architecture, gargoyles, and flying buttresses.",
+      "answer": "Notre-Dame Cathedral",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-alcatraz",
+      "question": "Situated on a rocky island in San Francisco Bay, this notorious former federal prison once held famous criminals like Al Capone.",
+      "answer": "Alcatraz",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-panama-canal-rebound",
+      "question": "This famous artificial waterway cuts through Central America, allowing ships to pass directly between the Atlantic and Pacific Oceans.",
+      "answer": "Panama Canal",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-louvre-rebound",
+      "question": "As the world's largest art museum, this former Parisian palace features a famous glass pyramid entrance and houses the Mona Lisa.",
+      "answer": "Louvre Museum",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-dead-sea",
+      "question": "Bordered by Jordan and Israel, this famous saltwater lake sits at the lowest elevation on land and is so salty that swimmers float effortlessly.",
+      "answer": "Dead Sea",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-mount-rushmore-rebound",
+      "question": "Sculpted into the granite face of the Black Hills in South Dakota, this massive monument features the 60-foot heads of four American presidents.",
+      "answer": "Mount Rushmore",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-tower-bridge",
+      "question": "Often confused with London Bridge, this iconic combined bascule and suspension bridge crosses the River Thames next to the Tower of London.",
+      "answer": "Tower Bridge",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-machu-picchu-rebound",
+      "question": "Hidden high in the Andes Mountains of Peru, this world-famous 15th-century Incan citadel is often called the 'Lost City of the Incas'.",
+      "answer": "Machu Picchu",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-berlin-wall",
+      "question": "Though mostly demolished in 1989, preserved concrete stretches of this historical barrier still stand as a major landmark in Germany's capital city.",
+      "answer": "Berlin Wall",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-amazon-rainforest",
+      "question": "Spanning across northern South America, primarily in Brazil, this colossal jungle stands as the largest tropical rainforest on Earth.",
+      "answer": "Amazon Rainforest",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-chichen-itza-rebound",
+      "question": "Located on Mexico's Yucatán Peninsula, this ancient Mayan city is dominated by a massive, world-famous step-pyramid known as El Castillo.",
+      "answer": "Chichen Itza",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-versailles-rebound",
+      "question": "This massive, incredibly opulent palace complex outside of Paris was built by the 'Sun King' Louis XIV and features the famous Hall of Mirrors.",
+      "answer": "Palace of Versailles",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-fuji-rebound-two",
+      "question": "Standing tall near Tokyo, this active stratovolcano is Japan's highest peak and is instantly recognizable by its symmetrical, snow-capped cone.",
+      "answer": "Mount Fuji",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-vatican-city",
+      "question": "Surrounded entirely by the city of Rome, this tiny walled independent city-state serves as the spiritual headquarters of the Roman Catholic Church.",
+      "answer": "Vatican City",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-broadway",
+      "question": "Running through the heart of Manhattan's Theater District, this famous New York street is globally synonymous with commercial theater and massive musical productions.",
+      "answer": "Broadway",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-loch-ness",
+      "question": "Located in the Scottish Highlands, this deep, murky freshwater lake is famous worldwide due to alleged sightings of a mythical aquatic monster.",
+      "answer": "Loch Ness",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-space-needle-rebound",
+      "question": "Built for the 1962 World's Fair, this 605-foot-tall tower features a saucer-shaped observation deck that dominates the skyline of Seattle, Washington.",
+      "answer": "Space Needle",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-great-barrier-reef",
+      "question": "Visible from space off the northeastern coast of Australia, this massive natural wonder is the largest coral reef system on Earth.",
+      "answer": "Great Barrier Reef",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-st-peters-rebound",
+      "question": "Located inside Vatican City, this massive Renaissance-era church is one of the largest in the world and features a giant dome designed by Michelangelo.",
+      "answer": "St. Peter's Basilica",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-mount-vesuvius",
+      "question": "Located near Naples, Italy, this active volcano is famous for its catastrophic eruption in 79 AD that buried the ancient Roman city of Pompeii.",
+      "answer": "Mount Vesuvius",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-las-caux-cave-rebound",
+      "question": "This famous cave complex in southwestern France is internationally renowned for its highly detailed, 17,000-year-old prehistoric wall paintings of animals.",
+      "answer": "Lascaux Cave",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-wall-street",
+      "question": "Located in Lower Manhattan, this short, historic street is globally recognized as the definitive geometric and cultural hub of American financial markets.",
+      "answer": "Wall Street",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-brooklyn-bridge",
+      "question": "Connecting Manhattan and Brooklyn over the East River, this beautiful historic suspension bridge features iconic stone arches and a popular pedestrian walkway.",
+      "answer": "Brooklyn Bridge",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-sahara-desert",
+      "question": "Stretching across the entire northern third of the African continent, this massive, arid landscape holds the title of the largest hot desert in the world.",
+      "answer": "Sahara Desert",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-golden-gate-park",
+      "question": "This massive, rectangular urban park in San Francisco is even larger than New York's Central Park and stretches all the way to the Pacific Ocean.",
+      "answer": "Golden Gate Park",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-mount-kilimanjaro",
+      "question": "Located in Tanzania, this massive, snow-capped dormant volcano stands as the highest mountain in Africa and the tallest free-standing mountain in the world.",
+      "answer": "Mount Kilimanjaro",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-beverly-hills-90210",
+      "question": "This world-famous upscale shopping street in Beverly Hills, California, is legendary for its ultra-luxury designer boutiques and celebrity sightings.",
+      "answer": "Rodeo Drive",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-arc-de-triomphe-rebound",
+      "question": "This famous neoclassical triumphal arch stands proudly at the center of a massive traffic roundabout at the western end of the Champs-Élysées in Paris.",
+      "answer": "Arc de Triomphe",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-canals-of-venice",
+      "question": "This world-famous, winding Italian waterway serves as the main aquatic 'street' for gondolas and water buses traveling through the city of Venice.",
+      "answer": "Grand Canal",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-sherwood-forest",
+      "question": "This historic royal forest in Nottinghamshire, England, is famous worldwide due to its legendary association with the folklore of Robin Hood.",
+      "answer": "Sherwood Forest",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-the-alamo",
+      "question": "This historic Spanish mission and fortress complex in San Antonio, Texas, was the site of a legendary 1836 battle during the Texas Revolution.",
+      "answer": "The Alamo",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Alamo"
+      ]
+    },
+    {
+      "slug": "landmark-easy-piazza-san-marco",
+      "question": "As the principal public square of Venice, Italy, this massive, historic plaza is tightly bordered by St. Mark's Basilica and flocks of pigeons.",
+      "answer": "St. Mark's Square",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-panther-parthenon",
+      "question": "Dedicated to the goddess Athena, the majestic ruins of this ancient white marble temple dominate the rocky cliffside of the Acropolis in Athens, Greece.",
+      "answer": "Parthenon",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-death-valley",
+      "question": "Located in California's Mojave Desert, this intense landscape contains Badwater Basin, which stands as the lowest and hottest point in North America.",
+      "answer": "Death Valley",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-fuji-tokyo-tower",
+      "question": "Painted in striking white and international orange zones to comply with aviation laws, this landmark Eiffel-inspired lattice tower stands tall in Japan's capital.",
+      "answer": "Tokyo Tower",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-madrid-plaza-mayor",
+      "question": "This massive, rectangular central plaza in the heart of Madrid, Spain, is completely surrounded by historic three-story residential buildings with arches.",
+      "answer": "Plaza Mayor",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-pentagon-building",
+      "question": "Serving as the massive headquarters for the U.S. Department of Defense in Virginia, this building is famous for its unique five-sided geometric design.",
+      "answer": "The Pentagon",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Pentagon"
+      ]
+    },
+    {
+      "slug": "landmark-easy-panama-canal-locks",
+      "question": "Constructed along the Atlantic coast of Florida, this sprawling historical launch site serves as the ultimate primary hub for American human spaceflight.",
+      "answer": "Kennedy Space Center",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-versailles-gardens",
+      "question": "This historic, open central square in Moscow sits next to the Kremlin and features the brightly colored onion domes of St. Basil's Cathedral.",
+      "answer": "Red Square",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-matterhorn-disney",
+      "question": "This iconic, active volcano on the island of Sicily stands as the tallest active volcano in Europe and is in a near-constant state of activity.",
+      "answer": "Mount Etna",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-wailing-wall-rebound",
+      "question": "This ancient limestone retaining wall in the Old City of Jerusalem is the holiest site where Jews are permitted to freely gather and pray.",
+      "answer": "Western Wall",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-cn-tower-skyline",
+      "question": "This historic cobblestone public square in the center of Prague's Old Town features a world-famous 15th-century Astronomical Clock.",
+      "answer": "Old Town Square",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-hollywood-walk",
+      "question": "Stretching across fifteen blocks of Hollywood Boulevard in California, this landmark sidewalk features thousands of five-pointed terrazzo and brass stars.",
+      "answer": "Hollywood Walk of Fame",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-trevi-fountain-coins",
+      "question": "This spectacular, giant marble fountain in Rome is world-famous for the tourist tradition of throwing a coin over your shoulder to ensure a return trip.",
+      "answer": "Trevi Fountain",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-vatican-sistine",
+      "question": "Located inside the Apostolic Palace in Vatican City, this historic chapel is world-famous for its magnificent ceiling frescoes painted by Michelangelo.",
+      "answer": "Sistine Chapel",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-easy-everglades",
+      "question": "Spanning the southern tip of Florida, this massive, subtropical marshland wilderness is famous for its unique ecosystem and wild alligators.",
+      "answer": "The Everglades",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Everglades"
+      ]
+    },
+    {
+      "slug": "landmark-easy-rockefeller-center",
+      "question": "This historic complex of commercial buildings in Midtown Manhattan is famous for its massive sunken plaza, ice rink, and annual giant Christmas tree.",
+      "answer": "Rockefeller Center",
+      "answer_format": "write_in",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    }
+  ],
+  "familiarity": "mainstream"
+}
