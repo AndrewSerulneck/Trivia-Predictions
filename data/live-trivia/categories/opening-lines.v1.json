@@ -1,0 +1,339 @@
+{
+  "categoryName": "Opening Lines",
+  "questions": [
+
+     {
+    "slug": "ray-liotta-goodfellas",
+    "question": "In what movie does Ray Liotta narrate this opening line: 'As far back as I can remember, I always wanted to be a gangster.'",
+    "answer": "Goodfellas",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  }, 
+    {
+    "slug": "call-me-ishmael",
+    "question": "In what book does the opening line read: 'Call me Ishmael.'?",
+    "answer": "Moby-Dick",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "it-was-the-best-of-times",
+    "question": "In what book does the opening line read: 'It was the best of times, it was the worst of times.'?",
+    "answer": "A Tale of Two Cities",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "happy-families",
+    "question": "In what book does the opening line read: 'Happy families are all alike; every unhappy family is unhappy in its own way.'?",
+    "answer": "Anna Karenina",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "all-children-grow-up",
+    "question": "In what classic children's book does the opening line read: 'All children, except one, grow up.'?",
+    "answer": "Peter Pan",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+
+  {
+    "slug": "mr-and-mrs-dursley",
+    "question": "In what book does the opening line read: 'Mr. and Mrs. Dursley, of number four, Privet Drive, were proud to say that they were perfectly normal, thank you very much.'?",
+    "answer": "Harry Potter and the Sorcerer's Stone",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-a-hole-in-the-ground",
+    "question": "In what book does the opening line read: 'In a hole in the ground there lived a hobbit.'?",
+    "answer": "The Hobbit",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "it-was-a-bright-cold-day",
+    "question": "In what book does the opening line read: 'It was a bright cold day in April, and the clocks were striking thirteen.'?",
+    "answer": "1984",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "star-wars-opening",
+    "question": "In what movie does the opening line read: 'A long time ago in a galaxy far, far away...'?",
+    "answer": "Star Wars",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "gone-with-the-wind-opening",
+    "question": "In what movie does the opening line read: 'There was a land of Cavaliers and Cotton Fields called the Old South.'?",
+    "answer": "Gone with the Wind",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-godfather-opening",
+    "question": "In what movie does the opening monologue read: 'I believe in America. America has made my fortune. And I raised my daughter in the American fashion.'?",
+    "answer": "The Godfather",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+    {
+    "slug": "the-departed-opening",
+    "question": "In what movie does Jack Nicholson narrate this opening line: 'I don't want to be a product of my environment. I want my environment to be a product of me.'?",
+    "answer": "The Departed",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+     {
+    "slug": "conan-the-barbarian-opening",
+    "question": "What movie starts with this monologue: 'Between the time when the oceans drank Atlantis and the rise of the sons of Aryas, there was an age undreamed of. And unto this, Conan, destined to wear the jeweled crown of Aquilonia upon a troubled brow.'?",
+    "answer": "Conan the Barbarian",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+      {
+    "slug": "eternal-sunshine-opening",
+    "question": "What movie starts with this monologue by Jim Carey: 'Random Thoughts, for Valentines day, 2004. The day's a holiday invented by greeting card companies, to make people feel like crap. I ditched work today. Took a train out to Montauk. I don't know why.'",
+    "answer": "Eternal Sunshine of the Spotless Mind",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+        {
+    "slug": "lotr-opening",
+    "question": "What movie franchise starts with this monologue:'The world is changed. I feel it in the water. I feel it in the earth. I smell it in the air. Much that once was is lost, for none now live who remember it.'?",
+    "answer": "The Lord of the Rings",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+          {
+    "slug": "raging-bull-opening",
+    "question": "What movie starts with this monologue by Robert de Niro: 'I remember those cheers. They still ring in my ears. After years, they remain in my thoughts. Go to one night, I took off my robe, and what’d I do? I forgot to wear shorts.'?",
+    "answer": "Raging Bull",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+            {
+    "slug": "patton-opening",
+    "question": "What movie starts with this monologue by George C. Scott as General George Patton: 'Be seated. Now, I want you to remember that no bastard ever won a war by dying for his country. He won it by making the other poor dumb bastard die for his country.'?",
+    "answer": "Patton",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "stand-by-me-opening",
+    "question": "In what movie does the opening line read: 'I was 12 going on 13 the first time I saw a dead human being.'?",
+    "answer": "Stand by Me",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "full-metal-jacket-opening",
+    "question": "In what movie does the opening line read: 'I am Gunnery Sergeant Hartman, your senior drill instructor. From now on you will speak only when spoken to, and the first and last words out of your filthy sewers will be sir.'?",
+    "answer": "Full Metal Jacket",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "fear-and-loathing-in-las-vegas-opening",
+    "question": "In what movie does the opening line read: 'We were somewhere around Barstow on the edge of the desert when the drugs began to take hold.'?",
+    "answer": "Fear and Loathing in Las Vegas",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "trainspotting-opening",
+    "question": "In what movie does the opening line read: 'Choose Life. Choose a job. Choose a career. Choose a family. Choose a f***ing big television.'?",
+    "answer": "Trainspotting",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "fight-club-opening",
+    "question": "In what movie does the opening line read: 'People are always asking me if I know Tyler Durden…'?",
+    "answer": "Fight Club",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "apocalypse-now-opening",
+    "question": "In what movie does the opening line read: 'Saigon. S**t! I'm still only in Saigon. Every time I think I'm gonna wake up back in the jungle...'?",
+    "answer": "Apocalypse Now",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "flatliners-opening",
+    "question": "In what movie does the opening line read: 'Today is a good day to die.'?",
+    "answer": "Flatliners",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-big-lebowski-opening",
+    "question": "In what movie does the opening line read: 'Way out west there was this fella I wanna tell ya about. Goes by the name of Jeff Lebowski.'?",
+    "answer": "The Big Lebowski",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-seventh-seal-opening",
+    "question": "In what movie does the opening dialogue include: 'Who are you?' 'I am Death.'?",
+    "answer": "The Seventh Seal",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "sin-city-opening",
+    "question": "In what movie does the opening line read: 'She shivers in the wind like the last leaf on a dying tree.'?",
+    "answer": "Sin City",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "dirty-dancing-opening",
+    "question": "In what movie does the opening line read: 'It was the summer of 1963, when everybody called me Baby and it didn't occur to me to mind.'?",
+    "answer": "Dirty Dancing",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "a-clockwork-orange-opening",
+    "question": "In what movie does Malcolm McDowell say this opening line: 'There was me, that is Alex, and my three droogs, that is Pete, Georgie, and Dim, and we sat in the Korova Milkbar trying to make up our rassoodocks what to do with the evening.'?",
+    "answer": "A Clockwork Orange",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "sunset-boulevard-opening",
+    "question": "In what movie does the opening line read: 'Yes, this is Sunset Boulevard, Los Angeles, California. It's about five o'clock in the morning – that's the homicide squad, complete with detectives and newspaper men.'?",
+    "answer": "Sunset Boulevard",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-sound-of-music-opening",
+    "question": "In what movie does the opening line read: 'The hills are alive with the sound of music.'?",
+    "answer": "The Sound of Music",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "gone-girl-opening",
+    "question": "In what movie does the opening line read: 'When I think of my wife, I always think of her head. I picture cracking her lovely skull, unspooling her brains, trying to get answers.'?",
+    "answer": "Gone Girl",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-piano-opening",
+    "question": "In what movie does the opening line read: 'The voice you hear is not my speaking voice, but my mind's voice. I have not spoken since I was six years old.'?",
+    "answer": "The Piano",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "dr-strangelove-opening",
+    "question": "In what movie does the opening line read: 'For more than a year, ominous rumors had been privately circulating among high-level western leaders that the Soviet Union had been at work on what was darkly hinted to be the Ultimate Weapon, a Doomsday Device.'?",
+    "answer": "Dr. Strangelove",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "chinatown-opening",
+    "question": "In what movie does the opening line read: 'All right, Curly, enough's enough. You can't eat the venetian blinds. I just had 'em installed on Wednesday.'?",
+    "answer": "Chinatown",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "rebecca-opening",
+    "question": "In what movie does the opening line read: 'Last night, I dreamt I went to Manderley again.'?",
+    "answer": "Rebecca",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "kill-bill-vol-1-opening",
+    "question": "Which Quentin Tarantino movie has the opening line: 'Do you find me sadistic? You know, I bet I could fry an egg on your head right now, if I wanted to.'?",
+    "answer": "Kill Bill: Vol. 1",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "in-bruges-opening",
+    "question": "In what movie does the opening line read: 'After I killed him, I dropped the gun in the Thames, washed the residue off me hands in the bathroom of a Burger King, and walked home to await instructions.'?",
+    "answer": "In Bruges",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "spider-man-2001-opening",
+    "question": "What superhero movie opens with Tobey Macguire asking this question: 'Who am I? You sure you want to know?'?",
+    "answer": "Spider-Man",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "dead-mans-shoes-opening",
+    "question": "In what movie does the opening line read: 'God will forgive them. He'll forgive them and let them into heaven. I can't live with that.'?",
+    "answer": "Dead Man's Shoes",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "amelie-opening",
+    "question": "In what movie does the opening line read: 'On September 3, 1973, 6:28pm and 32 seconds, a blue fly of the Calliphorides species, whose wings can flutter 14,670 times per minute, landed in Saint-Vincent Street, Montmartre.'?",
+    "answer": "Amélie",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-talented-mr-ripley-opening",
+    "question": "In what movie does the opening line read: 'If I could just go back... if I could rub everything out... starting with myself.'?",
+    "answer": "The Talented Mr. Ripley",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-social-network-opening",
+    "question": "In what movie (based on a true story) does Jesse Eisenberg recite the following opening line: 'Did you know there are more people with genius IQs living in China than there are people of any kind living in the United States?'?",
+    "answer": "The Social Network",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-outsiders-opening",
+    "question": "In what movie does the opening line read: 'When I stepped out into the bright sunlight from the darkness of the movie house, I had only two things on my mind: Paul Newman and a ride home.'?",
+    "answer": "The Outsiders",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "million-dollar-baby-opening",
+    "question": "In what movie does the opening line read: 'Only ever met one man I wouldn't wanna fight.'?",
+    "answer": "Million Dollar Baby",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "black-swan-opening",
+    "question": "In what movie does the opening line read: 'I had the craziest dream last night. I was dancing the White Swan.'?",
+    "answer": "Black Swan",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "deliverance-opening",
+    "question": "In what movie does Burt Reynolds say the opening line: 'You w- you wanna... you wanna talk about the vanishing wilderness?'?",
+    "answer": "Deliverance",
+    "category": "Opening Lines",
+    "difficulty": "easy"
+  }
+
+]
+}
+  
+ 
