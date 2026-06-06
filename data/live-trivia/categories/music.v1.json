@@ -870,7 +870,680 @@
       "answer_format": "write_in",
       "category": "Rock Music",
       "difficulty": "easy"
-    }
+    },
+    {
+    "slug": "outkast-members",
+    "question": "Name the rap duo that consists of André 3000 and Big Boi.",
+    "answer": "OutKast",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "run-dmc-members",
+    "question": "Name the rap group that consists of Joseph 'Run' Simmons, Darryl 'DMC' McDaniels, and Jason 'Jam Master Jay' Mizell.",
+    "answer": "Run-DMC",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "beastie-boys-members",
+    "question": "Name the rap group that consists of Michael 'Mike D' Diamond, Adam 'MCA' Yauch, and Adam 'Ad-Rock' Horovitz.",
+    "answer": "Beastie Boys",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "wu-tang-clan-members",
+    "question": "Name the rap group that consists of RZA, GZA, Method Man, Raekwon, Ghostface Killah, Inspectah Deck, U-God, Masta Killa, and Ol’ Dirty Bastard.",
+    "answer": "Wu-Tang Clan",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nwa-members",
+    "question": "Name the rap group that consists of Eazy-E, Dr. Dre, Ice Cube, MC Ren, and DJ Yella.",
+    "answer": "N.W.A",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-beatles-members",
+    "question": "Name the rock band that consists of John Lennon, Paul McCartney, George Harrison, and Ringo Starr.",
+    "answer": "The Beatles",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "led-zeppelin-members",
+    "question": "Name the rock band that consists of Robert Plant, Jimmy Page, John Paul Jones, and John Bonham.",
+    "answer": "Led Zeppelin",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "pink-floyd-members",
+    "question": "Name the rock band that consists of Syd Barrett, Roger Waters, David Gilmour, Nick Mason, and Richard Wright.",
+    "answer": "Pink Floyd",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-rolling-stones-members",
+    "question": "Name the rock band that consists of Mick Jagger, Keith Richards, Brian Jones, Bill Wyman, and Charlie Watts.",
+    "answer": "The Rolling Stones",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "queen-members",
+    "question": "Name the rock band that consists of Freddie Mercury, Brian May, Roger Taylor, and John Deacon.",
+    "answer": "Queen",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "aerosmith-members",
+    "question": "Name the rock band that consists of Steven Tyler, Joe Perry, Brad Whitford, Tom Hamilton, and Joey Kramer.",
+    "answer": "Aerosmith",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-who-members",
+    "question": "Name the rock band that consists of Roger Daltrey, Pete Townshend, John Entwistle, and Keith Moon.",
+    "answer": "The Who",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "fleetwood-mac-members",
+    "question": "Name the rock band that consists of Stevie Nicks, Lindsey Buckingham, Christine McVie, John McVie, and Mick Fleetwood.",
+    "answer": "Fleetwood Mac",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-eagles-members",
+    "question": "Name the rock band that consists of Don Henley, Glenn Frey, Joe Walsh, and Timothy B. Schmit.",
+    "answer": "The Eagles",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "backstreet-boys-members",
+    "question": "Name the boy band that consists of AJ McLean, Howie Dorough, Brian Littrell, Nick Carter, and Kevin Richardson.",
+    "answer": "Backstreet Boys",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nsync-members",
+    "question": "Name the boy band that consists of Justin Timberlake, JC Chasez, Joey Fatone, Lance Bass, and Chris Kirkpatrick.",
+    "answer": "NSYNC",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "one-direction-members",
+    "question": "Name the boy band that consists of Harry Styles, Niall Horan, Liam Payne, Louis Tomlinson, and Zayn Malik.",
+    "answer": "One Direction",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "jackson-5-members",
+    "question": "Name the pop group that consists of Jackie Jackson, Tito Jackson, Jermaine Jackson, Marlon Jackson, and Michael Jackson.",
+    "answer": "The Jackson 5",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "destinys-child-members",
+    "question": "Name the pop group that consists of Beyoncé Knowles, Kelly Rowland, and Michelle Williams.",
+    "answer": "Destiny's Child",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "spice-girls-members",
+    "question": "Name the pop group that consists of Mel B, Mel C, Emma Bunton, Geri Halliwell, and Victoria Beckham.",
+    "answer": "Spice Girls",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-supremes-members",
+    "question": "Name the pop group that consists of Diana Ross, Mary Wilson, and Florence Ballard.",
+    "answer": "The Supremes",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "abba-members",
+    "question": "Name the pop group that consists of Agnetha Fältskog, Björn Ulvaeus, Benny Andersson, and Anni-Frid Lyngstad.",
+    "answer": "ABBA",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-bee-gees-members",
+    "question": "Name the pop group that consists of Barry Gibb, Robin Gibb, and Maurice Gibb.",
+    "answer": "The Bee Gees",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "migos-members",
+    "question": "Name the rap group that consists of Quavo, Offset, and Takeoff.",
+    "answer": "Migos",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "public-enemy-members",
+    "question": "Name the rap group that consists of Chuck D, Flavor Flav, and DJ Lord.",
+    "answer": "Public Enemy",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "salt-n-pepa-members",
+    "question": "Name the rap duo that consists of Cheryl James and Sandra Denton.",
+    "answer": "Salt-N-Pepa",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-clash-members",
+    "question": "Name the rock band that consists of Joe Strummer, Mick Jones, Paul Simonon, and Topper Headon.",
+    "answer": "The Clash",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-police-members",
+    "question": "Name the rock band that consists of Sting, Andy Summers, and Stewart Copeland.",
+    "answer": "The Police",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "red-hot-chili-peppers-members",
+    "question": "Name the rock band that consists of Anthony Kiedis, Flea, John Frusciante, and Chad Smith.",
+    "answer": "Red Hot Chili Peppers",
+    "category": "Music",
+    "difficulty": "easy"
+  }, 
+   {
+    "slug": "the-doors-members",
+    "question": "Name the rock band that consists of Jim Morrison, Robby Krieger, Ray Manzarek, and John Densmore.",
+    "answer": "The Doors",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "lynyrd-skynyrd-members",
+    "question": "Name the rock band that consists of Ronnie Van Zant, Gary Rossington, Allen Collins, Larry Junstrom, and Bob Burns.",
+    "answer": "Lynyrd Skynyrd",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-jimi-hendrix-experience-members",
+    "question": "Name the rock band that consists of Jimi Hendrix, Noel Redding, and Mitch Mitchell.",
+    "answer": "The Jimi Hendrix Experience",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "cream-members",
+    "question": "Name the rock band that consists of Eric Clapton, Jack Bruce, and Ginger Baker.",
+    "answer": "Cream",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-grateful-dead-members",
+    "question": "Name the rock band that consists of Jerry Garcia, Bob Weir, Phil Lesh, Bill Kreutzmann, and Mickey Hart.",
+    "answer": "The Grateful Dead",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-byrds-members",
+    "question": "Name the rock band that consists of Roger McGuinn, Gene Clark, David Crosby, Chris Hillman, and Michael Clarke.",
+    "answer": "The Byrds",
+    "category": "Music",
+    "difficulty": "hard"
+  },
+  {
+    "slug": "the-temptations-members",
+    "question": "Name the R&B group that wrote 'My Girl,' and consists of Otis Williams, Melvin Franklin, Paul Williams, Eddie Kendricks, and David Ruffin.",
+    "answer": "The Temptations",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "earth-wind-and-fire-members",
+    "question": "Name the funk band that wrote 'September,' and consists of Maurice White, Verdine White, Ralph Johnson, and Al McKay.",
+    "answer": "Earth, Wind & Fire",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-commodores-members",
+    "question": "Name the funk band that consists of Lionel Richie, Thomas McClary, William King, and Ronald LaPread.",
+    "answer": "The Commodores",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "simon-and-garfunkel-members",
+    "question": "Name the folk duo that consists of Paul Simon and Art Garfunkel.",
+    "answer": "Simon & Garfunkel",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "hall-and-oates-members",
+    "question": "Name the pop duo that consists of Daryl Hall and John Oates.",
+    "answer": "Hall and Oates",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-everly-brothers-members",
+    "question": "Name the pop duo that consists of Don Everly and Phil Everly.",
+    "answer": "The Everly Brothers",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-carpenters-members",
+    "question": "Name the pop duo that consists of Karen Carpenter and Richard Carpenter.",
+    "answer": "The Carpenters",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-white-stripes-members",
+    "question": "Name the rock duo that consists of Jack White and Meg White.",
+    "answer": "The White Stripes",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-black-keys-members",
+    "question": "Name the blues rock duo that consists of Dan Auerbach and Patrick Carney.",
+    "answer": "The Black Keys",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tenacious-d-members",
+    "question": "Name the rock duo that consists of Jack Black and Kyle Gass.",
+    "answer": "Tenacious D",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+   {
+    "slug": "linkin-park-members",
+    "question": "Name the rock band that consists of Chester Bennington, Mike Shinoda, Brad Delson, Dave Farrell, Joe Hahn, and Rob Bourdon.",
+    "answer": "Linkin Park",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "aerosmith-members",
+    "question": "Name the rock band that consists of Steven Tyler, Joe Perry, Brad Whitford, Tom Hamilton, and Joey Kramer.",
+    "answer": "Aerosmith",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "black-sabbath-members",
+    "question": "Name the rock band that consists of Ozzy Osbourne, Tony Iommi, Geezer Butler, and Bill Ward.",
+    "answer": "Black Sabbath",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "blink-182-members",
+    "question": "Name the pop-punk band that consists of Mark Hoppus, Tom DeLonge, and Travis Barker.",
+    "answer": "Blink-182",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "sum-41-members",
+    "question": "Name the pop-punk band that consists of Deryck Whibley, Dave Baksh, Jason McCaslin, and Steve Jocz.",
+    "answer": "Sum 41",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "limp-bizkit-members",
+    "question": "Name the rap-rock band that consists of Fred Durst, Wes Borland, Sam Rivers, John Otto, and DJ Lethal.",
+    "answer": "Limp Bizkit",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "green-day-members",
+    "question": "Name the punk rock band that consists of Billie Joe Armstrong, Mike Dirnt, and Tré Cool.",
+    "answer": "Green Day",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "foo-fighters-members",
+    "question": "Name the rock band that consists of Dave Grohl, Pat Smear, Nate Mendel, Taylor Hawkins, and Chris Shiflett.",
+    "answer": "Foo Fighters",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "system-of-a-down-members",
+    "question": "Name the metal band that consists of Serj Tankian, Daron Malakian, Shavo Odadjian, and John Dolmayan.",
+    "answer": "System of a Down",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "slipknot-members",
+    "question": "Name the metal band that consists of Corey Taylor, Mick Thomson, Shawn Crahan, Paul Gray, Joey Jordison, Jim Root, Craig Jones, Sid Wilson, and Alessandro Venturella.",
+    "answer": "Slipknot",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "metallica-members",
+    "question": "Name the metal band that consists of James Hetfield, Lars Ulrich, Kirk Hammett, and Robert Trujillo.",
+    "answer": "Metallica",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "megadeth-members",
+    "question": "Name the metal band that consists of Dave Mustaine, David Ellefson, Marty Friedman, and Nick Menza.",
+    "answer": "Megadeth",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "pantera-members",
+    "question": "Name the metal band that consists of Phil Anselmo, Dimebag Darrell, Rex Brown, and Vinnie Paul.",
+    "answer": "Pantera",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nirvana-members",
+    "question": "Name the grunge band that consists of Kurt Cobain, Krist Novoselic, and Dave Grohl.",
+    "answer": "Nirvana",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "pearl-jam-members",
+    "question": "Name the rock band that consists of Eddie Vedder, Jeff Ament, Stone Gossard, Mike McCready, and Matt Cameron.",
+    "answer": "Pearl Jam",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "alice-in-chains-members",
+    "question": "Name the rock band that consists of Layne Staley, Jerry Cantrell, Mike Starr, and Sean Kinney.",
+    "answer": "Alice in Chains",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "soundgarden-members",
+    "question": "Name the rock band that consists of Chris Cornell, Kim Thayil, Ben Shepherd, and Matt Cameron.",
+    "answer": "Soundgarden",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "stone-temple-pilots-members",
+    "question": "Name the rock band that consists of Scott Weiland, Dean DeLeo, Robert DeLeo, and Eric Kretz.",
+    "answer": "Stone Temple Pilots",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "rage-against-the-machine-members",
+    "question": "Name the rap-metal band that consists of Zack de la Rocha, Tom Morello, Tim Commerford, and Brad Wilk.",
+    "answer": "Rage Against the Machine",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "korn-members",
+    "question": "Name the metal band that consists of Jonathan Davis, James Shaffer, Reginald Arvizu, and Ray Luzier.",
+    "answer": "Korn",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "fall-out-boy-members",
+    "question": "Name the pop-punk band that consists of Patrick Stump, Pete Wentz, Joe Trohman, and Andy Hurley.",
+    "answer": "Fall Out Boy",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "my-chemical-romance-members",
+    "question": "Name the rock band that consists of Gerard Way, Mikey Way, Ray Toro, Frank Iero, and Bob Bryar.",
+    "answer": "My Chemical Romance",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-killers-members",
+    "question": "Name the rock band that consists of Brandon Flowers, Dave Keuning, Mark Stoermer, and Ronnie Vannucci Jr.",
+    "answer": "The Killers",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "coldplay-members",
+    "question": "Name the rock band that consists of Chris Martin, Jonny Buckland, Guy Berryman, and Will Champion.",
+    "answer": "Coldplay",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "maroon-5-members",
+    "question": "Name the pop band that consists of Adam Levine, Jesse Carmichael, Mickey Madden, James Valentine, and Matt Flynn.",
+    "answer": "Maroon 5",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-strokes-members",
+    "question": "Name the rock band that consists of Julian Casablancas, Nick Valensi, Albert Hammond Jr., Nikolai Fraiture, and Fabrizio Moretti.",
+    "answer": "The Strokes",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-white-stripes-members",
+    "question": "Name the rock duo that consists of Jack White and Meg White.",
+    "answer": "The White Stripes",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-black-keys-members",
+    "question": "Name the rock duo that consists of Dan Auerbach and Patrick Carney.",
+    "answer": "The Black Keys",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-1975-members",
+    "question": "Name the pop band that consists of Matty Healy, Adam Hann, Ross MacDonald, and George Daniel.",
+    "answer": "The 1975",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "imagine-dragons-members",
+    "question": "Name the pop band that consists of Dan Reynolds, Wayne Sermon, Ben McKee, and Daniel Platzman.",
+    "answer": "Imagine Dragons",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "twenty-one-pilots-members",
+    "question": "Name the pop duo that consists of Tyler Joseph and Josh Dun.",
+    "answer": "Twenty One Pilots",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+   {
+    "slug": "the-clash-members",
+    "question": "Name the punk rock band that consists of Joe Strummer, Mick Jones, Paul Simonon, and Topper Headon.",
+    "answer": "The Clash",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-smashing-pumpkins-members",
+    "question": "Name the rock band that consists of Billy Corgan, James Iha, D'arcy Wretzky, and Jimmy Chamberlin.",
+    "answer": "The Smashing Pumpkins",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "radiohead-members",
+    "question": "Name the rock band that consists of Thom Yorke, Jonny Greenwood, Colin Greenwood, Ed O'Brien, and Philip Selway.",
+    "answer": "Radiohead",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "oasis-members",
+    "question": "Name the rock band that consists of Liam Gallagher, Noel Gallagher, Bonehead, Guigsy, and Alan White.",
+    "answer": "Oasis",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-cure-members",
+    "question": "Name the rock band that consists of Robert Smith, Simon Gallup, Roger O'Donnell, Jason Cooper, and Reeves Gabrels.",
+    "answer": "The Cure",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "u2-members",
+    "question": "Name the rock band that consists of Bono, The Edge, Adam Clayton, and Larry Mullen Jr.",
+    "answer": "U2",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "rem-members",
+    "question": "Name the rock band that consists of Michael Stipe, Peter Buck, Mike Mills, and Bill Berry.",
+    "answer": "R.E.M.",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-offspring-members",
+    "question": "Name the punk rock band that consists of Dexter Holland, Noodles, Greg K., and Pete Parada.",
+    "answer": "The Offspring",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "no-doubt-members",
+    "question": "Name the ska-punk band that consists of Gwen Stefani, Tony Kanal, Tom Dumont, and Adrian Young.",
+    "answer": "No Doubt",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "sublime-members",
+    "question": "Name the ska-punk band that consists of Bradley Nowell, Eric Wilson, and Bud Gaugh.",
+    "answer": "Sublime",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "less-than-jake-members",
+    "question": "Name the ska-punk band that consists of Chris DeMakes, Roger Lima, Vinnie Fiorello, Buddy Schaub, and Peter Wasilewski.",
+    "answer": "Less Than Jake",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-used-members",
+    "question": "Name the rock band that consists of Bert McCracken, Quinn Allman, Jepha Howard, and Dan Whitesides.",
+    "answer": "The Used",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "my-chemical-romance-members-2",
+    "question": "Name the rock band that consists of Gerard Way, Mikey Way, Ray Toro, Frank Iero, and Bob Bryar.",
+    "answer": "My Chemical Romance",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "paramore-members",
+    "question": "Name the pop-punk band that consists of Hayley Williams, Taylor York, and Zac Farro.",
+    "answer": "Paramore",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "all-time-low-members",
+    "question": "Name the pop-punk band that consists of Alex Gaskarth, Jack Barakat, Zack Merrick, and Rian Dawson.",
+    "answer": "All Time Low",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "new-found-glory-members",
+    "question": "Name the pop-punk band that consists of Jordan Pundik, Chad Gilbert, Ian Grushka, and Cyrus Bolooki.",
+    "answer": "New Found Glory",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "yellowcard-members",
+    "question": "Name the pop-punk band that consists of Ryan Key, Sean Mackin, Ryan Mendez, and Josh Portman.",
+    "answer": "Yellowcard",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-all-american-rejects-members",
+    "question": "Name the pop-punk band that consists of Tyson Ritter, Nick Wheeler, Mike Kennerty, and Chris Gaylor.",
+    "answer": "The All-American Rejects",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "good-charlotte-members",
+    "question": "Name the pop-punk band that consists of Joel Madden, Benji Madden, Paul Thomas, Billy Martin, and Dean Butterworth.",
+    "answer": "Good Charlotte",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+    {
+    "slug": "d12-members",
+    "question": "Name the rap group that consists of Eminem, Proof, Bizarre, Kuniva, Swifty McVay, and Fuzz Scoota.",
+    "answer": "D12",
+    "category": "Music",
+    "difficulty": "easy"
+  }
+
   ],
   "familiarity": "mainstream"
 }
