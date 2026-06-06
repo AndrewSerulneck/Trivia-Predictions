@@ -26,22 +26,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "euphoria-zendaya-character",
-      "question": "What is the name of the character played by Zendaya in the HBO series 'Euphoria'?",
-      "answer": "Rue",
-      "answer_format": "write_in",
-      "category": "Pop Culture",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "parasite-best-picture-year",
-      "question": "In which year did the South Korean film 'Parasite' make history by winning the Academy Award for Best Picture?",
-      "answer": "2020",
-      "answer_format": "write_in",
-      "category": "Pop Culture",
-      "difficulty": "medium"
-    },
-    {
       "slug": "squid-game-country-of-origin",
       "question": "Which country produced the hit Netflix series 'Squid Game'?",
       "answer": "South Korea",
@@ -117,28 +101,12 @@
       "difficulty": "hard"
     },
     {
-      "slug": "star-wars-baby-yoda-real-name",
-      "question": "What is the real name of the character widely known as 'Baby Yoda'?",
-      "answer": "Grogu",
-      "answer_format": "write_in",
-      "category": "Pop Culture",
-      "difficulty": "easy"
-    },
-    {
       "slug": "pop-culture-the-office-dunder-mifflin-city",
       "question": "In which Pennsylvania city is the Dunder Mifflin office located in 'The Office'?",
       "answer": "Scranton",
       "answer_format": "write_in",
       "category": "Pop Culture",
       "difficulty": "easy"
-    },
-    {
-      "slug": "white-lotus-season-2-location",
-      "question": "Where was the second season of 'The White Lotus' set?",
-      "answer": "Sicily",
-      "answer_format": "write_in",
-      "category": "Pop Culture",
-      "difficulty": "medium"
     },
     {
       "slug": "rupauls-drag-race-first-winner",
@@ -415,17 +383,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "the-white-lotus-season-3-location",
-      "question": "The third season of 'The White Lotus' is set in which country?",
-      "answer": "Thailand",
-      "answer_format": "write_in",
-      "category": "Pop Culture",
-      "difficulty": "medium",
-      "acceptableAnswers": [
-        "Siam"
-      ]
-    },
-    {
       "slug": "met-gala-2025-theme",
       "question": "What was the theme of the 2025 Met Gala, focused on Black dandyism and style?",
       "answer": "Superfine: Tailoring Black Style",
@@ -660,14 +617,6 @@
       "acceptableAnswers": [
         "Dance of the Dragons"
       ]
-    },
-    {
-      "slug": "furiosa-mad-max-star",
-      "question": "Which actress played the titular role in the 2024 prequel 'Furiosa: A Mad Max Saga'?",
-      "answer": "Anya Taylor-Joy",
-      "answer_format": "write_in",
-      "category": "Pop Culture",
-      "difficulty": "easy"
     },
     {
       "slug": "vanderpump-rules-hiatus",

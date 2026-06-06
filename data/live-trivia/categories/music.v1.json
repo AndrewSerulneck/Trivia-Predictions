@@ -417,14 +417,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "brass-instrument-no-valves",
-      "question": "Which of these brass instruments traditionally uses a slide rather than valves to change pitch?",
-      "answer": "Trombone",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "easy"
-    },
-    {
       "slug": "fleetwood-mac-go-your-own-way-writer",
       "question": "Which member of Fleetwood Mac wrote the hit song 'Go Your Own Way' about their breakup with a bandmate?",
       "answer": "Lindsey Buckingham",
@@ -562,14 +554,6 @@
       "acceptableAnswers": [
         "Zutons"
       ]
-    },
-    {
-      "slug": "nirvana-nevermind-baby-name",
-      "question": "What is the name of the baby pictured on the cover of Nirvana's 'Nevermind' album?",
-      "answer": "Spencer Elden",
-      "answer_format": "write_in",
-      "category": "Music",
-      "difficulty": "hard"
     },
     {
       "slug": "johny-cash-folsom-prison-year",

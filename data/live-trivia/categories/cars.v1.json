@@ -219,13 +219,6 @@
       "difficulty": "hard"
     },
     {
-      "slug": "first-car-with-automatic-transmission",
-      "question": "Which car manufacturer introduced the first automatic transmission in 1939?",
-      "answer": "General Motors",
-      "category": "Cars",
-      "difficulty": "hard"
-    },
-    {
       "slug": "first-car-with-fuel-injection",
       "question": "Which car manufacturer introduced the first production car with electronic fuel injection in 1957?",
       "answer": "Chevrolet",

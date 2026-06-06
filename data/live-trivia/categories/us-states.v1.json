@@ -2,900 +2,886 @@
   "categoryName": "US States",
   "questions": [
     {
-"slug": "us-states-grand-canyon",
-"question": "Which US state contains the overwhelming majority of the Grand Canyon National Park, including its famous South Rim?",
-"answer": "Arizona",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-everglades",
-"question": "Which US state contains the massive subtropical wilderness of the Everglades National Park within its borders?",
-"answer": "Florida",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-denali",
-"question": "Which US state contains Denali, the highest mountain peak in North America?",
-"answer": "Alaska",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-mauna-kea",
-"question": "Which US state contains the dormant volcano Mauna Kea, home to many of the world's premier astronomical observatories?",
-"answer": "Hawaii",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-alamo",
-"question": "Which US state contains the historic Alamo mission building within the city of San Antonio?",
-"answer": "Texas",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-crater-lake",
-"question": "Which US state contains Crater Lake, the deepest lake in the United States?",
-"answer": "Oregon",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-badlands",
-"question": "Which US state contains the striking eroded geological formations of Badlands National Park?",
-"answer": "South Dakota",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-mammoth-cave",
-"question": "Which US state contains Mammoth Cave National Park, which preserves the world's longest known cave system?",
-"answer": "Kentucky",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-okefenokee",
-"question": "The majority of the historic Okefenokee Swamp is located within the borders of which US state?",
-"answer": "Georgia",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-acadia",
-"question": "Which US state contains Acadia National Park, primarily located on Mount Desert Island?",
-"answer": "Maine",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-hoover-dam",
-"question": "While the Colorado River runs through it, the physical structure of the Hoover Dam itself anchors directly into Arizona and which other US state?",
-"answer": "Nevada",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-space-needle",
-"question": "Which US state contains the iconic Space Needle observation tower, built for the 1962 World's Fair?",
-"answer": "Washington",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-mormon-temple",
-"question": "Which US state contains the world headquarters of the Church of Jesus Christ of Latter-day Saints in Salt Lake City?",
-"answer": "Utah",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-gateway-arch",
-"question": "Which US state contains the 630-foot-tall stainless steel Gateway Arch monument in the city of St. Louis?",
-"answer": "Missouri",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-french-quarter",
-"question": "Which US state contains the historic, jazz-filled French Quarter neighborhood within its largest city?",
-"answer": "Louisiana",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-isle-royale",
-"question": "Which US state contains the wilderness of Isle Royale National Park, located entirely within Lake Superior?",
-"answer": "Michigan",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-independence-hall",
-"question": "Which US state contains Independence Hall, the historic building where the US Declaration of Independence was debated and adopted?",
-"answer": "Pennsylvania",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-mount-rushmore",
-"question": "Which US state contains the massive stone carvings of four US Presidents at Mount Rushmore?",
-"answer": "South Dakota",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-martha-vineyard",
-"question": "Which US state contains the affluent summer colony island of Martha's Vineyard?",
-"answer": "Massachusetts",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-outer-banks",
-"question": "Which US state contains the 200-mile string of barrier islands known as the Outer Banks?",
-"answer": "North Carolina",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-yosemite",
-"question": "Which US state contains the towering granite cliffs of El Capitan and Half Dome within Yosemite National Park?",
-"answer": "California",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-walmart-hq",
-"question": "Which US state contains the global corporate headquarters of Walmart Inc. in the city of Bentonville?",
-"answer": "Arkansas",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-yellowstone",
-"question": "While it spills slightly into Idaho and Montana, roughly 96 percent of Yellowstone National Park's land area sits inside which US state?",
-"answer": "Wyoming",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-indy-500",
-"question": "Which US state hosts the famous Indianapolis 500 automobile race at the Indianapolis Motor Speedway every May?",
-"answer": "Indiana",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-green-mountains",
-"question": "Which US state contains the entirety of the Green Mountains range, which heavily inspires its official state nickname?",
-"answer": "Vermont",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-mammoth-hot-springs",
-"question": "While Yellowstone is famous for its geysers, which US state contains the stark, terraced travertine structures of Mammoth Hot Springs?",
-"answer": "Wyoming",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-lake-itasca",
-"question": "Which US state contains Lake Itasca, the small glacial body of water officially recognized as the primary headwaters of the Mississippi River?",
-"answer": "Minnesota",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-garlock-fault",
-"question": "Which US state contains the 150-mile-long Garlock Fault, a major left-lateral strike-slip geological fault that intersects the San Andreas Fault?",
-"answer": "California",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-fort-sumter",
-"question": "Which US state contains Fort Sumter, the sea fort where the first shots of the American Civil War were fired in 1861?",
-"answer": "South Carolina",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-tupelo",
-"question": "Which US state contains the city of Tupelo, famous for preserving the tiny two-room birthplace home of Elvis Presley?",
-"answer": "Mississippi",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-isle-au-haut",
-"question": "Which US state contains Isle au Haut, a rugged island that holds a distinct, detached section of Acadia National Park?",
-"answer": "Maine",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-lake-pontchartrain",
-"question": "Which US state contains Lake Pontchartrain, which is spanned by the world's longest continuous bridge over water?",
-"answer": "Louisiana",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-great-serpent-mound",
-"question": "Which US state contains the Great Serpent Mound, a 1,348-foot-long prehistoric effigy mound depicting a snake swallowing an egg?",
-"answer": "Ohio",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-copper-harbor",
-"question": "Which US state contains Copper Harbor, a northern settlement that serves as the official terminus of US Route 41?",
-"answer": "Michigan",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-okafuni-swamp",
-"question": "Which US state contains the majority of the Suwannee River's headwaters within the protected Okefenokee National Wildlife Refuge?",
-"answer": "Georgia",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-dripping-springs",
-"question": "Which US state contains the historic Dripping Springs Natural Area, tucked into the rugged Organ Mountains?",
-"answer": "New Mexico",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-bacon-ridge",
-"question": "Which US state contains the Bacon Ridge Natural Area, a protected wildlife corridor located within Anne Arundel County?",
-"answer": "Maryland",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-tallgrass-prairie",
-"question": "Which US state contains the Tallgrass Prairie National Preserve, which protects the last vast expanse of the original tallgrass ecosystem?",
-"answer": "Kansas",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-mount-mitchell",
-"question": "Which US state contains Mount Mitchell, the highest peak in the Appalachian Mountains and the highest peak in the eastern United States?",
-"answer": "North Carolina",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-door-county",
-"question": "Which US state contains Door County, a major tourist peninsula nestled between Green Bay and Lake Michigan?",
-"answer": "Wisconsin",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-barr-trail",
-"question": "Which US state contains the Barr Trail, a challenging 13-mile mountain path that ascends directly to the summit of Pikes Peak?",
-"answer": "Colorado",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-block-island",
-"question": "Which US state contains Block Island, an offshore landmass bounded by the Atlantic Ocean and a sound named for the state itself?",
-"answer": "Rhode Island",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-coeur-d-alene",
-"question": "Which US state contains the city of Coeur d'Alene, situated on a stunning glacial lake of the same name?",
-"answer": "Idaho",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-lake-champlain",
-"question": "While the lake touches New York and Canada, which US state borders the eastern shoreline of Lake Champlain?",
-"answer": "Vermont",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-ouachita-mountains",
-"question": "While they extend into Oklahoma, the towering Hot Springs National Park sits within the portion of the Ouachita Mountains located in which US state?",
-"answer": "Arkansas",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-delaware-water-gap",
-"question": "Which US state shares the Delaware Water Gap National Recreation Area along its eastern river border with New Jersey?",
-"answer": "Pennsylvania",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-chimney-rock",
-"question": "Which US state contains Chimney Rock, a towering prominent rock formation that served as a critical landmark for pioneers on the Oregon Trail?",
-"answer": "Nebraska",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-theo-roosevelt-park",
-"question": "Which US state contains Theodore Roosevelt National Park, where the Little Missouri River flows through the colorful badlands?",
-"answer": "North Dakota",
-"category": "US States",
-"difficulty": "medium"
-},
-  {
-"slug": "us-states-battle-of-antietam",
-"question": "Which US state was the site of the Battle of Antietam in 1862, which remains the bloodiest single-day battle in American military history?",
-"answer": "Maryland",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-constitutional-convention",
-"question": "Which US state hosted the 1787 Constitutional Convention, where the United States Constitution was drafted and signed in Philadelphia?",
-"answer": "Pennsylvania",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-comstock-lode",
-"question": "The discovery of the Comstock Lode, the first major silver ore deposit in the United States, accelerated the statehood process for which US state?",
-"answer": "Nevada",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-bleeding-kansas",
-"question": "Which US state was the center of a brutal series of violent civil confrontations in the 1850s over the legality of slavery, earning it a famous 'bloody' moniker?",
-"answer": "Kansas",
-"category": "US States", 
-"difficulty": "easy"
-},
-{
-"slug": "us-states-king-philip-war",
-"question": "The Great Swamp Fight, a pivotal and devastating engagement of King Philip's War in 1675, took place in which modern-day US state?",
-"answer": "Rhode Island",
-"category": "US States",
-"difficulty": "hard"
-},
-{
-"slug": "us-states-haymarket-affair",
-"question": "Which US state was the location of the 1886 Haymarket Affair, a historic labor protest bombing?",
-"answer": "Illinois",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-shays-rebellion",
-"question": "Which US state was the primary setting for Shays' Rebellion, an armed uprising of farmers from 1786 to 1787 that highlighted the weaknesses of the Articles of Confederation?",
-"answer": "Massachusetts",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-john-brown-raid",
-"question": "The historic federal armory at Harpers Ferry, targeted by abolitionist John Brown for an armed slave revolt in 1859, is located in which modern-day US state?",
-"answer": "West Virginia",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-roanoke-colony",
-"question": "The mysterious 'Lost Colony' of Roanoke Island, established by Sir Walter Raleigh in 1587, was located off the coast of which modern-day US state?",
-"answer": "North Carolina",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-erie-canal",
-"question": "Which US state constructed the 363-mile Erie Canal, completing it in 1825 to connect the Hudson River directly to Lake Erie?",
-"answer": "New York",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-seneca-falls",
-"question": "Which US state hosted the Seneca Falls Convention in 1848, universally recognized as the first women's rights convention in the country?",
-"answer": "New York",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-black-hawk-war",
-"question": "The 1832 Battle of Bad Axe, the tragic final clash of the Black Hawk War, took place along the banks of the Mississippi River in which US state?",
-"answer": "Wisconsin",
-"category": "US States",
-"difficulty": "hard"
-},
-{
-"slug": "us-states-whiskey-rebellion",
-"question": "Which US state was the epicenter of the Whiskey Rebellion in the 1790s, forcing President George Washington to personally lead a militia to quell the tax revolt?",
-"answer": "Pennsylvania",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-pullman-strike",
-"question": "The historic 1894 Pullman Strike, a nationwide railroad boycott that completely paralyzed rail traffic, originated in a company town located in which US state?",
-"answer": "Illinois",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-bacon-rebellion",
-"question": "Which US state was the location of Bacon's Rebellion in 1676, an armed uprising of settlers that resulted in the burning of Jamestown?",
-"answer": "Virginia",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-homestead-strike",
-"question": "The 1892 Homestead Strike, a violent confrontation between striking steelworkers and Pinkerton detectives, took place at an Andrew Carnegie steel mill in which US state?",
-"answer": "Pennsylvania",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-little-rock-nine",
-"question": "Which US state was the site of the 1957 integration crisis involving the 'Little Rock Nine' at Central High School?",
-"answer": "Arkansas",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-wovoka-ghost-dance",
-"question": "The late-19th-century Ghost Dance religious movement, founded by the Northern Paiute prophet Wovoka, originated in which US state?",
-"answer": "Nevada",
-"category": "US States",
-"difficulty": "hard"
-},
-{
-"slug": "us-states-johnstown-flood",
-"question": "The catastrophic Johnstown Flood of 1889, which claimed over 2,200 lives after the failure of the South Fork Dam, occurred in which US state?",
-"answer": "Pennsylvania",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-gadsden-purchase",
-"question": "The 1853 Gadsden Purchase secured thousands of square miles of southern land along the Mexican border to finalize the territory of New Mexico and which other US state?",
-"answer": "Arizona",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-battle-of-tippecanoe",
-"question": "The 1811 Battle of Tippecanoe, a conflict between American forces and Tecumseh's Native American confederacy, was fought in which modern-day US state?",
-"answer": "Indiana",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-wilmington-insurrection",
-"question": "Which US state was the location of the 1898 Wilmington Insurrection, widely recognized as the only successful coup d'état in American history?",
-"answer": "North Carolina",
-"category": "US States",
-"difficulty": "hard"
-},
-{
-"slug": "us-states-williamsburg-capital",
-"question": "Which US state was the political home of Colonial Williamsburg, which served as the capital of the colony from 1699 to 1780?",
-"answer": "Virginia",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-crayola-factory",
-"question": "Which US state contains the original Crayola crayon manufacturing headquarters in Easton, where millions of crayons are produced daily?",
-"answer": "Pennsylvania",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-ben-jerry-factory",
-"question": "Which US state is home to the primary Ben & Jerry's ice cream factory in Waterbury, famous for its 'Flavor Graveyard' tracking retired flavors?",
-"answer": "Vermont",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-idaho-potato-museum",
-"question": "Which US state contains a museum in Blackfoot shaped like a giant baked potato, celebrating the agricultural crop that anchors the region's economy?",
-"answer": "Idaho",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-spam-museum",
-"question": "Which US state contains the official SPAM Museum, celebrating the famous canned meat product manufactured by Hormel Foods in Austin?",
-"answer": "Minnesota",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-tabasco-source",
-"question": "Which US state contains Avery Island, the salt dome landmass where every single bottle of Tabasco sauce is produced?",
-"answer": "Louisiana",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-peeps-factory",
-"question": "Which US state contains the Just Born candy factory, which manufactures nearly all of the country's marshmallow Peeps?",
-"answer": "Pennsylvania",
-"category": "US States",
-"difficulty": "hard"
-},
-{
-"slug": "us-states-tillamook-cheese",
-"question": "Which US state contains a massive, tourist-heavy creamery facility along its rugged Pacific Northwest coastline famous for its medium cheddar and coastal berry ice creams?",
-"answer": "Oregon",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-john-deere-hq",
-"question": "Which US state contains the global corporate headquarters of John Deere?",
-"answer": "Illinois",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-nike-world-hq",
-"question": "Which US state contains the massive, sprawling global corporate campus of Nike?",
-"answer": "Oregon",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-boeing-everett",
-"question": "Which US state contains the Everett Factory, a massive aerospace production building that holds the record as the largest building in the world by volume?",
-"answer": "Washington",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-corvette-factory",
-"question": "Which US state contains the Bowling Green Assembly Plant, the exclusive global manufacturing home of the Chevrolet Corvette sports car?",
-"answer": "Kentucky",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-kellogg-hq",
-"question": "Which US state contains the historic corporate headquarters of Kellogg's in Battle Creek, earning the settlement the nickname 'Cereal City'?",
-"answer": "Michigan",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-malls-of-america",
-"question": "Which US state contains the Mall of America, the largest shopping mall and indoor theme park complex in the United States?",
-"answer": "Minnesota",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-motto-forward",
-"question": "Which US state looks to the future with its concise, single-word official motto, 'Forward'?",
-"answer": "Wisconsin",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-motto-eureka",
-"question": "Which US state boasts the only Greek-word official motto in the country, 'Eureka' (I have found it), referencing its famous mid-19th-century gold rush?",
-"answer": "California",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-motto-show-me",
-"question": "Though its official Latin motto translates to 'The welfare of the people shall be the supreme law,' which midwestern state is universally known by its unofficial, skeptical motto, the 'Show-Me State'?",
-"answer": "Missouri",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-motto-live-free-or-die",
-"question": "Adopted in 1945 from a Revolutionary War toast written by General John Stark, 'Live Free or Die' is the assertively independent motto of which New England state?",
-"answer": "New Hampshire",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-motto-friendship",
-"question": "Derived from a Caddo Native American word meaning 'friends' or 'allies,' which large southern state uses the simple, single-word official motto 'Friendship'?",
-"answer": "Texas",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-motto-aloha",
-"question": "Which US state passed a unique statute explicitly establishing the 'Aloha Spirit' as a legal obligation and philosophical motto for its officials and citizens?",
-"answer": "Hawaii",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-motto-excelsior",
-"question": "Meaning 'Ever upward' or 'Still higher,' the Latin motto 'Excelsior' is prominently featured on the flag and coat of arms of which eastern state?",
-"answer": "New York",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-motto-to-be-rather-than-to-seem",
-"question": "Which US state features the classic philosophical Latin motto 'Esse quam videri,' which translates into English as 'To be, rather than to seem'?",
-"answer": "North Carolina",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-motto-north-to-the-future",
-"question": "Chosen during a 1967 centennial celebration to represent a land of geographic opportunity, 'North to the Future' is the official motto of which US state?",
-"answer": "Alaska",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-motto-she-flies-with-her-own-wings",
-"question": "Which state honors its pioneering trailblazers with the lyrical, independent motto 'Alis volat propriis,' translated as 'She flies with her own wings'?",
-"answer": "Oregon",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-motto-equal-rights",
-"question": "As the first territory and state to grant women the right to vote, hold office, and serve on juries, which western state appropriately claims the official motto 'Equal Rights'?",
-"answer": "Wyoming",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-motto-all-for-our-country",
-"question": "Admitted to the Union during the American Civil War, which western state references its wartime origin on its state seal with the patriotic motto 'All for Our Country'?",
-"answer": "Nevada",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-motto-industry",
-"question": "Representing the hard work and cooperation of its early settlers, which western state uses the single-word motto 'Industry' alongside the visual symbol of a beehive?",
-"answer": "Utah",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-motto-crossroads-of-america",
-"question": "Which US state officially adopted the transit-themed motto 'The Crossroads of America' due to the massive volume of interstate highways and railroads intersecting within its borders?",
-"answer": "Indiana",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-motto-gold-and-silver",
-"question": "Reflecting its deep ties to mining and the mineral wealth of its mountains, which state uses the bilingual Spanish motto 'Oro y Plata' (Gold and Silver)?",
-"answer": "Montana",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-motto-united-we-stand",
-"question": "Which southern state pairs its official motto, 'United we stand, divided we fall,' with an image of two men—traditionally a statesman and a frontiersman—embracing on its state seal?",
-"answer": "Kentucky",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-motto-if-you-seek-a-pleasant-peninsula",
-"question": "Taking inspiration from its unique, water-locked geography, which Great Lakes state uses the Latin motto 'Si quaeris peninsulam amoenam, circumspice' (If you seek a pleasant peninsula, look about you)?",
-"answer": "Michigan",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-motto-by-and-by",
-"question": "Which western state uses the calm, optimistic, and slightly colloquial timeline motto 'By and By'?",
-"answer": "Washington",
-"category": "US States",
-"difficulty": "hard"
-},
-{
-"slug": "us-states-motto-agriculture-and-commerce",
-"question": "Which southern state perfectly summarizes its economic foundation on its state seal with the dual-concept motto 'Agriculture and Commerce'?",
-"answer": "Tennessee",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-motto-liberty-and-independence",
-"question": "As the first state to ratify the United States Constitution, which Mid-Atlantic state boasts the foundational motto 'Liberty and Independence'?",
-"answer": "Delaware",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-motto-our-liberties-we-prize",
-"question": "Which midwestern agricultural state boldly declares, 'Our liberties we prize and our rights we will maintain,' across a streaming ribbon held by an eagle on its state flag?",
-"answer": "Iowa",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-motto-mountaineers-are-always-free",
-"question": "Reflecting its rugged topography and its secession from a neighboring territory during the Civil War, which Appalachian state uses the Latin motto 'Montani semper liberi' (Mountaineers are always free)?",
-"answer": "West Virginia",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-motto-while-i-breathe-i-hope",
-"question": "Which southern state features two distinct Latin mottos on its seal: 'Animis opibusque parati' (Prepared in mind and resources) and the famous 'Dum spiro spero' (While I breathe, I hope)?",
-"answer": "South Carolina",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-motto-it-grows-as-it-goes",
-"question": "Looking back at its steady territorial expansion and progress, which southwestern state uses the dynamic Latin motto 'Crescit eundo,' translating into English as 'It grows as it goes'?",
-"answer": "New Mexico",
-"category": "US States",
-"difficulty": "hard"
-},
-{
-"slug": "us-states-motto-with-god-all-things-are-possible",
-"question": "Following a high-profile legal challenge in the 1990s regarding the separation of church and state, federal courts upheld the official biblical motto, 'With God, all things are possible,' for which midwestern state?",
-"answer": "Ohio",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-weird-caribou-jail",
-"question": "In which northern US state is it a long-standing (though rarely enforced) misdemeanor to push a live caribou out of an airplane?",
-"answer": "Alaska",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-weird-milk-fight",
-"question": "Which midwestern state hosted a quirky historical event in 1993 where lawmakers legally designated milk as the official state beverage, only for the governor to sign the bill into law while drinking a glass of chocolate milk?",
-"answer": "Wisconsin",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-weird-gator-lotto",
-"question": "Which southern state has a lottery system dedicated exclusively to awarding a limited number of hunting tags for alligators each year due to the sheer population density of the reptiles?",
-"answer": "Florida",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-weird-london-bridge",
-"question": "In a bizarre structural acquisition, a real estate developer purchased the actual, historic London Bridge from England in 1968 and rebuilt it brick-by-brick in which desert US state?",
-"answer": "Arizona",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-weird-island-ratio",
-"question": "While famous for its massive open plains and fields, which midwestern state oddly contains a point where you can stand on an island, in a lake, on an island, in a lake?",
-"answer": "Minnesota",
-"category": "US States",
-"difficulty": "hard"
-},
-{
-"slug": "us-states-weird-soil-motto",
-"question": "Which state has an official state soil named 'Tama silt loam' that is so highly valued for agriculture it was celebrated with its own dedicated continuous exhibition at the state capitol?",
-"answer": "Iowa",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-weird-foot-measurement",
-"question": "Which US state boasts an unusual geological footprint by containing a mountain range that is completely circular, known as the Sutter Buttes, often called the world's smallest mountain range?",
-"answer": "California",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-weird-frog-jumping",
-"question": "Which western state features an official annual legislative recess specifically so lawmakers can attend a historic, county-fair frog jumping jubilee inspired by a Mark Twain short story?",
-"answer": "California",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-weird-time-zone-split",
-"question": "Which midwestern state is uniquely split between the Eastern and Central time zones, resulting in a confusing quirk where driving across certain county lines shifts your clock by an hour without leaving the state region?",
-"answer": "Indiana",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-weird-underground-fire",
-"question": "Which eastern state contains the borough of Centralia, where a subterranean coal mine fire has been burning completely out of control beneath the streets since 1962?",
-"answer": "Pennsylvania",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-weird-flamingo-law",
-"question": "Which US state features a historic municipality where it was once technically illegal to let your pet flamingo wander into a local barber shop?",
-"answer": "Florida",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-weird-dinosaur-tracks",
-"question": "Which northeast state contains a state park where thousands of authentic prehistoric footprints are preserved, discovered entirely by accident when a bulldozer operator was clearing land for a state building?",
-"answer": "Connecticut",
-"category": "US States",
-"difficulty": "hard"
-},
-{
-"slug": "us-states-weird-whale-blubber",
-"question": "Which coastal New England state features a historic law on the books stating that any whale found dead on the shore belongs technically to the governor, specifically for its blubber?",
-"answer": "Massachusetts",
-"category": "US States",
-"difficulty": "hard"
-},
-{
-"slug": "us-states-weird-car-henge",
-"question": "Which midwestern plains state contains 'Carhenge,' a quirky, full-scale replica of England's Stonehenge constructed entirely out of vintage American automobiles painted gray?",
-"answer": "Nebraska",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-weird-pickle-bounce",
-"question": "Which northeast state has a famous blue law stating that a pickle cannot legally be considered a pickle unless it can bounce when dropped from a height of one foot?",
-"answer": "Connecticut",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-weird-fake-town",
-"question": "Which eastern state contained the fictional 'paper town' of Agloe, which was invented by mapmakers to catch copyright violators but actually became a real place when a general store was built there?",
-"answer": "New York",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-weird-tomato-court",
-"question": "In 1893, the Supreme Court ruled in a case originating from a port in which state that a tomato is legally a vegetable rather than a fruit for tax and tariff purposes?",
-"answer": "New York",
-"category": "US States",
-"difficulty": "medium"
-},
-{
-"slug": "us-states-weird-ostrich-race",
-"question": "Which southwestern desert state hosts a massive annual festival dedicated entirely to ostrich racing, where riders attempt to navigate chariots pulled by the giant birds?",
-"answer": "Arizona",
-"category": "US States",
-"difficulty": "easy"
-},
-{
-"slug": "us-states-weird-potato-drop",
-"question": "While New York drops a crystal ball on New Year's Eve, which western state celebrates the midnight countdown by dropping a massive, glowing, manufactured replica of a potato from a crane?",
-"answer": "Idaho",
-"category": "US States",
-"difficulty": "easy"
-}
+      "slug": "us-states-grand-canyon",
+      "question": "Which US state contains the overwhelming majority of the Grand Canyon National Park, including its famous South Rim?",
+      "answer": "Arizona",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-everglades",
+      "question": "Which US state contains the massive subtropical wilderness of the Everglades National Park within its borders?",
+      "answer": "Florida",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-denali",
+      "question": "Which US state contains Denali, the highest mountain peak in North America?",
+      "answer": "Alaska",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-mauna-kea",
+      "question": "Which US state contains the dormant volcano Mauna Kea, home to many of the world's premier astronomical observatories?",
+      "answer": "Hawaii",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-alamo",
+      "question": "Which US state contains the historic Alamo mission building within the city of San Antonio?",
+      "answer": "Texas",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-crater-lake",
+      "question": "Which US state contains Crater Lake, the deepest lake in the United States?",
+      "answer": "Oregon",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-badlands",
+      "question": "Which US state contains the striking eroded geological formations of Badlands National Park?",
+      "answer": "South Dakota",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-mammoth-cave",
+      "question": "Which US state contains Mammoth Cave National Park, which preserves the world's longest known cave system?",
+      "answer": "Kentucky",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-okefenokee",
+      "question": "The majority of the historic Okefenokee Swamp is located within the borders of which US state?",
+      "answer": "Georgia",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-acadia",
+      "question": "Which US state contains Acadia National Park, primarily located on Mount Desert Island?",
+      "answer": "Maine",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-hoover-dam",
+      "question": "While the Colorado River runs through it, the physical structure of the Hoover Dam itself anchors directly into Arizona and which other US state?",
+      "answer": "Nevada",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-space-needle",
+      "question": "Which US state contains the iconic Space Needle observation tower, built for the 1962 World's Fair?",
+      "answer": "Washington",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-mormon-temple",
+      "question": "Which US state contains the world headquarters of the Church of Jesus Christ of Latter-day Saints in Salt Lake City?",
+      "answer": "Utah",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-gateway-arch",
+      "question": "Which US state contains the 630-foot-tall stainless steel Gateway Arch monument in the city of St. Louis?",
+      "answer": "Missouri",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-french-quarter",
+      "question": "Which US state contains the historic, jazz-filled French Quarter neighborhood within its largest city?",
+      "answer": "Louisiana",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-isle-royale",
+      "question": "Which US state contains the wilderness of Isle Royale National Park, located entirely within Lake Superior?",
+      "answer": "Michigan",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-independence-hall",
+      "question": "Which US state contains Independence Hall, the historic building where the US Declaration of Independence was debated and adopted?",
+      "answer": "Pennsylvania",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-mount-rushmore",
+      "question": "Which US state contains the massive stone carvings of four US Presidents at Mount Rushmore?",
+      "answer": "South Dakota",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-martha-vineyard",
+      "question": "Which US state contains the affluent summer colony island of Martha's Vineyard?",
+      "answer": "Massachusetts",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-outer-banks",
+      "question": "Which US state contains the 200-mile string of barrier islands known as the Outer Banks?",
+      "answer": "North Carolina",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-yosemite",
+      "question": "Which US state contains the towering granite cliffs of El Capitan and Half Dome within Yosemite National Park?",
+      "answer": "California",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-walmart-hq",
+      "question": "Which US state contains the global corporate headquarters of Walmart Inc. in the city of Bentonville?",
+      "answer": "Arkansas",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-yellowstone",
+      "question": "While it spills slightly into Idaho and Montana, roughly 96 percent of Yellowstone National Park's land area sits inside which US state?",
+      "answer": "Wyoming",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-indy-500",
+      "question": "Which US state hosts the famous Indianapolis 500 automobile race at the Indianapolis Motor Speedway every May?",
+      "answer": "Indiana",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-green-mountains",
+      "question": "Which US state contains the entirety of the Green Mountains range, which heavily inspires its official state nickname?",
+      "answer": "Vermont",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-mammoth-hot-springs",
+      "question": "While Yellowstone is famous for its geysers, which US state contains the stark, terraced travertine structures of Mammoth Hot Springs?",
+      "answer": "Wyoming",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-lake-itasca",
+      "question": "Which US state contains Lake Itasca, the small glacial body of water officially recognized as the primary headwaters of the Mississippi River?",
+      "answer": "Minnesota",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-garlock-fault",
+      "question": "Which US state contains the 150-mile-long Garlock Fault, a major left-lateral strike-slip geological fault that intersects the San Andreas Fault?",
+      "answer": "California",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-fort-sumter",
+      "question": "Which US state contains Fort Sumter, the sea fort where the first shots of the American Civil War were fired in 1861?",
+      "answer": "South Carolina",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-tupelo",
+      "question": "Which US state contains the city of Tupelo, famous for preserving the tiny two-room birthplace home of Elvis Presley?",
+      "answer": "Mississippi",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-isle-au-haut",
+      "question": "Which US state contains Isle au Haut, a rugged island that holds a distinct, detached section of Acadia National Park?",
+      "answer": "Maine",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-lake-pontchartrain",
+      "question": "Which US state contains Lake Pontchartrain, which is spanned by the world's longest continuous bridge over water?",
+      "answer": "Louisiana",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-great-serpent-mound",
+      "question": "Which US state contains the Great Serpent Mound, a 1,348-foot-long prehistoric effigy mound depicting a snake swallowing an egg?",
+      "answer": "Ohio",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-copper-harbor",
+      "question": "Which US state contains Copper Harbor, a northern settlement that serves as the official terminus of US Route 41?",
+      "answer": "Michigan",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-okafuni-swamp",
+      "question": "Which US state contains the majority of the Suwannee River's headwaters within the protected Okefenokee National Wildlife Refuge?",
+      "answer": "Georgia",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-dripping-springs",
+      "question": "Which US state contains the historic Dripping Springs Natural Area, tucked into the rugged Organ Mountains?",
+      "answer": "New Mexico",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-bacon-ridge",
+      "question": "Which US state contains the Bacon Ridge Natural Area, a protected wildlife corridor located within Anne Arundel County?",
+      "answer": "Maryland",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-tallgrass-prairie",
+      "question": "Which US state contains the Tallgrass Prairie National Preserve, which protects the last vast expanse of the original tallgrass ecosystem?",
+      "answer": "Kansas",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-mount-mitchell",
+      "question": "Which US state contains Mount Mitchell, the highest peak in the Appalachian Mountains and the highest peak in the eastern United States?",
+      "answer": "North Carolina",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-door-county",
+      "question": "Which US state contains Door County, a major tourist peninsula nestled between Green Bay and Lake Michigan?",
+      "answer": "Wisconsin",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-barr-trail",
+      "question": "Which US state contains the Barr Trail, a challenging 13-mile mountain path that ascends directly to the summit of Pikes Peak?",
+      "answer": "Colorado",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-block-island",
+      "question": "Which US state contains Block Island, an offshore landmass bounded by the Atlantic Ocean and a sound named for the state itself?",
+      "answer": "Rhode Island",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-coeur-d-alene",
+      "question": "Which US state contains the city of Coeur d'Alene, situated on a stunning glacial lake of the same name?",
+      "answer": "Idaho",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-lake-champlain",
+      "question": "While the lake touches New York and Canada, which US state borders the eastern shoreline of Lake Champlain?",
+      "answer": "Vermont",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-ouachita-mountains",
+      "question": "While they extend into Oklahoma, the towering Hot Springs National Park sits within the portion of the Ouachita Mountains located in which US state?",
+      "answer": "Arkansas",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-delaware-water-gap",
+      "question": "Which US state shares the Delaware Water Gap National Recreation Area along its eastern river border with New Jersey?",
+      "answer": "Pennsylvania",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-chimney-rock",
+      "question": "Which US state contains Chimney Rock, a towering prominent rock formation that served as a critical landmark for pioneers on the Oregon Trail?",
+      "answer": "Nebraska",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-theo-roosevelt-park",
+      "question": "Which US state contains Theodore Roosevelt National Park, where the Little Missouri River flows through the colorful badlands?",
+      "answer": "North Dakota",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-battle-of-antietam",
+      "question": "Which US state was the site of the Battle of Antietam in 1862, which remains the bloodiest single-day battle in American military history?",
+      "answer": "Maryland",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-constitutional-convention",
+      "question": "Which US state hosted the 1787 Constitutional Convention, where the United States Constitution was drafted and signed in Philadelphia?",
+      "answer": "Pennsylvania",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-comstock-lode",
+      "question": "The discovery of the Comstock Lode, the first major silver ore deposit in the United States, accelerated the statehood process for which US state?",
+      "answer": "Nevada",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-bleeding-kansas",
+      "question": "Which US state was the center of a brutal series of violent civil confrontations in the 1850s over the legality of slavery, earning it a famous 'bloody' moniker?",
+      "answer": "Kansas",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-king-philip-war",
+      "question": "The Great Swamp Fight, a pivotal and devastating engagement of King Philip's War in 1675, took place in which modern-day US state?",
+      "answer": "Rhode Island",
+      "category": "US States",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "us-states-haymarket-affair",
+      "question": "Which US state was the location of the 1886 Haymarket Affair, a historic labor protest bombing?",
+      "answer": "Illinois",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-shays-rebellion",
+      "question": "Which US state was the primary setting for Shays' Rebellion, an armed uprising of farmers from 1786 to 1787 that highlighted the weaknesses of the Articles of Confederation?",
+      "answer": "Massachusetts",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-john-brown-raid",
+      "question": "The historic federal armory at Harpers Ferry, targeted by abolitionist John Brown for an armed slave revolt in 1859, is located in which modern-day US state?",
+      "answer": "West Virginia",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-roanoke-colony",
+      "question": "The mysterious 'Lost Colony' of Roanoke Island, established by Sir Walter Raleigh in 1587, was located off the coast of which modern-day US state?",
+      "answer": "North Carolina",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-erie-canal",
+      "question": "Which US state constructed the 363-mile Erie Canal, completing it in 1825 to connect the Hudson River directly to Lake Erie?",
+      "answer": "New York",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-seneca-falls",
+      "question": "Which US state hosted the Seneca Falls Convention in 1848, universally recognized as the first women's rights convention in the country?",
+      "answer": "New York",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-black-hawk-war",
+      "question": "The 1832 Battle of Bad Axe, the tragic final clash of the Black Hawk War, took place along the banks of the Mississippi River in which US state?",
+      "answer": "Wisconsin",
+      "category": "US States",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "us-states-whiskey-rebellion",
+      "question": "Which US state was the epicenter of the Whiskey Rebellion in the 1790s, forcing President George Washington to personally lead a militia to quell the tax revolt?",
+      "answer": "Pennsylvania",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-pullman-strike",
+      "question": "The historic 1894 Pullman Strike, a nationwide railroad boycott that completely paralyzed rail traffic, originated in a company town located in which US state?",
+      "answer": "Illinois",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-bacon-rebellion",
+      "question": "Which US state was the location of Bacon's Rebellion in 1676, an armed uprising of settlers that resulted in the burning of Jamestown?",
+      "answer": "Virginia",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-homestead-strike",
+      "question": "The 1892 Homestead Strike, a violent confrontation between striking steelworkers and Pinkerton detectives, took place at an Andrew Carnegie steel mill in which US state?",
+      "answer": "Pennsylvania",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-little-rock-nine",
+      "question": "Which US state was the site of the 1957 integration crisis involving the 'Little Rock Nine' at Central High School?",
+      "answer": "Arkansas",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-wovoka-ghost-dance",
+      "question": "The late-19th-century Ghost Dance religious movement, founded by the Northern Paiute prophet Wovoka, originated in which US state?",
+      "answer": "Nevada",
+      "category": "US States",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "us-states-johnstown-flood",
+      "question": "The catastrophic Johnstown Flood of 1889, which claimed over 2,200 lives after the failure of the South Fork Dam, occurred in which US state?",
+      "answer": "Pennsylvania",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-gadsden-purchase",
+      "question": "The 1853 Gadsden Purchase secured thousands of square miles of southern land along the Mexican border to finalize the territory of New Mexico and which other US state?",
+      "answer": "Arizona",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-battle-of-tippecanoe",
+      "question": "The 1811 Battle of Tippecanoe, a conflict between American forces and Tecumseh's Native American confederacy, was fought in which modern-day US state?",
+      "answer": "Indiana",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-williamsburg-capital",
+      "question": "Which US state was the political home of Colonial Williamsburg, which served as the capital of the colony from 1699 to 1780?",
+      "answer": "Virginia",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-ben-jerry-factory",
+      "question": "Which US state is home to the primary Ben & Jerry's ice cream factory in Waterbury, famous for its 'Flavor Graveyard' tracking retired flavors?",
+      "answer": "Vermont",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-idaho-potato-museum",
+      "question": "Which US state contains a museum in Blackfoot shaped like a giant baked potato, celebrating the agricultural crop that anchors the region's economy?",
+      "answer": "Idaho",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-spam-museum",
+      "question": "Which US state contains the official SPAM Museum, celebrating the famous canned meat product manufactured by Hormel Foods in Austin?",
+      "answer": "Minnesota",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-tabasco-source",
+      "question": "Which US state contains Avery Island, the salt dome landmass where every single bottle of Tabasco sauce is produced?",
+      "answer": "Louisiana",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-peeps-factory",
+      "question": "Which US state contains the Just Born candy factory, which manufactures nearly all of the country's marshmallow Peeps?",
+      "answer": "Pennsylvania",
+      "category": "US States",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "us-states-tillamook-cheese",
+      "question": "Which US state contains a massive, tourist-heavy creamery facility along its rugged Pacific Northwest coastline famous for its medium cheddar and coastal berry ice creams?",
+      "answer": "Oregon",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-john-deere-hq",
+      "question": "Which US state contains the global corporate headquarters of John Deere?",
+      "answer": "Illinois",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-nike-world-hq",
+      "question": "Which US state contains the massive, sprawling global corporate campus of Nike?",
+      "answer": "Oregon",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-boeing-everett",
+      "question": "Which US state contains the Everett Factory, a massive aerospace production building that holds the record as the largest building in the world by volume?",
+      "answer": "Washington",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-corvette-factory",
+      "question": "Which US state contains the Bowling Green Assembly Plant, the exclusive global manufacturing home of the Chevrolet Corvette sports car?",
+      "answer": "Kentucky",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-kellogg-hq",
+      "question": "Which US state contains the historic corporate headquarters of Kellogg's in Battle Creek, earning the settlement the nickname 'Cereal City'?",
+      "answer": "Michigan",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-malls-of-america",
+      "question": "Which US state contains the Mall of America, the largest shopping mall and indoor theme park complex in the United States?",
+      "answer": "Minnesota",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-motto-forward",
+      "question": "Which US state looks to the future with its concise, single-word official motto, 'Forward'?",
+      "answer": "Wisconsin",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-motto-eureka",
+      "question": "Which US state boasts the only Greek-word official motto in the country, 'Eureka' (I have found it), referencing its famous mid-19th-century gold rush?",
+      "answer": "California",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-motto-show-me",
+      "question": "Though its official Latin motto translates to 'The welfare of the people shall be the supreme law,' which midwestern state is universally known by its unofficial, skeptical motto, the 'Show-Me State'?",
+      "answer": "Missouri",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-motto-live-free-or-die",
+      "question": "Adopted in 1945 from a Revolutionary War toast written by General John Stark, 'Live Free or Die' is the assertively independent motto of which New England state?",
+      "answer": "New Hampshire",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-motto-friendship",
+      "question": "Derived from a Caddo Native American word meaning 'friends' or 'allies,' which large southern state uses the simple, single-word official motto 'Friendship'?",
+      "answer": "Texas",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-motto-aloha",
+      "question": "Which US state passed a unique statute explicitly establishing the 'Aloha Spirit' as a legal obligation and philosophical motto for its officials and citizens?",
+      "answer": "Hawaii",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-motto-excelsior",
+      "question": "Meaning 'Ever upward' or 'Still higher,' the Latin motto 'Excelsior' is prominently featured on the flag and coat of arms of which eastern state?",
+      "answer": "New York",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-motto-to-be-rather-than-to-seem",
+      "question": "Which US state features the classic philosophical Latin motto 'Esse quam videri,' which translates into English as 'To be, rather than to seem'?",
+      "answer": "North Carolina",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-motto-north-to-the-future",
+      "question": "Chosen during a 1967 centennial celebration to represent a land of geographic opportunity, 'North to the Future' is the official motto of which US state?",
+      "answer": "Alaska",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-motto-she-flies-with-her-own-wings",
+      "question": "Which state honors its pioneering trailblazers with the lyrical, independent motto 'Alis volat propriis,' translated as 'She flies with her own wings'?",
+      "answer": "Oregon",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-motto-equal-rights",
+      "question": "As the first territory and state to grant women the right to vote, hold office, and serve on juries, which western state appropriately claims the official motto 'Equal Rights'?",
+      "answer": "Wyoming",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-motto-all-for-our-country",
+      "question": "Admitted to the Union during the American Civil War, which western state references its wartime origin on its state seal with the patriotic motto 'All for Our Country'?",
+      "answer": "Nevada",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-motto-industry",
+      "question": "Representing the hard work and cooperation of its early settlers, which western state uses the single-word motto 'Industry' alongside the visual symbol of a beehive?",
+      "answer": "Utah",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-motto-crossroads-of-america",
+      "question": "Which US state officially adopted the transit-themed motto 'The Crossroads of America' due to the massive volume of interstate highways and railroads intersecting within its borders?",
+      "answer": "Indiana",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-motto-gold-and-silver",
+      "question": "Reflecting its deep ties to mining and the mineral wealth of its mountains, which state uses the bilingual Spanish motto 'Oro y Plata' (Gold and Silver)?",
+      "answer": "Montana",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-motto-united-we-stand",
+      "question": "Which southern state pairs its official motto, 'United we stand, divided we fall,' with an image of two men—traditionally a statesman and a frontiersman—embracing on its state seal?",
+      "answer": "Kentucky",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-motto-if-you-seek-a-pleasant-peninsula",
+      "question": "Taking inspiration from its unique, water-locked geography, which Great Lakes state uses the Latin motto 'Si quaeris peninsulam amoenam, circumspice' (If you seek a pleasant peninsula, look about you)?",
+      "answer": "Michigan",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-motto-by-and-by",
+      "question": "Which western state uses the calm, optimistic, and slightly colloquial timeline motto 'By and By'?",
+      "answer": "Washington",
+      "category": "US States",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "us-states-motto-agriculture-and-commerce",
+      "question": "Which southern state perfectly summarizes its economic foundation on its state seal with the dual-concept motto 'Agriculture and Commerce'?",
+      "answer": "Tennessee",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-motto-liberty-and-independence",
+      "question": "As the first state to ratify the United States Constitution, which Mid-Atlantic state boasts the foundational motto 'Liberty and Independence'?",
+      "answer": "Delaware",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-motto-our-liberties-we-prize",
+      "question": "Which midwestern agricultural state boldly declares, 'Our liberties we prize and our rights we will maintain,' across a streaming ribbon held by an eagle on its state flag?",
+      "answer": "Iowa",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-motto-mountaineers-are-always-free",
+      "question": "Reflecting its rugged topography and its secession from a neighboring territory during the Civil War, which Appalachian state uses the Latin motto 'Montani semper liberi' (Mountaineers are always free)?",
+      "answer": "West Virginia",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-motto-while-i-breathe-i-hope",
+      "question": "Which southern state features two distinct Latin mottos on its seal: 'Animis opibusque parati' (Prepared in mind and resources) and the famous 'Dum spiro spero' (While I breathe, I hope)?",
+      "answer": "South Carolina",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-motto-it-grows-as-it-goes",
+      "question": "Looking back at its steady territorial expansion and progress, which southwestern state uses the dynamic Latin motto 'Crescit eundo,' translating into English as 'It grows as it goes'?",
+      "answer": "New Mexico",
+      "category": "US States",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "us-states-motto-with-god-all-things-are-possible",
+      "question": "Following a high-profile legal challenge in the 1990s regarding the separation of church and state, federal courts upheld the official biblical motto, 'With God, all things are possible,' for which midwestern state?",
+      "answer": "Ohio",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-weird-caribou-jail",
+      "question": "In which northern US state is it a long-standing (though rarely enforced) misdemeanor to push a live caribou out of an airplane?",
+      "answer": "Alaska",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-weird-milk-fight",
+      "question": "Which midwestern state hosted a quirky historical event in 1993 where lawmakers legally designated milk as the official state beverage, only for the governor to sign the bill into law while drinking a glass of chocolate milk?",
+      "answer": "Wisconsin",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-weird-gator-lotto",
+      "question": "Which southern state has a lottery system dedicated exclusively to awarding a limited number of hunting tags for alligators each year due to the sheer population density of the reptiles?",
+      "answer": "Florida",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-weird-london-bridge",
+      "question": "In a bizarre structural acquisition, a real estate developer purchased the actual, historic London Bridge from England in 1968 and rebuilt it brick-by-brick in which desert US state?",
+      "answer": "Arizona",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-weird-island-ratio",
+      "question": "While famous for its massive open plains and fields, which midwestern state oddly contains a point where you can stand on an island, in a lake, on an island, in a lake?",
+      "answer": "Minnesota",
+      "category": "US States",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "us-states-weird-soil-motto",
+      "question": "Which state has an official state soil named 'Tama silt loam' that is so highly valued for agriculture it was celebrated with its own dedicated continuous exhibition at the state capitol?",
+      "answer": "Iowa",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-weird-foot-measurement",
+      "question": "Which US state boasts an unusual geological footprint by containing a mountain range that is completely circular, known as the Sutter Buttes, often called the world's smallest mountain range?",
+      "answer": "California",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-weird-frog-jumping",
+      "question": "Which western state features an official annual legislative recess specifically so lawmakers can attend a historic, county-fair frog jumping jubilee inspired by a Mark Twain short story?",
+      "answer": "California",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-weird-time-zone-split",
+      "question": "Which midwestern state is uniquely split between the Eastern and Central time zones, resulting in a confusing quirk where driving across certain county lines shifts your clock by an hour without leaving the state region?",
+      "answer": "Indiana",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-weird-underground-fire",
+      "question": "Which eastern state contains the borough of Centralia, where a subterranean coal mine fire has been burning completely out of control beneath the streets since 1962?",
+      "answer": "Pennsylvania",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-weird-flamingo-law",
+      "question": "Which US state features a historic municipality where it was once technically illegal to let your pet flamingo wander into a local barber shop?",
+      "answer": "Florida",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-weird-dinosaur-tracks",
+      "question": "Which northeast state contains a state park where thousands of authentic prehistoric footprints are preserved, discovered entirely by accident when a bulldozer operator was clearing land for a state building?",
+      "answer": "Connecticut",
+      "category": "US States",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "us-states-weird-whale-blubber",
+      "question": "Which coastal New England state features a historic law on the books stating that any whale found dead on the shore belongs technically to the governor, specifically for its blubber?",
+      "answer": "Massachusetts",
+      "category": "US States",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "us-states-weird-car-henge",
+      "question": "Which midwestern plains state contains 'Carhenge,' a quirky, full-scale replica of England's Stonehenge constructed entirely out of vintage American automobiles painted gray?",
+      "answer": "Nebraska",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-weird-pickle-bounce",
+      "question": "Which northeast state has a famous blue law stating that a pickle cannot legally be considered a pickle unless it can bounce when dropped from a height of one foot?",
+      "answer": "Connecticut",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-weird-fake-town",
+      "question": "Which eastern state contained the fictional 'paper town' of Agloe, which was invented by mapmakers to catch copyright violators but actually became a real place when a general store was built there?",
+      "answer": "New York",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-weird-tomato-court",
+      "question": "In 1893, the Supreme Court ruled in a case originating from a port in which state that a tomato is legally a vegetable rather than a fruit for tax and tariff purposes?",
+      "answer": "New York",
+      "category": "US States",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-states-weird-ostrich-race",
+      "question": "Which southwestern desert state hosts a massive annual festival dedicated entirely to ostrich racing, where riders attempt to navigate chariots pulled by the giant birds?",
+      "answer": "Arizona",
+      "category": "US States",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "us-states-weird-potato-drop",
+      "question": "While New York drops a crystal ball on New Year's Eve, which western state celebrates the midnight countdown by dropping a massive, glowing, manufactured replica of a potato from a crane?",
+      "answer": "Idaho",
+      "category": "US States",
+      "difficulty": "easy"
+    }
   ]
 }

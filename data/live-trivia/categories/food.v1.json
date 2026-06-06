@@ -16,13 +16,6 @@
       "difficulty": "medium"
     },
     {
-      "slug": "food-spice-saffron-crocus",
-      "question": "Widely considered the most expensive spice by weight globally, saffron is harvested from the stigmas of which specific flower genus?",
-      "answer": "Crocus",
-      "category": "Food",
-      "difficulty": "medium"
-    },
-    {
       "slug": "food-brand-spam-portmanteau",
       "question": "Introduced by Hormel Foods in 1937, what iconic canned luncheon meat brand name serves as a portmanteau of the words 'spiced' and 'ham'?",
       "answer": "Spam",
@@ -133,13 +126,6 @@
       "answer": "Banana",
       "category": "Food",
       "difficulty": "medium"
-    },
-    {
-      "slug": "food-grain-quinoa-botany",
-      "question": "While treated culinarily as a cereal grain, the ancient South American staple quinoa is botanically classified as a pseudocereal belonging to which plant family?",
-      "answer": "Amaranthaceae",
-      "category": "Food",
-      "difficulty": "hard"
     },
     {
       "slug": "food-sauce-tahini-seed",
@@ -275,13 +261,6 @@
       "difficulty": "easy"
     },
     {
-      "slug": "food-dessert-ice-cream-cone",
-      "question": "What frozen dairy dessert is traditionally churned, flavored with vanilla or chocolate, and scooped onto a cone?",
-      "answer": "Ice cream",
-      "category": "Food",
-      "difficulty": "easy"
-    },
-    {
       "slug": "food-snack-popcorn-movie",
       "question": "What classic movie theater snack is made by heating dried corn kernels until they burst open?",
       "answer": "Popcorn",
@@ -401,23 +380,9 @@
       "difficulty": "medium"
     },
     {
-      "slug": "food-condiment-harissa-country",
-      "question": "The hot, aromatic chili pepper paste known as harissa, flavored with garlic, caraway, and cumin, originated in which North African country?",
-      "answer": "Tunisia",
-      "category": "Food",
-      "difficulty": "medium"
-    },
-    {
       "slug": "food-spice-mace-origin",
       "question": "What specific spice is derived from the lacy, reddish outer membrane that wraps around a whole nutmeg seed?",
       "answer": "Mace",
-      "category": "Food",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "food-dish-mole-poblano-state",
-      "question": "The complex, rich savory sauce known as mole poblano—famously combining chilis, spices, and a touch of chocolate—originated in which Mexican state?",
-      "answer": "Puebla",
       "category": "Food",
       "difficulty": "medium"
     },
@@ -446,20 +411,6 @@
       "slug": "food-brand-fritos-origin",
       "question": "In 1932, C.E. Doolin purchased a recipe for fried corn chips from a vendor in San Antonio and founded which classic American snack brand?",
       "answer": "Fritos",
-      "category": "Food",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "food-grain-farro-definition",
-      "question": "Which specific collective Italian term refers to the trio of ancient hulled wheat grains known individually as emmer, einkorn, and spelt?",
-      "answer": "Farro",
-      "category": "Food",
-      "difficulty": "medium"
-    },
-    {
-      "slug": "food-seafood-caviar-family",
-      "question": "To be legally marketed as authentic caviar in the United States and Europe, the salted roe must be harvested from which specific family of fish?",
-      "answer": "Sturgeon",
       "category": "Food",
       "difficulty": "medium"
     },

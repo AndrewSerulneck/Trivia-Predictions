@@ -181,22 +181,6 @@
       "difficulty": "hard"
     },
     {
-      "slug": "what-is-the-specific-biological-process-by-which-bats-and-dolphins-navigate-and-hunt-using-reflected-sound-waves",
-      "question": "What is the specific biological process by which bats and dolphins navigate and hunt using reflected sound waves?",
-      "answer": "Echolocation",
-      "answer_format": "write_in",
-      "category": "Animals",
-      "difficulty": "easy"
-    },
-    {
-      "slug": "what-is-the-name-of-the-unique-bone-structure-found-in-the-penis-of-many-mammals-including-dogs-and-bears-but-not-humans",
-      "question": "What is the name of the unique bone structure found in the penis of many mammals, including dogs and bears, but not humans?",
-      "answer": "Baculum",
-      "answer_format": "write_in",
-      "category": "Animals",
-      "difficulty": "medium"
-    },
-    {
       "slug": "what-is-the-scientific-term-for-the-shedding-of-an-exoskeleton-or-skin-by-arthropods-reptiles-and-amphibians",
       "question": "What is the scientific term for the shedding of an exoskeleton or skin by arthropods, reptiles, and amphibians?",
       "answer": "Ecdysis",
@@ -568,14 +552,6 @@
       "slug": "what-is-the-scientific-name-for-the-african-wild-dog",
       "question": "What is the scientific name for the African wild dog?",
       "answer": "Lycaon pictus",
-      "answer_format": "write_in",
-      "category": "Animals",
-      "difficulty": "hard"
-    },
-    {
-      "slug": "what-is-the-scientific-name-for-the-common-earthworm",
-      "question": "What is the scientific name for the common earthworm?",
-      "answer": "Lumbricus terrestris",
       "answer_format": "write_in",
       "category": "Animals",
       "difficulty": "hard"

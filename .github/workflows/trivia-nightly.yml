@@ -20,12 +20,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm
@@ -97,7 +97,6 @@ jobs:
           done
 
       - name: Seed Today's Live Trivia Occurrences
-        if: steps.commit-trivia.outputs.pushed == 'true'
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
@@ -107,7 +106,7 @@ jobs:
             -o /dev/null -w "Seed occurrences status: %{http_code}\n"
 
       - name: Trigger Vercel Redeploy
-        if: steps.commit-trivia.outputs.pushed == 'true' && secrets.VERCEL_DEPLOY_HOOK_URL != ''
+        if: steps.commit-trivia.outputs.pushed == 'true'
         run: |
           curl -s -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}" \
             -o /dev/null -w "Deploy hook status: %{http_code}\n"

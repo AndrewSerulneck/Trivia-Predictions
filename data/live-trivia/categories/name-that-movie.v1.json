@@ -1,0 +1,909 @@
+{
+  "categoryName": "Name That Movie",
+  "questions": [
+     {
+    "slug": "arnold-schwarzenegger-cyborg",
+    "question": "Arnold Schwarzenegger stars as a killer cyborg sent back in time to kill the leader of the human resistance before he is born.",
+    "answer": "The Terminator",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tom-hanks-castaway",
+    "question": "Tom Hanks stars as a FedEx executive stranded on a deserted island after a plane crash.",
+    "answer": "Cast Away",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "guy-pearce-memory-loss",
+    "question": "Guy Pearce stars as a man with short-term memory loss trying to uncover the truth about his wife's murder.",
+    "answer": "Memento",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "keanu-reeves-matrix",
+    "question": "Keanu Reeves stars as a computer hacker who discovers reality is a simulation created by machines.",
+    "answer": "The Matrix",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "bruce-willis-dead-again",
+    "question": "Bruce Willis stars as a troubled child psychologist who attempts to help an isolated young boy who is terrified of his ability to see and communicate with the dead.",
+    "answer": "The Sixth Sense",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "robert-de-niro-taxi-driver",
+    "question": "Robert De Niro stars as a mentally unstable veteran working as a taxi driver in New York City.",
+    "answer": "Taxi Driver",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "marlon-brando-mafia-boss",
+    "question": "Marlon Brando stars as the aging patriarch of a crime family in this epic mafia saga.",
+    "answer": "The Godfather",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "harison-ford-archaeologist",
+    "question": "Harrison Ford stars as an archaeologist and adventurer in this movie franchise.",
+    "answer": "Indiana Jones",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "sylvester-stallone-boxer",
+    "question": "Sylvester Stallone stars as an underdog boxer who gets a shot at the heavyweight championship.",
+    "answer": "Rocky",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "johnny-depp-pirate",
+    "question": "Johnny Depp stars as a swashbuckling pirate in this adventure series.",
+    "answer": "Pirates of the Caribbean",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "leonardo-dicaprio-titanic",
+    "question": "Leonardo DiCaprio stars as a poor artist who falls in love with a wealthy woman played by Kate Winslet aboard a ship that hits an iceberg.",
+    "answer": "Titanic",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "clint-eastwood-outlaw",
+    "question": "1967 film where Clint Eastwood stars as a mysterious outlaw in a small Western town.",
+    "answer": "The Good, the Bad and the Ugly",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "meryl-streep-devil",
+    "question": "Meryl Streep stars as the powerful editor of a fashion magazine who demands perfection from her assistant.",
+    "answer": "The Devil Wears Prada",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "jodie-foster-silence",
+    "question": "Jodie Foster stars as a young FBI trainee tracking down a serial killer who skins his victims.",
+    "answer": "The Silence of the Lambs",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "morgan-freeman-prison",
+    "question": "Morgan Freeman stars as a man wrongfully imprisoned for the murder of his wife, who later escapes to clear his name.",
+    "answer": "The Shawshank Redemption",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "dustin-hoffman-autism",
+    "question": "Dustin Hoffman stars as an autistic savant with extraordinary mathematical abilities.",
+    "answer": "Rain Man",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tom-cruise-ethan-hunt",
+    "question": "Tom Cruise stars as a secret agent who must clear his name after being framed for the deaths of his espionage team.",
+    "answer": "Mission: Impossible",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "will-smith-ali",
+    "question": "Will Smith stars as the legendary boxer Muhammad Ali in this biographical film.",
+    "answer": "Ali",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "julia-roberts-prostitute",
+    "question": "Julia Roberts stars as a prostitute hired by a wealthy businessman for a week in this romantic comedy.",
+    "answer": "Pretty Woman",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "brad-pitt-fight-club",
+    "question": "Brad Pitt stars as a charismatic soap salesman who forms an underground fight club with an insomniac office worker.",
+    "answer": "Fight Club",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "jim-carrey-mask",
+    "question": "Jim Carrey stars as a timid bank clerk who discovers a magical mask that transforms him into a green-faced trickster.",
+    "answer": "The Mask",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "sandra-bullock-bus",
+    "question": "Sandra Bullock stars as a woman who must drive a city bus after a criminal plants a bomb on it.",
+    "answer": "Speed",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "keanu-reeves-john-wick",
+    "question": "Keanu Reeves stars as a retired hitman who returns to the criminal underworld to seek vengeance for the death of his dog.",
+    "answer": "John Wick",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "matthew-mcconaughey-lawyer",
+    "question": "Matthew McConaughey stars as a defense attorney who takes on a high-profile murder case in the South.",
+    "answer": "A Time to Kill",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "scarlett-johansson-avenger",
+    "question": "Scarlett Johansson stars as a highly trained spy and assassin who joins a team of superheroes.",
+    "answer": "The Avengers",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "chris-pratt-guardians",
+    "question": "Chris Pratt stars as a roguish space adventurer who teams up with a group of misfits to save the galaxy.",
+    "answer": "Guardians of the Galaxy",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "ryan-reynolds-deadpool",
+    "question": "Ryan Reynolds stars as a wisecracking, fast-healing mercenary with a disfigured face.",
+    "answer": "Deadpool",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  }, 
+  {
+    "slug": "humphrey-bogart-rick",
+    "question": "Humphrey Bogart stars as Rick Blaine, a cynical American expatriate who runs a nightclub in Casablanca during World War II.",
+    "answer": "Casablanca",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "marlon-brando-don",
+    "question": "Marlon Brando stars as Don Vito Corleone, the aging patriarch of a powerful crime family.",
+    "answer": "The Godfather",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "anthony-perkins-norman",
+    "question": "Anthony Perkins stars as Norman Bates, a motel owner with a disturbing secret.",
+    "answer": "Psycho",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "jack-nicholson-joker",
+    "question": "Jack Nicholson stars as the Joker, a criminal mastermind who terrorizes Gotham City.",
+    "answer": "Batman",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "sigourney-weaver-ripley",
+    "question": "Sigourney Weaver stars as Ellen Ripley, a warrant officer battling a deadly alien aboard a spaceship.",
+    "answer": "Alien",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "arnold-schwarzenegger-dutch",
+    "question": "Arnold Schwarzenegger stars as Dutch, the leader of a team of commandos hunting a predatory alien in the jungle.",
+    "answer": "Predator",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "bruce-willis-john-mcclane",
+    "question": "Bruce Willis stars as John McClane, a New York cop who battles terrorists in a Los Angeles skyscraper.",
+    "answer": "Die Hard",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mel-gibson-max",
+    "question": "Mel Gibson stars as Max Rockatansky, a former police officer fighting for survival in a post-apocalyptic wasteland.",
+    "answer": "Mad Max",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "kurt-russell-snake",
+    "question": "Kurt Russell stars as Snake Plissken, a former soldier sent into a dystopian New York to rescue the President's daughter.",
+    "answer": "Escape from New York",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "wesley-snipes-blade",
+    "question": "Wesley Snipes stars as a half-vampire, half-mortal warrior who hunts vampires.",
+    "answer": "Blade",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "will-smith-j",
+    "question": "Will Smith stars as Agent J, a member of a secret agency that monitors alien activity on Earth.",
+    "answer": "Men in Black",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tommy-lee-jones-k",
+    "question": "Tommy Lee Jones stars as Agent K, a veteran agent who trains a new recruit to monitor alien activity.",
+    "answer": "Men in Black",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "daniel-craig-bond",
+    "question": "Daniel Craig stars as James Bond, a British secret agent who must stop a terrorist from destroying a new casino in Montenegro.",
+    "answer": "Casino Royale",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "clint-eastwood-dirty-harry",
+    "question": "Clint Eastwood stars as a San Francisco police inspector who must stop a serial killer.",
+    "answer": "Dirty Harry",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "charleton-heston-moses",
+    "question": "Charlton Heston stars as Moses, a Hebrew slave who leads his people out of Egypt.",
+    "answer": "The Ten Commandments",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "russell-crowe-gladiator",
+    "question": "Russell Crowe stars as Maximus, a Roman general who seeks revenge against the emperor who murdered his family.",
+    "answer": "Gladiator",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mel-gibson-braveheart",
+    "question": "Mel Gibson stars as William Wallace, a Scottish warrior who leads a rebellion against English rule.",
+    "answer": "Braveheart",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+ {
+    "slug": "forrest-gump-tom-hanks",
+    "question": "Tom Hanks stars as a kind-hearted man with a low IQ who witnesses and unwittingly influences several defining historical events in the United States.",
+    "answer": "Forrest Gump",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-truman-show-jim-carrey",
+    "question": "Jim Carrey stars as a man who discovers his entire life is a fabricated reality TV show.",
+    "answer": "The Truman Show",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-green-mile-tom-hanks",
+    "question": "Tom Hanks stars as a death row supervisor who encounters a man with a supernatural gift.",
+    "answer": "The Green Mile",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-pianist-adrien-brody",
+    "question": "Adrien Brody stars as a Polish Jewish pianist who struggles to survive the destruction of the Warsaw ghetto.",
+    "answer": "The Pianist",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "good-will-hunting-matt-damon",
+    "question": "Matt Damon stars as a genius janitor at MIT who solves a difficult math problem left on a chalkboard.",
+    "answer": "Good Will Hunting",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-departed-leonardo-dicaprio",
+    "question": "Leonardo DiCaprio stars as an undercover cop infiltrating the mob in Boston.",
+    "answer": "The Departed",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-revenant-leonardo-dicaprio",
+    "question": "Leonardo DiCaprio stars as a frontiersman left for dead after a bear attack, seeking revenge against those who betrayed him.",
+    "answer": "The Revenant",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-social-network-jesse-eisenberg",
+    "question": "Jesse Eisenberg stars as Mark Zuckerberg, the founder of Facebook, as he navigates the legal and personal challenges of creating a social network.",
+    "answer": "The Social Network",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-wolf-of-wall-street-leonardo-dicaprio",
+    "question": "Leonardo DiCaprio stars as Jordan Belfort, a stockbroker who rises to wealth and infamy through fraud and corruption.",
+    "answer": "The Wolf of Wall Street",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-aviatior-leonardo-dicaprio",
+    "question": "Leonardo DiCaprio stars as Howard Hughes, an eccentric aviation pioneer and filmmaker.",
+    "answer": "The Aviator",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-pursuit-of-happyness-will-smith",
+    "question": "Will Smith stars as Chris Gardner, a struggling salesman who becomes homeless while raising his son.",
+    "answer": "The Pursuit of Happyness",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-blind-side-sandra-bullock",
+    "question": "Sandra Bullock stars as Leigh Anne Tuohy, a woman who takes in a homeless teenager and helps him fulfill his potential as a football player.",
+    "answer": "The Blind Side",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-help-emma-stone",
+    "question": "Emma Stone stars as Skeeter Phelan, a young writer documenting the stories of African-American maids in 1960s Mississippi.",
+    "answer": "The Help",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-kings-speech-colin-firth",
+    "question": "Colin Firth stars as King George VI, who overcomes his stammer with the help of a speech therapist.",
+    "answer": "The King's Speech",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-imitation-game-benedict-cumberbatch",
+    "question": "Benedict Cumberbatch stars as Alan Turing, a mathematician who helps crack the Enigma code during World War II.",
+    "answer": "The Imitation Game",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-theory-of-everything-eddie-redmayne",
+    "question": "Eddie Redmayne stars as Stephen Hawking, a theoretical physicist diagnosed with ALS at a young age.",
+    "answer": "The Theory of Everything",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-martian-matt-damon",
+    "question": "Matt Damon stars as an astronaut stranded on Mars who must find a way to survive and signal Earth for rescue.",
+    "answer": "The Martian",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-grand-budapest-hotel-ralph-fiennes",
+    "question": "Ralph Fiennes stars as Gustave H, a legendary concierge at a famous European hotel between the wars.",
+    "answer": "The Grand Budapest Hotel",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-shape-of-water-sally-hawkins",
+    "question": "Sally Hawkins stars as Elisa, a mute janitor who forms a unique bond with an amphibious creature in a secret lab.",
+    "answer": "The Shape of Water",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-favourite-olivia-colman",
+    "question": "Olivia Colman stars as Queen Anne in this dark comedy about power and favoritism in 18th-century England.",
+    "answer": "The Favourite",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-joker-joaquin-phoenix",
+    "question": "Joaquin Phoenix stars as Arthur Fleck, a mentally troubled comedian who descends into madness and becomes a criminal icon in Gotham City.",
+    "answer": "Joker",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-irishman-robert-de-niro",
+    "question": "Robert De Niro stars as Frank Sheeran, a truck driver who becomes a hitman involved with the Bufalino crime family.",
+    "answer": "The Irishman",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-post-meryl-streep",
+    "question": "Meryl Streep stars as Katharine Graham, the first female publisher of a major American newspaper, during the Pentagon Papers scandal.",
+    "answer": "The Post",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-darkest-hour-gary-oldman",
+    "question": "Gary Oldman stars as Winston Churchill during the early days of World War II, as he faces the decision of whether to negotiate with Hitler or fight on.",
+    "answer": "The Darkest Hour",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-hateful-eight-samuel-l-jackson",
+    "question": "Samuel L. Jackson stars as Major Marquis Warren, a bounty hunter caught in a deadly game of deception in a blizzard-bound stagecoach stopover.",
+    "answer": "The Hateful Eight",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-revenant-tom-hardy",
+    "question": "Tom Hardy stars as John Fitzgerald, a trappers who betrays and leaves Hugh Glass for dead in the wilderness.",
+    "answer": "The Revenant",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "airplane-leslie-nielsen",
+    "question": "Leslie Nielsen stars in this spoof of disaster movies, where a former fighter pilot must land a plane after the crew falls ill.",
+    "answer": "Airplane!",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "caddyshack-rodney-dangerfield",
+    "question": "Rodney Dangerfield stars as a loud, obnoxious real estate developer who clashes with a snobby golf course owner.",
+    "answer": "Caddyshack",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "animal-house-john-belushi",
+    "question": "John Belushi stars as John 'Bluto' Blutarsky, a wild fraternity member at a 1962 college.",
+    "answer": "Animal House",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-hangover-bradley-cooper",
+    "question": "Bradley Cooper stars as Phil Wenneck, one of three friends who wake up after a wild bachelor party in Las Vegas with no memory of the previous night.",
+    "answer": "The Hangover",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "bridesmaids-kristen-wiig",
+    "question": "Kristen Wiig stars as Annie Walker, a maid of honor whose life unravels as she leads her best friend and a group of colorful bridesmaids on a wild ride.",
+    "answer": "Bridesmaids",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "superbad-jonah-hill",
+    "question": "Jonah Hill stars as Seth, a high school student trying to lose his virginity before graduation in this raunchy teen comedy.",
+    "answer": "Superbad",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "step-brothers-will-ferrell",
+    "question": "Will Ferrell and John C. Reilly are grown men who are forced to live together after their parents marry.",
+    "answer": "Step Brothers",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "anchorman-will-ferrell",
+    "question": "Will Ferrell stars as Ron Burgundy, a 1970s news anchor who struggles to adapt as his station brings in a female co-anchor.",
+    "answer": "Anchorman",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "old-school-will-ferrell",
+    "question": "Will Ferrell stars as Frank Ricard, a former college student who starts a fraternity near his old campus.",
+    "answer": "Old School",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "talladega-nights-will-ferrell",
+    "question": "Will Ferrell stars as Ricky Bobby, a cocky NASCAR driver who faces a series of comedic misadventures.",
+    "answer": "Talladega Nights",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "dumb-and-dumber-jim-carrey",
+    "question": "Jim Carrey stars as Lloyd Christmas, one of two dim-witted best friends on a cross-country road trip.",
+    "answer": "Dumb and Dumber",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "liar-liar-jim-carrey",
+    "question": "Jim Carrey stars as Fletcher Reede, a lawyer who cannot lie for 24 hours due to his son's birthday wish.",
+    "answer": "Liar Liar",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "meet-the-parents-ben-stiller",
+    "question": "Ben Stiller stars as Greg Focker, a male nurse who struggles to make a good impression on his girlfriend's parents.",
+    "answer": "Meet the Parents",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "zoolander-ben-stiller",
+    "question": "Ben Stiller stars as a dim-witted male model caught up in a conspiracy to assassinate the Prime Minister of Malaysia.",
+    "answer": "Zoolander",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-40-year-old-virgin-steve-carell",
+    "question": "Steve Carell stars as Andy Stitzer, a middle-aged man who has never had sex and faces pressure from his friends to lose his virginity.",
+    "answer": "The 40-Year-Old Virgin",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "evil-dead-2-bruce-campbell",
+    "question": "Bruce Campbell stars as Ash Williams, a man who must battle demonic forces in a remote cabin in this horror-comedy.",
+    "answer": "Evil Dead II",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "spaceballs-mel-brooks",
+    "question": "Mel Brooks directs this parody of 'Star Wars,' where a rogue space pilot must rescue a princess from an evil empire.",
+    "answer": "Spaceballs",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "blazing-saddles-mel-brooks",
+    "question": "Mel Brooks directs this Western comedy where a black sheriff is appointed to a racist town to clean it up.",
+    "answer": "Blazing Saddles",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "young-frankenstein-gene-wilder",
+    "question": "Gene Wilder stars as Dr. Frederick Frankenstein, who attempts to recreate his grandfather's experiment to bring a corpse back to life.",
+    "answer": "Young Frankenstein",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "groundhog-day-bill-murray",
+    "question": "Bill Murray stars as Phil Connors, a weatherman stuck in a time loop, reliving the same day over and over again.",
+    "answer": "Groundhog Day",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "ghostbusters-bill-murray",
+    "question": "Bill Murray stars as Dr. Peter Venkman, a parapsychologist who starts a ghost-catching business in New York City.",
+    "answer": "Ghostbusters",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "lost-in-translation-bill-murray",
+    "question": "Bill Murray stars as Bob Harris, an aging actor who forms an unlikely friendship with a young woman in Tokyo.",
+    "answer": "Lost in Translation",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "stripes-bill-murray",
+    "question": "Bill Murray stars as John Winger, a cab driver who joins the Army with his best friend.",
+    "answer": "Stripes",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "tootsie-dustin-hoffman",
+    "question": "Dustin Hoffman stars as Michael Dorsey, an unemployed actor who disguises himself as a woman to land a role on a soap opera.",
+    "answer": "Tootsie",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-producers-mel-brooks",
+    "question": "Mel Brooks directs this comedy about two theatrical producers who scheme to get rich by overselling interests in a sure-to-flop Broadway musical.",
+    "answer": "The Producers",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "when-harry-met-sally-billy-crystal",
+    "question": "Billy Crystal stars as Harry Burns, a man who debates whether men and women can truly be platonic friends with Meg Ryan's character over 12 years.",
+    "answer": "When Harry Met Sally",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+   {
+    "slug": "nightmare-on-elm-street-heather-langenkamp",
+    "question": "Heather Langenkamp stars as Nancy Thompson, a teenager haunted by a disfigured killer named Freddie Kreuger in her dreams.",
+    "answer": "A Nightmare on Elm Street",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-exorcist-linda-blair",
+    "question": "Linda Blair stars as Regan MacNeil, a young girl possessed by a demonic entity.",
+    "answer": "The Exorcist",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-shining-jack-nicholson",
+    "question": "Jack Nicholson stars as Jack Torrance, a writer who descends into madness while caretaking a haunted hotel.",
+    "answer": "The Shining",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "texas-chainsaw-massacre-marilyn-burns",
+    "question": "Marilyn Burns stars as Sally Hardesty, a woman terrorized by a family of cannibals, including the chainsaw-wielding Leatherface.",
+    "answer": "The Texas Chain Saw Massacre",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "scream-neve-campbell",
+    "question": "Neve Campbell stars as Sidney Prescott, a high school student targeted by a masked killer known as Ghostface.",
+    "answer": "Scream",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-ring-naomi-watts",
+    "question": "Naomi Watts stars as Rachel Keller, a journalist investigating a cursed videotape that kills viewers seven days after watching it.",
+    "answer": "The Ring",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "hoosiers-gene-hackman",
+    "question": "Gene Hackman stars as Norman Dale, a high school basketball coach leading a small-town team to an unlikely championship.",
+    "answer": "Hoosiers",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "remember-the-titans-denzel-washington",
+    "question": "Denzel Washington stars in this sports drama based on the true story of a newly racially integrated high school football team in Alexandria, Virginia in 1971.",
+    "answer": "Remember the Titans",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "jerry-maguire-tom-cruise",
+    "question": "Tom Cruise stars as a sports agent who has a moral crisis and starts his own agency.",
+    "answer": "Jerry Maguire",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "field-of-dreams-kevin-costner",
+    "question": "Kevin Costner stars as a farmer who builds a baseball field in his cornfield after hearing a mysterious voice.",
+    "answer": "Field of Dreams",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-natural-robert-redford",
+    "question": "Robert Redford stars as a talented but troubled baseball player who gets a second chance at glory.",
+    "answer": "The Natural",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "bull-durham-kevin-costner",
+    "question": "Kevin Costner stars as Crash Davis, a minor league catcher mentoring a young pitcher in the North Carolina league.",
+    "answer": "Bull Durham",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "major-league-charlie-sheen",
+    "question": "Charlie Sheen stars as Ricky Vaughn, a wild pitcher for the Cleveland Indians in this underdog baseball comedy.",
+    "answer": "Major League",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "white-men-cant-jump-wesley-snipes",
+    "question": "Wesley Snipes stars as a streetball hustler who teams up with a white player to scam others on the court.",
+    "answer": "White Men Can't Jump",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "space-jam-michael-jordan",
+    "question": "Michael Jordan stars as himself, teaming up with Bugs Bunny and the Looney Tunes to play basketball against aliens.",
+    "answer": "Space Jam",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "cool-runnings-john-candy",
+    "question": "John Candy stars as Irving Blitzer, a disgraced Olympic bobsledder coaching the first Jamaican bobsled team.",
+    "answer": "Cool Runnings",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "miracle-kurt-russell",
+    "question": "Kurt Russell stars as Herb Brooks, the coach of the 1980 U.S. Olympic hockey team that defeats the Soviet Union.",
+    "answer": "Miracle",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "invictus-morgan-freeman",
+    "question": "Morgan Freeman stars as Nelson Mandela, who uses the 1995 Rugby World Cup to unite South Africa.",
+    "answer": "Invictus",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "seabiscuit-tobey-maguire",
+    "question": "Tobey Maguire stars as Red Pollard, a jockey who helps an underdog racehorse become a champion.",
+    "answer": "Seabiscuit",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "secretariat-diane-lane",
+    "question": "Diane Lane stars as Penny Chenery, the owner of the legendary racehorse Secretariat.",
+    "answer": "Secretariat",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-fighter-mark-wahlberg",
+    "question": "Mark Wahlberg stars as Micky Ward, a boxer from Lowell, Massachusetts, fighting for his career and family.",
+    "answer": "The Fighter",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "warrior-tom-hardy",
+    "question": "Tom Hardy stars plays an ex-Marine who enters the world of mixed martial arts to save his family.",
+    "answer": "Warrior",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "creed-michael-b-jordan",
+    "question": "Michael B. Jordan stars as Adonis Creed, the son of Apollo Creed, who trains under Rocky Balboa to become a boxer.",
+    "answer": "Creed",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "million-dollar-baby-hilary-swank",
+    "question": "Hilary Swank plays Maggie Fitzgerald, a determined, working-class amateur boxer who convinces a hardened, guilt-ridden trainer (played by Clint Eastwood) to help her achieve her dream of turning professional",
+    "answer": "Million Dollar Baby",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-wrestler-mickey-rourke",
+    "question": "Mickey Rourke stars as Randy 'The Ram' Robinson, an aging professional wrestler struggling with his career and personal life.",
+    "answer": "The Wrestler",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "foxcatcher-steve-carell",
+    "question": "Steve Carell stars as John du Pont, an eccentric millionaire who sponsors Olympic wrestlers with dark intentions.",
+    "answer": "Foxcatcher",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "moneyball-brad-pitt",
+    "question": "Brad Pitt stars as Billy Beane, the general manager of the Oakland Athletics, who uses sabermetrics to build a competitive team.",
+    "answer": "Moneyball",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-rookie-dennis-quaid",
+    "question": "Dennis Quaid stars as Jimmy Morris, a high school baseball coach who fulfills his dream of pitching in the Major Leagues.",
+    "answer": "The Rookie",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-replacements-keanu-reeves",
+    "question": "Keanu Reeves stars as Shane Falco, a former college quarterback brought in to lead a team of misfits during an NFL strike.",
+    "answer": "The Replacements",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "any-given-sunday-al-pacino",
+    "question": "Al Pacino stars as the coach of a fictional professional football team in Miami dealing with personal and professional struggles.",
+    "answer": "Any Given Sunday",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-longest-yard-adam-sandler",
+    "question": "Both Adam Sandler and Burt Reynolds have played Paul Crewe, a former NFL quarterback who organizes a prison football team to play against the guards.",
+    "answer": "The Longest Yard",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "blades-of-glory-will-ferrell",
+    "question": "Will Ferrell and John Heder play disgraced rival figure skaters who team up to compete in pairs skating.",
+    "answer": "Blades of Glory",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "dodgeball-vince-vaughn",
+    "question": "Vince Vaughn plays the owner of a local gym who enters his team in a dodgeball tournament to save his business.",
+    "answer": "DodgeBall",
+    "category": "Name That Movie",
+    "difficulty": "easy"
+  }
+]
+}
+ 
