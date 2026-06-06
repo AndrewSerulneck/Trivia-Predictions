@@ -387,74 +387,30 @@ async function upsertRows(rows, { prune = false } = {}) {
   await verifyConnectivity(supabaseUrl);
 
   let processed = 0;
-  let skippedDeleted = 0;
   for (let start = 0; start < rows.length; start += CHUNK_SIZE) {
     const chunkNumber = Math.floor(start / CHUNK_SIZE) + 1;
     const chunk = rows.slice(start, start + CHUNK_SIZE);
-    const chunkSlugs = chunk.map((row) => row.slug).filter(Boolean);
 
-    // Determine which slugs already exist so we never overwrite an existing
-    // question's review status. Only brand-new questions land as pending_review;
-    // existing rows are updated WITHOUT touching their status column.
-    // Admin-deleted questions are skipped entirely so local JSON cannot
-    // resurrect them on the next import.
-    const existingSlugs = new Set();
-    const deletedSlugs = new Set();
-    if (chunkSlugs.length > 0) {
-      const { data: existingData, error: existingError } = await retryAsync(
-        async () => supabase.from("trivia_questions").select("slug, status").in("slug", chunkSlugs),
-        { operation: `lookup existing slugs chunk ${chunkNumber}` }
-      );
-      if (existingError) {
-        throw new Error(`Failed to look up existing slugs: ${describeError(existingError)}`);
-      }
-      for (const row of existingData ?? []) {
-        if (row.slug) existingSlugs.add(row.slug);
-        if (row.slug && row.status === "deleted") deletedSlugs.add(row.slug);
-      }
-    }
+    // Local JSON is authoritative: anything present in JSON is active in Supabase,
+    // including rows previously marked pending/deleted in the admin UI.
+    const activeRows = chunk.map((row) => ({ ...row, status: "active" }));
 
-    const importableRows = chunk.filter((row) => !deletedSlugs.has(row.slug));
-    skippedDeleted += chunk.length - importableRows.length;
-
-    const newRows = importableRows
-      .filter((row) => !existingSlugs.has(row.slug))
-      .map((row) => ({ ...row, status: "pending_review" }));
-    const existingRows = importableRows.filter((row) => existingSlugs.has(row.slug));
-
-    if (newRows.length > 0) {
+    if (activeRows.length > 0) {
       await retryAsync(
         async () => {
           const { error } = await supabase
             .from("trivia_questions")
-            .upsert(newRows, { onConflict: "slug" });
-          if (error) {
-            throw new Error(`Supabase insert (pending_review) failed: ${describeError(error)}`);
-          }
-        },
-        { operation: `insert pending chunk ${chunkNumber}` }
-      );
-    }
-
-    if (existingRows.length > 0) {
-      await retryAsync(
-        async () => {
-          // status omitted from payload → existing review status is preserved.
-          const { error } = await supabase
-            .from("trivia_questions")
-            .upsert(existingRows, { onConflict: "slug" });
+            .upsert(activeRows, { onConflict: "slug" });
           if (error) {
             throw new Error(`Supabase update failed: ${describeError(error)}`);
           }
         },
-        { operation: `update existing chunk ${chunkNumber}` }
+        { operation: `upsert active chunk ${chunkNumber}` }
       );
     }
 
-    processed += importableRows.length;
-    console.log(
-      `Upserted ${processed}/${rows.length - skippedDeleted} importable questions (${newRows.length} new → pending_review, ${existingRows.length} updated, ${chunk.length - importableRows.length} skipped as deleted)...`
-    );
+    processed += activeRows.length;
+    console.log(`Upserted ${processed}/${rows.length} active questions...`);
   }
 
   const { count, error } = await retryAsync(
@@ -475,15 +431,12 @@ async function upsertRows(rows, { prune = false } = {}) {
   if (prune) {
     const liveSlugs = new Set(rows.filter((r) => r.question_pool === LIVE_POOL).map((r) => r.slug).filter(Boolean));
     const speedSlugs = new Set(rows.filter((r) => r.question_pool === ANYTIME_POOL).map((r) => r.slug).filter(Boolean));
-    if (liveSlugs.size > 0) await pruneStaleRows(supabase, liveSlugs, LIVE_POOL);
-    if (speedSlugs.size > 0) await pruneStaleRows(supabase, speedSlugs, ANYTIME_POOL);
+    await pruneStaleRows(supabase, liveSlugs, LIVE_POOL);
+    await pruneStaleRows(supabase, speedSlugs, ANYTIME_POOL);
   }
 
   await autoFillUpcomingLiveShowdownSchedules(supabase);
 
-  if (skippedDeleted > 0) {
-    console.log(`Skipped ${skippedDeleted} question(s) already marked deleted in Supabase.`);
-  }
   console.log(`Done. trivia_questions total rows: ${count ?? "unknown"}`);
 }
 

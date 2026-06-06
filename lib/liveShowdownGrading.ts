@@ -608,33 +608,106 @@ function isSimilarShortAnswer(left: string, right: string): boolean {
   return distance <= 3 && similarity >= 0.80;
 }
 
-export function gradeWriteInAnswer(userSubmitted: string, correctTarget: string): boolean {
+export type WriteInAnswerMatchRule =
+  | "exact"
+  | "pluralization"
+  | "country_alias"
+  | "historical_alias"
+  | "person_alias"
+  | "event_alias"
+  | "numeric_measurement"
+  | "word_subset"
+  | "token_fuzzy_subset"
+  | "fuzzy_similarity"
+  | "stored_variant_exact";
+
+export type WriteInAnswerMatchSource = "canonical" | "acceptable" | "stored_variant";
+
+export type WriteInAnswerTargetTrace = {
+  source: Exclude<WriteInAnswerMatchSource, "stored_variant">;
+  target: string;
+  normalizedTarget: string;
+  matched: boolean;
+  matchedBy: Exclude<WriteInAnswerMatchRule, "stored_variant_exact"> | null;
+};
+
+export type WriteInAnswerStoredVariantTrace = {
+  index: number;
+  variant: string;
+  normalizedVariant: string;
+  matched: boolean;
+};
+
+export type WriteInAnswerEvaluation = {
+  submitted: string;
+  normalizedSubmitted: string;
+  matched: boolean;
+  matchedBy: WriteInAnswerMatchRule | null;
+  matchedSource: WriteInAnswerMatchSource | null;
+  matchedTarget: string | null;
+  normalizedMatchedTarget: string | null;
+  checkedTargets: WriteInAnswerTargetTrace[];
+  checkedVariantIndexes: number[];
+  checkedVariants: WriteInAnswerStoredVariantTrace[];
+  variantLookupAttempted: boolean;
+  variantLookupError: string | null;
+};
+
+type SingleTargetEvaluation = {
+  submitted: string;
+  target: string;
+  normalizedSubmitted: string;
+  normalizedTarget: string;
+  matched: boolean;
+  matchedBy: Exclude<WriteInAnswerMatchRule, "stored_variant_exact"> | null;
+};
+
+function evaluateWriteInAnswerAgainstTarget(userSubmitted: string, correctTarget: string): SingleTargetEvaluation {
   const targetRaw = String(correctTarget ?? "");
   const submittedRaw = String(userSubmitted ?? "");
-
-  if (!targetRaw || !submittedRaw) return false;
-
   const normalizedTarget = normalizeForTriviaComparison(targetRaw);
   const normalizedSubmitted = normalizeForTriviaComparison(submittedRaw);
-  if (!normalizedTarget || !normalizedSubmitted) return false;
+
+  const fail = (): SingleTargetEvaluation => ({
+    submitted: submittedRaw,
+    target: targetRaw,
+    normalizedSubmitted,
+    normalizedTarget,
+    matched: false,
+    matchedBy: null,
+  });
+
+  const pass = (
+    matchedBy: Exclude<WriteInAnswerMatchRule, "stored_variant_exact">
+  ): SingleTargetEvaluation => ({
+    submitted: submittedRaw,
+    target: targetRaw,
+    normalizedSubmitted,
+    normalizedTarget,
+    matched: true,
+    matchedBy,
+  });
+
+  if (!targetRaw || !submittedRaw) return fail();
+  if (!normalizedTarget || !normalizedSubmitted) return fail();
 
   // 1. Exact match.
-  if (normalizedSubmitted === normalizedTarget) return true;
+  if (normalizedSubmitted === normalizedTarget) return pass("exact");
 
   // 2. Pluralization variants ("noses" ↔ "nose", "countries" ↔ "country").
-  if (arePluralizationVariants(normalizedSubmitted, normalizedTarget)) return true;
+  if (arePluralizationVariants(normalizedSubmitted, normalizedTarget)) return pass("pluralization");
 
   // 3. NEW: Country/region matching (UK ↔ Great Britain, USSR ↔ Russia, etc.)
-  if (isCountryMatch(submittedRaw, targetRaw)) return true;
+  if (isCountryMatch(submittedRaw, targetRaw)) return pass("country_alias");
 
   // 4. NEW: Historical region matching (Mesopotamia ↔ Iraq, Persia ↔ Iran)
-  if (isHistoricalTermMatch(submittedRaw, targetRaw)) return true;
+  if (isHistoricalTermMatch(submittedRaw, targetRaw)) return pass("historical_alias");
 
   // 5. NEW: Person name matching (JFK ↔ John F. Kennedy, FDR ↔ Franklin D. Roosevelt)
-  if (isPersonNameMatch(submittedRaw, targetRaw)) return true;
+  if (isPersonNameMatch(submittedRaw, targetRaw)) return pass("person_alias");
 
   // 6. NEW: Historical event matching (WW2 ↔ World War II, NATO ↔ North Atlantic Treaty Organization)
-  if (isEventMatch(submittedRaw, targetRaw)) return true;
+  if (isEventMatch(submittedRaw, targetRaw)) return pass("event_alias");
 
   // 7. Numeric + measurement: when the correct answer is a number paired with a unit
   //    (e.g. "4000 feet", "206 mph"), accept a submission that supplies just the
@@ -644,21 +717,17 @@ export function gradeWriteInAnswer(userSubmitted: string, correctTarget: string)
   if (targetNumeric !== null && !isStandaloneNumber(normalizedTarget)) {
     const submittedNumeric = extractNumericPart(normalizedSubmitted);
     if (submittedNumeric === targetNumeric) {
-      if (isStandaloneNumber(normalizedSubmitted)) return true;
+      if (isStandaloneNumber(normalizedSubmitted)) return pass("numeric_measurement");
       // Submitted has extra words — accept only if every submitted word appears in the target.
       const submittedWords = normalizedSubmitted.split(" ").filter(Boolean);
       const targetWords = normalizedTarget.split(" ").filter(Boolean);
-      if (submittedWords.every((w) => targetWords.includes(w))) return true;
+      if (submittedWords.every((w) => targetWords.includes(w))) return pass("numeric_measurement");
     }
   }
 
   // 8. Pure standalone numbers require exact equality; mixed cases rejected here.
   if (isStandaloneNumber(normalizedTarget) || isStandaloneNumber(normalizedSubmitted)) {
-    return (
-      isStandaloneNumber(normalizedTarget) &&
-      isStandaloneNumber(normalizedSubmitted) &&
-      normalizedSubmitted === normalizedTarget
-    );
+    return fail();
   }
 
   // 8b. If the canonical answer starts with a specific four-digit year, require
@@ -667,12 +736,12 @@ export function gradeWriteInAnswer(userSubmitted: string, correctTarget: string)
   // for "1972 Dolphins" while still allowing exact stored variants like
   // "72 Dolphins" or subset matches such as "2016 Warriors".
   if (!submittedContainsRequiredYear(normalizedSubmitted, normalizedTarget)) {
-    return false;
+    return fail();
   }
 
   // 9. Partial word match: user's answer is a meaningful subset of the correct answer
   //    ("Noses" → "Nose Prints", "Nose" → "Nose Prints", "Prints" → "Nose Prints").
-  if (userWordsSubsetOfCorrect(normalizedSubmitted, normalizedTarget)) return true;
+  if (userWordsSubsetOfCorrect(normalizedSubmitted, normalizedTarget)) return pass("word_subset");
 
   // 9b. Token-level fuzzy subset: user gave fewer words than the correct answer and each
   //     of their tokens fuzzy-matches a distinct correct token, with at least one
@@ -680,10 +749,16 @@ export function gradeWriteInAnswer(userSubmitted: string, correctTarget: string)
   //     "Lanister" → "House Lannister" (typo + prefix word) and "Lannister" → "House
   //     Lannister" (omitted prefix). The substantive-token guard prevents a bare "New"
   //     from sliding through as a match for "New York".
-  if (tokenFuzzySubsetMatch(normalizedSubmitted, normalizedTarget)) return true;
+  if (tokenFuzzySubsetMatch(normalizedSubmitted, normalizedTarget)) return pass("token_fuzzy_subset");
 
   // 10. Fuzzy string similarity (typos, transpositions).
-  return isSimilarShortAnswer(normalizedSubmitted, normalizedTarget);
+  if (isSimilarShortAnswer(normalizedSubmitted, normalizedTarget)) return pass("fuzzy_similarity");
+
+  return fail();
+}
+
+export function gradeWriteInAnswer(userSubmitted: string, correctTarget: string): boolean {
+  return evaluateWriteInAnswerAgainstTarget(userSubmitted, correctTarget).matched;
 }
 
 function uniqueAnswerTargets(targets: string[]): string[] {
@@ -707,43 +782,150 @@ export async function gradeWriteInAnswerWithVariants(
   acceptableTargets: string[] = [],
   answerVariantIndexes: number[] = []
 ): Promise<boolean> {
-  for (const target of uniqueAnswerTargets([correctTarget, ...acceptableTargets])) {
-    if (gradeWriteInAnswer(userSubmitted, target)) {
-      return true;
-    }
+  const evaluation = await explainWriteInAnswerMatchWithVariants(
+    userSubmitted,
+    correctTarget,
+    questionId,
+    answerIndex,
+    acceptableTargets,
+    answerVariantIndexes
+  );
+  return evaluation.matched;
+}
+
+export async function explainWriteInAnswerMatchWithVariants(
+  userSubmitted: string,
+  correctTarget: string,
+  questionId?: string,
+  answerIndex?: number,
+  acceptableTargets: string[] = [],
+  answerVariantIndexes: number[] = []
+): Promise<WriteInAnswerEvaluation> {
+  const submitted = String(userSubmitted ?? "");
+  const normalizedSubmitted = normalizeForTriviaComparison(submitted);
+  const checkedTargets = uniqueAnswerTargets([correctTarget, ...acceptableTargets]).map((target, index) => {
+    const evaluation = evaluateWriteInAnswerAgainstTarget(submitted, target);
+    return {
+      source: index === 0 ? "canonical" : "acceptable",
+      target,
+      normalizedTarget: evaluation.normalizedTarget,
+      matched: evaluation.matched,
+      matchedBy: evaluation.matchedBy,
+    } satisfies WriteInAnswerTargetTrace;
+  });
+
+  const firstMatchedTarget = checkedTargets.find((target) => target.matched);
+  if (firstMatchedTarget) {
+    return {
+      submitted,
+      normalizedSubmitted,
+      matched: true,
+      matchedBy: firstMatchedTarget.matchedBy,
+      matchedSource: firstMatchedTarget.source,
+      matchedTarget: firstMatchedTarget.target,
+      normalizedMatchedTarget: firstMatchedTarget.normalizedTarget,
+      checkedTargets,
+      checkedVariantIndexes: [],
+      checkedVariants: [],
+      variantLookupAttempted: false,
+      variantLookupError: null,
+    };
   }
 
-  const normalizedSubmitted = normalizeForTriviaComparison(userSubmitted);
   if (!normalizedSubmitted) {
-    return false;
+    return {
+      submitted,
+      normalizedSubmitted,
+      matched: false,
+      matchedBy: null,
+      matchedSource: null,
+      matchedTarget: null,
+      normalizedMatchedTarget: null,
+      checkedTargets,
+      checkedVariantIndexes: [],
+      checkedVariants: [],
+      variantLookupAttempted: false,
+      variantLookupError: null,
+    };
   }
 
-  if (!questionId || !Number.isInteger(answerIndex) || Number(answerIndex) < 0) {
-    return false;
+  const checkedVariantIndexes = Array.from(
+    new Set(
+      [answerIndex, ...answerVariantIndexes]
+        .map((index) => Number(index))
+        .filter((index) => Number.isInteger(index) && index >= 0)
+    )
+  );
+
+  if (!questionId || checkedVariantIndexes.length === 0) {
+    return {
+      submitted,
+      normalizedSubmitted,
+      matched: false,
+      matchedBy: null,
+      matchedSource: null,
+      matchedTarget: null,
+      normalizedMatchedTarget: null,
+      checkedTargets,
+      checkedVariantIndexes,
+      checkedVariants: [],
+      variantLookupAttempted: false,
+      variantLookupError: null,
+    };
   }
+
+  const checkedVariants: WriteInAnswerStoredVariantTrace[] = [];
+  let variantLookupError: string | null = null;
 
   try {
-    const indexes = Array.from(
-      new Set(
-        [answerIndex, ...answerVariantIndexes]
-          .map((index) => Number(index))
-          .filter((index) => Number.isInteger(index) && index >= 0)
-      )
-    );
-    for (const index of indexes) {
+    for (const index of checkedVariantIndexes) {
       const variants = await getAnswerVariants(questionId, index);
       for (const variant of variants) {
         const normalizedVariant = normalizeForTriviaComparison(variant);
-        if (normalizedVariant && normalizedSubmitted === normalizedVariant) {
-          return true;
+        const matched = Boolean(normalizedVariant) && normalizedSubmitted === normalizedVariant;
+        checkedVariants.push({
+          index,
+          variant,
+          normalizedVariant,
+          matched,
+        });
+        if (matched) {
+          return {
+            submitted,
+            normalizedSubmitted,
+            matched: true,
+            matchedBy: "stored_variant_exact",
+            matchedSource: "stored_variant",
+            matchedTarget: variant,
+            normalizedMatchedTarget: normalizedVariant,
+            checkedTargets,
+            checkedVariantIndexes,
+            checkedVariants,
+            variantLookupAttempted: true,
+            variantLookupError: null,
+          };
         }
       }
     }
   } catch (error) {
+    variantLookupError = error instanceof Error ? error.message : "Error checking answer variants.";
     console.error("Error checking answer variants:", error);
   }
 
-  return false;
+  return {
+    submitted,
+    normalizedSubmitted,
+    matched: false,
+    matchedBy: null,
+    matchedSource: null,
+    matchedTarget: null,
+    normalizedMatchedTarget: null,
+    checkedTargets,
+    checkedVariantIndexes,
+    checkedVariants,
+    variantLookupAttempted: true,
+    variantLookupError,
+  };
 }
 
 export function normalizeWriteInForStorage(value: string): string {

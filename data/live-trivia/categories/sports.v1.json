@@ -561,7 +561,433 @@
       "answer": "Titans",
       "category": "Sports",
       "difficulty": "medium"
-    }
+    },
+    {
+    "slug": "nba-boston",
+    "question": "Name the professional basketball team from Boston.",
+    "answer": "Celtics",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nfl-green-bay",
+    "question": "Name the professional football team from Green Bay.",
+    "answer": "Packers",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mlb-new-york",
+    "question": "Name the professional baseball team from New York that plays in the American League.",
+    "answer": "Yankees",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nhl-detroit",
+    "question": "Name the professional hockey team from Detroit.",
+    "answer": "Red Wings",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nba-chicago",
+    "question": "Name the professional basketball team from Chicago.",
+    "answer": "Bulls",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nfl-dallas",
+    "question": "Name the professional football team from Dallas.",
+    "answer": "Cowboys",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mlb-los-angeles",
+    "question": "Name the professional baseball team from Los Angeles that plays in the National League.",
+    "answer": "Dodgers",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nhl-boston",
+    "question": "Name the professional hockey team from Boston.",
+    "answer": "Bruins",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nba-los-angeles",
+    "question": "Name the professional basketball team from Los Angeles that is not named the 'Lakers.'",
+    "answer": "Clippers",
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "nfl-pittsburgh",
+    "question": "Name the professional football team from Pittsburgh.",
+    "answer": "Steelers",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mlb-st-louis",
+    "question": "Name the professional baseball team from St. Louis.",
+    "answer": "Cardinals",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nhl-chicago",
+    "question": "Name the professional hockey team from Chicago.",
+    "answer": "Blackhawks",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nba-golden-state",
+    "question": "Name the professional basketball team from the San Francisco Bay Area.",
+    "answer": "Golden State Warriors",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nfl-kansas-city",
+    "question": "Name the professional football team from Kansas City.",
+    "answer": "Chiefs",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mlb-san-francisco",
+    "question": "Name the professional baseball team from San Francisco.",
+    "answer": "Giants",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nhl-montreal",
+    "question": "Name the professional hockey team from Montreal.",
+    "answer": "Canadiens",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nba-philadelphia",
+    "question": "Name the professional basketball team from Philadelphia.",
+    "answer": "76ers",
+      "acceptableAnswers": [
+    "Seventy-Sixers" ],
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nfl-seattle",
+    "question": "Name the professional football team from Seattle.",
+    "answer": "Seahawks",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mlb-atlanta",
+    "question": "Name the professional baseball team from Atlanta.",
+    "answer": "Braves",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nhl-toronto",
+    "question": "Name the professional hockey team from Toronto.",
+    "answer": "Maple Leafs",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nba-miami",
+    "question": "Name the professional basketball team from Miami.",
+    "answer": "Heat",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nfl-denver",
+    "question": "Name the professional football team from Denver.",
+    "answer": "Broncos",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mlb-baltimore",
+    "question": "Name the professional baseball team from Baltimore.",
+    "answer": "Orioles",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nhl-edmonton",
+    "question": "Name the professional hockey team from Edmonton.",
+    "answer": "Oilers",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nba-houston",
+    "question": "Name the professional basketball team from Houston.",
+    "answer": "Rockets",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nfl-new-orleans",
+    "question": "Name the professional football team from New Orleans.",
+    "answer": "Saints",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mlb-cleveland",
+    "question": "Name the professional baseball team from Cleveland.",
+    "answer": "Guardians",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nhl-vancouver",
+    "question": "Name the professional hockey team from Vancouver.",
+    "answer": "Canucks",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nba-san-antonio",
+    "question": "Name the professional basketball team from San Antonio.",
+    "answer": "Spurs",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nfl-las-vegas",
+    "question": "Name the professional football team from Las Vegas.",
+    "answer": "Raiders",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nba-milwaukee",
+    "question": "Name the professional basketball team from Milwaukee.",
+    "answer": "Bucks",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nfl-buffalo",
+    "question": "Name the professional football team from Buffalo.",
+    "answer": "Bills",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mlb-chicago-nl",
+    "question": "Name the professional baseball team from Chicago that plays in the National League.",
+    "answer": "Cubs",
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "nhl-colorado",
+    "question": "Name the professional hockey team from Colorado.",
+    "answer": "Avalanche",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nba-phoenix",
+    "question": "Name the professional basketball team from Phoenix.",
+    "answer": "Suns",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nfl-cincinnati",
+    "question": "Name the professional football team from Cincinnati.",
+    "answer": "Bengals",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mlb-new-york-nl",
+    "question": "Name the professional baseball team from New York (NL).",
+    "answer": "Mets",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nhl-tampa-bay",
+    "question": "Name the professional hockey team from Tampa Bay.",
+    "answer": "Lightning",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nba-indiana",
+    "question": "Name the professional basketball team from Indiana.",
+    "answer": "Pacers",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nfl-tennessee",
+    "question": "Name the professional football team from Tennessee.",
+    "answer": "Titans",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mlb-washington-dc",
+    "question": "Name the professional baseball team from Washington, D.C.",
+    "answer": "Nationals",
+      "acceptableAnswers": [
+    "Nats" 
+  ],
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nhl-nashville",
+    "question": "Name the professional hockey team from Nashville.",
+    "answer": "Predators",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nba-utah",
+    "question": "Name the professional basketball team from Utah.",
+    "answer": "Jazz",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nfl-jacksonville",
+    "question": "Name the professional football team from Jacksonville.",
+    "answer": "Jaguars",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mlb-houston",
+    "question": "Name the professional baseball team from Houston.",
+    "answer": "Astros",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nhl-washington",
+    "question": "Name the professional hockey team from Washington, D.C.",
+    "answer": "Capitals",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nba-denver",
+    "question": "Name the professional basketball team from Denver.",
+    "answer": "Nuggets",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nfl-carolina",
+    "question": "Name the professional football team from Carolina.",
+    "answer": "Panthers",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mlb-oakland",
+    "question": "Name the professional baseball team from Oakland.",
+    "answer": "Athletics",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nhl-florida",
+    "question": "Name the professional hockey team from Florida (plays in Sunrise, FL).",
+    "answer": "Panthers",
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "nba-orlando",
+    "question": "Name the professional basketball team from Orlando.",
+    "answer": "Magic",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nfl-atlanta",
+    "question": "Name the professional football team from Atlanta.",
+    "answer": "Falcons",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mlb-toronto",
+    "question": "Name the professional baseball team from Toronto.",
+    "answer": "Blue Jays",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nhl-ottawa",
+    "question": "Name the professional hockey team from Ottawa.",
+    "answer": "Senators",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nba-minnesota",
+    "question": "Name the professional basketball team from Minnesota.",
+    "answer": "Timberwolves",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nfl-arizona",
+    "question": "Name the professional football team from Arizona.",
+    "answer": "Cardinals",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mlb-philadelphia",
+    "question": "Name the professional baseball team from Philadelphia.",
+    "answer": "Phillies",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nhl-calgary",
+    "question": "Name the professional hockey team from Calgary.",
+    "answer": "Flames",
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "nba-portland",
+    "question": "Name the professional basketball team from Portland.",
+    "answer": "Trail Blazers",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nfl-tampa-bay",
+    "question": "Name the professional football team from Tampa Bay.",
+    "answer": "Buccaneers",
+    "category": "Sports",
+    "difficulty": "easy"
+  }
+
   ],
   "familiarity": "mainstream"
 }

@@ -113,6 +113,11 @@ Use this when building and updating your trivia bank.
    - `npm run trivia:import`
 4. Re-run import whenever the JSON changes.
 
+Pushing changes under `data/trivia/categories/` or `data/live-trivia/categories/` to `main`
+runs the production import with pruning enabled. Local JSON is authoritative:
+questions present in JSON are upserted as active in Supabase, and questions missing
+from JSON are removed from Supabase before the site is redeployed.
+
 Suggested category files:
 - `data/trivia/categories/sports.v1.json`
 - `data/trivia/categories/general-knowledge.v1.json`

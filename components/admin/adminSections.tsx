@@ -4,6 +4,7 @@ import { AdsCreateSection } from "@/components/admin/sections/AdsCreateSection";
 import { AdsListSection } from "@/components/admin/sections/AdsListSection";
 import { PickEmSettlementSection } from "@/components/admin/sections/PickEmSettlementSection";
 import { TriviaPendingReviewSection } from "@/components/admin/sections/TriviaPendingReviewSection";
+import { TriviaAnswerGraderSection } from "@/components/admin/sections/TriviaAnswerGraderSection";
 import { UserAnalyticsSection } from "@/components/admin/sections/UserAnalyticsSection";
 import LegacySectionPlaceholder from "@/components/admin/sections/LegacySectionPlaceholder";
 
@@ -18,6 +19,7 @@ export type AdminSection =
   | "trivia-create"
   | "trivia-list"
   | "trivia-review"
+  | "answer-grading"
   | "ads-create"
   | "ads-list"
   | "challenge-campaigns"
@@ -47,6 +49,7 @@ export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
   { id: "trivia-list",           label: "Trivia Questions",      slug: "trivia-list",           status: { label: "Ready", tone: "live" }, component: () => <LegacySectionPlaceholder sectionName="Trivia Questions" /> },
   { id: "trivia-create",         label: "Create Question",       slug: "trivia-create",         status: { label: "Ready", tone: "live" }, component: () => <LegacySectionPlaceholder sectionName="Create Question" /> },
   { id: "trivia-review",         label: "Question Review",       slug: "trivia-review",         status: { label: "Ready", tone: "live" }, component: TriviaPendingReviewSection },
+  { id: "answer-grading",        label: "Answer Grader",         slug: "answer-grading",        status: { label: "Ready", tone: "live" }, component: TriviaAnswerGraderSection },
   { id: "ads-list",              label: "Manage Ads",            slug: "ads-list",              status: { label: "Ready", tone: "live" }, component: AdsListSection },
   { id: "ads-create",            label: "Create Ad",             slug: "ads-create",            status: { label: "Ready", tone: "live" }, component: AdsCreateSection },
   { id: "ad-placement",          label: "Placement Builder",     slug: "ad-placement",          component: () => <LegacySectionPlaceholder sectionName="Placement Builder" /> },
@@ -63,7 +66,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     label: "Content",
-    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["trivia-list", "trivia-create", "trivia-review"].includes(opt.id)),
+    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["trivia-list", "trivia-create", "trivia-review", "answer-grading"].includes(opt.id)),
   },
   {
     label: "Advertising",
@@ -86,6 +89,7 @@ export const MIGRATED_SECTIONS: ReadonlySet<AdminSection> = new Set([
   "trivia-list",
   "trivia-create",
   "trivia-review",
+  "answer-grading",
   "challenge-campaigns",
   "live-trivia",
   "ad-placement",

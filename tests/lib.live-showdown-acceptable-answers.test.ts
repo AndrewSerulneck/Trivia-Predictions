@@ -1,6 +1,10 @@
 import { createRequire } from "node:module";
 import { describe, expect, it, vi } from "vitest";
-import { gradeWriteInAnswer, gradeWriteInAnswerWithVariants } from "@/lib/liveShowdownGrading";
+import {
+  explainWriteInAnswerMatchWithVariants,
+  gradeWriteInAnswer,
+  gradeWriteInAnswerWithVariants,
+} from "@/lib/liveShowdownGrading";
 
 vi.mock("server-only", () => ({}));
 
@@ -39,6 +43,15 @@ describe("live showdown acceptable answers", () => {
     ).resolves.toBe(true);
   });
 
+  it("returns a trace that stays in parity with acceptable answer grading", async () => {
+    const evaluation = await explainWriteInAnswerMatchWithVariants("That", "This", undefined, undefined, ["That"]);
+
+    expect(evaluation.matched).toBe(true);
+    expect(evaluation.matchedSource).toBe("acceptable");
+    expect(evaluation.matchedTarget).toBe("That");
+    expect(evaluation.matchedBy).toBe("exact");
+  });
+
   it("keeps backward-compatible live JSON questions with no acceptableAnswers", () => {
     const [row] = normalizeAndValidate([liveQuestion()]);
 
@@ -72,5 +85,22 @@ describe("live showdown acceptable answers", () => {
     await expect(
       gradeWriteInAnswerWithVariants("72 Dolphins", "1972 Dolphins", undefined, undefined, ["72 Dolphins"])
     ).resolves.toBe(true);
+  });
+
+  it("reports subset matches the same way the grader accepts them", async () => {
+    const evaluation = await explainWriteInAnswerMatchWithVariants("the Warriors", "Golden State Warriors");
+
+    expect(evaluation.matched).toBe(true);
+    expect(evaluation.matchedBy).toBe("word_subset");
+    expect(evaluation.normalizedSubmitted).toBe("warriors");
+    expect(evaluation.matchedTarget).toBe("Golden State Warriors");
+  });
+
+  it("keeps failing spelled-out 76ers submissions under current logic", async () => {
+    const evaluation = await explainWriteInAnswerMatchWithVariants("Seventy Sixers", "76ers");
+
+    expect(evaluation.matched).toBe(false);
+    expect(evaluation.normalizedSubmitted).toBe("70 sixers");
+    expect(evaluation.checkedTargets[0]?.normalizedTarget).toBe("76ers");
   });
 });

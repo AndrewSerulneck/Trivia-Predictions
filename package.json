@@ -13,7 +13,7 @@
     "trivia:generate": "node --env-file=.env.local scripts/generate-trivia-questions.cjs",
     "trivia:generate:nightly": "node --env-file=.env.local scripts/generate-trivia-nightly.cjs --total 100",
     "trivia:check": "node scripts/import-trivia-questions.cjs --dir data/trivia/categories --live-dir data/live-trivia/categories --check",
-    "trivia:import": "node --env-file=.env.local scripts/import-trivia-questions.cjs --dir data/trivia/categories --live-dir data/live-trivia/categories",
+    "trivia:import": "node --env-file=.env.local scripts/import-trivia-questions.cjs --dir data/trivia/categories --live-dir data/live-trivia/categories --prune",
     "trivia:import:prune": "node --env-file=.env.local scripts/import-trivia-questions.cjs --dir data/trivia/categories --live-dir data/live-trivia/categories --prune",
     "trivia:sync": "node --env-file=.env.local scripts/sync-local-trivia.cjs",
     "trivia:sync:dry-run": "node --env-file=.env.local scripts/sync-local-trivia.cjs --dry-run",
