@@ -1,0 +1,584 @@
+{
+  "categoryName": "Based on a True Story",
+  "questions": [
+
+      {
+    "slug": "the-social-network-jesse-eisenberg",
+    "question": "Which tech entrepreneur was played by Jesse Eisenberg in the 2010 film The Social Network?",
+    "answer": "Mark Zuckerberg",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-aviator-leonardo-dicaprio",
+    "question": "Which aviation pioneer was played by Leonardo DiCaprio in the 2004 film The Aviator?",
+    "answer": "Howard Hughes",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "a-beautiful-mind-russell-crowe",
+    "question": "Which mathematician was played by Russell Crowe in the 2001 film A Beautiful Mind?",
+    "answer": "John Nash",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-pursuit-of-happyness-will-smith",
+    "question": "Which stockbroker and entrepreneur was played by Will Smith in the 2006 film The Pursuit of Happyness?",
+    "answer": "Chris Gardner",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "ray-jamie-foxx",
+    "question": "Which musician was played by Jamie Foxx in the 2004 film Ray?",
+    "answer": "Ray Charles",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "walk-the-line-joaquin-phoenix",
+    "question": "Which musician was played by Joaquin Phoenix in the 2005 film Walk the Line?",
+    "answer": "Johnny Cash",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-theory-of-everything-eddie-redmayne",
+    "question": "Which physicist was played by Eddie Redmayne in the 2014 film The Theory of Everything?",
+    "answer": "Stephen Hawking",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-imitation-game-benedict-cumberbatch",
+    "question": "Which mathematician and codebreaker was played by Benedict Cumberbatch in the 2014 film The Imitation Game?",
+    "answer": "Alan Turing",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "capote-philip-seymour-hoffman",
+    "question": "Which author was played by Philip Seymour Hoffman in the 2005 film Capote?",
+    "answer": "Truman Capote",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-wolf-of-wall-street-leonardo-dicaprio",
+    "question": "Which stockbroker was played by Leonardo DiCaprio in the 2013 film The Wolf of Wall Street?",
+    "answer": "Jordan Belfort",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "moneyball-brad-pitt",
+    "question": "Which baseball general manager was played by Brad Pitt in the 2011 film Moneyball?",
+    "answer": "Billy Beane",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-fighter-mark-wahlberg",
+    "question": "Which boxer was played by Mark Wahlberg in the 2010 film The Fighter?",
+    "answer": "Micky Ward",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "rush-chris-hemsworth",
+    "question": "Which Formula 1 driver was played by Chris Hemsworth in the 2013 film Rush?",
+    "answer": "James Hunt",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "dallas-buyers-club-matthew-mcconaughey",
+    "question": "Which AIDS activist was played by Matthew McConaughey in the 2013 film Dallas Buyers Club?",
+    "answer": "Ron Woodroof",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-revenant-leonardo-dicaprio",
+    "question": "Which frontiersman was played by Leonardo DiCaprio in the 2015 film The Revenant?",
+    "answer": "Hugh Glass",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "hidden-figures-taraji-p-henson",
+    "question": "Which mathematician was played by Taraji P. Henson in the 2016 film Hidden Figures?",
+    "answer": "Katherine Johnson",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "darkest-hour-gary-oldman",
+    "question": "Which British leader was played by Gary Oldman in the 2017 film Darkest Hour?",
+    "answer": "Winston Churchill",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "i-tonya-margot-robbie",
+    "question": "Which figure skater was played by Margot Robbie in the 2017 film I, Tonya?",
+    "answer": "Tonya Harding",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-post-meryl-streep",
+    "question": "Which journalist was played by Meryl Streep in the 2017 film The Post?",
+    "answer": "Katharine Graham",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "vice-christian-bale",
+    "question": "Which U.S. Vice President was played by Christian Bale in the 2018 film Vice?",
+    "answer": "Dick Cheney",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "bohemian-rhapsody-rami-malek",
+    "question": "Which musician was played by Rami Malek in the 2018 film Bohemian Rhapsody?",
+    "answer": "Freddie Mercury",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "first-man-ryan-gosling",
+    "question": "Which astronaut was played by Ryan Gosling in the 2018 film First Man?",
+    "answer": "Neil Armstrong",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "ford-v-ferrari-matt-damon",
+    "question": "Which car designer and racer was played by Matt Damon in the 2019 film Ford v Ferrari?",
+    "answer": "Carroll Shelby",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "bombshell-charlize-theron",
+    "question": "Which journalist was played by Charlize Theron in the 2019 film Bombshell?",
+    "answer": "Megyn Kelly",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-irishman-robert-de-niro",
+    "question": "Which labor union leader was played by Al Pacino in the 2019 film The Irishman?",
+    "answer": "Jimmy Hoffa",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "judas-and-the-black-messiah-daniel-kaluuya",
+    "question": "Which activist was played by Daniel Kaluuya in the 2021 film Judas and the Black Messiah?",
+    "answer": "Fred Hampton",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+   {
+    "slug": "amadeus-tom-hulce",
+    "question": "Which composer was played by Tom Hulce in the 1984 film Amadeus?",
+    "answer": "Mozart",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "la-vie-en-rose-marion-cotillard",
+    "question": "Which singer was played by Marion Cotillard in the 2007 film La Vie en Rose?",
+    "answer": "Édith Piaf",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "rocketman-taron-egerton",
+    "question": "Which musician was played by Taron Egerton in the 2019 film Rocketman?",
+    "answer": "Elton John",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "elvis-austin-butler",
+    "question": "Which musician was played by Austin Butler in the 2022 film Elvis?",
+    "answer": "Elvis Presley",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "priscilla-cailee-spaeny",
+    "question": "Which celebrity was played by Cailee Spaeny in the 2023 film Priscilla?",
+    "answer": "Priscilla Presley",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "maestro-bradley-cooper",
+    "question": "Which conductor was played by Bradley Cooper in the 2023 film Maestro?",
+    "answer": "Leonard Bernstein",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "im-not-there-cate-blanchett",
+    "question": "Which musician was played by Cate Blanchett in the 2007 film I'm Not There?",
+    "answer": "Bob Dylan",
+    "category": "Based on a True Story",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "control-sam-riley",
+    "question": "Which musician was played by Sam Riley in the 2007 film Control?",
+    "answer": "Ian Curtis",
+    "category": "Based on a True Story",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "shine-geoffrey-rush",
+    "question": "Which pianist was played by Geoffrey Rush in the 1996 film Shine?",
+    "answer": "David Helfgott",
+    "category": "Based on a True Story",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "frida-salma-hayek",
+    "question": "Which artist was played by Salma Hayek in the 2002 film Frida?",
+    "answer": "Frida Kahlo",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mr-turner-timothy-spall",
+    "question": "Which painter was played by Timothy Spall in the 2014 film Mr. Turner?",
+    "answer": "J.M.W. Turner",
+    "category": "Based on a True Story",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "pollock-ed-harris",
+    "question": "Which artist was played by Ed Harris in the 2000 film Pollock?",
+    "answer": "Jackson Pollock",
+    "category": "Based on a True Story",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "the-disaster-artist-james-franco",
+    "question": "Which filmmaker was played by James Franco in the 2017 film The Disaster Artist?",
+    "answer": "Tommy Wiseau",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "man-on-the-moon-jim-carrey",
+    "question": "Which comedian was played by Jim Carrey in the 1999 film Man on the Moon?",
+    "answer": "Andy Kaufman",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "whats-love-got-to-do-with-it-angela-bassett",
+    "question": "Which singer was played by Angela Bassett in the 1993 film What's Love Got to Do with It?",
+    "answer": "Tina Turner",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "selena-jennifer-lopez",
+    "question": "Which singer was played by Jennifer Lopez in the 1997 film Selena?",
+    "answer": "Selena Quintanilla",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "straight-outta-compton-jason-mitchell",
+    "question": "Which rapper was played by Jason Mitchell in the 2015 film Straight Outta Compton?",
+    "answer": "Eazy-E",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "lincoln-daniel-day-lewis",
+    "question": "Which U.S. President was played by Daniel Day-Lewis in the 2012 film Lincoln?",
+    "answer": "Abraham Lincoln",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "gandhi-ben-kingsley",
+    "question": "Which leader was played by Ben Kingsley in the 1982 film Gandhi?",
+    "answer": "Mahatma Gandhi",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-queen-helen-mirren",
+    "question": "Which monarch was played by Helen Mirren in the 2006 film The Queen?",
+    "answer": "Queen Elizabeth II",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "spencer-kristen-stewart",
+    "question": "Which princess was played by Kristen Stewart in the 2021 film Spencer?",
+    "answer": "Princess Diana",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "malcolm-x-denzel-washington",
+    "question": "Which civil rights leader was played by Denzel Washington in the 1992 film named after the leader?",
+    "answer": "Malcolm X",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "milk-sean-penn",
+    "question": "Which politician was played by Sean Penn in the 2008 film Milk?",
+    "answer": "Harvey Milk",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "selma-david-oyelowo",
+    "question": "Which civil rights leader was played by David Oyelowo in the 2014 film Selma?",
+    "answer": "Martin Luther King Jr.",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "downfall-bruno-ganz",
+    "question": "Which leader was played by Bruno Ganz in the 2004 film Downfall?",
+    "answer": "Adolf Hitler",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-last-king-of-scotland-forest-whitaker",
+    "question": "Which dictator was played by Forest Whitaker in the 2006 film The Last King of Scotland?",
+    "answer": "Idi Amin",
+      "acceptableAnswers": [
+    "Jackie Kennedy"
+  ],
+    "category": "Based on a True Story",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "jackie-natalie-portman",
+    "question": "Which First Lady was played by Natalie Portman in the 2016 film Jackie?",
+    "answer": "Jacqueline Kennedy",
+          "acceptableAnswers": [
+    "Jackie Kennedy"
+  ],
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-right-stuff-ed-harris",
+    "question": "Which astronaut was played by Ed Harris in the 1983 film The Right Stuff?",
+    "answer": "John Glenn",
+    "category": "Based on a True Story",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "patton-george-c-scott",
+    "question": "Which general was played by George C. Scott in the 1970 film Patton?",
+    "answer": "George Patton",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "w-josh-brolin",
+    "question": "Which U.S. President was played by Josh Brolin in the 2008 film W?",
+    "answer": "George W. Bush",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "j-edgar-leonardo-dicaprio",
+    "question": "Which FBI director was played by Leonardo DiCaprio in the 2011 film J. Edgar?",
+    "answer": "Hoover",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "shirley-regina-king",
+    "question": "Which politician was played by Regina King in the 2024 film Shirley?",
+    "answer": "Shirley Chisholm",
+    "category": "Based on a True Story",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "spartacus-kirk-douglas",
+    "question": "Which gladiator was played by Kirk Douglas in the 1960 film Spartacus?",
+    "answer": "Spartacus",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "braveheart-mel-gibson",
+    "question": "Which Scottish leader was played by Mel Gibson in the 1995 film Braveheart?",
+    "answer": "William Wallace",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-messenger-the-story-of-joan-of-arc-milla-jovovich",
+    "question": "Which historical figure was played by Milla Jovovich in the 1999 film The Messenger?",
+    "answer": "Joan of Arc",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "raging-bull-robert-de-niro",
+    "question": "Which boxer was played by Robert De Niro in the 1980 film Raging Bull?",
+    "answer": "Jake LaMotta",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "ali-will-smith",
+    "question": "Which boxer was played by Will Smith in the 2001 film named after the boxer?",
+    "answer": "Muhammad Ali",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-hurricane-denzel-washington",
+    "question": "Which boxer was played by Denzel Washington in the 1999 film The Hurricane?",
+    "answer": "Rubin Carter",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "cinderella-man-russell-crowe",
+    "question": "Which boxer was played by Russell Crowe in the 2005 film Cinderella Man?",
+    "answer": "James Braddock",
+      "acceptableAnswers": [
+    "Jim Braddock"
+  ],
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "42-chadwick-boseman",
+    "question": "Which baseball player was played by Chadwick Boseman in the 2013 film 42?",
+    "answer": "Jackie Robinson",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "foxcatcher-channing-tatum",
+    "question": "Which Olympic wrestler was played by Channing Tatum in the 2014 film Foxcatcher?",
+    "answer": "Mark Schultz",
+    "category": "Based on a True Story",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "battle-of-the-sexes-emma-stone",
+    "question": "Which tennis player was played by Emma Stone in the 2017 film Battle of the Sexes?",
+    "answer": "Billie Jean King",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "nyad-annette-bening",
+    "question": "Which swimmer was played by Annette Bening in the 2023 film Nyad?",
+    "answer": "Diana Nyad",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-iron-claw-zac-efron",
+    "question": "Which wrestler was played by Zac Efron in the 2023 film The Iron Claw?",
+    "answer": "Kevin Von Erich",
+    "category": "Based on a True Story",
+    "difficulty": "medium"
+  },
+  {
+    "slug": "goodfellas-ray-liotta",
+    "question": "Which mobster was played by Ray Liotta in the 1990 film Goodfellas?",
+    "answer": "Henry Hill",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "american-gangster-denzel-washington",
+    "question": "Which drug lord was played by Denzel Washington in the 2007 film American Gangster?",
+    "answer": "Frank Lucas",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "black-mass-johnny-depp",
+    "question": "Which crime boss was played by Johnny Depp in the 2015 film Black Mass?",
+    "answer": "Whitey Bulger",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "erin-brockovich-julia-roberts",
+    "question": "Which legal clerk was played by Julia Roberts in the 2000 film named after this activist?",
+    "answer": "Erin Brockovich",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "all-the-Presidents-Men-robert-redford",
+    "question": "Which journalist was played by Robert Redford in the 1976 film All the President's Men?",
+    "answer": "Bob Woodward",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "house-of-gucci-lady-gaga",
+    "question": "Which socialite was played by Lady Gaga in the 2021 film House of Gucci?",
+    "answer": "Patrizia Reggiani",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-blind-side-quinton-aaron",
+    "question": "Which football player was played by Quinton Aaron in the 2009 film The Blind Side?",
+    "answer": "Michael Oher",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "invincible-mark-wahlberg",
+    "question": "Which football player was played by Mark Wahlberg in the 2006 film Invincible?",
+    "answer": "Vince Papale",
+    "category": "Based on a True Story",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "the-greatest-game-ever-played-shia-labeouf",
+    "question": "Which golfer was played by Shia LaBeouf in the 2005 film The Greatest Game Ever Played?",
+    "answer": "Francis Ouimet",
+    "category": "Based on a True Story",
+    "difficulty": "medium"
+  },
+{
+"slug": "oppenheimer-cillian-murphy",
+"question": "Which theoretical physicist known as the 'father of the atomic bomb' was played by Cillian Murphy in the 2023 biographical drama named after the physicist?",
+"answer": "J. Robert Oppenheimer",
+"category": "Based on a True Story",
+"difficulty": "easy"
+},
+{
+"slug": "lincoln-daniel-day-lewis",
+"question": "Which United States President was played by Daniel Day-Lewis in Steven Spielberg's 2012 historical drama named after the president?",
+"answer": "Abraham Lincoln",
+"category": "Based on a True Story",
+"difficulty": "easy"
+}
+
+
+]
+}

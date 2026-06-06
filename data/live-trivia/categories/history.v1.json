@@ -106,7 +106,7 @@
     {
       "slug": "world-war-one-trigger",
       "question": "The assassination of which figure triggered World War I?",
-      "answer": "Archduke Franz Ferdinand",
+      "answer": "Franz Ferdinand",
       "answer_format": "write_in",
       "category": "History",
       "difficulty": "easy"
@@ -721,286 +721,481 @@
       "category": "History",
       "difficulty": "hard"
     },
-      {
-    "slug": "french-revolution-leader",
-    "question": "Who was the revolutionary leader who became Emperor of France in 1804?",
-    "answer": "Napoleon Bonaparte",
-    "category": "History",
-    "difficulty": "easy"
-  },
     {
-    "slug": "civil-war-president",
-    "question": "Who was the President of the United States during the Civil War?",
-    "answer": "Abraham Lincoln",
-    "category": "History",
-    "difficulty": "easy"
-  },
+      "slug": "french-revolution-leader",
+      "question": "Who was the revolutionary leader who became Emperor of France in 1804?",
+      "answer": "Napoleon Bonaparte",
+      "category": "History",
+      "difficulty": "easy"
+    },
     {
-    "slug": "emancipation-proclamation-issuer",
-    "question": "Who issued the Emancipation Proclamation?",
-    "answer": "Abraham Lincoln",
-    "category": "History",
-    "difficulty": "easy"
-  },
+      "slug": "civil-war-president",
+      "question": "Who was the President of the United States during the Civil War?",
+      "answer": "Abraham Lincoln",
+      "category": "History",
+      "difficulty": "easy"
+    },
     {
-    "slug": "russian-revolution-leader",
-    "question": "Who led the Bolshevik Revolution in Russia in 1917?",
-    "answer": "Vladimir Lenin",
-    "category": "History",
-    "difficulty": "easy"
-  },
+      "slug": "emancipation-proclamation-issuer",
+      "question": "Who issued the Emancipation Proclamation?",
+      "answer": "Abraham Lincoln",
+      "category": "History",
+      "difficulty": "easy"
+    },
     {
-    "slug": "watergate-president",
-    "question": "Who was the U.S. President during the Watergate scandal?",
-    "answer": "Richard Nixon",
-    "category": "History",
-    "difficulty": "easy"
-  },
+      "slug": "russian-revolution-leader",
+      "question": "Who led the Bolshevik Revolution in Russia in 1917?",
+      "answer": "Vladimir Lenin",
+      "category": "History",
+      "difficulty": "easy"
+    },
     {
-    "slug": "indian-independence-leader",
-    "question": "Who was the leader of India's independence movement against British rule?",
-    "answer": "Mahatma Gandhi",
-    "category": "History",
-    "difficulty": "easy"
-  },
+      "slug": "watergate-president",
+      "question": "Who was the U.S. President during the Watergate scandal?",
+      "answer": "Richard Nixon",
+      "category": "History",
+      "difficulty": "easy"
+    },
     {
-    "slug": "south-africa-apartheid-leader",
-    "question": "Who was the first Black President of South Africa after the end of apartheid?",
-    "answer": "Nelson Mandela",
-    "category": "History",
-    "difficulty": "easy"
-  },
+      "slug": "indian-independence-leader",
+      "question": "Who was the leader of India's independence movement against British rule?",
+      "answer": "Mahatma Gandhi",
+      "category": "History",
+      "difficulty": "easy"
+    },
     {
-    "slug": "chinese-revolution-leader",
-    "question": "Who was the leader of the Communist Revolution in China in 1949?",
-    "answer": "Mao Zedong",
-    "category": "History",
-    "difficulty": "easy"
-  },
+      "slug": "south-africa-apartheid-leader",
+      "question": "Who was the first Black President of South Africa after the end of apartheid?",
+      "answer": "Nelson Mandela",
+      "category": "History",
+      "difficulty": "easy"
+    },
     {
-    "slug": "womens-suffrage-leader",
-    "question": "Who co-founded the National Woman Suffrage Association (NWSA) in 1869 and drafted the first version of the federal constitutional amendment to grant women the right to vote in 1878?",
-    "answer": "Susan B. Anthony",
-    "category": "History",
-    "difficulty": "easy"
-  },
-   {
-    "slug": "first-us-president-white-house",
-    "question": "Who was the first U.S. President to live in the White House?",
-    "answer": "John Adams",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "shortest-us-presidency",
-    "question": "Who was the U.S. President with the shortest term in office, serving only 32 days?",
-    "answer": "William Henry Harrison",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "tallest-us-president",
-    "question": "Who was the tallest U.S. President, standing at 6 feet 4 inches?",
-    "answer": "Abraham Lincoln",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "youngest-us-president",
-    "question": "Who was the youngest U.S. President to assume office at the age of 42?",
-    "answer": "Theodore Roosevelt",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "only-us-president-bachelor",
-    "question": "Who was the only U.S. President to remain a bachelor for his entire life?",
-    "answer": "James Buchanan",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "first-woman-to-win-nobel-prize",
-    "question": "Who was the first woman to win a Nobel Prize?",
-    "answer": "Marie Curie",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "first-man-on-moon",
-    "question": "Who was the first man to walk on the moon?",
-    "answer": "Neil Armstrong",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "first-woman-in-space",
-    "question": "Who was the first woman to travel to space?",
-    "answer": "Valentina Tereshkova",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "longest-reigning-british-monarch",
-    "question": "Who is the longest-reigning British monarch in history?",
-    "answer": "Queen Elizabeth II",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "first-emperor-of-roman-empire",
-    "question": "Who was the first Emperor of the Roman Empire?",
-    "answer": "Augustus",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "first-person-to-circumnavigate-globe",
-    "question": "Who was the first person to circumnavigate the globe?",
-    "answer": "Ferdinand Magellan",
-    "category": "History",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Juan Sebastián Elcano"
-    ]
-  },
-  {
-    "slug": "first-us-vice-president",
-    "question": "Who was the first Vice President of the United States?",
-    "answer": "John Adams",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "first-african-american-us-president",
-    "question": "Who was the first African American President of the United States?",
-    "answer": "Barack Obama",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "first-woman-us-supreme-court-justice",
-    "question": "Who was the first woman appointed to the U.S. Supreme Court?",
-    "answer": "Sandra Day O'Connor",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "first-person-to-win-two-nobel-prizes",
-    "question": "Who was the first person to win two Nobel Prizes?",
-    "answer": "Marie Curie",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "first-us-president-impeached",
-    "question": "Who was the first U.S. President to be impeached?",
-    "answer": "Andrew Johnson",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "first-man-to-fly-across-atlantic",
-    "question": "Who was the first person to fly solo across the Atlantic Ocean?",
-    "answer": "Charles Lindbergh",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "first-us-president-assassinated",
-    "question": "Who was the first U.S. President to be assassinated?",
-    "answer": "Abraham Lincoln",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "first-country-to-grant-women-vote",
-    "question": "Which was the first country to grant women the right to vote in national elections?",
-    "answer": "New Zealand",
-    "category": "History",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "first-person-to-climb-mt-everest",
-    "question": "Who was the first person to reach the summit of Mount Everest?",
-    "answer": "Edmund Hillary",
-    "category": "History",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Tenzing Norgay"
-    ]
-  },
-  {
-    "slug": "first-us-president-resign",
-    "question": "Who was the first U.S. President to resign from office?",
-    "answer": "Richard Nixon",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "first-european-to-reach-china",
-    "question": "Who was the first European to reach China by sea?",
-    "answer": "Marco Polo",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "first-us-secretary-of-state",
-    "question": "Who was the first U.S. Secretary of State?",
-    "answer": "Thomas Jefferson",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "first-person-to-win-oscars-for-acting-and-directing",
-    "question": "Who was the first person to win Oscars for both acting and directing?",
-    "answer": "Orson Welles",
-    "category": "History",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "first-us-president-born-outside-continental-us",
-    "question": "Who was the first U.S. President born outside the continental United States?",
-    "answer": "Barack Obama",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "first-person-to-invent-printing-press",
-    "question": "Who invented the printing press in Europe?",
-    "answer": "Johannes Gutenberg",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "first-us-president-to-serve-non-consecutive-terms",
-    "question": "Who was the first U.S. President to serve non-consecutive terms?",
-    "answer": "Grover Cleveland",
-    "category": "History",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "first-person-to-discover-penicillin",
-    "question": "Who discovered penicillin, the world's first antibiotic?",
-    "answer": "Alexander Fleming",
-    "category": "History",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "first-us-president-to-appear-on-television",
-    "question": "Who was the first U.S. President to appear on television?",
-    "answer": "Franklin D. Roosevelt",
-    "category": "History",
-    "difficulty": "medium"
-  },
-  {
-    "slug": "first-us-president-to-email",
-    "question": "Who was the first U.S. President to send an email?",
-    "answer": "Bill Clinton",
-    "category": "History",
-    "difficulty": "medium"
-  }
-  
+      "slug": "chinese-revolution-leader",
+      "question": "Who was the leader of the Communist Revolution in China in 1949?",
+      "answer": "Mao Zedong",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "womens-suffrage-leader",
+      "question": "Who co-founded the National Woman Suffrage Association (NWSA) in 1869 and drafted the first version of the federal constitutional amendment to grant women the right to vote in 1878?",
+      "answer": "Susan B. Anthony",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-us-president-white-house",
+      "question": "Who was the first U.S. President to live in the White House?",
+      "answer": "John Adams",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "shortest-us-presidency",
+      "question": "Who was the U.S. President with the shortest term in office, serving only 32 days?",
+      "answer": "William Henry Harrison",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "tallest-us-president",
+      "question": "Who was the tallest U.S. President, standing at 6 feet 4 inches?",
+      "answer": "Abraham Lincoln",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "youngest-us-president",
+      "question": "Who was the youngest U.S. President to assume office at the age of 42?",
+      "answer": "Theodore Roosevelt",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "only-us-president-bachelor",
+      "question": "Who was the only U.S. President to remain a bachelor for his entire life?",
+      "answer": "James Buchanan",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-woman-to-win-nobel-prize",
+      "question": "Who was the first woman to win a Nobel Prize?",
+      "answer": "Marie Curie",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-man-on-moon",
+      "question": "Who was the first man to walk on the moon?",
+      "answer": "Neil Armstrong",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-woman-in-space",
+      "question": "Who was the first woman to travel to space?",
+      "answer": "Valentina Tereshkova",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "longest-reigning-british-monarch",
+      "question": "Who is the longest-reigning British monarch in history?",
+      "answer": "Queen Elizabeth II",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-emperor-of-roman-empire",
+      "question": "Who was the first Emperor of the Roman Empire?",
+      "answer": "Augustus",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-person-to-circumnavigate-globe",
+      "question": "Who was the first person to circumnavigate the globe?",
+      "answer": "Ferdinand Magellan",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Juan Sebastián Elcano"
+      ]
+    },
+    {
+      "slug": "first-us-vice-president",
+      "question": "Who was the first Vice President of the United States?",
+      "answer": "John Adams",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-african-american-us-president",
+      "question": "Who was the first African American President of the United States?",
+      "answer": "Barack Obama",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-woman-us-supreme-court-justice",
+      "question": "Who was the first woman appointed to the U.S. Supreme Court?",
+      "answer": "Sandra Day O'Connor",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-person-to-win-two-nobel-prizes",
+      "question": "Who was the first person to win two Nobel Prizes?",
+      "answer": "Marie Curie",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-us-president-impeached",
+      "question": "Who was the first U.S. President to be impeached?",
+      "answer": "Andrew Johnson",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-man-to-fly-across-atlantic",
+      "question": "Who was the first person to fly solo across the Atlantic Ocean?",
+      "answer": "Charles Lindbergh",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-us-president-assassinated",
+      "question": "Who was the first U.S. President to be assassinated?",
+      "answer": "Abraham Lincoln",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-country-to-grant-women-vote",
+      "question": "Which was the first country to grant women the right to vote in national elections?",
+      "answer": "New Zealand",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "first-person-to-climb-mt-everest",
+      "question": "Who was the first person to reach the summit of Mount Everest?",
+      "answer": "Edmund Hillary",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Tenzing Norgay"
+      ]
+    },
+    {
+      "slug": "first-us-president-resign",
+      "question": "Who was the first U.S. President to resign from office?",
+      "answer": "Richard Nixon",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-european-to-reach-china",
+      "question": "Who was the first European to reach China by sea?",
+      "answer": "Marco Polo",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-us-secretary-of-state",
+      "question": "Who was the first U.S. Secretary of State?",
+      "answer": "Thomas Jefferson",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-person-to-win-oscars-for-acting-and-directing",
+      "question": "Who was the first person to win Oscars for both acting and directing?",
+      "answer": "Orson Welles",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "first-us-president-born-outside-continental-us",
+      "question": "Who was the first U.S. President born outside the continental United States?",
+      "answer": "Barack Obama",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-person-to-invent-printing-press",
+      "question": "Who invented the printing press in Europe?",
+      "answer": "Johannes Gutenberg",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-us-president-to-serve-non-consecutive-terms",
+      "question": "Who was the first U.S. President to serve non-consecutive terms?",
+      "answer": "Grover Cleveland",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "first-person-to-discover-penicillin",
+      "question": "Who discovered penicillin, the world's first antibiotic?",
+      "answer": "Alexander Fleming",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "first-us-president-to-appear-on-television",
+      "question": "Who was the first U.S. President to appear on television?",
+      "answer": "Franklin D. Roosevelt",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "first-us-president-to-email",
+      "question": "Who was the first U.S. President to send an email?",
+      "answer": "Bill Clinton",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "betty-crocker",
+      "question": "Was Betty Crocker a real person? Answer yes or no.",
+      "answer": "no",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "aunt-jemima",
+      "question": "Was Aunt Jemima a real person? Answer yes or no.",
+      "answer": "no",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "uncle-sam",
+      "question": "Was Uncle Sam a real person? Answer yes or no.",
+      "answer": "no",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "colonel-sanders",
+      "question": "Was Colonel Sanders a real person? Answer yes or no.",
+      "answer": "yes",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "ronald-mcdonald",
+      "question": "Was Ronald McDonald a real person? Answer yes or no.",
+      "answer": "no",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "johnny-appleseed",
+      "question": "Was Johnny Appleseed a real person? Answer yes or no.",
+      "answer": "yes",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "davy-crockett",
+      "question": "Was Davy Crockett a real person? Answer yes or no.",
+      "answer": "yes",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "daniel-boone",
+      "question": "Was Daniel Boone a real person? Answer yes or no.",
+      "answer": "yes",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "paul-bunyan",
+      "question": "Was Paul Bunyan a real person? Answer yes or no.",
+      "answer": "no",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "buffalo-bill",
+      "question": "Was Buffalo Bill a real person? Answer yes or no.",
+      "answer": "yes",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "annie-oakley",
+      "question": "Was Annie Oakley a real person? Answer yes or no.",
+      "answer": "yes",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "robin-hood",
+      "question": "Was Robin Hood a real person? Answer yes or no.",
+      "answer": "no",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "king-arthur",
+      "question": "Was King Arthur a real person? Answer yes or no.",
+      "answer": "no",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "captain-nemo",
+      "question": "Was Captain Nemo a real person? Answer yes or no.",
+      "answer": "no",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "doc-holliday",
+      "question": "Was Doc Holliday a real person? Answer yes or no.",
+      "answer": "yes",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "rasputin",
+      "question": "Was Rasputin a real person? Answer yes or no.",
+      "answer": "yes",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "chef-boyardee",
+      "question": "Was Chef Boyardee a real person? Answer yes or no.",
+      "answer": "yes",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "jose-cuervo",
+      "question": "Was José Cuervo a real person? Answer yes or no.",
+      "answer": "yes",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "jack-daniels",
+      "question": "Was Jack Daniels a real person? Answer yes or no.",
+      "answer": "yes",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "jim-beam",
+      "question": "Was Jim Beam a real person? Answer yes or no.",
+      "answer": "yes",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "johnnie-walker",
+      "question": "Was Johnnie Walker a real person? Answer yes or no.",
+      "answer": "yes",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mrs-buttersworth",
+      "question": "Was Mrs. Buttersworth a real person? Answer yes or no.",
+      "answer": "no",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "papa-john",
+      "question": "Was Papa John a real person? Answer yes or no.",
+      "answer": "yes",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "hollister",
+      "question": "Was John M. Hollister, founder of the Hollister clothing brand, a real person? Answer yes or no.",
+      "answer": "no",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "juan-valdez",
+      "question": "Was Juan Valdez a real person? Answer yes or no.",
+      "answer": "no",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "dr-pepper",
+      "question": "Was Dr. Pepper a real person? Answer yes or no.",
+      "answer": "no",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "jack-the-ripper",
+      "question": "Was Jack the Ripper a real person? Answer yes or no.",
+      "answer": "yes",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "alan-smithee",
+      "question": "Was Alan Smithee a real person? Answer yes or no.",
+      "answer": "no",
+      "category": "History",
+      "difficulty": "easy"
+    }
   ],
   "familiarity": "moderate"
 }

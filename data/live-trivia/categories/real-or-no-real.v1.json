@@ -1,0 +1,203 @@
+{
+  "categoryName": "Real or No Real",
+  "questions": [
+    {
+    "slug": "betty-crocker",
+    "question": "Was Betty Crocker a real person?",
+    "answer": "not real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "aunt-jemima",
+    "question": "Was Aunt Jemima a real person?",
+    "answer": "not real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "uncle-sam",
+    "question": "Was Uncle Sam a real person?",
+    "answer": "not real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "colonel-sanders",
+    "question": "Was Colonel Sanders a real person?",
+    "answer": "real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "ronald-mcdonald",
+    "question": "Was Ronald McDonald a real person?",
+    "answer": "not real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "johnny-appleseed",
+    "question": "Was Johnny Appleseed a real person?",
+    "answer": "real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "davy-crockett",
+    "question": "Was Davy Crockett a real person?",
+    "answer": "real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "daniel-boone",
+    "question": "Was Daniel Boone a real person?",
+    "answer": "real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "paul-bunyan",
+    "question": "Was Paul Bunyan a real person?",
+    "answer": "not real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "buffalo-bill",
+    "question": "Was Buffalo Bill a real person?",
+    "answer": "real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "annie-oakley",
+    "question": "Was Annie Oakley a real person?",
+    "answer": "real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "robin-hood",
+    "question": "Was Robin Hood a real person?",
+    "answer": "not real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "king-arthur",
+    "question": "Was King Arthur a real person?",
+    "answer": "not real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "captain-nemo",
+    "question": "Was Captain Nemo a real person?",
+    "answer": "not real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "doc-holliday",
+    "question": "Was Doc Holliday a real person?",
+    "answer": "real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+    {
+    "slug": "rasputin",
+    "question": "Was Rasputin a real person?",
+    "answer": "real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  }, 
+  {
+    "slug": "chef-boyardee",
+    "question": "Was Chef Boyardee a real person?",
+    "answer": "real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "jose-cuervo",
+    "question": "Was José Cuervo a real person?",
+    "answer": "real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "jack-daniels",
+    "question": "Was Jack Daniels a real person?",
+    "answer": "real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "jim-beam",
+    "question": "Was Jim Beam a real person?",
+    "answer": "real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "johnnie-walker",
+    "question": "Was Johnnie Walker a real person?",
+    "answer": "real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "mrs-buttersworth",
+    "question": "Was Mrs. Buttersworth a real person?",
+    "answer": "not real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "papa-john",
+    "question": "Was Papa John a real person?",
+    "answer": "real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+    {
+    "slug": "hollister",
+    "question": "Was John M. Hollister, founder of the Hollister clothing brand, a real person?",
+    "answer": "not real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "juan-valdez",
+    "question": "Was Juan Valdez a real person?",
+    "answer": "not real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "dr-pepper",
+    "question": "Was Dr. Pepper a real person?",
+    "answer": "not real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "jack-the-ripper",
+    "question": "Was Jack the Ripper a real person?",
+    "answer": "real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  },
+  {
+    "slug": "alan-smithee",
+    "question": "Was Alan Smithee a real person?",
+    "answer": "not real",
+    "category": "Real or Not Real",
+    "difficulty": "easy"
+  }
+]
+}
+
+
