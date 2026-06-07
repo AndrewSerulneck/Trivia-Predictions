@@ -108,9 +108,6 @@ if (!sportConfig) {
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
 }
-if (!BDL_KEY) {
-  throw new Error('Missing BALLDONTLIE_API_KEY');
-}
 if (!TSD_KEY) {
   throw new Error('Missing THESPORTSDB_API_KEY');
 }
@@ -253,6 +250,14 @@ async function fetchBdlPlayersPage(config, cursor) {
 }
 
 async function seedPlayersFromBdl(config) {
+  if (!BDL_KEY) {
+    return {
+      pagesScanned: 0,
+      upserts: 0,
+      skipped: true,
+    };
+  }
+
   let cursor = null;
   let pages = 0;
   let upserts = 0;
@@ -308,6 +313,7 @@ async function seedPlayersFromBdl(config) {
   return {
     pagesScanned: pages + 1,
     upserts,
+    skipped: false,
   };
 }
 
@@ -451,6 +457,9 @@ async function backfillMissingHeadshots(config, idMap) {
   const start = Date.now();
   console.log(`=== sync-headshots start (${sportSlug.toUpperCase()}) ===`);
   console.log(`league=${sportConfig.league} maxBackfill=${MAX_BACKFILL} batchSize=${BATCH_SIZE}`);
+  if (!BDL_KEY) {
+    console.log(`[${sportSlug}] BALLDONTLIE_API_KEY missing; skipping BDL player seed and using SportsDB-only headshot backfill`);
+  }
 
   try {
     const idMap = loadIdMap(sportConfig);
@@ -462,6 +471,7 @@ async function backfillMissingHeadshots(config, idMap) {
     console.log(`sport=${sportSlug}`);
     console.log(`fantasy_refs_scanned=${fantasyRefs.scanned}`);
     console.log(`fantasy_refs_upserted=${fantasyRefs.upserts}`);
+    console.log(`seed_skipped=${seed.skipped ? 'true' : 'false'}`);
     console.log(`seed_pages_scanned=${seed.pagesScanned}`);
     console.log(`seed_upserts=${seed.upserts}`);
     console.log(`missing_scanned=${backfill.scanned}`);
