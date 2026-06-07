@@ -248,6 +248,16 @@ body.tp-trivia-theme {
   background-image: none;
 }
 
+/* Fallback: if `.tp-trivia-bg` is present anywhere in the DOM (it's in the
+   server-rendered HTML from GameLandingExperience), immediately set html/body
+   to the correct dark base.  This eliminates any flash of the default slate
+   background before TriviaThemeScope's useLayoutEffect fires. */
+html:has(.tp-trivia-bg),
+body:has(.tp-trivia-bg) {
+  background-color: #0a0a0f;
+  background-image: none;
+}
+
 /* Full-viewport racing background used as the fixed game backdrop.
    Solid black base + a diagonal yellow/lime stripe band that fades down. */
 .tp-trivia-bg {

@@ -338,6 +338,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     label: "",
     nextStartAtMs: null,
     failureReason: null,
+    recurringType: null,
+    recurringDays: [],
   });
   const [liveCountdownNowMs, setLiveCountdownNowMs] = useState(() => Date.now());
   const [leaderboardBootstrapEntries, setLeaderboardBootstrapEntries] = useState<LeaderboardEntry[]>([]);
@@ -927,7 +929,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         ok?: boolean;
         state?: {
           isGameActive?: boolean;
-          nextSchedule?: { startTime?: string; timezone?: string } | null;
+          nextSchedule?: {
+            startTime?: string;
+            timezone?: string;
+            recurringType?: string;
+            recurringDays?: string[];
+          } | null;
         };
       }>(`/api/trivia/live/state${query}`, 3600, signal);
       if (signal.aborted) return;
@@ -950,6 +957,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           label: evaluation.label,
           nextStartAtMs: null,
           failureReason: null,
+          recurringType: evaluation.scheduleRecurringType || null,
+          recurringDays: evaluation.scheduleRecurringDays,
         });
         return;
       }
@@ -961,6 +970,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           label: formatLiveTriviaNextGameLabel(nextStart, evaluation.scheduleTimezone || undefined),
           nextStartAtMs: evaluation.nextStartAtMs,
           failureReason: null,
+          recurringType: evaluation.scheduleRecurringType || null,
+          recurringDays: evaluation.scheduleRecurringDays,
         });
         return;
       }
@@ -970,6 +981,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         label: evaluation.label,
         nextStartAtMs: null,
         failureReason: evaluation.failureReason,
+        recurringType: null,
+        recurringDays: [],
       });
     } catch {
       if (!signal.aborted) {
@@ -982,6 +995,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           label: "Status unavailable",
           nextStartAtMs: null,
           failureReason: "network",
+          recurringType: null,
+          recurringDays: [],
         });
       }
     } finally {
@@ -1393,6 +1408,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           arrivalProgress={arrivalProgress}
           liveTriviaStatus={liveTriviaStatus}
           nextLiveTriviaCountdownLabel={nextLiveTriviaCountdownLabel}
+          nextLiveTriviaCountdownSeconds={nextLiveTriviaCountdownSeconds}
           lobbyButtonShouldPulse={lobbyButtonShouldPulse}
           pendingDestination={pendingDestination}
           orderedHomeCards={orderedHomeCards}

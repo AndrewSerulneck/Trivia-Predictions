@@ -1642,15 +1642,6 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
                 +{totalUnclaimedBingoPoints} pts waiting to collect
               </p>
             </div>
-            <button
-              type="button"
-              data-bingo-collect-all
-              onClick={() => void collectAllBingoPoints()}
-              disabled={isCollectingAllBingo}
-              className="tp-clean-button inline-flex min-h-[44px] items-center rounded-xl border border-sky-300/50 bg-sky-300/10 px-4 py-2 text-sm font-black text-sky-200 shadow-[0_3px_0_rgba(0,0,0,0.25)] transition-all active:scale-95 disabled:opacity-60"
-            >
-              {isCollectingAllBingo ? "Collecting..." : "Collect Points"}
-            </button>
           </div>
         </div>
       ) : null}
@@ -1684,14 +1675,14 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
                 limitPulse ? "pickem-limit-pulse" : ""
               }`}
             >
-              {showBoardLimitMessage ? "Max 4 active boards reached!" : "Click Here to Play!"}
+              {showBoardLimitMessage ? "Max 4 active boards reached!" : "Tap here to play!"}
             </button>
           ) : (
             <Link
               href="/bingo/select-sport"
               className="tp-clean-button inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-sky-300/50 bg-sky-300/10 px-5 py-2 text-sm font-bold text-sky-200 shadow-[0_0_16px_rgba(125,211,252,0.2)] transition-all active:scale-95"
             >
-              🎲 Click Here to Play!
+              Tap here to play!
             </Link>
           )}
         </div>
@@ -1723,17 +1714,6 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
           </button>
         </div>
 
-        <div className="mt-3 flex w-full items-center gap-2">
-          <button
-            type="button"
-            data-bingo-collect-all
-            onClick={() => void collectAllBingoPoints()}
-            disabled={unclaimedWonBingoCards.length === 0 || isCollectingAllBingo}
-            className="tp-clean-button flex flex-1 items-center justify-center gap-1 rounded-xl border border-sky-300/50 bg-sky-300/10 py-2 text-sm font-bold text-sky-200 shadow-sm active:scale-95 disabled:opacity-40"
-          >
-            {isCollectingAllBingo ? "Collecting..." : "Collect Points"}
-          </button>
-        </div>
       </div>
 
       {/* Boards section */}
@@ -1774,14 +1754,11 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
           {/* Active boards panel */}
           <section className="w-full shrink-0 snap-start">
             <h2 className="text-base font-black text-sky-300">Active Boards</h2>
-            <p className="mt-1 text-sm text-slate-400">
-              Tap a board to expand it — or turn your phone sideways for the enhanced view.
-            </p>
             {loadingCards ? (
               <LoadingState label="Loading your cards..." />
             ) : selectedActiveCards.length === 0 ? (
               <p className="mt-3 rounded-xl border border-sky-300/20 bg-slate-800/50 p-3 text-sm text-slate-300">
-                No active cards yet. Tap &ldquo;Click Here to Play!&rdquo; above to get started.
+                No active boards.
               </p>
             ) : (
               <ul className="mt-3 space-y-3">
@@ -1896,24 +1873,6 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
                       {card.status === "won" ? (
                         <div className="relative mt-2">
                           {renderCompactGrid(card.id, card.squares, recentlyUpdatedSquareKeys, recentlySucceededSquareKeys, glowSquareKeys)}
-                          {showClaimOverlay ? (
-                            <>
-                              <div className="pointer-events-none absolute inset-0 rounded-lg bg-slate-900/10" />
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <button
-                                  type="button"
-                                  disabled={claimingCardId === card.id}
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    void claimPoints(card, event.currentTarget);
-                                  }}
-                                  className="pointer-events-auto inline-flex min-h-[44px] items-center rounded-xl border border-sky-300/50 bg-sky-300/10 px-4 py-2 text-sm font-bold text-sky-200 shadow-sm transition-all active:scale-95 disabled:opacity-60"
-                                >
-                                  {claimingCardId === card.id ? "Collecting..." : "Collect Points"}
-                                </button>
-                              </div>
-                            </>
-                          ) : null}
                         </div>
                       ) : (
                         <div className="mt-2">

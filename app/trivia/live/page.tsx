@@ -1520,14 +1520,14 @@ export default function LiveShowdownPage() {
                   <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full border-2 border-emerald-400/60 bg-emerald-500/20 text-4xl">
                     ✓
                   </div>
-                  <p className="text-sm font-black uppercase tracking-[0.16em] text-emerald-400">You&apos;re In the Lobby</p>
+                  <p className="text-xl font-black uppercase tracking-[0.16em] text-emerald-400">You&apos;re In the Lobby</p>
                   {lobbyUsername ? (
                     <p className="mt-1 text-3xl font-black text-white">{lobbyUsername}</p>
                   ) : null}
-                  <p className="mt-2 text-base font-semibold text-emerald-100/90">
+                  <p className="mt-2 text-xl font-semibold text-emerald-100/90">
                     You&apos;re checked in and ready. Keep this screen open — you&apos;ll be placed into the game automatically when it begins.
                   </p>
-                  <p className="mt-2 text-sm font-semibold text-emerald-300/70">No further action needed.</p>
+                  <p className="mt-2 text-lg font-semibold text-emerald-300/70">No further action needed.</p>
                 </section>
 
                 {/* ── Countdown ── */}

@@ -1260,6 +1260,10 @@ function buildSquareLabel(game: SportsBingoGame, resolver: SportsBingoResolver):
           return `${team}: at least ${formatLine(resolver.threshold)}% field-goal shooting.`;
         case "free_throw_pct":
           return `${team}: at least ${formatLine(resolver.threshold)}% free-throw shooting.`;
+        case "total_assists":
+          return `${team}: at least ${formatLine(resolver.threshold)} assists.`;
+        case "total_rebounds":
+          return `${team}: at least ${formatLine(resolver.threshold)} rebounds.`;
         default:
           return `${team} team stat milestone.`;
       }

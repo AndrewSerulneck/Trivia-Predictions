@@ -1061,7 +1061,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           >
             Hightop Pick &apos;Em
           </h2>
-          <p className="mt-2 text-[11px] font-semibold leading-relaxed text-slate-400">
+          <p className="mt-2 text-[13px] font-semibold leading-relaxed text-slate-400">
             Select winners by checking a team. Picks lock at scheduled start time and are final.
           </p>
 
@@ -1494,44 +1494,6 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
           </div>
         )}
       </div>
-
-      <div className="sticky bottom-0 z-30 mt-3 bg-gradient-to-t from-[#020617] via-[#020617]/96 to-transparent px-2 pb-[max(env(safe-area-inset-bottom),6px)] pt-4">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              if (!venueId) return;
-              navigateBackToVenue({
-                venuePath: `/venue/${encodeURIComponent(venueId)}`,
-                fallbackNavigate: () => {
-                  window.location.href = `/venue/${encodeURIComponent(venueId)}`;
-                },
-              });
-            }}
-            disabled={!venueId}
-            className="tp-clean-button tp-exit-pill inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 px-3 text-xs font-extrabold tracking-[0.02em] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <span aria-hidden="true" className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#fff7ea]/20 text-[11px]">
-              ←
-            </span>
-            Back to Venue
-          </button>
-          <button
-            type="button"
-            data-pickem-bank-collect
-            onClick={() => void collectBankPoints()}
-            disabled={isCollectingBank || !userId || !venueId || collectablePoints === 0}
-            className={`tp-clean-button inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border border-[#fde68a]/60 bg-[#fde68a]/15 px-3 text-xs font-extrabold text-[#fde68a] transition-all active:scale-95 active:brightness-90 disabled:cursor-not-allowed disabled:opacity-55 ${goldFlash ? "pickem-gold-flash" : ""}`}
-          >
-            <GoldCoinIcon className="h-4 w-4" />
-            {isCollectingBank ? "Collecting..." : `Collect Points (${collectablePoints.toLocaleString()})`}
-          </button>
-        </div>
-        <p className="pt-2 text-center text-[10px] font-bold tracking-[0.03em] text-slate-500">
-          Think you can pick today&apos;s winners? Prove it.
-        </p>
-      </div>
-
       {isMounted && (popAnim || multiplierAnim || limitEchoAnim)
         ? createPortal(
             <div className="pointer-events-none fixed inset-0 z-[7000] flex items-center justify-center">

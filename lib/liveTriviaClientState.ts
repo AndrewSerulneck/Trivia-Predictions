@@ -19,7 +19,12 @@ type LiveTriviaStatePayload = {
   ok?: boolean;
   state?: {
     isGameActive?: boolean;
-    nextSchedule?: { startTime?: string; timezone?: string } | null;
+    nextSchedule?: {
+      startTime?: string;
+      timezone?: string;
+      recurringType?: string;
+      recurringDays?: string[];
+    } | null;
   } | null;
 } | null;
 
@@ -37,6 +42,8 @@ export type LiveTriviaPayloadEvaluation =
       failureReason: null;
       scheduleTimezone: string;
       nextStartRaw: string;
+      scheduleRecurringType: string;
+      scheduleRecurringDays: string[];
     }
   | {
       kind: "upcoming";
@@ -45,6 +52,8 @@ export type LiveTriviaPayloadEvaluation =
       failureReason: null;
       scheduleTimezone: string;
       nextStartRaw: string;
+      scheduleRecurringType: string;
+      scheduleRecurringDays: string[];
     }
   | {
       kind: "tbd";
@@ -53,6 +62,8 @@ export type LiveTriviaPayloadEvaluation =
       failureReason: "missing_next_start";
       scheduleTimezone: string;
       nextStartRaw: "";
+      scheduleRecurringType: string;
+      scheduleRecurringDays: string[];
     }
   | {
       kind: "unavailable";
@@ -61,9 +72,13 @@ export type LiveTriviaPayloadEvaluation =
       failureReason: Exclude<LiveTriviaPayloadFailureReason, "missing_next_start">;
       scheduleTimezone: string;
       nextStartRaw: string;
+      scheduleRecurringType: string;
+      scheduleRecurringDays: string[];
     };
 
 export function evaluateLiveTriviaStatePayload(payload: LiveTriviaStatePayload): LiveTriviaPayloadEvaluation {
+  const emptyRecurring = { scheduleRecurringType: "", scheduleRecurringDays: [] as string[] };
+
   if (!payload?.ok) {
     return {
       kind: "unavailable",
@@ -72,6 +87,7 @@ export function evaluateLiveTriviaStatePayload(payload: LiveTriviaStatePayload):
       failureReason: "non_ok_payload",
       scheduleTimezone: "",
       nextStartRaw: "",
+      ...emptyRecurring,
     };
   }
 
@@ -84,10 +100,16 @@ export function evaluateLiveTriviaStatePayload(payload: LiveTriviaStatePayload):
       failureReason: "missing_state",
       scheduleTimezone: "",
       nextStartRaw: "",
+      ...emptyRecurring,
     };
   }
 
   const scheduleTimezone = String(state.nextSchedule?.timezone ?? "").trim();
+  const scheduleRecurringType = String(state.nextSchedule?.recurringType ?? "").trim();
+  const scheduleRecurringDays = Array.isArray(state.nextSchedule?.recurringDays)
+    ? (state.nextSchedule.recurringDays as string[]).map((d) => String(d).toLowerCase().trim()).filter(Boolean)
+    : [];
+
   if (state.isGameActive) {
     return {
       kind: "live",
@@ -96,6 +118,8 @@ export function evaluateLiveTriviaStatePayload(payload: LiveTriviaStatePayload):
       failureReason: null,
       scheduleTimezone,
       nextStartRaw: "",
+      scheduleRecurringType,
+      scheduleRecurringDays,
     };
   }
 
@@ -108,6 +132,8 @@ export function evaluateLiveTriviaStatePayload(payload: LiveTriviaStatePayload):
       failureReason: "missing_next_start",
       scheduleTimezone,
       nextStartRaw: "",
+      scheduleRecurringType,
+      scheduleRecurringDays,
     };
   }
 
@@ -120,6 +146,8 @@ export function evaluateLiveTriviaStatePayload(payload: LiveTriviaStatePayload):
       failureReason: "invalid_next_start",
       scheduleTimezone,
       nextStartRaw,
+      scheduleRecurringType,
+      scheduleRecurringDays,
     };
   }
 
@@ -130,5 +158,7 @@ export function evaluateLiveTriviaStatePayload(payload: LiveTriviaStatePayload):
     failureReason: null,
     scheduleTimezone,
     nextStartRaw,
+    scheduleRecurringType,
+    scheduleRecurringDays,
   };
 }

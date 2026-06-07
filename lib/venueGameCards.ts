@@ -55,7 +55,6 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
     cardClassName: "bg-indigo-600 text-white",
     visibleOnVenueHome: true,
     rules: [
-      "-Think you can pick today's winners? Prove it.",
       "-10 picks total",
       "-10 points per correct pick",
       "-7 correct picks wins double",

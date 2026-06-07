@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 
 const TRIVIA_THEME_CLASS = "tp-trivia-theme";
 
 export function TriviaThemeScope() {
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof document === "undefined") {
       return;
     }

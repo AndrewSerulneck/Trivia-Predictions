@@ -14,6 +14,8 @@ export type LiveTriviaStatus = {
   label: string;
   nextStartAtMs: number | null;
   failureReason: LiveTriviaPayloadFailureReason | "network" | null;
+  recurringType: string | null;
+  recurringDays: string[];
 };
 
 export type ChallengeCampaignCard = {

@@ -116,6 +116,7 @@ export function TriviaAppFrame() {
       <GameLandingExperience
         gameKey="speed-trivia"
         playLabel="Play Trivia"
+        initialPlaying={true}
         playDisabled={quotaLocked}
         playDisabledLabel={`Locked · ${formatCountdown(quotaSecondsRemaining)}`}
         landingStatus={landingStatus}

@@ -143,6 +143,8 @@ type LiveShowdownInactiveState = {
     intermissionAdDelaySeconds: number;
     lobbyAdEnabled: boolean;
     firstRoundCategory: string | null;
+    recurringType: "none" | "daily" | "weekly" | "monthly" | "yearly";
+    recurringDays: string[];
   } | null;
 };
 
@@ -1484,6 +1486,8 @@ export async function getLiveShowdownState(
             intermissionAdDelaySeconds: clampIntermissionDelaySeconds(upcoming.intermission_ad_delay_seconds),
             lobbyAdEnabled: Boolean(upcoming.lobby_ad_enabled ?? true),
             firstRoundCategory,
+            recurringType: normalizeRecurringType(upcoming.recurring_type),
+            recurringDays: normalizeRecurringDays(upcoming.recurring_days),
           }
         : null,
     };

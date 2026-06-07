@@ -352,7 +352,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   const [roundPointsAwarded, setRoundPointsAwarded] = useState(0);
 
   const question = questions[index] ?? null;
-  const finished = index >= questions.length;
+  const finished = questions.length > 0 && index >= questions.length;
   const accuracy = useMemo(() => {
     if (attempted === 0) return 0;
     return Math.round((correctAnswers / attempted) * 100);
@@ -1469,7 +1469,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
               </div>
             ) : null}
 
-            <div className="mb-6">
+            <div className="mb-5">
               <p className="font-black uppercase tracking-[0.16em] text-[#84cc16] text-[10.5px]">
                 Round {upcomingRoundNumber} of {ROUND_LIMIT_PER_WINDOW}
               </p>
@@ -1479,11 +1479,24 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
                   Trivia limit reached. Play again in{" "}
                   <span className="font-black">{formatCountdown(quotaSecondsRemaining)}</span>.
                 </p>
-              ) : (
-                <p className="mt-2 text-[13px] text-slate-400">
-                  You have {QUESTION_TIME_LIMIT_SECONDS} seconds to answer each question.
-                </p>
-              )}
+              ) : null}
+            </div>
+
+            <div className="mb-5 rounded-[14px] border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.08)] px-4 py-4">
+              <p className="mb-3 font-black uppercase tracking-[0.14em] text-[#84cc16] text-[13px]">Rules</p>
+              <ul className="space-y-3">
+                {([
+                  [`${QUESTIONS_PER_ROUND}`, "questions per round"],
+                  [`${QUESTION_TIME_LIMIT_SECONDS}s`, "per question"],
+                  [`${ROUND_LIMIT_PER_WINDOW}`, "rounds per hour"],
+                  [`+${POINTS_PER_CORRECT}`, "points per correct answer"],
+                ] as [string, string][]).map(([value, label]) => (
+                  <li key={label} className="flex items-center gap-3">
+                    <span className="font-mono font-black text-[#facc15] text-[18px] tabular-nums w-10 shrink-0 text-right">{value}</span>
+                    <span className="font-semibold text-slate-300 text-[15px]">{label}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
 
             <div
@@ -1505,15 +1518,6 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
                 style={{ boxShadow: "0 0 0 1px rgba(250,204,21,0.3), 0 10px 24px rgba(250,204,21,0.3)" }}
               >
                 {triviaQuotaLocked ? `Locked · ${formatCountdown(quotaSecondsRemaining)}` : "Yes, Start Trivia"}
-              </button>
-              <button
-                type="button"
-                onMouseDown={() => triggerHaptic(14)}
-                onClick={returnToVenueHome}
-                className={`${BUTTON_POP_CLASS} ${BACK_TO_VENUE_CLASS} w-full`}
-              >
-                <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs">←</span>
-                Back to Venue
               </button>
             </div>
           </div>

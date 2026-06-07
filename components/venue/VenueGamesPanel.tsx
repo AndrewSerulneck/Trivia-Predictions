@@ -11,6 +11,47 @@ import {
   type VenueArrivalStage,
 } from "@/components/venue/venueHubShared";
 
+const WEEKDAY_LABELS: Record<string, string> = {
+  sun: "Sunday",
+  mon: "Monday",
+  tue: "Tuesday",
+  wed: "Wednesday",
+  thu: "Thursday",
+  fri: "Friday",
+  sat: "Saturday",
+};
+
+const WEEKDAY_ORDER = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+
+function formatRecurringScheduleLabel(status: LiveTriviaStatus, nextStartAtMs: number | null): string | null {
+  if (status.recurringType !== "weekly" && status.recurringType !== "daily") return null;
+  const days = [...status.recurringDays].sort(
+    (a, b) => WEEKDAY_ORDER.indexOf(a) - WEEKDAY_ORDER.indexOf(b)
+  );
+
+  let dayLabel: string;
+  if (status.recurringType === "daily") {
+    dayLabel = "every day";
+  } else if (days.length === 1) {
+    dayLabel = `every ${WEEKDAY_LABELS[days[0]] ?? days[0]}`;
+  } else if (days.length > 1) {
+    const names = days.map((d) => WEEKDAY_LABELS[d] ?? d);
+    dayLabel = `every ${names.slice(0, -1).join(", ")} & ${names[names.length - 1]}`;
+  } else {
+    return null;
+  }
+
+  if (!nextStartAtMs) return `Live Trivia ${dayLabel}`;
+
+  const timeStr = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(new Date(nextStartAtMs));
+
+  return `Live Trivia ${dayLabel} at ${timeStr}`;
+}
+
 type VenueGamesPanelProps = {
   contentReady: boolean;
   showFastPathSkeleton: boolean;
@@ -19,6 +60,7 @@ type VenueGamesPanelProps = {
   arrivalProgress: number;
   liveTriviaStatus: LiveTriviaStatus;
   nextLiveTriviaCountdownLabel: string;
+  nextLiveTriviaCountdownSeconds: number | null;
   lobbyButtonShouldPulse: boolean;
   pendingDestination: VenueGameKey | null;
   orderedHomeCards: VenueGameCardConfig[];
@@ -37,6 +79,7 @@ function VenueGamesPanelInner({
   arrivalProgress,
   liveTriviaStatus,
   nextLiveTriviaCountdownLabel,
+  nextLiveTriviaCountdownSeconds,
   lobbyButtonShouldPulse,
   pendingDestination,
   orderedHomeCards,
@@ -62,15 +105,44 @@ function VenueGamesPanelInner({
           <div className="rounded-2xl border border-amber-400/60 bg-ht-surface p-3 shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
             <div className="flex items-stretch gap-3">
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-300">
-                  {liveTriviaStatus.live ? "Live Trivia in progress! Join the game now!" : "Next Live Trivia Showdown In"}
-                </p>
-                <p className="mt-1 font-black tabular-nums text-amber-200 text-[2.2rem] leading-none">
-                  {nextLiveTriviaCountdownLabel}
-                </p>
-                {liveTriviaStatus.label ? (
-                  <p className="mt-1 text-xs font-semibold text-amber-100/90">{liveTriviaStatus.label}</p>
-                ) : null}
+                {(() => {
+                  const recurringLabel = formatRecurringScheduleLabel(liveTriviaStatus, liveTriviaStatus.nextStartAtMs);
+                  if (liveTriviaStatus.live) {
+                    return (
+                      <>
+                        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-300">
+                          {recurringLabel ?? "Live Trivia in progress!"}
+                        </p>
+                        <p className="mt-1 font-black text-amber-200 text-[2.2rem] leading-none">
+                          Live now!
+                        </p>
+                      </>
+                    );
+                  }
+                  const isFarOut = recurringLabel != null &&
+                    nextLiveTriviaCountdownSeconds != null &&
+                    nextLiveTriviaCountdownSeconds >= 86400;
+                  if (isFarOut) {
+                    return (
+                      <p className="font-black text-amber-200 text-[1.35rem] leading-snug">
+                        {recurringLabel}
+                      </p>
+                    );
+                  }
+                  return (
+                    <>
+                      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-300">
+                        {recurringLabel ?? "Next Live Trivia Showdown In"}
+                      </p>
+                      <p className="mt-1 font-black tabular-nums text-amber-200 text-[2.2rem] leading-none">
+                        {nextLiveTriviaCountdownLabel}
+                      </p>
+                      {!recurringLabel && liveTriviaStatus.label ? (
+                        <p className="mt-1 text-xs font-semibold text-amber-100/90">{liveTriviaStatus.label}</p>
+                      ) : null}
+                    </>
+                  );
+                })()}
               </div>
               <button
                 type="button"
