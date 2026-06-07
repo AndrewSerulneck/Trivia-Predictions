@@ -21,11 +21,13 @@
 - `vercel.json`: Cron configurations. Do not alter without instruction.
 
 ## Trivia Source of Truth
-- **Local trivia JSON is canonical:** Files under `data/live-trivia/categories/` and `data/trivia/categories/` are the source of truth for trivia question content.
-- **Never rebuild local trivia JSON from Supabase:** Database state must not overwrite, regenerate, or "restore" those local JSON files.
+- **Speed Trivia is Admin/Supabase canonical:** For Speed Trivia (`question_pool='anytime_blitz'`, `answer_format='multiple_choice'`), the Admin UI and `trivia_questions` table are the source of truth. Local files under `data/trivia/categories/` are export artifacts only.
+- **Live Trivia JSON is canonical:** Files under `data/live-trivia/categories/` remain the source of truth for Live Trivia question content.
+- **Never cross Speed and Live Trivia pools:** Speed Trivia must stay `anytime_blitz` + `multiple_choice`; Live Trivia must stay `live_showdown` + write-in-compatible answer formats.
+- **Never rebuild Live Trivia JSON from Supabase:** Database state must not overwrite, regenerate, or "restore" `data/live-trivia/categories/`.
 - **Never rebuild local trivia JSON from stale git snapshots:** Do not use `git show`, `HEAD`, or other historical snapshots as the input source when editing or backfilling current trivia JSON unless the user explicitly asks for a restore from history.
-- **Question edits belong in local JSON first:** If the user asks to add, remove, rewrite, or audit questions/answers/acceptable answers, make those changes in the local JSON files.
-- **Sync direction is one-way:** Import/sync flows should push local JSON into local dev DB / Supabase / production, not pull remote DB state back into local JSON.
+- **Live Trivia question edits belong in local JSON first:** If the user asks to add, remove, rewrite, or audit Live Trivia questions/answers/acceptable answers, make those changes in the local JSON files.
+- **Speed Trivia JSON export is intentional:** Only export approved Speed Trivia rows from Supabase to `data/trivia/categories/` through the Admin Review GitHub PR export flow.
 - **Preserve current local file contents when scripting:** Any script that updates trivia JSON must read the current on-disk file first and only make the requested incremental changes.
 
 ## Architecture & Database Patterns

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { GitPullRequest } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 
 type QuestionPool = "live_showdown" | "anytime_blitz";
@@ -46,10 +47,12 @@ export function TriviaPendingReviewSection() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [exportPrUrl, setExportPrUrl] = useState("");
 
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({});
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [exportingJson, setExportingJson] = useState(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<EditDraft | null>(null);
@@ -145,7 +148,7 @@ export function TriviaPendingReviewSection() {
         const response = await fetch("/api/admin/trivia/questions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action, ids }),
+          body: JSON.stringify({ action, ids, pool: activeTab }),
         });
         const payload = (await response.json()) as { ok: boolean; updated?: number; error?: string };
         if (!response.ok || !payload.ok) {
@@ -162,8 +165,56 @@ export function TriviaPendingReviewSection() {
         setBulkBusy(false);
       }
     },
-    [filteredItems, selectedIds]
+    [activeTab, filteredItems, selectedIds]
   );
+
+  const exportApprovedSpeedJson = useCallback(async () => {
+    if (activeTab !== "anytime_blitz") {
+      setError("JSON export is only available for Speed Trivia.");
+      return;
+    }
+
+    setExportingJson(true);
+    setError("");
+    setSuccess("");
+    setExportPrUrl("");
+    try {
+      const response = await fetch("/api/admin/trivia/questions/export-speed-json", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const payload = (await response.json()) as {
+        ok: boolean;
+        totalQuestions?: number;
+        categories?: number;
+        changedFiles?: string[];
+        prUrl?: string;
+        alreadyUpToDate?: boolean;
+        error?: string;
+      };
+      if (!response.ok || !payload.ok) {
+        console.error("[speed-trivia-export-pr]", {
+          status: response.status,
+          payload,
+        });
+        throw new Error(payload.error ?? "Failed to create Speed Trivia export PR.");
+      }
+      if (payload.alreadyUpToDate) {
+        setSuccess("Approved Speed Trivia JSON is already up to date on GitHub.");
+        return;
+      }
+      setExportPrUrl(payload.prUrl ?? "");
+      setSuccess(
+        `Created export PR for ${payload.totalQuestions ?? 0} approved Speed Trivia question(s) across ${
+          payload.changedFiles?.length ?? payload.categories ?? 0
+        } JSON file(s).`
+      );
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to create Speed Trivia export PR."));
+    } finally {
+      setExportingJson(false);
+    }
+  }, [activeTab]);
 
   const startEdit = useCallback((item: PendingQuestion) => {
     setEditingId(item.id);
@@ -283,7 +334,21 @@ export function TriviaPendingReviewSection() {
       </div>
 
       {error ? <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
-      {success ? <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div> : null}
+      {success ? (
+        <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {success}
+          {exportPrUrl ? (
+            <a
+              href={exportPrUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="ml-2 font-semibold underline underline-offset-2"
+            >
+              Open PR
+            </a>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-2">
         <button
@@ -302,6 +367,17 @@ export function TriviaPendingReviewSection() {
         >
           Delete Selected{selectedCount > 0 ? ` (${selectedCount})` : ""}
         </button>
+        {activeTab === "anytime_blitz" ? (
+          <button
+            type="button"
+            onClick={() => void exportApprovedSpeedJson()}
+            disabled={exportingJson}
+            className="inline-flex items-center gap-2 rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-900 disabled:opacity-50"
+          >
+            <GitPullRequest className="h-4 w-4" aria-hidden="true" />
+            {exportingJson ? "Creating PR..." : "Create JSON Export PR"}
+          </button>
+        ) : null}
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white shadow-sm">

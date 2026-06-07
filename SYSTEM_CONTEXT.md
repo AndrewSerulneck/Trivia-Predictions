@@ -220,11 +220,13 @@
   - Vitest, ESLint, PostCSS, TypeScript compiler.
 
 ## 12. Known Constraints and Architectural Rules
-- **Trivia source-of-truth rule:** Files under `data/live-trivia/categories/` and `data/trivia/categories/` are the canonical source of truth for trivia question content, answers, and acceptable answers.
-- **No reverse sync into local trivia JSON:** Supabase, local dev database state, production database state, or other remote sources must never overwrite or regenerate those local trivia JSON files.
+- **Speed Trivia source-of-truth rule:** Speed Trivia (`question_pool='anytime_blitz'`, `answer_format='multiple_choice'`) is canonical in the Admin UI / Supabase `trivia_questions` table. Files under `data/trivia/categories/` are export artifacts for approved Speed Trivia rows.
+- **Live Trivia source-of-truth rule:** Files under `data/live-trivia/categories/` are the canonical source of truth for Live Trivia question content, answers, and acceptable answers.
+- **No reverse sync into Live Trivia JSON:** Supabase, local dev database state, production database state, or other remote sources must never overwrite or regenerate `data/live-trivia/categories/`.
+- **Pool separation rule:** Speed Trivia must stay `anytime_blitz` + `multiple_choice`; Live Trivia must stay `live_showdown` + write-in-compatible answer formats. Never mix these rows, import paths, or JSON directories.
 - **No historical snapshot rewrites for trivia JSON:** Do not use `git show`, `HEAD`, or any older snapshot as the input source for trivia JSON rewrite/backfill scripts unless the user explicitly asks for a history restore.
-- **Question edits belong in local JSON first:** If the user asks to add, remove, revise, or audit trivia questions or answers, the intended changes should be made in the local JSON files.
-- **Sync direction is outward from local JSON:** Import/sync workflows should push current local trivia JSON into the database and website environments, not pull database content back into local JSON.
+- **Live Trivia question edits belong in local JSON first:** If the user asks to add, remove, revise, or audit Live Trivia questions or answers, the intended changes should be made in the local JSON files.
+- **Speed Trivia sync direction:** Nightly Gemini generation writes directly to Supabase as `pending_review`; approved Speed Trivia rows can be exported from Admin Review into `data/trivia/categories/` through a GitHub PR.
 - **Preserve on-disk trivia JSON in scripts:** Any script that updates trivia JSON must read the current local file contents first and only make incremental requested changes.
 - **Naming rule — Live Trivia:** Always "Live Trivia" or "Live Trivia Showdown." Never "Live Showdown." Internal lib files use `liveShowdown*` naming but this must not surface in UI copy, comments, or documentation.
 - **Naming rule — Speed Trivia:** Always "Speed Trivia." Never "Anytime Blitz" (old internal name).

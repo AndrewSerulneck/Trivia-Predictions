@@ -8,8 +8,14 @@ type GlobalErrorProps = {
 };
 
 export default function GlobalError({ error, reset }: GlobalErrorProps) {
+  const showDebug = process.env.NODE_ENV !== "production";
+
   useEffect(() => {
-    console.error(error);
+    console.error("[global-error]", {
+      message: error.message,
+      digest: error.digest,
+      stack: error.stack,
+    });
   }, [error]);
 
   return (
@@ -19,7 +25,15 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
           <section className="w-full max-w-md rounded-lg border border-rose-500/40 bg-rose-500/10 p-6 text-sm text-rose-100">
             <h1 className="text-lg font-semibold text-white">Something went wrong</h1>
             <p className="mt-3 text-rose-100/85">The app hit an error while loading. Try again, or refresh the page.</p>
-            {error.digest ? <p className="mt-3 font-mono text-xs text-rose-100/70">Error digest: {error.digest}</p> : null}
+            {showDebug ? (
+              <div className="mt-4 rounded-md border border-rose-300/25 bg-black/30 p-3 font-mono text-xs text-rose-50">
+                <p className="font-semibold">Debug</p>
+                <p className="mt-2 break-words">Message: {error.message || "No message available"}</p>
+                {error.digest ? <p className="mt-1 break-words">Digest: {error.digest}</p> : null}
+              </div>
+            ) : error.digest ? (
+              <p className="mt-3 font-mono text-xs text-rose-100/70">Error digest: {error.digest}</p>
+            ) : null}
             <button
               type="button"
               onClick={reset}

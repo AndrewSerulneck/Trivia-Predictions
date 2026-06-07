@@ -82,8 +82,12 @@ Open `http://localhost:3000`.
 - `CRON_SECRET`: required to authorize cron settlement calls
 - `ADMIN_LOGIN_USERNAME`: admin login username used on `/admin`
 - `ADMIN_LOGIN_PASSWORD`: admin login password used on `/admin`
+- `GITHUB_TOKEN`: token used by Admin Question Review to create Speed Trivia JSON export PRs
+- `GITHUB_REPOSITORY`: target repository in `owner/name` form for Speed Trivia export PRs
+- `GITHUB_BASE_BRANCH`: base branch for Speed Trivia export PRs, defaults to `main`
+- `GITHUB_EXPORT_DRAFT_PR`: set to `true` to create draft Speed Trivia export PRs
 
-You get both from your Supabase project dashboard:
+You get the Supabase URL and keys from your Supabase project dashboard:
 `Project Settings -> API`.
 
 ## Database Setup (Supabase)

@@ -124,8 +124,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: "Supabase admin client is not configured." }, { status: 500 });
     }
 
-    const body = (await request.json()) as { action?: string; ids?: unknown };
+    const body = (await request.json()) as { action?: string; ids?: unknown; pool?: string };
     const action = String(body.action ?? "").trim().toLowerCase();
+    const poolParam = String(body.pool ?? "").trim();
+    const pool = VALID_POOLS.has(poolParam) ? poolParam : null;
     const ids = Array.isArray(body.ids)
       ? Array.from(new Set(body.ids.map((id) => String(id ?? "").trim()).filter(Boolean)))
       : [];
@@ -138,11 +140,13 @@ export async function POST(request: Request) {
     }
 
     const nextStatus: QuestionStatus = action === "approve" ? "active" : "deleted";
-    const { data, error } = await supabaseAdmin
+    let query = supabaseAdmin
       .from("trivia_questions")
       .update({ status: nextStatus })
-      .in("id", ids)
-      .select("id");
+      .in("id", ids);
+    if (pool) query = query.eq("question_pool", pool);
+
+    const { data, error } = await query.select("id");
 
     if (error) {
       throw new Error(error.message || "Failed to update trivia questions.");

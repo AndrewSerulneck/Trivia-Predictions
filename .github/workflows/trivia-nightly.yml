@@ -16,7 +16,7 @@ jobs:
   generate-and-import:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
 
     steps:
       - name: Checkout
@@ -33,49 +33,51 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      - name: Generate Trivia For All Categories
+      - name: Prepare Trivia Generation Workspace
+        run: |
+          mkdir -p "$RUNNER_TEMP/trivia-categories" "$RUNNER_TEMP/trivia-new"
+          cp data/trivia/categories/*.json "$RUNNER_TEMP/trivia-categories"/
+
+      - name: Generate Speed Trivia Review Candidates
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-2.5-flash' }}
           GEMINI_MODEL_FALLBACKS: ${{ secrets.GEMINI_MODEL_FALLBACKS || 'gemini-2.0-flash' }}
-        run: node scripts/generate-trivia-nightly.cjs --total 100 --batch-size 25
-
-      - name: Validate Trivia Files
-        run: npm run trivia:check
-
-      - name: Import Trivia To Supabase
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/import-trivia-questions.cjs --dir data/trivia/categories
-
-      - name: Commit Updated Trivia Files
         run: |
-          if git diff --quiet -- data/trivia/categories; then
-            echo "No trivia JSON changes to commit."
+          node scripts/generate-trivia-nightly.cjs \
+            --dir "$RUNNER_TEMP/trivia-categories" \
+            --new-only-dir "$RUNNER_TEMP/trivia-new" \
+            --total 100 \
+            --batch-size 25 \
+            --new-categories 0 \
+            --allow-category-errors
+
+      - name: Validate Generated Speed Trivia
+        run: |
+          if ! find "$RUNNER_TEMP/trivia-new" -name '*.json' -print -quit | grep -q .; then
+            echo "No new Speed Trivia questions were generated. Skipping validation and import."
             exit 0
           fi
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/trivia/categories
-          git commit -m "chore(trivia): nightly auto-generated questions"
+          node scripts/import-trivia-questions.cjs \
+            --dir "$RUNNER_TEMP/trivia-new" \
+            --status pending_review \
+            --pool anytime_blitz \
+            --answer-format multiple_choice \
+            --check
 
-          # Rebase onto latest main before push to avoid non-fast-forward failures.
-          git pull --rebase origin main
+      - name: Import Generated Speed Trivia To Supabase Review
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if ! find "$RUNNER_TEMP/trivia-new" -name '*.json' -print -quit | grep -q .; then
+            echo "No new Speed Trivia questions were generated. Skipping Supabase import."
+            exit 0
+          fi
 
-          # Retry once in case main advances between pull and push.
-          for attempt in 1 2; do
-            if git push origin HEAD:main; then
-              echo "Push succeeded on attempt ${attempt}."
-              break
-            fi
-
-            if [ "$attempt" -eq 2 ]; then
-              echo "Push failed after retries."
-              exit 1
-            fi
-
-            echo "Push rejected, rebasing and retrying..."
-            git pull --rebase origin main
-          done
+          node scripts/import-trivia-questions.cjs \
+            --dir "$RUNNER_TEMP/trivia-new" \
+            --status pending_review \
+            --pool anytime_blitz \
+            --answer-format multiple_choice

@@ -236,6 +236,7 @@ export default function LiveShowdownPage() {
   // Tracks whether the user is in any spectating state so submit() and the
   // forfeit path can gate on it without reading React state from a stale closure.
   const spectatingRef = useRef(false);
+  const boosterArmedRef = useRef(false);
   const [fetchFailureCategory, setFetchFailureCategory] = useState<
     "missing_venue" | "network" | "non_ok_payload" | "missing_fields" | "invalid_date" | null
   >(null);
@@ -539,20 +540,32 @@ export default function LiveShowdownPage() {
     return () => window.clearInterval(ticker);
   }, [isGameActive]);
 
-  // When the countdown reaches zero and the game still hasn't started (because
-  // the main polling interval is slow at 15s during pre-game), switch to
-  // aggressive 1-second fetches for up to 10 seconds so lobby players see the
-  // first question within ~1 second of game start rather than up to 15 seconds.
+  // Reset the booster guard whenever the scheduled game changes so it can arm
+  // again for the next game.
+  useEffect(() => {
+    boosterArmedRef.current = false;
+  }, [state?.nextSchedule?.startTime]);
+
+  // When the countdown reaches ~10 seconds, switch to aggressive 1-second fetches
+  // so lobby players see the first question as soon as the engine fires. The booster
+  // runs from T-10s through T+25s (35 iterations total) to cover server startup lag —
+  // the original 10-iteration window expired before game start, leaving players on the
+  // "Game Loading…" screen for up to 15 seconds while the idle 15s poll caught up.
+  // Guard with a ref so this arms exactly once per scheduled game, not every
+  // second — re-running every tick caused fetchState to re-seed localSecondsRemaining
+  // mid-tick, producing the 5→4→5→4 countdown glitch.
   useEffect(() => {
     if (isGameActive) return;
     if (localSecondsRemaining > 10) return;
     if (!state?.nextSchedule) return;
+    if (boosterArmedRef.current) return;
+    boosterArmedRef.current = true;
 
     void fetchState();
     let elapsed = 0;
     const booster = window.setInterval(() => {
       elapsed += 1;
-      if (elapsed >= 10) {
+      if (elapsed >= 35) {
         window.clearInterval(booster);
         return;
       }
@@ -1176,7 +1189,7 @@ export default function LiveShowdownPage() {
               ) : null}
               {state.nextSchedule?.firstRoundCategory ? (
                 <p className="mt-3 rounded-xl border border-amber-300/50 bg-amber-950/30 p-2 text-sm font-semibold text-amber-100">
-                  Opening category preview: {state.nextSchedule.firstRoundCategory}
+                  Opening category: {state.nextSchedule.firstRoundCategory}
                 </p>
               ) : null}
             </section>
@@ -1498,44 +1511,66 @@ export default function LiveShowdownPage() {
             );
           })()
         ) : isPreGameLobby ? (
-          <>
-            <section className="rounded-2xl border-2 border-cyan-300 bg-cyan-500/15 p-4 text-center">
-              <p className="text-sm font-black uppercase tracking-[0.14em] text-cyan-100">Welcome to the Live Showdown Lobby!</p>
-              <p className="mt-2 text-sm font-semibold text-cyan-100/95">
-                You are checked in. Keep this tab open and review the rules while the game clock counts down.
-              </p>
-            </section>
+          (() => {
+            const lobbyUsername = getUsername();
+            return (
+              <>
+                {/* ── Check-in confirmation card ── */}
+                <section className="rounded-2xl border-2 border-emerald-400 bg-emerald-500/10 p-5 text-center">
+                  <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full border-2 border-emerald-400/60 bg-emerald-500/20 text-4xl">
+                    ✓
+                  </div>
+                  <p className="text-sm font-black uppercase tracking-[0.16em] text-emerald-400">You&apos;re In the Lobby</p>
+                  {lobbyUsername ? (
+                    <p className="mt-1 text-3xl font-black text-white">{lobbyUsername}</p>
+                  ) : null}
+                  <p className="mt-2 text-base font-semibold text-emerald-100/90">
+                    You&apos;re checked in and ready. Keep this screen open — you&apos;ll be placed into the game automatically when it begins.
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-emerald-300/70">No further action needed.</p>
+                </section>
 
-            <section className="rounded-2xl border border-amber-400/60 bg-slate-900 p-4 text-center">
-              {state.nextSchedule ? (
-                <>
-                  <p className="text-xs uppercase tracking-[0.14em] text-amber-300">Next Live Trivia Showdown In</p>
-                  <p className="mt-2 text-4xl font-black tabular-nums text-amber-200">{formatCountdown(preGameSecondsRemaining)}</p>
-                </>
-              ) : (
-                <>
-                  <p className="text-xs uppercase tracking-[0.14em] text-amber-300">Live Trivia Status</p>
-                  <p className="mt-2 text-lg font-black text-amber-100">No Live Trivia is currently scheduled for this venue.</p>
-                </>
-              )}
-              {state.nextSchedule?.firstRoundCategory ? (
-                <p className="mt-3 rounded-xl border border-amber-300/50 bg-amber-950/30 p-2 text-sm font-semibold text-amber-100">
-                  Opening category preview: {state.nextSchedule.firstRoundCategory}
-                </p>
-              ) : null}
-            </section>
+                {/* ── Countdown ── */}
+                <section className="rounded-2xl border border-amber-400/60 bg-slate-900 p-4 text-center">
+                  {state.nextSchedule ? (
+                    <>
+                      <p className="text-sm uppercase tracking-[0.14em] text-amber-300">Game Begins In</p>
+                      <p className="mt-2 text-4xl font-black tabular-nums text-amber-200">{formatCountdown(preGameSecondsRemaining)}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm uppercase tracking-[0.14em] text-amber-300">Live Trivia Status</p>
+                      <p className="mt-2 text-lg font-black text-amber-100">No Live Trivia is currently scheduled for this venue.</p>
+                    </>
+                  )}
+                  {state.nextSchedule?.firstRoundCategory ? (
+                    <p className="mt-3 rounded-xl border border-amber-300/50 bg-amber-950/30 p-2 text-base font-semibold text-amber-100">
+                      Opening category: {state.nextSchedule.firstRoundCategory}
+                    </p>
+                  ) : null}
+                </section>
 
-            <section className="rounded-2xl border border-cyan-400/60 bg-slate-900 p-5">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-cyan-300">Lobby Rules</p>
-              <ul className="mt-3 space-y-2 text-xl font-semibold leading-snug text-slate-100">
-                {RULE_LINES.map((rule) => (
-                  <li key={`lobby-${rule}`} className="rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-3">
-                    {rule}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          </>
+                {/* ── What to expect ── */}
+                <section className="rounded-2xl border border-slate-700 bg-slate-900 p-5">
+                  <p className="text-sm font-black uppercase tracking-[0.14em] text-slate-400">What to Expect</p>
+                  <ul className="mt-3 space-y-2">
+                    <li className="flex items-start gap-3 rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-3">
+                      <span className="mt-0.5 text-xl">⏱</span>
+                      <span className="text-base font-semibold text-slate-100">30 seconds to type your answer for each question. Don&apos;t close or switch tabs during live play.</span>
+                    </li>
+                    <li className="flex items-start gap-3 rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-3">
+                      <span className="mt-0.5 text-xl">🏆</span>
+                      <span className="text-base font-semibold text-slate-100">Correct answers earn +10 points. Closest numeric guess wins if no one gets it exactly right.</span>
+                    </li>
+                    <li className="flex items-start gap-3 rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-3">
+                      <span className="mt-0.5 text-xl">🚀</span>
+                      <span className="text-base font-semibold text-slate-100">The game will start automatically. You&apos;ll see the first question appear on this screen.</span>
+                    </li>
+                  </ul>
+                </section>
+              </>
+            );
+          })()
         ) : isSpectatingActiveBlock || joinState === "spectating_active_block" ? (
           <section className="rounded-2xl border border-sky-400/60 bg-slate-900 p-4">
             {/* Explanation banner — tells the late joiner exactly why they can't play */}

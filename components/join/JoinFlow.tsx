@@ -650,21 +650,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const { refresh: refreshAuthSession, state: authState } = useAuthSession();
   const godMode = authState.godMode;
   const venueParam = initialVenueId.trim();
-  const initialJoinPageEntryIntent = useMemo(() => readFreshJoinPageEntryIntent(), []);
-  const hasInitialStoredJoinIdentity = useMemo(() => {
-    const storedAccountId = (getAccountId() ?? "").trim();
-    const storedUserId = (getUserId() ?? "").trim();
-    const storedUsername = (getUsername() ?? "").trim();
-    return Boolean(storedAccountId || (storedUserId && storedUsername));
-  }, []);
-  const initialCachedVenueList = useMemo(() => readCachedVenues() ?? [], []);
 
-  const [status, setStatus] = useState<Status>(() =>
-    !venueParam && initialCachedVenueList.length > 0 ? "ready" : "loading"
-  );
+  const [status, setStatus] = useState<Status>("loading");
   const [errorMessage, setErrorMessage] = useState("");
   const [venue, setVenue] = useState<Venue | null>(null);
-  const [venueList, setVenueList] = useState<Venue[]>(initialCachedVenueList);
+  const [venueList, setVenueList] = useState<Venue[]>([]);
   const [username, setUsername] = useState("");
   const [pin, setPin] = useState("");
   const [distanceMeters, setDistanceMeters] = useState<number | null>(null);
@@ -673,15 +663,9 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [locationNotice, setLocationNotice] = useState("");
   const [lastLocationVerifiedAt, setLastLocationVerifiedAt] = useState<number | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [panelDirection, setPanelDirection] = useState<1 | -1>(() =>
-    initialJoinPageEntryIntent?.source === "leave-venue" ? -1 : 1
-  );
-  const [activePanel, setActivePanel] = useState<JoinPanel>(() =>
-    hasInitialStoredJoinIdentity ? "venue-list" : "auth-method-selection"
-  );
-  const [animateInitialPanel] = useState<boolean>(() =>
-    Boolean(initialJoinPageEntryIntent?.source === "leave-venue" && hasInitialStoredJoinIdentity)
-  );
+  const [panelDirection, setPanelDirection] = useState<1 | -1>(1);
+  const [activePanel, setActivePanel] = useState<JoinPanel>("auth-method-selection");
+  const [animateInitialPanel] = useState(false);
   const [isOptimisticallyEntering, setIsOptimisticallyEntering] = useState(false);
   const [passkeyEnrollmentStep, setPasskeyEnrollmentStep] = useState<PasskeyEnrollmentStepData | null>(null);
   // Account-first auth state
@@ -733,10 +717,20 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
   useEffect(() => {
     const load = async () => {
+      const initialJoinPageEntryIntent = readFreshJoinPageEntryIntent();
+      const initialCachedVenueList = readCachedVenues() ?? [];
       const storedAccountId = (getAccountId() ?? "").trim();
       const storedUserId = (getUserId() ?? "").trim();
       const storedUsername = (getUsername() ?? "").trim();
       const hasStoredJoinIdentity = Boolean(storedAccountId || (storedUserId && storedUsername));
+
+      if (initialJoinPageEntryIntent?.source === "leave-venue") {
+        setPanelDirection(-1);
+      }
+      if (!venueParam && initialCachedVenueList.length > 0) {
+        setVenueList(initialCachedVenueList);
+        setStatus("ready");
+      }
 
       // If accountId is stored, load venues and show the venue-list so the user can explicitly choose.
       if (venueParam && hasStoredJoinIdentity) {
@@ -821,14 +815,15 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
               const sortedByDistance = [...distanceByVenue]
                 .sort((a, b) => a.distance - b.distance)
                 .map((item) => item.venue);
-              const nearbyCount = distanceByVenue.filter(
-                (item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, coords.accuracy)
-              ).length;
-              setVenueList(sortedByDistance);
+              const nearbyVenues = distanceByVenue
+                .filter((item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, coords.accuracy))
+                .sort((a, b) => a.distance - b.distance)
+                .map((item) => item.venue);
+              setVenueList(nearbyVenues);
               setLocationNotice(
-                nearbyCount > 0
-                  ? `Found ${nearbyCount} nearby venue(s).`
-                  : "Showing all venues. You'll verify location after selecting one."
+                nearbyVenues.length > 0
+                  ? `Found ${nearbyVenues.length} nearby venue(s).`
+                  : "No venue is currently in range from your location."
               );
             } else {
               setLocationNotice(
@@ -924,7 +919,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
     };
 
     void load();
-  }, [venueParam, router, godMode, initialCachedVenueList.length]);
+  }, [venueParam, router, godMode]);
 
   const clearLoginWatchdog = useCallback(() => {
     if (loginWatchdogRef.current !== null) {

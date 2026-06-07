@@ -18,6 +18,8 @@ function parseArgs(argv) {
     model: process.env.GEMINI_MODEL || "",
     dryRun: false,
     newCategoryCount: DEFAULT_NEW_CATEGORY_COUNT,
+    newOnlyDir: "",
+    allowCategoryErrors: false,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -47,8 +49,17 @@ function parseArgs(argv) {
       i += 1;
       continue;
     }
+    if (token === "--new-only-dir") {
+      args.newOnlyDir = (argv[i + 1] || "").trim();
+      i += 1;
+      continue;
+    }
     if (token === "--dry-run") {
       args.dryRun = true;
+      continue;
+    }
+    if (token === "--allow-category-errors") {
+      args.allowCategoryErrors = true;
     }
   }
 
@@ -290,6 +301,20 @@ function computeNightlyPlan({ records, inventedKeys, nightlyBudget }) {
     }
   }
 
+  if (remaining > 0 && records.length > 0) {
+    const fillable = [...records].sort((a, b) => {
+      if (a.currentCount !== b.currentCount) return a.currentCount - b.currentCount;
+      return a.categoryKey.localeCompare(b.categoryKey);
+    });
+    let index = 0;
+    while (remaining > 0) {
+      const record = fillable[index % fillable.length];
+      plan.set(record.categoryKey, (plan.get(record.categoryKey) || 0) + 1);
+      remaining -= 1;
+      index += 1;
+    }
+  }
+
   return {
     plan,
     remaining,
@@ -318,6 +343,9 @@ function runGeneratorForCategory({ category, count, args }) {
   if (args.dryRun) {
     cmdArgs.push("--dry-run");
   }
+  if (args.newOnlyDir) {
+    cmdArgs.push("--new-only-dir", args.newOnlyDir);
+  }
 
   const result = spawnSync(process.execPath, cmdArgs, {
     stdio: "inherit",
@@ -337,8 +365,8 @@ async function main() {
   assert(Number.isInteger(args.total) && args.total > 0, "--total must be a positive integer.");
   assert(Number.isInteger(args.batchSize) && args.batchSize > 0, "--batch-size must be a positive integer.");
   assert(
-    Number.isInteger(args.newCategoryCount) && args.newCategoryCount > 0,
-    "--new-categories must be a positive integer."
+    Number.isInteger(args.newCategoryCount) && args.newCategoryCount >= 0,
+    "--new-categories must be a non-negative integer."
   );
 
   const apiKey = String(process.env.GEMINI_API_KEY || "").trim();
@@ -352,12 +380,15 @@ async function main() {
   const existingDisplay = records.map((record) => record.displayCategory);
 
   // Step 2: Invent sub-genre categories and create new files if missing.
-  const candidates = await inventCategoryCandidates({
-    apiKey,
-    model,
-    existingDisplayCategories: existingDisplay,
-    countHint: args.newCategoryCount,
-  });
+  const candidates =
+    args.newCategoryCount > 0
+      ? await inventCategoryCandidates({
+          apiKey,
+          model,
+          existingDisplayCategories: existingDisplay,
+          countHint: args.newCategoryCount,
+        })
+      : [];
 
   const inventedRecords = [];
   const seenNewKeys = new Set();
@@ -383,10 +414,12 @@ async function main() {
     }
   }
 
-  assert(
-    inventedRecords.length >= args.newCategoryCount,
-    `Unable to invent ${args.newCategoryCount} unique new category(ies) from Gemini output.`
-  );
+  if (args.newCategoryCount > 0) {
+    assert(
+      inventedRecords.length >= args.newCategoryCount,
+      `Unable to invent ${args.newCategoryCount} unique new category(ies) from Gemini output.`
+    );
+  }
 
   // Re-read after possible file creation.
   ({ absoluteDir, records } = listCategoryRecords(args.dir));
@@ -427,7 +460,15 @@ async function main() {
     if (!record) continue;
 
     console.log(`\n=== Category: ${record.categoryKey} (${addCount}) ===`);
-    runGeneratorForCategory({ category: record.categoryKey, count: addCount, args });
+    try {
+      runGeneratorForCategory({ category: record.categoryKey, count: addCount, args });
+    } catch (error) {
+      if (!args.allowCategoryErrors) {
+        throw error;
+      }
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(`Skipping category "${record.categoryKey}" after generation failure: ${message}`);
+    }
   }
 
   console.log("\nNightly trivia generation complete.");

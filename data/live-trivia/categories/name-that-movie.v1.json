@@ -24,7 +24,7 @@
   },
   {
     "slug": "keanu-reeves-matrix",
-    "question": "Keanu Reeves stars as a computer hacker who discovers reality is a simulation created by machines.",
+    "question": "Keanu Reeves stars as a computer hacker who learns that reality is a simulation created by machines.",
     "answer": "The Matrix",
     "category": "Name That Movie",
     "difficulty": "easy"
@@ -101,7 +101,7 @@
   },
   {
     "slug": "morgan-freeman-prison",
-    "question": "Morgan Freeman stars as a man wrongfully imprisoned for the murder of his wife, who later escapes to clear his name.",
+    "question": "Tim Robbins stars as a man wrongfully imprisoned for the murder of his wife.",
     "answer": "The Shawshank Redemption",
     "category": "Name That Movie",
     "difficulty": "easy"
@@ -122,7 +122,7 @@
   },
   {
     "slug": "will-smith-ali",
-    "question": "Will Smith stars as the legendary boxer Muhammad Ali in this biographical film.",
+    "question": "Will Smith stars in this biographical film named after a legendary boxer.",
     "answer": "Ali",
     "category": "Name That Movie",
     "difficulty": "easy"

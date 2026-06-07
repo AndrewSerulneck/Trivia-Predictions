@@ -7,9 +7,13 @@ const { createClient } = require("@supabase/supabase-js");
 
 const DEFAULT_FILE = "data/trivia/questions.v1.json";
 const DEFAULT_DIR = "data/trivia/categories";
+const DEFAULT_LIVE_DIR = "data/live-trivia/categories";
 const CHUNK_SIZE = 200;
 const MAX_RETRIES = 5;
 const BASE_RETRY_DELAY_MS = 3000;
+const VALID_STATUSES = new Set(["pending_review", "active", "deleted"]);
+const VALID_POOLS = new Set(["anytime_blitz", "live_showdown"]);
+const VALID_ANSWER_FORMATS = new Set(["multiple_choice", "write_in", "numeric", "true_false"]);
 
 // GitHub-hosted runners can prefer IPv6 first; forcing IPv4 first avoids intermittent
 // fetch failures when a provider endpoint has partial IPv6 reachability.
@@ -20,7 +24,11 @@ function parseArgs(argv) {
   const args = {
     file: "",
     dir: DEFAULT_DIR,
+    liveDir: "",
     checkOnly: false,
+    status: "active",
+    questionPool: "",
+    answerFormat: "",
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -38,6 +46,29 @@ function parseArgs(argv) {
     if (token === "--dir") {
       args.dir = argv[i + 1] || DEFAULT_DIR;
       args.file = "";
+      args.liveDir = "";
+      i += 1;
+      continue;
+    }
+    if (token === "--live-dir") {
+      args.liveDir = argv[i + 1] || DEFAULT_LIVE_DIR;
+      args.file = "";
+      args.dir = "";
+      i += 1;
+      continue;
+    }
+    if (token === "--status") {
+      args.status = String(argv[i + 1] || "active").trim();
+      i += 1;
+      continue;
+    }
+    if (token === "--pool" || token === "--question-pool") {
+      args.questionPool = String(argv[i + 1] || "").trim();
+      i += 1;
+      continue;
+    }
+    if (token === "--answer-format") {
+      args.answerFormat = String(argv[i + 1] || "").trim();
       i += 1;
     }
   }
@@ -61,14 +92,64 @@ function assert(condition, message) {
   }
 }
 
+function normalizeAnswerKey(value) {
+  return String(value ?? "").toLowerCase().trim().replace(/\s+/g, " ");
+}
+
+function sanitizeAcceptableAnswers(values, canonicalAnswer) {
+  const rawValues = Array.isArray(values) ? values : [];
+  const seen = new Set([normalizeAnswerKey(canonicalAnswer)]);
+  const answers = [];
+  for (const value of rawValues) {
+    const answer = String(value ?? "").trim();
+    const key = normalizeAnswerKey(answer);
+    if (!answer || !key || seen.has(key)) continue;
+    seen.add(key);
+    answers.push(answer);
+  }
+  return answers;
+}
+
+function normalizeQuestionPool(value, fallback) {
+  const normalized = String(value || fallback || "").trim();
+  assert(VALID_POOLS.has(normalized), `Invalid question pool "${normalized}".`);
+  return normalized;
+}
+
+function normalizeAnswerFormat(value, fallback) {
+  const normalized = String(value || fallback || "").trim();
+  assert(VALID_ANSWER_FORMATS.has(normalized), `Invalid answer format "${normalized}".`);
+  return normalized;
+}
+
+function normalizeStatus(value) {
+  const normalized = String(value || "active").trim();
+  assert(VALID_STATUSES.has(normalized), `Invalid status "${normalized}".`);
+  return normalized;
+}
+
+function assertPoolFormatCompatible(questionPool, answerFormat) {
+  if (questionPool === "anytime_blitz") {
+    assert(
+      answerFormat === "multiple_choice",
+      "Speed Trivia rows must use question_pool=anytime_blitz and answer_format=multiple_choice."
+    );
+    return;
+  }
+
+  assert(
+    answerFormat === "write_in" || answerFormat === "numeric" || answerFormat === "true_false",
+    "Live Trivia rows must use question_pool=live_showdown and a write-in-compatible answer_format."
+  );
+}
+
 function readQuestionFile(filePath) {
   const absolutePath = path.resolve(process.cwd(), filePath);
   assert(fs.existsSync(absolutePath), `Question file not found: ${absolutePath}`);
 
   const raw = fs.readFileSync(absolutePath, "utf8");
   const parsed = JSON.parse(raw);
-  assert(Array.isArray(parsed), "Question file must contain a JSON array.");
-  return { absolutePath, questions: parsed };
+  return { absolutePath, questions: extractQuestions(parsed, absolutePath) };
 }
 
 function readQuestionDir(dirPath) {
@@ -87,15 +168,42 @@ function readQuestionDir(dirPath) {
     const filePath = path.join(absoluteDirPath, file);
     const raw = fs.readFileSync(filePath, "utf8");
     const parsed = JSON.parse(raw);
-    assert(Array.isArray(parsed), `File ${filePath} must contain a JSON array.`);
-    merged.push(...parsed.map((item) => ({ ...item, __sourceFile: file })));
+    const questions = extractQuestions(parsed, filePath);
+    merged.push(...questions.map((item) => ({ ...item, __sourceFile: file })));
   }
 
   return { absoluteDirPath, files, questions: merged };
 }
 
-function normalizeAndValidate(questions) {
+function extractQuestions(parsed, filePath) {
+  if (Array.isArray(parsed)) {
+    return parsed;
+  }
+
+  if (parsed && typeof parsed === "object" && Array.isArray(parsed.questions)) {
+    const categoryName = String(parsed.categoryName ?? "").trim();
+    return parsed.questions.map((item) => ({
+      category: categoryName || item?.category,
+      ...item,
+    }));
+  }
+
+  throw new Error(`File ${filePath} must contain a JSON array or an object with a questions array.`);
+}
+
+function normalizeAndValidate(questions, options = {}) {
   const seenSlugs = new Set();
+  const defaultQuestionPool = normalizeQuestionPool(
+    options.questionPool,
+    options.liveMode ? "live_showdown" : "anytime_blitz"
+  );
+  const defaultAnswerFormat = normalizeAnswerFormat(
+    options.answerFormat,
+    defaultQuestionPool === "live_showdown" ? "write_in" : "multiple_choice"
+  );
+  const status = options.status ? normalizeStatus(options.status) : "";
+  assertPoolFormatCompatible(defaultQuestionPool, defaultAnswerFormat);
+
   const rows = questions.map((item, index) => {
     const rowNumber = index + 1;
     const source = item.__sourceFile ? ` (${item.__sourceFile})` : "";
@@ -104,16 +212,35 @@ function normalizeAndValidate(questions) {
     const question = String(item.question ?? "").trim();
     assert(question.length > 0, `Row ${rowNumber}${source}: question is required.`);
 
-    assert(Array.isArray(item.options), `Row ${rowNumber}${source}: options must be an array.`);
-    const options = item.options.map((option) => String(option ?? "").trim()).filter(Boolean);
-    assert(options.length === 4, `Row ${rowNumber}${source}: options must contain exactly 4 items.`);
-
-    const correctAnswer = Number(item.correctAnswer);
-    assert(Number.isInteger(correctAnswer), `Row ${rowNumber}${source}: correctAnswer must be an integer.`);
-    assert(
-      correctAnswer >= 0 && correctAnswer < options.length,
-      `Row ${rowNumber}${source}: correctAnswer is out of range.`
+    const questionPool = normalizeQuestionPool(
+      item.__questionPool ?? item.questionPool ?? item.question_pool,
+      defaultQuestionPool
     );
+    const answerFormat = normalizeAnswerFormat(
+      item.__answerFormat ?? item.answerFormat ?? item.answer_format,
+      defaultAnswerFormat
+    );
+    assertPoolFormatCompatible(questionPool, answerFormat);
+
+    let rowOptions = [];
+    let correctAnswer = 0;
+    if (answerFormat === "multiple_choice") {
+      assert(Array.isArray(item.options), `Row ${rowNumber}${source}: options must be an array.`);
+      rowOptions = item.options.map((option) => String(option ?? "").trim()).filter(Boolean);
+      assert(rowOptions.length === 4, `Row ${rowNumber}${source}: options must contain exactly 4 items.`);
+
+      correctAnswer = Number(item.correctAnswer);
+      assert(Number.isInteger(correctAnswer), `Row ${rowNumber}${source}: correctAnswer must be an integer.`);
+      assert(
+        correctAnswer >= 0 && correctAnswer < rowOptions.length,
+        `Row ${rowNumber}${source}: correctAnswer is out of range.`
+      );
+    } else {
+      const canonicalAnswer = String(item.answer ?? item.options?.[0] ?? "").trim();
+      assert(canonicalAnswer.length > 0, `Row ${rowNumber}${source}: answer is required for Live Trivia.`);
+      rowOptions = [canonicalAnswer, ...sanitizeAcceptableAnswers(item.acceptableAnswers ?? item.options, canonicalAnswer)];
+      correctAnswer = 0;
+    }
 
     const category = String(item.category ?? "").trim();
     const difficulty = String(item.difficulty ?? "").trim();
@@ -124,14 +251,20 @@ function normalizeAndValidate(questions) {
     assert(!seenSlugs.has(slug), `Row ${rowNumber}${source}: duplicate slug "${slug}".`);
     seenSlugs.add(slug);
 
-    return {
+    const row = {
       slug,
       question,
-      options,
+      options: rowOptions,
       correct_answer: correctAnswer,
       category: category || null,
       difficulty: difficulty || null,
+      question_pool: questionPool,
+      answer_format: answerFormat,
     };
+    if (status) {
+      row.status = status;
+    }
+    return row;
   });
 
   return rows;
@@ -173,9 +306,10 @@ async function upsertRows(rows) {
     const chunk = rows.slice(start, start + CHUNK_SIZE);
     await retryAsync(
       async () => {
+        const ignoreDuplicates = chunk.every((row) => row.status === "pending_review");
         const { error } = await supabase
           .from("trivia_questions")
-          .upsert(chunk, { onConflict: "slug" });
+          .upsert(chunk, { onConflict: "slug", ignoreDuplicates });
 
         if (error) {
           throw new Error(`Supabase upsert failed: ${describeError(error)}`);
@@ -389,8 +523,23 @@ function sleep(ms) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const source = args.file ? readQuestionFile(args.file) : readQuestionDir(args.dir || DEFAULT_DIR);
-  const rows = normalizeAndValidate(source.questions);
+  const source = args.file
+    ? readQuestionFile(args.file)
+    : readQuestionDir(args.liveDir || args.dir || DEFAULT_DIR);
+  const liveMode = Boolean(args.liveDir);
+  const questionPool = normalizeQuestionPool(args.questionPool, liveMode ? "live_showdown" : "anytime_blitz");
+  const answerFormat = normalizeAnswerFormat(
+    args.answerFormat,
+    questionPool === "live_showdown" ? "write_in" : "multiple_choice"
+  );
+  const status = normalizeStatus(args.status);
+  assertPoolFormatCompatible(questionPool, answerFormat);
+  const rows = normalizeAndValidate(source.questions, {
+    questionPool,
+    answerFormat,
+    status,
+    liveMode,
+  });
 
   if ("files" in source) {
     console.log(`Loaded ${rows.length} questions from ${source.files.length} files in ${source.absoluteDirPath}`);
@@ -407,7 +556,15 @@ async function main() {
   await upsertRows(rows);
 }
 
-main().catch((error) => {
-  console.error(describeError(error));
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(describeError(error));
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  normalizeAndValidate,
+  parseArgs,
+  slugify,
+};

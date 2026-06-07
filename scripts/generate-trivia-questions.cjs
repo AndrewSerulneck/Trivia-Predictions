@@ -21,6 +21,7 @@ function parseArgs(argv) {
     model: DEFAULT_MODEL,
     allowPartial: false,
     dryRun: false,
+    newOnlyDir: "",
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -52,6 +53,11 @@ function parseArgs(argv) {
     }
     if (token === "--dry-run") {
       args.dryRun = true;
+      continue;
+    }
+    if (token === "--new-only-dir") {
+      args.newOnlyDir = (argv[i + 1] || "").trim();
+      i += 1;
       continue;
     }
     if (token === "--allow-partial") {
@@ -341,6 +347,13 @@ function writeQuestions(filePath, rows) {
   fs.writeFileSync(filePath, `${json}\n`, "utf8");
 }
 
+function writeNewQuestionsOnly(outputDir, categoryFile, rows) {
+  if (!outputDir || rows.length === 0) return;
+  const absoluteDir = path.resolve(process.cwd(), outputDir);
+  fs.mkdirSync(absoluteDir, { recursive: true });
+  writeQuestions(path.join(absoluteDir, categoryFile), rows);
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   assert(Number.isInteger(args.count) && args.count > 0, "--count must be a positive integer.");
@@ -419,6 +432,7 @@ async function main() {
   const merged = [...targetQuestions, ...created];
   if (!args.dryRun && created.length > 0) {
     writeQuestions(record.filePath, merged);
+    writeNewQuestionsOnly(args.newOnlyDir, record.file, created);
   }
 
   if (args.dryRun) {
