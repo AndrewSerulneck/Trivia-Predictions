@@ -9,7 +9,6 @@ const DEFAULT_TOTAL = 100;
 const DEFAULT_BATCH_SIZE = 25;
 const CATEGORY_TARGET_SIZE = 100;
 const DEFAULT_NEW_CATEGORY_COUNT = 1;
-const NORMAL_BUCKET = "normal_multiple_choice";
 
 function parseArgs(argv) {
   const args = {
@@ -85,38 +84,6 @@ function categoryKeyFromFile(file) {
   return file.replace(/\.json$/i, "").replace(/\.v\d+$/i, "").trim();
 }
 
-function isPlainObject(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function parseCategoryDocument(parsed, filePath, fallbackCategoryName) {
-  if (Array.isArray(parsed)) {
-    return {
-      categoryName: fallbackCategoryName,
-      normal_multiple_choice: parsed,
-    };
-  }
-
-  assert(isPlainObject(parsed), `Category file must be an object or JSON array: ${filePath}`);
-
-  const categoryName = String(parsed.categoryName || fallbackCategoryName).trim() || fallbackCategoryName;
-  const normal = parsed[NORMAL_BUCKET] || [];
-
-  assert(Array.isArray(normal), `${filePath}: "${NORMAL_BUCKET}" must be an array.`);
-
-  return {
-    categoryName,
-    normal_multiple_choice: normal,
-  };
-}
-
-function makeCategoryDocument(categoryName) {
-  return {
-    categoryName,
-    [NORMAL_BUCKET]: [],
-  };
-}
-
 function listCategoryRecords(dir) {
   const absoluteDir = path.resolve(process.cwd(), dir);
   assert(fs.existsSync(absoluteDir), `Category directory not found: ${absoluteDir}`);
@@ -131,19 +98,17 @@ function listCategoryRecords(dir) {
     const filePath = path.join(absoluteDir, file);
     const raw = fs.readFileSync(filePath, "utf8");
     const parsed = JSON.parse(raw);
+    assert(Array.isArray(parsed), `Category file must contain a JSON array: ${filePath}`);
+
     const categoryKey = categoryKeyFromFile(file);
     const displayCategory = toDisplayCategory(file.replace(/\.json$/i, ""));
-    const doc = parseCategoryDocument(parsed, filePath, displayCategory);
-
-    const normalCount = doc.normal_multiple_choice.length;
 
     return {
       file,
       filePath,
       categoryKey,
-      displayCategory: doc.categoryName || displayCategory,
-      normalCount,
-      currentCount: normalCount,
+      displayCategory,
+      currentCount: parsed.length,
     };
   });
 
@@ -268,7 +233,7 @@ function ensureCategoryFile({ absoluteDir, categoryName, existingByKey, dryRun }
   const filePath = path.join(absoluteDir, fileName);
 
   if (!dryRun) {
-    fs.writeFileSync(filePath, `${JSON.stringify(makeCategoryDocument(normalizeCategoryName(categoryName)), null, 2)}\n`, "utf8");
+    fs.writeFileSync(filePath, "[]\n", "utf8");
   }
 
   return {
@@ -276,8 +241,6 @@ function ensureCategoryFile({ absoluteDir, categoryName, existingByKey, dryRun }
     filePath,
     categoryKey: key,
     displayCategory: normalizeCategoryName(categoryName),
-    liveCount: 0,
-    normalCount: 0,
     currentCount: 0,
   };
 }
@@ -285,15 +248,11 @@ function ensureCategoryFile({ absoluteDir, categoryName, existingByKey, dryRun }
 function computeNightlyPlan({ records, inventedKeys, nightlyBudget }) {
   const byKey = new Map(records.map((record) => [record.categoryKey, record]));
   const underfilled = records
-    .map((record) => {
-      const normalNeeded = Math.max(0, CATEGORY_TARGET_SIZE - record.normalCount);
-      return {
-        ...record,
-        normalNeeded,
-        needed: normalNeeded,
-      };
-    })
-    .filter((record) => record.needed > 0);
+    .filter((record) => record.currentCount < CATEGORY_TARGET_SIZE)
+    .map((record) => ({
+      ...record,
+      needed: CATEGORY_TARGET_SIZE - record.currentCount,
+    }));
 
   const plan = new Map();
   let remaining = nightlyBudget;
@@ -338,15 +297,7 @@ function computeNightlyPlan({ records, inventedKeys, nightlyBudget }) {
   };
 }
 
-function splitCategoryCountByBucket(record, totalToAdd) {
-  const normalNeeded = Math.max(0, CATEGORY_TARGET_SIZE - record.normalCount);
-  const normal = Math.min(totalToAdd, normalNeeded);
-  return { normal };
-}
-
-function runGeneratorForCategory({ category, bucket, count, args }) {
-  if (count <= 0) return;
-
+function runGeneratorForCategory({ category, count, args }) {
   const scriptPath = path.resolve(process.cwd(), "scripts/generate-trivia-questions.cjs");
   const cmdArgs = [
     scriptPath,
@@ -358,8 +309,6 @@ function runGeneratorForCategory({ category, bucket, count, args }) {
     String(count),
     "--batch-size",
     String(args.batchSize),
-    "--bucket",
-    bucket,
     "--allow-partial",
   ];
 
@@ -379,7 +328,7 @@ function runGeneratorForCategory({ category, bucket, count, args }) {
     throw result.error;
   }
   if ((result.status ?? 1) !== 0) {
-    throw new Error(`Generation failed for category "${category}" bucket "${bucket}" with exit code ${result.status ?? 1}.`);
+    throw new Error(`Generation failed for category "${category}" with exit code ${result.status ?? 1}.`);
   }
 }
 
@@ -399,54 +348,48 @@ async function main() {
 
   // Step 1: Read existing files.
   let { absoluteDir, records } = listCategoryRecords(args.dir);
+  const existingKeys = new Set(records.map((record) => record.categoryKey.toLowerCase()));
   const existingDisplay = records.map((record) => record.displayCategory);
 
-  // Step 2: Invent sub-genre categories only when ALL existing categories are at/above target.
-  const allAtTarget = records.every((record) => record.normalCount >= CATEGORY_TARGET_SIZE);
-  const inventedRecords = [];
+  // Step 2: Invent sub-genre categories and create new files if missing.
+  const candidates = await inventCategoryCandidates({
+    apiKey,
+    model,
+    existingDisplayCategories: existingDisplay,
+    countHint: args.newCategoryCount,
+  });
 
-  if (allAtTarget) {
-    console.log("All existing categories are at target. Inventing new category(ies)...");
-    const existingKeys = new Set(records.map((record) => record.categoryKey.toLowerCase()));
-    const candidates = await inventCategoryCandidates({
-      apiKey,
-      model,
-      existingDisplayCategories: existingDisplay,
-      countHint: args.newCategoryCount,
+  const inventedRecords = [];
+  const seenNewKeys = new Set();
+
+  for (const candidate of candidates) {
+    if (inventedRecords.length >= args.newCategoryCount) break;
+    const key = slugify(candidate);
+    if (!key) continue;
+    if (existingKeys.has(key.toLowerCase())) continue;
+    if (seenNewKeys.has(key.toLowerCase())) continue;
+
+    const created = ensureCategoryFile({
+      absoluteDir,
+      categoryName: candidate,
+      existingByKey: new Map(records.map((record) => [record.categoryKey, true])),
+      dryRun: args.dryRun,
     });
 
-    const seenNewKeys = new Set();
-    for (const candidate of candidates) {
-      if (inventedRecords.length >= args.newCategoryCount) break;
-      const key = slugify(candidate);
-      if (!key) continue;
-      if (existingKeys.has(key.toLowerCase())) continue;
-      if (seenNewKeys.has(key.toLowerCase())) continue;
-
-      const created = ensureCategoryFile({
-        absoluteDir,
-        categoryName: candidate,
-        existingByKey: new Map(records.map((record) => [record.categoryKey, true])),
-        dryRun: args.dryRun,
-      });
-
-      if (created) {
-        inventedRecords.push(created);
-        seenNewKeys.add(key.toLowerCase());
-        existingKeys.add(key.toLowerCase());
-      }
+    if (created) {
+      inventedRecords.push(created);
+      seenNewKeys.add(key.toLowerCase());
+      existingKeys.add(key.toLowerCase());
     }
-
-    assert(
-      inventedRecords.length >= args.newCategoryCount,
-      `Unable to invent ${args.newCategoryCount} unique new category(ies) from Gemini output.`
-    );
-
-    // Re-read after possible file creation.
-    ({ absoluteDir, records } = listCategoryRecords(args.dir));
-  } else {
-    console.log("Some categories are underfilled. Skipping new category creation this run.");
   }
+
+  assert(
+    inventedRecords.length >= args.newCategoryCount,
+    `Unable to invent ${args.newCategoryCount} unique new category(ies) from Gemini output.`
+  );
+
+  // Re-read after possible file creation.
+  ({ absoluteDir, records } = listCategoryRecords(args.dir));
 
   // Step 3 + 4: Count each category and backfill with nightly budget up to target size.
   const inventedKeys = inventedRecords.map((record) => record.categoryKey);
@@ -456,13 +399,11 @@ async function main() {
     nightlyBudget: args.total,
   });
 
-  console.log(
-    `Speed trivia generation starting. Budget=${args.total}, TargetPerCategory=${CATEGORY_TARGET_SIZE}`
-  );
+  console.log(`Nightly trivia generation starting. Budget=${args.total}, TargetPerCategory=${CATEGORY_TARGET_SIZE}`);
   console.log("Current category counts:");
   for (const record of records) {
-    const overfull = record.currentCount > CATEGORY_TARGET_SIZE ? " (over target; no additions)" : "";
-    console.log(`- ${record.categoryKey}: normal=${record.normalCount}${overfull}`);
+    const overfull = record.currentCount > CATEGORY_TARGET_SIZE ? " (legacy over target; no additions)" : "";
+    console.log(`- ${record.categoryKey}: ${record.currentCount}${overfull}`);
   }
 
   if (inventedRecords.length > 0) {
@@ -472,7 +413,7 @@ async function main() {
     }
   }
 
-  console.log("Planned additions:");
+  console.log("Planned nightly additions:");
   for (const [categoryKey, addCount] of plan.entries()) {
     console.log(`- ${categoryKey}: +${addCount}`);
   }
@@ -485,14 +426,11 @@ async function main() {
     const record = byKey.get(categoryKey);
     if (!record) continue;
 
-    const split = splitCategoryCountByBucket(record, addCount);
-    if (split.normal <= 0) continue;
-
-    console.log(`\n=== Category: ${record.categoryKey} (+${split.normal}) ===`);
-    runGeneratorForCategory({ category: record.categoryKey, bucket: NORMAL_BUCKET, count: split.normal, args });
+    console.log(`\n=== Category: ${record.categoryKey} (${addCount}) ===`);
+    runGeneratorForCategory({ category: record.categoryKey, count: addCount, args });
   }
 
-  console.log("\nSpeed trivia generation complete.");
+  console.log("\nNightly trivia generation complete.");
 }
 
 main().catch((error) => {
