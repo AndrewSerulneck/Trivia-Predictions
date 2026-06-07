@@ -7,14 +7,9 @@ const { createClient } = require("@supabase/supabase-js");
 
 const DEFAULT_FILE = "data/trivia/questions.v1.json";
 const DEFAULT_DIR = "data/trivia/categories";
-const DEFAULT_LIVE_DIR = "data/live-trivia/categories";
 const CHUNK_SIZE = 200;
 const MAX_RETRIES = 5;
 const BASE_RETRY_DELAY_MS = 3000;
-const NORMAL_BUCKET = "normal_multiple_choice";
-const ANYTIME_POOL = "anytime_blitz";
-const LIVE_POOL = "live_showdown";
-const QUESTIONS_PER_ROUND = 15;
 
 // GitHub-hosted runners can prefer IPv6 first; forcing IPv4 first avoids intermittent
 // fetch failures when a provider endpoint has partial IPv6 reachability.
@@ -25,19 +20,13 @@ function parseArgs(argv) {
   const args = {
     file: "",
     dir: DEFAULT_DIR,
-    liveDir: "",
     checkOnly: false,
-    prune: false,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
     const token = argv[i];
     if (token === "--check") {
       args.checkOnly = true;
-      continue;
-    }
-    if (token === "--prune") {
-      args.prune = true;
       continue;
     }
     if (token === "--file") {
@@ -49,11 +38,6 @@ function parseArgs(argv) {
     if (token === "--dir") {
       args.dir = argv[i + 1] || DEFAULT_DIR;
       args.file = "";
-      i += 1;
-      continue;
-    }
-    if (token === "--live-dir") {
-      args.liveDir = argv[i + 1] || DEFAULT_LIVE_DIR;
       i += 1;
     }
   }
@@ -77,86 +61,14 @@ function assert(condition, message) {
   }
 }
 
-function isPlainObject(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function normalizeAnswerKey(value) {
-  return String(value ?? "").toLowerCase().trim().replace(/\s+/g, " ");
-}
-
-function coerceAcceptableAnswers(item, canonicalAnswer, rowLabel) {
-  if (item.acceptableAnswers === undefined || item.acceptableAnswers === null) {
-    return [];
-  }
-
-  assert(Array.isArray(item.acceptableAnswers), `${rowLabel}: acceptableAnswers must be an array when provided.`);
-
-  const seen = new Set([normalizeAnswerKey(canonicalAnswer)]);
-  const answers = [];
-  item.acceptableAnswers.forEach((entry, index) => {
-    assert(
-      typeof entry === "string",
-      `${rowLabel}: acceptableAnswers[${index}] must be a string when provided.`
-    );
-
-    const answer = entry.trim();
-    const key = normalizeAnswerKey(answer);
-    if (!answer || !key || seen.has(key)) {
-      return;
-    }
-    seen.add(key);
-    answers.push(answer);
-  });
-
-  return answers;
-}
-
-function readCategoryPayload(parsed, sourceLabel) {
-  if (Array.isArray(parsed)) {
-    return parsed.map((item) => ({
-      ...item,
-      __questionPool: ANYTIME_POOL,
-      __answerFormat: "multiple_choice",
-    }));
-  }
-
-  assert(isPlainObject(parsed), `${sourceLabel} must contain either an array or object.`);
-
-  const normal = parsed[NORMAL_BUCKET] || [];
-  assert(Array.isArray(normal), `${sourceLabel}: "${NORMAL_BUCKET}" must be an array.`);
-
-  return normal.map((item) => ({ ...item, __questionPool: ANYTIME_POOL, __answerFormat: "multiple_choice" }));
-}
-
-function readLiveCategoryPayload(parsed, sourceLabel) {
-  assert(isPlainObject(parsed), `${sourceLabel} must contain an object.`);
-  const questions = parsed.questions || [];
-  assert(Array.isArray(questions), `${sourceLabel}: "questions" must be an array.`);
-  // The file's `categoryName` is the single source of truth for category — every
-  // question in this file is stamped with it, so per-question `category` values
-  // can drift in the JSON without affecting the DB. Falls back to the filename
-  // (matching the admin UI's derivation) when `categoryName` is absent.
-  const categoryName =
-    String(parsed.categoryName || "").trim() ||
-    path.basename(sourceLabel).replace(/\.v\d+\.json$/i, "").replace(/-/g, " ");
-  return questions.map((item) => ({
-    ...item,
-    __questionPool: LIVE_POOL,
-    __answerFormat: "write_in",
-    __categoryName: categoryName,
-  }));
-}
-
 function readQuestionFile(filePath) {
   const absolutePath = path.resolve(process.cwd(), filePath);
   assert(fs.existsSync(absolutePath), `Question file not found: ${absolutePath}`);
 
   const raw = fs.readFileSync(absolutePath, "utf8");
   const parsed = JSON.parse(raw);
-  const questions = readCategoryPayload(parsed, absolutePath);
-
-  return { absolutePath, questions };
+  assert(Array.isArray(parsed), "Question file must contain a JSON array.");
+  return { absolutePath, questions: parsed };
 }
 
 function readQuestionDir(dirPath) {
@@ -173,53 +85,10 @@ function readQuestionDir(dirPath) {
   const merged = [];
   for (const file of files) {
     const filePath = path.join(absoluteDirPath, file);
-    const raw = fs.readFileSync(filePath, "utf8").trim();
-    if (!raw) {
-      console.warn(`Warning: skipping empty file ${file}`);
-      continue;
-    }
-    let parsed;
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      console.warn(`Warning: skipping malformed JSON in ${file}`);
-      continue;
-    }
-    const rows = readCategoryPayload(parsed, filePath);
-    merged.push(...rows.map((item) => ({ ...item, __sourceFile: file })));
-  }
-
-  return { absoluteDirPath, files, questions: merged };
-}
-
-function readLiveQuestionDir(dirPath) {
-  const absoluteDirPath = path.resolve(process.cwd(), dirPath);
-  assert(fs.existsSync(absoluteDirPath), `Live trivia directory not found: ${absoluteDirPath}`);
-  assert(fs.statSync(absoluteDirPath).isDirectory(), `Not a directory: ${absoluteDirPath}`);
-
-  const files = fs
-    .readdirSync(absoluteDirPath)
-    .filter((name) => name.endsWith(".json"))
-    .sort();
-  assert(files.length > 0, `No .json files found in ${absoluteDirPath}`);
-
-  const merged = [];
-  for (const file of files) {
-    const filePath = path.join(absoluteDirPath, file);
-    const raw = fs.readFileSync(filePath, "utf8").trim();
-    if (!raw) {
-      console.warn(`Warning: skipping empty file ${file}`);
-      continue;
-    }
-    let parsed;
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      console.warn(`Warning: skipping malformed JSON in ${file}`);
-      continue;
-    }
-    const rows = readLiveCategoryPayload(parsed, filePath);
-    merged.push(...rows.map((item) => ({ ...item, __sourceFile: file })));
+    const raw = fs.readFileSync(filePath, "utf8");
+    const parsed = JSON.parse(raw);
+    assert(Array.isArray(parsed), `File ${filePath} must contain a JSON array.`);
+    merged.push(...parsed.map((item) => ({ ...item, __sourceFile: file })));
   }
 
   return { absoluteDirPath, files, questions: merged };
@@ -235,43 +104,6 @@ function normalizeAndValidate(questions) {
     const question = String(item.question ?? "").trim();
     assert(question.length > 0, `Row ${rowNumber}${source}: question is required.`);
 
-    // For live-trivia files, `__categoryName` (the file's categoryName) is
-    // authoritative and overrides any per-question `category` value.
-    const category = String(item.__categoryName ?? item.category ?? "").trim();
-    const difficulty = String(item.difficulty ?? "").trim();
-
-    const providedSlug = String(item.slug ?? "").trim();
-    const slug = slugify(providedSlug || question);
-    assert(slug.length > 0, `Row ${rowNumber}${source}: slug is empty after normalization.`);
-    assert(!seenSlugs.has(slug), `Row ${rowNumber}${source}: duplicate slug "${slug}".`);
-    seenSlugs.add(slug);
-
-    const questionPoolRaw = String(item.__questionPool ?? ANYTIME_POOL).trim();
-    const question_pool = questionPoolRaw === LIVE_POOL ? LIVE_POOL : ANYTIME_POOL;
-    const answerFormatRaw = String(item.__answerFormat ?? "multiple_choice").trim();
-    const answer_format =
-      answerFormatRaw === "write_in" || answerFormatRaw === "numeric" || answerFormatRaw === "true_false"
-        ? answerFormatRaw
-        : "multiple_choice";
-
-    // Live trivia keeps options[0] as the canonical reveal answer. Any later
-    // options are explicit accepted write-in alternatives.
-    if (answer_format !== "multiple_choice") {
-      const answer = String(item.answer ?? (Array.isArray(item.options) ? item.options[0] : "") ?? "").trim();
-      assert(answer.length > 0, `Row ${rowNumber}${source}: answer is required for non-MC questions.`);
-      const acceptableAnswers = coerceAcceptableAnswers(item, answer, `Row ${rowNumber}${source}`);
-      return {
-        slug,
-        question,
-        options: [answer, ...acceptableAnswers],
-        correct_answer: 0,
-        category: category || null,
-        difficulty: difficulty || null,
-        question_pool,
-        answer_format,
-      };
-    }
-
     assert(Array.isArray(item.options), `Row ${rowNumber}${source}: options must be an array.`);
     const options = item.options.map((option) => String(option ?? "").trim()).filter(Boolean);
     assert(options.length === 4, `Row ${rowNumber}${source}: options must contain exactly 4 items.`);
@@ -283,6 +115,15 @@ function normalizeAndValidate(questions) {
       `Row ${rowNumber}${source}: correctAnswer is out of range.`
     );
 
+    const category = String(item.category ?? "").trim();
+    const difficulty = String(item.difficulty ?? "").trim();
+
+    const providedSlug = String(item.slug ?? "").trim();
+    const slug = slugify(providedSlug || question);
+    assert(slug.length > 0, `Row ${rowNumber}${source}: slug is empty after normalization.`);
+    assert(!seenSlugs.has(slug), `Row ${rowNumber}${source}: duplicate slug "${slug}".`);
+    seenSlugs.add(slug);
+
     return {
       slug,
       question,
@@ -290,72 +131,13 @@ function normalizeAndValidate(questions) {
       correct_answer: correctAnswer,
       category: category || null,
       difficulty: difficulty || null,
-      question_pool,
-      answer_format,
     };
   });
 
   return rows;
 }
 
-async function pruneStaleRows(supabase, localSlugs, pool) {
-  const PAGE_SIZE = 1000;
-  const dbSlugs = new Set();
-  let from = 0;
-  while (true) {
-    const { data, error } = await supabase
-      .from("trivia_questions")
-      .select("slug")
-      .eq("question_pool", pool)
-      .not("slug", "is", null)
-      .range(from, from + PAGE_SIZE - 1);
-    if (error) throw new Error(`Failed to fetch ${pool} slugs: ${describeError(error)}`);
-    if (!data || data.length === 0) break;
-    for (const row of data) {
-      if (row.slug) dbSlugs.add(row.slug);
-    }
-    if (data.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
-  }
-
-  const stale = [...dbSlugs].filter((slug) => !localSlugs.has(slug));
-  if (stale.length === 0) {
-    console.log(`Prune [${pool}]: no stale questions found.`);
-    return;
-  }
-
-  // Delete in batches to stay within Supabase query-size limits.
-  const BATCH = 200;
-  let pruned = 0;
-  for (let start = 0; start < stale.length; start += BATCH) {
-    const batch = stale.slice(start, start + BATCH);
-
-    // Remove all referencing rows first (FK ON DELETE RESTRICT).
-    const { error: sqError } = await supabase
-      .from("trivia_session_questions")
-      .delete()
-      .in("question_id", batch);
-    if (sqError) throw new Error(`Failed to remove schedule mappings: ${describeError(sqError)}`);
-
-    const { error: answerError } = await supabase
-      .from("live_showdown_answers")
-      .delete()
-      .in("question_id", batch);
-    if (answerError) throw new Error(`Failed to remove live showdown answers: ${describeError(answerError)}`);
-
-    const { error: delError } = await supabase
-      .from("trivia_questions")
-      .delete()
-      .in("slug", batch);
-    if (delError) throw new Error(`Failed to delete stale questions: ${describeError(delError)}`);
-
-    pruned += batch.length;
-  }
-
-  console.log(`Prune [${pool}]: deleted ${pruned} stale question(s).`);
-}
-
-async function upsertRows(rows, { prune = false } = {}) {
+async function upsertRows(rows) {
   const supabaseUrl = normalizeEnvValue(process.env.NEXT_PUBLIC_SUPABASE_URL);
   const serviceRoleKey = normalizeEnvValue(process.env.SUPABASE_SERVICE_ROLE_KEY);
 
@@ -388,29 +170,24 @@ async function upsertRows(rows, { prune = false } = {}) {
 
   let processed = 0;
   for (let start = 0; start < rows.length; start += CHUNK_SIZE) {
-    const chunkNumber = Math.floor(start / CHUNK_SIZE) + 1;
     const chunk = rows.slice(start, start + CHUNK_SIZE);
+    await retryAsync(
+      async () => {
+        const { error } = await supabase
+          .from("trivia_questions")
+          .upsert(chunk, { onConflict: "slug" });
 
-    // Local JSON is authoritative: anything present in JSON is active in Supabase,
-    // including rows previously marked pending/deleted in the admin UI.
-    const activeRows = chunk.map((row) => ({ ...row, status: "active" }));
+        if (error) {
+          throw new Error(`Supabase upsert failed: ${describeError(error)}`);
+        }
+      },
+      {
+        operation: `upsert chunk ${Math.floor(start / CHUNK_SIZE) + 1}`,
+      }
+    );
 
-    if (activeRows.length > 0) {
-      await retryAsync(
-        async () => {
-          const { error } = await supabase
-            .from("trivia_questions")
-            .upsert(activeRows, { onConflict: "slug" });
-          if (error) {
-            throw new Error(`Supabase update failed: ${describeError(error)}`);
-          }
-        },
-        { operation: `upsert active chunk ${chunkNumber}` }
-      );
-    }
-
-    processed += activeRows.length;
-    console.log(`Upserted ${processed}/${rows.length} active questions...`);
+    processed += chunk.length;
+    console.log(`Upserted ${processed}/${rows.length} questions...`);
   }
 
   const { count, error } = await retryAsync(
@@ -428,159 +205,7 @@ async function upsertRows(rows, { prune = false } = {}) {
     throw new Error(`Count query failed: ${describeError(error)}`);
   }
 
-  if (prune) {
-    const liveSlugs = new Set(rows.filter((r) => r.question_pool === LIVE_POOL).map((r) => r.slug).filter(Boolean));
-    const speedSlugs = new Set(rows.filter((r) => r.question_pool === ANYTIME_POOL).map((r) => r.slug).filter(Boolean));
-    await pruneStaleRows(supabase, liveSlugs, LIVE_POOL);
-    await pruneStaleRows(supabase, speedSlugs, ANYTIME_POOL);
-  }
-
-  await autoFillUpcomingLiveShowdownSchedules(supabase);
-
   console.log(`Done. trivia_questions total rows: ${count ?? "unknown"}`);
-}
-
-function shuffleInPlace(list) {
-  for (let i = list.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [list[i], list[j]] = [list[j], list[i]];
-  }
-  return list;
-}
-
-async function autoFillUpcomingLiveShowdownSchedules(supabase) {
-  const nowIso = new Date().toISOString();
-  const { data: schedules, error: schedulesError } = await supabase
-    .from("trivia_schedules")
-    .select("id, num_rounds, start_time")
-    .gt("start_time", nowIso)
-    .order("start_time", { ascending: true })
-    .limit(200);
-
-  if (schedulesError) {
-    throw new Error(`Failed to load upcoming trivia schedules: ${describeError(schedulesError)}`);
-  }
-  if (!Array.isArray(schedules) || schedules.length === 0) {
-    console.log("No upcoming schedules found to auto-fill.");
-    return;
-  }
-
-  const scheduleIds = schedules.map((row) => String(row.id ?? "").trim()).filter(Boolean);
-  const { data: existingRows, error: existingError } = await supabase
-    .from("trivia_session_questions")
-    .select("schedule_id, round_number, question_index, question_id")
-    .in("schedule_id", scheduleIds);
-
-  if (existingError) {
-    throw new Error(`Failed to load existing schedule mappings: ${describeError(existingError)}`);
-  }
-
-  const { data: livePoolRows, error: livePoolError } = await supabase
-    .from("trivia_questions")
-    .select("slug")
-    .eq("question_pool", LIVE_POOL)
-    .not("slug", "is", null)
-    .limit(20000);
-
-  if (livePoolError) {
-    throw new Error(`Failed to load live_showdown question pool: ${describeError(livePoolError)}`);
-  }
-
-  const liveSlugs = Array.from(
-    new Set(
-      (livePoolRows ?? [])
-        .map((row) => String(row.slug ?? "").trim())
-        .filter(Boolean)
-    )
-  );
-  if (liveSlugs.length === 0) {
-    console.log("No live_showdown questions available for schedule auto-fill.");
-    return;
-  }
-
-  const existingBySchedule = new Map();
-  for (const row of existingRows ?? []) {
-    const scheduleId = String(row.schedule_id ?? "").trim();
-    if (!scheduleId) continue;
-    const list = existingBySchedule.get(scheduleId) ?? [];
-    list.push({
-      roundNumber: Number(row.round_number),
-      questionIndex: Number(row.question_index),
-      questionId: String(row.question_id ?? "").trim(),
-    });
-    existingBySchedule.set(scheduleId, list);
-  }
-
-  const insertRows = [];
-
-  for (const schedule of schedules) {
-    const scheduleId = String(schedule.id ?? "").trim();
-    if (!scheduleId) continue;
-    const numRounds = Math.max(1, Math.min(24, Math.floor(Number(schedule.num_rounds) || 1)));
-    const existingForSchedule = existingBySchedule.get(scheduleId) ?? [];
-    const occupiedSlots = new Set(
-      existingForSchedule
-        .map((row) => `${row.roundNumber}:${row.questionIndex}`)
-    );
-    const usedQuestionIds = new Set(
-      existingForSchedule
-        .map((row) => String(row.questionId ?? "").trim())
-        .filter(Boolean)
-    );
-
-    const shuffledCandidates = shuffleInPlace([...liveSlugs]);
-    let candidateCursor = 0;
-
-    for (let roundNumber = 1; roundNumber <= numRounds; roundNumber += 1) {
-      for (let questionIndex = 1; questionIndex <= QUESTIONS_PER_ROUND; questionIndex += 1) {
-        const slotKey = `${roundNumber}:${questionIndex}`;
-        if (occupiedSlots.has(slotKey)) {
-          continue;
-        }
-
-        let nextQuestionId = "";
-        while (candidateCursor < shuffledCandidates.length) {
-          const candidate = shuffledCandidates[candidateCursor] ?? "";
-          candidateCursor += 1;
-          if (candidate && !usedQuestionIds.has(candidate)) {
-            nextQuestionId = candidate;
-            break;
-          }
-        }
-
-        if (!nextQuestionId) {
-          nextQuestionId = shuffledCandidates[Math.floor(Math.random() * shuffledCandidates.length)] ?? "";
-        }
-        if (!nextQuestionId) {
-          continue;
-        }
-
-        usedQuestionIds.add(nextQuestionId);
-        occupiedSlots.add(slotKey);
-        insertRows.push({
-          schedule_id: scheduleId,
-          question_id: nextQuestionId,
-          round_number: roundNumber,
-          question_index: questionIndex,
-        });
-      }
-    }
-  }
-
-  if (insertRows.length === 0) {
-    console.log("Upcoming schedules already have full question mappings.");
-    return;
-  }
-
-  const { error: insertError } = await supabase
-    .from("trivia_session_questions")
-    .insert(insertRows);
-
-  if (insertError) {
-    throw new Error(`Failed to auto-fill schedule question mappings: ${describeError(insertError)}`);
-  }
-
-  console.log(`Auto-filled ${insertRows.length} missing upcoming trivia_session_questions slots.`);
 }
 
 async function retryAsync(fn, options) {
@@ -764,43 +389,25 @@ function sleep(ms) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  const source = args.file ? readQuestionFile(args.file) : readQuestionDir(args.dir || DEFAULT_DIR);
+  const rows = normalizeAndValidate(source.questions);
 
-  // --- Speed trivia (normal_multiple_choice) ---
-  const speedSource = args.file ? readQuestionFile(args.file) : readQuestionDir(args.dir || DEFAULT_DIR);
-  const speedRows = normalizeAndValidate(speedSource.questions);
-
-  if ("files" in speedSource) {
-    console.log(`Speed trivia: loaded ${speedRows.length} questions from ${speedSource.files.length} files in ${speedSource.absoluteDirPath}`);
+  if ("files" in source) {
+    console.log(`Loaded ${rows.length} questions from ${source.files.length} files in ${source.absoluteDirPath}`);
   } else {
-    console.log(`Speed trivia: loaded ${speedRows.length} questions from ${speedSource.absolutePath}`);
+    console.log(`Loaded ${rows.length} questions from ${source.absolutePath}`);
   }
-
-  // --- Live trivia (write-in) ---
-  let liveRows = [];
-  if (args.liveDir) {
-    const liveSource = readLiveQuestionDir(args.liveDir);
-    liveRows = normalizeAndValidate(liveSource.questions);
-    console.log(`Live trivia: loaded ${liveRows.length} questions from ${liveSource.files.length} files in ${liveSource.absoluteDirPath}`);
-  }
-
-  const allRows = [...speedRows, ...liveRows];
-  console.log(`Total: ${allRows.length} questions. Validation passed.`);
+  console.log("Validation passed.");
 
   if (args.checkOnly) {
     console.log("Check mode: no database writes performed.");
     return;
   }
 
-  await upsertRows(allRows, { prune: args.prune });
+  await upsertRows(rows);
 }
 
-if (require.main === module) {
-  main().catch((error) => {
-    console.error(describeError(error));
-    process.exit(1);
-  });
-}
-
-module.exports = {
-  normalizeAndValidate,
-};
+main().catch((error) => {
+  console.error(describeError(error));
+  process.exit(1);
+});

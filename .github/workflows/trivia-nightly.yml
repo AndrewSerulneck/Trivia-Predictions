@@ -20,12 +20,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: npm
@@ -33,47 +33,32 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      - name: Generate Speed Trivia (multiple-choice)
+      - name: Generate Trivia For All Categories
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-2.5-flash' }}
           GEMINI_MODEL_FALLBACKS: ${{ secrets.GEMINI_MODEL_FALLBACKS || 'gemini-2.0-flash' }}
-        run: node scripts/generate-trivia-nightly.cjs --total 50 --batch-size 25
+        run: node scripts/generate-trivia-nightly.cjs --total 100 --batch-size 25
 
-      - name: Generate Live Trivia (write-in)
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-2.5-flash' }}
-          GEMINI_MODEL_FALLBACKS: ${{ secrets.GEMINI_MODEL_FALLBACKS || 'gemini-2.0-flash' }}
-        run: node scripts/generate-live-trivia-nightly.cjs --total 50 --batch-size 25
-
-      - name: Validate All Trivia Files
+      - name: Validate Trivia Files
         run: npm run trivia:check
 
-      - name: Import All Trivia To Supabase
+      - name: Import Trivia To Supabase
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/import-trivia-questions.cjs --dir data/trivia/categories --live-dir data/live-trivia/categories
+        run: node scripts/import-trivia-questions.cjs --dir data/trivia/categories
 
       - name: Commit Updated Trivia Files
-        id: commit-trivia
         run: |
-          speed_changed=$(git status --porcelain -- data/trivia/categories)
-          live_changed=$(git status --porcelain -- data/live-trivia/categories)
-
-          if [ -z "$speed_changed" ] && [ -z "$live_changed" ]; then
+          if git diff --quiet -- data/trivia/categories; then
             echo "No trivia JSON changes to commit."
-            echo "pushed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          [ -n "$speed_changed" ] && git add data/trivia/categories
-          [ -n "$live_changed" ] && git add data/live-trivia/categories
-
+          git add data/trivia/categories
           git commit -m "chore(trivia): nightly auto-generated questions"
 
           # Rebase onto latest main before push to avoid non-fast-forward failures.
@@ -83,7 +68,6 @@ jobs:
           for attempt in 1 2; do
             if git push origin HEAD:main; then
               echo "Push succeeded on attempt ${attempt}."
-              echo "pushed=true" >> "$GITHUB_OUTPUT"
               break
             fi
 
@@ -95,18 +79,3 @@ jobs:
             echo "Push rejected, rebasing and retrying..."
             git pull --rebase origin main
           done
-
-      - name: Seed Today's Live Trivia Occurrences
-        env:
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
-        run: |
-          curl -s -X POST "${APP_URL}/api/cron/seed-live-trivia-occurrences" \
-            -H "Authorization: Bearer ${CRON_SECRET}" \
-            -o /dev/null -w "Seed occurrences status: %{http_code}\n"
-
-      - name: Trigger Vercel Redeploy
-        if: steps.commit-trivia.outputs.pushed == 'true'
-        run: |
-          curl -s -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}" \
-            -o /dev/null -w "Deploy hook status: %{http_code}\n"
