@@ -47,8 +47,6 @@ const PRE_ROUND_COUNTDOWN_START = 3;
 const BUTTON_POP_CLASS =
   "transition-all duration-150 transform active:scale-95 active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300";
 const ANSWER_LETTERS = ["A", "B", "C", "D"] as const;
-const BACK_TO_VENUE_CLASS =
-  "tp-exit-pill tp-clean-button inline-flex items-center justify-center gap-2 px-4 text-sm font-black";
 const INCORRECT_EMOJIS = [
   "😢",
   "😞",
@@ -1406,15 +1404,6 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
                   ? `Unlocks in ${formatCountdown(quotaSecondsRemaining)}`
                   : "Start Next Round"}
               </button>
-              <button
-                type="button"
-                onMouseDown={() => triggerHaptic(14)}
-                onClick={returnToVenueHome}
-                className={`${BUTTON_POP_CLASS} ${BACK_TO_VENUE_CLASS} w-full`}
-              >
-                <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs">←</span>
-                Back to Venue
-              </button>
             </div>
           </div>
         </div>
@@ -1528,13 +1517,13 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
 
   if (preRoundCountdown !== null) {
     return (
-      <div className="relative flex h-full min-h-0 flex-col items-center justify-center overflow-hidden bg-transparent text-center">
-        <div className="relative z-10 px-6">
+      <div className="relative flex h-full min-h-0 flex-col items-center justify-center bg-transparent text-center">
+        <div className="relative z-10 px-6 pb-4">
           <p className="font-black uppercase tracking-[0.12em] text-[#84cc16] text-[11px]">Get Ready</p>
           <p className="mt-1 font-black text-white text-[24px]">Round {upcomingRoundNumber}</p>
           <p
             key={`count-${preRoundCountdown}`}
-            className="animate-tp-countdown-pop mt-3 font-black leading-none text-[#facc15] text-[72px]"
+            className="animate-tp-countdown-pop mt-3 font-black leading-[1.15] text-[#facc15] text-[72px]"
             style={{ textShadow: "0 0 30px rgba(250,204,21,0.6)" }}
           >
             {preRoundCountdown > 0 ? preRoundCountdown : "GO!"}

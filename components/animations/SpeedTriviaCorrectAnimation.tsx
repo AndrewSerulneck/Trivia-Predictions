@@ -129,17 +129,20 @@ export function SpeedTriviaCorrectAnimation({
       });
     })();
 
-    // ── Points counter: rise and fade ───────────────────────────────────────
+    // ── Points counter: delayed rise and fade (beat 2) ─────────────────────
     void (async (): Promise<void> => {
+      // Wait for badge to settle before points appear
+      await new Promise<void>((res) => setTimeout(res, 150));
+      if (cancelledRef.current) return;
       // Snap visible
       await pointsControls.start({
         opacity: 1,
         transition: { duration: 0.05 },
       });
       if (cancelledRef.current) return;
-      // Rise 120px
+      // Rise 150px — travels through the badge zone
       await pointsControls.start({
-        y:       -120,
+        y:       -150,
         transition: {
           duration: 0.9,
           ease:     [0.22, 1, 0.36, 1],
@@ -156,7 +159,7 @@ export function SpeedTriviaCorrectAnimation({
     // ── Lifecycle ────────────────────────────────────────────────────────────
     const lifecycleTimer = setTimeout(() => {
       if (!cancelledRef.current) onComplete();
-    }, 1100);
+    }, 1400);
 
     return () => {
       cancelledRef.current = true;
@@ -182,11 +185,11 @@ export function SpeedTriviaCorrectAnimation({
         </motion.div>
       </div>
 
-      {/* ── LAYER 2: Points counter rising from bottom-center ────────────────── */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-[28%] flex justify-center">
+      {/* ── LAYER 2: Points counter rising from below badge center ──────────── */}
+      <div className="pointer-events-none fixed inset-0 flex items-center justify-center">
         <motion.span
           animate={pointsControls}
-          initial={{ opacity: 0, y: 0 }}
+          initial={{ opacity: 0, y: 70 }}
           className="select-none font-black tracking-[0.08em]"
           style={{
             fontSize:   "36px",
