@@ -726,133 +726,152 @@
       "question": "Who was the revolutionary leader who became Emperor of France in 1804?",
       "answer": "Napoleon Bonaparte",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "civil-war-president",
       "question": "Who was the President of the United States during the Civil War?",
       "answer": "Abraham Lincoln",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "emancipation-proclamation-issuer",
       "question": "Who issued the Emancipation Proclamation?",
       "answer": "Abraham Lincoln",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "russian-revolution-leader",
       "question": "Who led the Bolshevik Revolution in Russia in 1917?",
       "answer": "Vladimir Lenin",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "watergate-president",
       "question": "Who was the U.S. President during the Watergate scandal?",
       "answer": "Richard Nixon",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "indian-independence-leader",
       "question": "Who was the leader of India's independence movement against British rule?",
       "answer": "Mahatma Gandhi",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "south-africa-apartheid-leader",
       "question": "Who was the first Black President of South Africa after the end of apartheid?",
       "answer": "Nelson Mandela",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "chinese-revolution-leader",
       "question": "Who was the leader of the Communist Revolution in China in 1949?",
       "answer": "Mao Zedong",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "womens-suffrage-leader",
       "question": "Who co-founded the National Woman Suffrage Association (NWSA) in 1869 and drafted the first version of the federal constitutional amendment to grant women the right to vote in 1878?",
       "answer": "Susan B. Anthony",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-us-president-white-house",
       "question": "Who was the first U.S. President to live in the White House?",
       "answer": "John Adams",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "shortest-us-presidency",
       "question": "Who was the U.S. President with the shortest term in office, serving only 32 days?",
       "answer": "William Henry Harrison",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "tallest-us-president",
       "question": "Who was the tallest U.S. President, standing at 6 feet 4 inches?",
       "answer": "Abraham Lincoln",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "youngest-us-president",
       "question": "Who was the youngest U.S. President to assume office at the age of 42?",
       "answer": "Theodore Roosevelt",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "only-us-president-bachelor",
       "question": "Who was the only U.S. President to remain a bachelor for his entire life?",
       "answer": "James Buchanan",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-woman-to-win-nobel-prize",
       "question": "Who was the first woman to win a Nobel Prize?",
       "answer": "Marie Curie",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-man-on-moon",
       "question": "Who was the first man to walk on the moon?",
       "answer": "Neil Armstrong",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-woman-in-space",
       "question": "Who was the first woman to travel to space?",
       "answer": "Valentina Tereshkova",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "longest-reigning-british-monarch",
       "question": "Who is the longest-reigning British monarch in history?",
       "answer": "Queen Elizabeth II",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-emperor-of-roman-empire",
       "question": "Who was the first Emperor of the Roman Empire?",
       "answer": "Augustus",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-person-to-circumnavigate-globe",
@@ -862,63 +881,72 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Juan Sebastián Elcano"
-      ]
+      ],
+      "answer_format": "write_in"
     },
     {
       "slug": "first-us-vice-president",
       "question": "Who was the first Vice President of the United States?",
       "answer": "John Adams",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-african-american-us-president",
       "question": "Who was the first African American President of the United States?",
       "answer": "Barack Obama",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-woman-us-supreme-court-justice",
       "question": "Who was the first woman appointed to the U.S. Supreme Court?",
       "answer": "Sandra Day O'Connor",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-person-to-win-two-nobel-prizes",
       "question": "Who was the first person to win two Nobel Prizes?",
       "answer": "Marie Curie",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-us-president-impeached",
       "question": "Who was the first U.S. President to be impeached?",
       "answer": "Andrew Johnson",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-man-to-fly-across-atlantic",
       "question": "Who was the first person to fly solo across the Atlantic Ocean?",
       "answer": "Charles Lindbergh",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-us-president-assassinated",
       "question": "Who was the first U.S. President to be assassinated?",
       "answer": "Abraham Lincoln",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-country-to-grant-women-vote",
       "question": "Which was the first country to grant women the right to vote in national elections?",
       "answer": "New Zealand",
       "category": "History",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-person-to-climb-mt-everest",
@@ -928,273 +956,1522 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Tenzing Norgay"
-      ]
+      ],
+      "answer_format": "write_in"
     },
     {
       "slug": "first-us-president-resign",
       "question": "Who was the first U.S. President to resign from office?",
       "answer": "Richard Nixon",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-european-to-reach-china",
       "question": "Who was the first European to reach China by sea?",
       "answer": "Marco Polo",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-us-secretary-of-state",
       "question": "Who was the first U.S. Secretary of State?",
       "answer": "Thomas Jefferson",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-person-to-win-oscars-for-acting-and-directing",
       "question": "Who was the first person to win Oscars for both acting and directing?",
       "answer": "Orson Welles",
       "category": "History",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-us-president-born-outside-continental-us",
       "question": "Who was the first U.S. President born outside the continental United States?",
       "answer": "Barack Obama",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-person-to-invent-printing-press",
       "question": "Who invented the printing press in Europe?",
       "answer": "Johannes Gutenberg",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-us-president-to-serve-non-consecutive-terms",
       "question": "Who was the first U.S. President to serve non-consecutive terms?",
       "answer": "Grover Cleveland",
       "category": "History",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-person-to-discover-penicillin",
       "question": "Who discovered penicillin, the world's first antibiotic?",
       "answer": "Alexander Fleming",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-us-president-to-appear-on-television",
       "question": "Who was the first U.S. President to appear on television?",
       "answer": "Franklin D. Roosevelt",
       "category": "History",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "answer_format": "write_in"
     },
     {
       "slug": "first-us-president-to-email",
       "question": "Who was the first U.S. President to send an email?",
       "answer": "Bill Clinton",
       "category": "History",
-      "difficulty": "medium"
+      "difficulty": "medium",
+      "answer_format": "write_in"
     },
     {
       "slug": "betty-crocker",
       "question": "Was Betty Crocker a real person? Answer yes or no.",
       "answer": "no",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "aunt-jemima",
       "question": "Was Aunt Jemima a real person? Answer yes or no.",
       "answer": "no",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "uncle-sam",
       "question": "Was Uncle Sam a real person? Answer yes or no.",
       "answer": "no",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "colonel-sanders",
       "question": "Was Colonel Sanders a real person? Answer yes or no.",
       "answer": "yes",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "ronald-mcdonald",
       "question": "Was Ronald McDonald a real person? Answer yes or no.",
       "answer": "no",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "johnny-appleseed",
       "question": "Was Johnny Appleseed a real person? Answer yes or no.",
       "answer": "yes",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "davy-crockett",
       "question": "Was Davy Crockett a real person? Answer yes or no.",
       "answer": "yes",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "daniel-boone",
       "question": "Was Daniel Boone a real person? Answer yes or no.",
       "answer": "yes",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "paul-bunyan",
       "question": "Was Paul Bunyan a real person? Answer yes or no.",
       "answer": "no",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "buffalo-bill",
       "question": "Was Buffalo Bill a real person? Answer yes or no.",
       "answer": "yes",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "annie-oakley",
       "question": "Was Annie Oakley a real person? Answer yes or no.",
       "answer": "yes",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "robin-hood",
       "question": "Was Robin Hood a real person? Answer yes or no.",
       "answer": "no",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "king-arthur",
       "question": "Was King Arthur a real person? Answer yes or no.",
       "answer": "no",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "captain-nemo",
       "question": "Was Captain Nemo a real person? Answer yes or no.",
       "answer": "no",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "doc-holliday",
       "question": "Was Doc Holliday a real person? Answer yes or no.",
       "answer": "yes",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "rasputin",
       "question": "Was Rasputin a real person? Answer yes or no.",
       "answer": "yes",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "chef-boyardee",
       "question": "Was Chef Boyardee a real person? Answer yes or no.",
       "answer": "yes",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "jose-cuervo",
       "question": "Was José Cuervo a real person? Answer yes or no.",
       "answer": "yes",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "jack-daniels",
       "question": "Was Jack Daniels a real person? Answer yes or no.",
       "answer": "yes",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "jim-beam",
       "question": "Was Jim Beam a real person? Answer yes or no.",
       "answer": "yes",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "johnnie-walker",
       "question": "Was Johnnie Walker a real person? Answer yes or no.",
       "answer": "yes",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "mrs-buttersworth",
       "question": "Was Mrs. Buttersworth a real person? Answer yes or no.",
       "answer": "no",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "papa-john",
       "question": "Was Papa John a real person? Answer yes or no.",
       "answer": "yes",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "hollister",
       "question": "Was John M. Hollister, founder of the Hollister clothing brand, a real person? Answer yes or no.",
       "answer": "no",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "juan-valdez",
       "question": "Was Juan Valdez a real person? Answer yes or no.",
       "answer": "no",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "dr-pepper",
       "question": "Was Dr. Pepper a real person? Answer yes or no.",
       "answer": "no",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "jack-the-ripper",
       "question": "Was Jack the Ripper a real person? Answer yes or no.",
       "answer": "yes",
       "category": "History",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "answer_format": "write_in"
     },
     {
       "slug": "alan-smithee",
       "question": "Was Alan Smithee a real person? Answer yes or no.",
       "answer": "no",
       "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "first-artificial-satellite",
+      "question": "What was the name of the world's first artificial satellite launched on October 4, 1957 by the Soviet Union that officially ignited the Space Race between the USSR and the United States?",
+      "answer": "Sputnik",
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "first-moon-landing-mission",
+      "question": "What Apollo mission first landed humans on the Moon in 1969? The answer is a number.",
+      "answer": "11",
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "first-person-on-moon",
+      "question": "Who was the first person to walk on the Moon in 1969?",
+      "answer": "Neil Armstrong",
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "second-person-on-moon",
+      "question": "Who was the second person to walk on the Moon in 1969?",
+      "answer": "Buzz Aldrin",
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "columbus-voyage-year",
+      "question": "In what year did Christopher Columbus first voyage to the Americas?",
+      "answer": "1492",
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "french-revolution-leader",
+      "question": "Who was the revolutionary leader who became Emperor of France in 1804?",
+      "answer": "Napoleon Bonaparte",
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "first-woman-vice-president",
+      "question": "Who was the first woman to serve as Vice President of the United States?",
+      "answer": "Kamala Harris",
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "mesoppotamian-agriculture",
+      "question": "What major geographic feature allowed the civilizations of Mesopotamia, Egypt, and the Indus Valley to develop advanced agricultural practices?",
+      "answer": "Rivers",
+      "category": "History",
+      "difficulty": "easy",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "hammurabi-legal-code",
+      "question": "What Babylonian king created one of the earliest and most complete written legal codes in ancient history?",
+      "answer": "Hammurabi",
+      "answer_format": "write_in",
+      "category": "History",
       "difficulty": "easy"
+    },
+    {
+      "slug": "first-democracy-city-state",
+      "question": "Which Greek city-state developed the world's first direct democracy?",
+      "answer": "Athens",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "silk-road-trade-network",
+      "question": "What ancient trade network connected the economies of China and the Mediterranean? Hint: It was a 'smooth' ride.",
+      "answer": "Silk Road",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "feudalism-medieval-europe",
+      "question": "What political and military system dominated Europe during the Middle Ages, based on land-for-loyalty contracts?",
+      "answer": "Feudalism",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "black-death-pandemic",
+      "question": "What 14th-century pandemic decimated Europe's population and crippled the feudal economy?",
+      "answer": "Black Death",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Bubonic Plague",
+        "The Plague",
+        "Plague"
+      ]
+    },
+    {
+      "slug": "peloponnesian-war-rival",
+      "question": "What city-state was the fierce military rival of Athens during the Peloponnesian War?",
+      "answer": "Sparta",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "title-of-egyptian-rulers",
+      "question": "What title was given to the absolute rulers of ancient Egypt?",
+      "answer": "Pharaoh",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "roman-amphitheater-gladiators",
+      "question": "What grand amphitheater in Rome was used for public gladiatorial combats?",
+      "answer": "Colosseum",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Coliseum"
+      ]
+    },
+    {
+      "slug": "great-wall-of-china-dynasty",
+      "question": "What structure was built by the Qin Dynasty to protect China's northern border from invaders?",
+      "answer": "Great Wall",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Great Wall of China"
+      ]
+    },
+    {
+      "slug": "columbian-exchange",
+      "question": "What term describes the massive exchange of plants, animals, and diseases between the Old and New Worlds after 1492?",
+      "answer": "Columbian Exchange",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "mercantilism-economic-theory",
+      "question": "What economic theory pushed European powers to maximize exports and hoard gold through colonial trade?",
+      "answer": "Mercantilism",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "john-locke-natural-rights",
+      "question": "Which English philosopher wrote about natural rights to 'life, liberty, and property'?",
+      "answer": "John Locke",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "portugal-spice-trade",
+      "question": "What European maritime empire dominated global spice trade routes during the 16th century after conquering Malacca?",
+      "answer": "Portugal",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "enlightenment-period",
+      "question": "What historical period focused on reason, science, and individualism over traditional religious authority?",
+      "answer": "Enlightenment",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Age of Enlightenment",
+        "Age of Reason"
+      ]
+    },
+    {
+      "slug": "haitian-revolution-leader",
+      "question": "Who led the successful slave revolt that established the independent nation of Haiti?",
+      "answer": "Toussaint Louverture",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Toussaint L'Ouverture",
+        "Louverture"
+      ]
+    },
+    {
+      "slug": "berlin-conference-africa",
+      "question": "What 1884 diplomatic conference saw European powers divide the continent of Africa among themselves?",
+      "answer": "Berlin Conference",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "treaty-ended-wwi",
+      "question": "What treaty officially ended World War I and placed harsh financial penalties on Germany?",
+      "answer": "Treaty of Versailles",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Versailles Treaty",
+        "Versailles"
+      ]
+    },
+    {
+      "slug": "fascism-definition",
+      "question": "What political philosophy, championed by Benito Mussolini, emphasizes extreme nationalism and dictatorial rule?",
+      "answer": "Fascism",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "united-nations-founding",
+      "question": "What international body was created in 1945 to replace the failed League of Nations?",
+      "answer": "United Nations",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "UN"
+      ]
+    },
+    {
+      "slug": "nato-founding",
+      "question": "What defensive military alliance was formed by Western nations in 1949 to counter Soviet expansion?",
+      "answer": "NATO",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "North Atlantic Treaty Organization"
+      ]
+    },
+    {
+      "slug": "berlin-wall-cold-war-symbol",
+      "question": "What wall became the ultimate physical symbol of the Cold War division in Europe?",
+      "answer": "Berlin Wall",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "jamestown-first-settlement",
+      "question": "What was the first permanent English settlement established in North America in 1607?",
+      "answer": "Jamestown",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "salutary-neglect",
+      "question": "What British policy of relaxed enforcement allowed American colonies to develop self-governance?",
+      "answer": "Salutary Neglect",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Salutary neglect"
+      ]
+    },
+    {
+      "slug": "common-sense-pamphlet-author",
+      "question": "Who authored the highly influential 1776 pro-independence pamphlet Common Sense?",
+      "answer": "Thomas Paine",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "us-constitution-supreme-law",
+      "question": "What 1787 document serves as the supreme law of the United States?",
+      "answer": "U.S. Constitution",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Constitution",
+        "The Constitution",
+        "United States Constitution"
+      ]
+    },
+    {
+      "slug": "washington-farewell-warning",
+      "question": "What did George Washington explicitly warn Americans against forming in his 1796 Farewell Address?",
+      "answer": "Political parties",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Factions",
+        "Political factions",
+        "Parties"
+      ]
+    },
+    {
+      "slug": "monroe-doctrine",
+      "question": "What 1823 policy declared the Western Hemisphere closed to further European colonization?",
+      "answer": "Monroe Doctrine",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "manifest-destiny",
+      "question": "What ideological phrase drove American westward expansion to the Pacific Coast in the 1840s?",
+      "answer": "Manifest Destiny",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "missouri-compromise",
+      "question": "What 1820 compromise banned slavery north of the 36°30' parallel in the Louisiana Territory?",
+      "answer": "Missouri Compromise",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "lincoln-elected-1860",
+      "question": "Who was elected President of the United States in 1860, sparking the secession of Southern states?",
+      "answer": "Abraham Lincoln",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "emancipation-proclamation-document",
+      "question": "What executive order, issued by Lincoln in 1863, declared all slaves in Confederate territory free?",
+      "answer": "Emancipation Proclamation",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "thirteenth-amendment-slavery",
+      "question": "Which constitutional amendment officially abolished slavery throughout the United States?",
+      "answer": "Thirteenth Amendment",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "13th Amendment",
+        "Amendment XIII",
+        "13th"
+      ]
+    },
+    {
+      "slug": "gilded-age",
+      "question": "Name the era of American history from 1870-1900 that was defined by rapid industrialization, massive fortunes, and severe urban poverty?",
+      "answer": "Gilded Age",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "web-du-bois-naacp",
+      "question": "Which civil rights leader co-founded the NAACP in 1909 to fight for institutional equality?",
+      "answer": "W.E.B. Du Bois",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "WEB Du Bois",
+        "W.E.B. DuBois",
+        "Du Bois",
+        "DuBois"
+      ]
+    },
+    {
+      "slug": "spanish-american-war-1898",
+      "question": "What 1898 war resulted in America gaining the territories of Guam, Puerto Rico and the Philippines?",
+      "answer": "Spanish-American War",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Spanish American War"
+      ]
+    },
+    {
+      "slug": "great-migration",
+      "question": "What term describes the massive 20th-century migration of African Americans out of the rural South?",
+      "answer": "Great Migration",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "stock-market-crash-1929",
+      "question": "What sudden economic cataclysm occurred in October 1929, kicking off the Great Depression?",
+      "answer": "Stock Market Crash",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Stock crash",
+        "Black Tuesday",
+        "Market crash",
+        "The Crash"
+      ]
+    },
+    {
+      "slug": "new-deal-fdr",
+      "question": "What domestic program did Franklin D. Roosevelt launch to provide relief, recovery, and reform during the Great Depression?",
+      "answer": "New Deal",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "pearl-harbor-attack",
+      "question": "What surprise military strike pulled the United States directly into World War II on December 7, 1941?",
+      "answer": "Pearl Harbor",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "manhattan-project-atomic-bomb",
+      "question": "What secret U.S. government project successfully developed the world's first atomic bomb?",
+      "answer": "Manhattan Project",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "brown-v-board",
+      "question": "What landmark 1954 Supreme Court case ruled that racial segregation in public schools was unconstitutional?",
+      "answer": "Brown v. Board of Education",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Brown v. Board",
+        "Brown vs Board",
+        "Brown v Board"
+      ]
+    },
+    {
+      "slug": "watergate-scandal",
+      "question": "What political scandal forced the resignation of President Richard Nixon in 1974?",
+      "answer": "Watergate",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Watergate scandal"
+      ]
+    },
+    {
+      "slug": "sumerian-writing-system",
+      "question": "What system of ink-and-clay writing was developed by the ancient Sumerians in Mesopotamia?",
+      "answer": "Cuneiform",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "feudal-japan-warrior-class",
+      "question": "What professional military class served the daimyo in feudal Japan?",
+      "answer": "Samurai",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "aztec-capital-tenochtitlan",
+      "question": "What Mesoamerican civilization built the city of Tenochtitlan on Lake Texcoco?",
+      "answer": "Aztecs",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Aztec",
+        "Aztec Empire"
+      ]
+    },
+    {
+      "slug": "alexander-the-great-persian-empire",
+      "question": "What Macedonian king conquered the Persian Empire and spread Hellenistic culture?",
+      "answer": "Alexander the Great",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Alexander",
+        "Alexander III"
+      ]
+    },
+    {
+      "slug": "punic-wars-conflict",
+      "question": "What century-long conflict was fought between the Roman Republic and Carthage?",
+      "answer": "Punic Wars",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "confucianism-philosophy",
+      "question": "What major Chinese philosophy emphasizes filial piety, ancestral respect, and social order?",
+      "answer": "Confucianism",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "buddhism-founder",
+      "question": "What major world religion was founded by Siddhartha Gautama in ancient India?",
+      "answer": "Buddhism",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "ottoman-empire-constantinople",
+      "question": "What civilization conquered Constantinople in 1453, ending the Byzantine Empire?",
+      "answer": "Ottoman Empire",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Ottomans",
+        "Ottoman Turks"
+      ]
+    },
+    {
+      "slug": "east-india-company",
+      "question": "What joint-stock enterprise governed India on behalf of the British Empire until 1858?",
+      "answer": "East India Company",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "British East India Company"
+      ]
+    },
+    {
+      "slug": "russian-imperial-title-czar",
+      "question": "What title, derived from the word Caesar, was given to the absolute monarchs of Imperial Russia?",
+      "answer": "Czar",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Czars",
+        "Tsar",
+        "Tsars",
+        "Tsar",
+        "Caesar"
+      ]
+    },
+    {
+      "slug": "guillotine-reign-of-terror",
+      "question": "What machine became the primary execution tool of the French Revolution's Reign of Terror?",
+      "answer": "Guillotine",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "opium-wars-china",
+      "question": "What drug did British merchants smuggle into China, sparking two 19th-century wars?",
+      "answer": "Opium",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "capitalism-marx-critique",
+      "question": "What political system, critiqued by Karl Marx in 1848, relies on private ownership of production?",
+      "answer": "Capitalism",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "trench-warfare-wwi",
+      "question": "What style of stagnant, defensive warfare defined the Western Front during World War I?",
+      "answer": "Trench warfare",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Trench war",
+        "Trenches"
+      ]
+    },
+    {
+      "slug": "league-of-nations",
+      "question": "What international organization did Woodrow Wilson propose in his Fourteen Points to prevent future global wars?",
+      "answer": "League of Nations",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "weimar-republic",
+      "question": "What German regime, established after World War I, suffered from hyperinflation and political chaos?",
+      "answer": "Weimar Republic",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "hiroshima-atomic-bomb-city",
+      "question": "What city did the United States strike with the first atomic bomb on August 6, 1945?",
+      "answer": "Hiroshima",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "warsaw-pact",
+      "question": "What 1955 defense treaty was signed by the Soviet Union and its Eastern European satellite states?",
+      "answer": "Warsaw Pact",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "detente-cold-war",
+      "question": "What term describes the easing of Cold War tensions between the U.S. and USSR during the 1970s?",
+      "answer": "Détente",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Detente"
+      ]
+    },
+    {
+      "slug": "whiskey-rebellion",
+      "question": "What 1794 violent domestic rebellion in western Pennsylvania was sparked by a federal tax on whiskey?",
+      "answer": "Whiskey Rebellion",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "louisiana-purchase-territory",
+      "question": "What vast territory did Thomas Jefferson purchase from France in 1803, doubling the size of the U.S.?",
+      "answer": "Louisiana Purchase",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "war-of-1812-cause",
+      "question": "What war was fought between the United States and Great Britain over maritime rights and impressment?",
+      "answer": "War of 1812",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "underground-railroad",
+      "question": "What network of secret routes and safe houses helped enslaved people escape to the free North?",
+      "answer": "Underground Railroad",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "john-brown-harpers-ferry",
+      "question": "What radical abolitionist led a failed raid on the federal armory at Harpers Ferry in 1859?",
+      "answer": "John Brown",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "battle-of-gettysburg-turning-point",
+      "question": "What 1863 clash in Pennsylvania is widely considered the turning point of the Civil War?",
+      "answer": "Gettysburg",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Battle of Gettysburg"
+      ]
+    },
+    {
+      "slug": "fourteenth-amendment",
+      "question": "Which constitutional amendment granted citizenship and equal protection under the law to all persons born in the U.S.?",
+      "answer": "Fourteenth Amendment",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "14th Amendment",
+        "Amendment XIV",
+        "14th"
+      ]
+    },
+    {
+      "slug": "transcontinental-railroad",
+      "question": "What transportation network was completed in 1869 when the Union Pacific and Central Pacific rails met in Utah?",
+      "answer": "Transcontinental Railroad",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Transcontinental railroad"
+      ]
+    },
+    {
+      "slug": "ellis-island",
+      "question": "What immigration station in New York Harbor processed over 12 million immigrants between 1892 and 1954?",
+      "answer": "Ellis Island",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "jim-crow-laws",
+      "question": "What state laws institutionalized racial segregation and disenfranchisement across the American South after Reconstruction?",
+      "answer": "Jim Crow",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Jim Crow laws"
+      ]
+    },
+    {
+      "slug": "muckrakers",
+      "question": "What investigative journalists exposed corporate corruption and urban poverty during the Progressive Era?",
+      "answer": "Muckrakers",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "dust-bowl",
+      "question": "What environmental disaster of severe dust storms ruined Great Plains agriculture during the 1930s?",
+      "answer": "Dust Bowl",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "d-day-normandy",
+      "question": "What major Allied amphibious invasion landed on the beaches of Normandy, France, on June 6, 1944?",
+      "answer": "D-Day",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Operation Overlord",
+        "Normandy invasion",
+        "Normandy landings"
+      ]
+    },
+    {
+      "slug": "marshall-plan",
+      "question": "What massive U.S. financial aid package helped rebuild Western Europe's economy after World War II?",
+      "answer": "Marshall Plan",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "korean-war",
+      "question": "What proxy conflict from 1950 to 1953 ended in a stalemate at the 38th parallel?",
+      "answer": "Korean War",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "cuban-missile-crisis-event",
+      "question": "What 13-day nuclear standoff in October 1962 brought the U.S. and USSR to the brink of war?",
+      "answer": "Cuban Missile Crisis",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mlk-i-have-a-dream",
+      "question": "Which civil rights leader gave the historic 'I Have a Dream' speech during the 1963 March on Washington?",
+      "answer": "Martin Luther King Jr.",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Martin Luther King",
+        "MLK",
+        "Dr. King",
+        "Dr. Martin Luther King Jr."
+      ]
+    },
+    {
+      "slug": "vietnam-war-protests",
+      "question": "What Southeast Asian war sparked massive domestic protests and divided America throughout the 1960s and 70s?",
+      "answer": "Vietnam War",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "civil-rights-act-1964",
+      "question": "What federal legislation outlawed discrimination based on race, color, religion, sex, or national origin in 1964?",
+      "answer": "Civil Rights Act",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Civil Rights Act of 1964"
+      ]
+    },
+    {
+      "slug": "stagflation-1970s",
+      "question": "What economic condition of the 1970s combined stagnant economic growth with high inflation?",
+      "answer": "Stagflation",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "rosetta-stone-artifact",
+      "question": "What artifact, discovered in 1799, provided the key to deciphering ancient Egyptian hieroglyphics?",
+      "answer": "Rosetta Stone",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "roman-aqueducts",
+      "question": "What architectural engineering marvel did the Romans build to transport fresh water into their cities?",
+      "answer": "Aqueducts",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Aqueduct"
+      ]
+    },
+    {
+      "slug": "judaism-founding",
+      "question": "What monotheistic religion was founded by Abraham and established its holy center in Jerusalem?",
+      "answer": "Judaism",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "chinese-silk-trade-secret",
+      "question": "What primary trade commodity from China was so heavily guarded that revealing its production secret carried a death penalty?",
+      "answer": "Silk",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quran-islam-scripture",
+      "question": "What major text serves as the central holy scripture of Islam?",
+      "answer": "Quran",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Koran",
+        "Qur'an"
+      ]
+    },
+    {
+      "slug": "mongol-conquests",
+      "question": "What nomadic Central Asian warriors conquered China, Russia, and Persia during the 13th century?",
+      "answer": "Mongols",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Mongol Empire",
+        "Mongol warriors"
+      ]
+    },
+    {
+      "slug": "humanism-renaissance",
+      "question": "What intellectual movement during the European Renaissance revived the study of classical Greek and Roman texts?",
+      "answer": "Humanism",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "sugar-plantation-slave-trade",
+      "question": "What lucrative cash crop drove the expansion of the Caribbean plantation system and transatlantic slave trade?",
+      "answer": "Sugar",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "peter-the-great-russia",
+      "question": "Which Russian ruler, known as 'The Great,' violently modernized and westernized the country in the early 18th century?",
+      "answer": "Peter the Great",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Peter",
+        "Peter I"
+      ]
+    },
+    {
+      "slug": "jacobins-reign-of-terror",
+      "question": "What radical political club, led by Maximilien Robespierre, orchestrated the Reign of Terror during the French Revolution?",
+      "answer": "Jacobins",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Jacobin Club",
+        "Jacobin"
+      ]
+    },
+    {
+      "slug": "battle-of-waterloo",
+      "question": "What famous 1815 battle marked the final military defeat of Napoleon Bonaparte?",
+      "answer": "Waterloo",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Battle of Waterloo"
+      ]
+    },
+    {
+      "slug": "steam-engine-industrial-revolution",
+      "question": "What early industrial invention became the primary power source for factories and trains?",
+      "answer": "Steam engine",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "ottoman-empire-sick-man-of-europe",
+      "question": "What major empire, nicknamed the 'Sick Man of Europe,' collapsed completely following its defeat in World War I?",
+      "answer": "Ottoman Empire",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Ottomans",
+        "Ottoman"
+      ]
+    },
+    {
+      "slug": "great-depression",
+      "question": "What severe economic crisis crippled the global economy throughout the 1930s?",
+      "answer": "Great Depression",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "iron-curtain",
+      "question": "What political term did Winston Churchill use to describe the ideological and physical boundary dividing Europe after World War II?",
+      "answer": "Iron Curtain",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "imf-bretton-woods",
+      "question": "What international financial institution was created at the Bretton Woods Conference to stabilize global exchange rates?",
+      "answer": "IMF",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "International Monetary Fund"
+      ]
+    },
+    {
+      "slug": "space-race",
+      "question": "What terminology describes the competitive race between the U.S. and USSR to achieve technological dominance in space exploration?",
+      "answer": "Space Race",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "velvet-revolution",
+      "question": "What 1989 political movement saw multiple Eastern European nations overthrow their communist governments?",
+      "answer": "Velvet Revolution",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "seven-years-war",
+      "question": "What intercolonial war between Britain and France from 1754 to 1763 loaded Britain with debt, leading them to tax the American colonies?",
+      "answer": "Seven Years' War",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Seven Years War",
+        "French and Indian War"
+      ]
+    },
+    {
+      "slug": "sons-of-liberty",
+      "question": "What radical patriot group, organized by Samuel Adams, led the agitation against British taxes in Boston?",
+      "answer": "Sons of Liberty",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "continental-congress",
+      "question": "What legislative body served as the governing government of the colonies during the American Revolution?",
+      "answer": "Continental Congress",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "articles-of-confederation",
+      "question": "What was the name of the first, highly weak constitution of the United States, replaced in 1789?",
+      "answer": "Articles of Confederation",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "bill-of-rights",
+      "question": "What collective name is given to the first ten amendments to the U.S. Constitution, which protect individual liberties?",
+      "answer": "Bill of Rights",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "republican-party-founding",
+      "question": "What political party was formed in the 1850s with the primary goal of stopping the expansion of slavery?",
+      "answer": "Republican Party",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Republicans",
+        "GOP"
+      ]
+    },
+    {
+      "slug": "confederacy-civil-war",
+      "question": "What informal name was given to the states that seceded from the United States during the Civil War?",
+      "answer": "Confederacy",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Confederate States",
+        "Confederate States of America",
+        "CSA"
+      ]
+    },
+    {
+      "slug": "chicago-meatpacking-gilded-age",
+      "question": "What major industrial city became the primary meatpacking hub of the United States during the Gilded Age?",
+      "answer": "Chicago",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "homestead-act",
+      "question": "What 1862 federal law accelerated western migration by offering free 160-acre plots of public land to settlers?",
+      "answer": "Homestead Act",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "carpetbaggers",
+      "question": "What derogatory term was used to describe corrupt northern politicians who moved south during Reconstruction to profit?",
+      "answer": "Carpetbaggers",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Carpetbagger"
+      ]
+    },
+    {
+      "slug": "homestead-strike",
+      "question": "What major labor strike in 1892 at a Carnegie steel mill turned into a bloody confrontation between workers and private guards?",
+      "answer": "Homestead Strike",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "yellow-journalism",
+      "question": "What type of sensationalized, exaggerated journalism helped inflame public opinion before the Spanish-American War?",
+      "answer": "Yellow journalism",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Yellow Journalism"
+      ]
+    },
+    {
+      "slug": "zimmermann-telegram",
+      "question": "What intercepted diplomatic message from Germany to Mexico helped push the United States into World War I?",
+      "answer": "Zimmermann Telegram",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Zimmermann Note"
+      ]
+    },
+    {
+      "slug": "harlem-renaissance",
+      "question": "What era of the 1920s saw a massive explosion of African American cultural, literary, and artistic expression?",
+      "answer": "Harlem Renaissance",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "social-security-act",
+      "question": "What 1935 legislative act established the U.S. safety net system of old-age pensions and unemployment insurance?",
+      "answer": "Social Security",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Social Security Act"
+      ]
+    },
+    {
+      "slug": "joseph-mccarthy-red-scare",
+      "question": "Which U.S. Senator led the aggressive anti-communist witch hunts of the Second Red Scare during the early 1950s?",
+      "answer": "Joseph McCarthy",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "McCarthy",
+        "Senator McCarthy"
+      ]
+    },
+    {
+      "slug": "freedom-rides",
+      "question": "What name is given to the 1961 acts of protest organized to challenge segregated public transportation by riding interstate buses?",
+      "answer": "Freedom Rides",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Freedom Ride"
+      ]
+    },
+    {
+      "slug": "national-organization-for-women",
+      "question": "What major feminist organization was co-founded by Betty Friedan in 1966 to advance gender equality?",
+      "answer": "NOW",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "National Organization for Women"
+      ]
+    },
+    {
+      "slug": "nafta",
+      "question": "What major trade agreement signed in 1992 eliminated tariffs between the United States, Canada, and Mexico?",
+      "answer": "NAFTA",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "North American Free Trade Agreement"
+      ]
+    },
+    {
+      "slug": "red-scare",
+      "question": "What name is given to the periods of intense public fear and paranoia in 20th-century America regarding the domestic spread of communism?",
+      "answer": "Red Scare",
+      "answer_format": "write_in",
+      "category": "History",
+      "difficulty": "medium"
     }
   ],
   "familiarity": "moderate"

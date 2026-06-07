@@ -17,6 +17,7 @@ import { SchedulesSection } from "@/components/admin/sections/SchedulesSection";
 import { TriviaListSection } from "@/components/admin/sections/TriviaListSection";
 import { TriviaCreateSection } from "@/components/admin/sections/TriviaCreateSection";
 import { TriviaPendingReviewSection } from "@/components/admin/sections/TriviaPendingReviewSection";
+import { TriviaAnswerGraderSection } from "@/components/admin/sections/TriviaAnswerGraderSection";
 import { AdPlacementBuilder } from "@/components/admin/AdPlacementBuilder";
 import { AdAnalyticsDashboard } from "@/components/admin/AdAnalyticsDashboard";
 import { AdsListSection } from "@/components/admin/sections/AdsListSection";
@@ -499,6 +500,8 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
         return <TriviaCreateSection />;
       case "trivia-review":
         return <TriviaPendingReviewSection />;
+      case "answer-grading":
+        return <TriviaAnswerGraderSection />;
       case "ad-placement":
         return <AdPlacementBuilder venues={venueList} />;
       case "ad-debug":
