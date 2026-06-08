@@ -14,6 +14,8 @@ import { POST } from "@/app/api/join/profile/route";
 
 const ACCOUNT_ID = "00000000-0000-4000-8000-000000000001";
 const VENUE_ID = "venue-test-1";
+const JOIN_LOCATION = { latitude: 40, longitude: -74, accuracy: 25 };
+const VENUE_ROW = { id: VENUE_ID, latitude: 40, longitude: -74, radius: 100 };
 
 function buildSingleChain<T>(result: { data: T; error: { message?: string; code?: string } | null }) {
   const chain = {
@@ -51,7 +53,7 @@ describe("POST /api/join/profile — account-first path", () => {
       data: { id: ACCOUNT_ID, auth_id: null, username: "alice" },
       error: null,
     });
-    const venueChain = buildSingleChain({ data: { id: VENUE_ID }, error: null });
+    const venueChain = buildSingleChain({ data: VENUE_ROW, error: null });
     const profileChain = buildSingleChain({ data: existingProfile, error: null });
 
     mocks.from.mockImplementation((table: string) => {
@@ -65,7 +67,7 @@ describe("POST /api/join/profile — account-first path", () => {
       new Request("http://localhost/api/join/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accountId: ACCOUNT_ID, venueId: VENUE_ID }),
+        body: JSON.stringify({ accountId: ACCOUNT_ID, venueId: VENUE_ID, location: JOIN_LOCATION }),
       })
     );
     const body = (await response.json()) as {
@@ -93,7 +95,7 @@ describe("POST /api/join/profile — account-first path", () => {
       data: { id: ACCOUNT_ID, auth_id: null, username: "bob" },
       error: null,
     });
-    const venueChain = buildSingleChain({ data: { id: VENUE_ID }, error: null });
+    const venueChain = buildSingleChain({ data: VENUE_ROW, error: null });
 
     // First users.select (lookup) returns null; insert returns new profile.
     let usersCallCount = 0;
@@ -115,7 +117,7 @@ describe("POST /api/join/profile — account-first path", () => {
       new Request("http://localhost/api/join/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accountId: ACCOUNT_ID, venueId: VENUE_ID }),
+        body: JSON.stringify({ accountId: ACCOUNT_ID, venueId: VENUE_ID, location: JOIN_LOCATION }),
       })
     );
     const body = (await response.json()) as {
@@ -150,6 +152,37 @@ describe("POST /api/join/profile — account-first path", () => {
     expect(response.status).toBe(404);
     expect(body.ok).toBe(false);
     expect(body.error).toContain("Account not found");
+  });
+
+  it("rejects account joins when submitted location is outside the venue geofence", async () => {
+    const accountChain = buildSingleChain({
+      data: { id: ACCOUNT_ID, auth_id: null, username: "alice", god_mode: false },
+      error: null,
+    });
+    const venueChain = buildSingleChain({ data: VENUE_ROW, error: null });
+
+    mocks.from.mockImplementation((table: string) => {
+      if (table === "accounts") return { select: vi.fn().mockReturnValue(accountChain) };
+      if (table === "venues") return { select: vi.fn().mockReturnValue(venueChain) };
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    const response = await POST(
+      new Request("http://localhost/api/join/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accountId: ACCOUNT_ID,
+          venueId: VENUE_ID,
+          location: { latitude: 41, longitude: -74, accuracy: 25 },
+        }),
+      })
+    );
+    const body = (await response.json()) as { ok: boolean; error?: string };
+
+    expect(response.status).toBe(403);
+    expect(body.ok).toBe(false);
+    expect(body.error).toContain("Required range");
   });
 
   it("requires venueId in the account-first path", async () => {

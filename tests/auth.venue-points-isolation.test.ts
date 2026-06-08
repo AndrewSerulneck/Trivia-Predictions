@@ -15,6 +15,8 @@ import { POST } from "@/app/api/join/profile/route";
 const ACCOUNT_ID = "00000000-0000-4000-8000-000000000099";
 const VENUE_A = "venue-alpha";
 const VENUE_B = "venue-beta";
+const JOIN_LOCATION = { latitude: 40, longitude: -74, accuracy: 25 };
+const VENUE_GEOFENCE_ROW = { id: "any", latitude: 40, longitude: -74, radius: 100 };
 
 function buildChain<T>(result: { data: T; error: { message?: string; code?: string } | null }) {
   const chain = {
@@ -63,7 +65,7 @@ describe("Points isolation across venues", () => {
 
     mocks.from.mockImplementation((table: string) => {
       if (table === "accounts") return { select: vi.fn().mockReturnValue(buildChain({ data: account, error: null })) };
-      if (table === "venues") return { select: vi.fn().mockReturnValue(buildChain({ data: { id: "any" }, error: null })) };
+      if (table === "venues") return { select: vi.fn().mockReturnValue(buildChain({ data: VENUE_GEOFENCE_ROW, error: null })) };
       if (table === "users") {
         // Return a fresh chain each call; the first eq sets venue_id context.
         let capturedVenue = "";
@@ -93,7 +95,7 @@ describe("Points isolation across venues", () => {
       new Request("http://localhost/api/join/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accountId: ACCOUNT_ID, venueId: VENUE_A }),
+        body: JSON.stringify({ accountId: ACCOUNT_ID, venueId: VENUE_A, location: JOIN_LOCATION }),
       })
     );
     const bodyA = (await responseA.json()) as { ok: boolean; user?: { points: number; venueId: string } };
@@ -102,7 +104,7 @@ describe("Points isolation across venues", () => {
       new Request("http://localhost/api/join/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accountId: ACCOUNT_ID, venueId: VENUE_B }),
+        body: JSON.stringify({ accountId: ACCOUNT_ID, venueId: VENUE_B, location: JOIN_LOCATION }),
       })
     );
     const bodyB = (await responseB.json()) as { ok: boolean; user?: { points: number; venueId: string } };
@@ -139,7 +141,7 @@ describe("Points isolation across venues", () => {
         return { select: vi.fn().mockReturnValue(buildChain({ data: account, error: null })) };
       }
       if (table === "venues") {
-        return { select: vi.fn().mockReturnValue(buildChain({ data: { id: VENUE_B }, error: null })) };
+        return { select: vi.fn().mockReturnValue(buildChain({ data: { ...VENUE_GEOFENCE_ROW, id: VENUE_B }, error: null })) };
       }
       if (table === "users") {
         usersCallCount++;
@@ -157,7 +159,7 @@ describe("Points isolation across venues", () => {
       new Request("http://localhost/api/join/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accountId: ACCOUNT_ID, venueId: VENUE_B }),
+        body: JSON.stringify({ accountId: ACCOUNT_ID, venueId: VENUE_B, location: JOIN_LOCATION }),
       })
     );
     const body = (await response.json()) as { ok: boolean; user?: { points: number; venueId: string } };

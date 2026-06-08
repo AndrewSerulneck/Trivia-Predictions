@@ -1,9 +1,12 @@
+export { calculateDistanceMeters, getGeofenceThresholdMeters } from "@/lib/geofence";
+import type { GeofenceCoordinates } from "@/lib/geofence";
+
 export type Coordinates = {
   latitude: number;
   longitude: number;
   accuracy?: number;
   timestamp?: number;
-};
+} & GeofenceCoordinates;
 
 function getCurrentPositionWithOptions(options: PositionOptions): Promise<Coordinates> {
   return new Promise((resolve, reject) => {
@@ -131,22 +134,6 @@ export async function getBestCurrentLocation(options: BestLocationOptions = {}):
     globalThis.setTimeout(() => finish(), sampleDurationMs);
     globalThis.setTimeout(() => finish(new Error("Location request timed out.")), timeoutMs + 500);
   });
-}
-
-export function calculateDistanceMeters(a: Coordinates, b: Coordinates): number {
-  const toRad = (value: number) => (value * Math.PI) / 180;
-  const earthRadius = 6371000;
-  const dLat = toRad(b.latitude - a.latitude);
-  const dLon = toRad(b.longitude - a.longitude);
-  const lat1 = toRad(a.latitude);
-  const lat2 = toRad(b.latitude);
-
-  const h =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-
-  return earthRadius * c;
 }
 
 export interface AddressPrediction {

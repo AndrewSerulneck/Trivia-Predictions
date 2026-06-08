@@ -16,7 +16,13 @@ import {
   validatePin,
   validateUsername,
 } from "@/lib/auth";
-import { calculateDistanceMeters, getBestCurrentLocation, getCurrentLocation, type Coordinates } from "@/lib/geolocation";
+import {
+  calculateDistanceMeters,
+  getBestCurrentLocation,
+  getCurrentLocation,
+  getGeofenceThresholdMeters,
+  type Coordinates,
+} from "@/lib/geolocation";
 import {
   getAccountId,
   getUserId,
@@ -252,16 +258,8 @@ function rememberLocalPasskeyForUsername(username: string): void {
 
 const getVenueVisual = (venue: Venue, index: number) => getVenueVisualFromConfig(venue, index);
 
-const ACCESS_DISTANCE_METERS = 200;
 const PRELOAD_FETCH_TIMEOUT_MS = 1500;
 const LOGIN_WATCHDOG_TIMEOUT_MS = 30000;
-
-function getGeofenceThresholdMeters(venueRadius: number, accuracy?: number): number {
-  const normalizedVenueRadius = Number.isFinite(venueRadius) ? Math.max(0, Math.round(venueRadius)) : 0;
-  const baseRadius = Math.max(ACCESS_DISTANCE_METERS, normalizedVenueRadius);
-  const accuracyBuffer = Number.isFinite(accuracy) ? Math.min(5000, Math.max(120, Math.round(Number(accuracy) * 1.5))) : 320;
-  return baseRadius + accuracyBuffer;
-}
 
 const ONBOARDING_PANEL_VARIANTS = {
   enter: (direction: 1 | -1) => ({
@@ -296,6 +294,11 @@ const LOADING_PHRASES = [
 type LocationResult = {
   coords: Coordinates | null;
   permissionDenied: boolean;
+};
+
+type VenueAccessResult = {
+  allowed: boolean;
+  location?: Coordinates;
 };
 
 async function getInitialLocation(): Promise<LocationResult> {
@@ -661,6 +664,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   const [locationVerified, setLocationVerified] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationNotice, setLocationNotice] = useState("");
+  const [verifiedLocation, setVerifiedLocation] = useState<Coordinates | null>(null);
   const [lastLocationVerifiedAt, setLastLocationVerifiedAt] = useState<number | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [panelDirection, setPanelDirection] = useState<1 | -1>(1);
@@ -727,7 +731,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       if (initialJoinPageEntryIntent?.source === "leave-venue") {
         setPanelDirection(-1);
       }
-      if (!venueParam && initialCachedVenueList.length > 0) {
+      if (!venueParam && initialCachedVenueList.length > 0 && (DISABLE_GEOFENCE_FOR_TESTING || godMode)) {
         setVenueList(initialCachedVenueList);
         setStatus("ready");
       }
@@ -737,11 +741,48 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         setStatus("loading");
         try {
           const [venues, venueData] = await Promise.all([listVenues(), getVenueById(venueParam)]);
-          setVenueList(venues);
           if (!venueData) {
             setStatus("error");
             setErrorMessage(`Venue "${venueParam}" was not found.`);
             return;
+          }
+          if (DISABLE_GEOFENCE_FOR_TESTING || godMode) {
+            setVenueList(venues);
+            setLocationVerified(true);
+            setVerifiedLocation(null);
+            setLocationNotice("Testing mode: location checks are disabled.");
+          } else {
+            setLocationLoading(true);
+            const { coords, permissionDenied } = await getInitialLocation();
+            if (coords) {
+              const nearbyVenues = venues
+                .map((item) => ({
+                  venue: item,
+                  distance: calculateDistanceMeters(coords, {
+                    latitude: item.latitude,
+                    longitude: item.longitude,
+                  }),
+                }))
+                .filter((item) => item.distance <= getGeofenceThresholdMeters(item.venue.radius, coords.accuracy))
+                .sort((a, b) => a.distance - b.distance)
+                .map((item) => item.venue);
+              setVenueList(nearbyVenues);
+              setVerifiedLocation(nearbyVenues.length > 0 ? coords : null);
+              setLocationNotice(
+                nearbyVenues.length > 0
+                  ? `Found ${nearbyVenues.length} nearby venue(s).`
+                  : "No venue is currently in range from your location."
+              );
+            } else {
+              setVenueList([]);
+              setVerifiedLocation(null);
+              setLocationNotice(
+                permissionDenied
+                  ? "Location permission is off. Turn it on to see nearby venues."
+                  : "Location check unavailable right now. Retry to see nearby venues."
+              );
+            }
+            setLocationLoading(false);
           }
           setVenue(venueData);
           setAccountIdState(storedAccountId || null);
@@ -760,10 +801,11 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
       // Preserve a stable join UI after first successful initialization.
       // Background refreshes should not blank the panel/state.
-      if (!hasSuccessfulInitialRenderRef.current && initialCachedVenueList.length === 0) {
+      if (!hasSuccessfulInitialRenderRef.current && (initialCachedVenueList.length === 0 || !(DISABLE_GEOFENCE_FOR_TESTING || godMode))) {
         setStatus("loading");
         setErrorMessage("");
         setLocationVerified(false);
+        setVerifiedLocation(null);
         setLastLocationVerifiedAt(null);
         setDistanceMeters(null);
         setLocationNotice("Verifying your location...");
@@ -773,7 +815,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       try {
         if (!venueParam) {
           let locationPromise: Promise<LocationResult> | null = null;
-          if (!(DISABLE_GEOFENCE_FOR_TESTING || godMode) && !hasStoredJoinIdentity) {
+          if (!(DISABLE_GEOFENCE_FOR_TESTING || godMode)) {
             setLocationLoading(true);
             locationPromise = getInitialLocation();
           } else {
@@ -781,7 +823,6 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           }
 
           const venues = await listVenues();
-          setVenueList(venues);
           // Skip auth selection if the user already has either an account-level
           // identity or a legacy venue session we can continue from.
           if (hasStoredJoinIdentity) {
@@ -796,6 +837,8 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
           if (DISABLE_GEOFENCE_FOR_TESTING || godMode) {
             setLocationVerified(true);
+            setVerifiedLocation(null);
+            setVenueList(venues);
             setLocationNotice("Testing mode: location checks are disabled.");
             setLocationLoading(false);
             setVenue(null);
@@ -820,21 +863,22 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
                 .sort((a, b) => a.distance - b.distance)
                 .map((item) => item.venue);
               setVenueList(nearbyVenues);
+              setVerifiedLocation(nearbyVenues.length > 0 ? coords : null);
               setLocationNotice(
                 nearbyVenues.length > 0
                   ? `Found ${nearbyVenues.length} nearby venue(s).`
                   : "No venue is currently in range from your location."
               );
             } else {
+              setVenueList([]);
+              setVerifiedLocation(null);
               setLocationNotice(
                 permissionDenied
-                  ? "Location permission is off. You can still choose a venue and verify afterward."
-                  : "Location check unavailable right now. You can still choose a venue and verify afterward."
+                  ? "Location permission is off. Turn it on to see nearby venues."
+                  : "Location check unavailable right now. Retry to see nearby venues."
               );
             }
             setLocationLoading(false);
-          } else if (hasStoredJoinIdentity) {
-            setLocationNotice("Choose a venue to continue.");
           }
           setVenue(null);
           return;
@@ -881,16 +925,19 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
             const allowedDistance = getGeofenceThresholdMeters(venueData.radius, current.accuracy);
             if (distance <= allowedDistance) {
               setLocationVerified(true);
+              setVerifiedLocation(current);
               setLastLocationVerifiedAt(Date.now());
               setLocationNotice("");
             } else {
               setLocationVerified(false);
+              setVerifiedLocation(null);
               setLastLocationVerifiedAt(null);
               setLocationNotice("");
               setErrorMessage(`You are ${Math.round(distance)}m away. Required range is ${Math.round(allowedDistance)}m.`);
             }
           } catch (error) {
             setLocationVerified(false);
+            setVerifiedLocation(null);
             setLastLocationVerifiedAt(null);
             setLocationNotice("");
             if (isLocationPermissionDenied(error)) {
@@ -903,6 +950,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
           }
         } else {
           setLocationVerified(true);
+          setVerifiedLocation(null);
           setLastLocationVerifiedAt(Date.now());
           setLocationNotice("");
         }
@@ -1009,15 +1057,16 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   }, [clearNavigationFallback, pathname]);
 
   const verifyVenueAccess = useCallback(
-    async (selectedVenue: Venue) => {
+    async (selectedVenue: Venue): Promise<VenueAccessResult> => {
       if (DISABLE_GEOFENCE_FOR_TESTING || godMode) {
         setLocationLoading(false);
         setLocationVerified(true);
+        setVerifiedLocation(null);
         setLastLocationVerifiedAt(Date.now());
         setLocationNotice(godMode ? "God mode: location checks are bypassed." : "Testing mode: location checks are disabled.");
         setDistanceMeters(null);
         setErrorMessage("");
-        return;
+        return { allowed: true };
       }
 
       setLocationLoading(true);
@@ -1041,18 +1090,22 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         setDistanceMeters(distance);
         if (distance <= allowedDistance) {
           setLocationVerified(true);
+          setVerifiedLocation(current);
           setLastLocationVerifiedAt(Date.now());
           setLocationNotice("");
           setErrorMessage("");
-          return;
+          return { allowed: true, location: current };
         }
 
         setLocationVerified(false);
+        setVerifiedLocation(null);
         setLastLocationVerifiedAt(null);
         setLocationNotice("");
         setErrorMessage(`You are ${Math.round(distance)}m away. Required range is ${Math.round(allowedDistance)}m.`);
+        return { allowed: false };
       } catch (error) {
         setLocationVerified(false);
+        setVerifiedLocation(null);
         setLastLocationVerifiedAt(null);
         setLocationNotice("");
         if (isLocationPermissionDenied(error)) {
@@ -1060,6 +1113,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         } else {
           setErrorMessage(getErrorMessage(error, "Unable to verify location."));
         }
+        return { allowed: false };
       } finally {
         setLocationLoading(false);
       }
@@ -1096,7 +1150,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   );
 
   const resolveAndNavigate = useCallback(
-    async (resolvedAccountId: string, selectedVenue: Venue) => {
+    async (resolvedAccountId: string, selectedVenue: Venue, location?: Coordinates) => {
       setErrorMessage("");
       setPendingVenueSelectionId(selectedVenue.id);
       setStatus("saving");
@@ -1115,7 +1169,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
       let didNavigate = false;
       try {
-        const user = await resolveVenueProfile({ accountId: resolvedAccountId, venueId: selectedVenue.id });
+        const user = await resolveVenueProfile({ accountId: resolvedAccountId, venueId: selectedVenue.id, location });
         await navigateToResolvedVenue(selectedVenue, user);
         didNavigate = true;
       } catch (error) {
@@ -1140,7 +1194,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
   );
 
   const resolveAndNavigateFromSession = useCallback(
-    async (sessionUserId: string, selectedVenue: Venue) => {
+    async (sessionUserId: string, selectedVenue: Venue, location?: Coordinates) => {
       setErrorMessage("");
       setPendingVenueSelectionId(selectedVenue.id);
       setStatus("saving");
@@ -1159,7 +1213,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
 
       let didNavigate = false;
       try {
-        const user = await resolveVenueProfileFromSession({ sessionUserId, venueId: selectedVenue.id });
+        const user = await resolveVenueProfileFromSession({ sessionUserId, venueId: selectedVenue.id, location });
         await navigateToResolvedVenue(selectedVenue, user);
         didNavigate = true;
       } catch (error) {
@@ -1192,13 +1246,25 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
       // Account-first path: resolve venue profile and navigate.
       const resolvedAccountId = accountId || getAccountId();
       if (resolvedAccountId) {
-        void resolveAndNavigate(resolvedAccountId, selectedVenue);
+        void (async () => {
+          const access = await verifyVenueAccess(selectedVenue);
+          if (!access.allowed) {
+            return;
+          }
+          await resolveAndNavigate(resolvedAccountId, selectedVenue, access.location);
+        })();
         return;
       }
 
       const sessionUserId = (getUserId() ?? "").trim();
       if (sessionUserId) {
-        void resolveAndNavigateFromSession(sessionUserId, selectedVenue);
+        void (async () => {
+          const access = await verifyVenueAccess(selectedVenue);
+          if (!access.allowed) {
+            return;
+          }
+          await resolveAndNavigateFromSession(sessionUserId, selectedVenue, access.location);
+        })();
         return;
       }
 
@@ -2117,6 +2183,7 @@ export function JoinFlow({ initialVenueId }: { initialVenueId: string }) {
         venueId: venue.id,
         selectedVenueId: venue.id,
         pin: effectivePin,
+        location: verifiedLocation ?? undefined,
         signal: loginController.signal,
         traceId,
       });

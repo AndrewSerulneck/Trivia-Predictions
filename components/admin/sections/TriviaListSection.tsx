@@ -546,7 +546,7 @@ export function TriviaListSection() {
                                   value={editing.question}
                                   onChange={(event) => setEditing({ ...editing, question: event.target.value })}
                                   rows={2}
-                                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
                                 />
                               </div>
 
@@ -555,7 +555,7 @@ export function TriviaListSection() {
                                 <input
                                   value={editing.category}
                                   onChange={(event) => setEditing({ ...editing, category: event.target.value })}
-                                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
                                 />
                               </div>
                               <div>
@@ -563,7 +563,7 @@ export function TriviaListSection() {
                                 <input
                                   value={editing.difficulty}
                                   onChange={(event) => setEditing({ ...editing, difficulty: event.target.value })}
-                                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
                                 />
                               </div>
 
@@ -614,7 +614,7 @@ export function TriviaListSection() {
                                           nextOptions[index] = event.target.value;
                                           setEditing({ ...editing, options: nextOptions });
                                         }}
-                                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
                                       />
                                     </div>
                                   ))}
@@ -641,7 +641,7 @@ export function TriviaListSection() {
                                     type={editing.answerFormat === "numeric" ? "number" : "text"}
                                     value={editing.writeInAnswer}
                                     onChange={(event) => setEditing({ ...editing, writeInAnswer: event.target.value })}
-                                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
                                   />
                                 </div>
                               )}

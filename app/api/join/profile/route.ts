@@ -5,6 +5,12 @@ import { DEFAULT_VENUE_BY_ID } from "@/lib/defaultVenues";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
 import { normalizePin as normalizeCanonicalPin } from "@/lib/pin";
 import { createSessionCookie, isSessionEnforced, readSession } from "@/lib/serverSession";
+import {
+  calculateDistanceMeters,
+  getGeofenceThresholdMeters,
+  isValidGeofenceCoordinates,
+  type GeofenceCoordinates,
+} from "@/lib/geofence";
 
 function userResponse(userId: string, data: Record<string, unknown>): NextResponse {
   const res = NextResponse.json(data);
@@ -16,6 +22,7 @@ type CreateProfileBody = {
   username?: string;
   venueId?: string;
   pin?: string;
+  location?: GeofenceCoordinates;
   selectedVenueId?: string;
   authUserId?: string;
   accountId?: string;
@@ -39,6 +46,23 @@ type DbError = {
   code?: string;
   message?: string;
 };
+
+type VenueGeofenceRow = {
+  id: string;
+  latitude: number;
+  longitude: number;
+  radius: number;
+};
+
+function normalizeBooleanEnv(value: string | undefined, fallback = false): boolean {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) return fallback;
+  if (normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on") return true;
+  if (normalized === "0" || normalized === "false" || normalized === "no" || normalized === "off") return false;
+  return fallback;
+}
+
+const DISABLE_GEOFENCE_FOR_TESTING = normalizeBooleanEnv(process.env.NEXT_PUBLIC_DISABLE_GEOFENCE, false);
 
 function normalizePin(pin: string): string {
   return normalizeCanonicalPin(pin);
@@ -109,26 +133,117 @@ async function ensureDefaultVenueExists(venueId: string): Promise<string | null>
   return insertVenueError?.message ?? null;
 }
 
+async function getVenueGeofenceRow(venueId: string): Promise<{ venue: VenueGeofenceRow | null; error: string | null }> {
+  const defaultVenueError = await ensureDefaultVenueExists(venueId);
+  if (defaultVenueError) {
+    return { venue: null, error: defaultVenueError };
+  }
+
+  const { data, error } = await supabaseAdmin!
+    .from("venues")
+    .select("id, latitude, longitude, radius")
+    .eq("id", venueId)
+    .maybeSingle<VenueGeofenceRow>();
+
+  if (error) {
+    return { venue: null, error: error.message };
+  }
+
+  return { venue: data ? {
+    id: data.id,
+    latitude: Number(data.latitude),
+    longitude: Number(data.longitude),
+    radius: Number(data.radius),
+  } : null, error: null };
+}
+
+async function verifyJoinGeofence(params: {
+  venueId: string;
+  location?: GeofenceCoordinates;
+  bypass?: boolean;
+  traceId: string | null;
+}): Promise<{ ok: true } | { ok: false; response: NextResponse }> {
+  const { venueId, location, bypass, traceId } = params;
+  if (DISABLE_GEOFENCE_FOR_TESTING || bypass) {
+    return { ok: true };
+  }
+
+  if (!location || !isValidGeofenceCoordinates(location)) {
+    logAuthIncident("join-profile-route", "post-reject-missing-location", { traceId, venueId });
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { ok: false, error: "Location verification is required to enter this venue." },
+        { status: 403 }
+      ),
+    };
+  }
+
+  const { venue, error } = await getVenueGeofenceRow(venueId);
+  if (error) {
+    return { ok: false, response: NextResponse.json({ ok: false, error }, { status: 500 }) };
+  }
+  if (!venue) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { ok: false, error: "Selected venue is unavailable right now. Refresh and choose again." },
+        { status: 409 }
+      ),
+    };
+  }
+
+  const distance = calculateDistanceMeters(location, {
+    latitude: venue.latitude,
+    longitude: venue.longitude,
+  });
+  const allowedDistance = getGeofenceThresholdMeters(venue.radius, location.accuracy);
+
+  if (distance <= allowedDistance) {
+    return { ok: true };
+  }
+
+  logAuthIncident("join-profile-route", "post-reject-geofence", {
+    traceId,
+    venueId,
+    distance: Math.round(distance),
+    allowedDistance: Math.round(allowedDistance),
+  });
+  return {
+    ok: false,
+    response: NextResponse.json(
+      { ok: false, error: `You are ${Math.round(distance)}m away. Required range is ${Math.round(allowedDistance)}m.` },
+      { status: 403 }
+    ),
+  };
+}
+
 async function resolveVenueProfileForAccount(params: {
   accountId: string;
   venueId: string;
+  location?: GeofenceCoordinates;
   traceId: string | null;
   startedAt: number;
 }): Promise<NextResponse> {
-  const { accountId, venueId, traceId, startedAt } = params;
+  const { accountId, venueId, location, traceId, startedAt } = params;
   logAuthIncident("join-profile-route", "post-account-path-start", { traceId, accountId, venueId });
 
   const { data: account, error: accountLookupError } = await supabaseAdmin!
     .from("accounts")
-    .select("id, auth_id, username")
+    .select("id, auth_id, username, god_mode")
     .eq("id", accountId)
-    .maybeSingle<{ id: string; auth_id: string | null; username: string }>();
+    .maybeSingle<{ id: string; auth_id: string | null; username: string; god_mode?: boolean | null }>();
 
   if (accountLookupError) {
     return NextResponse.json({ ok: false, error: accountLookupError.message }, { status: 500 });
   }
   if (!account) {
     return NextResponse.json({ ok: false, error: "Account not found." }, { status: 404 });
+  }
+
+  const geofence = await verifyJoinGeofence({ venueId, location, bypass: Boolean(account.god_mode), traceId });
+  if (!geofence.ok) {
+    return geofence.response;
   }
 
   const venueError = await ensureDefaultVenueExists(venueId);
@@ -255,7 +370,7 @@ export async function POST(request: Request) {
     if (!venueId) {
       return NextResponse.json({ ok: false, error: "Venue is required." }, { status: 400 });
     }
-    return resolveVenueProfileForAccount({ accountId, venueId, traceId, startedAt });
+    return resolveVenueProfileForAccount({ accountId, venueId, location: body.location, traceId, startedAt });
   }
 
   if (sessionUserId) {
@@ -284,12 +399,12 @@ export async function POST(request: Request) {
 
     const linkedAccountId = String(sessionUser.account_id ?? "").trim();
     if (linkedAccountId) {
-      return resolveVenueProfileForAccount({ accountId: linkedAccountId, venueId, traceId, startedAt });
+      return resolveVenueProfileForAccount({ accountId: linkedAccountId, venueId, location: body.location, traceId, startedAt });
     }
 
-    const venueError = await ensureDefaultVenueExists(venueId);
-    if (venueError) {
-      return NextResponse.json({ ok: false, error: venueError }, { status: 500 });
+    const geofence = await verifyJoinGeofence({ venueId, location: body.location, traceId });
+    if (!geofence.ok) {
+      return geofence.response;
     }
 
     const normalizedUsername =
@@ -412,6 +527,11 @@ export async function POST(request: Request) {
   }
   if (!/^\d{4}$/.test(pin)) {
     return NextResponse.json({ ok: false, error: "PIN must be exactly 4 digits." }, { status: 400 });
+  }
+
+  const geofence = await verifyJoinGeofence({ venueId, location: body.location, traceId });
+  if (!geofence.ok) {
+    return geofence.response;
   }
 
   // Ensure default demo venues are present when selected from public links,

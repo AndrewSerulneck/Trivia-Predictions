@@ -432,7 +432,7 @@ export function TriviaPendingReviewSection() {
                             onChange={(event) =>
                               setEditDraft((prev) => (prev ? { ...prev, question: event.target.value } : prev))
                             }
-                            className="w-full min-w-[16rem] rounded-lg border border-slate-300 px-2 py-1 text-sm"
+                            className="w-full min-w-[16rem] rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
                             rows={2}
                           />
                         ) : (
@@ -447,7 +447,7 @@ export function TriviaPendingReviewSection() {
                               onChange={(event) =>
                                 setEditDraft((prev) => (prev ? { ...prev, answer: event.target.value } : prev))
                               }
-                              className="w-full min-w-[10rem] rounded-lg border border-slate-300 px-2 py-1 text-sm"
+                              className="w-full min-w-[10rem] rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
                             />
                           ) : (
                             <div className="space-y-1">
@@ -472,7 +472,7 @@ export function TriviaPendingReviewSection() {
                                         return { ...prev, options };
                                       })
                                     }
-                                    className="w-full min-w-[10rem] rounded-lg border border-slate-300 px-2 py-1 text-sm"
+                                    className="w-full min-w-[10rem] rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
                                   />
                                 </div>
                               ))}

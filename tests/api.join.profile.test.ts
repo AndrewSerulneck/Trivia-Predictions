@@ -15,6 +15,9 @@ vi.mock("@/lib/supabaseAdmin", () => ({
 
 import { GET, POST } from "@/app/api/join/profile/route";
 
+const JOIN_LOCATION = { latitude: 40, longitude: -74, accuracy: 25 };
+const VENUE_ROW = { id: "venue-qa", latitude: 40, longitude: -74, radius: 100 };
+
 function hashPin(pin: string, salt: string): string {
   return scryptSync(pin, salt, 64).toString("hex");
 }
@@ -24,14 +27,17 @@ function buildSelectChain<T>(result: { data: T; error: { message?: string; code?
     eq: ReturnType<typeof vi.fn>;
     ilike: ReturnType<typeof vi.fn>;
     limit: ReturnType<typeof vi.fn>;
+    maybeSingle: ReturnType<typeof vi.fn>;
   } = {
     eq: vi.fn(),
     ilike: vi.fn(),
     limit: vi.fn(),
+    maybeSingle: vi.fn(),
   };
   chain.eq.mockReturnValue(chain);
   chain.ilike.mockReturnValue(chain);
   chain.limit.mockResolvedValue(result);
+  chain.maybeSingle.mockResolvedValue(result);
   return chain;
 }
 
@@ -55,6 +61,11 @@ describe("/api/join/profile", () => {
     const usersSelect = buildSelectChain({ data: [existingRow], error: null });
 
     mocks.from.mockImplementation((table: string) => {
+      if (table === "venues") {
+        return {
+          select: vi.fn().mockReturnValue(buildSelectChain({ data: VENUE_ROW, error: null })),
+        };
+      }
       if (table === "users") {
         return {
           select: vi.fn().mockReturnValue(usersSelect),
@@ -72,6 +83,7 @@ describe("/api/join/profile", () => {
           venueId: "venue-qa",
           selectedVenueId: "venue-qa",
           pin: "1357",
+          location: JOIN_LOCATION,
         }),
       })
     );
@@ -100,6 +112,11 @@ describe("/api/join/profile", () => {
     const usersSelect = buildSelectChain({ data: [existingRow], error: null });
 
     mocks.from.mockImplementation((table: string) => {
+      if (table === "venues") {
+        return {
+          select: vi.fn().mockReturnValue(buildSelectChain({ data: VENUE_ROW, error: null })),
+        };
+      }
       if (table === "users") {
         return {
           select: vi.fn().mockReturnValue(usersSelect),
@@ -117,6 +134,7 @@ describe("/api/join/profile", () => {
           venueId: "venue-qa",
           selectedVenueId: "venue-qa",
           pin: "9999",
+          location: JOIN_LOCATION,
         }),
       })
     );

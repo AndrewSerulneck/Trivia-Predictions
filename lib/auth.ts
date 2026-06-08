@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
 import { isValidPin, normalizePin } from "@/lib/pin";
+import type { GeofenceCoordinates } from "@/lib/geofence";
 import type { User } from "@/types";
 
 type UserProfileRow = {
@@ -126,6 +127,7 @@ export async function createUserProfile(params: {
   username: string;
   venueId: string;
   pin: string;
+  location?: GeofenceCoordinates;
   signal?: AbortSignal;
   selectedVenueId?: string;
   traceId?: string;
@@ -182,6 +184,7 @@ export async function createUserProfile(params: {
         pin,
         selectedVenueId,
         authUserId,
+        location: params.location,
       }),
       signal: timeoutController.signal,
     });
@@ -306,6 +309,7 @@ export async function createOrLoginAccount(params: {
 export async function resolveVenueProfile(params: {
   accountId: string;
   venueId: string;
+  location?: GeofenceCoordinates;
   traceId?: string;
   signal?: AbortSignal;
 }): Promise<User> {
@@ -332,7 +336,7 @@ export async function resolveVenueProfile(params: {
         "Content-Type": "application/json",
         ...(traceId ? { "X-Auth-Trace-Id": traceId } : {}),
       },
-      body: JSON.stringify({ accountId: params.accountId, venueId: params.venueId }),
+      body: JSON.stringify({ accountId: params.accountId, venueId: params.venueId, location: params.location }),
       signal: controller.signal,
     });
   } catch (error) {
@@ -363,6 +367,7 @@ export async function resolveVenueProfile(params: {
 export async function resolveVenueProfileFromSession(params: {
   sessionUserId: string;
   venueId: string;
+  location?: GeofenceCoordinates;
   traceId?: string;
   signal?: AbortSignal;
 }): Promise<User> {
@@ -389,7 +394,7 @@ export async function resolveVenueProfileFromSession(params: {
         "Content-Type": "application/json",
         ...(traceId ? { "X-Auth-Trace-Id": traceId } : {}),
       },
-      body: JSON.stringify({ sessionUserId: params.sessionUserId, venueId: params.venueId }),
+      body: JSON.stringify({ sessionUserId: params.sessionUserId, venueId: params.venueId, location: params.location }),
       signal: controller.signal,
     });
   } catch (error) {
