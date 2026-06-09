@@ -83,6 +83,7 @@ async function parseJsonResponse<T>(response: Response, contextMessage: string):
 
 const FALLBACK_HEADSHOT_SRC = "/images/player-silhouette.svg";
 const DISABLE_GEOFENCE_FOR_TESTING =
+  process.env.NODE_ENV !== "production" &&
   String(process.env.NEXT_PUBLIC_DISABLE_GEOFENCE ?? "")
     .trim()
     .toLowerCase() === "true";
