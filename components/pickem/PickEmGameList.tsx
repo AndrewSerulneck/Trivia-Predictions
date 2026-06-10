@@ -3,6 +3,7 @@ import { cachedFetch } from "@/lib/fetchCache";
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import { NotificationBell } from "@/components/ui/NotificationBell";
@@ -198,6 +199,11 @@ function shiftDateKey(dateKey: string, deltaDays: number): string {
   return new Date(parsed + deltaDays * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
+function isValidPastOrTodayDateKey(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  return value <= getLocalDateKey();
+}
+
 function resultLabel(game: PickEmGame): string {
   if (!game.userPickStatus || game.userPickStatus === "pending") {
     return "";
@@ -227,9 +233,10 @@ function getDisplayedScoreCell(game: PickEmGame, teamName: string, score: number
   return game.winnerTeam === teamName ? "Won" : "";
 }
 
-export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: string }) {
+export function PickEmGameList({ initialSportSlug = "", initialDate = "" }: { initialSportSlug?: string; initialDate?: string }) {
   const normalizedInitialSportSlug = String(initialSportSlug ?? "").trim().toLowerCase();
   const todayDateKey = getLocalDateKey();
+  const router = useRouter();
   const [userId, setUserId] = useState("");
   const [venueId, setVenueId] = useState("");
   const [nflWeekStartDate, setNflWeekStartDate] = useState("");
@@ -241,7 +248,10 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
   const [optimisticPickByGame, setOptimisticPickByGame] = useState<Record<string, string | undefined>>({});
   const [sports, setSports] = useState<PickEmSport[]>([]);
   const [selectedSportSlug, setSelectedSportSlug] = useState("");
-  const [selectedDate, setSelectedDate] = useState(todayDateKey);
+  const normalizedInitialDate = String(initialDate ?? "").trim();
+  const [selectedDate, setSelectedDate] = useState(
+    isValidPastOrTodayDateKey(normalizedInitialDate) ? normalizedInitialDate : todayDateKey
+  );
   const [sport, setSport] = useState<PickEmSport | null>(null);
   const [games, setGames] = useState<PickEmGame[]>([]);
   const latestGameMapRef = useRef<Map<string, PickEmGame>>(new Map());
@@ -277,6 +287,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
   const headerPointsGainTimerRef = useRef<number | null>(null);
   const headerPointsPulseTimerRef = useRef<number | null>(null);
   const popIdRef = useRef(0);
+  const animatedWinDatesRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     setUserId(getUserId() ?? "");
@@ -313,6 +324,14 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
   }, []);
 
   useEffect(() => { setIsMounted(true); }, []);
+
+  useEffect(() => {
+    if (!selectedSportSlug) return;
+    const params = new URLSearchParams();
+    params.set("date", selectedDate);
+    params.set("sport", selectedSportSlug);
+    router.replace(`/pickem?${params.toString()}`, { scroll: false });
+  }, [selectedDate, selectedSportSlug, router]);
 
   useEffect(() => {
     const run = async () => {
@@ -564,6 +583,39 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
         .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt)),
     [pickHistory, selectedDate, toLocalDateKey]
   );
+
+  useEffect(() => {
+    if (!selectedSportSlug || historicalPicks.length === 0) return;
+
+    const isToday = selectedDate === todayDateKey;
+    const sessionKey = isToday ? `${selectedDate}:${selectedSportSlug}` : selectedDate;
+
+    if (animatedWinDatesRef.current.has(sessionKey)) return;
+
+    const wonPicks = isToday
+      ? historicalPicks.filter((pick) => pick.status === "won" && pick.sportSlug === selectedSportSlug)
+      : historicalPicks.filter((pick) => pick.status === "won");
+
+    if (wonPicks.length === 0) return;
+
+    animatedWinDatesRef.current.add(sessionKey);
+
+    const totalPoints = wonPicks.reduce((sum, pick) => sum + Math.max(0, pick.rewardPoints || 10), 0);
+
+    window.dispatchEvent(
+      new CustomEvent("tp:coin-flight", {
+        detail: {
+          delta: totalPoints,
+          coins: Math.min(24, Math.max(8, wonPicks.length * 4)),
+        },
+      })
+    );
+    window.dispatchEvent(
+      new CustomEvent("tp:points-updated", {
+        detail: { source: "pickem-wins", delta: totalPoints },
+      })
+    );
+  }, [historicalPicks, selectedDate, selectedSportSlug, todayDateKey]);
 
   const fallbackCollectPoints = useMemo(
     () =>
@@ -1341,20 +1393,20 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                     return (
                       <Fragment key={game.id}>
                         <li className="overflow-hidden rounded-xl border border-[#fde68a]/45 bg-[linear-gradient(115deg,#1a2f72_0%,#1a2f72_46%,#6b1a4e_54%,#6b1a4e_100%)]">
-                          <div className="flex items-center justify-between border-b border-dashed border-[#fde68a]/45 px-3 py-1.5">
-                            <span className="text-[9px] font-black uppercase tracking-[0.16em] text-[#fde68a]">{league}</span>
+                          <div className="flex items-center justify-between border-b border-dashed border-[#fde68a]/45 px-4 py-2">
+                            <span className="text-[11px] font-black uppercase tracking-[0.16em] text-[#fde68a]">{league}</span>
                             <span
-                              className={`inline-flex items-center gap-1 text-[10px] font-extrabold ${
+                              className={`inline-flex items-center gap-1 text-[11px] font-extrabold ${
                                 game.status === "live" ? "text-emerald-300" : "text-slate-300"
                               }`}
                             >
                               {game.status === "live" ? (
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                               ) : null}
                               {statusLabel}
                             </span>
                           </div>
-                          <div className="bg-[#020617]/45">
+                          <div className="flex overflow-hidden bg-[#020617]/45">
                             <button
                               type="button"
                               aria-disabled={disableAwaySelection}
@@ -1381,29 +1433,29 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                                 void submitPick(game, game.awayTeam);
                               }}
                               style={{ touchAction: "manipulation" }}
-                              className={`tp-clean-button flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left ${
+                              className={`tp-clean-button flex w-1/2 flex-col items-center justify-center gap-1 px-2 py-4 text-center ${
                                 disableAwaySelection ? "cursor-not-allowed opacity-45" : ""
                               } ${
                                 awaySelected ? "bg-[#fde68a]/15" : ""
                               } ${pickPulseByGameId[game.id] === game.awayTeam ? "scale-[1.01]" : ""}`}
                             >
-                              <span className="flex min-w-0 items-center gap-2">
-                                <span
-                                  className={`inline-flex h-5 w-5 items-center justify-center rounded-[5px] text-xs font-black ${
-                                    awaySelected
-                                      ? "rotate-[-7deg] border border-[#fde68a] bg-[#fde68a] text-[#1a2f72]"
-                                      : "border border-[#fde68a]/45 text-transparent"
-                                  }`}
-                                >
-                                  ✓
-                                </span>
-                                <span className="truncate text-[13px] font-black text-white">{game.awayTeam}</span>
+                              <span
+                                className={`inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-[14px] font-black ${
+                                  awaySelected
+                                    ? "rotate-[-7deg] border border-[#fde68a] bg-[#fde68a] text-[#1a2f72]"
+                                    : "border border-[#fde68a]/45 text-transparent"
+                                }`}
+                              >
+                                ✓
                               </span>
-                              <span className={`text-[14px] font-black tabular-nums ${isAwayWinner ? "text-emerald-300" : "text-slate-200"}`}>
+                              <span className="whitespace-normal break-words text-[15px] font-black leading-tight text-white">
+                                {game.awayTeam}
+                              </span>
+                              <span className={`text-[16px] font-black tabular-nums ${isAwayWinner ? "text-emerald-300" : "text-slate-200"}`}>
                                 {getDisplayedScoreCell(game, game.awayTeam, game.awayScore)}
                               </span>
                             </button>
-                            <div className="h-px bg-[#fde68a]/20" />
+                            <div className="w-px shrink-0 bg-[#fde68a]/20" />
                             <button
                               type="button"
                               aria-disabled={disableHomeSelection}
@@ -1430,25 +1482,25 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
                                 void submitPick(game, game.homeTeam);
                               }}
                               style={{ touchAction: "manipulation" }}
-                              className={`tp-clean-button flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left ${
+                              className={`tp-clean-button flex w-1/2 flex-col items-center justify-center gap-1 px-2 py-4 text-center ${
                                 disableHomeSelection ? "cursor-not-allowed opacity-45" : ""
                               } ${
                                 homeSelected ? "bg-[#fde68a]/15" : ""
                               } ${pickPulseByGameId[game.id] === game.homeTeam ? "scale-[1.01]" : ""}`}
                             >
-                              <span className="flex min-w-0 items-center gap-2">
-                                <span
-                                  className={`inline-flex h-5 w-5 items-center justify-center rounded-[5px] text-xs font-black ${
-                                    homeSelected
-                                      ? "rotate-[-7deg] border border-[#fde68a] bg-[#fde68a] text-[#1a2f72]"
-                                      : "border border-[#fde68a]/45 text-transparent"
-                                  }`}
-                                >
-                                  ✓
-                                </span>
-                                <span className="truncate text-[13px] font-black text-white">{game.homeTeam}</span>
+                              <span
+                                className={`inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-[14px] font-black ${
+                                  homeSelected
+                                    ? "rotate-[-7deg] border border-[#fde68a] bg-[#fde68a] text-[#1a2f72]"
+                                    : "border border-[#fde68a]/45 text-transparent"
+                                }`}
+                              >
+                                ✓
                               </span>
-                              <span className={`text-[14px] font-black tabular-nums ${isHomeWinner ? "text-emerald-300" : "text-slate-200"}`}>
+                              <span className="whitespace-normal break-words text-[15px] font-black leading-tight text-white">
+                                {game.homeTeam}
+                              </span>
+                              <span className={`text-[16px] font-black tabular-nums ${isHomeWinner ? "text-emerald-300" : "text-slate-200"}`}>
                                 {getDisplayedScoreCell(game, game.homeTeam, game.homeScore)}
                               </span>
                             </button>
@@ -1456,7 +1508,7 @@ export function PickEmGameList({ initialSportSlug = "" }: { initialSportSlug?: s
 
                           {resultLabel(game) ? (
                             <div
-                              className={`px-3 py-1 text-[10px] font-extrabold tracking-[0.04em] ${
+                              className={`px-4 py-1.5 text-[11px] font-extrabold tracking-[0.04em] ${
                                 game.userPickStatus === "won"
                                   ? "bg-emerald-500/15 text-emerald-300"
                                   : "bg-rose-500/15 text-rose-300"

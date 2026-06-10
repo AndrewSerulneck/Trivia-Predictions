@@ -789,7 +789,7 @@
     },
     {
       "slug": "landmark-easy-pentagon-building",
-      "question": "Serving as the massive headquarters for the U.S. Department of Defense in Virginia, this building is famous for its unique five-sided geometric design.",
+      "question": "Serving as the massive headquarters for the U.S. Department of Defense in Virginia, what building is famous for its unique five-sided geometric design.",
       "answer": "The Pentagon",
       "category": "Famous Landmarks",
       "difficulty": "easy",
@@ -806,10 +806,12 @@
     },
     {
       "slug": "landmark-easy-versailles-gardens",
-      "question": "This historic, open central square in Moscow sits next to the Kremlin and features the brightly colored onion domes of St. Basil's Cathedral.",
+      "question": "This historic, open central square in Moscow sits next to the Kremlin and features the brightly colored onion domes of St. Basil's Cathedral. What is it called?",
       "answer": "Red Square",
       "category": "Famous Landmarks",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "imageUrl": "https://images.unsplash.com/photo-1632938103263-4bf16652911d?w=800&fit=crop",
+      "imageCredit": "Photo by Alexey Fedotov on Unsplash"
     },
     {
       "slug": "landmark-easy-matterhorn-disney",
@@ -869,6 +871,435 @@
       "answer": "Rockefeller Center",
       "category": "Famous Landmarks",
       "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-photo-eiffel-tower",
+      "question": "What famous landmark is depicted in this photo?",
+      "answer": "Eiffel Tower",
+      "category": "Famous Landmarks",
+      "difficulty": "easy",
+      "acceptableAnswers": ["The Eiffel Tower", "Tour Eiffel"],
+      "imageUrl": "https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=800&fit=crop",
+      "imageCredit": "Photo by Mathew Schwartz on Unsplash"
+    },
+    {
+      "slug": "landmark-photo-taj-mahal",
+      "question": "What famous landmark is shown in this photo?",
+      "answer": "Taj Mahal",
+      "category": "Famous Landmarks",
+      "difficulty": "easy",
+      "imageUrl": "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800&fit=crop",
+      "imageCredit": "Photo by Jovyn Chamb on Unsplash"
+    },
+    {
+      "slug": "landmark-photo-colosseum",
+      "question": "Name the ancient structure pictured here.",
+      "answer": "Colosseum",
+      "category": "Famous Landmarks",
+      "difficulty": "easy",
+      "acceptableAnswers": ["The Colosseum", "Coliseum", "The Coliseum"],
+      "imageUrl": "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&fit=crop",
+      "imageCredit": "Photo by Davi Pimentel on Unsplash"
+    },
+    {
+      "slug": "landmark-photo-machu-picchu",
+      "question": "What ancient citadel is pictured here?",
+      "answer": "Machu Picchu",
+      "category": "Famous Landmarks",
+      "difficulty": "easy",
+      "imageUrl": "https://images.unsplash.com/photo-1587595431973-160d0d94add1?w=800&fit=crop",
+      "imageCredit": "Photo by Willian Justen de Vasconcellos on Unsplash"
+    },
+    {
+      "slug": "landmark-photo-great-wall",
+      "question": "What famous structure is shown in this photo?",
+      "answer": "Great Wall of China",
+      "category": "Famous Landmarks",
+      "difficulty": "easy",
+      "acceptableAnswers": ["The Great Wall", "Great Wall"],
+      "imageUrl": "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=800&fit=crop",
+      "imageCredit": "Photo by Max van den Oetelaar on Unsplash"
+    },
+    {
+      "slug": "landmark-photo-statue-of-liberty",
+      "question": "What iconic statue is pictured here?",
+      "answer": "Statue of Liberty",
+      "category": "Famous Landmarks",
+      "difficulty": "easy",
+      "acceptableAnswers": ["The Statue of Liberty", "Lady Liberty"],
+      "imageUrl": "https://plus.unsplash.com/premium_photo-1681803531285-75db948035d3?w=800&fit=crop",
+      "imageCredit": "Photo on Unsplash"
+    },
+    {
+      "slug": "landmark-photo-big-ben",
+      "question": "What famous clock tower is pictured here?",
+      "answer": "Big Ben",
+      "category": "Famous Landmarks",
+      "difficulty": "easy",
+      "acceptableAnswers": ["Elizabeth Tower"],
+      "imageUrl": "https://images.unsplash.com/photo-1454793147212-9e7e57e89a4f?w=800&fit=crop",
+      "imageCredit": "Photo by Mathew Schwartz on Unsplash"
+    },
+    {
+      "slug": "landmark-photo-sydney-opera-house",
+      "question": "What famous performing arts venue is shown in this photo?",
+      "answer": "Sydney Opera House",
+      "category": "Famous Landmarks",
+      "difficulty": "easy",
+      "acceptableAnswers": ["The Sydney Opera House"],
+      "imageUrl": "https://images.unsplash.com/photo-1540448051910-09cfadd5df61?w=800&fit=crop",
+      "imageCredit": "Photo by Dan Freeman on Unsplash"
+    },
+    {
+      "slug": "landmark-photo-petra",
+      "question": "What ancient city carved into rose-red cliffs is shown here?",
+      "answer": "Petra",
+      "category": "Famous Landmarks",
+      "difficulty": "medium",
+      "acceptableAnswers": ["Petra, Jordan"],
+      "imageUrl": "https://images.unsplash.com/photo-1579606032821-4e6161c81bd3?w=800&fit=crop",
+      "imageCredit": "Photo by Torsten Dederichs on Unsplash"
+    },
+    {
+      "slug": "landmark-photo-angkor-wat",
+      "question": "What ancient temple complex is depicted in this photo?",
+      "answer": "Angkor Wat",
+      "category": "Famous Landmarks",
+      "difficulty": "medium",
+      "imageUrl": "https://images.unsplash.com/photo-1539701938214-0d9736e1c16b?w=800&fit=crop",
+      "imageCredit": "Photo on Unsplash"
+    },
+    {
+      "slug": "landmark-lotus-temple",
+      "question": "Known as the 'Lotus Temple,' this stunning flower-shaped Bahá'í House of Worship in New Delhi, India, is one of the most visited buildings in the world.",
+      "answer": "Lotus Temple",
+      "category": "Famous Landmarks",
+      "difficulty": "hard",
+      "acceptableAnswers": ["Bahá'í House of Worship", "Bahai Temple"]
+    },
+    {
+      "slug": "landmark-uluru",
+      "question": "This enormous sandstone monolith rising 1,142 feet above the surrounding desert in Australia's Northern Territory is sacred to the Anangu Aboriginal people.",
+      "answer": "Uluru",
+      "category": "Famous Landmarks",
+      "difficulty": "medium",
+      "acceptableAnswers": ["Ayers Rock"]
+    },
+    {
+      "slug": "landmark-victoria-falls",
+      "question": "Straddling the border of Zambia and Zimbabwe, this waterfall on the Zambezi River is the largest in the world by total area of falling water.",
+      "answer": "Victoria Falls",
+      "category": "Famous Landmarks",
+      "difficulty": "medium",
+      "acceptableAnswers": ["Mosi-oa-Tunya"]
+    },
+    {
+      "slug": "landmark-mount-olympus",
+      "question": "At 9,573 feet, this is the highest mountain in Greece and, in ancient Greek religion, the home of the twelve Olympian gods.",
+      "answer": "Mount Olympus",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-pompeii",
+      "question": "This ancient Roman city in southern Italy was catastrophically buried under volcanic ash and pumice following the eruption of a nearby volcano in 79 AD, preserving it nearly intact.",
+      "answer": "Pompeii",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-tikal",
+      "question": "Hidden deep in the rainforests of northern Guatemala, this abandoned ancient city was once one of the most powerful kingdoms of the Maya civilization.",
+      "answer": "Tikal",
+      "category": "Famous Landmarks",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "landmark-teotihuacan",
+      "question": "Home to the Pyramid of the Sun and the Pyramid of the Moon, this massive pre-Columbian city northeast of Mexico City was once one of the largest cities in the ancient world.",
+      "answer": "Teotihuacan",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-salar-de-uyuni",
+      "question": "At over 4,000 square miles, this immense salt flat in the Bolivian Andes is the world's largest, and during the rainy season a thin layer of water turns it into the world's largest natural mirror.",
+      "answer": "Salar de Uyuni",
+      "category": "Famous Landmarks",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "landmark-plitvice-lakes",
+      "question": "This UNESCO World Heritage site in Croatia is famous for its chain of terraced lakes interconnected by waterfalls, with vivid turquoise and green colors created by minerals and microorganisms.",
+      "answer": "Plitvice Lakes",
+      "category": "Famous Landmarks",
+      "difficulty": "hard",
+      "acceptableAnswers": ["Plitvice Lakes National Park"]
+    },
+    {
+      "slug": "landmark-mont-blanc",
+      "question": "Straddling the border of France and Italy at 15,774 feet, this is the highest peak in the Alps and in all of Western Europe.",
+      "answer": "Mont Blanc",
+      "category": "Famous Landmarks",
+      "difficulty": "medium",
+      "acceptableAnswers": ["Monte Bianco"]
+    },
+    {
+      "slug": "landmark-suez-canal",
+      "question": "Opened in 1869 and connecting the Mediterranean Sea to the Red Sea, this 120-mile Egyptian waterway dramatically shortened shipping routes between Europe and Asia.",
+      "answer": "Suez Canal",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-galapagos",
+      "question": "This volcanic archipelago in the Pacific Ocean, belonging to Ecuador, was visited by Charles Darwin in 1835 and inspired his theory of natural selection through its unique wildlife.",
+      "answer": "Galápagos Islands",
+      "category": "Famous Landmarks",
+      "difficulty": "easy",
+      "acceptableAnswers": ["Galapagos Islands", "Galapagos"]
+    },
+    {
+      "slug": "landmark-amazon-river",
+      "question": "Though slightly shorter than the Nile, this South American river carries more water than any other river on Earth and flows through the world's largest rainforest.",
+      "answer": "Amazon River",
+      "category": "Famous Landmarks",
+      "difficulty": "easy",
+      "acceptableAnswers": ["Amazon", "The Amazon"]
+    },
+    {
+      "slug": "landmark-lake-titicaca",
+      "question": "Straddling the border of Peru and Bolivia at an elevation of 12,507 feet, this is the world's highest navigable lake and the largest lake in South America by surface area.",
+      "answer": "Lake Titicaca",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-table-mountain",
+      "question": "This flat-topped mountain overlooking Cape Town, South Africa, is one of the New Seven Wonders of Nature and is a globally recognized symbol of the city.",
+      "answer": "Table Mountain",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-antelope-canyon",
+      "question": "Located on Navajo land near Page, Arizona, this slot canyon is famous for its wave-like structure and narrow passages through flowing sandstone, and is one of the most photographed canyons in the American Southwest.",
+      "answer": "Antelope Canyon",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-old-faithful",
+      "question": "This famous geyser in Yellowstone National Park earned its name from its consistent eruption schedule, shooting boiling water up to 184 feet in the air roughly every 60 to 110 minutes.",
+      "answer": "Old Faithful",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-monument-valley",
+      "question": "This region of the Colorado Plateau on the Navajo Nation border of Utah and Arizona is famous for its iconic red-rock buttes and mesas that have appeared in countless Western films.",
+      "answer": "Monument Valley",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-bryce-canyon",
+      "question": "Located in southern Utah, this national park is known for its hoodoos — tall, thin spires of rock formed by erosion — and for having the world's largest concentration of these unique geological formations.",
+      "answer": "Bryce Canyon",
+      "category": "Famous Landmarks",
+      "difficulty": "medium",
+      "acceptableAnswers": ["Bryce Canyon National Park"]
+    },
+    {
+      "slug": "landmark-arches-national-park",
+      "question": "Located in eastern Utah, this national park contains over 2,000 natural sandstone arches, including the famous Delicate Arch which appears on Utah's license plate.",
+      "answer": "Arches National Park",
+      "category": "Famous Landmarks",
+      "difficulty": "medium",
+      "acceptableAnswers": ["Arches", "Delicate Arch"]
+    },
+    {
+      "slug": "landmark-zion-national-park",
+      "question": "This national park in southwestern Utah is known for its steep red cliffs, The Narrows slot canyon, and Angels Landing — a trail that requires navigating chains bolted into sheer rock.",
+      "answer": "Zion National Park",
+      "category": "Famous Landmarks",
+      "difficulty": "medium",
+      "acceptableAnswers": ["Zion Canyon", "Zion"]
+    },
+    {
+      "slug": "landmark-crater-lake",
+      "question": "Formed by the collapse of a volcano around 5,700 years ago, this lake in Oregon is the deepest lake in the United States at 1,943 feet and is renowned for its startling deep blue color.",
+      "answer": "Crater Lake",
+      "category": "Famous Landmarks",
+      "difficulty": "medium",
+      "acceptableAnswers": ["Crater Lake National Park"]
+    },
+    {
+      "slug": "landmark-torres-del-paine",
+      "question": "Located in southern Chilean Patagonia, this national park is named for the three distinctive granite towers that dominate its skyline and is widely considered one of the most beautiful places on Earth.",
+      "answer": "Torres del Paine",
+      "category": "Famous Landmarks",
+      "difficulty": "hard",
+      "acceptableAnswers": ["Torres del Paine National Park"]
+    },
+    {
+      "slug": "landmark-iguazu-falls",
+      "question": "Spanning the border of Argentina and Brazil, this system of 275 individual waterfalls is wider than Niagara Falls and Victoria Falls combined, and is set within a UNESCO World Heritage Site.",
+      "answer": "Iguazu Falls",
+      "category": "Famous Landmarks",
+      "difficulty": "medium",
+      "acceptableAnswers": ["Iguassu Falls", "Iguaçu Falls"]
+    },
+    {
+      "slug": "landmark-giant-causeway",
+      "question": "Located on the northeastern coast of Northern Ireland, this area of about 40,000 interlocking basalt columns — most of them hexagonal — was formed by an ancient volcanic eruption.",
+      "answer": "Giant's Causeway",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-amalfi-coast",
+      "question": "This stretch of coastline along the southern edge of Italy's Sorrentine Peninsula is famous for its dramatic cliffs, pastel-colored towns perched above the sea, and UNESCO World Heritage status.",
+      "answer": "Amalfi Coast",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-white-cliffs-dover",
+      "question": "These iconic chalk cliffs on the English coast near the Strait of Dover reach heights of up to 350 feet and have long served as a symbol of Britain due to their visibility from France.",
+      "answer": "White Cliffs of Dover",
+      "category": "Famous Landmarks",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "landmark-cinque-terre",
+      "question": "This string of five colorful cliff-hanging villages along a rugged stretch of the Italian Riviera coastline — connected by hiking trails and a railway — is a UNESCO World Heritage Site.",
+      "answer": "Cinque Terre",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-norwegian-fjords",
+      "question": "These long, narrow inlets carved by glaciers along the west coast of Norway — including the famous Geirangerfjord and Nærøyfjord — are listed as UNESCO World Heritage Sites.",
+      "answer": "Norwegian Fjords",
+      "category": "Famous Landmarks",
+      "difficulty": "easy",
+      "acceptableAnswers": ["Fjords of Norway", "Geirangerfjord", "Nærøyfjord"]
+    },
+    {
+      "slug": "landmark-ha-long-bay",
+      "question": "Located in northeastern Vietnam, this UNESCO World Heritage site is famous for its emerald waters and thousands of towering limestone islands topped with rainforest.",
+      "answer": "Ha Long Bay",
+      "category": "Famous Landmarks",
+      "difficulty": "medium",
+      "acceptableAnswers": ["Halong Bay"]
+    },
+    {
+      "slug": "landmark-lake-baikal",
+      "question": "Located in Siberia, Russia, this is the world's deepest lake at 5,387 feet and holds approximately 20% of the world's unfrozen surface fresh water.",
+      "answer": "Lake Baikal",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-pamukkale",
+      "question": "Located in southwestern Turkey, this natural site consists of terraced hot spring pools and white travertine terraces that cascade down a hillside, adjacent to the ancient ruins of Hierapolis.",
+      "answer": "Pamukkale",
+      "category": "Famous Landmarks",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "landmark-zhangjiajie",
+      "question": "This Chinese national park in Hunan Province features thousands of towering sandstone pillar formations — widely recognized as the inspiration for the floating Hallelujah Mountains in the film Avatar.",
+      "answer": "Zhangjiajie",
+      "category": "Famous Landmarks",
+      "difficulty": "hard",
+      "acceptableAnswers": ["Zhangjiajie National Forest Park"]
+    },
+    {
+      "slug": "landmark-kinkaku-ji",
+      "question": "Formally known as Rokuon-ji, this Zen Buddhist temple in Kyoto, Japan, is famous for its top two floors being completely covered in gold leaf, reflecting beautifully in the surrounding pond.",
+      "answer": "Kinkaku-ji",
+      "category": "Famous Landmarks",
+      "difficulty": "hard",
+      "acceptableAnswers": ["Golden Pavilion", "Temple of the Golden Pavilion"]
+    },
+    {
+      "slug": "landmark-temple-of-heaven",
+      "question": "This complex of religious buildings in Beijing, China, was visited by emperors of the Ming and Qing dynasties to perform annual ceremonies of prayer to Heaven for a good harvest.",
+      "answer": "Temple of Heaven",
+      "category": "Famous Landmarks",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "landmark-varanasi",
+      "question": "Considered the spiritual capital of India, this ancient city on the banks of the Ganges River is one of the oldest continuously inhabited cities in the world and draws millions of Hindu pilgrims each year.",
+      "answer": "Varanasi",
+      "category": "Famous Landmarks",
+      "difficulty": "hard",
+      "acceptableAnswers": ["Benares", "Kashi"]
+    },
+    {
+      "slug": "landmark-bagan",
+      "question": "Located in Myanmar, this ancient capital contains more than 3,500 Buddhist temples, pagodas, and monasteries scattered across a vast archaeological plain.",
+      "answer": "Bagan",
+      "category": "Famous Landmarks",
+      "difficulty": "hard",
+      "acceptableAnswers": ["Pagan"]
+    },
+    {
+      "slug": "landmark-waitomo-caves",
+      "question": "Located in New Zealand's King Country region, these limestone caves are renowned for their glowworm populations that illuminate the cavern ceilings like a starry sky.",
+      "answer": "Waitomo Glowworm Caves",
+      "category": "Famous Landmarks",
+      "difficulty": "hard",
+      "acceptableAnswers": ["Waitomo Caves"]
+    },
+    {
+      "slug": "landmark-great-ocean-road",
+      "question": "This scenic coastal drive in Victoria, Australia, stretches 151 miles and is home to the Twelve Apostles — a collection of limestone stacks rising from the Southern Ocean.",
+      "answer": "Great Ocean Road",
+      "category": "Famous Landmarks",
+      "difficulty": "medium",
+      "acceptableAnswers": ["Twelve Apostles"]
+    },
+    {
+      "slug": "landmark-isle-of-skye",
+      "question": "This rugged Scottish island off the northwest coast of Scotland is famous for its dramatic landscapes including the Quiraing, Old Man of Storr, and Fairy Pools.",
+      "answer": "Isle of Skye",
+      "category": "Famous Landmarks",
+      "difficulty": "medium",
+      "acceptableAnswers": ["Skye"]
+    },
+    {
+      "slug": "landmark-lake-bled",
+      "question": "This glacial lake in Slovenia, set against the Julian Alps, features a small island with a baroque church and a medieval castle perched on a cliff above the shoreline.",
+      "answer": "Lake Bled",
+      "category": "Famous Landmarks",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "landmark-mount-roraima",
+      "question": "This table-top mountain sits at the tri-border point of Venezuela, Brazil, and Guyana, and inspired Sir Arthur Conan Doyle's novel 'The Lost World.' It is perpetually shrouded in cloud.",
+      "answer": "Mount Roraima",
+      "category": "Famous Landmarks",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "landmark-blue-hole",
+      "question": "Located off the coast of Belize, this giant marine sinkhole — roughly 1,000 feet wide and 400 feet deep — is one of the world's top scuba diving destinations.",
+      "answer": "Great Blue Hole",
+      "category": "Famous Landmarks",
+      "difficulty": "hard",
+      "acceptableAnswers": ["Blue Hole", "The Great Blue Hole"]
+    },
+    {
+      "slug": "landmark-jiuzhaigou",
+      "question": "This national park in China's Sichuan province is renowned for its multi-level waterfalls and colorful lakes ranging from turquoise to deep blue.",
+      "answer": "Jiuzhaigou",
+      "category": "Famous Landmarks",
+      "difficulty": "hard",
+      "acceptableAnswers": ["Jiuzhai Valley"]
     }
   ]
 }

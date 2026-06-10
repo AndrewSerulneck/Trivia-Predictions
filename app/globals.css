@@ -792,6 +792,29 @@ h4,
   will-change: transform, opacity;
 }
 
+/* Live Trivia correct-answer reveal: single left-to-right shimmer sweep. */
+@keyframes tp-answer-shimmer {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-tp-answer-shimmer {
+  animation: tp-answer-shimmer 600ms ease-out 350ms both;
+  will-change: transform, opacity;
+}
+
 /* Pick 'Em compact mode for narrow phones (iPhone SE and similar). */
 @media (max-width: 380px) {
   .tp-pickem-compact section {

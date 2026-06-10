@@ -2,6 +2,7 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
+const { createClient } = require("@supabase/supabase-js");
 
 const DEFAULT_DIR = "data/trivia/categories";
 const DEFAULT_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
@@ -82,6 +83,10 @@ function slugify(value) {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+function normalizeEnvValue(value) {
+  return typeof value === "string" ? value.trim() : "";
 }
 
 function normalizeQuestionKey(question) {
@@ -351,7 +356,66 @@ function writeNewQuestionsOnly(outputDir, categoryFile, rows) {
   if (!outputDir || rows.length === 0) return;
   const absoluteDir = path.resolve(process.cwd(), outputDir);
   fs.mkdirSync(absoluteDir, { recursive: true });
-  writeQuestions(path.join(absoluteDir, categoryFile), rows);
+  const filePath = path.join(absoluteDir, categoryFile);
+  let mergedRows = rows;
+  if (fs.existsSync(filePath)) {
+    const existing = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    if (Array.isArray(existing)) {
+      mergedRows = [...existing, ...rows];
+    }
+  }
+  writeQuestions(filePath, mergedRows);
+}
+
+async function fetchExistingDatabaseQuestionCatalog(questionPool) {
+  const supabaseUrl = normalizeEnvValue(process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const serviceRoleKey = normalizeEnvValue(process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    return [];
+  }
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const catalog = [];
+  const pageSize = 1000;
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from("trivia_questions")
+      .select("slug, question, status")
+      .eq("question_pool", questionPool)
+      .neq("status", "deleted")
+      .range(from, from + pageSize - 1);
+
+    if (error) {
+      throw new Error(`Failed to load existing trivia questions from Supabase: ${error.message}`);
+    }
+
+    if (!data || data.length === 0) {
+      break;
+    }
+
+    for (const row of data) {
+      catalog.push({
+        id: null,
+        slug: row.slug ?? null,
+        question: String(row.question ?? ""),
+        questionPool,
+        status: row.status ?? null,
+      });
+    }
+
+    if (data.length < pageSize) {
+      break;
+    }
+    from += pageSize;
+  }
+
+  return catalog;
 }
 
 async function main() {
@@ -373,6 +437,14 @@ async function main() {
 
   const seenSlugs = new Set(allExisting.map((item) => slugify(item?.slug || item?.question || "")).filter(Boolean));
   const seenQuestionKeys = new Set(allExisting.map((item) => normalizeQuestionKey(item?.question || "")).filter(Boolean));
+  const dbQuestionCatalog = await fetchExistingDatabaseQuestionCatalog("anytime_blitz");
+  for (const row of dbQuestionCatalog) {
+    const questionKey = normalizeQuestionKey(row.question);
+    if (questionKey) seenQuestionKeys.add(questionKey);
+  }
+  if (dbQuestionCatalog.length > 0) {
+    console.log(`Loaded ${dbQuestionCatalog.length} existing anytime_blitz questions from Supabase.`);
+  }
 
   const existingInCategory = targetQuestions
     .map((item) => String(item?.question || "").trim())

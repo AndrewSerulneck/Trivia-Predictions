@@ -33,7 +33,9 @@ function areNotificationsEqual(left: Notification[], right: Notification[]): boo
 }
 
 function extractPointsFromMessage(message: string): number {
-  const match = message.match(/(?:earned|won)\s+([0-9][0-9,]*)\s+points?/i);
+  const match =
+    message.match(/\+(\d[\d,]*)\s*pts/i) ??
+    message.match(/(?:earned|won)\s+([0-9][0-9,]*)\s+points?/i);
   if (!match?.[1]) {
     return 0;
   }
@@ -292,7 +294,7 @@ export function NotificationBell() {
                       onClick={() => {
                         void markRead(item.id);
                         setOpen(false);
-                        router.push(resolveNotificationHref(item.message));
+                        router.push(item.linkUrl ?? resolveNotificationHref(item.message));
                       }}
                       className="tp-clean-button flex w-full items-start gap-3 px-4 py-3 hover:bg-slate-800/60 transition-colors"
                     >

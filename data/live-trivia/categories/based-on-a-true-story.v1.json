@@ -3,7 +3,7 @@
   "questions": [
 
       {
-    "slug": "the-social-network-jesse-eisenberg",
+    "slug": "the-social-network-jesse-eisenberg-true-story",
     "question": "Which tech entrepreneur was played by Jesse Eisenberg in the 2010 film The Social Network?",
     "answer": "Mark Zuckerberg",
     "category": "Based on a True Story",
@@ -24,7 +24,7 @@
     "difficulty": "easy"
   },
   {
-    "slug": "the-pursuit-of-happyness-will-smith",
+    "slug": "the-pursuit-of-happyness-will-smith-true-story",
     "question": "Which stockbroker and entrepreneur was played by Will Smith in the 2006 film The Pursuit of Happyness?",
     "answer": "Chris Gardner",
     "category": "Based on a True Story",
@@ -45,14 +45,14 @@
     "difficulty": "easy"
   },
   {
-    "slug": "the-theory-of-everything-eddie-redmayne",
+    "slug": "the-theory-of-everything-eddie-redmayne-true-story",
     "question": "Which physicist was played by Eddie Redmayne in the 2014 film The Theory of Everything?",
     "answer": "Stephen Hawking",
     "category": "Based on a True Story",
     "difficulty": "easy"
   },
   {
-    "slug": "the-imitation-game-benedict-cumberbatch",
+    "slug": "the-imitation-game-benedict-cumberbatch-true-story",
     "question": "Which mathematician and codebreaker was played by Benedict Cumberbatch in the 2014 film The Imitation Game?",
     "answer": "Alan Turing",
     "category": "Based on a True Story",
@@ -66,21 +66,21 @@
     "difficulty": "easy"
   },
   {
-    "slug": "the-wolf-of-wall-street-leonardo-dicaprio",
+    "slug": "the-wolf-of-wall-street-leonardo-dicaprio-true-story",
     "question": "Which stockbroker was played by Leonardo DiCaprio in the 2013 film The Wolf of Wall Street?",
     "answer": "Jordan Belfort",
     "category": "Based on a True Story",
     "difficulty": "easy"
   },
   {
-    "slug": "moneyball-brad-pitt",
+    "slug": "moneyball-brad-pitt-true-story",
     "question": "Which baseball general manager was played by Brad Pitt in the 2011 film Moneyball?",
     "answer": "Billy Beane",
     "category": "Based on a True Story",
     "difficulty": "easy"
   },
   {
-    "slug": "the-fighter-mark-wahlberg",
+    "slug": "the-fighter-mark-wahlberg-true-story",
     "question": "Which boxer was played by Mark Wahlberg in the 2010 film The Fighter?",
     "answer": "Micky Ward",
     "category": "Based on a True Story",
@@ -101,7 +101,7 @@
     "difficulty": "easy"
   },
   {
-    "slug": "the-revenant-leonardo-dicaprio",
+    "slug": "the-revenant-leonardo-dicaprio-true-story",
     "question": "Which frontiersman was played by Leonardo DiCaprio in the 2015 film The Revenant?",
     "answer": "Hugh Glass",
     "category": "Based on a True Story",
@@ -129,7 +129,7 @@
     "difficulty": "easy"
   },
   {
-    "slug": "the-post-meryl-streep",
+    "slug": "the-post-meryl-streep-true-story",
     "question": "Which journalist was played by Meryl Streep in the 2017 film The Post?",
     "answer": "Katharine Graham",
     "category": "Based on a True Story",
@@ -171,7 +171,7 @@
     "difficulty": "easy"
   },
   {
-    "slug": "the-irishman-robert-de-niro",
+    "slug": "the-irishman-robert-de-niro-true-story",
     "question": "Which labor union leader was played by Al Pacino in the 2019 film The Irishman?",
     "answer": "Jimmy Hoffa",
     "category": "Based on a True Story",

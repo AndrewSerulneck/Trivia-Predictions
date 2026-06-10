@@ -9,11 +9,14 @@ export type AnimationType =
   | "LIVE_TRIVIA_WRONG"
   | "LIVE_TRIVIA_STREAK"
   | "LIVE_TRIVIA_ROUND_BREAK"
+  | "LIVE_TRIVIA_NEXT_CATEGORY"
   | "FANTASY_SCORE_UP"
   | "FANTASY_LIVE_COLLECT";
 
 export interface AnimationPayload {
   inputRect?: DOMRect | null;
+  categoryName?: string;
+  roundNumber?: number;
 }
 
 export type GameplayAnimationProps = {

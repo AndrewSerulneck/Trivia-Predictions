@@ -311,6 +311,9 @@ export function PopupAds() {
         dismissedByTriggerRef.current["popup-on-scroll"] = true;
         setLandingPopupGate(false);
       }
+      if (popup.trigger === "popup-round-end") {
+        window.dispatchEvent(new CustomEvent("tp:round-end-ad-complete"));
+      }
     }
     // Release scroll lock immediately on close — don't wait for the effect cycle.
     setScrollLock(`popup-ad:${popupOwnerId}`, false);
@@ -493,19 +496,23 @@ export function PopupAds() {
       if (requestedRound) {
         pendingRoundPopupQueueRef.current = pendingRoundPopupQueueRef.current.filter((value) => value !== requestedRound);
       }
-      // Delay so the round-summary UI has time to render before the popup
-      // covers it — the ad should appear *over* the summary, not before it.
-      void wait(350).then(() =>
-        showPopup("popup-round-end", {
-          pageKey,
-          displayTrigger: "round-end",
-          roundNumber: requestedRound,
-        }).then((opened) => {
-          if (!opened && requestedRound) {
+      void showPopup("popup-round-end", {
+        pageKey,
+        displayTrigger: "round-end",
+        roundNumber: requestedRound,
+      }).then((opened) => {
+        if (opened) {
+          // Ad is showing — tell TriviaGame to cancel its fallback timer and
+          // wait for the dismiss event instead.
+          window.dispatchEvent(new CustomEvent("tp:round-end-ad-shown"));
+        } else {
+          if (requestedRound) {
             pendingRoundPopupQueueRef.current.push(requestedRound);
           }
-        })
-      );
+          // No ad is showing — signal that the round summary can appear.
+          window.dispatchEvent(new CustomEvent("tp:round-end-ad-complete"));
+        }
+      });
     };
 
     window.addEventListener("tp:trivia-round-complete", onRoundComplete as EventListener);

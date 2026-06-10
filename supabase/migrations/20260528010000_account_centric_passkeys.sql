@@ -29,6 +29,12 @@ where ch.user_id = u.id
   and u.account_id is not null
   and ch.account_id is null;
 
+-- Some older challenge rows can be orphaned from a venue user profile or predate
+-- account backfill entirely. These WebAuthn challenges are short-lived and safe
+-- to discard before enforcing account_id NOT NULL.
+delete from public.webauthn_challenges
+where account_id is null;
+
 alter table public.webauthn_challenges
   alter column account_id set not null,
   alter column user_id drop not null;

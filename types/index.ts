@@ -76,6 +76,10 @@ export interface TriviaQuestion {
   questionPool?: "anytime_blitz" | "live_showdown";
   answerFormat?: "multiple_choice" | "write_in" | "numeric" | "true_false";
   createdAt?: string;
+  /** Fully-qualified image URL to display above the question text (e.g. an Unsplash photo URL or Wikimedia map SVG). */
+  imageUrl?: string;
+  /** Attribution text required by the image source (e.g. "Photo by Jane Doe on Unsplash"). */
+  imageCredit?: string;
 }
 
 export interface TriviaAnswer {
@@ -141,6 +145,7 @@ export interface Notification {
   type: "info" | "success" | "warning" | "error";
   read: boolean;
   createdAt: string;
+  linkUrl?: string;
 }
 
 export type ChallengeGameType =

@@ -1,4 +1,4 @@
-export type EmceePhase = "pregame" | "rest_warning" | "mid_game_break";
+export type EmceePhase = "pregame" | "rest_warning" | "mid_game_break" | "post_game";
 
 const PREGAME_LINES = [
   "Doors are open, brains are warming up. Grab a drink and find your crew.",
@@ -55,6 +55,17 @@ const BREAK_PLAYFUL_LINES = [
   "Reset complete soon. Greatness pending.",
 ];
 
+const FINAL_RESULTS_LINES = [
+  "Game over. Check the standings and settle the table debate.",
+  "The final scores are locked. See where you finished above.",
+  "That's a wrap on tonight's trivia. Well played.",
+  "All rounds complete. The leaderboard has the final word.",
+  "The winner has been decided. Check the top of the board.",
+  "Tonight's game is in the books. Thanks for playing.",
+  "Final standings are in. Come back and defend your rank next time.",
+  "Game complete. The scoreboard doesn't lie.",
+];
+
 function hashSeed(seed: string): number {
   let hash = 2166136261;
   for (let i = 0; i < seed.length; i += 1) {
@@ -76,12 +87,17 @@ export function getEmceeLine(params: {
   roundNumber?: number | null;
   questionIndex?: number | null;
   secondsRemaining: number;
+  isFinalRound?: boolean;
 }): string {
   const bucket = Math.floor(Math.max(0, params.secondsRemaining) / 6);
   const baseSeed = `${params.phase}:${params.scheduleId ?? "none"}:${params.roundNumber ?? 0}:${params.questionIndex ?? 0}:${bucket}`;
 
   if (params.phase === "pregame") {
     return pickFrom(PREGAME_LINES, baseSeed);
+  }
+
+  if (params.phase === "post_game" || params.isFinalRound) {
+    return pickFrom(FINAL_RESULTS_LINES, baseSeed);
   }
 
   const playful = hashSeed(`${baseSeed}:tone`) % 2 === 1;

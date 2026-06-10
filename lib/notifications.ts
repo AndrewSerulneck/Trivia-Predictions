@@ -10,6 +10,7 @@ type NotificationRow = {
   type: Notification["type"];
   read: boolean;
   created_at: string;
+  link_url: string | null;
 };
 
 function mapNotificationRow(row: NotificationRow): Notification {
@@ -20,6 +21,7 @@ function mapNotificationRow(row: NotificationRow): Notification {
     type: row.type,
     read: row.read,
     createdAt: row.created_at,
+    linkUrl: row.link_url ?? undefined,
   };
 }
 
@@ -68,7 +70,7 @@ export async function listUserNotifications(
 
   let query = supabaseAdmin
     .from("notifications")
-    .select("id, user_id, message, type, read, created_at", { count: "exact" })
+    .select("id, user_id, message, type, read, created_at, link_url", { count: "exact" })
     .eq("user_id", userId)
     .gte("created_at", cutoffIso)
     .order("created_at", { ascending: false });

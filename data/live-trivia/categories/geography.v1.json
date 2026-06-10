@@ -766,6 +766,1547 @@
       "answer": "Nebraska",
       "category": "Geography",
       "difficulty": "hard"
+    },
+    {
+      "slug": "geography-map-texas",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Texas",
+      "category": "Geography",
+      "difficulty": "easy",
+      "imageUrl": "/maps/geography-map-texas.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-florida",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Florida",
+      "category": "Geography",
+      "difficulty": "easy",
+      "imageUrl": "/maps/geography-map-florida.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-california",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "California",
+      "category": "Geography",
+      "difficulty": "easy",
+      "imageUrl": "/maps/geography-map-california.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-alaska",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Alaska",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-alaska.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-france",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "France",
+      "category": "Geography",
+      "difficulty": "easy",
+      "imageUrl": "/maps/geography-map-france.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-brazil",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Brazil",
+      "category": "Geography",
+      "difficulty": "easy",
+      "imageUrl": "/maps/geography-map-brazil.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-australia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Australia",
+      "category": "Geography",
+      "difficulty": "easy",
+      "imageUrl": "/maps/geography-map-australia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-japan",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Japan",
+      "category": "Geography",
+      "difficulty": "easy",
+      "imageUrl": "/maps/geography-map-japan.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-new-york",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "New York",
+      "category": "Geography",
+      "difficulty": "easy",
+      "imageUrl": "/maps/geography-map-new-york.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-ohio",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Ohio",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-ohio.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-michigan",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Michigan",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-michigan.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-illinois",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Illinois",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-illinois.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-pennsylvania",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Pennsylvania",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-pennsylvania.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-colorado",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Colorado",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-colorado.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-washington",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Washington",
+      "category": "Geography",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Washington State"
+      ],
+      "imageUrl": "/maps/geography-map-washington.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-arizona",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Arizona",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-arizona.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-georgia",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Georgia",
+      "category": "Geography",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Georgia (U.S. state)"
+      ],
+      "imageUrl": "/maps/geography-map-georgia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-north-carolina",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "North Carolina",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-north-carolina.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-tennessee",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Tennessee",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-tennessee.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-minnesota",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Minnesota",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-minnesota.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-nevada",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Nevada",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-nevada.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-canada",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Canada",
+      "category": "Geography",
+      "difficulty": "easy",
+      "imageUrl": "/maps/geography-map-canada.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-mexico",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Mexico",
+      "category": "Geography",
+      "difficulty": "easy",
+      "imageUrl": "/maps/geography-map-mexico.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-germany",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Germany",
+      "category": "Geography",
+      "difficulty": "easy",
+      "imageUrl": "/maps/geography-map-germany.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-italy",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Italy",
+      "category": "Geography",
+      "difficulty": "easy",
+      "imageUrl": "/maps/geography-map-italy.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-spain",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Spain",
+      "category": "Geography",
+      "difficulty": "easy",
+      "imageUrl": "/maps/geography-map-spain.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-united-kingdom",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "United Kingdom",
+      "category": "Geography",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "UK",
+        "Great Britain",
+        "England"
+      ],
+      "imageUrl": "/maps/geography-map-united-kingdom.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-china",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "China",
+      "category": "Geography",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "People's Republic of China",
+        "PRC"
+      ],
+      "imageUrl": "/maps/geography-map-china.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-india",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "India",
+      "category": "Geography",
+      "difficulty": "easy",
+      "imageUrl": "/maps/geography-map-india.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-russia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Russia",
+      "category": "Geography",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Russian Federation"
+      ],
+      "imageUrl": "/maps/geography-map-russia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-argentina",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Argentina",
+      "category": "Geography",
+      "difficulty": "easy",
+      "imageUrl": "/maps/geography-map-argentina.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-south-africa",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "South Africa",
+      "category": "Geography",
+      "difficulty": "easy",
+      "imageUrl": "/maps/geography-map-south-africa.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-egypt",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Egypt",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-egypt.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-nigeria",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Nigeria",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-nigeria.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-south-korea",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "South Korea",
+      "category": "Geography",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Korea",
+        "Republic of Korea"
+      ],
+      "imageUrl": "/maps/geography-map-south-korea.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-sweden",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Sweden",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-sweden.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-norway",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Norway",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-norway.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-poland",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Poland",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-poland.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-ukraine",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Ukraine",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-ukraine.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-turkey",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Turkey",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-turkey.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-indonesia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Indonesia",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-indonesia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-new-zealand",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "New Zealand",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-new-zealand.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-alabama",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Alabama",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-alabama.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-arkansas",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Arkansas",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-arkansas.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-connecticut",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Connecticut",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-connecticut.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-delaware",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Delaware",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-delaware.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-hawaii",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Hawaii",
+      "category": "Geography",
+      "difficulty": "easy",
+      "imageUrl": "/maps/geography-map-hawaii.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-idaho",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Idaho",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-idaho.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-indiana",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Indiana",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-indiana.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-iowa",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Iowa",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-iowa.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-kansas",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Kansas",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-kansas.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-kentucky",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Kentucky",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-kentucky.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-louisiana",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Louisiana",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-louisiana.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-maine",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Maine",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-maine.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-maryland",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Maryland",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-maryland.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-massachusetts",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Massachusetts",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-massachusetts.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-mississippi",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Mississippi",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-mississippi.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-missouri",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Missouri",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-missouri.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-montana",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Montana",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-montana.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-nebraska",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Nebraska",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-nebraska.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-new-hampshire",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "New Hampshire",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-new-hampshire.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-new-jersey",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "New Jersey",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-new-jersey.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-new-mexico",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "New Mexico",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-new-mexico.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-north-dakota",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "North Dakota",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-north-dakota.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-oklahoma",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Oklahoma",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-oklahoma.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-oregon",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Oregon",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-oregon.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-rhode-island",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Rhode Island",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-rhode-island.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-south-carolina",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "South Carolina",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-south-carolina.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-south-dakota",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "South Dakota",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-south-dakota.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-utah",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Utah",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-utah.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-vermont",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Vermont",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-vermont.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-virginia",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Virginia",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-virginia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-west-virginia",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "West Virginia",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-west-virginia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-wisconsin",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Wisconsin",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-wisconsin.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-wyoming",
+      "question": "Which U.S. state is shown highlighted on this map?",
+      "answer": "Wyoming",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-wyoming.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-albania",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Albania",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-albania.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-austria",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Austria",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-austria.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-belarus",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Belarus",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-belarus.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-belgium",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Belgium",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-belgium.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-bosnia-and-herzegovina",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Bosnia and Herzegovina",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-bosnia-and-herzegovina.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census",
+      "acceptableAnswers": [
+        "Bosnia",
+        "Herzegovina"
+      ]
+    },
+    {
+      "slug": "geography-map-bulgaria",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Bulgaria",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-bulgaria.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-croatia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Croatia",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-croatia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-czech-republic",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Czech Republic",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-czech-republic.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census",
+      "acceptableAnswers": [
+        "Czechia"
+      ]
+    },
+    {
+      "slug": "geography-map-denmark",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Denmark",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-denmark.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-estonia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Estonia",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-estonia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-finland",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Finland",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-finland.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-greece",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Greece",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-greece.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-hungary",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Hungary",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-hungary.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-ireland",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Ireland",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-ireland.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-latvia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Latvia",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-latvia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-lithuania",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Lithuania",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-lithuania.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-luxembourg",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Luxembourg",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-luxembourg.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-moldova",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Moldova",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-moldova.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-montenegro",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Montenegro",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-montenegro.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-netherlands",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Netherlands",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-netherlands.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-north-macedonia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "North Macedonia",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-north-macedonia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census",
+      "acceptableAnswers": [
+        "Macedonia"
+      ]
+    },
+    {
+      "slug": "geography-map-portugal",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Portugal",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-portugal.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-romania",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Romania",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-romania.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-serbia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Serbia",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-serbia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-slovakia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Slovakia",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-slovakia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-slovenia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Slovenia",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-slovenia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-switzerland",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Switzerland",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-switzerland.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-bolivia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Bolivia",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-bolivia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-chile",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Chile",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-chile.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-colombia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Colombia",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-colombia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-costa-rica",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Costa Rica",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-costa-rica.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-cuba",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Cuba",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-cuba.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-dominican-republic",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Dominican Republic",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-dominican-republic.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-ecuador",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Ecuador",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-ecuador.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-el-salvador",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "El Salvador",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-el-salvador.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-guatemala",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Guatemala",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-guatemala.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-haiti",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Haiti",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-haiti.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-honduras",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Honduras",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-honduras.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-jamaica",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Jamaica",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-jamaica.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-nicaragua",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Nicaragua",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-nicaragua.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-panama",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Panama",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-panama.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-paraguay",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Paraguay",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-paraguay.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-peru",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Peru",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-peru.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-uruguay",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Uruguay",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-uruguay.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-venezuela",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Venezuela",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-venezuela.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-algeria",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Algeria",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-algeria.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-angola",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Angola",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-angola.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-cameroon",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Cameroon",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-cameroon.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-dem-rep-of-the-congo",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Democratic Republic of the Congo",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-dem-rep-of-the-congo.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census",
+      "acceptableAnswers": [
+        "DRC",
+        "Congo",
+        "Democratic Republic of Congo",
+        "Dem. Rep. of the Congo"
+      ]
+    },
+    {
+      "slug": "geography-map-ethiopia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Ethiopia",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-ethiopia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-ghana",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Ghana",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-ghana.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-kenya",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Kenya",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-kenya.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-libya",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Libya",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-libya.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-madagascar",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Madagascar",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-madagascar.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-mali",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Mali",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-mali.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-morocco",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Morocco",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-morocco.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-mozambique",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Mozambique",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-mozambique.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-senegal",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Senegal",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-senegal.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-somalia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Somalia",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-somalia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-sudan",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Sudan",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-sudan.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-tanzania",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Tanzania",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-tanzania.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-tunisia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Tunisia",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-tunisia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-uganda",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Uganda",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-uganda.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-zambia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Zambia",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-zambia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-zimbabwe",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Zimbabwe",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-zimbabwe.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-afghanistan",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Afghanistan",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-afghanistan.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-azerbaijan",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Azerbaijan",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-azerbaijan.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-bangladesh",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Bangladesh",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-bangladesh.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-cambodia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Cambodia",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-cambodia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-iran",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Iran",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-iran.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-iraq",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Iraq",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-iraq.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-israel",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Israel",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-israel.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-jordan",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Jordan",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-jordan.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-kazakhstan",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Kazakhstan",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-kazakhstan.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-laos",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Laos",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-laos.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-malaysia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Malaysia",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-malaysia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-mongolia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Mongolia",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-mongolia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-myanmar",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Myanmar",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-myanmar.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-nepal",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Nepal",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-nepal.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-north-korea",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "North Korea",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-north-korea.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census",
+      "acceptableAnswers": [
+        "Democratic People's Republic of Korea"
+      ]
+    },
+    {
+      "slug": "geography-map-pakistan",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Pakistan",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-pakistan.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-philippines",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Philippines",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-philippines.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-saudi-arabia",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Saudi Arabia",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-saudi-arabia.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-sri-lanka",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Sri Lanka",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-sri-lanka.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-syria",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Syria",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-syria.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-taiwan",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Taiwan",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-taiwan.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census",
+      "acceptableAnswers": [
+        "Republic of China"
+      ]
+    },
+    {
+      "slug": "geography-map-thailand",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Thailand",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-thailand.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-united-arab-emirates",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "United Arab Emirates",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-united-arab-emirates.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census",
+      "acceptableAnswers": [
+        "UAE"
+      ]
+    },
+    {
+      "slug": "geography-map-uzbekistan",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Uzbekistan",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-uzbekistan.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-vietnam",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Vietnam",
+      "category": "Geography",
+      "difficulty": "medium",
+      "imageUrl": "/maps/geography-map-vietnam.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
+    },
+    {
+      "slug": "geography-map-yemen",
+      "question": "Which country is shown highlighted on this map?",
+      "answer": "Yemen",
+      "category": "Geography",
+      "difficulty": "hard",
+      "imageUrl": "/maps/geography-map-yemen.svg",
+      "imageCredit": "Map: Natural Earth / U.S. Census"
     }
   ]
 }

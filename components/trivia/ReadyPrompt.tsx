@@ -50,9 +50,12 @@ export function ReadyPrompt({ type, roundNumber, category, secondsRemaining, isV
             </p>
             <p className="mt-1 text-xl font-bold text-slate-300 sm:text-2xl">{subtext}</p>
             {type === "round_start" && category ? (
-              <p className="mt-2 rounded-xl border border-amber-400/50 bg-amber-950/40 px-4 py-2 text-base font-semibold text-amber-200 sm:text-lg">
-                Category: {category}
-              </p>
+              <div className="mt-4 flex flex-col items-center gap-1">
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Category</p>
+                <p className={`bg-gradient-to-r ${gradientClass} bg-clip-text text-2xl font-black uppercase tracking-tight text-transparent sm:text-3xl`}>
+                  {category}
+                </p>
+              </div>
             ) : null}
             <motion.p
               animate={{ scale: [1, 1.1, 1] }}

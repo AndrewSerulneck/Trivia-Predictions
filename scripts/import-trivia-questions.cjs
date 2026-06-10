@@ -96,6 +96,12 @@ function normalizeAnswerKey(value) {
   return String(value ?? "").toLowerCase().trim().replace(/\s+/g, " ");
 }
 
+function normalizeQuestionKey(question) {
+  return String(question ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
 function sanitizeAcceptableAnswers(values, canonicalAnswer) {
   const rawValues = Array.isArray(values) ? values : [];
   const seen = new Set([normalizeAnswerKey(canonicalAnswer)]);
@@ -191,8 +197,13 @@ function extractQuestions(parsed, filePath) {
   throw new Error(`File ${filePath} must contain a JSON array or an object with a questions array.`);
 }
 
+function buildQuestionIdentity(questionPool, question) {
+  return `${String(questionPool ?? "").trim()}::${normalizeQuestionKey(question)}`;
+}
+
 function normalizeAndValidate(questions, options = {}) {
   const seenSlugs = new Set();
+  const seenQuestionIdentities = new Set();
   const defaultQuestionPool = normalizeQuestionPool(
     options.questionPool,
     options.liveMode ? "live_showdown" : "anytime_blitz"
@@ -251,6 +262,23 @@ function normalizeAndValidate(questions, options = {}) {
     assert(!seenSlugs.has(slug), `Row ${rowNumber}${source}: duplicate slug "${slug}".`);
     seenSlugs.add(slug);
 
+    const normalizedQuestionKey = normalizeQuestionKey(question);
+    assert(
+      normalizedQuestionKey.length > 0,
+      `Row ${rowNumber}${source}: normalized question key is empty.`
+    );
+
+    if (questionPool === "anytime_blitz") {
+      const questionIdentity = buildQuestionIdentity(questionPool, question);
+      assert(
+        !seenQuestionIdentities.has(questionIdentity),
+        `Row ${rowNumber}${source}: duplicate question text "${question}" in pool "${questionPool}".`
+      );
+      seenQuestionIdentities.add(questionIdentity);
+    }
+
+    const imageUrl = String(item.imageUrl ?? item.image_url ?? "").trim();
+
     const row = {
       slug,
       question,
@@ -260,6 +288,7 @@ function normalizeAndValidate(questions, options = {}) {
       difficulty: difficulty || null,
       question_pool: questionPool,
       answer_format: answerFormat,
+      image_url: imageUrl || null,
     };
     if (status) {
       row.status = status;
@@ -270,7 +299,7 @@ function normalizeAndValidate(questions, options = {}) {
   return rows;
 }
 
-async function upsertRows(rows) {
+function createSupabaseClient() {
   const supabaseUrl = normalizeEnvValue(process.env.NEXT_PUBLIC_SUPABASE_URL);
   const serviceRoleKey = normalizeEnvValue(process.env.SUPABASE_SERVICE_ROLE_KEY);
 
@@ -294,22 +323,135 @@ async function upsertRows(rows) {
     `NEXT_PUBLIC_SUPABASE_URL points to a local host (${hostname}). Use your production Supabase project URL for CI.`
   );
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    global: { fetch: createDiagnosticFetch() },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  return {
+    supabaseUrl,
+    supabase: createClient(supabaseUrl, serviceRoleKey, {
+      global: { fetch: createDiagnosticFetch() },
+      auth: { persistSession: false, autoRefreshToken: false },
+    }),
+  };
+}
+
+function filterExistingQuestionRows(existingCatalog, rows) {
+  if (!Array.isArray(existingCatalog) || rows.length === 0) {
+    return { acceptedRows: rows, skippedRows: [] };
+  }
+
+  const existingByIdentity = new Map();
+  for (const row of existingCatalog) {
+    const identity = `${String(row.questionPool ?? "").trim()}::${normalizeQuestionKey(row.question)}`;
+    if (!identity.endsWith("::")) {
+      const slugs = existingByIdentity.get(identity) ?? new Set();
+      const slug = String(row.slug ?? "").trim();
+      if (slug) slugs.add(slug);
+      existingByIdentity.set(identity, slugs);
+    }
+  }
+
+  const acceptedRows = [];
+  const skippedRows = [];
+  for (const row of rows) {
+    if (row.question_pool !== "anytime_blitz") {
+      acceptedRows.push(row);
+      existingCatalog.push({
+        id: null,
+        slug: row.slug,
+        question: row.question,
+        questionPool: row.question_pool,
+        status: row.status ?? null,
+      });
+      continue;
+    }
+
+    const identity = buildQuestionIdentity(row.question_pool, row.question);
+    const matchingSlugs = existingByIdentity.get(identity);
+    if (matchingSlugs && !matchingSlugs.has(row.slug)) {
+      skippedRows.push(row);
+      continue;
+    }
+
+    acceptedRows.push(row);
+    existingCatalog.push({
+      id: null,
+      slug: row.slug,
+      question: row.question,
+      questionPool: row.question_pool,
+      status: row.status ?? null,
+    });
+  }
+
+  return { acceptedRows, skippedRows };
+}
+
+async function loadExistingQuestionCatalog(supabase, pools) {
+  const uniquePools = Array.from(new Set((pools ?? []).filter(Boolean)));
+  if (uniquePools.length === 0) return [];
+
+  const catalog = [];
+  for (const questionPool of uniquePools) {
+    for (let start = 0; ; start += CHUNK_SIZE) {
+      const { data, error } = await retryAsync(
+        async () => {
+          return supabase
+            .from("trivia_questions")
+            .select("id, slug, question, question_pool, status")
+            .eq("question_pool", questionPool)
+            .neq("status", "deleted")
+            .range(start, start + CHUNK_SIZE - 1);
+        },
+        {
+          operation: `load existing trivia catalog for ${questionPool}`,
+        }
+      );
+
+      if (error) {
+        throw new Error(`Failed to load existing trivia catalog: ${describeError(error)}`);
+      }
+
+      const batch = data ?? [];
+      catalog.push(
+        ...batch.map((row) => ({
+          id: row.id ?? null,
+          slug: row.slug ?? null,
+          question: String(row.question ?? ""),
+          questionPool: row.question_pool,
+          status: row.status ?? null,
+        }))
+      );
+
+      if (batch.length < CHUNK_SIZE) break;
+    }
+  }
+
+  return catalog;
+}
+
+async function upsertRows(rows) {
+  const { supabaseUrl, supabase } = createSupabaseClient();
 
   await verifyConnectivity(supabaseUrl);
 
   let processed = 0;
+  let skippedDuplicates = 0;
+  const existingCatalog = await loadExistingQuestionCatalog(
+    supabase,
+    rows.map((row) => row.question_pool)
+  );
   for (let start = 0; start < rows.length; start += CHUNK_SIZE) {
     const chunk = rows.slice(start, start + CHUNK_SIZE);
+    const { acceptedRows, skippedRows } = filterExistingQuestionRows(existingCatalog, chunk);
+    skippedDuplicates += skippedRows.length;
+
+    if (acceptedRows.length === 0) {
+      continue;
+    }
+
     await retryAsync(
       async () => {
-        const ignoreDuplicates = chunk.every((row) => row.status === "pending_review");
+        const ignoreDuplicates = acceptedRows.every((row) => row.status === "pending_review");
         const { error } = await supabase
           .from("trivia_questions")
-          .upsert(chunk, { onConflict: "slug", ignoreDuplicates });
+          .upsert(acceptedRows, { onConflict: "slug", ignoreDuplicates });
 
         if (error) {
           throw new Error(`Supabase upsert failed: ${describeError(error)}`);
@@ -320,8 +462,12 @@ async function upsertRows(rows) {
       }
     );
 
-    processed += chunk.length;
+    processed += acceptedRows.length;
     console.log(`Upserted ${processed}/${rows.length} questions...`);
+  }
+
+  if (skippedDuplicates > 0) {
+    console.log(`Skipped ${skippedDuplicates} duplicate question(s) already present in Supabase.`);
   }
 
   const { count, error } = await retryAsync(
