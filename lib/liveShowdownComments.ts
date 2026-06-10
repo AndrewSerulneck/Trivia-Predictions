@@ -8,7 +8,8 @@ export type LiveShowdownCommentTrigger =
   | "round_break"
   | "closest_guess_pending"
   | "game_final_question"
-  | "scoring_streak";
+  | "scoring_streak"
+  | "post_game";
 
 const CORRECT_SUBMISSION_COMMENTS = [
   "Spot on! That's how you set the tone.",
@@ -155,26 +156,26 @@ const UNSUBMITTED_INACTIVE_COMMENTS = [
 ] as const;
 
 const ROUND_START_COMMENTS = [
-  "New round is LIVE! Show us what you've got.",
-  "Lock in. The points are on the table.",
-  "Fresh round, fresh chance. Let's go.",
-  "Brains on, drinks ready — this round starts NOW.",
-  "New category, new challenge. Come out swinging.",
-  "The competition gets stiffer from here. Stay sharp.",
-  "First question of the round. Set the tone.",
-  "Whoever starts hot carries the momentum.",
-  "This could be the round that flips everything.",
-  "Let's see who's been doing their homework.",
-  "Table chatter is over. Pure focus from here.",
-  "Round is live. No hesitation, no second-guessing.",
-  "New round means new points. Let's chase them.",
-  "The real test starts now. Bring it.",
-  "Here's where the standings actually move.",
-  "Down in the standings? This is your reset button.",
-  "Comfortable lead? Doesn't matter. Round is on.",
-  "Trivia night gets decided in rounds like this.",
-  "Alright everyone — eyes up, brains engaged.",
-  "This round could be the one they talk about.",
+  "New round is live. Go win it.",
+  "Lock in. Fresh points are on the table.",
+  "Fresh round, fresh chances. Let's go.",
+  "Brains on, drinks down for a second. We're rolling.",
+  "New category, new pressure. Come out strong.",
+  "The room gets tighter from here. Stay sharp.",
+  "First question of the round. Set the pace.",
+  "Fast start, big edge. Go grab it.",
+  "This is the kind of round that flips a leaderboard.",
+  "Let's see who's actually ready for this category.",
+  "Table chatter down. Trivia brain up.",
+  "Round is on. Be quick and be right.",
+  "New round, new points. Go hunt them.",
+  "Here's your next chance to move.",
+  "The standings can change fast from here.",
+  "Running behind? This is your window.",
+  "Sitting on a lead? Protect it.",
+  "Rounds like this decide who stays near the top.",
+  "Alright everyone, eyes up and thumbs ready.",
+  "No easing into this one. Start strong.",
 ] as const;
 
 const GAME_FINAL_QUESTION_COMMENTS = [
@@ -193,6 +194,21 @@ const GAME_FINAL_QUESTION_COMMENTS = [
   "The room goes quiet. The final question is live.",
   "Last one. Whatever happens, it's been a battle. Now finish it.",
   "One final answer to write the ending of tonight's story.",
+] as const;
+
+const POST_GAME_COMMENTS = [
+  "That's a wrap! Check the final standings and see where you landed.",
+  "Game over. The scores are in — how did your table do tonight?",
+  "And that's the final buzzer. Great game all around.",
+  "The night is done. Check your rank and come back swinging next time.",
+  "Last answer is in the books. Final standings are live above.",
+  "That's all she wrote. Well played — see you at the next one.",
+  "Game complete. The leaderboard tells the whole story.",
+  "Trivia night is officially in the books. Check those final standings.",
+  "Pencils down. The results are locked — see how you stacked up.",
+  "All rounds complete. Thanks for playing — the rematch is always brewing.",
+  "The final score is set. Hope tonight's questions gave your brain a workout.",
+  "Tonight's champion has been crowned. See the full standings above.",
 ] as const;
 
 const SCORING_STREAK_COMMENTS = [
@@ -277,6 +293,9 @@ export function selectLiveShowdownComment(params: {
   }
   if (trigger === "round_start") {
     return pickFromBank(ROUND_START_COMMENTS, eventKey);
+  }
+  if (trigger === "post_game") {
+    return pickFromBank(POST_GAME_COMMENTS, eventKey);
   }
   return pickFromBank(TRANSITION_AND_PREGAME_COMMENTS, eventKey);
 }

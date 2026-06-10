@@ -2733,6 +2733,8 @@ type LiveTriviaFileQuestion = {
   answer_format: "write_in";
   category: string;
   difficulty: string;
+  imageUrl?: string;
+  imageCredit?: string;
 };
 
 type SpeedTriviaFileQuestion = {
@@ -2796,6 +2798,8 @@ function mapLiveFileQuestion(q: LiveTriviaFileQuestion, categoryName: string): T
     difficulty: q.difficulty,
     questionPool: "live_showdown",
     answerFormat: "write_in",
+    ...(q.imageUrl ? { imageUrl: q.imageUrl } : {}),
+    ...(q.imageCredit ? { imageCredit: q.imageCredit } : {}),
   };
 }
 

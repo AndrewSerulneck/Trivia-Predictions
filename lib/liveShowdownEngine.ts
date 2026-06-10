@@ -48,6 +48,7 @@ type TriviaQuestionRow = {
   category: string | null;
   difficulty: string | null;
   question_pool: "anytime_blitz" | "live_showdown";
+  image_url: string | null;
 };
 
 export type LiveShowdownQuestionPublic = {
@@ -60,6 +61,7 @@ export type LiveShowdownQuestionPublic = {
   roundNumber: number;
   questionIndex: number;
   isClosestGuess: boolean;
+  imageUrl: string | null;
 };
 
 type LiveShowdownQuestionInternal = LiveShowdownQuestionPublic & {
@@ -376,6 +378,7 @@ function mapQuestionInternal(
     roundNumber: sessionRow.round_number,
     questionIndex: sessionRow.question_index,
     isClosestGuess: correctNumericAnswer !== null,
+    imageUrl: row.image_url ?? null,
     correctAnswer,
     correctNumericAnswer,
   };
@@ -393,6 +396,7 @@ function toPublicQuestion(question: LiveShowdownQuestionInternal | null): LiveSh
     roundNumber: question.roundNumber,
     questionIndex: question.questionIndex,
     isClosestGuess: question.isClosestGuess,
+    imageUrl: question.imageUrl ?? null,
   };
 }
 
@@ -656,7 +660,7 @@ async function loadSessionQuestion(
 
   const bySlug = await admin
     .from("trivia_questions")
-    .select("id, slug, question, options, correct_answer, category, difficulty, question_pool")
+    .select("id, slug, question, options, correct_answer, category, difficulty, question_pool, image_url")
     .eq("slug", questionId)
     .limit(1)
     .maybeSingle();
@@ -670,7 +674,7 @@ async function loadSessionQuestion(
   if (!questionRow && isUuidLike(questionId)) {
     const byId = await admin
       .from("trivia_questions")
-      .select("id, slug, question, options, correct_answer, category, difficulty, question_pool")
+      .select("id, slug, question, options, correct_answer, category, difficulty, question_pool, image_url")
       .eq("id", questionId)
       .limit(1)
       .maybeSingle();

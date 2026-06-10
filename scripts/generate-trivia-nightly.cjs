@@ -9,6 +9,7 @@ const DEFAULT_TOTAL = 100;
 const DEFAULT_BATCH_SIZE = 25;
 const CATEGORY_TARGET_SIZE = 100;
 const DEFAULT_NEW_CATEGORY_COUNT = 1;
+const MAX_REFILL_PASSES = 4;
 
 function parseArgs(argv) {
   const args = {
@@ -360,6 +361,13 @@ function runGeneratorForCategory({ category, count, args }) {
   }
 }
 
+function countQuestionsInCategoryFile(filePath) {
+  const raw = fs.readFileSync(filePath, "utf8");
+  const parsed = JSON.parse(raw);
+  assert(Array.isArray(parsed), `Category file must contain a JSON array: ${filePath}`);
+  return parsed.length;
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   assert(Number.isInteger(args.total) && args.total > 0, "--total must be a positive integer.");
@@ -454,21 +462,57 @@ async function main() {
     console.log(`Unspent budget: ${remaining} (all eligible categories may already be at target).`);
   }
 
-  for (const [categoryKey, addCount] of plan.entries()) {
-    if (addCount <= 0) continue;
+  const actualAdds = new Map();
+
+  for (const [categoryKey, requestedCount] of plan.entries()) {
+    if (requestedCount <= 0) continue;
     const record = byKey.get(categoryKey);
     if (!record) continue;
 
-    console.log(`\n=== Category: ${record.categoryKey} (${addCount}) ===`);
-    try {
-      runGeneratorForCategory({ category: record.categoryKey, count: addCount, args });
-    } catch (error) {
-      if (!args.allowCategoryErrors) {
-        throw error;
+    let remainingForCategory = requestedCount;
+    let pass = 0;
+
+    while (remainingForCategory > 0 && pass < MAX_REFILL_PASSES) {
+      pass += 1;
+      const beforeCount = countQuestionsInCategoryFile(record.filePath);
+      console.log(`\n=== Category: ${record.categoryKey} (+${remainingForCategory}, pass ${pass}) ===`);
+
+      try {
+        runGeneratorForCategory({ category: record.categoryKey, count: remainingForCategory, args });
+      } catch (error) {
+        if (!args.allowCategoryErrors) {
+          throw error;
+        }
+        const message = error instanceof Error ? error.message : String(error);
+        console.warn(`Skipping category "${record.categoryKey}" after generation failure: ${message}`);
+        break;
       }
-      const message = error instanceof Error ? error.message : String(error);
-      console.warn(`Skipping category "${record.categoryKey}" after generation failure: ${message}`);
+
+      const afterCount = countQuestionsInCategoryFile(record.filePath);
+      const addedThisPass = Math.max(0, afterCount - beforeCount);
+      actualAdds.set(record.categoryKey, (actualAdds.get(record.categoryKey) || 0) + addedThisPass);
+
+      if (addedThisPass >= remainingForCategory) {
+        remainingForCategory = 0;
+        break;
+      }
+
+      remainingForCategory -= addedThisPass;
+      if (addedThisPass === 0) {
+        console.warn(`No new questions were added for "${record.categoryKey}" on refill pass ${pass}.`);
+        break;
+      }
+
+      console.warn(
+        `Category "${record.categoryKey}" only added ${addedThisPass}/${remainingForCategory + addedThisPass}; retrying remaining ${remainingForCategory}.`
+      );
     }
+  }
+
+  const requestedTotal = [...plan.values()].reduce((sum, count) => sum + count, 0);
+  const actualTotal = [...actualAdds.values()].reduce((sum, count) => sum + count, 0);
+  if (actualTotal < requestedTotal) {
+    console.warn(`Nightly generation finished short: added ${actualTotal}/${requestedTotal} planned questions.`);
   }
 
   console.log("\nNightly trivia generation complete.");

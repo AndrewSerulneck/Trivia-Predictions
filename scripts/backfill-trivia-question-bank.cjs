@@ -44,6 +44,12 @@ function slugify(value) {
     .replace(/^-|-$/g, "");
 }
 
+function normalizeQuestionKey(value) {
+  return String(value ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
 function toCategoryFromFileName(fileName) {
   return fileName.replace(/\.v\d+\.json$/i, "").replace(/-/g, " ").trim();
 }
@@ -116,6 +122,7 @@ function readLiveRows() {
 function normalizeAndDeduplicate(rows) {
   const normalized = [];
   const slugCounts = new Map();
+  const seenQuestionIdentities = new Set();
   let skipped = 0;
 
   for (const row of rows) {
@@ -147,6 +154,16 @@ function normalizeAndDeduplicate(rows) {
     const seen = slugCounts.get(baseSlug) ?? 0;
     slugCounts.set(baseSlug, seen + 1);
     const slug = seen === 0 ? baseSlug : `${baseSlug}-dup-${seen + 1}`;
+
+    const normalizedQuestionKey = normalizeQuestionKey(row.question);
+    const questionIdentity = `${row.questionPool}::${normalizedQuestionKey}`;
+    if (row.questionPool === ANYTIME_POOL && (!normalizedQuestionKey || seenQuestionIdentities.has(questionIdentity))) {
+      skipped += 1;
+      continue;
+    }
+    if (row.questionPool === ANYTIME_POOL) {
+      seenQuestionIdentities.add(questionIdentity);
+    }
 
     normalized.push({
       slug,

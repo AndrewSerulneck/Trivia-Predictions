@@ -9,6 +9,7 @@ import { readWarmTriviaCache } from "@/lib/warmupCache";
 import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
 import { canAdvanceToNextTriviaQuestion } from "@/lib/triviaRoundProgress";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
+import { QuestionImage } from "@/components/trivia/QuestionImage";
 import type { TriviaQuestion } from "@/types";
 
 type TriviaApiResponse = {
@@ -216,6 +217,7 @@ type AnswerButtonProps = {
   onChoose: (index: number) => void;
 };
 
+
 function AnswerButton({
   option,
   optionIndex,
@@ -340,6 +342,9 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   const [quotaSecondsRemaining, setQuotaSecondsRemaining] = useState(0);
   const [roundEndedMessage, setRoundEndedMessage] = useState("");
   const [isPreparingNextRound, setIsPreparingNextRound] = useState(false);
+  const [roundSummaryReady, setRoundSummaryReady] = useState(false);
+  const [displayTotal, setDisplayTotal] = useState(0);
+  const [totalCardPulsing, setTotalCardPulsing] = useState(false);
   const roundCompletionHandledRef = useRef(false);
   const backgroundRoundExitRef = useRef(false);
 
@@ -1221,6 +1226,69 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   }, [finished]);
 
   useEffect(() => {
+    if (!finished) {
+      setRoundSummaryReady(false);
+      setDisplayTotal(0);
+      setTotalCardPulsing(false);
+      return;
+    }
+    const onAdComplete = () => setRoundSummaryReady(true);
+    window.addEventListener("tp:round-end-ad-complete", onAdComplete);
+    // Fallback: show summary after 4s if no signal arrives (e.g. ad system
+    // silent). Cancelled immediately if an ad actually opens — in that case
+    // we wait indefinitely for the user to dismiss it.
+    let fallbackTimer: number | null = window.setTimeout(
+      () => setRoundSummaryReady(true),
+      4000,
+    );
+    const onAdShown = () => {
+      if (fallbackTimer !== null) {
+        clearTimeout(fallbackTimer);
+        fallbackTimer = null;
+      }
+    };
+    window.addEventListener("tp:round-end-ad-shown", onAdShown);
+    return () => {
+      window.removeEventListener("tp:round-end-ad-complete", onAdComplete);
+      window.removeEventListener("tp:round-end-ad-shown", onAdShown);
+      if (fallbackTimer !== null) clearTimeout(fallbackTimer);
+    };
+  }, [finished]);
+
+  useEffect(() => {
+    if (!roundSummaryReady) return;
+    const totalBefore = roundStartPoints ?? Math.max(0, (roundTotalPoints ?? 0) - pointsWon);
+    const totalAfter = roundTotalPoints ?? (totalBefore + pointsWon);
+    setDisplayTotal(totalBefore);
+    setTotalCardPulsing(false);
+
+    let cancelled = false;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const schedule = (fn: () => void, ms: number) => {
+      timers.push(setTimeout(() => { if (!cancelled) fn(); }, ms));
+    };
+
+    const diff = totalAfter - totalBefore;
+    const DURATION_MS = 800;
+    const steps = Math.min(Math.max(Math.abs(diff), 1), 30);
+    const stepMs = DURATION_MS / steps;
+    // Pause 400ms so the user registers the "before" total, then count up.
+    for (let i = 1; i <= steps; i++) {
+      schedule(() => {
+        const progress = i / steps;
+        setDisplayTotal(i === steps ? totalAfter : Math.round(totalBefore + diff * progress));
+      }, 400 + stepMs * i);
+    }
+    schedule(() => setTotalCardPulsing(true), 400 + DURATION_MS + 80);
+    schedule(() => setTotalCardPulsing(false), 400 + DURATION_MS + 480);
+
+    return () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+    };
+  }, [roundSummaryReady, roundStartPoints, roundTotalPoints, pointsWon]);
+
+  useEffect(() => {
     if (typeof window === "undefined") {
       return;
     }
@@ -1322,6 +1390,17 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
     );
   }
 
+  if (finished && !roundSummaryReady) {
+    return (
+      <div className="flex h-full min-h-0 items-center justify-center bg-transparent">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-7 w-7 animate-spin rounded-full border-2 border-[rgba(250,204,21,0.25)] border-t-[#facc15]" />
+          <p className="font-black uppercase tracking-[0.12em] text-[#facc15] text-[10px]">Tallying results…</p>
+        </div>
+      </div>
+    );
+  }
+
   if (finished) {
     const totalAfterRound = roundTotalPoints ?? estimatedRoundTotal ?? currentUserPoints ?? 0;
     const roundGain = Math.max(0, roundDelta);
@@ -1376,9 +1455,21 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
                   </span>
                 ) : null}
               </div>
-              <div className="col-span-2 rounded-xl border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.08)] p-3">
+              <div
+                className={`col-span-2 rounded-xl border bg-[rgba(250,204,21,0.08)] p-3 transition-all duration-300 ${
+                  totalCardPulsing
+                    ? "border-[rgba(250,204,21,0.8)] shadow-[0_0_16px_rgba(250,204,21,0.35)]"
+                    : "border-[rgba(250,204,21,0.3)]"
+                }`}
+              >
                 <div className="font-black uppercase tracking-[0.14em] text-[#84cc16] text-[10px]">Total Points</div>
-                <div className="mt-0.5 font-mono font-black text-[#facc15] text-[20px]">{totalAfterRound}</div>
+                <div
+                  className={`mt-0.5 font-mono font-black text-[#facc15] text-[20px] transition-transform duration-150 ${
+                    totalCardPulsing ? "scale-110" : "scale-100"
+                  }`}
+                >
+                  {displayTotal}
+                </div>
                 <div className="mt-0.5 text-[10px] text-slate-400">+{roundGain} this round</div>
               </div>
             </div>
@@ -1390,6 +1481,16 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
               className="grid gap-2 pt-4"
               style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}
             >
+              {triviaQuotaLocked && (
+                <div className="mb-1 rounded-[12px] border border-[rgba(250,204,21,0.2)] bg-[rgba(250,204,21,0.06)] px-4 py-3 text-center">
+                  <p className="font-black text-[#facc15] text-[26px] uppercase tracking-[0.06em]">Thanks for playing!</p>
+                  <p className="mt-1 text-[24px] text-slate-300 leading-snug">
+                    {"You've hit the 3-round limit for this hour! Come back in "}
+                    <span className="font-black text-[#facc15]">{formatCountdown(quotaSecondsRemaining)}</span>
+                    {" to keep earning points."}
+                  </p>
+                </div>
+              )}
               <button
                 type="button"
                 onMouseDown={() => triggerHaptic(14)}
@@ -1463,12 +1564,6 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
                 Round {upcomingRoundNumber} of {ROUND_LIMIT_PER_WINDOW}
               </p>
               <h1 className="mt-1 font-black text-white text-[24px]">Ready to start trivia?</h1>
-              {triviaQuotaLocked ? (
-                <p className="mt-2 text-[13px] text-rose-300">
-                  Trivia limit reached. Play again in{" "}
-                  <span className="font-black">{formatCountdown(quotaSecondsRemaining)}</span>.
-                </p>
-              ) : null}
             </div>
 
             <div className="mb-5 rounded-[14px] border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.08)] px-4 py-4">
@@ -1492,6 +1587,16 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
               className="grid gap-2"
               style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}
             >
+              {triviaQuotaLocked && (
+                <div className="mb-1 rounded-[12px] border border-[rgba(250,204,21,0.2)] bg-[rgba(250,204,21,0.06)] px-4 py-3 text-center">
+                  <p className="font-black text-[#facc15] text-[26px] uppercase tracking-[0.06em]">Thanks for playing!</p>
+                  <p className="mt-1 text-[24px] text-slate-300 leading-snug">
+                    {"You've hit the 3-round limit for this hour! Come back in "}
+                    <span className="font-black text-[#facc15]">{formatCountdown(quotaSecondsRemaining)}</span>
+                    {" to keep earning points."}
+                  </p>
+                </div>
+              )}
               <button
                 type="button"
                 onMouseDown={() => triggerHaptic(20)}
@@ -1669,6 +1774,15 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
                 >
                   {/* Decorative corner ring */}
                   <div className="pointer-events-none absolute -right-7 -top-7 h-[110px] w-[110px] rounded-full border-[5px] border-[rgba(250,204,21,0.18)]" />
+
+                  {/* Question image (only when present) */}
+                  {question.imageUrl ? (
+                    <QuestionImage
+                      key={question.id}
+                      src={question.imageUrl}
+                      credit={question.imageCredit}
+                    />
+                  ) : null}
 
                   <div className="relative z-10 flex items-center gap-3">
                     {/* SVG timer ring */}

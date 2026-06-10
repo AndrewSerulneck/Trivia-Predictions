@@ -1574,49 +1574,51 @@ export async function getPickEmPointsBankSummary(params: {
   };
 }
 
-async function insertPickEmSettlementNotification(params: {
+type PickEmWinGroup = {
   userId: string;
-  status: PickEmPickStatus;
-  gameLabel: string;
-  selectedTeam: string;
-  homeTeam: string;
-  awayTeam: string;
-  homeScore: number | null;
-  awayScore: number | null;
-}): Promise<void> {
-  if (!supabaseAdmin) {
+  teams: string[];
+  totalPoints: number;
+  localDate: string;
+  sportSlug: PickEmSportSlug;
+};
+
+async function insertPickEmWinGroupNotifications(groups: Map<string, PickEmWinGroup>): Promise<void> {
+  if (!supabaseAdmin || groups.size === 0) {
     return;
   }
 
-  const statusLabel =
-    params.status === "won"
-      ? "success"
-      : params.status === "lost"
-      ? "warning"
-      : params.status === "push"
-      ? "info"
-      : "warning";
+  const todayUtc = new Date().toISOString().slice(0, 10);
+  const rows: { user_id: string; type: string; message: string; link_url: string }[] = [];
 
-  const scoreSummary =
-    params.homeScore !== null && params.awayScore !== null
-      ? `${params.homeTeam} ${params.homeScore} - ${params.awayScore} ${params.awayTeam}.`
-      : "Final score unavailable.";
+  for (const group of groups.values()) {
+    const { userId, teams, totalPoints, localDate, sportSlug } = group;
+    if (teams.length === 0 || totalPoints <= 0) {
+      continue;
+    }
 
-  const message =
-    params.status === "won"
-      ? `Pick 'Em result: You won "${params.gameLabel}" with ${params.selectedTeam}. ${scoreSummary}`
-      : params.status === "lost"
-      ? `Pick 'Em result: You lost "${params.gameLabel}" with ${params.selectedTeam}. ${scoreSummary}`
-      : params.status === "push"
-      ? `Pick 'Em result: "${params.gameLabel}" ended in a push. ${scoreSummary}`
-      : `Pick 'Em result: "${params.gameLabel}" was canceled.`;
+    let message: string;
+    if (teams.length === 1) {
+      message = `${teams[0]} won. +${totalPoints} pts.`;
+    } else if (teams.length === 2) {
+      message = `${teams[0]} and ${teams[1]} won. +${totalPoints} pts.`;
+    } else {
+      message = `${teams[0]}, ${teams[1]}, and others won. +${totalPoints} pts.`;
+    }
+
+    const isToday = localDate === todayUtc;
+    const linkUrl = isToday
+      ? `/pickem?date=${localDate}&sport=${sportSlug}`
+      : `/pickem?date=${localDate}`;
+
+    rows.push({ user_id: userId, type: "success", message, link_url: linkUrl });
+  }
+
+  if (rows.length === 0) {
+    return;
+  }
 
   try {
-    await supabaseAdmin.from("notifications").insert({
-      user_id: params.userId,
-      type: statusLabel,
-      message,
-    });
+    await supabaseAdmin.from("notifications").insert(rows);
   } catch {
     // Never block grading if notification write fails.
   }
@@ -2231,6 +2233,7 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
   let won = 0;
   let lost = 0;
   let push = 0;
+  const winGroups = new Map<string, PickEmWinGroup>();
   const staleFinalizeMs = 4 * 60 * 60 * 1000;
   const nowMs = Date.now();
 
@@ -2343,19 +2346,28 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
       continue;
     }
 
-    await insertPickEmSettlementNotification({
-      userId: row.user_id,
-      status,
-      gameLabel: row.game_label,
-      selectedTeam: row.selected_team,
-      homeTeam: row.home_team,
-      awayTeam: row.away_team,
-      homeScore,
-      awayScore,
-    });
+    if (status === "won") {
+      const localDate = row.starts_at.slice(0, 10);
+      const groupKey = `${row.user_id}:${localDate}:${row.sport_slug}`;
+      const existing = winGroups.get(groupKey);
+      if (existing) {
+        existing.teams.push(row.selected_team);
+        existing.totalPoints += PICKEM_REWARD_POINTS;
+      } else {
+        winGroups.set(groupKey, {
+          userId: row.user_id,
+          teams: [row.selected_team],
+          totalPoints: PICKEM_REWARD_POINTS,
+          localDate,
+          sportSlug: row.sport_slug,
+        });
+      }
+    }
 
     settledCount += 1;
   }
+
+  await insertPickEmWinGroupNotifications(winGroups);
 
   return {
     pendingScanned: pending.length,

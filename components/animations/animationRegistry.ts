@@ -10,6 +10,7 @@ import { LiveTriviaCorrectAnimation } from "@/components/animations/LiveTriviaCo
 import { LiveTriviaWrongAnimation } from "@/components/animations/LiveTriviaWrongAnimation";
 import { LiveTriviaStreakAnimation } from "@/components/animations/LiveTriviaStreakAnimation";
 import { LiveTriviaRoundBreakAnimation } from "@/components/animations/LiveTriviaRoundBreakAnimation";
+import { LiveTriviaCategoryAnnouncementAnimation } from "@/components/animations/LiveTriviaCategoryAnnouncementAnimation";
 import { FantasyScoreUpAnimation } from "@/components/animations/FantasyScoreUpAnimation";
 import { FantasyLiveCollectAnimation } from "@/components/animations/FantasyLiveCollectAnimation";
 
@@ -30,6 +31,7 @@ export const ANIMATION_REGISTRY: Record<AnimationType, AnimationComponent> = {
   LIVE_TRIVIA_WRONG: LiveTriviaWrongAnimation,
   LIVE_TRIVIA_STREAK: LiveTriviaStreakAnimation,
   LIVE_TRIVIA_ROUND_BREAK: LiveTriviaRoundBreakAnimation,
+  LIVE_TRIVIA_NEXT_CATEGORY: LiveTriviaCategoryAnnouncementAnimation,
   FANTASY_SCORE_UP: FantasyScoreUpAnimation,
   FANTASY_LIVE_COLLECT: FantasyLiveCollectAnimation,
 };

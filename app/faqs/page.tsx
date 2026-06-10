@@ -10,9 +10,17 @@ type FaqItem = {
 // Add, remove, or edit Q&A entries in this array.
 const FAQ_ITEMS: FaqItem[] = [
   {
+    question: "What is Hightop Challenge?",
+    answer: "Hightop Challenge is a platform for trivia that also gives sports bars a way to offer promotions using the games they're showing on TV."
+  },
+  {
+    question: "What games are available and how do I play?",
+    answer: ""
+  },
+  {
     question: "How do I win prizes?",
     answer:
-      "Play venue games consistently, finish near the top of the leaderboard, and claim any rewards you unlock from game wins or active challenges.",
+      "Each venue decides what challenges are available and what prizes can be won.",
   },
 ];
 

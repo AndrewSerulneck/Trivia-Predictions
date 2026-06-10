@@ -1054,13 +1054,6 @@
     "difficulty": "easy"
   },
   {
-    "slug": "the-clash-members",
-    "question": "Name the rock band that consists of Joe Strummer, Mick Jones, Paul Simonon, and Topper Headon.",
-    "answer": "The Clash",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
     "slug": "the-police-members",
     "question": "Name the rock band that consists of Sting, Andy Summers, and Stewart Copeland.",
     "answer": "The Police",
@@ -1190,13 +1183,6 @@
     "slug": "linkin-park-members",
     "question": "Name the rock band that consists of Chester Bennington, Mike Shinoda, Brad Delson, Dave Farrell, Joe Hahn, and Rob Bourdon.",
     "answer": "Linkin Park",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "aerosmith-members",
-    "question": "Name the rock band that consists of Steven Tyler, Joe Perry, Brad Whitford, Tom Hamilton, and Joey Kramer.",
-    "answer": "Aerosmith",
     "category": "Music",
     "difficulty": "easy"
   },
@@ -1365,20 +1351,6 @@
     "slug": "the-strokes-members",
     "question": "Name the rock band that consists of Julian Casablancas, Nick Valensi, Albert Hammond Jr., Nikolai Fraiture, and Fabrizio Moretti.",
     "answer": "The Strokes",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-white-stripes-members",
-    "question": "Name the rock duo that consists of Jack White and Meg White.",
-    "answer": "The White Stripes",
-    "category": "Music",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-black-keys-members",
-    "question": "Name the rock duo that consists of Dan Auerbach and Patrick Carney.",
-    "answer": "The Black Keys",
     "category": "Music",
     "difficulty": "easy"
   },

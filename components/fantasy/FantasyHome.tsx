@@ -686,6 +686,7 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
   const [isMounted, setIsMounted] = useState(false);
   const [lastCollectedPoints, setLastCollectedPoints] = useState(0);
   const [isCollectingLive, setIsCollectingLive] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const syncedLastCollectedRef = useRef<string | false>(false);
   const gameDetailsRequestNonceRef = useRef(0);
   const prevStatsSnapshotRef = useRef<Map<number, StatsSnapshot>>(new Map());
@@ -1076,7 +1077,7 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
     if (selectedDate < serverTodayDate) {
       return false;
     }
-    if (existingEntryForSelectedGame.status !== "pending") {
+    if (existingEntryForSelectedGame.status === "final" || existingEntryForSelectedGame.status === "canceled") {
       return false;
     }
     return true;
@@ -2289,44 +2290,45 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
 
       <div className="space-y-3 px-4">
 
-        {/* ── Date stepper + sport chips ── */}
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between gap-2 rounded-xl border border-[#fef3c7]/30 bg-[#0a3128] px-2 py-1.5">
+        {/* ── Date stepper + sport chips (single row) ── */}
+        <div className="flex items-center gap-2">
+          {/* Compact date stepper */}
+          <div className="flex shrink-0 items-center gap-0.5 rounded-xl border border-[#fef3c7]/30 bg-[#0a3128] px-1 py-1">
             <button
               type="button"
               onClick={navigateToPrevDay}
-              className="relative flex h-8 w-8 items-center justify-center rounded-full border border-[#fef3c7]/35 bg-black/30 text-xs font-black text-[#fde68a] active:scale-90"
+              className="relative flex h-7 w-7 items-center justify-center rounded-lg border border-[#fef3c7]/25 bg-black/30 text-[10px] font-black text-[#fde68a] active:scale-90"
               aria-label="Previous day"
             >
               ◀
               {hasPreviousUnclaimedFantasyEntries && !hasCurrentUnclaimedFantasyEntries ? (
-                <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#0a3128] bg-rose-500 text-[9px] font-black text-white">!</span>
+                <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3 items-center justify-center rounded-full border border-[#0a3128] bg-rose-500 text-[8px] font-black text-white">!</span>
               ) : null}
             </button>
-            <span className="text-[12.5px] font-extrabold text-[#fef3c7]">{formatDateLabel(selectedDate, serverTodayDate)}</span>
+            <span className="min-w-[52px] text-center text-[11px] font-extrabold text-[#fef3c7]">{formatDateLabel(selectedDate, serverTodayDate)}</span>
             <button
               type="button"
               onClick={navigateToNextDay}
               disabled={isToday}
-              className="relative flex h-8 w-8 items-center justify-center rounded-full border border-[#fef3c7]/35 bg-black/30 text-xs font-black text-[#fde68a] active:scale-90 disabled:opacity-30"
+              className="relative flex h-7 w-7 items-center justify-center rounded-lg border border-[#fef3c7]/25 bg-black/30 text-[10px] font-black text-[#fde68a] active:scale-90 disabled:opacity-30"
               aria-label="Next day"
             >
               ▶
               {hasFutureUnclaimedFantasyEntries && !hasCurrentUnclaimedFantasyEntries ? (
-                <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#0a3128] bg-rose-500 text-[9px] font-black text-white">!</span>
+                <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3 items-center justify-center rounded-full border border-[#0a3128] bg-rose-500 text-[8px] font-black text-white">!</span>
               ) : null}
             </button>
           </div>
 
-          {/* Sport chips */}
-          <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+          {/* Sport chips — scrollable */}
+          <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
             {FANTASY_SPORTS.map((sport) => (
               <button
                 key={sport.key}
                 type="button"
                 disabled={!sport.available}
                 onClick={() => sport.available && setSelectedSport(sport.key)}
-                className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-black tracking-[0.03em] transition-all disabled:cursor-not-allowed ${
+                className={`flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-black tracking-[0.03em] transition-all disabled:cursor-not-allowed ${
                   selectedSport === sport.key
                     ? "border-[#fde68a] bg-[#fde68a] text-[#0a3128]"
                     : sport.available
@@ -2334,7 +2336,7 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
                     : "border-white/[0.12] bg-white/[0.03] text-slate-600 opacity-55"
                 }`}
               >
-                <span className="text-sm">{sport.icon}</span>
+                <span className="text-[13px]">{sport.icon}</span>
                 {sport.label}
                 {!sport.available ? (
                   <span className="text-[8px] font-extrabold uppercase tracking-[0.1em] text-slate-500">Soon</span>
@@ -2488,126 +2490,148 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
               </div>
             ) : null}
 
-            {/* Live roster cards */}
-            <div>
-              <p className="mb-2 text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">Your roster · locked</p>
-              <div className="flex flex-col gap-2">
-                {(
-                  trackedEntry.lineupPlayers.length > 0
-                    ? trackedEntry.lineupPlayers
-                    : trackedEntry.lineup.map((playerName, index) => ({
-                        playerId: -(index + 1),
-                        playerName,
-                        headshotUrl: null,
-                      }))
-                ).map((player) => {
-                  const livePoints = livePointsByPlayer.get(String(player.playerId));
-                  const requireLiveRows = trackedEntry.status === "pending" || trackedEntry.status === "live";
-                  const playerPoints =
-                    typeof livePoints === "number"
-                      ? livePoints
-                      : requireLiveRows
-                      ? 0
-                      : getScoreFromBreakdown(trackedEntry.scoreBreakdown, player);
-                  const isHot = highlightedPlayerIds.includes(String(player.playerId));
-                  const popTone = playerPopToneById[String(player.playerId)] ?? "gain";
-                  const isScoring = playerPoints > 0;
-                  const poolItem = playerPool.find(
-                    (it) => normalizePlayerKey(it.playerName) === normalizePlayerKey(player.playerName)
-                  );
-                  return (
-                    <div
-                      key={`${trackedEntry.id}-${player.playerId}`}
-                      className={`grid grid-cols-[30px_1fr_auto] items-center gap-2.5 rounded-[14px] border px-3 py-2.5 transition-all duration-300 ${
-                        isHot
-                          ? popTone === "loss"
-                            ? "scale-[1.02] border-rose-400/40 bg-rose-950/20"
-                            : "scale-[1.02] border-emerald-400/40 bg-emerald-950/20"
-                          : "border-[#fef3c7]/[0.22] bg-[#fef3c7]/[0.045]"
-                      }`}
-                    >
-                      <PlayerHeadshot
-                        src={player.headshotUrl ?? playerPoolHeadshotByName.get(normalizePlayerKey(player.playerName)) ?? null}
-                        name={player.playerName}
-                        live={isScoring}
-                      />
-                      <div className="min-w-0 leading-tight">
-                        <div className="flex items-center gap-1.5">
-                          <span className={`truncate text-[13px] font-black ${
-                            isHot ? (popTone === "loss" ? "text-rose-300" : "text-emerald-300") : "text-[#fef3c7]"
-                          }`}>
-                            {player.playerName}
-                          </span>
-                          <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[8.5px] font-black uppercase tracking-[0.08em] ${
-                            isScoring
-                              ? "border border-[#6ee7b7]/40 bg-emerald-500/15 text-[#6ee7b7]"
-                              : "border border-white/10 bg-white/5 text-slate-400"
-                          }`}>
-                            {isScoring ? <span className="h-1 w-1 animate-pulse rounded-full bg-emerald-400" /> : null}
-                            {isScoring ? "Live" : "Locked"}
-                          </span>
-                        </div>
-                        <div className="mt-0.5 truncate text-[10px] font-bold text-[#fef3c7]/55">
-                          {poolItem?.team ?? trackedEntry.gameLabel}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-[8px] font-black uppercase tracking-[0.14em] text-[#fef3c7]/55">FP</div>
-                        <SpringPop
-                          popKey={playerPopTickById[String(player.playerId)] ?? 0}
-                          glowSize={10}
-                          glowColor={popTone === "loss" ? "red" : "green"}
-                          className={`font-mono text-[18px] font-[900] leading-[1.05] tabular-nums ${
-                            isHot ? (popTone === "loss" ? "text-rose-200" : "text-emerald-200") : "text-[#fde68a]"
-                          }`}
-                        >
-                          {playerPoints.toFixed(1)}
-                        </SpringPop>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              {existingEntryForSelectedGame && canEditExistingEntryLineup && !isEditingRoster ? (
-                <button
-                  type="button"
-                  onClick={startEditingRoster}
-                  className="mt-2.5 flex min-h-[44px] w-full items-center justify-center rounded-[12px] border border-[#fde68a]/50 bg-[#fde68a]/15 text-[12.5px] font-black uppercase tracking-[0.08em] text-[#fde68a] active:scale-[0.98]"
-                >
-                  Edit Roster
-                </button>
-              ) : null}
-            </div>
+            {/* Live roster cards + leaderboard — two-column on sm+ */}
+            <div className="sm:grid sm:grid-cols-[1fr_260px] sm:items-start sm:gap-5">
 
-            {/* Venue leaderboard */}
-            {leaderboard.length > 0 ? (
+              {/* Roster column */}
               <div>
-                <p className="mb-2 text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">Venue leaderboard</p>
-                <div className="overflow-hidden rounded-xl border border-[#fef3c7]/[0.18] bg-[#0f172a]">
-                  {leaderboard.map((row, i) => {
-                    const isMe = row.userId === userId;
+                <p className="mb-2.5 text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">
+                  {canEditExistingEntryLineup ? "Your roster" : "Your roster · locked"}
+                </p>
+                <div className="flex flex-col gap-2.5">
+                  {(
+                    trackedEntry.lineupPlayers.length > 0
+                      ? trackedEntry.lineupPlayers
+                      : trackedEntry.lineup.map((playerName, index) => ({
+                          playerId: -(index + 1),
+                          playerName,
+                          headshotUrl: null,
+                        }))
+                  ).map((player) => {
+                    const livePoints = livePointsByPlayer.get(String(player.playerId));
+                    const requireLiveRows = trackedEntry.status === "pending" || trackedEntry.status === "live";
+                    const playerPoints =
+                      typeof livePoints === "number"
+                        ? livePoints
+                        : requireLiveRows
+                        ? 0
+                        : getScoreFromBreakdown(trackedEntry.scoreBreakdown, player);
+                    const isHot = highlightedPlayerIds.includes(String(player.playerId));
+                    const popTone = playerPopToneById[String(player.playerId)] ?? "gain";
+                    const isScoring = playerPoints > 0;
+                    const poolItem = playerPool.find(
+                      (it) => normalizePlayerKey(it.playerName) === normalizePlayerKey(player.playerName)
+                    );
                     return (
                       <div
-                        key={row.entryId}
-                        className={`flex items-center justify-between px-3 py-2 ${i ? "border-t border-white/5" : ""} ${isMe ? "bg-[#fef3c7]/[0.06]" : ""}`}
+                        key={`${trackedEntry.id}-${player.playerId}`}
+                        className={`grid grid-cols-[60px_1fr_auto] items-center gap-3.5 rounded-[18px] border px-4 py-4 transition-all duration-300 ${
+                          isHot
+                            ? popTone === "loss"
+                              ? "scale-[1.02] border-rose-400/40 bg-rose-950/20"
+                              : "scale-[1.02] border-emerald-400/40 bg-emerald-950/20"
+                            : "border-[#fef3c7]/[0.22] bg-[#fef3c7]/[0.045]"
+                        }`}
                       >
-                        <div className="flex min-w-0 items-center gap-2.5">
-                          <span className={`w-4 font-mono text-[12px] font-[900] tabular-nums ${row.rank <= 3 ? "text-[#fde68a]" : "text-slate-500"}`}>
-                            {row.rank}
-                          </span>
-                          <span className={`truncate text-[12px] ${isMe ? "font-black text-[#fef3c7]" : "font-bold text-slate-300"}`}>
-                            {isMe ? "You" : row.username}
-                          </span>
+                        <PlayerHeadshot
+                          src={player.headshotUrl ?? playerPoolHeadshotByName.get(normalizePlayerKey(player.playerName)) ?? null}
+                          name={player.playerName}
+                          live={isScoring}
+                          sizeClass="h-[60px] w-[60px]"
+                        />
+                        <div className="min-w-0 leading-tight">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className={`truncate text-[15px] font-black ${
+                              isHot ? (popTone === "loss" ? "text-rose-300" : "text-emerald-300") : "text-[#fef3c7]"
+                            }`}>
+                              {player.playerName}
+                            </span>
+                            <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[8.5px] font-black uppercase tracking-[0.08em] ${
+                              isScoring
+                                ? "border border-[#6ee7b7]/40 bg-emerald-500/15 text-[#6ee7b7]"
+                                : "border border-white/10 bg-white/5 text-slate-400"
+                            }`}>
+                              {isScoring ? <span className="h-1 w-1 animate-pulse rounded-full bg-emerald-400" /> : null}
+                              {isScoring ? "Live" : "Pending"}
+                            </span>
+                          </div>
+                          <div className="mt-1 truncate text-[11px] font-bold text-[#fef3c7]/55">
+                            {poolItem?.position ? <span className="text-[#fde68a]">{poolItem.position}</span> : null}
+                            {poolItem?.position && poolItem?.team ? " · " : null}
+                            {poolItem?.team ?? trackedEntry.gameLabel}
+                          </div>
                         </div>
-                        <span className={`font-mono text-[13px] font-[900] tabular-nums ${isMe ? "text-[#6ee7b7]" : "text-slate-200"}`}>
-                          {Number(row.points ?? 0).toFixed(1)}
-                        </span>
+                        <div className="text-right">
+                          <div className="text-[9px] font-black uppercase tracking-[0.14em] text-[#fef3c7]/45">FP</div>
+                          <SpringPop
+                            popKey={playerPopTickById[String(player.playerId)] ?? 0}
+                            glowSize={12}
+                            glowColor={popTone === "loss" ? "red" : "green"}
+                            className={`font-mono text-[24px] font-[900] leading-[1.05] tabular-nums ${
+                              isHot ? (popTone === "loss" ? "text-rose-200" : "text-emerald-200") : "text-[#fde68a]"
+                            }`}
+                          >
+                            {playerPoints.toFixed(1)}
+                          </SpringPop>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
+                {existingEntryForSelectedGame && canEditExistingEntryLineup && !isEditingRoster ? (
+                  <button
+                    type="button"
+                    onClick={startEditingRoster}
+                    className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-[12px] border border-[#fde68a]/50 bg-[#fde68a]/15 text-[12.5px] font-black uppercase tracking-[0.08em] text-[#fde68a] active:scale-[0.98]"
+                  >
+                    Edit Roster
+                  </button>
+                ) : null}
               </div>
-            ) : null}
+
+              {/* Leaderboard column */}
+              {leaderboard.length > 0 ? (
+                <div>
+                  {/* Mobile toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setShowLeaderboard((v) => !v)}
+                    className="mt-4 flex w-full items-center justify-between rounded-[12px] border border-[#fef3c7]/[0.18] bg-[#0f172a] px-3.5 py-2.5 sm:hidden"
+                  >
+                    <span className="text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">
+                      Venue leaderboard · {leaderboard.length}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400">{showLeaderboard ? "Hide ▲" : "Show ▼"}</span>
+                  </button>
+                  <div className={`sm:block ${showLeaderboard ? "block" : "hidden"}`}>
+                    <p className="mb-2 mt-4 hidden text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a] sm:block">Venue leaderboard</p>
+                    <div className="overflow-hidden rounded-xl border border-[#fef3c7]/[0.18] bg-[#0f172a]">
+                      {leaderboard.map((row, i) => {
+                        const isMe = row.userId === userId;
+                        return (
+                          <div
+                            key={row.entryId}
+                            className={`flex items-center justify-between px-3 py-2.5 ${i ? "border-t border-white/5" : ""} ${isMe ? "bg-[#fef3c7]/[0.06]" : ""}`}
+                          >
+                            <div className="flex min-w-0 items-center gap-2.5">
+                              <span className={`w-4 font-mono text-[12px] font-[900] tabular-nums ${row.rank <= 3 ? "text-[#fde68a]" : "text-slate-500"}`}>
+                                {row.rank}
+                              </span>
+                              <span className={`truncate text-[12px] ${isMe ? "font-black text-[#fef3c7]" : "font-bold text-slate-300"}`}>
+                                {isMe ? "You" : row.username}
+                              </span>
+                            </div>
+                            <span className={`font-mono text-[13px] font-[900] tabular-nums ${isMe ? "text-[#6ee7b7]" : "text-slate-200"}`}>
+                              {Number(row.points ?? 0).toFixed(1)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
 
             {/* Collect / claim */}
             {showTrackedEntryClaimButton ? (
@@ -2740,18 +2764,18 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
                             disabled={!filled || !canModifyRosterSelections}
                             onClick={() => name && removeSelectedPlayer(name)}
                             aria-label={filled ? `Remove ${name}` : "Empty roster slot"}
-                            className={`flex flex-1 flex-col items-center justify-center gap-1 rounded-[9px] py-2.5 text-center transition-transform active:scale-95 disabled:cursor-default ${
+                            className={`flex flex-1 flex-col items-center justify-center gap-1.5 rounded-[11px] py-3.5 text-center transition-transform active:scale-95 disabled:cursor-default ${
                               filled
                                 ? "border border-[#fef3c7]/40 bg-[#fef3c7]/10"
                                 : "border border-dashed border-[#fef3c7]/25 bg-black/25"
                             }`}
                           >
                             {filled ? (
-                              <PlayerHeadshot src={playerPoolHeadshotByName.get(normalizePlayerKey(name!)) ?? null} name={name!} />
+                              <PlayerHeadshot src={playerPoolHeadshotByName.get(normalizePlayerKey(name!)) ?? null} name={name!} sizeClass="h-[42px] w-[42px]" />
                             ) : (
-                              <span className="text-sm font-black text-[#fef3c7]/55">+</span>
+                              <span className="text-base font-black text-[#fef3c7]/55">+</span>
                             )}
-                            <span className={`text-[8px] font-extrabold leading-none ${filled ? "text-[#fef3c7]" : "text-slate-500"}`}>
+                            <span className={`text-[8.5px] font-extrabold leading-none ${filled ? "text-[#fef3c7]" : "text-slate-500"}`}>
                               {poolItem?.position ?? "—"}
                             </span>
                           </button>

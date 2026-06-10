@@ -1,8 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
+import { RankBadge } from "@/components/trivia/RankBadge";
+import { AnimatedQuestionText } from "@/components/animations/AnimatedQuestionText";
+import { LiveTriviaCountdownTimer } from "@/components/animations/LiveTriviaCountdownTimer";
+import { RevealedAnswerBanner } from "@/components/animations/RevealedAnswerBanner";
+import { EmceeTypeInAnnouncement } from "@/components/animations/EmceeTypeInAnnouncement";
+import { LiveTriviaLeaderboardRow } from "@/components/animations/LiveTriviaLeaderboardRow";
 import { getUserId, getVenueId, getUsername } from "@/lib/storage";
 import { navigateBackToVenue } from "@/lib/venueGameTransition";
 import {
@@ -14,6 +20,7 @@ import {
   type LiveShowdownCommentTrigger,
 } from "@/lib/liveShowdownComments";
 import { ReadyPrompt } from "@/components/trivia/ReadyPrompt";
+import { QuestionImage } from "@/components/trivia/QuestionImage";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 
 type Phase = "answering" | "rest_warning" | "mid_game_break" | "pre_game";
@@ -63,6 +70,7 @@ type LiveState = {
   currentRoundCategory?: string | null;
   upcomingRoundNumber?: number | null;
   upcomingRoundCategory?: string | null;
+  isFinalResultsWindow?: boolean;
   leaderboard?: LeaderboardEntry[] | null;
   viewerRank?: number | null;
   viewerRoundByRound?: ViewerRoundSummary[] | null;
@@ -82,6 +90,7 @@ type LiveState = {
     options: string[];
     category?: string | null;
     isClosestGuess?: boolean;
+    imageUrl?: string | null;
   } | null;
 };
 
@@ -172,24 +181,6 @@ function computeRankMovement(entries: LeaderboardEntry[]): Map<string, number> {
   return movement;
 }
 
-const RankBadge = ({ rank }: { rank: number }) => {
-  const palette =
-    rank === 1
-      ? "bg-amber-400 text-slate-900"
-      : rank === 2
-      ? "bg-slate-300 text-slate-900"
-      : rank === 3
-      ? "bg-amber-700 text-amber-50"
-      : "bg-slate-700 text-slate-300";
-  return (
-    <span
-      className={`inline-flex h-7 w-7 items-center justify-center rounded-lg text-sm font-black tabular-nums ${palette}`}
-    >
-      {rank}
-    </span>
-  );
-};
-
 export default function LiveShowdownPage() {
   const searchParams = useSearchParams();
   const { triggerAnimation } = useAnimationTrigger();
@@ -257,8 +248,8 @@ export default function LiveShowdownPage() {
 
   const isPostGame = Boolean(
     hasOnboarded &&
-    !state?.isGameActive &&
-    Object.keys(participatingQuestionKeys).length > 0
+    Object.keys(participatingQuestionKeys).length > 0 &&
+    (!state?.isGameActive || state?.isFinalResultsWindow)
   );
 
   const postGameStats = useMemo(() => {
@@ -988,6 +979,12 @@ export default function LiveShowdownPage() {
     }
 
     if (state.activePhase === "mid_game_break" && state.scheduleId && state.currentRound) {
+      if (state.isFinalResultsWindow) {
+        return {
+          key: `post_game:${state.scheduleId}`,
+          trigger: "post_game",
+        };
+      }
       return {
         key: `round_break:${state.scheduleId}:${state.currentRound}`,
         trigger: "round_break",
@@ -1031,8 +1028,17 @@ export default function LiveShowdownPage() {
     prevPhaseRef.current = state?.activePhase ?? null;
     if (prev && prev !== "mid_game_break" && state?.activePhase === "mid_game_break") {
       triggerAnimation("LIVE_TRIVIA_ROUND_BREAK");
+      if (state.upcomingRoundCategory) {
+        const upcomingRound = (state.currentRound ?? 0) + 1;
+        setTimeout(() => {
+          triggerAnimation("LIVE_TRIVIA_NEXT_CATEGORY", {
+            categoryName: state.upcomingRoundCategory ?? undefined,
+            roundNumber: upcomingRound,
+          });
+        }, 1600);
+      }
     }
-  }, [state?.activePhase, triggerAnimation]);
+  }, [state?.activePhase, state?.upcomingRoundCategory, state?.currentRound, triggerAnimation]);
 
   if (loading) {
     return (
@@ -1172,6 +1178,7 @@ export default function LiveShowdownPage() {
         </header>
 
 
+        <AnimatePresence mode="wait">
         {!hasOnboarded ? (
           <>
             <section className="rounded-2xl border border-amber-400/60 bg-slate-900 p-4 text-center">
@@ -1597,6 +1604,9 @@ export default function LiveShowdownPage() {
                     🎯 Closest Guess — nearest answer wins 10 points
                   </p>
                 ) : null}
+                {state.activeQuestion.imageUrl ? (
+                  <QuestionImage key={state.activeQuestion.questionId} src={state.activeQuestion.imageUrl} credit={state.activeQuestion.imageUrl.includes("wikimedia.org") ? "Map via Wikimedia Commons" : undefined} />
+                ) : null}
                 <p className="mt-2 text-3xl font-extrabold tracking-tight leading-tight text-slate-300">
                   {state.activeQuestion.question}
                 </p>
@@ -1642,7 +1652,14 @@ export default function LiveShowdownPage() {
             )}
           </section>
         ) : answering ? (
-          <section className="rounded-2xl border border-emerald-400/60 bg-slate-900 p-4">
+          <motion.section
+            key={`question-${activeKey}`}
+            initial={{ opacity: 0, x: 28 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -28 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            className="rounded-2xl border border-emerald-400/60 bg-slate-900 p-4"
+          >
             <p className="text-base font-black uppercase tracking-[0.14em] text-emerald-300">
               Round {state.currentRound} · Question {state.currentQuestionIndex}
             </p>
@@ -1656,16 +1673,20 @@ export default function LiveShowdownPage() {
                 🎯 Closest Guess — nearest answer wins 10 points
               </p>
             ) : null}
+            {state.activeQuestion?.imageUrl ? (
+              <QuestionImage key={state.activeQuestion.questionId} src={state.activeQuestion.imageUrl} credit={state.activeQuestion.imageUrl.includes("wikimedia.org") ? "Map via Wikimedia Commons" : undefined} />
+            ) : null}
             <p className="mt-2 text-3xl font-extrabold tracking-tight leading-tight">
-              {state.activeQuestion?.question ?? "Question loading…"}
+              {state.activeQuestion?.question ? (
+                <AnimatedQuestionText text={state.activeQuestion.question} />
+              ) : (
+                "Question loading…"
+              )}
             </p>
             {!state.activeQuestion ? (
               <p className="mt-1 text-sm text-slate-400">Hang tight — syncing question from server.</p>
             ) : null}
-            <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-slate-800">
-              <div className="h-full bg-emerald-400 transition-all duration-700" style={{ width: `${progressPct}%` }} />
-            </div>
-            <p className="mt-1 text-2xl font-black text-emerald-200">{state.secondsRemaining}s</p>
+            <LiveTriviaCountdownTimer secondsRemaining={state.secondsRemaining} progressPct={progressPct} />
             <input
               ref={answerInputRef}
               value={answer}
@@ -1686,12 +1707,23 @@ export default function LiveShowdownPage() {
             >
               {submittedKey === activeKey ? "Answer Locked!" : isSubmitting ? "Submitting..." : "Submit"}
             </button>
-          </section>
+          </motion.section>
         ) : restWarning ? (
-          <section className="rounded-2xl border border-fuchsia-400/60 bg-slate-900 p-4 text-center">
-            <p className="text-base font-black uppercase tracking-[0.14em] text-fuchsia-300">Answer Reveal</p>
+          <motion.section
+            key={`rest-${activeKey}`}
+            initial={{ opacity: 0, x: 28 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -28 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            className="rounded-2xl border border-fuchsia-400/60 bg-slate-900 p-4 text-center"
+          >
+            <p className="text-base font-black uppercase tracking-[0.14em] text-fuchsia-300">Next question in:</p>
             <p className="mt-2 text-5xl font-black tabular-nums text-fuchsia-200">{state.secondsRemaining}s</p>
-            <div
+            <motion.div
+              key={`feedback-${activeKey}`}
+              initial={{ scale: 0.88, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 380, damping: 22, delay: 0.05 }}
               className={`mt-3 rounded-xl border p-3 text-center ${
                 feedbackState === "right"
                   ? "border-emerald-300/70 bg-emerald-500/20 text-emerald-100"
@@ -1703,21 +1735,32 @@ export default function LiveShowdownPage() {
               <p className="text-4xl font-black tracking-wide">{feedbackLabel}</p>
               <p className="text-xl font-bold">{feedbackSubcopy}</p>
               {!currentResult ? <p className="mt-1 text-xs">Question expired.</p> : null}
-            </div>
-            {state.revealedAnswer ? (
-              <p className="mt-3 rounded-xl border border-fuchsia-300/50 bg-fuchsia-950/40 p-3 text-2xl font-extrabold tracking-tight">
-                Correct Answer: {state.revealedAnswer}
-              </p>
-            ) : null}
-            {state.emceeAnnouncement ? (
-              <p className="mt-3 rounded-xl border border-amber-300/70 bg-amber-950/50 p-3 text-base font-bold text-amber-100">
-                Emcee: {state.emceeAnnouncement}
-              </p>
-            ) : null}
-          </section>
+            </motion.div>
+            <RevealedAnswerBanner answer={state.revealedAnswer} animationKey={activeKey} />
+            <AnimatePresence>
+              {state.emceeAnnouncement ? (
+                <motion.p
+                  key={`emcee-${activeKey}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="mt-3 rounded-xl border border-amber-300/70 bg-amber-950/50 p-3 text-base font-bold text-amber-100"
+                >
+                  Emcee: {state.emceeAnnouncement}
+                </motion.p>
+              ) : null}
+            </AnimatePresence>
+          </motion.section>
         ) : (
           /* ── Round break / intermission ── */
-          <section className="space-y-4">
+          <motion.section
+            key="intermission"
+            initial={{ opacity: 0, x: 28 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -28 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            className="space-y-4"
+          >
             {/* Header: round label + title + break countdown (no card border — sits on page bg) */}
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -1773,18 +1816,14 @@ export default function LiveShowdownPage() {
             ) : null}
 
             {/* Emcee announcement */}
-            {state.emceeAnnouncement ? (
-              <div
-                className="rounded-xl px-4 py-3 text-sm font-bold"
-                style={{ background: "rgba(120,53,15,0.3)", border: "1px solid rgba(245,158,11,0.35)", color: "#fde68a" }}
-              >
-                {state.emceeAnnouncement}
-              </div>
-            ) : null}
+            <EmceeTypeInAnnouncement text={state.emceeAnnouncement} />
 
             {/* In-game leaderboard (this game only, not lifetime venue points) */}
             {state.leaderboard && state.leaderboard.length > 0 ? (
-              <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
+              <div
+                key={state.currentRound ?? "lb"}
+                className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900"
+              >
                 <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
                   <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Leaderboard</p>
                   <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-600">This game only</p>
@@ -1804,55 +1843,16 @@ export default function LiveShowdownPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {state.leaderboard.slice(0, 10).map((player) => {
-                        const isViewer = Boolean(viewerId) && player.userId === viewerId;
-                        const movement = rankMovement.get(player.userId) ?? 0;
-                        return (
-                          <tr
-                            key={player.userId}
-                            className={`border-t border-slate-800 ${
-                              isViewer ? "bg-fuchsia-950/30 ring-1 ring-inset ring-fuchsia-500/50" : ""
-                            }`}
-                          >
-                            <td className="px-3 py-2.5">
-                              <RankBadge rank={player.rank} />
-                            </td>
-                            <td className="px-3 py-2.5">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-slate-100">{player.username}</span>
-                                {isViewer ? (
-                                  <span className="rounded bg-fuchsia-500 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">
-                                    You
-                                  </span>
-                                ) : null}
-                                {movement > 0 ? (
-                                  <span className="text-[10px] font-black tabular-nums text-emerald-400">▲{movement}</span>
-                                ) : movement < 0 ? (
-                                  <span className="text-[10px] font-black tabular-nums text-rose-400">
-                                    ▼{Math.abs(movement)}
-                                  </span>
-                                ) : null}
-                              </div>
-                            </td>
-                            {Array.from({ length: state.currentRound ?? 0 }, (_, i) => {
-                              const roundNumber = i + 1;
-                              return (
-                                <td key={roundNumber} className="px-2 py-2.5 text-right tabular-nums text-slate-400">
-                                  {player.roundPoints[roundNumber] ?? 0}
-                                </td>
-                              );
-                            })}
-                            <td className="px-3 py-2.5 text-right">
-                              <span className="text-lg font-black tabular-nums text-white">{player.totalPoints}</span>
-                              {player.pointsThisRound > 0 ? (
-                                <span className="ml-1 text-xs font-black tabular-nums text-emerald-400">
-                                  +{player.pointsThisRound}
-                                </span>
-                              ) : null}
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {state.leaderboard.slice(0, 10).map((player, index) => (
+                        <LiveTriviaLeaderboardRow
+                          key={player.userId}
+                          player={player}
+                          index={index}
+                          isViewer={Boolean(viewerId) && player.userId === viewerId}
+                          movement={rankMovement.get(player.userId) ?? 0}
+                          currentRound={state.currentRound ?? 0}
+                        />
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -1870,8 +1870,9 @@ export default function LiveShowdownPage() {
                 ) : null}
               </div>
             ) : null}
-          </section>
+          </motion.section>
         )}
+        </AnimatePresence>
 
         {hasOnboarded && commentText ? (
           <div className="rounded-xl border border-cyan-400/50 bg-cyan-950/30 p-3 text-sm font-semibold text-cyan-100">
@@ -1885,6 +1886,19 @@ export default function LiveShowdownPage() {
         {error ? <div className="rounded-xl border border-rose-400/50 bg-rose-950/40 p-3 text-sm">{error}</div> : null}
       </div>
 
+
+      {process.env.NODE_ENV === "development" ? (
+        <button
+          type="button"
+          onClick={() => triggerAnimation("LIVE_TRIVIA_NEXT_CATEGORY", {
+            categoryName: state.upcomingRoundCategory ?? "Test Category",
+            roundNumber: (state.currentRound ?? 0) + 1,
+          })}
+          className="fixed bottom-4 right-4 z-[1100] rounded-lg border border-dashed border-fuchsia-700/60 bg-fuchsia-950/80 px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-fuchsia-400 backdrop-blur-sm hover:bg-fuchsia-950"
+        >
+          ▶ Test Category Anim
+        </button>
+      ) : null}
 
       {hasOnboarded && Boolean(forfeitKey) && Boolean(activeKey) && forfeitKey === activeKey ? (
         <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/75 p-4">

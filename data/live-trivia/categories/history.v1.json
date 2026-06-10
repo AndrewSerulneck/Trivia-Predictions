@@ -1304,14 +1304,6 @@
       "answer_format": "write_in"
     },
     {
-      "slug": "french-revolution-leader",
-      "question": "Who was the revolutionary leader who became Emperor of France in 1804?",
-      "answer": "Napoleon Bonaparte",
-      "category": "History",
-      "difficulty": "easy",
-      "answer_format": "write_in"
-    },
-    {
       "slug": "first-woman-vice-president",
       "question": "Who was the first woman to serve as Vice President of the United States?",
       "answer": "Kamala Harris",
