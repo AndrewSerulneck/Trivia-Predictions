@@ -140,7 +140,7 @@ function pickBalancedRandomQuestions(questions: TriviaQuestion[], limit: number)
   return selected;
 }
 
-export async function getTriviaQuestions(limit = 15, userId?: string): Promise<TriviaQuestion[]> {
+export async function getTriviaQuestions(limit = 15, userId?: string, category?: string): Promise<TriviaQuestion[]> {
   const client = supabaseAdmin;
   if (!client) {
     return pickBalancedRandomQuestions(FALLBACK_QUESTIONS, limit);
@@ -169,11 +169,17 @@ export async function getTriviaQuestions(limit = 15, userId?: string): Promise<T
 
   const queryLimit = Math.min(MAX_CANDIDATE_QUESTIONS, Math.max(safeLimit * 40, 480));
 
-  const { count: totalQuestionCount, error: countError } = await client
+  const safeCategory = category?.trim() || undefined;
+
+  const countQuery = client
     .from("trivia_questions")
     .select("id", { count: "exact", head: true })
     .eq("question_pool", "anytime_blitz")
     .eq("status", "active");
+
+  const { count: totalQuestionCount, error: countError } = safeCategory
+    ? await countQuery.eq("category", safeCategory)
+    : await countQuery;
 
   if (countError) {
     return pickBalancedRandomQuestions(FALLBACK_QUESTIONS, safeLimit);
@@ -181,17 +187,19 @@ export async function getTriviaQuestions(limit = 15, userId?: string): Promise<T
 
   const total = Math.max(0, totalQuestionCount ?? 0);
   if (total === 0) {
-    return pickBalancedRandomQuestions(FALLBACK_QUESTIONS, safeLimit);
+    return [];
   }
 
   const candidatesById = new Map<string, TriviaQuestionRow>();
   if (total <= queryLimit) {
-    const { data, error } = await client
+    const rowQuery = client
       .from("trivia_questions")
       .select("id, question, options, correct_answer, category, difficulty")
       .eq("question_pool", "anytime_blitz")
       .eq("status", "active")
       .range(0, total - 1);
+
+    const { data, error } = safeCategory ? await rowQuery.eq("category", safeCategory) : await rowQuery;
     if (error || !data) {
       return pickBalancedRandomQuestions(FALLBACK_QUESTIONS, safeLimit);
     }
@@ -213,14 +221,15 @@ export async function getTriviaQuestions(limit = 15, userId?: string): Promise<T
     }
 
     const windows = await Promise.all(
-      offsets.map((offset) =>
-        client
+      offsets.map((offset) => {
+        const windowQuery = client
           .from("trivia_questions")
           .select("id, question, options, correct_answer, category, difficulty")
           .eq("question_pool", "anytime_blitz")
           .eq("status", "active")
-          .range(offset, offset + windowSize - 1)
-      )
+          .range(offset, offset + windowSize - 1);
+        return safeCategory ? windowQuery.eq("category", safeCategory) : windowQuery;
+      })
     );
 
     for (const result of windows) {

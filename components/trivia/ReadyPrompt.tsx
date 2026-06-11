@@ -52,7 +52,7 @@ export function ReadyPrompt({ type, roundNumber, category, secondsRemaining, isV
             {type === "round_start" && category ? (
               <div className="mt-4 flex flex-col items-center gap-1">
                 <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Category</p>
-                <p className={`bg-gradient-to-r ${gradientClass} bg-clip-text text-2xl font-black uppercase tracking-tight text-transparent sm:text-3xl`}>
+                <p className={`bg-gradient-to-r ${gradientClass} bg-clip-text text-4xl font-black uppercase tracking-tight text-transparent sm:text-6xl`}>
                   {category}
                 </p>
               </div>

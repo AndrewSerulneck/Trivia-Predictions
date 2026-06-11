@@ -9,6 +9,8 @@ type PageShellProps = {
   showUserStatus?: boolean;
   showAlerts?: boolean;
   showPageTitle?: boolean;
+  shellClassName?: string;
+  mainClassName?: string;
   children?: React.ReactNode;
 };
 
@@ -22,6 +24,8 @@ export function PageShell({
   children,
   noContainer = false,
   lockViewport = false,
+  shellClassName,
+  mainClassName,
 }: PageShellProps) {
   const useCompactTopNav = !showBranding;
   const hasCompactHeaderContent = showUserStatus || showPageTitle;
@@ -51,7 +55,7 @@ export function PageShell({
     : undefined;
 
   return (
-    <div className={`tp-page-shell flex flex-col ${shellHeightClass} ${shellGapClass}`} style={shellStyle}>
+    <div className={`tp-page-shell flex flex-col ${shellHeightClass} ${shellGapClass}${shellClassName ? ` ${shellClassName}` : ""}`} style={shellStyle}>
       {useCompactTopNav ? (
         hasCompactHeaderContent ? (
           <header className="tp-page-header tp-page-header-compact fixed inset-x-0 top-0 z-[1000] w-full max-w-none overflow-visible px-0 pb-0 pt-0">
@@ -86,7 +90,7 @@ export function PageShell({
 
       {useCompactTopNav && hasCompactHeaderContent ? <div aria-hidden className={`w-full shrink-0 ${compactHeaderSpacerClass}`} /> : null}
 
-      <main className={`tp-page-main min-w-0 ${mainClass}`}>
+      <main className={`tp-page-main min-w-0 ${mainClass}${mainClassName ? ` ${mainClassName}` : ""}`}>
         {noContainer ? (
           <>{children}</>
         ) : (

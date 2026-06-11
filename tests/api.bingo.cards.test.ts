@@ -48,6 +48,51 @@ describe("/api/bingo/cards", () => {
     });
   });
 
+  it("GET active view is read-only by default", async () => {
+    mocks.listUserSportsBingoCards.mockResolvedValue([{ id: "card-1" }]);
+
+    const response = await GET(
+      new Request("http://localhost/api/bingo/cards?userId=u1&includeSettled=false&activeView=true")
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.listUserSportsBingoCards).toHaveBeenCalledWith({
+      userId: "u1",
+      includeSettled: false,
+      refreshProgress: false,
+    });
+  });
+
+  it("GET can explicitly request progress refresh for active cards", async () => {
+    mocks.listUserSportsBingoCards.mockResolvedValue([{ id: "card-1" }]);
+
+    const response = await GET(
+      new Request("http://localhost/api/bingo/cards?userId=u1&includeSettled=false&refreshProgress=true")
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.listUserSportsBingoCards).toHaveBeenCalledWith({
+      userId: "u1",
+      includeSettled: false,
+      refreshProgress: true,
+    });
+  });
+
+  it("GET settled card reads never trigger progress refresh", async () => {
+    mocks.listUserSportsBingoCards.mockResolvedValue([{ id: "card-1" }]);
+
+    const response = await GET(
+      new Request("http://localhost/api/bingo/cards?userId=u1&includeSettled=true&refreshProgress=true")
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.listUserSportsBingoCards).toHaveBeenCalledWith({
+      userId: "u1",
+      includeSettled: true,
+      refreshProgress: false,
+    });
+  });
+
   it("POST generate returns board preview", async () => {
     mocks.generateSportsBingoBoard.mockResolvedValue({ game: { id: "game-1" }, squares: [] });
 

@@ -584,7 +584,7 @@
     },
     {
       "slug": "triple-landlocked-state",
-      "question": "What is the only U.S. state that is 'triple landlocked', requiring you to cross at least three states or countries to reach an ocean?",
+      "question": "What is the only U.S. state that is 'triple landlocked', requiring you to cross at least three states to reach an ocean?",
       "answer": "Nebraska",
       "category": "Geography",
       "difficulty": "hard"
@@ -660,7 +660,7 @@
     },
     {
       "slug": "africa-largest-island-nation",
-      "question": "What is the largest island nation off the eastern coast of mainland Africa?",
+      "question": "What is the large island nation off the eastern coast of mainland Africa?",
       "answer": "Madagascar",
       "category": "Geography",
       "difficulty": "easy"

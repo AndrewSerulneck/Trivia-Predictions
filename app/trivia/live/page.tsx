@@ -1195,7 +1195,7 @@ export default function LiveShowdownPage() {
                 <p className="mt-2 text-sm font-semibold text-emerald-200">Live game detected. You can join now.</p>
               ) : null}
               {state.nextSchedule?.firstRoundCategory ? (
-                <p className="mt-3 rounded-xl border border-amber-300/50 bg-amber-950/30 p-2 text-sm font-semibold text-amber-100">
+                <p className="mt-4 rounded-xl border border-amber-300/50 bg-amber-950/30 p-4 text-2xl font-bold text-amber-100">
                   Opening category: {state.nextSchedule.firstRoundCategory}
                 </p>
               ) : null}
@@ -1551,7 +1551,7 @@ export default function LiveShowdownPage() {
                     </>
                   )}
                   {state.nextSchedule?.firstRoundCategory ? (
-                    <p className="mt-3 rounded-xl border border-amber-300/50 bg-amber-950/30 p-2 text-base font-semibold text-amber-100">
+                    <p className="mt-4 rounded-xl border border-amber-300/50 bg-amber-950/30 p-4 text-3xl font-bold text-amber-100">
                       Opening category: {state.nextSchedule.firstRoundCategory}
                     </p>
                   ) : null}
@@ -1804,16 +1804,6 @@ export default function LiveShowdownPage() {
 
             {/* Divider */}
             <div className="h-px w-full bg-slate-800" />
-
-            {/* Last revealed answer */}
-            {state.revealedAnswer ? (
-              <div
-                className="rounded-xl px-4 py-3 text-sm font-bold"
-                style={{ background: "rgba(112,26,117,0.25)", border: "1px solid rgba(192,38,211,0.3)", color: "#f0abfc" }}
-              >
-                Correct answer: <span className="font-black">{state.revealedAnswer}</span>
-              </div>
-            ) : null}
 
             {/* Emcee announcement */}
             <EmceeTypeInAnnouncement text={state.emceeAnnouncement} />

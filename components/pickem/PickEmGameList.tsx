@@ -10,6 +10,8 @@ import { NotificationBell } from "@/components/ui/NotificationBell";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { navigateBackToVenue } from "@/lib/venueGameTransition";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
+import { CoinFXCanvas } from "@/components/ui/CoinFXCanvas";
+import { PickEmCollectAnimation } from "@/components/animations/PickEmCollectAnimation";
 import type { AdSlot } from "@/types";
 
 type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl" | "mma" | "tennis";
@@ -265,8 +267,14 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "" }: { in
   const [pickPulseByGameId, setPickPulseByGameId] = useState<Record<string, string | undefined>>({});
   const [dailyPickCount, setDailyPickCount] = useState(0);
   const [dailyPickCountDelta, setDailyPickCountDelta] = useState(0);
-  const [isCollectingBank, setIsCollectingBank] = useState(false);
   const [pointsBank, setPointsBank] = useState<GamesResponse["pointsBank"] | null>(null);
+  const [collectResult, setCollectResult] = useState<{
+    pointsCollected: number;
+    correctPicks: number;
+    totalSettledPicks: number;
+    multiplierApplied: 1 | 2 | 3;
+  } | null>(null);
+  const hasAutoCollectedRef = useRef(false);
   const [goldFlash, setGoldFlash] = useState(false);
   const [flashingSportSlug, setFlashingSportSlug] = useState("");
   const [lastDebugProbes, setLastDebugProbes] = useState<
@@ -276,8 +284,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "" }: { in
   const [limitEchoAnim, setLimitEchoAnim] = useState<{ id: number } | null>(null);
   const [multiplierAnim, setMultiplierAnim] = useState<{ label: "Double Points!" | "Triple Points!"; id: number } | null>(null);
   const [limitPulse, setLimitPulse] = useState(false);
-  const [hasPreviousUnclaimedPicks, setHasPreviousUnclaimedPicks] = useState(false);
-  const [hasFutureUnclaimedPicks, setHasFutureUnclaimedPicks] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [pickHistory, setPickHistory] = useState<PickEmPickHistoryItem[]>([]);
   const [loadingPickHistory, setLoadingPickHistory] = useState(false);
@@ -617,19 +623,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "" }: { in
     );
   }, [historicalPicks, selectedDate, selectedSportSlug, todayDateKey]);
 
-  const fallbackCollectPoints = useMemo(
-    () =>
-      historicalPicks.reduce((sum, pick) => {
-        if (pick.status !== "won" || pick.rewardClaimedAt) {
-          return sum;
-        }
-        return sum + Math.max(0, Number(pick.rewardPoints || 10));
-      }, 0),
-    [historicalPicks]
-  );
-
-  const collectablePoints = Math.max(0, Math.max(pointsBank?.pendingPoints ?? 0, fallbackCollectPoints));
-
   const scheduleBackgroundRefresh = useCallback(() => {
     if (refreshTimerRef.current !== null) {
       window.clearTimeout(refreshTimerRef.current);
@@ -669,62 +662,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "" }: { in
     setDailyPickCount(count);
     setDailyPickCountDelta(0);
   }, [userId, venueId]);
-
-  useEffect(() => {
-    const run = async () => {
-      if (!userId || !venueId) {
-        setHasPreviousUnclaimedPicks(false);
-        setHasFutureUnclaimedPicks(false);
-        return;
-      }
-      try {
-        const response = await fetch(
-          `/api/pickem/picks?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venueId)}&includeSettled=true&limit=500`,
-          { cache: "no-store" }
-        );
-        const payload = (await response.json()) as {
-          ok: boolean;
-          picks?: Array<{
-            startsAt: string;
-            venueId: string;
-            status: "pending" | "won" | "lost" | "push" | "canceled";
-            rewardClaimedAt?: string | null;
-          }>;
-        };
-        if (!payload.ok) {
-          setHasPreviousUnclaimedPicks(false);
-          return;
-        }
-        const hasOlderUnclaimed = (payload.picks ?? []).some((pick) => {
-          if (pick.venueId !== venueId) return false;
-          if (pick.status !== "won") return false;
-          if (pick.rewardClaimedAt) return false;
-          const pickDateKey = toLocalDateKey(pick.startsAt);
-          return Boolean(pickDateKey) && pickDateKey < selectedDate;
-        });
-        const hasLaterUnclaimed = (payload.picks ?? []).some((pick) => {
-          if (pick.venueId !== venueId) return false;
-          if (pick.status !== "won") return false;
-          if (pick.rewardClaimedAt) return false;
-          const pickDateKey = toLocalDateKey(pick.startsAt);
-          return Boolean(pickDateKey) && pickDateKey > selectedDate;
-        });
-        const hasCurrentUnclaimed = (payload.picks ?? []).some((pick) => {
-          if (pick.venueId !== venueId) return false;
-          if (pick.status !== "won") return false;
-          if (pick.rewardClaimedAt) return false;
-          const pickDateKey = toLocalDateKey(pick.startsAt);
-          return Boolean(pickDateKey) && pickDateKey === selectedDate;
-        });
-        setHasPreviousUnclaimedPicks(hasCurrentUnclaimed ? false : hasOlderUnclaimed);
-        setHasFutureUnclaimedPicks(hasCurrentUnclaimed ? false : hasLaterUnclaimed);
-      } catch {
-        setHasPreviousUnclaimedPicks(false);
-        setHasFutureUnclaimedPicks(false);
-      }
-    };
-    void run();
-  }, [selectedDate, toLocalDateKey, userId, venueId]);
 
   const submitPickRequest = useCallback(
     async (gameId: string, pickTeam: string) => {
@@ -903,81 +840,68 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "" }: { in
     [clearPickRequest, flushGamePick, isViewingToday, loadDailyPickCount, optimisticPickByGame, pickCount, scheduleBackgroundRefresh, userId, venueId]
   );
 
-  const collectBankPoints = useCallback(async () => {
-    if (!userId || !venueId || isCollectingBank) {
-      return;
-    }
-    setIsCollectingBank(true);
-    setSubmitMessage("");
-    try {
-      const response = await fetch("/api/pickem/picks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "claim_points",
-          userId,
-          venueId,
-          localDate: selectedDate,
-          tzOffsetMinutes: new Date().getTimezoneOffset(),
-        }),
-      });
-      const payload = (await response.json()) as {
-        ok: boolean;
-        result?: {
-          claimed: boolean;
-          pointsAwarded: number;
-          claimedPickCount: number;
-          multiplierApplied: 1 | 2 | 3;
+  useEffect(() => {
+    if (!userId || !venueId) return;
+    if (!pointsBank || pointsBank.unclaimedCorrectPicks <= 0) return;
+    if (hasAutoCollectedRef.current) return;
+    hasAutoCollectedRef.current = true;
+
+    const run = async () => {
+      try {
+        const response = await fetch("/api/pickem/picks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "claim_points",
+            userId,
+            venueId,
+            localDate: selectedDate,
+            tzOffsetMinutes: new Date().getTimezoneOffset(),
+          }),
+        });
+        const payload = (await response.json()) as {
+          ok: boolean;
+          result?: {
+            claimed: boolean;
+            pointsAwarded: number;
+            claimedPickCount: number;
+            multiplierApplied: 1 | 2 | 3;
+            correctPicks: number;
+            settledPicks: number;
+          };
+          error?: string;
         };
-        error?: string;
-      };
-      if (!payload.ok || !payload.result) {
-        throw new Error(payload.error ?? "Failed to collect Pick 'Em points.");
-      }
-      if (!payload.result.claimed || payload.result.pointsAwarded <= 0) {
-        setSubmitMessage("No unclaimed settled points are available right now.");
-      } else {
-        const collectButton = document.querySelector<HTMLElement>("[data-pickem-bank-collect]");
-        const rect = collectButton?.getBoundingClientRect();
+        if (!payload.ok || !payload.result || !payload.result.claimed || payload.result.pointsAwarded <= 0) {
+          return;
+        }
+        const { pointsAwarded, multiplierApplied, correctPicks, settledPicks } = payload.result;
         window.dispatchEvent(
           new CustomEvent("tp:coin-flight", {
             detail: {
-              sourceRect: rect
-                ? { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
-                : undefined,
-              delta: payload.result.pointsAwarded,
-              coins: Math.min(36, Math.max(12, Math.round(payload.result.pointsAwarded / 2))),
+              delta: pointsAwarded,
+              coins: Math.min(36, Math.max(12, Math.round(pointsAwarded / 2))),
             },
           })
         );
         window.dispatchEvent(
           new CustomEvent("tp:points-updated", {
-            detail: { source: "pickem-claim", delta: payload.result.pointsAwarded },
+            detail: { source: "pickem-claim", delta: pointsAwarded },
           })
         );
-        window.dispatchEvent(new CustomEvent("tp:success-particles"));
-        setGoldFlash(true);
-        window.setTimeout(() => setGoldFlash(false), 750);
-        setSubmitMessage(
-          `Collected +${payload.result.pointsAwarded} points (${payload.result.claimedPickCount} picks, ${payload.result.multiplierApplied}x multiplier).`
-        );
+        setCollectResult({
+          pointsCollected: pointsAwarded,
+          correctPicks,
+          totalSettledPicks: settledPicks,
+          multiplierApplied,
+        });
+        void loadGames({ background: true });
+        void loadDailyPickCount();
+      } catch {
+        // silent — user still sees their picks, just no animation
       }
-      await loadGames({ background: true });
-      const historyResponse = await fetch(
-        `/api/pickem/picks?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venueId)}&includeSettled=true&refreshSettlement=true&limit=500`,
-        { cache: "no-store" }
-      );
-      const historyPayload = (await historyResponse.json()) as { ok: boolean; picks?: PickEmPickHistoryItem[] };
-      if (historyPayload.ok) {
-        setPickHistory(historyPayload.picks ?? []);
-      }
-      await loadDailyPickCount();
-    } catch (error) {
-      setSubmitMessage(error instanceof Error ? error.message : "Failed to collect Pick 'Em points.");
-    } finally {
-      setIsCollectingBank(false);
-    }
-  }, [isCollectingBank, loadDailyPickCount, loadGames, selectedDate, userId, venueId]);
+    };
+    void run();
+  }, [loadDailyPickCount, loadGames, pointsBank, selectedDate, userId, venueId]);
 
   useEffect(() => {
     void loadDailyPickCount();
@@ -1036,6 +960,16 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "" }: { in
 
   return (
     <div className="tp-pickem-compact min-h-[100dvh] touch-pan-y pb-[max(env(safe-area-inset-bottom),6px)]">
+      <CoinFXCanvas />
+      {collectResult ? (
+        <PickEmCollectAnimation
+          pointsCollected={collectResult.pointsCollected}
+          correctPicks={collectResult.correctPicks}
+          totalSettledPicks={collectResult.totalSettledPicks}
+          multiplierApplied={collectResult.multiplierApplied}
+          onComplete={() => setCollectResult(null)}
+        />
+      ) : null}
       <style>{`
         @keyframes sport-pop {
           0%   { transform: scale(1); }
@@ -1179,11 +1113,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "" }: { in
                 aria-label="Previous day"
               >
                 ◀
-                {hasPreviousUnclaimedPicks ? (
-                  <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white">
-                    !
-                  </span>
-                ) : null}
               </button>
               <span className="text-xs font-extrabold tracking-[0.02em] text-slate-50">
                 {new Date(`${selectedDate}T00:00:00.000Z`).toLocaleDateString(undefined, {
@@ -1210,11 +1139,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "" }: { in
                 aria-label="Next day"
               >
                 ▶
-                {hasFutureUnclaimedPicks ? (
-                  <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white">
-                    !
-                  </span>
-                ) : null}
               </button>
             </div>
 

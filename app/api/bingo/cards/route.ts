@@ -19,8 +19,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const userId = (searchParams.get("userId") ?? "").trim();
     const includeSettled = normalizeBoolean(searchParams.get("includeSettled"), true);
-    const activeView = normalizeBoolean(searchParams.get("activeView"), false);
-    const refreshProgressRequested = normalizeBoolean(searchParams.get("refreshProgress"), activeView && !includeSettled);
+    const refreshProgressRequested = normalizeBoolean(searchParams.get("refreshProgress"), false);
     // Historical/settled queries are immutable snapshots and must never trigger expensive refresh evaluation.
     const refreshProgress = includeSettled ? false : refreshProgressRequested;
 

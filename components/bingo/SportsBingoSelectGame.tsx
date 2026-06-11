@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getUserId } from "@/lib/storage";
+import { writeSelectedBingoGame } from "@/lib/bingoSelectedGameCache";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 
 type BingoGame = {
@@ -159,6 +160,7 @@ export function SportsBingoSelectGame() {
                     if (unavailable) {
                       return;
                     }
+                    writeSelectedBingoGame(game);
                     router.push(
                       `/bingo/select-board?sportKey=${encodeURIComponent(sportKey)}&gameId=${encodeURIComponent(game.id)}`
                     );

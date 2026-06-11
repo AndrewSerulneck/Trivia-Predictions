@@ -10,7 +10,11 @@ const APISPORTS_NBA_BASE_URL = process.env.APISPORTS_NBA_BASE_URL?.trim() ?? "ht
 const APISPORTS_API_KEY = process.env.APISPORTS_API_KEY?.trim() ?? "";
 const FANTASY_SPORT_KEY = "basketball_nba";
 const FANTASY_NFL_SPORT_KEY = "americanfootball_nfl";
-const FANTASY_LINEUP_SIZE = 5;
+const FANTASY_STANDARD_LINEUP_SIZE = 5;
+const FANTASY_MLB_LINEUP_SIZE = 6;
+const FANTASY_MLB_PITCHER_COUNT = 3;
+const FANTASY_MLB_HITTER_COUNT = 3;
+const FANTASY_MAX_LINEUP_SIZE = Math.max(FANTASY_STANDARD_LINEUP_SIZE, FANTASY_MLB_LINEUP_SIZE);
 const FANTASY_POINTS_MULTIPLIER = Math.max(1, Number.parseInt(process.env.FANTASY_POINTS_MULTIPLIER ?? "1", 10) || 1);
 // Keep this high enough to include full-day NBA slates across multiple games.
 const FANTASY_PLAYER_POOL_LIMIT = 200;
@@ -122,6 +126,11 @@ export type FantasyPlayerPoolItem = {
   position: string | null;
   team: string | null;
 };
+
+export type FantasyPlayerPoolEmptyReason =
+  | "no-games"
+  | "all-games-started"
+  | "no-eligible-players";
 
 export type FantasyLineupPlayer = {
   playerId: number;
@@ -617,7 +626,7 @@ function parseLineup(raw: unknown): string[] {
     lineup.push(name);
   }
 
-  return lineup.slice(0, FANTASY_LINEUP_SIZE);
+  return lineup.slice(0, FANTASY_MAX_LINEUP_SIZE);
 }
 
 function parseLineupPlayers(raw: unknown): FantasyLineupPlayer[] {
@@ -646,7 +655,57 @@ function parseLineupPlayers(raw: unknown): FantasyLineupPlayer[] {
     players.push({ playerId: playerIdRaw, playerName, headshotUrl: headshotUrlRaw || null });
   }
 
-  return players.slice(0, FANTASY_LINEUP_SIZE);
+  return players.slice(0, FANTASY_MAX_LINEUP_SIZE);
+}
+
+function isMlbPitcherPosition(position: string | null | undefined): boolean {
+  const normalized = String(position ?? "").trim().toUpperCase();
+  if (!normalized) {
+    return false;
+  }
+  const tokens = normalized.split(/[^A-Z]+/).filter(Boolean);
+  return tokens.some((token) => token === "P" || token === "SP" || token === "RP" || token === "CP");
+}
+
+function getRequiredFantasyLineupSize(params: { gameId?: string; sportKey?: string }): number {
+  const gameId = String(params.gameId ?? "").trim();
+  const sportKey = String(params.sportKey ?? "").trim();
+  const anyDailyId = gameId ? parseAnyDailyGameId(gameId) : null;
+  if (anyDailyId?.league === "MLB" || sportKey === FANTASY_MLB_SPORT_KEY) {
+    return FANTASY_MLB_LINEUP_SIZE;
+  }
+  return FANTASY_STANDARD_LINEUP_SIZE;
+}
+
+function assertMlbLineupShape(lineup: string[], playerPool: FantasyPlayerPoolItem[]): void {
+  const poolByKey = new Map<string, FantasyPlayerPoolItem>();
+  for (const item of playerPool) {
+    const key = normalizeNameKey(item.playerName);
+    if (!key || poolByKey.has(key)) {
+      continue;
+    }
+    poolByKey.set(key, item);
+  }
+
+  let pitcherCount = 0;
+  let hitterCount = 0;
+  for (const playerName of lineup) {
+    const item = poolByKey.get(normalizeNameKey(playerName));
+    if (!item) {
+      throw new Error(`"${playerName}" is not in the available player pool for this slate.`);
+    }
+    if (isMlbPitcherPosition(item.position)) {
+      pitcherCount += 1;
+    } else {
+      hitterCount += 1;
+    }
+  }
+
+  if (pitcherCount !== FANTASY_MLB_PITCHER_COUNT || hitterCount !== FANTASY_MLB_HITTER_COUNT) {
+    throw new Error(
+      `MLB lineups must include exactly ${FANTASY_MLB_PITCHER_COUNT} pitchers and ${FANTASY_MLB_HITTER_COUNT} hitters.`
+    );
+  }
 }
 
 function parseScoreBreakdown(raw: unknown): Record<string, number> {
@@ -2081,10 +2140,11 @@ async function assertFantasyEntryCadenceAvailable(params: {
   }
 }
 
-function validateLineup(lineup: unknown): string[] {
+function validateLineup(lineup: unknown, params?: { gameId?: string; sportKey?: string }): string[] {
   const parsed = parseLineup(lineup);
-  if (parsed.length !== FANTASY_LINEUP_SIZE) {
-    throw new Error(`Lineup must contain exactly ${FANTASY_LINEUP_SIZE} unique players.`);
+  const requiredSize = getRequiredFantasyLineupSize(params ?? {});
+  if (parsed.length !== requiredSize) {
+    throw new Error(`Lineup must contain exactly ${requiredSize} unique players.`);
   }
   return parsed;
 }
@@ -2135,7 +2195,7 @@ export async function submitFantasyEntry(params: {
   const userId = String(params.userId ?? "").trim();
   const venueId = String(params.venueId ?? "").trim();
   const gameId = String(params.gameId ?? "").trim();
-  const lineup = validateLineup(params.lineup);
+  const lineup = validateLineup(params.lineup, { gameId });
   const tzOffsetMinutes = parseTimezoneOffset(params.tzOffsetMinutes);
   const serverTodayDate = getServerTodayDate();
   const allowStartedDrafting = shouldAllowStartedDraftingForTesting();
@@ -2218,6 +2278,9 @@ export async function submitFantasyEntry(params: {
       throw new Error(`"${playerName}" is not in the available player pool for this slate.`);
     }
   }
+  if (entrySportKey === FANTASY_MLB_SPORT_KEY) {
+    assertMlbLineupShape(lineup, playerPool);
+  }
   const storedLineup = buildStoredLineupWithIds(lineup, playerPool);
 
   await assertFantasyEntryCadenceAvailable({
@@ -2274,7 +2337,7 @@ export async function updateFantasyEntryLineup(params: {
   const userId = String(params.userId ?? "").trim();
   const venueId = String(params.venueId ?? "").trim();
   const gameId = String(params.gameId ?? "").trim();
-  const lineup = validateLineup(params.lineup);
+  const lineup = validateLineup(params.lineup, { gameId });
   const tzOffsetMinutes = parseTimezoneOffset(params.tzOffsetMinutes);
   const serverTodayDate = getServerTodayDate();
   const allowStartedDrafting = shouldAllowStartedDraftingForTesting();
@@ -2318,6 +2381,9 @@ export async function updateFantasyEntryLineup(params: {
     if (!poolKeys.has(normalizeNameKey(playerName))) {
       throw new Error(`"${playerName}" is not in the available player pool for this slate.`);
     }
+  }
+  if (existingRow.sport_key === FANTASY_MLB_SPORT_KEY) {
+    assertMlbLineupShape(lineup, playerPool);
   }
   const storedLineup = buildStoredLineupWithIds(lineup, playerPool);
 
@@ -2417,6 +2483,50 @@ function computeFantasyRewardPoints(totalFantasyPoints: number): number {
 const APISPORTS_FINAL_STATUS_SHORT = new Set(["FT", "AOT"]);
 const APISPORTS_IN_PLAY_STATUS_SHORT = new Set(["Q1", "Q2", "Q3", "Q4", "OT", "BT", "HT"]);
 const APISPORTS_NOT_STARTED_STATUS_SHORT = new Set(["NS", "POST", "CANC", "SUSP", "AWD", "ABD"]);
+const GAME_START_GRACE_MS = 5 * 60 * 1000;
+
+function normalizeBdlGameStatusShort(rawStatus: unknown): string {
+  const status = String(rawStatus ?? "").trim().toLowerCase();
+  if (!status) {
+    return "NS";
+  }
+  if (
+    status.includes("final") ||
+    status.includes("finished") ||
+    status.includes("complete")
+  ) {
+    return "FT";
+  }
+  if (
+    status.includes("live") ||
+    status.includes("progress") ||
+    status.includes("in progress") ||
+    status.includes("in_progress") ||
+    status.includes("qtr") ||
+    status.includes("quarter") ||
+    status.includes("half") ||
+    status.includes("ot") ||
+    status.includes("inning") ||
+    status.includes("top ") ||
+    status.includes("bot ")
+  ) {
+    return "LIVE";
+  }
+  if (
+    status.includes("postponed") ||
+    status.includes("postponement")
+  ) {
+    return "POST";
+  }
+  if (
+    status.includes("cancel") ||
+    status.includes("suspend") ||
+    status.includes("abandon")
+  ) {
+    return "CANC";
+  }
+  return "NS";
+}
 
 function isFinalGameStatus(value: string): boolean {
   const status = String(value ?? "").trim().toUpperCase();
@@ -2431,7 +2541,15 @@ function isInProgressGameStatus(value: string): boolean {
   if (APISPORTS_IN_PLAY_STATUS_SHORT.has(status)) {
     return true;
   }
-  return status.includes("LIVE") || status.includes("IN PLAY") || status.includes("IN_PROGRESS");
+  return (
+    status.includes("LIVE") ||
+    status.includes("IN PLAY") ||
+    status.includes("IN_PROGRESS") ||
+    status.includes("PROGRESS") ||
+    status.includes("QUARTER") ||
+    status.includes("HALF") ||
+    status.includes("INNING")
+  );
 }
 
 function isStartedGameStatus(value: string): boolean {
@@ -2818,7 +2936,9 @@ function getApiSportsGameStatusShort(game: ApiSportsNbaGame): string {
 }
 
 function isApiSportsGameInProgress(game: ApiSportsNbaGame): boolean {
-  return isInProgressGameStatus(getApiSportsGameStatusShort(game));
+  const shortStatus = getApiSportsGameStatusShort(game);
+  const longStatus = String(getPath(game, ["status", "long"]) ?? "").trim().toUpperCase();
+  return isInProgressGameStatus(shortStatus) || isInProgressGameStatus(longStatus);
 }
 
 function isApiSportsGameFinal(game: ApiSportsNbaGame): boolean {
@@ -2834,13 +2954,30 @@ function isApiSportsGameFinal(game: ApiSportsNbaGame): boolean {
 
 function isApiSportsGameStarted(game: ApiSportsNbaGame): boolean {
   const shortStatus = getApiSportsGameStatusShort(game);
+  const longStatus = String(getPath(game, ["status", "long"]) ?? "").trim().toUpperCase();
+  const startMs = parseApiSportsGameStartMs(game);
   if (isFinalGameStatus(shortStatus)) {
     return true;
   }
-  if (APISPORTS_NOT_STARTED_STATUS_SHORT.has(shortStatus)) {
-    return false;
+  if (isFinalGameStatus(longStatus)) {
+    return true;
   }
-  return isApiSportsGameInProgress(game);
+  if (APISPORTS_NOT_STARTED_STATUS_SHORT.has(shortStatus)) {
+    if (shortStatus === "POST" || shortStatus === "CANC" || shortStatus === "SUSP" || shortStatus === "AWD" || shortStatus === "ABD") {
+      return false;
+    }
+    if (isInProgressGameStatus(longStatus)) {
+      return true;
+    }
+    return Number.isFinite(startMs) && Date.now() >= startMs + GAME_START_GRACE_MS;
+  }
+  if (!shortStatus && !longStatus) {
+    return Number.isFinite(startMs) && Date.now() >= startMs + GAME_START_GRACE_MS;
+  }
+  if (isApiSportsGameInProgress(game) || isInProgressGameStatus(longStatus)) {
+    return true;
+  }
+  return Number.isFinite(startMs) && Date.now() >= startMs + GAME_START_GRACE_MS;
 }
 
 async function fetchApiSportsNbaGamesByDate(dateIso: string): Promise<ApiSportsNbaGame[]> {
@@ -2855,12 +2992,7 @@ async function fetchApiSportsNbaGamesByDate(dateIso: string): Promise<ApiSportsN
   const rows = rowsRaw.map((game) => {
     const homeTeam = asRecord(game.home_team);
     const awayTeam = asRecord(game.visitor_team);
-    const statusRaw = String(game.status ?? "").trim().toLowerCase();
-    const shortStatus = statusRaw.includes("final")
-      ? "FT"
-      : statusRaw.includes("qtr") || statusRaw.includes("half") || statusRaw.includes("ot")
-      ? "Q1"
-      : "NS";
+    const shortStatus = normalizeBdlGameStatusShort(game.status);
     return {
       id: game.id,
       date: {
@@ -2911,12 +3043,7 @@ async function fetchBdlMlbGamesByDate(dateIso: string): Promise<ApiSportsNbaGame
   const rows = rowsRaw.map((game) => {
     const homeTeam = asRecord(game.home_team);
     const awayTeam = asRecord(game.away_team ?? game.visitor_team);
-    const statusRaw = String(game.status ?? "").trim().toLowerCase();
-    const shortStatus = statusRaw.includes("final")
-      ? "FT"
-      : statusRaw.includes("inning") || statusRaw.includes("live") || statusRaw.includes("progress")
-      ? "LIVE"
-      : "NS";
+    const shortStatus = normalizeBdlGameStatusShort(game.status);
     return {
       id: game.id,
       date: {
@@ -3034,12 +3161,7 @@ async function fetchBdlWnbaGamesByDate(dateIso: string): Promise<ApiSportsNbaGam
   const rows = rowsRaw.map((game) => {
     const homeTeam = asRecord(game.home_team);
     const awayTeam = asRecord(game.visitor_team);
-    const statusRaw = String(game.status ?? "").trim().toLowerCase();
-    const shortStatus = statusRaw.includes("final")
-      ? "FT"
-      : statusRaw.includes("qtr") || statusRaw.includes("half") || statusRaw.includes("ot")
-      ? "Q1"
-      : "NS";
+    const shortStatus = normalizeBdlGameStatusShort(game.status);
     return {
       id: game.id,
       date: {

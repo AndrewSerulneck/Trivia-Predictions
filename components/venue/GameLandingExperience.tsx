@@ -192,6 +192,8 @@ export function GameLandingExperience({
           showUserStatus={showShellUserStatus}
           showAlerts={showShellAlerts}
           noContainer
+          shellClassName={isPlaying ? "!gap-0" : undefined}
+          mainClassName={isPlaying ? "pt-0!" : undefined}
         >
           {isPlaying ? (
             <div

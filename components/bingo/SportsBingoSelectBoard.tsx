@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { getUserId, getVenueId } from "@/lib/storage";
+import { readSelectedBingoGame } from "@/lib/bingoSelectedGameCache";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 
 type BingoGame = {
@@ -271,6 +272,13 @@ export function SportsBingoSelectBoard() {
     setLoadingGame(true);
     setErrorMessage("");
 
+    const cachedGame = readSelectedBingoGame({ sportKey, gameId });
+    if (cachedGame) {
+      setGame(cachedGame);
+      setLoadingGame(false);
+      return;
+    }
+
     try {
       const response = await fetch(
         `/api/bingo/games?sportKey=${encodeURIComponent(sportKey)}&includeLocked=false&tzOffsetMinutes=${encodeURIComponent(String(new Date().getTimezoneOffset()))}`,
@@ -301,7 +309,7 @@ export function SportsBingoSelectBoard() {
     setLoadingCards(true);
     try {
       const response = await fetch(
-        `/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=false&activeView=true`,
+        `/api/bingo/cards?userId=${encodeURIComponent(userId)}&includeSettled=false&activeView=true&refreshProgress=false`,
         {
           cache: "no-store",
         }

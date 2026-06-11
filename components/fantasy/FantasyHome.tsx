@@ -12,11 +12,14 @@ import { VenueEntryRulesPanel } from "@/components/venue/VenueEntryRulesPanel";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import type { FantasyEntry, FantasyGame, FantasyLeaderboardEntry, FantasyPlayerPoolItem } from "@/lib/fantasy";
 import type { FantasyLineupPlayer } from "@/lib/fantasy";
+import type { FantasyPlayerPoolEmptyReason } from "@/lib/fantasy";
+import { FantasySettledCollectAnimation } from "@/components/animations/FantasySettledCollectAnimation";
 
 type GamesPayload = {
   ok: boolean;
   games?: FantasyGame[];
   playerPool?: FantasyPlayerPoolItem[];
+  playerPoolEmptyReason?: FantasyPlayerPoolEmptyReason | null;
   leaderboard?: FantasyLeaderboardEntry[];
   dailyGameId?: string;
   wnbaDailyGameId?: string;
@@ -106,9 +109,26 @@ const FANTASY_SPORTS: Array<{ key: FantasySport; icon: string; label: string; av
 const FANTASY_LINEUP_SIZE_BY_SPORT: Record<FantasySport, number> = {
   nba: 5,
   wnba: 5,
-  baseball: 5,
+  baseball: 6,
   football: 5,
 };
+const FANTASY_MLB_PITCHER_COUNT = 3;
+const FANTASY_MLB_HITTER_COUNT = 3;
+
+type MlbRosterRole = "pitcher" | "hitter";
+
+function isMlbPitcherPosition(position: string | null | undefined): boolean {
+  const normalized = String(position ?? "").trim().toUpperCase();
+  if (!normalized) {
+    return false;
+  }
+  const tokens = normalized.split(/[^A-Z]+/).filter(Boolean);
+  return tokens.some((token) => token === "P" || token === "SP" || token === "RP" || token === "CP");
+}
+
+function getMlbRosterRole(position: string | null | undefined): MlbRosterRole {
+  return isMlbPitcherPosition(position) ? "pitcher" : "hitter";
+}
 
 function formatDateLabel(dateStr: string, todayStr: string): string {
   if (dateStr === todayStr) return "Today";
@@ -650,6 +670,7 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
   const [serverTodayDate, setServerTodayDate] = useState(() => getTodayDateInput());
   const [selectedGameId, setSelectedGameId] = useState("");
   const [playerPool, setPlayerPool] = useState<FantasyPlayerPoolItem[]>([]);
+  const [playerPoolEmptyReason, setPlayerPoolEmptyReason] = useState<FantasyPlayerPoolEmptyReason | null>(null);
   const [leaderboard, setLeaderboard] = useState<FantasyLeaderboardEntry[]>([]);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [hasStartedGame, setHasStartedGame] = useState(false);
@@ -659,8 +680,8 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
   const [submitting, setSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [claimingEntryId, setClaimingEntryId] = useState("");
-  const [isCollectingAllFantasy, setIsCollectingAllFantasy] = useState(false);
+  const hasAutoCollectedFantasyRef = useRef<Set<string>>(new Set());
+  const [settledCollectResult, setSettledCollectResult] = useState<{ pointsCollected: number; entryCount: number } | null>(null);
   const [hasLocalLineupDraft, setHasLocalLineupDraft] = useState(false);
   const [draftSubmissionAttempted, setDraftSubmissionAttempted] = useState(false);
   const [justSubmittedRoster, setJustSubmittedRoster] = useState(false);
@@ -688,6 +709,7 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
   const [isCollectingLive, setIsCollectingLive] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const syncedLastCollectedRef = useRef<string | false>(false);
+  const autoCollectLiveTimerRef = useRef<number | null>(null);
   const gameDetailsRequestNonceRef = useRef(0);
   const prevStatsSnapshotRef = useRef<Map<number, StatsSnapshot>>(new Map());
   const statFlashCounterRef = useRef(0);
@@ -948,6 +970,7 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
   const loadSelectedGameDetails = useCallback(async () => {
     if (!selectedGameId) {
       setPlayerPool([]);
+      setPlayerPoolEmptyReason(null);
       setLeaderboard([]);
       setIsLoadingPool(false);
       return;
@@ -955,6 +978,7 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
 
     if (selectedSport !== "nba" && selectedSport !== "wnba" && selectedSport !== "baseball") {
       setPlayerPool([]);
+      setPlayerPoolEmptyReason(null);
       setLeaderboard([]);
       setIsLoadingPool(false);
       return;
@@ -983,6 +1007,7 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
         const sportPayload = await parseJsonResponse<GamesPayload>(sportRes, "Failed to load fantasy player pool");
         if (requestNonce !== gameDetailsRequestNonceRef.current) return;
         setPlayerPool(sportPayload.playerPool ?? []);
+        setPlayerPoolEmptyReason(sportPayload.playerPoolEmptyReason ?? null);
         setLeaderboard(sportPayload.leaderboard ?? []);
         setSelectedPlayers((current) => {
           const poolKeys = new Set((sportPayload.playerPool ?? []).map((item) => item.playerName));
@@ -992,6 +1017,7 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
       }
     } catch (error) {
       setPlayerPool([]);
+      setPlayerPoolEmptyReason(null);
       setLeaderboard([]);
       setErrorMessage(error instanceof Error ? error.message : "Failed to load fantasy player pool.");
     } finally {
@@ -1002,6 +1028,7 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
   useEffect(() => {
     setSelectedPlayers([]);
     setPlayerPool([]);
+    setPlayerPoolEmptyReason(null);
     setLeaderboard([]);
     setSortBy("projected");
     setFilterPosition("all");
@@ -1069,6 +1096,32 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
     }
     return map;
   }, [playerPool]);
+  const playerPoolItemByKey = useMemo(() => {
+    const map = new Map<string, FantasyPlayerPoolItem>();
+    for (const item of playerPool) {
+      const key = normalizePlayerKey(item.playerName);
+      if (!key || map.has(key)) {
+        continue;
+      }
+      map.set(key, item);
+    }
+    return map;
+  }, [playerPool]);
+  const selectedPlayerPoolItems = useMemo(
+    () =>
+      selectedPlayers
+        .map((name) => playerPoolItemByKey.get(normalizePlayerKey(name)) ?? null)
+        .filter((item): item is FantasyPlayerPoolItem => Boolean(item)),
+    [playerPoolItemByKey, selectedPlayers]
+  );
+  const selectedMlbPitchers = useMemo(
+    () => selectedPlayerPoolItems.filter((item) => getMlbRosterRole(item.position) === "pitcher"),
+    [selectedPlayerPoolItems]
+  );
+  const selectedMlbHitters = useMemo(
+    () => selectedPlayerPoolItems.filter((item) => getMlbRosterRole(item.position) === "hitter"),
+    [selectedPlayerPoolItems]
+  );
   const hasResolvedEntries = !loadingEntries;
   const canEditExistingEntryLineup = useMemo(() => {
     if (!existingEntryForSelectedGame) {
@@ -1238,57 +1291,6 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
         .sort((left, right) => Date.parse(right.startsAt) - Date.parse(left.startsAt)),
     [entries, selectedEntrySportKey, selectedSlateDate]
   );
-  const hasPreviousUnclaimedFantasyEntries = useMemo(
-    () =>
-      entries.some((entry) => {
-        if (!selectedEntrySportKey || entry.sportKey !== selectedEntrySportKey) {
-          return false;
-        }
-        if (entry.status !== "final" || entry.rewardClaimedAt || computeFantasyClaimablePoints(entry) <= 0) {
-          return false;
-        }
-        const entryDateKey = getEntryLocalDateKey(entry);
-        if (!entryDateKey) {
-          return false;
-        }
-        return entryDateKey < selectedSlateDate;
-      }),
-    [entries, selectedEntrySportKey, selectedSlateDate]
-  );
-  const hasCurrentUnclaimedFantasyEntries = useMemo(
-    () =>
-      entries.some((entry) => {
-        if (!selectedEntrySportKey || entry.sportKey !== selectedEntrySportKey) {
-          return false;
-        }
-        if (entry.status !== "final" || entry.rewardClaimedAt || computeFantasyClaimablePoints(entry) <= 0) {
-          return false;
-        }
-        const entryDateKey = getEntryLocalDateKey(entry);
-        if (!entryDateKey) {
-          return false;
-        }
-        return entryDateKey === selectedSlateDate;
-      }),
-    [entries, selectedEntrySportKey, selectedSlateDate]
-  );
-  const hasFutureUnclaimedFantasyEntries = useMemo(
-    () =>
-      entries.some((entry) => {
-        if (!selectedEntrySportKey || entry.sportKey !== selectedEntrySportKey) {
-          return false;
-        }
-        if (entry.status !== "final" || entry.rewardClaimedAt || computeFantasyClaimablePoints(entry) <= 0) {
-          return false;
-        }
-        const entryDateKey = getEntryLocalDateKey(entry);
-        if (!entryDateKey) {
-          return false;
-        }
-        return entryDateKey > selectedSlateDate;
-      }),
-    [entries, selectedEntrySportKey, selectedSlateDate]
-  );
   const trackedEntry = useMemo(() => {
     const selected = entries.find(
       (entry) =>
@@ -1408,6 +1410,27 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
       setIsCollectingLive(false);
     }
   }, [isCollectingLive, isGeofencePaused, trackedEntry, triggerAnimation, uncollectedPoints, userId]);
+
+  useEffect(() => {
+    if (!trackedEntry || uncollectedPoints <= 0 || isGeofencePaused) {
+      if (autoCollectLiveTimerRef.current !== null) {
+        window.clearTimeout(autoCollectLiveTimerRef.current);
+        autoCollectLiveTimerRef.current = null;
+      }
+      return;
+    }
+    if (autoCollectLiveTimerRef.current !== null) return;
+    autoCollectLiveTimerRef.current = window.setTimeout(() => {
+      autoCollectLiveTimerRef.current = null;
+      void collectLivePoints();
+    }, 3000);
+    return () => {
+      if (autoCollectLiveTimerRef.current !== null) {
+        window.clearTimeout(autoCollectLiveTimerRef.current);
+        autoCollectLiveTimerRef.current = null;
+      }
+    };
+  }, [collectLivePoints, isGeofencePaused, trackedEntry, uncollectedPoints]);
 
   useEffect(() => {
     if (!selectedGameId) {
@@ -1713,19 +1736,34 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
     };
   }, [hasLiveEntry, loadEntries, loadGames, loadSelectedGameDetails, nextPendingEntryStartMs, userId]);
 
-  const togglePlayer = useCallback((playerName: string) => {
+  const togglePlayer = useCallback((player: FantasyPlayerPoolItem) => {
+    const playerName = player.playerName;
     setJustSubmittedRoster(false);
     setHasLocalLineupDraft(true);
     setSelectedPlayers((current) => {
       if (current.includes(playerName)) {
         return current.filter((name) => name !== playerName);
       }
+      if (selectedSport === "baseball") {
+        const role = getMlbRosterRole(player.position);
+        const currentItems = current
+          .map((name) => playerPoolItemByKey.get(normalizePlayerKey(name)) ?? null)
+          .filter((item): item is FantasyPlayerPoolItem => Boolean(item));
+        const pitcherCount = currentItems.filter((item) => getMlbRosterRole(item.position) === "pitcher").length;
+        const hitterCount = currentItems.filter((item) => getMlbRosterRole(item.position) === "hitter").length;
+        if (role === "pitcher" && pitcherCount >= FANTASY_MLB_PITCHER_COUNT) {
+          return current;
+        }
+        if (role === "hitter" && hitterCount >= FANTASY_MLB_HITTER_COUNT) {
+          return current;
+        }
+      }
       if (current.length >= requiredLineupSize) {
         return current;
       }
       return [...current, playerName];
     });
-  }, [requiredLineupSize]);
+  }, [playerPoolItemByKey, requiredLineupSize, selectedSport]);
 
   const removeSelectedPlayer = useCallback((playerName: string) => {
     setJustSubmittedRoster(false);
@@ -1855,6 +1893,24 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
       return;
     }
 
+    if (selectedSport === "baseball" && (selectedMlbPitchers.length !== FANTASY_MLB_PITCHER_COUNT || selectedMlbHitters.length !== FANTASY_MLB_HITTER_COUNT)) {
+      const missingPitchers = Math.max(0, FANTASY_MLB_PITCHER_COUNT - selectedMlbPitchers.length);
+      const missingHitters = Math.max(0, FANTASY_MLB_HITTER_COUNT - selectedMlbHitters.length);
+      const needs: string[] = [];
+      if (missingPitchers > 0) {
+        needs.push(`${missingPitchers} more pitcher${missingPitchers === 1 ? "" : "s"}`);
+      }
+      if (missingHitters > 0) {
+        needs.push(`${missingHitters} more hitter${missingHitters === 1 ? "" : "s"}`);
+      }
+      setStatusMessage(
+        selectedPlayers.length === 0
+          ? "Draft 3 pitchers and 3 hitters to build your MLB roster."
+          : `Draft ${needs.join(" and ")}, then tap ${existingEntryForSelectedGame ? "Update roster" : "Submit roster"}.`
+      );
+      return;
+    }
+
     if (selectedPlayers.length !== requiredLineupSize) {
       setStatusMessage(
         selectedPlayers.length === 0
@@ -1875,6 +1931,9 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
     requiredLineupSize,
     selectedGameId,
     selectedPlayers,
+    selectedMlbHitters.length,
+    selectedMlbPitchers.length,
+    selectedSport,
   ]);
 
   const handleSubmitRoster = useCallback(async () => {
@@ -1892,80 +1951,60 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
     setErrorMessage("");
   }, []);
 
-  const claimReward = useCallback(
-    async (entry: FantasyEntry, sourceRect?: DOMRect) => {
-      if (!userId || !entry.id || claimingEntryId) {
-        return;
-      }
+  useEffect(() => {
+    if (loadingEntries || !userId) return;
+    const toCollect = entries.filter(
+      (entry) =>
+        entry.id &&
+        entry.status === "final" &&
+        !entry.rewardClaimedAt &&
+        computeFantasyClaimablePoints(entry) > 0 &&
+        !hasAutoCollectedFantasyRef.current.has(entry.id)
+    );
+    if (toCollect.length === 0) return;
+    toCollect.forEach((entry) => hasAutoCollectedFantasyRef.current.add(entry.id));
 
-      setClaimingEntryId(entry.id);
-      setStatusMessage("");
-      setErrorMessage("");
-      try {
-        const response = await fetch("/api/fantasy/entries", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "claim",
-            userId,
-            entryId: entry.id,
-          }),
-        });
-
-        const payload = await parseJsonResponse<{
-          ok: boolean;
-          error?: string;
-          result?: { claimed: boolean; pointsAwarded: number };
-        }>(response, "Failed to claim fantasy reward");
-
-        if (!payload.ok) {
-          throw new Error(payload.error ?? "Failed to claim fantasy reward.");
-        }
-
-        if (payload.result?.claimed) {
-          if (sourceRect && payload.result.pointsAwarded > 0) {
-            window.dispatchEvent(
-              new CustomEvent("tp:coin-flight", {
-                detail: {
-                  sourceRect: {
-                    left: sourceRect.left,
-                    top: sourceRect.top,
-                    width: sourceRect.width,
-                    height: sourceRect.height,
-                  },
-                  delta: payload.result.pointsAwarded,
-                  coins: Math.min(36, Math.max(12, Math.round(payload.result.pointsAwarded / 2))),
-                },
-              })
-            );
-            window.dispatchEvent(
-              new CustomEvent("tp:points-updated", {
-                detail: {
-                  source: "fantasy-claim",
-                  delta: payload.result.pointsAwarded,
-                },
-              })
-            );
+    const run = async () => {
+      let totalAwarded = 0;
+      for (const entry of toCollect) {
+        try {
+          const response = await fetch("/api/fantasy/entries", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "claim", userId, entryId: entry.id }),
+          });
+          const payload = await parseJsonResponse<{
+            ok: boolean;
+            result?: { claimed: boolean; pointsAwarded: number };
+          }>(response, "Failed to collect fantasy entries");
+          if (payload.ok && payload.result?.claimed) {
+            totalAwarded += payload.result.pointsAwarded;
           }
-          setStatusMessage(`Claimed +${payload.result.pointsAwarded} points.`);
-        } else {
-          setStatusMessage("Reward was already claimed.");
+        } catch {
+          // continue collecting remaining entries
         }
-
-        await loadEntries(false);
-      } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : "Failed to claim fantasy reward.");
-      } finally {
-        setClaimingEntryId("");
       }
-    },
-    [claimingEntryId, loadEntries, userId]
-  );
+      if (totalAwarded > 0) {
+        window.dispatchEvent(
+          new CustomEvent("tp:coin-flight", {
+            detail: {
+              delta: totalAwarded,
+              coins: Math.min(36, Math.max(14, Math.round(totalAwarded / 2))),
+            },
+          })
+        );
+        window.dispatchEvent(
+          new CustomEvent("tp:points-updated", {
+            detail: { source: "fantasy-claim", delta: totalAwarded },
+          })
+        );
+        setSettledCollectResult({ pointsCollected: totalAwarded, entryCount: toCollect.length });
+      }
+      void loadEntries(false);
+    };
+    void run();
+  }, [entries, loadEntries, loadingEntries, userId]);
 
-  const totalUnclaimedFantasyPoints = useMemo(
-    () => finalUnclaimedEntries.reduce((sum, e) => sum + computeFantasyClaimablePoints(e), 0),
-    [finalUnclaimedEntries]
-  );
   const myLeaderboardEntry = useMemo(
     () => leaderboard.find((row) => row.userId === userId) ?? null,
     [leaderboard, userId]
@@ -2068,57 +2107,6 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
     return best > 0 ? key : null;
   }, [sortedFilteredPool]);
 
-  const collectAllFantasyEntries = useCallback(async () => {
-    if (!userId || isCollectingAllFantasy || finalUnclaimedEntries.length === 0) return;
-    setIsCollectingAllFantasy(true);
-    setStatusMessage("");
-    setErrorMessage("");
-    let totalAwarded = 0;
-    let firstRect: DOMRect | undefined;
-    try {
-      const collectButton = document.querySelector<HTMLElement>("[data-fantasy-collect-all]");
-      firstRect = collectButton?.getBoundingClientRect();
-      for (const entry of finalUnclaimedEntries) {
-        if (!entry.id) continue;
-        const response = await fetch("/api/fantasy/entries", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "claim", userId, entryId: entry.id }),
-        });
-        const payload = await parseJsonResponse<{
-          ok: boolean;
-          result?: { claimed: boolean; pointsAwarded: number };
-        }>(response, "Failed to collect fantasy entries");
-        if (payload.ok && payload.result?.claimed) {
-          totalAwarded += payload.result.pointsAwarded;
-        }
-      }
-      if (totalAwarded > 0) {
-        window.dispatchEvent(
-          new CustomEvent("tp:coin-flight", {
-            detail: {
-              sourceRect: firstRect
-                ? { left: firstRect.left, top: firstRect.top, width: firstRect.width, height: firstRect.height }
-                : undefined,
-              delta: totalAwarded,
-              coins: Math.min(36, Math.max(14, Math.round(totalAwarded / 2))),
-            },
-          })
-        );
-        window.dispatchEvent(
-          new CustomEvent("tp:points-updated", {
-            detail: { source: "fantasy-claim", delta: totalAwarded },
-          })
-        );
-        setStatusMessage(`Collected +${totalAwarded} points!`);
-      }
-    } catch {
-      setErrorMessage("Failed to collect some entries. Try individual collect buttons below.");
-    } finally {
-      setIsCollectingAllFantasy(false);
-      await loadEntries(false);
-    }
-  }, [finalUnclaimedEntries, isCollectingAllFantasy, loadEntries, userId]);
 
   if (!userId || !venueId) {
     return (
@@ -2142,6 +2130,16 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
   const isFantasyLineupSport = selectedSport === "nba" || selectedSport === "wnba" || selectedSport === "baseball";
   const selectedSportLabel =
     selectedSport === "baseball" ? "baseball" : selectedSport === "wnba" ? "WNBA" : "NBA";
+  let emptyPlayerPoolMessage = "";
+  if (!isLoadingPool && availablePlayerPool.length === 0) {
+    if (playerPoolEmptyReason === "all-games-started") {
+      emptyPlayerPoolMessage = `No players are available to draft because all ${selectedSportLabel} games for this slate are already in progress.`;
+    } else if (playerPoolEmptyReason === "no-games") {
+      emptyPlayerPoolMessage = `No ${selectedSportLabel} games are scheduled for this date.`;
+    } else {
+      emptyPlayerPoolMessage = `No ${selectedSportLabel} players are available to draft for this slate right now.`;
+    }
+  }
   const showGameStart =
     isFantasyLineupSport &&
     selectedGameId &&
@@ -2159,8 +2157,17 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
   const isSubmittedRosterView = (Boolean(existingEntryForSelectedGame) || justSubmittedRoster) && !isEditingRoster;
   const canModifyRosterSelections = !isSubmittedRosterView;
   const selectedPlayerCount = selectedPlayers.length;
-  const isLineupComplete = selectedPlayers.length === requiredLineupSize;
+  const isBaseballRosterComplete =
+    selectedSport === "baseball" &&
+    selectedMlbPitchers.length === FANTASY_MLB_PITCHER_COUNT &&
+    selectedMlbHitters.length === FANTASY_MLB_HITTER_COUNT;
+  const isLineupComplete =
+    selectedSport === "baseball"
+      ? selectedPlayers.length === requiredLineupSize && isBaseballRosterComplete
+      : selectedPlayers.length === requiredLineupSize;
   const remainingLineupSlots = Math.max(0, requiredLineupSize - selectedPlayerCount);
+  const remainingMlbPitchers = Math.max(0, FANTASY_MLB_PITCHER_COUNT - selectedMlbPitchers.length);
+  const remainingMlbHitters = Math.max(0, FANTASY_MLB_HITTER_COUNT - selectedMlbHitters.length);
   const showFloatingRosterCta =
     isFantasyLineupSport &&
     Boolean(selectedGameId) &&
@@ -2169,6 +2176,12 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
     selectedPlayerCount > 0;
   const floatingRosterCtaLabel = isLineupComplete
     ? `${existingEntryForSelectedGame ? "Update" : "Submit"} Roster!`
+    : selectedSport === "baseball"
+    ? remainingMlbPitchers > 0 && remainingMlbHitters > 0
+      ? `Draft ${remainingMlbPitchers} pitcher${remainingMlbPitchers === 1 ? "" : "s"} and ${remainingMlbHitters} hitter${remainingMlbHitters === 1 ? "" : "s"}`
+      : remainingMlbPitchers > 0
+      ? `Draft ${remainingMlbPitchers} pitcher${remainingMlbPitchers === 1 ? "" : "s"}`
+      : `Draft ${remainingMlbHitters} hitter${remainingMlbHitters === 1 ? "" : "s"}`
     : `Draft ${remainingLineupSlots} player${remainingLineupSlots === 1 ? "" : "s"}!`;
   const fantasyBottomPadding = showFloatingRosterCta
     ? "calc(7rem + env(safe-area-inset-bottom, 0px))"
@@ -2179,6 +2192,13 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
       className="tp-fantasy-compact min-h-[100dvh] touch-pan-y bg-[#020617] text-[#f8fafc]"
       style={{ paddingBottom: fantasyBottomPadding }}
     >
+      {settledCollectResult ? (
+        <FantasySettledCollectAnimation
+          pointsCollected={settledCollectResult.pointsCollected}
+          entryCount={settledCollectResult.entryCount}
+          onComplete={() => setSettledCollectResult(null)}
+        />
+      ) : null}
       {/* Stat flash toasts */}
       <div className="pointer-events-none fixed left-1/2 top-[5.25rem] z-[2200] -translate-x-1/2 space-y-2">
         <AnimatePresence initial={false}>
@@ -2301,9 +2321,6 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
               aria-label="Previous day"
             >
               ◀
-              {hasPreviousUnclaimedFantasyEntries && !hasCurrentUnclaimedFantasyEntries ? (
-                <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3 items-center justify-center rounded-full border border-[#0a3128] bg-rose-500 text-[8px] font-black text-white">!</span>
-              ) : null}
             </button>
             <span className="min-w-[52px] text-center text-[11px] font-extrabold text-[#fef3c7]">{formatDateLabel(selectedDate, serverTodayDate)}</span>
             <button
@@ -2314,9 +2331,6 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
               aria-label="Next day"
             >
               ▶
-              {hasFutureUnclaimedFantasyEntries && !hasCurrentUnclaimedFantasyEntries ? (
-                <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3 items-center justify-center rounded-full border border-[#0a3128] bg-rose-500 text-[8px] font-black text-white">!</span>
-              ) : null}
             </button>
           </div>
 
@@ -2376,21 +2390,6 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
           <p className="rounded-xl border border-rose-400/40 bg-rose-950/30 px-3 py-2 text-xs font-semibold text-rose-300">
             {errorMessage}
           </p>
-        ) : null}
-
-        {/* Collect all banner */}
-        {finalUnclaimedEntries.length > 0 ? (
-          <button
-            type="button"
-            data-fantasy-collect-all
-            onClick={() => void collectAllFantasyEntries()}
-            disabled={isCollectingAllFantasy}
-            className="tp-clean-button w-full rounded-xl border border-violet-400/50 bg-violet-500/20 py-3 text-sm font-black text-violet-300 active:scale-[0.98] disabled:opacity-50"
-          >
-            {isCollectingAllFantasy
-              ? "Collecting..."
-              : `Collect ${totalUnclaimedFantasyPoints} pts from ${finalUnclaimedEntries.length} game${finalUnclaimedEntries.length === 1 ? "" : "s"}`}
-          </button>
         ) : null}
 
         {/* ── LIVE SCORING (shown whenever a tracked entry exists) ── */}
@@ -2633,61 +2632,13 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
               ) : null}
             </div>
 
-            {/* Collect / claim */}
-            {showTrackedEntryClaimButton ? (
-              <button
-                type="button"
-                onClick={(event) => { const rect = event.currentTarget.getBoundingClientRect(); void claimReward(trackedEntry, rect); }}
-                disabled={claimingEntryId === trackedEntry.id}
-                className="flex min-h-[46px] w-full items-center justify-center gap-2.5 rounded-[14px] border border-[#6ee7b7]/60 bg-emerald-500/15 text-[13.5px] font-black tracking-[0.03em] text-[#6ee7b7] active:scale-[0.98] disabled:opacity-60"
-              >
-                <svg width="18" height="18" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="24" fill="#fde047" stroke="#a16207" strokeWidth="3" /><circle cx="32" cy="32" r="16" fill="#fef9c3" stroke="#a16207" strokeWidth="2" /></svg>
-                {claimingEntryId === trackedEntry.id ? "Collecting..." : `Collect Live Points (+${trackedEntryClaimablePoints})`}
-              </button>
-            ) : hasLiveEntry && uncollectedPoints > 0 ? (
-              <button
-                type="button"
-                onClick={() => void collectLivePoints()}
-                disabled={isCollectingLive || isGeofencePaused}
-                className="flex min-h-[46px] w-full items-center justify-center gap-2.5 rounded-[14px] border border-[#6ee7b7]/60 bg-emerald-500/15 text-[13.5px] font-black tracking-[0.03em] text-[#6ee7b7] active:scale-[0.98] disabled:opacity-60"
-              >
-                <svg width="18" height="18" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="24" fill="#fde047" stroke="#a16207" strokeWidth="3" /><circle cx="32" cy="32" r="16" fill="#fef9c3" stroke="#a16207" strokeWidth="2" /></svg>
-                {isCollectingLive
-                  ? "Collecting..."
-                  : isGeofencePaused
-                  ? "Must be at venue to collect"
-                  : `Collect Live Points (+${uncollectedPoints.toFixed(1)})`}
-              </button>
-            ) : hasLiveEntry ? (
+            {hasLiveEntry ? (
               <div className="flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
                 <p className="text-[11px] font-semibold text-[#6ee7b7]">Live · Streaming updates</p>
               </div>
             ) : null}
 
-            {isFantasyLineupSport && finalUnclaimedEntries.length > 1 ? (
-              <div className="rounded-2xl border border-[#fef3c7]/20 bg-[#0f172a] p-4">
-                <p className="mb-2 text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">Completed · Ready to collect</p>
-                <div className="flex flex-col gap-2">
-                  {finalUnclaimedEntries.map((entry) => (
-                    <div key={entry.id} className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-bold text-[#fef3c7]">{entry.gameLabel}</p>
-                        <p className="text-xs text-slate-500">{formatLocalDateTime(entry.startsAt)}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(event) => { const rect = event.currentTarget.getBoundingClientRect(); void claimReward(entry, rect); }}
-                        disabled={claimingEntryId === entry.id}
-                        className="shrink-0 rounded-full border border-[#6ee7b7]/55 bg-emerald-500/15 px-3 py-1.5 text-xs font-black text-[#6ee7b7] disabled:opacity-60"
-                      >
-                        {claimingEntryId === entry.id ? "…" : `Collect ${computeFantasyClaimablePoints(entry)} pts`}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
           </>
         ) : null}
 
@@ -2737,9 +2688,21 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
                   <ChalkGrid fine />
                   <div className="relative z-[2]">
                     <div className="mb-2.5 flex items-center justify-between">
-                      <p className="text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">
-                        Your lineup · {selectedPlayers.length}/{requiredLineupSize}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-[10.5px] font-black uppercase tracking-[0.16em] text-[#fde68a]">
+                          Your lineup · {selectedPlayers.length}/{requiredLineupSize}
+                        </p>
+                        {selectedSport === "baseball" ? (
+                          <>
+                            <span className="inline-flex items-center rounded-full border border-sky-300/35 bg-sky-400/10 px-2 py-1 text-[8.5px] font-black uppercase tracking-[0.1em] text-sky-200">
+                              Pitchers {selectedMlbPitchers.length}/{FANTASY_MLB_PITCHER_COUNT}
+                            </span>
+                            <span className="inline-flex items-center rounded-full border border-amber-300/35 bg-amber-400/10 px-2 py-1 text-[8.5px] font-black uppercase tracking-[0.1em] text-amber-200">
+                              Hitters {selectedMlbHitters.length}/{FANTASY_MLB_HITTER_COUNT}
+                            </span>
+                          </>
+                        ) : null}
+                      </div>
                       {isSubmittedRosterView && canEditExistingEntryLineup ? (
                         <button
                           type="button"
@@ -2750,38 +2713,106 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
                         </button>
                       ) : null}
                     </div>
-                    <div className="flex gap-1.5">
-                      {Array.from({ length: requiredLineupSize }).map((_, i) => {
-                        const name = selectedPlayers[i];
-                        const poolItem = name
-                          ? playerPool.find((item) => normalizePlayerKey(item.playerName) === normalizePlayerKey(name))
-                          : undefined;
-                        const filled = Boolean(name);
-                        return (
-                          <button
-                            key={`slot-${i}`}
-                            type="button"
-                            disabled={!filled || !canModifyRosterSelections}
-                            onClick={() => name && removeSelectedPlayer(name)}
-                            aria-label={filled ? `Remove ${name}` : "Empty roster slot"}
-                            className={`flex flex-1 flex-col items-center justify-center gap-1.5 rounded-[11px] py-3.5 text-center transition-transform active:scale-95 disabled:cursor-default ${
-                              filled
-                                ? "border border-[#fef3c7]/40 bg-[#fef3c7]/10"
-                                : "border border-dashed border-[#fef3c7]/25 bg-black/25"
-                            }`}
-                          >
-                            {filled ? (
-                              <PlayerHeadshot src={playerPoolHeadshotByName.get(normalizePlayerKey(name!)) ?? null} name={name!} sizeClass="h-[42px] w-[42px]" />
-                            ) : (
-                              <span className="text-base font-black text-[#fef3c7]/55">+</span>
-                            )}
-                            <span className={`text-[8.5px] font-extrabold leading-none ${filled ? "text-[#fef3c7]" : "text-slate-500"}`}>
-                              {poolItem?.position ?? "—"}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
+                    {selectedSport === "baseball" ? (
+                      <div className="space-y-3">
+                        {[
+                          {
+                            title: "Pitchers",
+                            accent: "text-sky-200",
+                            slotAccent: "border-sky-300/35 bg-sky-400/10",
+                            emptyAccent: "border-sky-300/20 bg-sky-950/20",
+                            players: selectedMlbPitchers,
+                            total: FANTASY_MLB_PITCHER_COUNT,
+                          },
+                          {
+                            title: "Hitters",
+                            accent: "text-amber-200",
+                            slotAccent: "border-amber-300/35 bg-amber-400/10",
+                            emptyAccent: "border-amber-300/20 bg-amber-950/20",
+                            players: selectedMlbHitters,
+                            total: FANTASY_MLB_HITTER_COUNT,
+                          },
+                        ].map((section) => (
+                          <div key={section.title}>
+                            <div className="mb-2 flex items-center justify-between">
+                              <p className={`text-[9px] font-black uppercase tracking-[0.16em] ${section.accent}`}>
+                                {section.title}
+                              </p>
+                              <span className="text-[9px] font-bold text-slate-400">
+                                {section.players.length}/{section.total}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-1.5">
+                              {Array.from({ length: section.total }).map((_, i) => {
+                                const item = section.players[i];
+                                const name = item?.playerName ?? "";
+                                const filled = Boolean(item);
+                                return (
+                                  <button
+                                    key={`${section.title}-slot-${i}`}
+                                    type="button"
+                                    disabled={!filled || !canModifyRosterSelections}
+                                    onClick={() => name && removeSelectedPlayer(name)}
+                                    aria-label={filled ? `Remove ${name}` : `Empty ${section.title} slot`}
+                                    className={`flex flex-col items-center justify-center gap-1.5 rounded-[11px] py-3.5 text-center transition-transform active:scale-95 disabled:cursor-default ${
+                                      filled
+                                        ? `border ${section.slotAccent}`
+                                        : `border border-dashed ${section.emptyAccent}`
+                                    }`}
+                                  >
+                                    {filled ? (
+                                      <PlayerHeadshot
+                                        src={playerPoolHeadshotByName.get(normalizePlayerKey(name)) ?? null}
+                                        name={name}
+                                        sizeClass="h-[42px] w-[42px]"
+                                      />
+                                    ) : (
+                                      <span className="text-base font-black text-[#fef3c7]/55">+</span>
+                                    )}
+                                    <span className={`text-[8.5px] font-extrabold leading-none ${filled ? "text-[#fef3c7]" : "text-slate-500"}`}>
+                                      {item?.position ?? (section.title === "Pitchers" ? "P" : "BAT")}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex gap-1.5">
+                        {Array.from({ length: requiredLineupSize }).map((_, i) => {
+                          const name = selectedPlayers[i];
+                          const poolItem = name
+                            ? playerPool.find((item) => normalizePlayerKey(item.playerName) === normalizePlayerKey(name))
+                            : undefined;
+                          const filled = Boolean(name);
+                          return (
+                            <button
+                              key={`slot-${i}`}
+                              type="button"
+                              disabled={!filled || !canModifyRosterSelections}
+                              onClick={() => name && removeSelectedPlayer(name)}
+                              aria-label={filled ? `Remove ${name}` : "Empty roster slot"}
+                              className={`flex flex-1 flex-col items-center justify-center gap-1.5 rounded-[11px] py-3.5 text-center transition-transform active:scale-95 disabled:cursor-default ${
+                                filled
+                                  ? "border border-[#fef3c7]/40 bg-[#fef3c7]/10"
+                                  : "border border-dashed border-[#fef3c7]/25 bg-black/25"
+                              }`}
+                            >
+                              {filled ? (
+                                <PlayerHeadshot src={playerPoolHeadshotByName.get(normalizePlayerKey(name!)) ?? null} name={name!} sizeClass="h-[42px] w-[42px]" />
+                              ) : (
+                                <span className="text-base font-black text-[#fef3c7]/55">+</span>
+                              )}
+                              <span className={`text-[8.5px] font-extrabold leading-none ${filled ? "text-[#fef3c7]" : "text-slate-500"}`}>
+                                {poolItem?.position ?? "—"}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                     {isSubmittedRosterView && canEditExistingEntryLineup ? (
                       <button
                         type="button"
@@ -2796,6 +2827,10 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
                         {canEditExistingEntryLineup
                           ? "Roster locked in. Tap Edit to make changes before tipoff."
                           : "Roster locked — games have started."}
+                      </p>
+                    ) : selectedSport === "baseball" ? (
+                      <p className="mt-2.5 text-[10.5px] text-[#fef3c7]/60">
+                        Draft exactly 3 pitchers and 3 hitters for your MLB roster.
                       </p>
                     ) : null}
                   </div>
@@ -2847,10 +2882,10 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
                     {/* Player rows */}
                     {availablePlayerPool.length === 0 ? (
                       <div className="py-6 text-center">
-                        {sportGames.length > 0 ? (
+                        {isLoadingPool ? (
                           <BasketballLoader label="Loading players…" />
                         ) : (
-                          <p className="text-sm text-slate-500">No players available for this date.</p>
+                          <p className="mx-auto max-w-[24rem] text-sm leading-6 text-slate-400">{emptyPlayerPoolMessage}</p>
                         )}
                       </div>
                     ) : sortedFilteredPool.length === 0 ? (
@@ -2861,6 +2896,12 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
                           {sortedFilteredPool.slice(0, visibleCount).map((item) => {
                             const isSelected = selectedPlayerKeySet.has(normalizePlayerKey(item.playerName));
                             const isFull = selectedPlayers.length >= requiredLineupSize;
+                            const isBaseballRole = selectedSport === "baseball";
+                            const rosterRole = isBaseballRole ? getMlbRosterRole(item.position) : null;
+                            const roleCount = rosterRole === "pitcher" ? selectedMlbPitchers.length : selectedMlbHitters.length;
+                            const roleLimit = rosterRole === "pitcher" ? FANTASY_MLB_PITCHER_COUNT : FANTASY_MLB_HITTER_COUNT;
+                            const isRoleFull = Boolean(isBaseballRole && roleCount >= roleLimit);
+                            const disableDraft = (isFull || isRoleFull) && !isSelected;
                             const isTop = topProjectedPlayerKey === normalizePlayerKey(item.playerName);
                             const proj = item.projectedLine != null ? Math.round(Number(item.projectedLine)) : 0;
                             return (
@@ -2876,6 +2917,15 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
                                 <div className="min-w-0 leading-[1.15]">
                                   <div className="flex items-center gap-1.5">
                                     <span className="truncate text-[13px] font-black text-[#fef3c7]">{item.playerName}</span>
+                                    {selectedSport === "baseball" ? (
+                                      <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.08em] ${
+                                        rosterRole === "pitcher"
+                                          ? "border border-sky-300/35 bg-sky-400/10 text-sky-200"
+                                          : "border border-amber-300/35 bg-amber-400/10 text-amber-200"
+                                      }`}>
+                                        {rosterRole === "pitcher" ? "Pitcher" : "Hitter"}
+                                      </span>
+                                    ) : null}
                                     {isTop ? (
                                       <span className="shrink-0 rounded-full border border-[#fcd34d]/40 bg-[#fcd34d]/15 px-1.5 text-[8px] font-black uppercase tracking-[0.06em] text-[#fcd34d]">★ Top</span>
                                     ) : null}
@@ -2894,15 +2944,15 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
                                 </div>
                                 <button
                                   type="button"
-                                  disabled={isFull && !isSelected}
-                                  onClick={() => togglePlayer(item.playerName)}
+                                  disabled={disableDraft}
+                                  onClick={() => togglePlayer(item)}
                                   className={`h-8 min-w-[64px] rounded-full text-[10.5px] font-black uppercase tracking-[0.04em] transition-colors disabled:opacity-40 ${
                                     isSelected
                                       ? "border border-[#6ee7b7]/55 bg-emerald-500/15 text-[#6ee7b7]"
                                       : "border border-[#fef3c7]/45 bg-[#fef3c7]/10 text-[#fde68a]"
                                   }`}
                                 >
-                                  {isSelected ? "✓ Drafted" : "Draft"}
+                                  {isSelected ? "✓ Drafted" : isRoleFull && selectedSport === "baseball" ? "Full" : "Draft"}
                                 </button>
                               </div>
                             );

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight, ListChecks, Plus, Trophy } from "lucide-react";
 import { BouncingBallLoader } from "@/components/ui/BouncingBallLoader";
 import type { TouchEvent as ReactTouchEvent } from "react";
 import { createPortal } from "react-dom";
@@ -655,9 +656,96 @@ function renderExpandedGrid(
 }
 
 type BingoScreenIndex = 0 | 1;
+type LandscapeBoardMode = "active" | "scored";
 
 function clampScreen(value: number): BingoScreenIndex {
   return Math.min(1, Math.max(0, value)) as BingoScreenIndex;
+}
+
+function wrapIndex(index: number, length: number): number {
+  if (length <= 0) {
+    return 0;
+  }
+  return ((index % length) + length) % length;
+}
+
+function renderLandscapeGrid(
+  cardId: string,
+  squares: BingoCardSquare[],
+  recentlyUpdatedSquareKeys: ReadonlySet<string>,
+  recentlySucceededSquareKeys: ReadonlySet<string>,
+  glowingSquareKeys: ReadonlySet<string>
+) {
+  const byIndex = new Map<number, BingoCardSquare>();
+  for (const square of squares) {
+    byIndex.set(square.index, square);
+  }
+
+  return (
+    <div className="tp-bingo-landscape-board relative flex h-full w-full flex-col rounded-[18px] border-2 border-sky-300/90 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(255,215,128,0.10),transparent_60%),radial-gradient(circle_at_20%_80%,rgba(0,0,0,0.45),transparent_60%),#0c3a2e] p-2 shadow-[inset_0_0_0_1px_rgba(125,211,252,0.4),0_12px_26px_rgba(0,0,0,0.55),0_0_28px_rgba(125,211,252,0.18)]">
+      <span aria-hidden="true" className="pointer-events-none absolute inset-1 rounded-[14px] border border-[#c89b3a]/55" />
+      <div className="relative z-[2] mb-1.5 grid grid-cols-5 gap-1.5">
+        {BINGO_HEADER_LETTERS.map((item) => (
+          <div
+            key={item.letter}
+            className={`text-center text-lg font-black leading-none tracking-[0.1em] [font-family:'Bree_Serif','Nunito',serif] [text-shadow:0_1px_0_rgba(0,0,0,0.5),0_0_12px_currentColor] ${item.color}`}
+          >
+            {item.letter}
+          </div>
+        ))}
+      </div>
+      <div className="relative z-[2] grid min-h-0 flex-1 grid-cols-5 grid-rows-5 gap-1.5">
+        {Array.from({ length: 25 }).map((_, index) => {
+          const square = byIndex.get(index);
+          if (!square) {
+            return <div key={index} className="min-h-0 rounded-md border border-white/[0.06] bg-slate-900/40" />;
+          }
+
+          const isFree = Boolean(square.isFree);
+          const squareKey = toCardSquareKey(cardId, index);
+          const shouldPop = recentlyUpdatedSquareKeys.has(squareKey);
+          const isSuccessPop = recentlySucceededSquareKeys.has(squareKey);
+          const isGlowing = glowingSquareKeys.has(squareKey);
+          const progressText =
+            square.propProgress && square.status === "pending"
+              ? `${Math.min(square.propProgress.current, square.propProgress.target)}/${square.propProgress.target}`
+              : "";
+
+          return (
+            <div
+              key={index}
+              title={square.label}
+              data-bingo-square-key={squareKey}
+              className={`relative flex min-h-0 items-center justify-center overflow-hidden rounded-md border px-1 py-1 text-center text-[10px] font-bold leading-tight [font-family:'Bree_Serif','Nunito',serif] ${getCardSquareStyle(
+                square.status,
+                isFree
+              )} ${
+                shouldPop
+                  ? isSuccessPop
+                    ? "bingo-square-pop ring-2 ring-amber-300 bg-gradient-to-br from-amber-300 via-yellow-300 to-lime-200 text-amber-900 shadow-[0_0_14px_3px_rgba(250,204,21,0.9)] animate-pulse"
+                    : "bingo-square-pop ring-2 ring-cyan-400 shadow-[0_0_8px_2px_rgba(34,211,238,0.45)]"
+                  : ""
+              }`}
+            >
+              <span
+                className={`pointer-events-none absolute inset-0 rounded-md bg-cyan-300/35 blur-[1px] transition duration-200 ${
+                  isGlowing ? "scale-110 opacity-100" : "scale-95 opacity-0"
+                }`}
+                style={{ willChange: "transform, opacity" }}
+              />
+              {renderSquareStatusGlyph(square)}
+              <span className="relative z-[1] line-clamp-3">{isFree ? "FREE" : shortenLabel(square.label, 16)}</span>
+              {progressText ? (
+                <span className="absolute bottom-0.5 left-1/2 z-[2] -translate-x-1/2 rounded bg-slate-950/55 px-1 text-[8px] font-black text-sky-200/90">
+                  {progressText}
+                </span>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function recoverBingoPageScrollState() {
@@ -699,6 +787,12 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
   const [recentlyAddedCardIds, setRecentlyAddedCardIds] = useState<Set<string>>(new Set());
   const [isScreenShaking, setIsScreenShaking] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(() => toLocalDateInput(new Date()));
+  const [isLandscapeGameView, setIsLandscapeGameView] = useState(false);
+  const [landscapeBoardMode, setLandscapeBoardMode] = useState<LandscapeBoardMode>("active");
+  const [landscapeActiveBoardIndex, setLandscapeActiveBoardIndex] = useState(0);
+  const [landscapeScoredBoardIndex, setLandscapeScoredBoardIndex] = useState(0);
+  const [landscapeActiveCardId, setLandscapeActiveCardId] = useState("");
+  const [landscapeScoredCardId, setLandscapeScoredCardId] = useState("");
   const prefetchUsedRef = useRef(false);
   const clearSquarePopTimerRef = useRef<number | null>(null);
   const kickoffRefreshTimerRef = useRef<number | null>(null);
@@ -751,6 +845,23 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
       window.cancelAnimationFrame(rafId);
       window.clearTimeout(timeoutId);
       window.removeEventListener("pageshow", onPageShow);
+    };
+  }, []);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(orientation: landscape) and (max-height: 560px)");
+    const updateLandscapeMode = () => {
+      setIsLandscapeGameView(mediaQuery.matches);
+    };
+
+    updateLandscapeMode();
+    mediaQuery.addEventListener("change", updateLandscapeMode);
+    window.addEventListener("resize", updateLandscapeMode);
+    window.addEventListener("orientationchange", updateLandscapeMode);
+    return () => {
+      mediaQuery.removeEventListener("change", updateLandscapeMode);
+      window.removeEventListener("resize", updateLandscapeMode);
+      window.removeEventListener("orientationchange", updateLandscapeMode);
     };
   }, []);
 
@@ -1010,7 +1121,7 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
     [queueVisualEvents, triggerAnimation]
   );
 
-  const loadCards = useCallback(async ({ background = false, refreshProgress = true }: { background?: boolean; refreshProgress?: boolean } = {}) => {
+  const loadCards = useCallback(async ({ background = false, refreshProgress = false }: { background?: boolean; refreshProgress?: boolean } = {}) => {
     if (!userId) {
       if (!prefetchUsedRef.current) {
         setCards([]);
@@ -1461,6 +1572,135 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
     () => unclaimedWonBingoCards.reduce((sum, card) => sum + card.rewardPoints, 0),
     [unclaimedWonBingoCards]
   );
+  const landscapeScoredCards = useMemo(() => settledCards.slice(0, 8), [settledCards]);
+  const selectedLandscapeActiveIndex = activeCards.findIndex((card) => card.id === landscapeActiveCardId);
+  const selectedLandscapeScoredIndex = landscapeScoredCards.findIndex((card) => card.id === landscapeScoredCardId);
+  const normalizedLandscapeActiveIndex =
+    selectedLandscapeActiveIndex >= 0 ? selectedLandscapeActiveIndex : wrapIndex(landscapeActiveBoardIndex, activeCards.length);
+  const normalizedLandscapeScoredIndex =
+    selectedLandscapeScoredIndex >= 0
+      ? selectedLandscapeScoredIndex
+      : wrapIndex(landscapeScoredBoardIndex, landscapeScoredCards.length);
+  const landscapeCards = landscapeBoardMode === "active" ? activeCards : landscapeScoredCards;
+  const landscapeCurrentIndex =
+    landscapeBoardMode === "active" ? normalizedLandscapeActiveIndex : normalizedLandscapeScoredIndex;
+  const landscapeCurrentCard = landscapeCards[landscapeCurrentIndex] ?? null;
+  const landscapeProgress = landscapeCurrentCard ? getBoardProgress(landscapeCurrentCard.squares) : null;
+
+  useEffect(() => {
+    const nextIndex = wrapIndex(normalizedLandscapeActiveIndex, activeCards.length);
+    setLandscapeActiveBoardIndex(nextIndex);
+    setLandscapeActiveCardId(activeCards[nextIndex]?.id ?? "");
+  }, [activeCards, normalizedLandscapeActiveIndex]);
+
+  useEffect(() => {
+    const nextIndex = wrapIndex(normalizedLandscapeScoredIndex, landscapeScoredCards.length);
+    setLandscapeScoredBoardIndex(nextIndex);
+    setLandscapeScoredCardId(landscapeScoredCards[nextIndex]?.id ?? "");
+  }, [landscapeScoredCards, normalizedLandscapeScoredIndex]);
+
+  useEffect(() => {
+    if (!isLandscapeGameView) {
+      return;
+    }
+    setExpandedActiveCardId("");
+    setExpandedFinalCardId("");
+  }, [isLandscapeGameView]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("tp-bingo-landscape-active", isLandscapeGameView);
+    document.body.classList.toggle("tp-bingo-landscape-active", isLandscapeGameView);
+    return () => {
+      document.documentElement.classList.remove("tp-bingo-landscape-active");
+      document.body.classList.remove("tp-bingo-landscape-active");
+    };
+  }, [isLandscapeGameView]);
+
+  const selectLandscapeBoardAt = useCallback(
+    (mode: LandscapeBoardMode, index: number) => {
+      if (mode === "active") {
+        const nextIndex = wrapIndex(index, activeCards.length);
+        setLandscapeBoardMode("active");
+        setLandscapeActiveBoardIndex(nextIndex);
+        setLandscapeActiveCardId(activeCards[nextIndex]?.id ?? "");
+        return;
+      }
+
+      const nextIndex = wrapIndex(index, landscapeScoredCards.length);
+      setLandscapeBoardMode("scored");
+      setLandscapeScoredBoardIndex(nextIndex);
+      setLandscapeScoredCardId(landscapeScoredCards[nextIndex]?.id ?? "");
+    },
+    [activeCards, landscapeScoredCards]
+  );
+
+  const selectLandscapeCard = useCallback(
+    (mode: LandscapeBoardMode, cardId: string) => {
+      const sourceCards = mode === "active" ? activeCards : landscapeScoredCards;
+      const nextIndex = sourceCards.findIndex((card) => card.id === cardId);
+      selectLandscapeBoardAt(mode, nextIndex >= 0 ? nextIndex : 0);
+    },
+    [activeCards, landscapeScoredCards, selectLandscapeBoardAt]
+  );
+
+  const goToLandscapeBoard = useCallback(
+    (delta: number) => {
+      if (landscapeBoardMode === "active") {
+        selectLandscapeBoardAt("active", landscapeCurrentIndex + delta);
+        return;
+      }
+      selectLandscapeBoardAt("scored", landscapeCurrentIndex + delta);
+    },
+    [landscapeBoardMode, landscapeCurrentIndex, selectLandscapeBoardAt]
+  );
+
+  const onLandscapeTouchEnd = useCallback(
+    (event: ReactTouchEvent<HTMLDivElement>) => {
+      const startX = touchStartXRef.current;
+      const startY = touchStartYRef.current;
+      touchStartXRef.current = null;
+      touchStartYRef.current = null;
+      if (startX === null || startY === null || landscapeCards.length <= 1) {
+        return;
+      }
+
+      const touch = event.changedTouches[0];
+      if (!touch) {
+        return;
+      }
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+      if (Math.abs(dx) < 28 || Math.abs(dx) < Math.abs(dy) * 0.75) {
+        return;
+      }
+      goToLandscapeBoard(dx < 0 ? 1 : -1);
+    },
+    [goToLandscapeBoard, landscapeCards.length]
+  );
+
+  useEffect(() => {
+    if (!isLandscapeGameView) {
+      return;
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (landscapeCards.length <= 1) {
+        return;
+      }
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        goToLandscapeBoard(-1);
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        goToLandscapeBoard(1);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [goToLandscapeBoard, isLandscapeGameView, landscapeCards.length]);
 
   const collectAllBingoPoints = useCallback(async () => {
     if (!userId || isCollectingAllBingo || unclaimedWonBingoCards.length === 0) return;
@@ -1613,6 +1853,252 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
       setClaimingCardId("");
     }
   };
+
+  const actionPopsPortal =
+    typeof document !== "undefined"
+      ? createPortal(
+          <div className="pointer-events-none fixed inset-0 z-[2400]" aria-hidden="true">
+            {actionPops.map((pop) => (
+              <ActionPop
+                key={pop.id}
+                text={pop.text}
+                x={pop.x}
+                y={pop.y}
+                tone={pop.tone}
+                onDone={() => setActionPops((current) => current.filter((item) => item.id !== pop.id))}
+              />
+            ))}
+          </div>,
+          document.body
+        )
+      : null;
+  const limitFeedbackPortal =
+    typeof document !== "undefined" && (limitPopAnim || limitEchoAnim)
+      ? createPortal(
+          <div className="pointer-events-none fixed inset-0 z-[7000] flex items-center justify-center">
+            {limitPopAnim ? (
+              <motion.span
+                key={limitPopAnim.id}
+                className="select-none whitespace-nowrap font-black leading-none text-red-500 transform-gpu will-change-transform"
+                style={{
+                  fontSize: "clamp(2.2rem, 10vw, 4.5rem)",
+                  textShadow: "0 0 22px rgba(239,68,68,0.42), 0 0 44px rgba(239,68,68,0.24)",
+                }}
+                initial={{ scale: 0.72, opacity: 0, y: 0 }}
+                animate={{ scale: [0.72, 1.08, 1.02, 0.98], y: [0, -20, -16, -8], opacity: [0, 1, 1, 0] }}
+                transition={{
+                  duration: 0.55,
+                  times: [0, 0.28, 0.62, 1],
+                  ease: ["easeOut", "easeOut", "easeIn", "easeIn"],
+                }}
+                onAnimationComplete={() => setLimitPopAnim(null)}
+              >
+                Limit Reached
+              </motion.span>
+            ) : null}
+            {limitEchoAnim ? (
+              <motion.span
+                key={limitEchoAnim.id}
+                className="absolute top-[19%] select-none whitespace-nowrap font-black leading-none text-red-500 transform-gpu will-change-transform"
+                style={{
+                  fontSize: "clamp(1.8rem, 7vw, 3.2rem)",
+                  textShadow: "0 0 18px rgba(239,68,68,0.38), 0 0 34px rgba(239,68,68,0.18)",
+                }}
+                initial={{ scale: 0.7, opacity: 0, y: 0 }}
+                animate={{ scale: [0.7, 1.06, 1], opacity: [0, 1, 0], y: [0, -12, -20] }}
+                transition={{ duration: 0.55, times: [0, 0.45, 1], ease: "easeOut" }}
+                onAnimationComplete={() => setLimitEchoAnim(null)}
+              >
+                Limit Reached
+              </motion.span>
+            ) : null}
+          </div>,
+          document.body
+        )
+      : null;
+
+  if (isLandscapeGameView) {
+    const isActiveLandscapeMode = landscapeBoardMode === "active";
+    const hasLandscapeCards = landscapeCards.length > 0;
+    const currentBoardNumber = hasLandscapeCards ? landscapeCurrentIndex + 1 : 0;
+    const currentBoardTotal = landscapeCards.length;
+    const currentCardIsLive = landscapeCurrentCard ? Date.parse(landscapeCurrentCard.startsAt) <= Date.now() : false;
+    const canCollectCurrentCard =
+      landscapeCurrentCard?.status === "won" &&
+      !landscapeCurrentCard.rewardClaimedAt &&
+      landscapeCurrentCard.rewardPoints > 0;
+
+    const landscapeContent = (
+      <div
+        ref={rootRef}
+        onTouchStart={onSwipeTouchStart}
+        onTouchEnd={onLandscapeTouchEnd}
+        className={`tp-bingo-theme tp-bingo-landscape-shell fixed inset-0 z-[1300] flex h-[100svh] w-screen overflow-hidden bg-[#020617] text-slate-100 ${
+          isScreenShaking ? "tp-bingo-screen-shake" : ""
+        }`}
+      >
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(125,211,252,0.15),transparent_24%),radial-gradient(circle_at_70%_100%,rgba(249,115,22,0.12),transparent_30%),linear-gradient(180deg,#020617_0%,#07111f_100%)]" />
+        <main className="tp-bingo-landscape-main relative z-[1] grid h-full w-full grid-rows-[auto_minmax(0,1fr)] gap-2 px-[max(env(safe-area-inset-left),0.6rem)] py-[max(env(safe-area-inset-top),0.35rem)] pr-[max(env(safe-area-inset-right),0.6rem)]">
+          <header className="tp-bingo-landscape-header flex min-h-0 items-center justify-between rounded-[14px] border border-sky-300/55 bg-slate-950/82 px-3 py-1.5 shadow-[0_0_24px_rgba(125,211,252,0.16)]">
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase leading-none tracking-[0.16em] text-sky-300">
+                Sports Bingo · {isActiveLandscapeMode ? `Board ${currentBoardNumber || 0} of ${currentBoardTotal}` : `Scored ${currentBoardNumber || 0} of ${currentBoardTotal}`}
+              </p>
+              <h1 className="mt-1 truncate text-[18px] font-black leading-none text-slate-50 [font-family:'Bree_Serif','Nunito',serif]">
+                {landscapeCurrentCard?.gameLabel ?? (isActiveLandscapeMode ? "No active boards" : "No scored boards")}
+              </h1>
+            </div>
+            <div className="tp-bingo-landscape-controls flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={() => selectLandscapeBoardAt("active", normalizedLandscapeActiveIndex)}
+                className={`tp-clean-button tp-bingo-landscape-tab inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[10px] font-black uppercase tracking-[0.1em] transition ${
+                  isActiveLandscapeMode
+                    ? "border-sky-300/70 bg-sky-300/15 text-sky-200"
+                    : "border-white/10 bg-white/[0.04] text-slate-300"
+                }`}
+              >
+                <ListChecks aria-hidden="true" className="h-3.5 w-3.5" />
+                <span className="tp-bingo-landscape-control-label">Active</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => selectLandscapeBoardAt("scored", normalizedLandscapeScoredIndex)}
+                className={`tp-clean-button tp-bingo-landscape-tab inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[10px] font-black uppercase tracking-[0.1em] transition ${
+                  !isActiveLandscapeMode
+                    ? "border-amber-300/70 bg-amber-300/15 text-amber-100"
+                    : "border-white/10 bg-white/[0.04] text-slate-300"
+                }`}
+              >
+                <Trophy aria-hidden="true" className="h-3.5 w-3.5" />
+                <span className="tp-bingo-landscape-control-label">Scored</span>
+              </button>
+              {landscapeCurrentCard ? (
+                <span className="tp-bingo-landscape-status inline-flex h-8 items-center gap-1.5 rounded-full border border-sky-300/45 bg-sky-300/10 px-3 text-[10px] font-black uppercase tracking-[0.1em] text-sky-200">
+                  <span className={`h-1.5 w-1.5 rounded-full ${currentCardIsLive && isActiveLandscapeMode ? "animate-pulse bg-sky-300" : "bg-slate-400"}`} />
+                  {isActiveLandscapeMode ? (currentCardIsLive ? "Live" : "Upcoming") : landscapeCurrentCard.status}
+                </span>
+              ) : null}
+            </div>
+          </header>
+
+          <section className="tp-bingo-landscape-content grid min-h-0 grid-cols-[2.7rem_minmax(0,1fr)_minmax(13rem,17rem)_2.7rem] items-center gap-2">
+            <button
+              type="button"
+              onClick={() => goToLandscapeBoard(-1)}
+              disabled={landscapeCards.length <= 1}
+              className="tp-clean-button tp-bingo-landscape-arrow flex h-12 w-12 items-center justify-center rounded-full border border-sky-300/50 bg-slate-950/82 text-sky-200 shadow-[0_0_18px_rgba(125,211,252,0.16)] transition active:scale-95 disabled:opacity-30"
+              aria-label="Previous Bingo board"
+            >
+              <ChevronLeft aria-hidden="true" className="h-7 w-7" />
+            </button>
+
+            <div className="flex h-full min-h-0 items-center justify-center">
+              {landscapeCurrentCard ? (
+                <div className="tp-bingo-landscape-board-stage aspect-square h-full max-h-[calc(100svh-5.7rem)] w-full max-w-[calc(100vw-21rem)]">
+                  {renderLandscapeGrid(
+                    landscapeCurrentCard.id,
+                    landscapeCurrentCard.squares,
+                    recentlyUpdatedSquareKeys,
+                    recentlySucceededSquareKeys,
+                    glowSquareKeys
+                  )}
+                </div>
+              ) : (
+                <div className="tp-bingo-landscape-empty flex h-full w-full items-center justify-center rounded-[18px] border border-sky-300/45 bg-slate-950/82 px-5 text-center shadow-[0_0_24px_rgba(125,211,252,0.12)]">
+                  <div className="max-w-[24rem]">
+                    <p className="text-[12px] font-black uppercase tracking-[0.16em] text-sky-300">
+                      {isActiveLandscapeMode ? "No active boards" : "No scored boards"}
+                    </p>
+                    <p className="mt-2 text-[22px] font-black leading-tight text-slate-50 [font-family:'Bree_Serif','Nunito',serif]">
+                      {isActiveLandscapeMode ? "Create a board to play live." : "Scored boards will appear after games finish."}
+                    </p>
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                      <Link
+                        href="/bingo/select-sport"
+                        className="tp-clean-button inline-flex h-10 items-center gap-2 rounded-full border border-sky-300/55 bg-sky-300/14 px-4 text-[12px] font-black text-sky-100"
+                      >
+                        <Plus aria-hidden="true" className="h-4 w-4" />
+                        Create Board
+                      </Link>
+                      {isActiveLandscapeMode ? (
+                        <button
+                          type="button"
+                          onClick={() => selectLandscapeBoardAt("scored", normalizedLandscapeScoredIndex)}
+                          className="tp-clean-button inline-flex h-10 items-center gap-2 rounded-full border border-amber-300/45 bg-amber-300/12 px-4 text-[12px] font-black text-amber-100 disabled:opacity-40"
+                          disabled={landscapeScoredCards.length === 0}
+                        >
+                          <Trophy aria-hidden="true" className="h-4 w-4" />
+                          Scored Boards
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <aside className="tp-bingo-landscape-aside grid h-full min-h-0 grid-rows-[minmax(0,1fr)_auto] gap-2">
+              <div className="tp-bingo-landscape-panel min-h-0 rounded-[18px] border border-sky-300/35 bg-slate-950/82 p-3 shadow-[0_0_22px_rgba(125,211,252,0.1)]">
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-sky-300">Board Progress</p>
+                {landscapeCurrentCard && landscapeProgress ? (
+                  <div className="tp-bingo-landscape-progress mt-3 space-y-3">
+                    <BingoProgressRing squares={landscapeCurrentCard.squares} />
+                    <div className="h-2 overflow-hidden rounded-full bg-white/[0.07]">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-orange-400 to-amber-300"
+                        style={{ width: `${landscapeProgress.pctFilled}%` }}
+                      />
+                    </div>
+                    <p className="text-[11px] font-bold leading-snug text-slate-300">
+                      {landscapeProgress.toBingo === null
+                        ? "Every line is blocked."
+                        : landscapeProgress.toBingo === 0
+                        ? "Bingo complete."
+                        : `${landscapeProgress.toBingo} squares from bingo.`}
+                    </p>
+                    {canCollectCurrentCard ? (
+                      <button
+                        type="button"
+                        onClick={(event) => void claimPoints(landscapeCurrentCard, event.currentTarget)}
+                        className="tp-clean-button flex h-10 w-full items-center justify-center rounded-[10px] bg-amber-400 px-3 text-[12px] font-black uppercase text-slate-950"
+                      >
+                        Collect {landscapeCurrentCard.rewardPoints} Points
+                      </button>
+                    ) : null}
+                  </div>
+                ) : (
+                  <p className="mt-3 text-[11px] font-bold leading-snug text-slate-300">
+                    Active boards show live progress here once you create one.
+                  </p>
+                )}
+              </div>
+              <div className="tp-bingo-landscape-panel tp-bingo-landscape-legend rounded-[18px] border border-sky-300/35 bg-slate-950/82 p-3 shadow-[0_0_22px_rgba(125,211,252,0.1)]">
+                <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-sky-300">Legend</p>
+                <BingoLegend />
+              </div>
+            </aside>
+
+            <button
+              type="button"
+              onClick={() => goToLandscapeBoard(1)}
+              disabled={landscapeCards.length <= 1}
+              className="tp-clean-button tp-bingo-landscape-arrow flex h-12 w-12 items-center justify-center rounded-full border border-sky-300/50 bg-slate-950/82 text-sky-200 shadow-[0_0_18px_rgba(125,211,252,0.16)] transition active:scale-95 disabled:opacity-30"
+              aria-label="Next Bingo board"
+            >
+              <ChevronRight aria-hidden="true" className="h-7 w-7" />
+            </button>
+          </section>
+        </main>
+        {actionPopsPortal}
+        {limitFeedbackPortal}
+      </div>
+    );
+
+    return typeof document !== "undefined"
+      ? createPortal(landscapeContent, document.body)
+      : landscapeContent;
+  }
 
   return (
     <div ref={rootRef} className={`tp-bingo-theme space-y-3 ${isScreenShaking ? "tp-bingo-screen-shake" : ""}`}>
@@ -1768,7 +2254,10 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
                   <li
                     key={card.id}
                     data-bingo-card-id={card.id}
-                    onClick={() => setExpandedActiveCardId(card.id)}
+                    onClick={() => {
+                      selectLandscapeCard("active", card.id);
+                      setExpandedActiveCardId(card.id);
+                    }}
                     className={`relative cursor-pointer rounded-2xl border border-sky-300/40 bg-slate-900/80 p-3 transition-all hover:border-sky-300/70 hover:bg-slate-900 ${
                       recentlyAddedCardIds.has(card.id) ? "bingo-board-pop" : ""
                     }`}
@@ -1844,7 +2333,14 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
                           ? "cursor-pointer border-sky-300/50 bg-sky-300/[0.07] ring-2 ring-sky-300/30 animate-pulse"
                           : "border-sky-300/15 bg-slate-900"
                       }`}
-                      onClick={showClaimOverlay ? (event) => void claimPoints(card, event.currentTarget) : undefined}
+                      onClick={
+                        showClaimOverlay
+                          ? (event) => {
+                              selectLandscapeCard("scored", card.id);
+                              void claimPoints(card, event.currentTarget);
+                            }
+                          : () => selectLandscapeCard("scored", card.id)
+                      }
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <p className="text-sm font-semibold text-slate-200">{card.gameLabel}</p>
@@ -1878,7 +2374,11 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
                         <div className="mt-2">
                           <button
                             type="button"
-                            onClick={() => setExpandedFinalCardId(card.id)}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              selectLandscapeCard("scored", card.id);
+                              setExpandedFinalCardId(card.id);
+                            }}
                             className="tp-clean-button inline-flex min-h-[36px] items-center rounded-full border border-sky-300/35 bg-sky-300/[0.07] px-3 py-1.5 text-xs font-semibold text-sky-300 transition-all active:scale-95 hover:border-sky-300/60"
                           >
                             View Final Board
@@ -2003,66 +2503,8 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
         </div>
       ) : null}
 
-      {typeof document !== "undefined"
-        ? createPortal(
-            <div className="pointer-events-none fixed inset-0 z-[2400]" aria-hidden="true">
-              {actionPops.map((pop) => (
-                <ActionPop
-                  key={pop.id}
-                  text={pop.text}
-                  x={pop.x}
-                  y={pop.y}
-                  tone={pop.tone}
-                  onDone={() => setActionPops((current) => current.filter((item) => item.id !== pop.id))}
-                />
-              ))}
-            </div>,
-            document.body
-          )
-        : null}
-      {typeof document !== "undefined" && (limitPopAnim || limitEchoAnim)
-        ? createPortal(
-            <div className="pointer-events-none fixed inset-0 z-[7000] flex items-center justify-center">
-              {limitPopAnim ? (
-                <motion.span
-                  key={limitPopAnim.id}
-                  className="select-none whitespace-nowrap font-black leading-none text-red-500 transform-gpu will-change-transform"
-                  style={{
-                    fontSize: "clamp(2.2rem, 10vw, 4.5rem)",
-                    textShadow: "0 0 22px rgba(239,68,68,0.42), 0 0 44px rgba(239,68,68,0.24)",
-                  }}
-                  initial={{ scale: 0.72, opacity: 0, y: 0 }}
-                  animate={{ scale: [0.72, 1.08, 1.02, 0.98], y: [0, -20, -16, -8], opacity: [0, 1, 1, 0] }}
-                  transition={{
-                    duration: 0.55,
-                    times: [0, 0.28, 0.62, 1],
-                    ease: ["easeOut", "easeOut", "easeIn", "easeIn"],
-                  }}
-                  onAnimationComplete={() => setLimitPopAnim(null)}
-                >
-                  Limit Reached
-                </motion.span>
-              ) : null}
-              {limitEchoAnim ? (
-                <motion.span
-                  key={limitEchoAnim.id}
-                  className="absolute top-[19%] select-none whitespace-nowrap font-black leading-none text-red-500 transform-gpu will-change-transform"
-                  style={{
-                    fontSize: "clamp(1.8rem, 7vw, 3.2rem)",
-                    textShadow: "0 0 18px rgba(239,68,68,0.38), 0 0 34px rgba(239,68,68,0.18)",
-                  }}
-                  initial={{ scale: 0.7, opacity: 0, y: 0 }}
-                  animate={{ scale: [0.7, 1.06, 1], opacity: [0, 1, 0], y: [0, -12, -20] }}
-                  transition={{ duration: 0.55, times: [0, 0.45, 1], ease: "easeOut" }}
-                  onAnimationComplete={() => setLimitEchoAnim(null)}
-                >
-                  Limit Reached
-                </motion.span>
-              ) : null}
-            </div>,
-            document.body
-          )
-        : null}
+      {actionPopsPortal}
+      {limitFeedbackPortal}
       <style jsx global>{`
         @keyframes tp-bingo-screen-shake {
           0% { transform: translate3d(0, 0, 0); }

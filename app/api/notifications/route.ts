@@ -10,36 +10,43 @@ function normalizePositiveInt(value: string | null, fallback: number): number {
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const userId = (searchParams.get("userId") ?? "").trim();
-  const pageSize = Math.max(1, Math.min(100, normalizePositiveInt(searchParams.get("pageSize"), 50)));
-  const page = Math.max(1, normalizePositiveInt(searchParams.get("page"), 1));
-  const unreadOnly = (searchParams.get("filter") ?? "all").trim().toLowerCase() === "unread";
-  const hasPagingParams = searchParams.has("page") || searchParams.has("pageSize") || searchParams.has("filter");
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = (searchParams.get("userId") ?? "").trim();
+    const pageSize = Math.max(1, Math.min(100, normalizePositiveInt(searchParams.get("pageSize"), 50)));
+    const page = Math.max(1, normalizePositiveInt(searchParams.get("page"), 1));
+    const unreadOnly = (searchParams.get("filter") ?? "all").trim().toLowerCase() === "unread";
+    const hasPagingParams = searchParams.has("page") || searchParams.has("pageSize") || searchParams.has("filter");
 
-  if (!hasPagingParams) {
-    const data = await getUserNotifications(userId);
-    return NextResponse.json({ ok: true, ...data });
+    if (!hasPagingParams) {
+      const data = await getUserNotifications(userId);
+      return NextResponse.json({ ok: true, ...data });
+    }
+
+    const offset = (page - 1) * pageSize;
+    const data = await listUserNotifications(userId, {
+      limit: pageSize,
+      offset,
+      unreadOnly,
+    });
+    const totalPages = Math.max(1, Math.ceil(data.totalItems / pageSize));
+
+    return NextResponse.json({
+      ok: true,
+      unreadCount: data.unreadCount,
+      items: data.items,
+      page: Math.min(page, totalPages),
+      pageSize,
+      totalItems: data.totalItems,
+      totalPages,
+      filter: unreadOnly ? "unread" : "all",
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { ok: false, error: error instanceof Error ? error.message : "Failed to load notifications." },
+      { status: 500 }
+    );
   }
-
-  const offset = (page - 1) * pageSize;
-  const data = await listUserNotifications(userId, {
-    limit: pageSize,
-    offset,
-    unreadOnly,
-  });
-  const totalPages = Math.max(1, Math.ceil(data.totalItems / pageSize));
-
-  return NextResponse.json({
-    ok: true,
-    unreadCount: data.unreadCount,
-    items: data.items,
-    page: Math.min(page, totalPages),
-    pageSize,
-    totalItems: data.totalItems,
-    totalPages,
-    filter: unreadOnly ? "unread" : "all",
-  });
 }
 
 export async function POST(request: Request) {

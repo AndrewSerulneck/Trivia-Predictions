@@ -312,7 +312,15 @@ function AnswerButton({
   );
 }
 
-export function TriviaGame({ questions: initialQuestions = [] }: { questions?: TriviaQuestion[] }) {
+export function TriviaGame({
+  questions: initialQuestions = [],
+  selectedCategory = null,
+  onChangeCategory,
+}: {
+  questions?: TriviaQuestion[];
+  selectedCategory?: string | null;
+  onChangeCategory?: () => void;
+}) {
   const router = useRouter();
   const { triggerAnimation } = useAnimationTrigger();
   const gameRootRef = useRef<HTMLDivElement>(null);
@@ -687,7 +695,8 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         return;
       }
 
-      const warmSnapshot = useWarmCache ? readWarmTriviaCache(userId, venueId) : null;
+      // Warm cache is all-category; skip it when the user has picked a specific category.
+      const warmSnapshot = useWarmCache && !selectedCategory ? readWarmTriviaCache(userId, venueId) : null;
       const hasWarmQuestions = Boolean(warmSnapshot?.questions && warmSnapshot.questions.length > 0);
 
       if (showLoading) {
@@ -713,7 +722,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
       }
 
       try {
-        const items = await fetchTriviaQuestions(userId);
+        const items = await fetchTriviaQuestions(userId, selectedCategory);
         setQuestions(items);
         resetRoundState();
         await loadQuota();
@@ -727,7 +736,7 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
         }
       }
     },
-    [loadCurrentUserPoints, loadQuota, resetRoundState, router]
+    [loadCurrentUserPoints, loadQuota, resetRoundState, router, selectedCategory]
   );
 
   useEffect(() => {
@@ -1505,6 +1514,16 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
                   ? `Unlocks in ${formatCountdown(quotaSecondsRemaining)}`
                   : "Start Next Round"}
               </button>
+              {onChangeCategory && (
+                <button
+                  type="button"
+                  onMouseDown={() => triggerHaptic(12)}
+                  onClick={onChangeCategory}
+                  className={`${BUTTON_POP_CLASS} w-full rounded-[14px] border border-[rgba(250,204,21,0.35)] bg-transparent py-3.5 font-black uppercase tracking-[0.04em] text-[#facc15] text-[14px]`}
+                >
+                  Change Category
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1534,10 +1553,10 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
             <button
               type="button"
               onMouseDown={() => triggerHaptic(14)}
-              onClick={returnToVenueHome}
+              onClick={onChangeCategory ?? returnToVenueHome}
               className="tp-exit-pill tp-clean-button inline-flex items-center gap-1.5 px-3 font-black text-[12px]"
             >
-              ← Venue
+              ← Back
             </button>
             <div
               className="font-black uppercase tracking-[0.06em] text-[#facc15] text-[17px]"
@@ -1597,22 +1616,41 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
                   </p>
                 </div>
               )}
-              <button
-                type="button"
-                onMouseDown={() => triggerHaptic(20)}
-                onClick={() => {
-                  setRoundEndedMessage("");
-                  setIsRoundStarted(true);
-                  setPreRoundCountdown(PRE_ROUND_COUNTDOWN_START);
-                  setSecondsRemaining(QUESTION_TIME_LIMIT_SECONDS);
-                  setRoundStartPoints(currentUserPoints ?? null);
-                }}
-                disabled={triviaQuotaLocked}
-                className={`${BUTTON_POP_CLASS} w-full rounded-[14px] bg-[#facc15] py-3.5 font-black uppercase tracking-[0.04em] text-[#0a0a0f] text-[14px] disabled:opacity-50`}
-                style={{ boxShadow: "0 0 0 1px rgba(250,204,21,0.3), 0 10px 24px rgba(250,204,21,0.3)" }}
-              >
-                {triviaQuotaLocked ? `Locked · ${formatCountdown(quotaSecondsRemaining)}` : "Yes, Start Trivia"}
-              </button>
+              {questions.length === 0 && onChangeCategory ? (
+                <>
+                  <div className="mb-1 rounded-[12px] border border-[rgba(250,204,21,0.2)] bg-[rgba(250,204,21,0.06)] px-4 py-3 text-center">
+                    <p className="font-black text-[#facc15] text-[15px] uppercase tracking-[0.06em]">No questions available</p>
+                    <p className="mt-1 text-[13px] text-slate-400 leading-snug">
+                      You&apos;ve answered all the questions in this category. Try a different one.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onMouseDown={() => triggerHaptic(12)}
+                    onClick={onChangeCategory}
+                    className={`${BUTTON_POP_CLASS} w-full rounded-[14px] border border-[rgba(250,204,21,0.35)] bg-transparent py-3.5 font-black uppercase tracking-[0.04em] text-[#facc15] text-[14px]`}
+                  >
+                    Change Category
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onMouseDown={() => triggerHaptic(20)}
+                  onClick={() => {
+                    setRoundEndedMessage("");
+                    setIsRoundStarted(true);
+                    setPreRoundCountdown(PRE_ROUND_COUNTDOWN_START);
+                    setSecondsRemaining(QUESTION_TIME_LIMIT_SECONDS);
+                    setRoundStartPoints(currentUserPoints ?? null);
+                  }}
+                  disabled={triviaQuotaLocked}
+                  className={`${BUTTON_POP_CLASS} w-full rounded-[14px] bg-[#facc15] py-3.5 font-black uppercase tracking-[0.04em] text-[#0a0a0f] text-[14px] disabled:opacity-50`}
+                  style={{ boxShadow: "0 0 0 1px rgba(250,204,21,0.3), 0 10px 24px rgba(250,204,21,0.3)" }}
+                >
+                  {triviaQuotaLocked ? `Locked · ${formatCountdown(quotaSecondsRemaining)}` : "Yes, Start Trivia"}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1936,10 +1974,13 @@ export function TriviaGame({ questions: initialQuestions = [] }: { questions?: T
   );
 }
 
-export async function fetchTriviaQuestions(userId?: string): Promise<TriviaQuestion[]> {
+export async function fetchTriviaQuestions(userId?: string, category?: string | null): Promise<TriviaQuestion[]> {
   const query = new URLSearchParams();
   if (userId) {
     query.set("userId", userId);
+  }
+  if (category) {
+    query.set("category", category);
   }
   const suffix = query.toString() ? `?${query.toString()}` : "";
   const response = await fetch(`/api/trivia${suffix}`, { method: "GET", cache: "no-store" });

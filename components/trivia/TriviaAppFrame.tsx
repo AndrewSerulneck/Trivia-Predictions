@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { TriviaGame } from "@/components/trivia/TriviaGame";
+import { CategorySelect } from "@/components/trivia/CategorySelect";
 import { TriviaThemeScope } from "@/components/trivia/TriviaThemeScope";
 import { GameLandingExperience } from "@/components/venue/GameLandingExperience";
 import { formatCountdown } from "@/components/venue/venueHubShared";
@@ -16,6 +17,8 @@ type TriviaQuotaSnapshot = {
 };
 
 export function TriviaAppFrame() {
+  const [phase, setPhase] = useState<"category-select" | "game">("category-select");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [quota, setQuota] = useState<TriviaQuotaSnapshot | null>(null);
   const [quotaSecondsRemaining, setQuotaSecondsRemaining] = useState(0);
 
@@ -125,7 +128,19 @@ export function TriviaAppFrame() {
         playingBackgroundClassName="tp-trivia-bg"
       >
         <div className="flex h-full min-h-0 flex-col">
-          <TriviaGame />
+          {phase === "category-select" ? (
+            <CategorySelect
+              onSelect={(category) => {
+                setSelectedCategory(category);
+                setPhase("game");
+              }}
+            />
+          ) : (
+            <TriviaGame
+              selectedCategory={selectedCategory}
+              onChangeCategory={() => setPhase("category-select")}
+            />
+          )}
         </div>
       </GameLandingExperience>
     </>

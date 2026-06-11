@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getFantasyPlayerPoolForDate, getFantasyPlayerPoolForGame, listFantasyGames, listFantasyLeaderboard } from "@/lib/fantasy";
-import type { FantasyLeaderboardEntry, FantasyPlayerPoolItem } from "@/lib/fantasy";
+import type { FantasyLeaderboardEntry, FantasyPlayerPoolEmptyReason, FantasyPlayerPoolItem } from "@/lib/fantasy";
 
 const FANTASY_DAILY_GAME_ID_PREFIX = "nba-daily-";
 const FANTASY_WNBA_DAILY_GAME_ID_PREFIX = "wnba-daily-";
@@ -36,6 +36,32 @@ function resolveDailyGameIdForSport(todayDate: string, sportKey: string | undefi
     return `${FANTASY_MLB_DAILY_GAME_ID_PREFIX}${todayDate}`;
   }
   return `${FANTASY_DAILY_GAME_ID_PREFIX}${todayDate}`;
+}
+
+function resolveLeagueForFantasySelection(gameId: string, sportKey: string | undefined): string | null {
+  const trimmedGameId = String(gameId ?? "").trim();
+  if (trimmedGameId.startsWith(FANTASY_WNBA_DAILY_GAME_ID_PREFIX)) {
+    return "WNBA";
+  }
+  if (trimmedGameId.startsWith(FANTASY_MLB_DAILY_GAME_ID_PREFIX)) {
+    return "MLB";
+  }
+  if (trimmedGameId.startsWith(FANTASY_DAILY_GAME_ID_PREFIX)) {
+    return "NBA";
+  }
+
+  const normalizedSportKey = String(sportKey ?? "").trim().toLowerCase();
+  if (normalizedSportKey.includes("wnba")) {
+    return "WNBA";
+  }
+  if (normalizedSportKey.includes("mlb") || normalizedSportKey.includes("baseball")) {
+    return "MLB";
+  }
+  if (normalizedSportKey.includes("nba") || normalizedSportKey.includes("basketball")) {
+    return "NBA";
+  }
+
+  return null;
 }
 
 function normalizePositiveInt(value: string | null, fallback: number): number {
@@ -90,7 +116,7 @@ export async function GET(request: Request) {
     const tzOffsetMinutes = searchParams.get("tzOffsetMinutes") ?? undefined;
     const tzOffset = normalizeTimezoneOffset(tzOffsetMinutes);
     const todayDate = getTodayDateInOffset(tzOffset);
-    const date = todayDate;
+    const date = requestedDate ?? todayDate;
     const gameId = String(searchParams.get("gameId") ?? "").trim();
     const sportKey = String(searchParams.get("sportKey") ?? "").trim() || undefined;
     const venueId = String(searchParams.get("venueId") ?? "").trim();
@@ -130,7 +156,36 @@ export async function GET(request: Request) {
       leaderboard = await listFantasyLeaderboard({ venueId, gameId: leaderboardGameId, limit: 30 });
     }
 
-    return NextResponse.json({ ok: true, games, playerPool, leaderboard, dailyGameId, wnbaDailyGameId, mlbDailyGameId });
+    let playerPoolEmptyReason: FantasyPlayerPoolEmptyReason | null = null;
+    if (playerPool.length === 0) {
+      const selectedLeague = resolveLeagueForFantasySelection(gameId, sportKey);
+      const slateGames = gameId
+        ? selectedLeague
+          ? games.filter((game) => game.league === selectedLeague)
+          : games.filter((game) => game.id === gameId)
+        : selectedLeague
+        ? games.filter((game) => game.league === selectedLeague)
+        : games;
+
+      if (slateGames.length === 0) {
+        playerPoolEmptyReason = "no-games";
+      } else if (!includeStartedGames && slateGames.every((game) => game.isLocked)) {
+        playerPoolEmptyReason = "all-games-started";
+      } else {
+        playerPoolEmptyReason = "no-eligible-players";
+      }
+    }
+
+    return NextResponse.json({
+      ok: true,
+      games,
+      playerPool,
+      playerPoolEmptyReason,
+      leaderboard,
+      dailyGameId,
+      wnbaDailyGameId,
+      mlbDailyGameId,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load fantasy games.";
     return NextResponse.json({ ok: false, error: message }, { status: toClientErrorStatus(message) });

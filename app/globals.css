@@ -239,6 +239,174 @@ body.tp-bingo-theme {
   background-image: none;
 }
 
+html.tp-bingo-landscape-active,
+body.tp-bingo-landscape-active {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: manipulation !important;
+  scrollbar-gutter: auto !important;
+}
+
+.tp-bingo-landscape-shell {
+  font-size: 16px;
+}
+
+.tp-game-page .tp-page-main .tp-bingo-landscape-shell .text-xs { font-size: 0.75rem !important; }
+.tp-game-page .tp-page-main .tp-bingo-landscape-shell .text-sm { font-size: 0.875rem !important; }
+.tp-game-page .tp-page-main .tp-bingo-landscape-shell .text-base { font-size: 1rem !important; }
+.tp-game-page .tp-page-main .tp-bingo-landscape-shell .text-lg { font-size: 1.125rem !important; }
+
+.tp-bingo-landscape-shell .tp-bingo-landscape-board {
+  min-width: 0;
+  min-height: 0;
+}
+
+.tp-bingo-landscape-shell .tp-bingo-landscape-content {
+  grid-template-columns: 2.75rem minmax(0, 1fr) clamp(12rem, 24vw, 17rem) 2.75rem;
+}
+
+.tp-bingo-landscape-shell .tp-bingo-landscape-board-stage {
+  max-height: min(calc(100svh - 5.7rem), calc(100vw - clamp(19rem, 35vw, 24rem)));
+  max-width: min(calc(100svh - 5.7rem), calc(100vw - clamp(19rem, 35vw, 24rem)));
+}
+
+.tp-bingo-landscape-shell .tp-bingo-landscape-arrow {
+  height: 2.75rem;
+  width: 2.75rem;
+  justify-self: center;
+}
+
+.tp-bingo-landscape-shell .tp-bingo-landscape-panel {
+  overflow: hidden;
+}
+
+@media (orientation: landscape) and (max-height: 430px) {
+  .tp-bingo-landscape-shell .tp-bingo-landscape-main {
+    gap: 0.4rem;
+    padding-top: max(env(safe-area-inset-top), 0.35rem);
+    padding-bottom: max(env(safe-area-inset-bottom), 0.35rem);
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-header {
+    border-radius: 12px;
+    padding: 0.35rem 0.5rem;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-header h1 {
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-controls {
+    gap: 0.3rem;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-tab,
+  .tp-bingo-landscape-shell .tp-bingo-landscape-status {
+    height: 1.8rem;
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-content {
+    gap: 0.4rem;
+    grid-template-columns: 2.25rem minmax(0, 1fr) minmax(9.8rem, 10.8rem) 2.25rem;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-board-stage {
+    max-height: calc(100svh - 4.85rem);
+    max-width: calc(100vw - 16rem);
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-arrow {
+    height: 2.25rem;
+    width: 2.25rem;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-board {
+    border-radius: 14px;
+    padding: 0.4rem;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-board > div:first-of-type {
+    margin-bottom: 0.3rem;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-board [data-bingo-square-key] {
+    font-size: 8px;
+    line-height: 1.05;
+    padding: 0.2rem;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-aside {
+    gap: 0.4rem;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-panel {
+    border-radius: 14px;
+    padding: 0.55rem;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-progress {
+    margin-top: 0.45rem;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-progress > * + * {
+    margin-top: 0.45rem;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-legend ul {
+    gap: 0;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-legend ul > * + * {
+    margin-top: 0.35rem;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-legend li {
+    font-size: 10px;
+    line-height: 1.15;
+  }
+}
+
+@media (orientation: landscape) and (max-width: 700px) {
+  .tp-bingo-landscape-shell .tp-bingo-landscape-control-label {
+    display: none;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-content {
+    grid-template-columns: 2.15rem minmax(0, 1fr) minmax(9.25rem, 10rem) 2.15rem;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-board-stage {
+    max-width: calc(100vw - 15.25rem);
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-status {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+
+@media (orientation: landscape) and (max-width: 600px) {
+  .tp-bingo-landscape-shell .tp-bingo-landscape-status {
+    display: none;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-content {
+    grid-template-columns: 2rem minmax(0, 1fr) minmax(8.4rem, 9rem) 2rem;
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-board-stage {
+    max-width: calc(100vw - 13.75rem);
+  }
+
+  .tp-bingo-landscape-shell .tp-bingo-landscape-empty {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
 /* Speed Trivia — racing electric theme.
    Scopes the entire page canvas to the near-black base so the themed
    surface reaches every edge (including scrollbar gutters / overscroll). */

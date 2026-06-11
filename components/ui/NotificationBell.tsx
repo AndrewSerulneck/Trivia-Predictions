@@ -89,11 +89,16 @@ export function NotificationBell() {
       return;
     }
 
-    const response = await fetch(`/api/notifications?userId=${encodeURIComponent(targetUserId)}`, {
-      cache: "no-store",
-    });
-    const payload = (await response.json()) as NotificationPayload;
-    if (!payload.ok) {
+    let payload: NotificationPayload;
+    try {
+      const response = await fetch(`/api/notifications?userId=${encodeURIComponent(targetUserId)}`, {
+        cache: "no-store",
+      });
+      payload = (await response.json()) as NotificationPayload;
+      if (!response.ok || !payload.ok) {
+        return;
+      }
+    } catch {
       return;
     }
 
