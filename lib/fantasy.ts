@@ -3874,7 +3874,7 @@ export async function claimFantasyReward(params: {
 
   const { data: entry, error } = await supabaseAdmin
     .from("fantasy_entries")
-    .select("id, user_id, venue_id, status, points, reward_points, reward_claimed_at, live_collected_points")
+    .select("id, user_id, venue_id, status, points, reward_points, reward_claimed_at, live_collected_points, sport_key")
     .eq("id", entryId)
     .eq("user_id", userId)
     .maybeSingle<{
@@ -3886,6 +3886,7 @@ export async function claimFantasyReward(params: {
       reward_points: number;
       reward_claimed_at: string | null;
       live_collected_points: number;
+      sport_key: string;
     }>();
 
   if (error || !entry) {
@@ -3955,10 +3956,16 @@ export async function claimFantasyReward(params: {
     throw new Error(updateUserError.message ?? "Failed to award fantasy points.");
   }
 
+  const sportLabel =
+    entry.sport_key === "baseball_mlb"
+      ? "baseball"
+      : entry.sport_key === "american_football_nfl"
+        ? "football"
+        : "basketball";
   await supabaseAdmin.from("notifications").insert({
     user_id: userId,
     type: "success",
-    message: `Fantasy reward claimed: +${pointsAwarded} points.`,
+    message: `Great job, coach! Your fantasy ${sportLabel} team won ${pointsAwarded} pts!`,
   });
 
   return { claimed: true, pointsAwarded };

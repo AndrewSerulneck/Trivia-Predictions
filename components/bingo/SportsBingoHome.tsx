@@ -817,6 +817,30 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
   }, []);
 
   useEffect(() => {
+    const fromBell = sessionStorage.getItem("tp:celebrate") === "bingo";
+    if (fromBell) {
+      sessionStorage.removeItem("tp:celebrate");
+      sessionStorage.removeItem("tp:celebrate:delta");
+      triggerAnimation("BINGO_WIN");
+    }
+    const uid = getUserId() ?? "";
+    if (!uid) return;
+    void fetch("/api/notifications/celebrate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: uid, game: "bingo" }),
+    })
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = (await res.json()) as { celebrate: boolean; delta: number };
+        if (!fromBell && data.celebrate) {
+          triggerAnimation("BINGO_WIN");
+        }
+      })
+      .catch(() => {});
+  }, [triggerAnimation]);
+
+  useEffect(() => {
     const uid = getUserId()?.trim() ?? "";
     if (!uid) return;
     const cached = consumeBingoPrefetchCache(uid);

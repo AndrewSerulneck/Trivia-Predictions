@@ -2536,16 +2536,6 @@ export async function claimPickEmPoints(params: {
       });
     } catch {}
 
-    try {
-      await supabaseAdmin.from("notifications").insert({
-        user_id: userId,
-        type: "success",
-        message:
-          bonusPoints > 0
-            ? `Pick 'Em collected: +${totalAwarded} points (includes ${result.multiplierApplied}x multiplier bonus).`
-            : `Pick 'Em collected: +${totalAwarded} points added to your credit allocation.`,
-      });
-    } catch {}
   }
 
   return result;

@@ -100,6 +100,64 @@ export async function listUserNotifications(
   };
 }
 
+export async function stampCelebrationNotifications(params: {
+  userId: string;
+  game: "bingo" | "fantasy" | "pickem";
+}): Promise<{ celebrate: boolean; delta: number }> {
+  if (!params.userId || !supabaseAdmin) {
+    return { celebrate: false, delta: 0 };
+  }
+
+  const cutoffIso = getNotificationRetentionCutoffIso();
+  let query = supabaseAdmin
+    .from("notifications")
+    .update({ animation_shown_at: new Date().toISOString() } as Record<string, unknown>)
+    .eq("user_id", params.userId)
+    .eq("type", "success")
+    .is("animation_shown_at", null)
+    .gte("created_at", cutoffIso);
+
+  if (params.game === "bingo") {
+    query = query.ilike("message", "%Bingo Board won%");
+  } else if (params.game === "fantasy") {
+    query = query.ilike("message", "%Your fantasy%");
+  } else {
+    query = query.ilike("link_url", "/pickem%");
+  }
+
+  const { data } = await query.select("id, message");
+
+  if (!data || data.length === 0) {
+    return { celebrate: false, delta: 0 };
+  }
+
+  let delta = 0;
+  for (const row of data as Array<{ message: string }>) {
+    const match = row.message.match(/\+(\d[\d,]*)\s*pts/i);
+    if (match?.[1]) {
+      delta += Number.parseInt(match[1].replace(/,/g, ""), 10);
+    }
+  }
+
+  return { celebrate: true, delta };
+}
+
+export async function createNotification(params: {
+  userId: string;
+  message: string;
+  type: Notification["type"];
+  linkUrl?: string;
+}): Promise<void> {
+  if (!params.userId || !supabaseAdmin) return;
+  await supabaseAdmin.from("notifications").insert({
+    user_id: params.userId,
+    message: params.message,
+    type: params.type,
+    read: false,
+    link_url: params.linkUrl ?? null,
+  });
+}
+
 export async function markNotificationsRead(params: {
   userId: string;
   notificationId?: string;

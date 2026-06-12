@@ -180,6 +180,8 @@ export interface ChallengeInvite {
   respondedAt?: string;
 }
 
+export type PrizeType = "wine_bottle" | "free_appetizer" | "gift_certificate";
+
 export type CampaignRecurringType = "none" | "daily" | "weekly" | "monthly" | "yearly";
 export type ChallengeScheduleType = "single_day" | "multi_day" | "recurring" | "one_time";
 export type ChallengeImageFitMode = "cover" | "contain";
@@ -233,6 +235,8 @@ export interface ChallengeCampaign {
   winnerUserId?: string | null;
   winnerUsername?: string | null;
   prizeClaimedAt?: string | null;
+  prizeType?: PrizeType | null;
+  prizeGiftCertificateAmount?: number | null;
   isActive: boolean;
 }
 
@@ -244,6 +248,10 @@ export interface ChallengeCampaignWin {
   winnerUserId: string;
   winnerUsername?: string | null;
   claimedAt?: string | null;
+  prizeType?: PrizeType | null;
+  prizeGiftCertificateAmount?: number | null;
+  prizeExpiresAt?: string | null;
+  prizeRedeemedAt?: string | null;
 }
 
 export interface ChallengeCampaignProgress {
@@ -281,6 +289,32 @@ export interface PrizeWin {
   awardedAt: string;
   claimedAt?: string;
 }
+
+export type RedeemablePrize =
+  | {
+      source: "weekly";
+      id: string;
+      venueId: string;
+      challengeName: string;
+      prizeTitle: string;
+      prizeDescription?: string;
+      rewardPoints: number;
+      status: PrizeWinStatus;
+      awardedAt: string;
+      claimedAt?: string | null;
+      expiresAt?: never;
+    }
+  | {
+      source: "challenge";
+      id: string;
+      venueId: string;
+      challengeName: string;
+      prizeType: PrizeType;
+      prizeGiftCertificateAmount?: number | null;
+      awardedAt: string;
+      expiresAt: string;
+      redeemedAt?: string | null;
+    };
 
 export interface Advertisement {
   id: string;

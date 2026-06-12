@@ -95,6 +95,76 @@ function normalizeQuestionKey(question) {
     .replace(/[^a-z0-9]/g, "");
 }
 
+const QUESTION_STOP_WORDS = new Set([
+  "a",
+  "an",
+  "and",
+  "are",
+  "as",
+  "at",
+  "by",
+  "did",
+  "do",
+  "does",
+  "for",
+  "from",
+  "how",
+  "in",
+  "is",
+  "it",
+  "its",
+  "of",
+  "on",
+  "or",
+  "the",
+  "this",
+  "to",
+  "was",
+  "were",
+  "what",
+  "when",
+  "which",
+  "who",
+  "whose",
+  "with",
+]);
+
+function tokenizeQuestion(question) {
+  return String(question || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 3 && !QUESTION_STOP_WORDS.has(token));
+}
+
+function buildQuestionSimilarityKey(question) {
+  const tokens = Array.from(new Set(tokenizeQuestion(question))).sort();
+  return tokens.join(" ");
+}
+
+function areQuestionsNearDuplicates(left, right) {
+  const leftKey = buildQuestionSimilarityKey(left);
+  const rightKey = buildQuestionSimilarityKey(right);
+  if (!leftKey || !rightKey) return false;
+  if (leftKey === rightKey) return true;
+
+  const leftTokens = leftKey.split(" ").filter(Boolean);
+  const rightTokens = rightKey.split(" ").filter(Boolean);
+  if (leftTokens.length < 4 || rightTokens.length < 4) {
+    return false;
+  }
+
+  const rightSet = new Set(rightTokens);
+  let overlap = 0;
+  for (const token of leftTokens) {
+    if (rightSet.has(token)) overlap += 1;
+  }
+
+  const similarity = (2 * overlap) / (leftTokens.length + rightTokens.length);
+  return similarity >= 0.9;
+}
+
 function toDisplayCategory(fileBaseName) {
   const name = fileBaseName.replace(/\.v\d+$/i, "");
   return name
@@ -386,7 +456,7 @@ async function fetchExistingDatabaseQuestionCatalog(questionPool) {
   while (true) {
     const { data, error } = await supabase
       .from("trivia_questions")
-      .select("slug, question, status")
+      .select("slug, question, status, category")
       .eq("question_pool", questionPool)
       .neq("status", "deleted")
       .range(from, from + pageSize - 1);
@@ -404,6 +474,7 @@ async function fetchExistingDatabaseQuestionCatalog(questionPool) {
         id: null,
         slug: row.slug ?? null,
         question: String(row.question ?? ""),
+        category: String(row.category ?? ""),
         questionPool,
         status: row.status ?? null,
       });
@@ -437,10 +508,25 @@ async function main() {
 
   const seenSlugs = new Set(allExisting.map((item) => slugify(item?.slug || item?.question || "")).filter(Boolean));
   const seenQuestionKeys = new Set(allExisting.map((item) => normalizeQuestionKey(item?.question || "")).filter(Boolean));
+  const existingQuestionsByCategory = new Map();
+  for (const item of allExisting) {
+    const categoryKey = String(item?.category || "").trim().toLowerCase();
+    const question = String(item?.question || "").trim();
+    if (!categoryKey || !question) continue;
+    const group = existingQuestionsByCategory.get(categoryKey) ?? [];
+    group.push(question);
+    existingQuestionsByCategory.set(categoryKey, group);
+  }
   const dbQuestionCatalog = await fetchExistingDatabaseQuestionCatalog("anytime_blitz");
   for (const row of dbQuestionCatalog) {
     const questionKey = normalizeQuestionKey(row.question);
     if (questionKey) seenQuestionKeys.add(questionKey);
+    const categoryKey = String(row.category || "").trim().toLowerCase();
+    if (categoryKey && row.question) {
+      const group = existingQuestionsByCategory.get(categoryKey) ?? [];
+      group.push(row.question);
+      existingQuestionsByCategory.set(categoryKey, group);
+    }
   }
   if (dbQuestionCatalog.length > 0) {
     console.log(`Loaded ${dbQuestionCatalog.length} existing anytime_blitz questions from Supabase.`);
@@ -452,7 +538,10 @@ async function main() {
     .slice(-40);
 
   const created = [];
+  let skippedExactDuplicates = 0;
+  let skippedNearDuplicates = 0;
   let attempts = 0;
+  const categorySimilarityPool = [...(existingQuestionsByCategory.get(record.displayCategory.toLowerCase()) ?? [])];
 
   while (created.length < args.count && attempts < MAX_ATTEMPTS) {
     attempts += 1;
@@ -479,12 +568,19 @@ async function main() {
       const questionKey = normalizeQuestionKey(row.question);
 
       if (seenSlugs.has(row.slug) || seenQuestionKeys.has(questionKey)) {
+        skippedExactDuplicates += 1;
+        continue;
+      }
+
+      if (categorySimilarityPool.some((existingQuestion) => areQuestionsNearDuplicates(existingQuestion, row.question))) {
+        skippedNearDuplicates += 1;
         continue;
       }
 
       seenSlugs.add(row.slug);
       seenQuestionKeys.add(questionKey);
       existingInCategory.push(row.question);
+      categorySimilarityPool.push(row.question);
       created.push(row);
     }
 
@@ -518,6 +614,8 @@ async function main() {
   console.log(`File: ${record.filePath}`);
   console.log(`Added: ${created.length}`);
   console.log(`New total in category file: ${merged.length}`);
+  console.log(`Skipped exact duplicates: ${skippedExactDuplicates}`);
+  console.log(`Skipped near duplicates: ${skippedNearDuplicates}`);
 }
 
 main().catch((error) => {

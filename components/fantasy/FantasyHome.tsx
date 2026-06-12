@@ -750,6 +750,39 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
   }, []);
 
   useEffect(() => {
+    const fromBell = sessionStorage.getItem("tp:celebrate") === "fantasy";
+    const bellDelta = Number(sessionStorage.getItem("tp:celebrate:delta") ?? 0);
+    if (fromBell) {
+      sessionStorage.removeItem("tp:celebrate");
+      sessionStorage.removeItem("tp:celebrate:delta");
+      triggerAnimation("FANTASY_LIVE_COLLECT");
+      if (bellDelta > 0) {
+        window.dispatchEvent(new CustomEvent("tp:coin-flight", { detail: { delta: bellDelta, coins: Math.min(18, Math.max(6, Math.round(bellDelta / 2))) } }));
+        window.dispatchEvent(new CustomEvent("tp:points-updated", { detail: { source: "fantasy-celebrate", delta: bellDelta } }));
+      }
+    }
+    const uid = getUserId() ?? "";
+    if (!uid) return;
+    void fetch("/api/notifications/celebrate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: uid, game: "fantasy" }),
+    })
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = (await res.json()) as { celebrate: boolean; delta: number };
+        if (!fromBell && data.celebrate) {
+          triggerAnimation("FANTASY_LIVE_COLLECT");
+          if (data.delta > 0) {
+            window.dispatchEvent(new CustomEvent("tp:coin-flight", { detail: { delta: data.delta, coins: Math.min(18, Math.max(6, Math.round(data.delta / 2))) } }));
+            window.dispatchEvent(new CustomEvent("tp:points-updated", { detail: { source: "fantasy-celebrate", delta: data.delta } }));
+          }
+        }
+      })
+      .catch(() => {});
+  }, [triggerAnimation]);
+
+  useEffect(() => {
     geofencePauseRef.current = isGeofencePaused;
   }, [isGeofencePaused]);
 

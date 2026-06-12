@@ -15,6 +15,9 @@ const REST_WARNING_MS = 15_000;
 const QUESTION_WINDOW_MS = QUESTIONS_PER_ROUND * QUESTION_BLOCK_MS; // 11 min 15 sec
 const ROUND_MS = 15 * 60_000; // 15 min
 const MID_GAME_BREAK_MS = ROUND_MS - QUESTION_WINDOW_MS; // 3 min 45 sec
+const BLOCKED_LIVE_SHOWDOWN_CATEGORIES = new Set(["fantasy epics"]);
+const RECENT_CATEGORY_COOLDOWN_OCCURRENCES = 3;
+const RECENT_CATEGORY_SLOT_LOOKBACK_LIMIT = 360;
 
 export type LiveShowdownPhase = "answering" | "rest_warning" | "mid_game_break";
 
@@ -49,6 +52,22 @@ type TriviaQuestionRow = {
   difficulty: string | null;
   question_pool: "anytime_blitz" | "live_showdown";
   image_url: string | null;
+};
+
+export type LiveTriviaSeedQuestion = {
+  slug: string | null;
+  category: string | null;
+  options: unknown;
+  correct_answer: number;
+  question_pool: "anytime_blitz" | "live_showdown";
+};
+
+export type LiveTriviaSeedSlot = {
+  slug: string;
+  category: string;
+  roundNumber: number;
+  questionIndex: number;
+  wasSeen: boolean;
 };
 
 export type LiveShowdownQuestionPublic = {
@@ -321,6 +340,213 @@ function seededShuffle<T>(items: readonly T[], seed: number): T[] {
     result[j] = tmp;
   }
   return result;
+}
+
+function normalizeLiveTriviaCategory(value: string | null | undefined): string {
+  const normalized = String(value ?? "").trim();
+  return normalized || "General";
+}
+
+function isBlockedLiveTriviaCategory(value: string | null | undefined): boolean {
+  return BLOCKED_LIVE_SHOWDOWN_CATEGORIES.has(normalizeLiveTriviaCategory(value).toLowerCase());
+}
+
+function getLiveTriviaCorrectAnswer(row: Pick<LiveTriviaSeedQuestion, "options" | "correct_answer">): string {
+  const options = coerceOptions(row.options);
+  const answerIndex = Number.isInteger(row.correct_answer) ? row.correct_answer : -1;
+  if (answerIndex < 0 || answerIndex >= options.length) return "";
+  return String(options[answerIndex] ?? "").trim();
+}
+
+function countAnswerWords(answer: string): number {
+  if (!answer) return 0;
+  return answer.split(/\s+/).map((part) => part.trim()).filter(Boolean).length;
+}
+
+function isLiveTriviaSeedAnswerAllowed(answerRaw: unknown): boolean {
+  const answer = String(answerRaw ?? "").trim().replace(/\s+/g, " ");
+  if (!answer) return false;
+  if (parseLargePureNumberAnswer(answer) !== null) return true;
+  return countAnswerWords(answer) <= 2;
+}
+
+type NormalizedLiveTriviaSeedQuestion = LiveTriviaSeedQuestion & {
+  slug: string;
+  category: string;
+};
+
+function buildSeedKey(parts: readonly string[]): number {
+  return djb2(parts.join(":"));
+}
+
+function uniquePush(target: string[], seen: Set<string>, slug: string): void {
+  if (!slug || seen.has(slug)) return;
+  target.push(slug);
+  seen.add(slug);
+}
+
+export function buildLiveTriviaOccurrenceSeedSlots(params: {
+  questions: readonly LiveTriviaSeedQuestion[];
+  seenSlugs: ReadonlySet<string>;
+  recentCategories?: ReadonlySet<string>;
+  scheduleId: string;
+  occurrenceDate: string;
+  venueId: string;
+  numRounds: number;
+  questionsPerRound?: number;
+}): { slots: LiveTriviaSeedSlot[]; usedSeen: boolean; repeatedQuestions: boolean; usedRecentCategory: boolean } {
+  const safeVenueId = toSafeVenueId(params.venueId);
+  const rounds = clampRounds(params.numRounds);
+  const questionsPerRound = Math.max(1, Math.min(100, Math.floor(Number(params.questionsPerRound ?? QUESTIONS_PER_ROUND))));
+  const totalSlots = rounds * questionsPerRound;
+  const byCategory = new Map<string, NormalizedLiveTriviaSeedQuestion[]>();
+  const recentCategorySet = new Set(
+    Array.from(params.recentCategories ?? [])
+      .map((category) => normalizeLiveTriviaCategory(category))
+      .filter(Boolean)
+  );
+
+  for (const row of params.questions) {
+    const slug = String(row.slug ?? "").trim();
+    if (!slug) continue;
+    if (row.question_pool !== "live_showdown") continue;
+    if (isBlockedLiveTriviaCategory(row.category)) continue;
+    if (!isLiveTriviaSeedAnswerAllowed(getLiveTriviaCorrectAnswer(row))) continue;
+
+    const category = normalizeLiveTriviaCategory(row.category);
+    const list = byCategory.get(category) ?? [];
+    list.push({ ...row, slug, category });
+    byCategory.set(category, list);
+  }
+
+  for (const [category, list] of byCategory.entries()) {
+    byCategory.set(
+      category,
+      list.slice().sort((a, b) => a.slug.localeCompare(b.slug))
+    );
+  }
+
+  const fullRoundCategories = Array.from(byCategory.entries())
+    .filter(([, list]) => list.length >= questionsPerRound)
+    .map(([category]) => category)
+    .sort((a, b) => a.localeCompare(b));
+  const fallbackCategories = Array.from(byCategory.entries())
+    .filter(([, list]) => list.length > 0)
+    .map(([category]) => category)
+    .sort((a, b) => a.localeCompare(b));
+  const baseCategories = fullRoundCategories.length > 0 ? fullRoundCategories : fallbackCategories;
+  const freshCategories = baseCategories.filter((category) => !recentCategorySet.has(category));
+  const cooledCategories = baseCategories.filter((category) => recentCategorySet.has(category));
+  const eligibleCategories = [...freshCategories, ...cooledCategories];
+
+  if (eligibleCategories.length === 0) {
+    return { slots: [], usedSeen: false, repeatedQuestions: false, usedRecentCategory: false };
+  }
+
+  const selectedCategories: string[] = [];
+  let cycleIndex = 0;
+  while (selectedCategories.length < rounds) {
+    const freshSeed = buildSeedKey([
+      "live-trivia",
+      "categories",
+      "fresh",
+      safeVenueId,
+      params.occurrenceDate,
+      params.scheduleId,
+      String(cycleIndex),
+    ]);
+    const cooledSeed = buildSeedKey([
+      "live-trivia",
+      "categories",
+      "cooled",
+      safeVenueId,
+      params.occurrenceDate,
+      params.scheduleId,
+      String(cycleIndex),
+    ]);
+    const cycle = [
+      ...seededShuffle(freshCategories, freshSeed),
+      ...seededShuffle(cooledCategories, cooledSeed),
+    ];
+    for (const category of cycle) {
+      if (selectedCategories.length >= rounds) break;
+      selectedCategories.push(category);
+    }
+    cycleIndex += 1;
+  }
+
+  const slots: LiveTriviaSeedSlot[] = [];
+  const usedInOccurrence = new Set<string>();
+  let usedSeen = false;
+  let repeatedQuestions = false;
+  let usedRecentCategory = false;
+
+  for (let roundIndex = 0; roundIndex < rounds; roundIndex += 1) {
+    const category = selectedCategories[roundIndex] ?? eligibleCategories[0]!;
+    if (recentCategorySet.has(category)) usedRecentCategory = true;
+    const categoryRows = byCategory.get(category) ?? [];
+    const unseenRows = categoryRows.filter((row) => !params.seenSlugs.has(row.slug));
+    const seenRows = categoryRows.filter((row) => params.seenSlugs.has(row.slug));
+    const unseenSeed = buildSeedKey([
+      "live-trivia",
+      "questions",
+      safeVenueId,
+      params.occurrenceDate,
+      params.scheduleId,
+      category,
+      String(roundIndex + 1),
+    ]);
+    const seenSeed = buildSeedKey([
+      "live-trivia",
+      "seen",
+      safeVenueId,
+      params.occurrenceDate,
+      params.scheduleId,
+      category,
+      String(roundIndex + 1),
+    ]);
+
+    const chosen: string[] = [];
+    for (const row of seededShuffle(unseenRows, unseenSeed)) {
+      if (chosen.length >= questionsPerRound) break;
+      uniquePush(chosen, usedInOccurrence, row.slug);
+    }
+
+    if (chosen.length < questionsPerRound) {
+      for (const row of seededShuffle(seenRows, seenSeed)) {
+        if (chosen.length >= questionsPerRound) break;
+        const before = chosen.length;
+        uniquePush(chosen, usedInOccurrence, row.slug);
+        if (chosen.length > before) usedSeen = true;
+      }
+    }
+
+    if (chosen.length < questionsPerRound) {
+      const repeatPool = seededShuffle(categoryRows, unseenSeed ^ 0x9e3779b9);
+      let repeatIndex = 0;
+      while (chosen.length < questionsPerRound && repeatPool.length > 0) {
+        const repeatSlug = repeatPool[repeatIndex % repeatPool.length]!.slug;
+        chosen.push(repeatSlug);
+        if (params.seenSlugs.has(repeatSlug)) usedSeen = true;
+        repeatedQuestions = true;
+        repeatIndex += 1;
+      }
+    }
+
+    for (let questionIndex = 0; questionIndex < chosen.length; questionIndex += 1) {
+      slots.push({
+        slug: chosen[questionIndex]!,
+        category,
+        roundNumber: roundIndex + 1,
+        questionIndex: questionIndex + 1,
+        wasSeen: params.seenSlugs.has(chosen[questionIndex]!),
+      });
+    }
+
+    if (slots.length >= totalSlots) break;
+  }
+
+  return { slots: slots.slice(0, totalSlots), usedSeen, repeatedQuestions, usedRecentCategory };
 }
 
 function getTimeZoneOffsetMs(date: Date, timeZone: string): number {
@@ -1031,10 +1257,97 @@ export async function findOccurrencesToSeed(nowMs: number): Promise<LiveOccurren
   return targets;
 }
 
+async function loadRecentVenueLiveTriviaCategories(
+  venueId: string,
+  occurrenceDate: string
+): Promise<Set<string>> {
+  const admin = supabaseAdmin;
+  const safeVenueId = toSafeVenueId(venueId);
+  if (!admin || !safeVenueId) return new Set();
+
+  try {
+    const venueSchedules = await loadScheduleRows(safeVenueId);
+    const scheduleIds = venueSchedules.map((row) => String(row.id ?? "").trim()).filter(Boolean);
+    if (scheduleIds.length === 0) return new Set();
+
+    const { data: slotData, error: slotError } = await runOccurrenceCompatibleQuery(
+      "loadRecentVenueLiveTriviaCategories",
+      () =>
+        admin
+          .from("trivia_session_questions")
+          .select("occurrence_date, question_id")
+          .in("schedule_id", scheduleIds)
+          .lt("occurrence_date", occurrenceDate)
+          .order("occurrence_date", { ascending: false })
+          .limit(RECENT_CATEGORY_SLOT_LOOKBACK_LIMIT),
+      () => Promise.resolve({ data: [], error: null })
+    );
+    if (slotError) {
+      console.warn(
+        `[seedOccurrenceQuestions] skipped recent category cooldown for venue ${safeVenueId}: ` +
+          `${slotError.message ?? "failed to load recent occurrence slots"}.`
+      );
+      return new Set();
+    }
+
+    const recentRows = ((slotData ?? []) as Array<{ occurrence_date: string | null; question_id: string | null }>)
+      .map((row) => ({
+        occurrenceDate: String(row.occurrence_date ?? "").trim(),
+        questionId: String(row.question_id ?? "").trim(),
+      }))
+      .filter((row) => row.occurrenceDate && row.questionId);
+
+    const recentDates: string[] = [];
+    const recentDateSet = new Set<string>();
+    for (const row of recentRows) {
+      if (recentDateSet.has(row.occurrenceDate)) continue;
+      recentDateSet.add(row.occurrenceDate);
+      recentDates.push(row.occurrenceDate);
+      if (recentDates.length >= RECENT_CATEGORY_COOLDOWN_OCCURRENCES) break;
+    }
+
+    if (recentDates.length === 0) return new Set();
+    const recentQuestionIds = Array.from(
+      new Set(
+        recentRows
+          .filter((row) => recentDateSet.has(row.occurrenceDate))
+          .map((row) => row.questionId)
+      )
+    );
+    if (recentQuestionIds.length === 0) return new Set();
+
+    const { data: questionData, error: questionError } = await admin
+      .from("trivia_questions")
+      .select("slug, category")
+      .in("slug", recentQuestionIds)
+      .eq("question_pool", "live_showdown")
+      .limit(RECENT_CATEGORY_SLOT_LOOKBACK_LIMIT);
+    if (questionError) {
+      console.warn(
+        `[seedOccurrenceQuestions] skipped recent category cooldown for venue ${safeVenueId}: ` +
+          `${questionError.message ?? "failed to load recent categories"}.`
+      );
+      return new Set();
+    }
+
+    return new Set(
+      ((questionData ?? []) as Array<{ category: string | null }>)
+        .map((row) => normalizeLiveTriviaCategory(row.category))
+        .filter(Boolean)
+    );
+  } catch (error) {
+    console.warn(
+      `[seedOccurrenceQuestions] skipped recent category cooldown for venue ${safeVenueId}: ` +
+        `${error instanceof Error ? error.message : "unknown error"}.`
+    );
+    return new Set();
+  }
+}
+
 // Seeds trivia_session_questions for one occurrence. Idempotent: if rows already
 // exist for (schedule_id, occurrence_date) it returns without re-seeding.
-// Questions are drawn from status='active' trivia_questions, deduplicated against
-// venue_seen_questions, and shuffled with a per-(venue, date) seed.
+// Questions are selected category-first, deduplicated against venue_seen_questions
+// when inventory allows, and shuffled with per-(venue, date, schedule) seeds.
 export async function seedOccurrenceQuestions(
   scheduleId: string,
   occurrenceDate: string,
@@ -1087,7 +1400,7 @@ export async function seedOccurrenceQuestions(
   // Active question pool in a deterministic base order.
   const { data: poolData, error: poolError } = await admin
     .from("trivia_questions")
-    .select("slug")
+    .select("slug, category, options, correct_answer, question_pool")
     .eq("status", "active")
     .eq("question_pool", "live_showdown")
     .not("slug", "is", null)
@@ -1097,76 +1410,52 @@ export async function seedOccurrenceQuestions(
     throw new Error(poolError.message || "Failed to load active question pool.");
   }
 
-  const allSlugs = ((poolData ?? []) as Array<{ slug: string | null }>)
-    .map((r) => String(r.slug ?? "").trim())
-    .filter(Boolean);
+  const recentCategories = await loadRecentVenueLiveTriviaCategories(safeVenueId, occurrenceDate);
+  const seedResult = buildLiveTriviaOccurrenceSeedSlots({
+    questions: (poolData ?? []) as LiveTriviaSeedQuestion[],
+    seenSlugs,
+    recentCategories,
+    scheduleId,
+    occurrenceDate,
+    venueId: safeVenueId,
+    numRounds: rounds,
+    questionsPerRound: QUESTIONS_PER_ROUND,
+  });
 
-  const seed = djb2(`${safeVenueId}${occurrenceDate}`);
-  const unseen = allSlugs.filter((slug) => !seenSlugs.has(slug));
-  const seen = allSlugs.filter((slug) => seenSlugs.has(slug));
-  const shuffledUnseen = seededShuffle(unseen, seed);
-  const shuffledSeen = seededShuffle(seen, seed ^ 0x9e3779b9);
-
-  const chosen: string[] = [];
-  const chosenSet = new Set<string>();
-  const pushUnique = (slug: string) => {
-    if (!slug || chosenSet.has(slug)) return;
-    chosen.push(slug);
-    chosenSet.add(slug);
-  };
-
-  for (const slug of shuffledUnseen) {
-    if (chosen.length >= totalSlots) break;
-    pushUnique(slug);
-  }
-
-  let usedRepeats = false;
-  if (chosen.length < totalSlots) {
-    // Not enough unseen questions — fall back to already-seen ones (allow repeats).
-    usedRepeats = true;
-    for (const slug of shuffledSeen) {
-      if (chosen.length >= totalSlots) break;
-      pushUnique(slug);
-    }
-  }
-
-  if (chosen.length === 0) {
+  if (seedResult.slots.length === 0) {
     // No active questions at all — nothing we can seed.
     return { seeded: 0, skipped: totalSlots };
   }
 
-  // Fewer distinct questions than slots: cycle through what we have to fill.
-  if (chosen.length < totalSlots) {
-    const cycle = chosen.slice();
-    let idx = 0;
-    while (chosen.length < totalSlots) {
-      chosen.push(cycle[idx % cycle.length]);
-      idx += 1;
-    }
-  }
-
-  if (usedRepeats) {
+  if (
+    seedResult.usedSeen ||
+    seedResult.repeatedQuestions ||
+    seedResult.usedRecentCategory ||
+    seedResult.slots.length < totalSlots
+  ) {
     // TODO(Prompt 10): persist a venue_question_warnings row / fire a notification
     // when a venue runs low on unseen questions. The table/notifier does not exist
     // yet, so we only log for now.
     console.warn(
       `[seedOccurrenceQuestions] venue ${safeVenueId} ran low on unseen questions for ${occurrenceDate} ` +
-        `(unseen=${unseen.length}, needed=${totalSlots}); reused seen questions.`
+        `(seeded=${seedResult.slots.length}, needed=${totalSlots}, usedSeen=${seedResult.usedSeen}, ` +
+        `repeatedQuestions=${seedResult.repeatedQuestions}, usedRecentCategory=${seedResult.usedRecentCategory}, ` +
+        `recentCategoryCount=${recentCategories.size}).`
     );
   }
 
-  const sessionRowsWithOccurrence = chosen.slice(0, totalSlots).map((slug, k) => ({
+  const sessionRowsWithOccurrence = seedResult.slots.map((slot) => ({
     schedule_id: scheduleId,
     occurrence_date: occurrenceDate,
-    question_id: slug,
-    round_number: Math.floor(k / QUESTIONS_PER_ROUND) + 1,
-    question_index: (k % QUESTIONS_PER_ROUND) + 1,
+    question_id: slot.slug,
+    round_number: slot.roundNumber,
+    question_index: slot.questionIndex,
   }));
-  const sessionRowsLegacy = chosen.slice(0, totalSlots).map((slug, k) => ({
+  const sessionRowsLegacy = seedResult.slots.map((slot) => ({
     schedule_id: scheduleId,
-    question_id: slug,
-    round_number: Math.floor(k / QUESTIONS_PER_ROUND) + 1,
-    question_index: (k % QUESTIONS_PER_ROUND) + 1,
+    question_id: slot.slug,
+    round_number: slot.roundNumber,
+    question_index: slot.questionIndex,
   }));
 
   const { error: insertError } = await runOccurrenceCompatibleQuery(
@@ -1190,7 +1479,7 @@ export async function seedOccurrenceQuestions(
     throw new Error(insertError.message || "Failed to seed occurrence questions.");
   }
 
-  const seenRows = Array.from(new Set(chosen)).map((slug) => ({
+  const seenRows = Array.from(new Set(seedResult.slots.map((slot) => slot.slug))).map((slug) => ({
     venue_id: safeVenueId,
     question_id: slug,
   }));
@@ -1201,7 +1490,7 @@ export async function seedOccurrenceQuestions(
     throw new Error(seenUpsertError.message || "Failed to record venue seen questions.");
   }
 
-  return { seeded: totalSlots, skipped: 0 };
+  return { seeded: seedResult.slots.length, skipped: Math.max(0, totalSlots - seedResult.slots.length) };
 }
 
 // Number of leaderboard entries surfaced in state. Ranks are computed across the

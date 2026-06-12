@@ -301,6 +301,35 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "" }: { in
   }, []);
 
   useEffect(() => {
+    const fromBell = sessionStorage.getItem("tp:celebrate") === "pickem";
+    const bellDelta = Number(sessionStorage.getItem("tp:celebrate:delta") ?? 0);
+    if (fromBell) {
+      sessionStorage.removeItem("tp:celebrate");
+      sessionStorage.removeItem("tp:celebrate:delta");
+      if (bellDelta > 0) {
+        window.dispatchEvent(new CustomEvent("tp:coin-flight", { detail: { delta: bellDelta, coins: Math.min(36, Math.max(12, Math.round(bellDelta / 2))) } }));
+        window.dispatchEvent(new CustomEvent("tp:points-updated", { detail: { source: "pickem-celebrate", delta: bellDelta } }));
+      }
+    }
+    const uid = getUserId() ?? "";
+    if (!uid) return;
+    void fetch("/api/notifications/celebrate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: uid, game: "pickem" }),
+    })
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = (await res.json()) as { celebrate: boolean; delta: number };
+        if (!fromBell && data.celebrate && data.delta > 0) {
+          window.dispatchEvent(new CustomEvent("tp:coin-flight", { detail: { delta: data.delta, coins: Math.min(36, Math.max(12, Math.round(data.delta / 2))) } }));
+          window.dispatchEvent(new CustomEvent("tp:points-updated", { detail: { source: "pickem-celebrate", delta: data.delta } }));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     latestGameMapRef.current = new Map(games.map((game) => [game.id, game]));
     gamesRef.current = games;
     hasLiveGamesRef.current = games.some((g) => g.status === "live");

@@ -10,6 +10,7 @@ import { SchedulesSection } from "@/components/admin/sections/SchedulesSection";
 import { TriviaCreateSection } from "@/components/admin/sections/TriviaCreateSection";
 import { TriviaPendingReviewSection } from "@/components/admin/sections/TriviaPendingReviewSection";
 import { TriviaAnswerGraderSection } from "@/components/admin/sections/TriviaAnswerGraderSection";
+import { TriviaImageReviewSection } from "@/components/admin/sections/TriviaImageReviewSection";
 import { TriviaListSection } from "@/components/admin/sections/TriviaListSection";
 import { UserAnalyticsSection } from "@/components/admin/sections/UserAnalyticsSection";
 import { UsersSection } from "@/components/admin/sections/UsersSection";
@@ -29,6 +30,7 @@ export type AdminSection =
   | "trivia-list"
   | "trivia-review"
   | "answer-grading"
+  | "trivia-image-review"
   | "ads-create"
   | "ads-list"
   | "challenge-campaigns"
@@ -85,6 +87,7 @@ export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
   { id: "trivia-create",         label: "Create Question",       slug: "trivia-create",         status: { label: "Ready", tone: "live" }, component: TriviaCreateSection },
   { id: "trivia-review",         label: "Question Review",       slug: "trivia-review",         status: { label: "Ready", tone: "live" }, component: TriviaPendingReviewSection },
   { id: "answer-grading",        label: "Answer Grader",         slug: "answer-grading",        status: { label: "Ready", tone: "live" }, component: TriviaAnswerGraderSection },
+  { id: "trivia-image-review",   label: "Image Review",          slug: "trivia-image-review",   status: { label: "Ready", tone: "live" }, component: TriviaImageReviewSection },
   { id: "ads-list",              label: "Manage Ads",            slug: "ads-list",              status: { label: "Ready", tone: "live" }, component: AdsListSection },
   { id: "ads-create",            label: "Create Ad",             slug: "ads-create",            status: { label: "Ready", tone: "live" }, component: AdsCreateSection },
   { id: "ad-placement",          label: "Placement Builder",     slug: "ad-placement",          component: PlacementBuilderSection },
@@ -101,7 +104,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     label: "Content",
-    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["trivia-list", "trivia-create", "trivia-review", "answer-grading"].includes(opt.id)),
+    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["trivia-list", "trivia-create", "trivia-review", "answer-grading", "trivia-image-review"].includes(opt.id)),
   },
   {
     label: "Advertising",
@@ -125,6 +128,7 @@ export const MIGRATED_SECTIONS: ReadonlySet<AdminSection> = new Set([
   "trivia-create",
   "trivia-review",
   "answer-grading",
+  "trivia-image-review",
   "challenge-campaigns",
   "live-trivia",
   "ad-placement",

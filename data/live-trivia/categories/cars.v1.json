@@ -275,7 +275,9 @@
         "Mini Coop"
       ],
       "category": "Cars",
-      "difficulty": "easy"
+      "difficulty": "easy",
+      "imageUrl": "https://images.unsplash.com/photo-1591316638441-bc659685017d?w=800&fit=crop",
+      "imageCredit": "Photo by Lance Anderson on Unsplash"
     },
     {
       "slug": "waynes-world-aurora",
@@ -340,687 +342,1004 @@
       "category": "Cars",
       "difficulty": "easy"
     },
-      {
-    "slug": "bmw-ultimate-driving-machine",
-    "question": "Complete this BMW slogan: 'The Ultimate Driving ______.'",
-    "answer": "Machine",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "ford-built-tough",
-    "question": "Complete this Ford slogan: 'Built ______ Tough.'",
-    "answer": "Ford",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "toyota-moving-forward",
-    "question": "What Japanese car company uses the slogan 'Moving Forward'?",
-    "answer": "Toyota",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "mercedes-best-or-nothing",
-    "question": "Complete this Mercedes-Benz slogan: 'The Best or ______.'",
-    "answer": "Nothing",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "audi-truth-in-engineering",
-    "question": "Complete this Audi slogan: 'Truth in ______.'",
-    "answer": "Engineering",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nissan-innovation-that-excites",
-    "question": "Complete this Nissan slogan: 'Innovation that ______.'",
-    "answer": "Excites",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "volkswagen-das-auto",
-    "question": "What car company uses the slogan 'Das Auto'?",
-    "answer": "Volkswagen",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "chevrolet-like-a-rock",
-    "question": "What American producer of cars and trucks uses the slgan 'Like a rock?'",
-    "answer": "Chevrolet",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "porsche-no-substitute",
-    "question": "Complete this Porsche slogan: 'Porsche: There Is No ______.'",
-    "answer": "Substitute",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "lexus-relentless-pursuit",
-    "question": "Complete this Lexus slogan: 'The Relentless Pursuit of ______.'",
-    "answer": "Perfection",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "subaru-confidence-in-motion",
-    "question": "Complete this Subaru slogan: 'Confidence in ______.'",
-    "answer": "Motion",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "hyundai-new-thinking",
-    "question": "Complete this Hyundai slogan: 'New Thinking. New ______.'",
-    "answer": "Possibilities",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "kia-power-to-surprise",
-    "question": "Complete this Kia slogan: 'The Power to ______.'",
-    "answer": "Surprise",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "tesla-sustainable-energy",
-    "question": "Complete this Tesla slogan: 'Accelerating the World's Transition to ______ Energy.'",
-    "answer": "Sustainable",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "jeep-go-anywhere",
-    "question": "Which American car manufacturer uses the slogan 'Go Anywhere. Do Anything.'?",
-    "answer": "Jeep",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "dodge-brothers",
-    "question": "Which car manufacturer uses the iconic marketing slogan 'Brotherhood of Muscle'?",
-    "answer": "Dodge",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "chrysler-imported-from-detroit",
-    "question": "Which car manufacturer uses the slogan 'Imported from Detroit'?",
-    "answer": "Chrysler",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "infiniti-inspired-performance",
-    "question": "Which car manufacturer uses the slogan 'Inspired Performance'?",
-    "answer": "Infiniti",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "mazda-zoom-zoom",
-    "question": "Which car manufacturer uses the slogan 'Zoom-Zoom' in their commercials?",
-    "answer": "Mazda",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "jaguar-grace-space-pace",
-    "question": "Which British car manufacturer uses the slogan 'Grace, Space, Pace'?",
-    "answer": "Jaguar",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "land-rover-above-and-beyond",
-    "question": "Which British car manufacturer uses the slogan 'Above and Beyond'?",
-    "answer": "Land Rover",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "ferrari-passion-for-excellence",
-    "question": "Which Italian sports car manufacturer uses the slogan 'Passion for Excellence'?",
-    "answer": "Ferrari",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "lamborghini-for-the-bold",
-    "question": "Which Italian car manufacturer uses the slogan 'For the Bold'?",
-    "answer": "Lamborghini",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "maserati-the-absolute-opposite-of-ordinary",
-    "question": "Complete this famous slogan used by Maserati: 'The Absolute Opposite of __________'?",
-    "answer": "Ordinary",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "aston-martin-power-beauty-soul",
-    "question": "Which British car manufacturer uses the slogan 'Power, Beauty, and Soul'?",
-    "answer": "Aston Martin",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "bugatti-no-limits",
-    "question": "Which French hypercar manufacturer uses the slogan 'No Limits'?",
-    "answer": "Bugatti",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "rolls-royce-the-best-car-in-the-world",
-    "question": "Which British car manufacturer uses the slogan 'The Best Car in the World' since the release of their Silver Ghost model?",
-    "answer": "Rolls-Royce",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-   {
-    "slug": "toyota-country",
-    "question": "In which country is the car manufacturer Toyota based?",
-    "answer": "Japan",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "ford-country",
-    "question": "In which country is the car manufacturer Ford based?",
-    "answer": "United States",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "USA",
-      "America"
-    ]
-  },
-  {
-    "slug": "volkswagen-country",
-    "question": "In which country is the car manufacturer Volkswagen based?",
-    "answer": "Germany",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Federal Republic of Germany"
-    ]
-  },
-  {
-    "slug": "mercedes-country",
-    "question": "In which country is the car manufacturer Mercedes-Benz based?",
-    "answer": "Germany",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Federal Republic of Germany"
-    ]
-  },
-  {
-    "slug": "bmw-country",
-    "question": "In which country is the car manufacturer BMW based?",
-    "answer": "Germany",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Federal Republic of Germany"
-    ]
-  },
-  {
-    "slug": "honda-country",
-    "question": "In which country is the car manufacturer Honda based?",
-    "answer": "Japan",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "nissan-country",
-    "question": "In which country is the car manufacturer Nissan based?",
-    "answer": "Japan",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "hyundai-country",
-    "question": "In which country is the car manufacturer Hyundai based?",
-    "answer": "South Korea",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Republic of Korea"
-    ]
-  },
-  {
-    "slug": "kia-country",
-    "question": "In which country is the car manufacturer Kia based?",
-    "answer": "South Korea",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Republic of Korea"
-    ]
-  },
-  {
-    "slug": "ferrari-country",
-    "question": "In which country is the car manufacturer Ferrari based?",
-    "answer": "Italy",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Italian Republic"
-    ]
-  },
-  {
-    "slug": "lamborghini-country",
-    "question": "In which country is the car manufacturer Lamborghini based?",
-    "answer": "Italy",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Italian Republic"
-    ]
-  },
-  {
-    "slug": "maserati-country",
-    "question": "In which country is the car manufacturer Maserati based?",
-    "answer": "Italy",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Italian Republic"
-    ]
-  },
-  {
-    "slug": "aston-martin-country",
-    "question": "In which country is the car manufacturer Aston Martin based?",
-    "answer": "United Kingdom",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "UK",
-      "Great Britain",
-      "Britain",
-      "England"
-    ]
-  },
-  {
-    "slug": "rolls-royce-country",
-    "question": "In which country is the car manufacturer Rolls-Royce based?",
-    "answer": "United Kingdom",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "UK",
-      "Great Britain",
-      "Britain",
-      "England"
-    ]
-  },
-  {
-    "slug": "bentley-country",
-    "question": "In which country is the car manufacturer Bentley based?",
-    "answer": "United Kingdom",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "UK",
-      "Great Britain",
-      "Britain",
-      "England"
-    ]
-  },
-  {
-    "slug": "jaguar-country",
-    "question": "In which country is the car manufacturer Jaguar based?",
-    "answer": "United Kingdom",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "UK",
-      "Great Britain",
-      "Britain",
-      "England"
-    ]
-  },
-  {
-    "slug": "land-rover-country",
-    "question": "In which country is the car manufacturer Land Rover based?",
-    "answer": "United Kingdom",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "UK",
-      "Great Britain",
-      "Britain",
-      "England"
-    ]
-  },
-  {
-    "slug": "mini-country",
-    "question": "In which country is the car manufacturer Mini based?",
-    "answer": "United Kingdom",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "UK",
-      "Great Britain",
-      "Britain",
-      "England"
-    ]
-  },
-  {
-    "slug": "peugeot-country",
-    "question": "In which country is the car manufacturer Peugeot based?",
-    "answer": "France",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "French Republic"
-    ]
-  },
-  {
-    "slug": "renault-country",
-    "question": "In which country is the car manufacturer Renault based?",
-    "answer": "France",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "French Republic"
-    ]
-  },
-  {
-    "slug": "citroen-country",
-    "question": "In which country is the car manufacturer Citroën based?",
-    "answer": "France",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "French Republic"
-    ]
-  },
-  {
-    "slug": "bugatti-country",
-    "question": "In which country is the car manufacturer Bugatti based?",
-    "answer": "France",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "French Republic"
-    ]
-  },
-  {
-    "slug": "volvo-country",
-    "question": "In which country is the car manufacturer Volvo based?",
-    "answer": "Sweden",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Kingdom of Sweden"
-    ]
-  },
-  {
-    "slug": "saab-country",
-    "question": "In which country is the car manufacturer Saab based?",
-    "answer": "Sweden",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Kingdom of Sweden"
-    ]
-  },
-  {
-    "slug": "koenigsegg-country",
-    "question": "In which country is the car manufacturer Koenigsegg based?",
-    "answer": "Sweden",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Kingdom of Sweden"
-    ]
-  },
-  {
-    "slug": "pagani-country",
-    "question": "In which country is the car manufacturer Pagani based?",
-    "answer": "Italy",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Italian Republic"
-    ]
-  },
-  {
-    "slug": "mclaren-country",
-    "question": "In which country is the car manufacturer McLaren based?",
-    "answer": "United Kingdom",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "UK",
-      "Great Britain",
-      "Britain",
-      "England"
-    ]
-  },
-  {
-    "slug": "tesla-country",
-    "question": "In which country is the car manufacturer Tesla based?",
-    "answer": "United States",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "USA",
-      "America"
-    ]
-  },
-  {
-    "slug": "rivian-country",
-    "question": "In which country is the car manufacturer Rivian based?",
-    "answer": "United States",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "USA",
-      "America"
-    ]
-  },
-   {
-    "slug": "alfa-romeo-country",
-    "question": "In which country is the car manufacturer Alfa Romeo based?",
-    "answer": "Italy",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Italian Republic"
-    ]
-  },
-  {
-    "slug": "lancia-country",
-    "question": "In which country is the car manufacturer Lancia based?",
-    "answer": "Italy",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Italian Republic"
-    ]
-  },
-  {
-    "slug": "fiat-country",
-    "question": "In which country is the car manufacturer Fiat based?",
-    "answer": "Italy",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Italian Republic"
-    ]
-  },
-  {
-    "slug": "chrysler-country",
-    "question": "In which country is the car manufacturer Chrysler based?",
-    "answer": "United States",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "USA",
-      "America"
-    ]
-  },
-  {
-    "slug": "dodge-country",
-    "question": "In which country is the car manufacturer Dodge based?",
-    "answer": "United States",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "USA",
-      "America"
-    ]
-  },
-  {
-    "slug": "jeep-country",
-    "question": "In which country is the car manufacturer Jeep based?",
-    "answer": "United States",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "USA",
-      "America"
-    ]
-  },
-  {
-    "slug": "cadillac-country",
-    "question": "In which country is the car manufacturer Cadillac based?",
-    "answer": "United States",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "USA",
-      "America"
-    ]
-  },
-  {
-    "slug": "chevrolet-country",
-    "question": "In which country is the car manufacturer Chevrolet based?",
-    "answer": "United States",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "USA",
-      "America"
-    ]
-  },
-  {
-    "slug": "seat-country",
-    "question": "In which country is the car manufacturer SEAT based?",
-    "answer": "Spain",
-    "category": "Cars",
-    "difficulty": "hard",
-    "acceptableAnswers": [
-      "Kingdom of Spain"
-    ]
-  },
-  {
-    "slug": "cupra-country",
-    "question": "In which country is the car manufacturer Cupra based?",
-    "answer": "Spain",
-    "category": "Cars",
-    "difficulty": "hard",
-    "acceptableAnswers": [
-      "Kingdom of Spain"
-    ]
-  },
-  {
-    "slug": "skoda-country",
-    "question": "In which country is the car manufacturer Škoda based?",
-    "answer": "Czech Republic",
-    "category": "Cars",
-    "difficulty": "hard",
-    "acceptableAnswers": [
-      "Czechia"
-    ]
-  },
-  {
-    "slug": "audi-country",
-    "question": "In which country is the car manufacturer Audi based?",
-    "answer": "Germany",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Federal Republic of Germany"
-    ]
-  },
-  {
-    "slug": "porsche-country",
-    "question": "In which country is the car manufacturer Porsche based?",
-    "answer": "Germany",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Federal Republic of Germany"
-    ]
-  },
-  {
-    "slug": "suzuki-country",
-    "question": "In which country is the car manufacturer Suzuki based?",
-    "answer": "Japan",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "mazda-country",
-    "question": "In which country is the car manufacturer Mazda based?",
-    "answer": "Japan",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "mitsubishi-country",
-    "question": "In which country is the car manufacturer Mitsubishi based?",
-    "answer": "Japan",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "subaru-country",
-    "question": "In which country is the car manufacturer Subaru based?",
-    "answer": "Japan",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "lexus-country",
-    "question": "In which country is the car manufacturer Lexus based?",
-    "answer": "Japan",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "acura-country",
-    "question": "In which country is the car manufacturer Acura based?",
-    "answer": "Japan",
-    "category": "Cars",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "genesis-country",
-    "question": "In which country is the car manufacturer Genesis based?",
-    "answer": "South Korea",
-    "category": "Cars",
-    "difficulty": "easy",
-    "acceptableAnswers": [
-      "Republic of Korea"
-    ]
-  }
-  
+    {
+      "slug": "bmw-ultimate-driving-machine",
+      "question": "Complete this BMW slogan: 'The Ultimate Driving ______.'",
+      "answer": "Machine",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "ford-built-tough",
+      "question": "Complete this Ford slogan: 'Built ______ Tough.'",
+      "answer": "Ford",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "toyota-moving-forward",
+      "question": "What Japanese car company uses the slogan 'Moving Forward'?",
+      "answer": "Toyota",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mercedes-best-or-nothing",
+      "question": "Complete this Mercedes-Benz slogan: 'The Best or ______.'",
+      "answer": "Nothing",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "audi-truth-in-engineering",
+      "question": "Complete this Audi slogan: 'Truth in ______.'",
+      "answer": "Engineering",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nissan-innovation-that-excites",
+      "question": "Complete this Nissan slogan: 'Innovation that ______.'",
+      "answer": "Excites",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "volkswagen-das-auto",
+      "question": "What car company uses the slogan 'Das Auto'?",
+      "answer": "Volkswagen",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "chevrolet-like-a-rock",
+      "question": "What American producer of cars and trucks uses the slgan 'Like a rock?'",
+      "answer": "Chevrolet",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "porsche-no-substitute",
+      "question": "Complete this Porsche slogan: 'Porsche: There Is No ______.'",
+      "answer": "Substitute",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "lexus-relentless-pursuit",
+      "question": "Complete this Lexus slogan: 'The Relentless Pursuit of ______.'",
+      "answer": "Perfection",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "subaru-confidence-in-motion",
+      "question": "Complete this Subaru slogan: 'Confidence in ______.'",
+      "answer": "Motion",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "hyundai-new-thinking",
+      "question": "Complete this Hyundai slogan: 'New Thinking. New ______.'",
+      "answer": "Possibilities",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "kia-power-to-surprise",
+      "question": "Complete this Kia slogan: 'The Power to ______.'",
+      "answer": "Surprise",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "tesla-sustainable-energy",
+      "question": "Complete this Tesla slogan: 'Accelerating the World's Transition to ______ Energy.'",
+      "answer": "Sustainable",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "jeep-go-anywhere",
+      "question": "Which American car manufacturer uses the slogan 'Go Anywhere. Do Anything.'?",
+      "answer": "Jeep",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "dodge-brothers",
+      "question": "Which car manufacturer uses the iconic marketing slogan 'Brotherhood of Muscle'?",
+      "answer": "Dodge",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "chrysler-imported-from-detroit",
+      "question": "Which car manufacturer uses the slogan 'Imported from Detroit'?",
+      "answer": "Chrysler",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "infiniti-inspired-performance",
+      "question": "Which car manufacturer uses the slogan 'Inspired Performance'?",
+      "answer": "Infiniti",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mazda-zoom-zoom",
+      "question": "Which car manufacturer uses the slogan 'Zoom-Zoom' in their commercials?",
+      "answer": "Mazda",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "jaguar-grace-space-pace",
+      "question": "Which British car manufacturer uses the slogan 'Grace, Space, Pace'?",
+      "answer": "Jaguar",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "land-rover-above-and-beyond",
+      "question": "Which British car manufacturer uses the slogan 'Above and Beyond'?",
+      "answer": "Land Rover",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "ferrari-passion-for-excellence",
+      "question": "Which Italian sports car manufacturer uses the slogan 'Passion for Excellence'?",
+      "answer": "Ferrari",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "lamborghini-for-the-bold",
+      "question": "Which Italian car manufacturer uses the slogan 'For the Bold'?",
+      "answer": "Lamborghini",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "maserati-the-absolute-opposite-of-ordinary",
+      "question": "Complete this famous slogan used by Maserati: 'The Absolute Opposite of __________'?",
+      "answer": "Ordinary",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "aston-martin-power-beauty-soul",
+      "question": "Which British car manufacturer uses the slogan 'Power, Beauty, and Soul'?",
+      "answer": "Aston Martin",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "bugatti-no-limits",
+      "question": "Which French hypercar manufacturer uses the slogan 'No Limits'?",
+      "answer": "Bugatti",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "rolls-royce-the-best-car-in-the-world",
+      "question": "Which British car manufacturer uses the slogan 'The Best Car in the World' since the release of their Silver Ghost model?",
+      "answer": "Rolls-Royce",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "toyota-country",
+      "question": "In which country is the car manufacturer Toyota based?",
+      "answer": "Japan",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "ford-country",
+      "question": "In which country is the car manufacturer Ford based?",
+      "answer": "United States",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "USA",
+        "America"
+      ]
+    },
+    {
+      "slug": "volkswagen-country",
+      "question": "In which country is the car manufacturer Volkswagen based?",
+      "answer": "Germany",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Federal Republic of Germany"
+      ]
+    },
+    {
+      "slug": "mercedes-country",
+      "question": "In which country is the car manufacturer Mercedes-Benz based?",
+      "answer": "Germany",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Federal Republic of Germany"
+      ]
+    },
+    {
+      "slug": "bmw-country",
+      "question": "In which country is the car manufacturer BMW based?",
+      "answer": "Germany",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Federal Republic of Germany"
+      ]
+    },
+    {
+      "slug": "honda-country",
+      "question": "In which country is the car manufacturer Honda based?",
+      "answer": "Japan",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "nissan-country",
+      "question": "In which country is the car manufacturer Nissan based?",
+      "answer": "Japan",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "hyundai-country",
+      "question": "In which country is the car manufacturer Hyundai based?",
+      "answer": "South Korea",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Republic of Korea"
+      ]
+    },
+    {
+      "slug": "kia-country",
+      "question": "In which country is the car manufacturer Kia based?",
+      "answer": "South Korea",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Republic of Korea"
+      ]
+    },
+    {
+      "slug": "ferrari-country",
+      "question": "In which country is the car manufacturer Ferrari based?",
+      "answer": "Italy",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Italian Republic"
+      ]
+    },
+    {
+      "slug": "lamborghini-country",
+      "question": "In which country is the car manufacturer Lamborghini based?",
+      "answer": "Italy",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Italian Republic"
+      ]
+    },
+    {
+      "slug": "volkswagen-meaning",
+      "question": "What does the name 'Volkswagen' mean?",
+      "answer": "People's Car",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Car for the People"
+      ]
+    },
+    {
+      "slug": "maserati-country",
+      "question": "In which country is the car manufacturer Maserati based?",
+      "answer": "Italy",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Italian Republic"
+      ]
+    },
+    {
+      "slug": "aston-martin-country",
+      "question": "In which country is the car manufacturer Aston Martin based?",
+      "answer": "United Kingdom",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "UK",
+        "Great Britain",
+        "Britain",
+        "England"
+      ]
+    },
+    {
+      "slug": "rolls-royce-country",
+      "question": "In which country is the car manufacturer Rolls-Royce based?",
+      "answer": "United Kingdom",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "UK",
+        "Great Britain",
+        "Britain",
+        "England"
+      ]
+    },
+    {
+      "slug": "bentley-country",
+      "question": "In which country is the car manufacturer Bentley based?",
+      "answer": "United Kingdom",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "UK",
+        "Great Britain",
+        "Britain",
+        "England"
+      ]
+    },
+    {
+      "slug": "jaguar-country",
+      "question": "In which country is the car manufacturer Jaguar based?",
+      "answer": "United Kingdom",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "UK",
+        "Great Britain",
+        "Britain",
+        "England"
+      ]
+    },
+    {
+      "slug": "land-rover-country",
+      "question": "In which country is the car manufacturer Land Rover based?",
+      "answer": "United Kingdom",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "UK",
+        "Great Britain",
+        "Britain",
+        "England"
+      ]
+    },
+    {
+      "slug": "mini-country",
+      "question": "In which country is the car manufacturer Mini based?",
+      "answer": "United Kingdom",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "UK",
+        "Great Britain",
+        "Britain",
+        "England"
+      ]
+    },
+    {
+      "slug": "peugeot-country",
+      "question": "In which country is the car manufacturer Peugeot based?",
+      "answer": "France",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "French Republic"
+      ]
+    },
+    {
+      "slug": "renault-country",
+      "question": "In which country is the car manufacturer Renault based?",
+      "answer": "France",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "French Republic"
+      ]
+    },
+    {
+      "slug": "citroen-country",
+      "question": "In which country is the car manufacturer Citroën based?",
+      "answer": "France",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "French Republic"
+      ]
+    },
+    {
+      "slug": "bugatti-country",
+      "question": "In which country is the car manufacturer Bugatti based?",
+      "answer": "France",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "French Republic"
+      ]
+    },
+    {
+      "slug": "volvo-country",
+      "question": "In which country is the car manufacturer Volvo based?",
+      "answer": "Sweden",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Kingdom of Sweden"
+      ]
+    },
+    {
+      "slug": "saab-country",
+      "question": "In which country is the car manufacturer Saab based?",
+      "answer": "Sweden",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Kingdom of Sweden"
+      ]
+    },
+    {
+      "slug": "koenigsegg-country",
+      "question": "In which country is the car manufacturer Koenigsegg based?",
+      "answer": "Sweden",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Kingdom of Sweden"
+      ]
+    },
+    {
+      "slug": "pagani-country",
+      "question": "In which country is the car manufacturer Pagani based?",
+      "answer": "Italy",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Italian Republic"
+      ]
+    },
+    {
+      "slug": "mclaren-country",
+      "question": "In which country is the car manufacturer McLaren based?",
+      "answer": "United Kingdom",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "UK",
+        "Great Britain",
+        "Britain",
+        "England"
+      ]
+    },
+    {
+      "slug": "tesla-country",
+      "question": "In which country is the car manufacturer Tesla based?",
+      "answer": "United States",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "USA",
+        "America"
+      ]
+    },
+    {
+      "slug": "rivian-country",
+      "question": "In which country is the car manufacturer Rivian based?",
+      "answer": "United States",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "USA",
+        "America"
+      ]
+    },
+    {
+      "slug": "alfa-romeo-country",
+      "question": "In which country is the car manufacturer Alfa Romeo based?",
+      "answer": "Italy",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Italian Republic"
+      ]
+    },
+    {
+      "slug": "lancia-country",
+      "question": "In which country is the car manufacturer Lancia based?",
+      "answer": "Italy",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Italian Republic"
+      ]
+    },
+    {
+      "slug": "fiat-country",
+      "question": "In which country is the car manufacturer Fiat based?",
+      "answer": "Italy",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Italian Republic"
+      ]
+    },
+    {
+      "slug": "chrysler-country",
+      "question": "In which country is the car manufacturer Chrysler based?",
+      "answer": "United States",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "USA",
+        "America"
+      ]
+    },
+    {
+      "slug": "dodge-country",
+      "question": "In which country is the car manufacturer Dodge based?",
+      "answer": "United States",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "USA",
+        "America"
+      ]
+    },
+    {
+      "slug": "jeep-country",
+      "question": "In which country is the car manufacturer Jeep based?",
+      "answer": "United States",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "USA",
+        "America"
+      ]
+    },
+    {
+      "slug": "cadillac-country",
+      "question": "In which country is the car manufacturer Cadillac based?",
+      "answer": "United States",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "USA",
+        "America"
+      ]
+    },
+    {
+      "slug": "chevrolet-country",
+      "question": "In which country is the car manufacturer Chevrolet based?",
+      "answer": "United States",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "USA",
+        "America"
+      ]
+    },
+    {
+      "slug": "seat-country",
+      "question": "In which country is the car manufacturer SEAT based?",
+      "answer": "Spain",
+      "category": "Cars",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Kingdom of Spain"
+      ]
+    },
+    {
+      "slug": "cupra-country",
+      "question": "In which country is the car manufacturer Cupra based?",
+      "answer": "Spain",
+      "category": "Cars",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Kingdom of Spain"
+      ]
+    },
+    {
+      "slug": "skoda-country",
+      "question": "In which country is the car manufacturer Škoda based?",
+      "answer": "Czech Republic",
+      "category": "Cars",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Czechia"
+      ]
+    },
+    {
+      "slug": "audi-country",
+      "question": "In which country is the car manufacturer Audi based?",
+      "answer": "Germany",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Federal Republic of Germany"
+      ]
+    },
+    {
+      "slug": "porsche-country",
+      "question": "In which country is the car manufacturer Porsche based?",
+      "answer": "Germany",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Federal Republic of Germany"
+      ]
+    },
+    {
+      "slug": "suzuki-country",
+      "question": "In which country is the car manufacturer Suzuki based?",
+      "answer": "Japan",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mazda-country",
+      "question": "In which country is the car manufacturer Mazda based?",
+      "answer": "Japan",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "mitsubishi-country",
+      "question": "In which country is the car manufacturer Mitsubishi based?",
+      "answer": "Japan",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "subaru-country",
+      "question": "In which country is the car manufacturer Subaru based?",
+      "answer": "Japan",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "lexus-country",
+      "question": "In which country is the car manufacturer Lexus based?",
+      "answer": "Japan",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "acura-country",
+      "question": "In which country is the car manufacturer Acura based?",
+      "answer": "Japan",
+      "category": "Cars",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "genesis-country",
+      "question": "In which country is the car manufacturer Genesis based?",
+      "answer": "South Korea",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Republic of Korea"
+      ]
+    },
+    {
+      "slug": "car-logo-toyota",
+      "question": "What car maker uses this logo?",
+      "answer": "Toyota",
+      "category": "Cars",
+      "difficulty": "easy",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Toyota_EU.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-ford",
+      "question": "What car maker uses this logo?",
+      "answer": "Ford",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Ford Motor Company"
+      ],
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Ford_Motor_Company_Logo.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-chevrolet",
+      "question": "What car maker uses this logo?",
+      "answer": "Chevrolet",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Chevy"
+      ],
+      "imageUrl": "https://images.unsplash.com/photo-1590456744030-8b9128517cbb?w=800&fit=crop",
+      "imageCredit": "Photo by Giorgio Trovato on Unsplash"
+    },
+    {
+      "slug": "car-logo-honda",
+      "question": "What car maker uses this logo?",
+      "answer": "Honda",
+      "category": "Cars",
+      "difficulty": "easy",
+      "imageUrl": "https://images.unsplash.com/photo-1502744688674-c619d1586c9e?w=800&fit=crop",
+      "imageCredit": "Photo by Volkan Olmez on Unsplash"
+    },
+    {
+      "slug": "car-logo-bmw",
+      "question": "What car maker uses this logo?",
+      "answer": "BMW",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Bayerische Motoren Werke"
+      ],
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/BMW.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-mercedes-benz",
+      "question": "What car maker uses this logo?",
+      "answer": "Mercedes-Benz",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Mercedes",
+        "Mercedes Benz"
+      ],
+      "imageUrl": "https://images.unsplash.com/photo-1599767958551-276fcac34484?w=800&fit=crop",
+      "imageCredit": "Photo by Gabor Papp on Unsplash"
+    },
+    {
+      "slug": "car-logo-audi",
+      "question": "What car maker uses this logo?",
+      "answer": "Audi",
+      "category": "Cars",
+      "difficulty": "easy",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Audi-Logo_2016.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-volkswagen",
+      "question": "What car maker uses this logo?",
+      "answer": "Volkswagen",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "VW"
+      ],
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Volkswagen_logo_2019.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-porsche",
+      "question": "What car maker uses this logo?",
+      "answer": "Porsche",
+      "category": "Cars",
+      "difficulty": "easy",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Porsche-Automarken-Logo.jpg",
+      "imageCredit": "Photo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-tesla",
+      "question": "What car maker uses this logo?",
+      "answer": "Tesla",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Tesla Motors"
+      ],
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Tesla_Motors.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-nissan",
+      "question": "What car maker uses this logo?",
+      "answer": "Nissan",
+      "category": "Cars",
+      "difficulty": "easy",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Nissan_2020_logo.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-hyundai",
+      "question": "What car maker uses this logo?",
+      "answer": "Hyundai",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Hyundai Motor Company"
+      ],
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Hyundai_Motor_Company_logo.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-kia",
+      "question": "What car maker uses this logo?",
+      "answer": "Kia",
+      "category": "Cars",
+      "difficulty": "easy",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/KIA_logo3.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-subaru",
+      "question": "What car maker uses this logo?",
+      "answer": "Subaru",
+      "category": "Cars",
+      "difficulty": "easy",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Subaru_logo.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-mazda",
+      "question": "What car maker uses this logo?",
+      "answer": "Mazda",
+      "category": "Cars",
+      "difficulty": "easy",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Mazda_logo.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-mitsubishi",
+      "question": "What car maker uses this logo?",
+      "answer": "Mitsubishi",
+      "category": "Cars",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Mitsubishi Motors"
+      ],
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Mitsubishi_Motors_SVG_logo.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-volvo",
+      "question": "What car maker uses this logo?",
+      "answer": "Volvo",
+      "category": "Cars",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Volvo Cars"
+      ],
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Volvo_logo.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-jaguar",
+      "question": "What car maker uses this logo?",
+      "answer": "Jaguar",
+      "category": "Cars",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Jaguar Cars"
+      ],
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Jaguar_2024.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-land-rover",
+      "question": "What car maker uses this logo?",
+      "answer": "Land Rover",
+      "category": "Cars",
+      "difficulty": "medium",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Land_Rover_2023.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-jeep",
+      "question": "What car maker uses this logo?",
+      "answer": "Jeep",
+      "category": "Cars",
+      "difficulty": "easy",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Jeep_logo.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-cadillac",
+      "question": "What car maker uses this logo?",
+      "answer": "Cadillac",
+      "category": "Cars",
+      "difficulty": "medium",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Cadillac_Logo_2021.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-lexus",
+      "question": "What car maker uses this logo?",
+      "answer": "Lexus",
+      "category": "Cars",
+      "difficulty": "medium",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Lexus.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-acura",
+      "question": "What car maker uses this logo?",
+      "answer": "Acura",
+      "category": "Cars",
+      "difficulty": "medium",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Acura_logo.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-buick",
+      "question": "What car maker uses this logo?",
+      "answer": "Buick",
+      "category": "Cars",
+      "difficulty": "medium",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Buick_logo_2023.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-chrysler",
+      "question": "What car maker uses this logo?",
+      "answer": "Chrysler",
+      "category": "Cars",
+      "difficulty": "medium",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Chrysler_logo14.png",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-dodge",
+      "question": "What car maker uses this logo?",
+      "answer": "Dodge",
+      "category": "Cars",
+      "difficulty": "medium",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Dodge_2022_logo.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-peugeot",
+      "question": "What car maker uses this logo?",
+      "answer": "Peugeot",
+      "category": "Cars",
+      "difficulty": "hard",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Peugeot_2021_Logo.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-renault",
+      "question": "What car maker uses this logo?",
+      "answer": "Renault",
+      "category": "Cars",
+      "difficulty": "hard",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Renault_2021.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-fiat",
+      "question": "What car maker uses this logo?",
+      "answer": "Fiat",
+      "category": "Cars",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "FIAT"
+      ],
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Fiat_Automobiles_logo.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    },
+    {
+      "slug": "car-logo-mini",
+      "question": "What car maker uses this logo?",
+      "answer": "Mini",
+      "category": "Cars",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "MINI",
+        "Mini Cooper"
+      ],
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/MINI_logo.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
+    }
   ]
 }

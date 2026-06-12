@@ -3,7 +3,12 @@ import "server-only";
 import { readFileSync, readdirSync, writeFileSync } from "fs";
 import { join } from "path";
 
-import { djb2, getLiveShowdownState } from "@/lib/liveShowdownEngine";
+import {
+  buildLiveTriviaOccurrenceSeedSlots,
+  djb2,
+  getLiveShowdownState,
+  type LiveTriviaSeedQuestion,
+} from "@/lib/liveShowdownEngine";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const QUESTIONS_PER_ROUND = 15;
@@ -323,12 +328,18 @@ function zonedDateTimeToUtcIso(dateValue: string, timeValue: string, timeZone: s
   return new Date(guessMs).toISOString();
 }
 
-async function buildLiveShowdownQuestionMatrix(numRounds: number): Promise<string[]> {
+async function buildLiveShowdownQuestionMatrix(params: {
+  numRounds: number;
+  venueId: string;
+  occurrenceDate: string;
+  scheduleSeed: string;
+}): Promise<string[]> {
   const admin = getAdminClient();
+  const numRounds = clampRounds(Number(params.numRounds));
   const totalNeeded = numRounds * QUESTIONS_PER_ROUND;
   const { data, error } = await admin
     .from("trivia_questions")
-    .select("id, slug, question, category, options, correct_answer, question_pool")
+    .select("slug, category, options, correct_answer, question_pool")
     .eq("question_pool", "live_showdown")
     .eq("status", "active");
 
@@ -336,115 +347,21 @@ async function buildLiveShowdownQuestionMatrix(numRounds: number): Promise<strin
     throw new Error(error.message || "Failed to load trivia questions for Live Showdown seeding.");
   }
 
-  type EligibleRow = LiveShowdownQuestionRow & { slug: string };
+  const seedResult = buildLiveTriviaOccurrenceSeedSlots({
+    questions: (data ?? []) as LiveTriviaSeedQuestion[],
+    seenSlugs: new Set(),
+    scheduleId: params.scheduleSeed,
+    occurrenceDate: params.occurrenceDate,
+    venueId: params.venueId,
+    numRounds,
+    questionsPerRound: QUESTIONS_PER_ROUND,
+  });
 
-  const rows = ((data ?? []) as LiveShowdownQuestionRow[])
-    .filter((row) => String(row.slug ?? "").trim().length > 0)
-    .map((row) => ({ ...row, slug: String(row.slug ?? "").trim() }) as EligibleRow);
-
-  const liveEligible = rows.filter(
-    (row) => isLiveShowdownEligibleAnswer(getCorrectAnswer(row))
-  );
-
-  // Build per-category buckets; shuffle each bucket for variety within the category.
-  const byCategory = new Map<string, EligibleRow[]>();
-  for (const row of liveEligible) {
-    if (isBlockedLiveShowdownCategory(row.category)) {
-      continue;
-    }
-    const cat = normalizeCategory(row.category);
-    const list = byCategory.get(cat) ?? [];
-    list.push(row);
-    byCategory.set(cat, list);
-  }
-  for (const list of byCategory.values()) {
-    shuffleInPlace(list);
-  }
-
-  // Only categories that can fully support one round are eligible.
-  // Contract: each round must use a distinct category (no repeats in a game).
-  const eligibleRoundCategories = Array.from(byCategory.entries())
-    .filter(([, list]) => list.length >= 25)
-    .map(([cat]) => cat);
-  if (eligibleRoundCategories.length === 0) {
+  if (seedResult.slots.length === 0) {
     throw new Error("No eligible Live Showdown categories are available for seeding.");
   }
-  // Prefer no repeats: consume every available category once before any repeat.
-  const selectedRoundCategories: string[] = [];
-  const firstCycle = shuffleInPlace([...eligibleRoundCategories]);
-  let cycle = [...firstCycle];
-  while (selectedRoundCategories.length < numRounds) {
-    if (cycle.length === 0) {
-      cycle = shuffleInPlace([...eligibleRoundCategories]);
-    }
-    const next = cycle.shift();
-    if (!next) break;
-    selectedRoundCategories.push(next);
-  }
 
-  const used = new Set<string>();
-
-  // Pick up to `count` unused questions from `source`, optionally filtered to `category`.
-  // Enforces at most one closest-guess (standalone numeric answer) question per round
-  // using the `numericUsed` accumulator passed in from the caller.
-  const takeFrom = (
-    source: EligibleRow[],
-    count: number,
-    category: string | undefined,
-    numericUsed: { value: number },
-    enforceNumericLimit = true
-  ): string[] => {
-    const picked: string[] = [];
-    for (const row of source) {
-      if (picked.length >= count) break;
-      if (used.has(row.slug)) continue;
-      if (category !== undefined && normalizeCategory(row.category) !== category) continue;
-      const isNumeric = isStandaloneNumeric(getCorrectAnswer(row));
-      if (enforceNumericLimit && isNumeric && numericUsed.value >= 1) continue;
-      used.add(row.slug);
-      picked.push(row.slug);
-      if (isNumeric) numericUsed.value += 1;
-    }
-    return picked;
-  };
-
-  const rounds: string[][] = [];
-
-  for (let round = 1; round <= numRounds; round += 1) {
-    const preferredCategory = selectedRoundCategories[round - 1] ?? null;
-
-    const roundSlugs: string[] = [];
-    const numericUsed = { value: 0 };
-
-    if (preferredCategory) {
-      // 1. Live-eligible questions from preferred category.
-      roundSlugs.push(...takeFrom(liveEligible, QUESTIONS_PER_ROUND, preferredCategory, numericUsed));
-      // 2. Any live question from preferred category (broadest fallback within category).
-      if (roundSlugs.length < QUESTIONS_PER_ROUND) {
-        const catAll = byCategory.get(preferredCategory) ?? [];
-        roundSlugs.push(
-          ...takeFrom(catAll, QUESTIONS_PER_ROUND - roundSlugs.length, preferredCategory, numericUsed)
-        );
-      }
-      // 4. Final in-category fallback without closest-guess cap to guarantee fill.
-      if (roundSlugs.length < QUESTIONS_PER_ROUND) {
-        const catAll = byCategory.get(preferredCategory) ?? [];
-        roundSlugs.push(
-          ...takeFrom(catAll, QUESTIONS_PER_ROUND - roundSlugs.length, preferredCategory, numericUsed, false)
-        );
-      }
-    }
-
-    if (roundSlugs.length < QUESTIONS_PER_ROUND) {
-      throw new Error(
-        `Unable to fill round ${round} for category "${preferredCategory}"; only ${roundSlugs.length}/${QUESTIONS_PER_ROUND} questions available.`
-      );
-    }
-
-    rounds.push(roundSlugs.slice(0, QUESTIONS_PER_ROUND));
-  }
-
-  const flat = rounds.flat();
+  const flat = seedResult.slots.map((slot) => slot.slug);
   if (flat.length < totalNeeded) {
     throw new Error(`Unable to produce required question matrix: ${flat.length}/${totalNeeded} slots filled.`);
   }
@@ -544,7 +461,12 @@ export async function createAdminLiveShowdownSchedule(params: {
   }
 
   const startTimeIso = zonedDateTimeToUtcIso(targetDate, startTime, timezone);
-  const sampledQuestionSlugs = await buildLiveShowdownQuestionMatrix(numRounds);
+  const sampledQuestionSlugs = await buildLiveShowdownQuestionMatrix({
+    numRounds,
+    venueId,
+    occurrenceDate: targetDate,
+    scheduleSeed: `admin-create:${venueId}:${startTimeIso}:${title}`,
+  });
 
   const scheduleInsert = await admin
     .from("trivia_schedules")
@@ -697,7 +619,12 @@ export async function updateAdminLiveShowdownSchedule(params: {
 
   // If rounds changed, rebuild the question matrix
   if (roundsChanged) {
-    const newQuestionSlugs = await buildLiveShowdownQuestionMatrix(numRounds);
+    const newQuestionSlugs = await buildLiveShowdownQuestionMatrix({
+      numRounds,
+      venueId,
+      occurrenceDate: targetDate,
+      scheduleSeed: `admin-update:${scheduleId}`,
+    });
 
     // Delete existing session questions
     const { error: deleteQuestionsError } = await admin

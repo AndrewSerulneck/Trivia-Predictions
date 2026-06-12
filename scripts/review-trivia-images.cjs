@@ -57,6 +57,9 @@ function cardHtml(q, index) {
     : "";
 
   const isMap = (q.imageCredit ?? "").toLowerCase().includes("wikimedia");
+  const swapCmd = `node --env-file=.env.local scripts/enrich-landmark-images.cjs --swap ${q.slug}`;
+  const wikiCmd = `node --env-file=.env.local scripts/enrich-landmark-images.cjs --swap ${q.slug} --wiki`;
+
   return `
     <div class="card" id="${slug}">
       <div class="card-index">#${index + 1}</div>
@@ -83,6 +86,14 @@ function cardHtml(q, index) {
         </div>
         <div class="credit-row">${credit}</div>
         <div class="slug-row">slug: <code>${slug}</code></div>
+        <div class="swap-row">
+          <button class="swap-btn" data-cmd="${escHtml(swapCmd)}" onclick="copySwap(this)" title="Copy swap command">
+            ↺ Swap photo
+          </button>
+          <button class="swap-btn wiki" data-cmd="${escHtml(wikiCmd)}" onclick="copySwap(this)" title="Copy Wikimedia swap command">
+            🗺 Try Wikimedia
+          </button>
+        </div>
       </div>
     </div>`;
 }
@@ -153,6 +164,12 @@ const html = `<!DOCTYPE html>
   .credit-row { font-size: 0.65rem; color: #475569; margin-top: 4px; }
   .slug-row { font-size: 0.6rem; color: #334155; margin-top: 4px; }
   code { background: rgba(255,255,255,0.05); padding: 1px 4px; border-radius: 3px; }
+  .swap-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .swap-btn { background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.4); color: #a5b4fc; font-size: 0.7rem; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .swap-btn:hover { background: rgba(99,102,241,0.3); border-color: rgba(99,102,241,0.7); }
+  .swap-btn.wiki { background: rgba(20,184,166,0.1); border-color: rgba(20,184,166,0.35); color: #5eead4; }
+  .swap-btn.wiki:hover { background: rgba(20,184,166,0.25); }
+  .swap-btn.copied { background: rgba(74,222,128,0.2); border-color: rgba(74,222,128,0.5); color: #4ade80; }
   .filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .filter-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #94a3b8; font-size: 0.75rem; font-weight: 600; padding: 4px 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
   .filter-btn:hover, .filter-btn.active { background: rgba(250,204,21,0.15); border-color: rgba(250,204,21,0.5); color: #facc15; }
@@ -187,6 +204,23 @@ const html = `<!DOCTYPE html>
       img.closest('.card').style.borderColor = 'rgba(248,113,113,0.6)';
     });
   });
+
+  // Copy the swap command to clipboard and briefly show confirmation
+  function copySwap(btn) {
+    const cmd = btn.dataset.cmd;
+    navigator.clipboard.writeText(cmd).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = orig;
+        btn.classList.remove('copied');
+      }, 2000);
+    }).catch(() => {
+      // fallback: show a prompt so the user can copy manually
+      window.prompt('Copy this command:', cmd);
+    });
+  }
 </script>
 </body>
 </html>`;

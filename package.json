@@ -30,7 +30,10 @@
     "headshots:sync": "node scripts/sync-headshots.js",
     "apisports:probe:nba": "node --env-file=.env.local scripts/probe-apisports-nba.cjs",
     "live-showdown:seed": "node --env-file=.env.local --import tsx scripts/seedLiveShowdownPool.ts",
-    "trivia:restore-speed": "node --env-file=.env.local scripts/restore-deleted-speed-trivia.cjs"
+    "trivia:restore-speed": "node --env-file=.env.local scripts/restore-deleted-speed-trivia.cjs",
+    "landmark:images": "node --env-file=.env.local scripts/enrich-landmark-images.cjs",
+    "landmark:images:dry-run": "node --env-file=.env.local scripts/enrich-landmark-images.cjs --dry-run",
+    "landmark:review": "node scripts/review-trivia-images.cjs"
   },
   "repository": {
     "type": "git",

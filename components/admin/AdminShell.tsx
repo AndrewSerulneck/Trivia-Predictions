@@ -18,6 +18,7 @@ import { TriviaListSection } from "@/components/admin/sections/TriviaListSection
 import { TriviaCreateSection } from "@/components/admin/sections/TriviaCreateSection";
 import { TriviaPendingReviewSection } from "@/components/admin/sections/TriviaPendingReviewSection";
 import { TriviaAnswerGraderSection } from "@/components/admin/sections/TriviaAnswerGraderSection";
+import { TriviaImageReviewSection } from "@/components/admin/sections/TriviaImageReviewSection";
 import { AdPlacementBuilder } from "@/components/admin/AdPlacementBuilder";
 import { AdAnalyticsDashboard } from "@/components/admin/AdAnalyticsDashboard";
 import { AdsListSection } from "@/components/admin/sections/AdsListSection";
@@ -502,6 +503,8 @@ export function AdminShell({ venues, initialSection = "venue-users" }: AdminShel
         return <TriviaPendingReviewSection />;
       case "answer-grading":
         return <TriviaAnswerGraderSection />;
+      case "trivia-image-review":
+        return <TriviaImageReviewSection />;
       case "ad-placement":
         return <AdPlacementBuilder venues={venueList} />;
       case "ad-debug":

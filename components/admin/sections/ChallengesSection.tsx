@@ -9,6 +9,7 @@ import { PaginationBar, BulkActionBar, TH, TD, TR } from "@/components/admin/Adm
 type CampaignRecurringType = "none" | "daily" | "weekly" | "monthly" | "yearly";
 type ChallengeMode = "progress" | "leaderboard";
 type ChallengeLeaderboardTiebreaker = "first_to_score" | "latest_activity";
+type PrizeType = "wine_bottle" | "free_appetizer" | "gift_certificate";
 
 type AdminChallengeCampaign = {
   id: string;
@@ -34,6 +35,8 @@ type AdminChallengeCampaign = {
   displayOrder?: number | null;
   winnerUserId?: string | null;
   winnerUsername?: string | null;
+  prizeType?: PrizeType | null;
+  prizeGiftCertificateAmount?: number | null;
   isActive: boolean;
 };
 
@@ -42,6 +45,12 @@ type AdminChallengeCampaign = {
 const PAGE_SIZE = 25;
 
 const GAME_TYPE_OPTIONS = ["pickem", "fantasy", "speed-trivia", "live-trivia", "bingo"] as const;
+const PRIZE_TYPE_OPTIONS: Array<{ value: PrizeType | "none"; label: string }> = [
+  { value: "none", label: "No Prize" },
+  { value: "wine_bottle", label: "Bottle of Wine" },
+  { value: "free_appetizer", label: "Free Appetizer" },
+  { value: "gift_certificate", label: "Gift Certificate" },
+];
 const DAY_OPTIONS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 const RECURRING_OPTIONS: CampaignRecurringType[] = ["none", "daily", "weekly", "monthly", "yearly"];
 const CHALLENGE_MODE_OPTIONS: ChallengeMode[] = ["progress", "leaderboard"];
@@ -132,6 +141,8 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
   const [formPointsRequired, setFormPointsRequired] = useState("100");
   const [formRecurring, setFormRecurring] = useState<CampaignRecurringType>("none");
   const [formActive, setFormActive] = useState(true);
+  const [formPrizeType, setFormPrizeType] = useState<PrizeType | "none">("none");
+  const [formPrizeAmount, setFormPrizeAmount] = useState("");
   const [createBusy, setCreateBusy] = useState(false);
   const [createError, setCreateError] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
@@ -320,6 +331,8 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
     setFormPointsRequired("100");
     setFormRecurring("none");
     setFormActive(true);
+    setFormPrizeType("none");
+    setFormPrizeAmount("");
     setCreateError("");
     setEditingCampaignId(null);
   }
@@ -357,6 +370,8 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
     );
     setFormRecurring(campaign.recurringType ?? "none");
     setFormActive(Boolean(campaign.isActive));
+    setFormPrizeType(campaign.prizeType ?? "none");
+    setFormPrizeAmount(campaign.prizeGiftCertificateAmount != null ? String(campaign.prizeGiftCertificateAmount) : "");
     setCreateError("");
     setStatusMessage("");
     setMode("edit");
@@ -387,6 +402,11 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
         pointMultiplier: parseFloat(formMultiplier) || 1,
         pointsRequiredToWin: parseInt(formPointsRequired, 10) || 100,
         recurringType: formRecurring,
+        prizeType: formPrizeType === "none" ? null : formPrizeType,
+        prizeGiftCertificateAmount:
+          formPrizeType === "gift_certificate" && formPrizeAmount.trim()
+            ? parseFloat(formPrizeAmount) || null
+            : null,
         isActive: formActive,
       };
 
@@ -772,6 +792,44 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
               </p>
             </div>
           )}
+
+          {/* Prize */}
+          <div className="col-span-2">
+            <label className={lbl}>Prize for Winner</label>
+            <div className="mt-1 flex flex-wrap gap-2">
+              {PRIZE_TYPE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => { setFormPrizeType(opt.value); if (opt.value !== "gift_certificate") setFormPrizeAmount(""); }}
+                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                    formPrizeType === opt.value
+                      ? "border-indigo-600 bg-indigo-50 text-indigo-700"
+                      : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {formPrizeType === "gift_certificate" && (
+              <div className="mt-3">
+                <label className={lbl}>Gift Certificate Amount (USD)</label>
+                <div className="relative mt-1 w-40">
+                  <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400 text-sm">$</span>
+                  <input
+                    type="number"
+                    min={0.01}
+                    step={0.01}
+                    placeholder="0.00"
+                    className={`${field} pl-7`}
+                    value={formPrizeAmount}
+                    onChange={(e) => setFormPrizeAmount(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Venue targeting */}
           <div className="col-span-2">

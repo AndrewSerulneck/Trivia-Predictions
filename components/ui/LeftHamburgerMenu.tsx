@@ -122,6 +122,7 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
   const [pointsBurstVisible, setPointsBurstVisible] = useState(false);
   const [pointsBurstToken, setPointsBurstToken] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [hasUnclaimedPrize, setHasUnclaimedPrize] = useState(false);
   const [isUsernameModalOpen, setIsUsernameModalOpen] = useState(false);
   const [usernameDraft, setUsernameDraft] = useState("");
   const [currentPinDraft, setCurrentPinDraft] = useState("");
@@ -295,6 +296,17 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
       animateGain(payload.profile.points - priorPointsRef.current);
     }
     priorPointsRef.current = payload.profile.points;
+
+    // Fire-and-forget: check for unclaimed prizes to drive the pulse dot
+    if (userId && venueId) {
+      fetch(
+        `/api/prizes/has-unclaimed?userId=${encodeURIComponent(userId)}&venueId=${encodeURIComponent(venueId)}`,
+        { cache: "no-store" }
+      )
+        .then((r) => r.json() as Promise<{ ok: boolean; hasUnclaimed: boolean }>)
+        .then((p) => { if (p.ok) setHasUnclaimedPrize(p.hasUnclaimed); })
+        .catch(() => {});
+    }
   }, [animateGain, setPointsAndAnimate]);
 
   const openUsernameModal = useCallback(() => {
@@ -639,7 +651,12 @@ export function LeftHamburgerMenu({ variant = "default", showAlerts = true }: Le
                           : "border-ht-border-hairline bg-ht-elevated/50 text-ht-fg-secondary hover:border-ht-border-soft hover:bg-ht-elevated"
                       }`}
                     >
-                      <div className="text-lg font-black leading-tight">{item.label}</div>
+                      <div className="flex items-center gap-2 text-lg font-black leading-tight">
+                        {item.label}
+                        {item.href === "/redeem-prizes" && hasUnclaimedPrize && (
+                          <span className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-amber-400" aria-label="Unclaimed prize" />
+                        )}
+                      </div>
                       <div className={`mt-1 text-sm leading-snug ${active ? "text-ht-fg-secondary" : "text-ht-fg-muted"}`}>
                         {item.description}
                       </div>

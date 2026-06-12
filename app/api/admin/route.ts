@@ -57,6 +57,7 @@ import type {
   ChallengeImageFitMode,
   ChallengeLeaderboardTiebreaker,
   ChallengeMode,
+  PrizeType,
 } from "@/types";
 import {
   createAdminLiveShowdownSchedule,
@@ -440,6 +441,8 @@ export async function POST(request: Request) {
           pointMultiplier?: number;
           pointsRequiredToWin?: number;
           recurringType?: CampaignRecurringType;
+          prizeType?: PrizeType | null;
+          prizeGiftCertificateAmount?: number | null;
           isActive?: boolean;
         }
       | {
@@ -745,6 +748,8 @@ export async function POST(request: Request) {
         pointMultiplier: body.pointMultiplier,
         pointsRequiredToWin: body.pointsRequiredToWin,
         recurringType: body.recurringType,
+        prizeType: body.prizeType,
+        prizeGiftCertificateAmount: body.prizeGiftCertificateAmount,
         isActive: body.isActive,
       });
       return NextResponse.json({ ok: true, item });
@@ -998,6 +1003,8 @@ export async function PATCH(request: Request) {
           recurringType?: CampaignRecurringType;
           displayOrder?: number | null;
           winnerUserId?: string | null;
+          prizeType?: PrizeType | null;
+          prizeGiftCertificateAmount?: number | null;
           isActive?: boolean;
         }
       | {
@@ -1203,6 +1210,8 @@ export async function PATCH(request: Request) {
         recurringType: body.recurringType,
         displayOrder: body.displayOrder,
         winnerUserId: body.winnerUserId,
+        prizeType: body.prizeType,
+        prizeGiftCertificateAmount: body.prizeGiftCertificateAmount,
         isActive: body.isActive,
       });
       return NextResponse.json({ ok: true, item });

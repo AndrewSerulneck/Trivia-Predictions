@@ -773,7 +773,7 @@
       "answer": "Texas",
       "category": "Geography",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/ad/Texas_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-texas.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -782,7 +782,7 @@
       "answer": "Florida",
       "category": "Geography",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/1/15/Florida_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-florida.svg",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -791,7 +791,7 @@
       "answer": "California",
       "category": "Geography",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/94/California_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-california.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -800,7 +800,7 @@
       "answer": "Alaska",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Alaska_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-alaska.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -827,7 +827,7 @@
       "answer": "Australia",
       "category": "Geography",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4b/Australia_in_Oceania.svg",
+      "imageUrl": "/maps/geography-map-australia.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -836,7 +836,7 @@
       "answer": "Japan",
       "category": "Geography",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e1/Japan_in_Asia_%28de-facto%29.svg",
+      "imageUrl": "/maps/geography-map-japan.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -845,7 +845,7 @@
       "answer": "New York",
       "category": "Geography",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/06/New_York_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-new-york.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -854,7 +854,7 @@
       "answer": "Ohio",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/58/Ohio_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-ohio.svg",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -863,7 +863,7 @@
       "answer": "Michigan",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/50/Michigan_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-michigan.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -872,7 +872,7 @@
       "answer": "Illinois",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/53/Illinois_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-illinois.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -881,7 +881,7 @@
       "answer": "Pennsylvania",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Pennsylvania_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-pennsylvania.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -890,7 +890,7 @@
       "answer": "Colorado",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/60/Colorado_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-colorado.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -902,7 +902,7 @@
       "acceptableAnswers": [
         "Washington State"
       ],
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/3/30/Washington_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-washington.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -911,7 +911,7 @@
       "answer": "Arizona",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Arizona_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-arizona.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -923,7 +923,7 @@
       "acceptableAnswers": [
         "Georgia (U.S. state)"
       ],
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d1/Georgia_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-georgia.svg",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -932,7 +932,7 @@
       "answer": "North Carolina",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/20/North_Carolina_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-north-carolina.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -941,7 +941,7 @@
       "answer": "Tennessee",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/29/Tennessee_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-tennessee.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -950,7 +950,7 @@
       "answer": "Minnesota",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/81/Minnesota_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-minnesota.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -959,7 +959,7 @@
       "answer": "Nevada",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Nevada_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-nevada.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -968,7 +968,7 @@
       "answer": "Canada",
       "category": "Geography",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/1/15/Canada_location_map.svg",
+      "imageUrl": "/maps/geography-map-canada.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -977,7 +977,7 @@
       "answer": "Mexico",
       "category": "Geography",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e4/Mexico_on_the_globe_%28Americas_centered%29.svg",
+      "imageUrl": "/maps/geography-map-mexico.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1031,7 +1031,7 @@
         "People's Republic of China",
         "PRC"
       ],
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/96/China_in_Asia_%28de-facto%29.svg",
+      "imageUrl": "/maps/geography-map-china.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1040,7 +1040,7 @@
       "answer": "India",
       "category": "Geography",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/d/dc/India_location_map.svg",
+      "imageUrl": "/maps/geography-map-india.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1052,7 +1052,7 @@
       "acceptableAnswers": [
         "Russian Federation"
       ],
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e2/Russia_in_Asia.svg",
+      "imageUrl": "/maps/geography-map-russia.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1070,7 +1070,7 @@
       "answer": "South Africa",
       "category": "Geography",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3c/South_Africa_in_Africa.svg",
+      "imageUrl": "/maps/geography-map-south-africa.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1079,7 +1079,7 @@
       "answer": "Egypt",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Egypt_location_map.svg",
+      "imageUrl": "/maps/geography-map-egypt.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1088,7 +1088,7 @@
       "answer": "Nigeria",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/70/Nigeria_in_Africa.svg",
+      "imageUrl": "/maps/geography-map-nigeria.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1110,7 +1110,7 @@
       "answer": "Sweden",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Sweden_in_Europe.svg",
+      "imageUrl": "/maps/geography-map-sweden.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1119,7 +1119,7 @@
       "answer": "Norway",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Norway_in_Europe.svg",
+      "imageUrl": "/maps/geography-map-norway.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1128,7 +1128,7 @@
       "answer": "Poland",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Poland_in_Europe.svg",
+      "imageUrl": "/maps/geography-map-poland.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1137,7 +1137,7 @@
       "answer": "Ukraine",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/27/Ukraine_in_Europe.svg",
+      "imageUrl": "/maps/geography-map-ukraine.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1146,7 +1146,7 @@
       "answer": "Turkey",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/3/30/Turkey_in_its_region.svg",
+      "imageUrl": "/maps/geography-map-turkey.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1164,7 +1164,7 @@
       "answer": "New Zealand",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e1/New_Zealand_in_Oceania.svg",
+      "imageUrl": "/maps/geography-map-new-zealand.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1182,7 +1182,7 @@
       "answer": "Arkansas",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/86/Arkansas_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-arkansas.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1209,7 +1209,7 @@
       "answer": "Hawaii",
       "category": "Geography",
       "difficulty": "easy",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Hawaii_in_United_States_%28zoom%29.svg",
+      "imageUrl": "/maps/geography-map-hawaii.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1218,7 +1218,7 @@
       "answer": "Idaho",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a0/Idaho_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-idaho.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1227,7 +1227,7 @@
       "answer": "Indiana",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d2/Indiana_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-indiana.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1236,7 +1236,7 @@
       "answer": "Iowa",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/57/Iowa_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-iowa.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1245,7 +1245,7 @@
       "answer": "Kansas",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a6/Kansas_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-kansas.svg",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1254,7 +1254,7 @@
       "answer": "Kentucky",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e2/Kentucky_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-kentucky.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1263,7 +1263,7 @@
       "answer": "Louisiana",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2a/Louisiana_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-louisiana.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1272,7 +1272,7 @@
       "answer": "Maine",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/78/Maine_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-maine.svg",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1281,7 +1281,7 @@
       "answer": "Maryland",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/d/da/Maryland_in_United_States_%28zoom%29.svg",
+      "imageUrl": "/maps/geography-map-maryland.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1299,7 +1299,7 @@
       "answer": "Mississippi",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/22/Mississippi_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-mississippi.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1308,7 +1308,7 @@
       "answer": "Missouri",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/62/Missouri_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-missouri.svg",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1317,7 +1317,7 @@
       "answer": "Montana",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/67/Montana_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-montana.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1326,7 +1326,7 @@
       "answer": "Nebraska",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/44/Nebraska_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-nebraska.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1353,7 +1353,7 @@
       "answer": "New Mexico",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fe/New_Mexico_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-new-mexico.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1362,7 +1362,7 @@
       "answer": "North Dakota",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bc/North_Dakota_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-north-dakota.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1371,7 +1371,7 @@
       "answer": "Oklahoma",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/99/Oklahoma_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-oklahoma.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1380,7 +1380,7 @@
       "answer": "Oregon",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/59/Oregon_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-oregon.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1398,7 +1398,7 @@
       "answer": "South Carolina",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8e/South_Carolina_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-south-carolina.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1407,7 +1407,7 @@
       "answer": "South Dakota",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8f/South_Dakota_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-south-dakota.svg",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1416,7 +1416,7 @@
       "answer": "Utah",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/82/Utah_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-utah.svg",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1434,7 +1434,7 @@
       "answer": "Virginia",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c6/Virginia_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-virginia.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1443,7 +1443,7 @@
       "answer": "West Virginia",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2a/West_Virginia_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-west-virginia.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1452,7 +1452,7 @@
       "answer": "Wisconsin",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Wisconsin_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-wisconsin.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1461,7 +1461,7 @@
       "answer": "Wyoming",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Wyoming_in_United_States.svg",
+      "imageUrl": "/maps/geography-map-wyoming.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1488,7 +1488,7 @@
       "answer": "Belarus",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2b/Belarus_in_Europe.svg",
+      "imageUrl": "/maps/geography-map-belarus.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1537,7 +1537,7 @@
       "answer": "Czech Republic",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/ff/Czech_Republic_in_Europe.svg",
+      "imageUrl": "/maps/geography-map-czech-republic.png",
       "imageCredit": "Map via Wikimedia Commons",
       "acceptableAnswers": [
         "Czechia"
@@ -1567,7 +1567,7 @@
       "answer": "Finland",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Finland_in_Europe.svg",
+      "imageUrl": "/maps/geography-map-finland.svg",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1621,7 +1621,7 @@
       "answer": "Luxembourg",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Luxembourg_in_Europe.svg",
+      "imageUrl": "/maps/geography-map-luxembourg.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1669,7 +1669,7 @@
       "answer": "Romania",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/af/Romania_in_Europe.svg",
+      "imageUrl": "/maps/geography-map-romania.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1876,7 +1876,7 @@
       "answer": "Algeria",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f2/Algeria_in_Africa.svg",
+      "imageUrl": "/maps/geography-map-algeria.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1885,7 +1885,7 @@
       "answer": "Angola",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8d/Angola_in_Africa.svg",
+      "imageUrl": "/maps/geography-map-angola.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1903,7 +1903,7 @@
       "answer": "Democratic Republic of the Congo",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0e/Democratic_Republic_of_the_Congo_in_Africa.svg",
+      "imageUrl": "/maps/geography-map-dem-rep-of-the-congo.png",
       "imageCredit": "Map via Wikimedia Commons",
       "acceptableAnswers": [
         "DRC",
@@ -1918,7 +1918,7 @@
       "answer": "Ethiopia",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f0/Ethiopia_in_Africa.svg",
+      "imageUrl": "/maps/geography-map-ethiopia.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1936,7 +1936,7 @@
       "answer": "Kenya",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Kenya_location_map.svg",
+      "imageUrl": "/maps/geography-map-kenya.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1954,7 +1954,7 @@
       "answer": "Madagascar",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Madagascar_in_Africa.svg",
+      "imageUrl": "/maps/geography-map-madagascar.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1963,7 +1963,7 @@
       "answer": "Mali",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Mali_in_Africa.svg",
+      "imageUrl": "/maps/geography-map-mali.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1981,7 +1981,7 @@
       "answer": "Mozambique",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/05/Mozambique_in_Africa.svg",
+      "imageUrl": "/maps/geography-map-mozambique.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1999,16 +1999,7 @@
       "answer": "Somalia",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/65/Somalia_in_Africa.svg",
-      "imageCredit": "Map via Wikimedia Commons"
-    },
-    {
-      "slug": "geography-map-sudan",
-      "question": "Which country is shown highlighted on this map?",
-      "answer": "Sudan",
-      "category": "Geography",
-      "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3d/Sudan_location_map.svg",
+      "imageUrl": "/maps/geography-map-somalia.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -2017,7 +2008,7 @@
       "answer": "Tanzania",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/83/Tanzania_in_Africa.svg",
+      "imageUrl": "/maps/geography-map-tanzania.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -2035,7 +2026,7 @@
       "answer": "Uganda",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Uganda_in_Africa.svg",
+      "imageUrl": "/maps/geography-map-uganda.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -2044,7 +2035,7 @@
       "answer": "Zambia",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Zambia_in_Africa.svg",
+      "imageUrl": "/maps/geography-map-zambia.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -2053,7 +2044,7 @@
       "answer": "Zimbabwe",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/69/Zimbabwe_in_Africa.svg",
+      "imageUrl": "/maps/geography-map-zimbabwe.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -2071,7 +2062,7 @@
       "answer": "Azerbaijan",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Azerbaijan_in_its_region.svg",
+      "imageUrl": "/maps/geography-map-azerbaijan.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -2111,15 +2102,6 @@
       "imageCredit": "Map: Natural Earth / U.S. Census"
     },
     {
-      "slug": "geography-map-israel",
-      "question": "Which country is shown highlighted on this map?",
-      "answer": "Israel",
-      "category": "Geography",
-      "difficulty": "medium",
-      "imageUrl": "/maps/geography-map-israel.svg",
-      "imageCredit": "Map: Natural Earth / U.S. Census"
-    },
-    {
       "slug": "geography-map-jordan",
       "question": "Which country is shown highlighted on this map?",
       "answer": "Jordan",
@@ -2134,7 +2116,7 @@
       "answer": "Kazakhstan",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/ff/Kazakhstan_in_its_region.svg",
+      "imageUrl": "/maps/geography-map-kazakhstan.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -2161,7 +2143,7 @@
       "answer": "Mongolia",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Mongolia_in_Asia.svg",
+      "imageUrl": "/maps/geography-map-mongolia.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -2181,18 +2163,6 @@
       "difficulty": "hard",
       "imageUrl": "/maps/geography-map-nepal.svg",
       "imageCredit": "Map: Natural Earth / U.S. Census"
-    },
-    {
-      "slug": "geography-map-north-korea",
-      "question": "Which country is shown highlighted on this map?",
-      "answer": "North Korea",
-      "category": "Geography",
-      "difficulty": "medium",
-      "imageUrl": "/maps/geography-map-north-korea.svg",
-      "imageCredit": "Map: Natural Earth / U.S. Census",
-      "acceptableAnswers": [
-        "Democratic People's Republic of Korea"
-      ]
     },
     {
       "slug": "geography-map-pakistan",
@@ -2218,7 +2188,7 @@
       "answer": "Saudi Arabia",
       "category": "Geography",
       "difficulty": "medium",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/79/Saudi_Arabia_in_its_region.svg",
+      "imageUrl": "/maps/geography-map-saudi-arabia.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -2278,7 +2248,7 @@
       "answer": "Uzbekistan",
       "category": "Geography",
       "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1d/Uzbekistan_in_its_region.svg",
+      "imageUrl": "/maps/geography-map-uzbekistan.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {

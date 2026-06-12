@@ -6766,8 +6766,8 @@ export async function refreshSportsBingoProgress(params: {
       if (!cardUpdateError && wonRow?.id) {
         await addNotification(
           cardRow.user_id,
-          "info",
-          `Bingo in ${cardRow.game_label}! Claim ${cardRow.reward_points} points from Bingo Home.`
+          "success",
+          `Your ${cardRow.away_team} vs. ${cardRow.home_team} Bingo Board won! +${cardRow.reward_points} pts!`
         );
 
         settledWins += 1;
@@ -7152,12 +7152,6 @@ export async function claimSportsBingoReward(params: {
       .update({ points: currentPoints + rewardPoints })
       .eq("id", userId);
   }
-
-  await addNotification(
-    userId,
-    "success",
-    `Bingo payout claimed: You won ${rewardPoints} points in ${claimedCard.game_label}.`
-  );
 
   return {
     cardId: claimedCard.id,

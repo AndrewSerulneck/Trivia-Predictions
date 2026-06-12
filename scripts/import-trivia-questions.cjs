@@ -102,6 +102,74 @@ function normalizeQuestionKey(question) {
     .replace(/[^a-z0-9]/g, "");
 }
 
+const QUESTION_STOP_WORDS = new Set([
+  "a",
+  "an",
+  "and",
+  "are",
+  "as",
+  "at",
+  "by",
+  "did",
+  "do",
+  "does",
+  "for",
+  "from",
+  "how",
+  "in",
+  "is",
+  "it",
+  "its",
+  "of",
+  "on",
+  "or",
+  "the",
+  "this",
+  "to",
+  "was",
+  "were",
+  "what",
+  "when",
+  "which",
+  "who",
+  "whose",
+  "with",
+]);
+
+function tokenizeQuestion(question) {
+  return String(question ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 3 && !QUESTION_STOP_WORDS.has(token));
+}
+
+function buildQuestionSimilarityKey(question) {
+  const tokens = Array.from(new Set(tokenizeQuestion(question))).sort();
+  return tokens.join(" ");
+}
+
+function areQuestionsNearDuplicates(left, right) {
+  const leftKey = buildQuestionSimilarityKey(left);
+  const rightKey = buildQuestionSimilarityKey(right);
+  if (!leftKey || !rightKey) return false;
+  if (leftKey === rightKey) return true;
+
+  const leftTokens = leftKey.split(" ").filter(Boolean);
+  const rightTokens = rightKey.split(" ").filter(Boolean);
+  if (leftTokens.length < 4 || rightTokens.length < 4) return false;
+
+  const rightSet = new Set(rightTokens);
+  let overlap = 0;
+  for (const token of leftTokens) {
+    if (rightSet.has(token)) overlap += 1;
+  }
+
+  const similarity = (2 * overlap) / (leftTokens.length + rightTokens.length);
+  return similarity >= 0.9;
+}
+
 function sanitizeAcceptableAnswers(values, canonicalAnswer) {
   const rawValues = Array.isArray(values) ? values : [];
   const seen = new Set([normalizeAnswerKey(canonicalAnswer)]);
@@ -334,10 +402,11 @@ function createSupabaseClient() {
 
 function filterExistingQuestionRows(existingCatalog, rows) {
   if (!Array.isArray(existingCatalog) || rows.length === 0) {
-    return { acceptedRows: rows, skippedRows: [] };
+    return { acceptedRows: rows, skippedRows: [], skippedNearDuplicateRows: [] };
   }
 
   const existingByIdentity = new Map();
+  const existingQuestionsByCategory = new Map();
   for (const row of existingCatalog) {
     const identity = `${String(row.questionPool ?? "").trim()}::${normalizeQuestionKey(row.question)}`;
     if (!identity.endsWith("::")) {
@@ -346,10 +415,19 @@ function filterExistingQuestionRows(existingCatalog, rows) {
       if (slug) slugs.add(slug);
       existingByIdentity.set(identity, slugs);
     }
+
+    const categoryKey = String(row.category ?? "").trim().toLowerCase();
+    const question = String(row.question ?? "").trim();
+    if (categoryKey && question) {
+      const group = existingQuestionsByCategory.get(categoryKey) ?? [];
+      group.push(question);
+      existingQuestionsByCategory.set(categoryKey, group);
+    }
   }
 
   const acceptedRows = [];
   const skippedRows = [];
+  const skippedNearDuplicateRows = [];
   for (const row of rows) {
     if (row.question_pool !== "anytime_blitz") {
       acceptedRows.push(row);
@@ -357,6 +435,7 @@ function filterExistingQuestionRows(existingCatalog, rows) {
         id: null,
         slug: row.slug,
         question: row.question,
+        category: row.category,
         questionPool: row.question_pool,
         status: row.status ?? null,
       });
@@ -370,17 +449,29 @@ function filterExistingQuestionRows(existingCatalog, rows) {
       continue;
     }
 
+    const categoryKey = String(row.category ?? "").trim().toLowerCase();
+    const categoryQuestions = categoryKey ? existingQuestionsByCategory.get(categoryKey) ?? [] : [];
+    if (categoryQuestions.some((existingQuestion) => areQuestionsNearDuplicates(existingQuestion, row.question))) {
+      skippedNearDuplicateRows.push(row);
+      continue;
+    }
+
     acceptedRows.push(row);
     existingCatalog.push({
       id: null,
       slug: row.slug,
       question: row.question,
+      category: row.category,
       questionPool: row.question_pool,
       status: row.status ?? null,
     });
+    if (categoryKey) {
+      categoryQuestions.push(row.question);
+      existingQuestionsByCategory.set(categoryKey, categoryQuestions);
+    }
   }
 
-  return { acceptedRows, skippedRows };
+  return { acceptedRows, skippedRows, skippedNearDuplicateRows };
 }
 
 async function loadExistingQuestionCatalog(supabase, pools) {
@@ -394,7 +485,7 @@ async function loadExistingQuestionCatalog(supabase, pools) {
         async () => {
           return supabase
             .from("trivia_questions")
-            .select("id, slug, question, question_pool, status")
+            .select("id, slug, question, question_pool, status, category")
             .eq("question_pool", questionPool)
             .neq("status", "deleted")
             .range(start, start + CHUNK_SIZE - 1);
@@ -414,6 +505,7 @@ async function loadExistingQuestionCatalog(supabase, pools) {
           id: row.id ?? null,
           slug: row.slug ?? null,
           question: String(row.question ?? ""),
+          category: String(row.category ?? ""),
           questionPool: row.question_pool,
           status: row.status ?? null,
         }))
@@ -433,14 +525,16 @@ async function upsertRows(rows) {
 
   let processed = 0;
   let skippedDuplicates = 0;
+  let skippedNearDuplicates = 0;
   const existingCatalog = await loadExistingQuestionCatalog(
     supabase,
     rows.map((row) => row.question_pool)
   );
   for (let start = 0; start < rows.length; start += CHUNK_SIZE) {
     const chunk = rows.slice(start, start + CHUNK_SIZE);
-    const { acceptedRows, skippedRows } = filterExistingQuestionRows(existingCatalog, chunk);
+    const { acceptedRows, skippedRows, skippedNearDuplicateRows } = filterExistingQuestionRows(existingCatalog, chunk);
     skippedDuplicates += skippedRows.length;
+    skippedNearDuplicates += skippedNearDuplicateRows.length;
 
     if (acceptedRows.length === 0) {
       continue;
@@ -468,6 +562,9 @@ async function upsertRows(rows) {
 
   if (skippedDuplicates > 0) {
     console.log(`Skipped ${skippedDuplicates} duplicate question(s) already present in Supabase.`);
+  }
+  if (skippedNearDuplicates > 0) {
+    console.log(`Skipped ${skippedNearDuplicates} near-duplicate question(s) already present in Supabase.`);
   }
 
   const { count, error } = await retryAsync(

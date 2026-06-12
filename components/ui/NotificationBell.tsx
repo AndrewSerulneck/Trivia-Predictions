@@ -44,6 +44,19 @@ function extractPointsFromMessage(message: string): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }
 
+function resolveCelebrationGame(
+  message: string,
+  linkUrl: string | null | undefined
+): { game: "bingo" | "fantasy" | "pickem"; delta: number } | null {
+  const text = message.toLowerCase();
+  const delta = extractPointsFromMessage(message);
+  if (delta <= 0) return null;
+  if (text.includes("bingo board won")) return { game: "bingo", delta };
+  if (text.includes("fantasy")) return { game: "fantasy", delta };
+  if (linkUrl?.includes("/pickem")) return { game: "pickem", delta };
+  return null;
+}
+
 function resolveNotificationHref(message: string): string {
   const text = message.toLowerCase();
   if (text.includes("challenge")) {
@@ -299,6 +312,11 @@ export function NotificationBell() {
                       onClick={() => {
                         void markRead(item.id);
                         setOpen(false);
+                        const celebration = resolveCelebrationGame(item.message, item.linkUrl);
+                        if (celebration) {
+                          sessionStorage.setItem("tp:celebrate", celebration.game);
+                          sessionStorage.setItem("tp:celebrate:delta", String(celebration.delta));
+                        }
                         router.push(item.linkUrl ?? resolveNotificationHref(item.message));
                       }}
                       className="tp-clean-button flex w-full items-start gap-3 px-4 py-3 hover:bg-slate-800/60 transition-colors"
