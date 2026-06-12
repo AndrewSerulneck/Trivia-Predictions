@@ -1265,7 +1265,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     router.prefetch("/pending-challenges");
     router.prefetch("/active-games");
     router.prefetch("/redeem-prizes");
-    router.prefetch("/activity");
     if (!warmupStartedRef.current && !bootstrapSnapshotRef.current) {
       warmupStartedRef.current = true;
       void runWarmup();

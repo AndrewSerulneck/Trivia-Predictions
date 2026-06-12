@@ -3,7 +3,7 @@ import { stampCelebrationNotifications } from "@/lib/notifications";
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as { userId?: string; game?: string };
+    const body = (await request.json()) as { userId?: string; game?: string; linkUrl?: string };
     const userId = (body.userId ?? "").trim();
     const game = (body.game ?? "").trim();
 
@@ -14,7 +14,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: "game must be bingo, fantasy, or pickem." }, { status: 400 });
     }
 
-    const result = await stampCelebrationNotifications({ userId, game });
+    const result = await stampCelebrationNotifications({
+      userId,
+      game,
+      linkUrl: String(body.linkUrl ?? "").trim() || undefined,
+    });
     return NextResponse.json({ ok: true, celebrate: result.celebrate, delta: result.delta });
   } catch (error) {
     return NextResponse.json(

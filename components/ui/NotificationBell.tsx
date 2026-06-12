@@ -24,7 +24,8 @@ function areNotificationsEqual(left: Notification[], right: Notification[]): boo
       l.message !== r.message ||
       l.type !== r.type ||
       l.createdAt !== r.createdAt ||
-      l.read !== r.read
+      l.read !== r.read ||
+      l.linkUrl !== r.linkUrl
     ) {
       return false;
     }
@@ -68,16 +69,19 @@ function resolveNotificationHref(message: string): string {
   if (text.includes("pick 'em") || text.includes("pick em") || text.includes("pick’em")) {
     return "/pickem";
   }
+  if (text.includes("fantasy")) {
+    return "/fantasy";
+  }
   if (text.includes("bingo")) {
-    return "/bingo";
+    return "/bingo/home";
   }
   if (text.includes("prediction") || text.includes("market") || text.includes("pick")) {
-    return "/predictions";
+    return "/pickem";
   }
   if (text.includes("trivia") || text.includes("round")) {
     return "/trivia";
   }
-  return "/activity";
+  return "/pickem";
 }
 
 export function NotificationBell() {
@@ -88,6 +92,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [renderNowMs, setRenderNowMs] = useState(0);
   const userIdRef = useRef("");
   const knownNotificationIdsRef = useRef<Set<string>>(new Set());
   const hasLoadedOnceRef = useRef(false);
@@ -208,6 +213,13 @@ export function NotificationBell() {
       return;
     }
 
+    const initialTimeLabelTimer = window.setTimeout(() => {
+      setRenderNowMs(Date.now());
+    }, 0);
+    const timeLabelInterval = window.setInterval(() => {
+      setRenderNowMs(Date.now());
+    }, 60_000);
+
     const positionMenu = () => {
       const anchorRect = rootRef.current?.getBoundingClientRect();
       const menuWidth = Math.min(352, window.innerWidth - 16);
@@ -221,6 +233,8 @@ export function NotificationBell() {
     window.addEventListener("resize", positionMenu);
     window.addEventListener("scroll", positionMenu, true);
     return () => {
+      window.clearTimeout(initialTimeLabelTimer);
+      window.clearInterval(timeLabelInterval);
       window.removeEventListener("resize", positionMenu);
       window.removeEventListener("scroll", positionMenu, true);
     };
@@ -296,9 +310,7 @@ export function NotificationBell() {
                   : item.type === "success" || isPositive
                   ? "bg-emerald-400"
                   : "bg-cyan-400";
-                const minutesAgo = Math.floor(
-                  (Date.now() - new Date(item.createdAt).getTime()) / 60000
-                );
+                const minutesAgo = Math.floor((renderNowMs - new Date(item.createdAt).getTime()) / 60000);
                 const timeLabel =
                   minutesAgo < 1
                     ? "Just now"

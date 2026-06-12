@@ -531,6 +531,30 @@ function parseAnyDailyGameId(gameId: string): { date: string; league: "NBA" | "W
   return null;
 }
 
+function getFantasySportSlugFromSportKey(sportKey: string): "nba" | "wnba" | "baseball" {
+  if (sportKey === FANTASY_WNBA_SPORT_KEY) return "wnba";
+  if (sportKey === FANTASY_MLB_SPORT_KEY) return "baseball";
+  return "nba";
+}
+
+function getFantasyScorecardDate(params: { gameId: string; startsAt: string }): string {
+  const dailyGame = parseAnyDailyGameId(params.gameId);
+  if (dailyGame?.date) {
+    return dailyGame.date;
+  }
+  const startsAtMs = Date.parse(params.startsAt);
+  if (!Number.isFinite(startsAtMs)) {
+    return getServerTodayDate();
+  }
+  return toLocalDateKeyByOffset(startsAtMs, new Date().getTimezoneOffset());
+}
+
+function buildFantasyScorecardLink(params: { entryId: string; sportKey: string; gameId: string; startsAt: string }): string {
+  const date = getFantasyScorecardDate(params);
+  const sport = getFantasySportSlugFromSportKey(params.sportKey);
+  return `/fantasy?date=${encodeURIComponent(date)}&sport=${encodeURIComponent(sport)}&entryId=${encodeURIComponent(params.entryId)}`;
+}
+
 function toApiIsoNoMs(ms: number): string {
   return new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
 }
@@ -3874,7 +3898,7 @@ export async function claimFantasyReward(params: {
 
   const { data: entry, error } = await supabaseAdmin
     .from("fantasy_entries")
-    .select("id, user_id, venue_id, status, points, reward_points, reward_claimed_at, live_collected_points, sport_key")
+    .select("id, user_id, venue_id, status, points, reward_points, reward_claimed_at, live_collected_points, sport_key, game_id, starts_at")
     .eq("id", entryId)
     .eq("user_id", userId)
     .maybeSingle<{
@@ -3887,6 +3911,8 @@ export async function claimFantasyReward(params: {
       reward_claimed_at: string | null;
       live_collected_points: number;
       sport_key: string;
+      game_id: string;
+      starts_at: string;
     }>();
 
   if (error || !entry) {
@@ -3966,6 +3992,12 @@ export async function claimFantasyReward(params: {
     user_id: userId,
     type: "success",
     message: `Great job, coach! Your fantasy ${sportLabel} team won ${pointsAwarded} pts!`,
+    link_url: buildFantasyScorecardLink({
+      entryId: String(entry.id ?? ""),
+      sportKey: String(entry.sport_key ?? ""),
+      gameId: String(entry.game_id ?? ""),
+      startsAt: String(entry.starts_at ?? ""),
+    }),
   });
 
   return { claimed: true, pointsAwarded };

@@ -103,6 +103,7 @@ export async function listUserNotifications(
 export async function stampCelebrationNotifications(params: {
   userId: string;
   game: "bingo" | "fantasy" | "pickem";
+  linkUrl?: string;
 }): Promise<{ celebrate: boolean; delta: number }> {
   if (!params.userId || !supabaseAdmin) {
     return { celebrate: false, delta: 0 };
@@ -117,7 +118,10 @@ export async function stampCelebrationNotifications(params: {
     .is("animation_shown_at", null)
     .gte("created_at", cutoffIso);
 
-  if (params.game === "bingo") {
+  const linkUrl = String(params.linkUrl ?? "").trim();
+  if (linkUrl) {
+    query = query.eq("link_url", linkUrl);
+  } else if (params.game === "bingo") {
     query = query.ilike("message", "%Bingo Board won%");
   } else if (params.game === "fantasy") {
     query = query.ilike("message", "%Your fantasy%");

@@ -1044,15 +1044,13 @@
     },
     {
       "slug": "car-logo-ford",
-      "question": "What car maker uses this logo?",
+      "question": "Which American automaker uses a blue oval as its primary logo?",
       "answer": "Ford",
       "category": "Cars",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Ford Motor Company"
-      ],
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Ford_Motor_Company_Logo.svg",
-      "imageCredit": "Logo via Wikimedia Commons"
+      ]
     },
     {
       "slug": "car-logo-chevrolet",
@@ -1072,8 +1070,8 @@
       "answer": "Honda",
       "category": "Cars",
       "difficulty": "easy",
-      "imageUrl": "https://images.unsplash.com/photo-1502744688674-c619d1586c9e?w=800&fit=crop",
-      "imageCredit": "Photo by Volkan Olmez on Unsplash"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/3/38/Honda.svg",
+      "imageCredit": "Logo via Wikimedia Commons"
     },
     {
       "slug": "car-logo-bmw",
@@ -1123,12 +1121,10 @@
     },
     {
       "slug": "car-logo-porsche",
-      "question": "What car maker uses this logo?",
+      "question": "Which German automaker's crest features a prancing horse at its center, surrounded by antlers and red-and-black stripes?",
       "answer": "Porsche",
       "category": "Cars",
-      "difficulty": "easy",
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Porsche-Automarken-Logo.jpg",
-      "imageCredit": "Photo via Wikimedia Commons"
+      "difficulty": "easy"
     },
     {
       "slug": "car-logo-tesla",
@@ -1144,12 +1140,10 @@
     },
     {
       "slug": "car-logo-nissan",
-      "question": "What car maker uses this logo?",
+      "question": "Which Japanese automaker's logo features its name inside a chrome circular badge?",
       "answer": "Nissan",
       "category": "Cars",
-      "difficulty": "easy",
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Nissan_2020_logo.svg",
-      "imageCredit": "Logo via Wikimedia Commons"
+      "difficulty": "easy"
     },
     {
       "slug": "car-logo-hyundai",
@@ -1165,12 +1159,10 @@
     },
     {
       "slug": "car-logo-kia",
-      "question": "What car maker uses this logo?",
+      "question": "Which Korean automaker uses stylized overlapping letters forming an oval as its logo?",
       "answer": "Kia",
       "category": "Cars",
-      "difficulty": "easy",
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/KIA_logo3.svg",
-      "imageCredit": "Logo via Wikimedia Commons"
+      "difficulty": "easy"
     },
     {
       "slug": "car-logo-subaru",
@@ -1199,7 +1191,7 @@
       "acceptableAnswers": [
         "Mitsubishi Motors"
       ],
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Mitsubishi_Motors_SVG_logo.svg",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5a/Mitsubishi_logo.svg",
       "imageCredit": "Logo via Wikimedia Commons"
     },
     {
@@ -1211,37 +1203,35 @@
       "acceptableAnswers": [
         "Volvo Cars"
       ],
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Volvo_logo.svg",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2b/Volvo_Iron_Mark_-_black.svg",
       "imageCredit": "Logo via Wikimedia Commons"
     },
     {
       "slug": "car-logo-jaguar",
-      "question": "What car maker uses this logo?",
+      "question": "What car maker uses this leaping cat as its emblem?",
       "answer": "Jaguar",
       "category": "Cars",
       "difficulty": "medium",
       "acceptableAnswers": [
         "Jaguar Cars"
       ],
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Jaguar_2024.svg",
-      "imageCredit": "Logo via Wikimedia Commons"
+      "imageUrl": "https://images.unsplash.com/photo-1568954264801-622ec5bd5cd5?w=800&fit=crop",
+      "imageCredit": "Photo by Matthew Wiebe on Unsplash"
     },
     {
       "slug": "car-logo-land-rover",
-      "question": "What car maker uses this logo?",
+      "question": "Which British off-road brand uses an oval green badge with its name in white as its emblem?",
       "answer": "Land Rover",
       "category": "Cars",
-      "difficulty": "medium",
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Land_Rover_2023.svg",
-      "imageCredit": "Logo via Wikimedia Commons"
+      "difficulty": "medium"
     },
     {
       "slug": "car-logo-jeep",
-      "question": "What car maker uses this logo?",
+      "question": "What car maker uses this iconic seven-slot grille as its emblem?",
       "answer": "Jeep",
       "category": "Cars",
       "difficulty": "easy",
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Jeep_logo.svg",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d1/Jeep_1987_logo.svg",
       "imageCredit": "Logo via Wikimedia Commons"
     },
     {
@@ -1277,7 +1267,7 @@
       "answer": "Buick",
       "category": "Cars",
       "difficulty": "medium",
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Buick_logo_2023.svg",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/85/Buick-logo.svg",
       "imageCredit": "Logo via Wikimedia Commons"
     },
     {
@@ -1286,7 +1276,7 @@
       "answer": "Chrysler",
       "category": "Cars",
       "difficulty": "medium",
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Chrysler_logo14.png",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0e/ChryPly_Blue_Pentastar.svg",
       "imageCredit": "Logo via Wikimedia Commons"
     },
     {
@@ -1300,12 +1290,10 @@
     },
     {
       "slug": "car-logo-peugeot",
-      "question": "What car maker uses this logo?",
+      "question": "Which French automaker has a roaring lion as the central element of its logo?",
       "answer": "Peugeot",
       "category": "Cars",
-      "difficulty": "hard",
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Peugeot_2021_Logo.svg",
-      "imageCredit": "Logo via Wikimedia Commons"
+      "difficulty": "hard"
     },
     {
       "slug": "car-logo-renault",
@@ -1325,21 +1313,19 @@
       "acceptableAnswers": [
         "FIAT"
       ],
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Fiat_Automobiles_logo.svg",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f8/Fiat_logo.svg",
       "imageCredit": "Logo via Wikimedia Commons"
     },
     {
       "slug": "car-logo-mini",
-      "question": "What car maker uses this logo?",
+      "question": "Which British car brand uses a winged circular badge with a crown on top as its primary emblem?",
       "answer": "Mini",
       "category": "Cars",
       "difficulty": "medium",
       "acceptableAnswers": [
         "MINI",
         "Mini Cooper"
-      ],
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/MINI_logo.svg",
-      "imageCredit": "Logo via Wikimedia Commons"
+      ]
     }
   ]
 }

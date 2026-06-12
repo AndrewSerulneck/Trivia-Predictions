@@ -50,16 +50,19 @@ function resolveNotificationHref(message: string): string {
   if (text.includes("pick 'em") || text.includes("pick em") || text.includes("pick’em")) {
     return "/pickem";
   }
+  if (text.includes("fantasy")) {
+    return "/fantasy";
+  }
   if (text.includes("bingo")) {
-    return "/bingo";
+    return "/bingo/home";
   }
   if (text.includes("prediction") || text.includes("market") || text.includes("pick")) {
-    return "/predictions";
+    return "/pickem";
   }
   if (text.includes("trivia") || text.includes("round")) {
     return "/trivia";
   }
-  return "/activity";
+  return "/pickem";
 }
 
 export function ActivityTimeline() {
@@ -171,7 +174,7 @@ export function ActivityTimeline() {
       });
       void loadNotifications(userId, notificationFilter, notificationsPage);
     }
-    router.push(resolveNotificationHref(item.message));
+    router.push(item.linkUrl ?? resolveNotificationHref(item.message));
   };
 
   const pickCounts = useMemo(() => {

@@ -6379,11 +6379,26 @@ async function loadUserPoints(userId: string): Promise<number> {
   return Number(data?.points ?? 0);
 }
 
-async function addNotification(userId: string, type: "success" | "warning" | "info", message: string): Promise<void> {
+function buildBingoScorecardLink(params: { cardId: string; startsAt: string }): string {
+  const startsAt = params.startsAt;
+  const startsAtMs = Date.parse(startsAt);
+  const date = Number.isFinite(startsAtMs)
+    ? new Date(startsAtMs - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)
+    : new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+  return `/bingo/home?date=${encodeURIComponent(date)}&cardId=${encodeURIComponent(params.cardId)}`;
+}
+
+async function addNotification(
+  userId: string,
+  type: "success" | "warning" | "info",
+  message: string,
+  linkUrl?: string
+): Promise<void> {
   await supabaseAdmin!.from("notifications").insert({
     user_id: userId,
     type,
     message,
+    link_url: linkUrl ?? null,
   });
 }
 
@@ -6767,7 +6782,8 @@ export async function refreshSportsBingoProgress(params: {
         await addNotification(
           cardRow.user_id,
           "success",
-          `Your ${cardRow.away_team} vs. ${cardRow.home_team} Bingo Board won! +${cardRow.reward_points} pts!`
+          `Your ${cardRow.away_team} vs. ${cardRow.home_team} Bingo Board won! +${cardRow.reward_points} pts!`,
+          buildBingoScorecardLink({ cardId: cardRow.id, startsAt: cardRow.starts_at })
         );
 
         settledWins += 1;

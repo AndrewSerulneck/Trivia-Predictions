@@ -1,0 +1,317 @@
+{
+  "categoryName": "Classic Cocktails",
+  "questions": 
+
+  [
+  {
+    "slug": "cocktail-martini",
+    "question": "What cocktail is made with Gin or Vodka, Dry Vermouth, and a Lemon twist or Olive garnish?",
+    "answer": "Martini",
+    "category": "Classic Cocktails",
+    "difficulty": "easy",
+    "acceptableAnswers": [
+      "Martini",
+      "Vodka Martini",
+      "Gin Martini"
+    ]
+  },
+  {
+    "slug": "cocktail-manhattan",
+    "question": "What cocktail is made with Rye Whiskey or Bourbon, Sweet Vermouth, Angostura Bitters, and a Cherry garnish?",
+    "answer": "Manhattan",
+    "category": "Classic Cocktails",
+    "difficulty": "medium",
+    "acceptableAnswers": [
+      "Manhattan"
+    ]
+  },
+  {
+    "slug": "cocktail-old-fashioned",
+    "question": "What cocktail is made with Bourbon or Rye Whiskey, Sugar, Angostura Bitters, and an Orange twist garnish?",
+    "answer": "Old Fashioned",
+    "category": "Classic Cocktails",
+    "difficulty": "easy",
+    "acceptableAnswers": [
+      "Old Fashioned"
+    ]
+  },
+  {
+    "slug": "cocktail-mojito",
+    "question": "What cocktail is made with White Rum, Fresh Mint, Lime Juice, Sugar, and Club Soda?",
+    "answer": "Mojito",
+    "category": "Classic Cocktails",
+    "difficulty": "easy",
+    "acceptableAnswers": [
+      "Mojito"
+    ]
+  },
+  {
+    "slug": "cocktail-rob-roy",
+    "question": "What cocktail is made with Scotch Whisky, Sweet Vermouth, Angostura Bitters, and a Cherry garnish?",
+    "answer": "Rob Roy",
+    "category": "Classic Cocktails",
+    "difficulty": "hard",
+    "acceptableAnswers": [
+      "Rob Roy"
+    ]
+  },
+  {
+    "slug": "cocktail-margarita",
+    "question": "What cocktail is made with Tequila, Triple Sec (or Cointreau), Fresh Lime Juice, and a Salt rim?",
+    "answer": "Margarita",
+    "category": "Classic Cocktails",
+    "difficulty": "easy",
+    "acceptableAnswers": [
+      "Margarita"
+    ]
+  },
+  {
+    "slug": "cocktail-paloma",
+    "question": "What cocktail is made with Tequila, Grapefruit Soda (or Grapefruit Juice and Club Soda), and Lime Juice?",
+    "answer": "Paloma",
+    "category": "Classic Cocktails",
+    "difficulty": "medium",
+    "acceptableAnswers": [
+      "Paloma"
+    ]
+  },
+  {
+    "slug": "cocktail-whiskey-sour",
+    "question": "What cocktail is made with Bourbon, Fresh Lemon Juice, Simple Syrup, and an optional Egg White?",
+    "answer": "Whiskey Sour",
+    "category": "Classic Cocktails",
+    "difficulty": "easy",
+    "acceptableAnswers": [
+      "Whiskey Sour"
+    ]
+  },
+  {
+    "slug": "cocktail-negroni",
+    "question": "What cocktail is made with Gin, Sweet Vermouth, and Campari?",
+    "answer": "Negroni",
+    "category": "Classic Cocktails",
+    "difficulty": "medium",
+    "acceptableAnswers": [
+      "Negroni"
+    ]
+  },
+  {
+    "slug": "cocktail-americano",
+    "question": "What cocktail is made with Campari, Sweet Vermouth, and Club Soda?",
+    "answer": "Americano",
+    "category": "Classic Cocktails",
+    "difficulty": "hard",
+    "acceptableAnswers": [
+      "Americano"
+    ]
+  },
+  {
+    "slug": "cocktail-aperol-spritz",
+    "question": "What cocktail is made with Aperol, Prosecco, Club Soda, and an Orange slice garnish?",
+    "answer": "Aperol Spritz",
+    "category": "Classic Cocktails",
+    "difficulty": "easy",
+    "acceptableAnswers": [
+      "Aperol Spritz",
+      "Spritz Veneziano"
+    ]
+  },
+  {
+    "slug": "cocktail-moscow-mule",
+    "question": "What cocktail is made with Vodka, Ginger Beer, and Fresh Lime Juice, and is often served in a copper mug?",
+    "answer": "Moscow Mule",
+    "category": "Classic Cocktails",
+    "difficulty": "easy",
+    "acceptableAnswers": [
+      "Moscow Mule"
+    ]
+  },
+  {
+    "slug": "cocktail-cosmopolitan",
+    "question": "What cocktail is made with Vodka (often Citrus), Triple Sec, Cranberry Juice, and Fresh Lime Juice?",
+    "answer": "Cosmopolitan",
+    "category": "Classic Cocktails",
+    "difficulty": "easy",
+    "acceptableAnswers": [
+      "Cosmopolitan",
+      "Cosmo"
+    ]
+  },
+  {
+    "slug": "cocktail-gimlet",
+    "question": "What cocktail is made with Gin or Vodka, Fresh Lime Juice, and Simple Syrup?",
+    "answer": "Gimlet",
+    "category": "Classic Cocktails",
+    "difficulty": "medium",
+    "acceptableAnswers": [
+      "Gimlet",
+      "Vodka Gimlet",
+      "Gin Gimlet"
+    ]
+  },
+  {
+    "slug": "cocktail-tom-collins",
+    "question": "What cocktail is made with Gin, Fresh Lemon Juice, Simple Syrup, and Club Soda?",
+    "answer": "Tom Collins",
+    "category": "Classic Cocktails",
+    "difficulty": "medium",
+    "acceptableAnswers": [
+      "Tom Collins"
+    ]
+  },
+  {
+    "slug": "cocktail-daiquiri",
+    "question": "What cocktail is made with White Rum, Fresh Lime Juice, and Simple Syrup?",
+    "answer": "Daiquiri",
+    "category": "Classic Cocktails",
+    "difficulty": "easy",
+    "acceptableAnswers": [
+      "Daiquiri"
+    ]
+  },
+  {
+    "slug": "cocktail-dark-n-stormy",
+    "question": "What cocktail is made with Dark Rum, Ginger Beer, and Lime Juice?",
+    "answer": "Dark 'n' Stormy",
+    "category": "Classic Cocktails",
+    "difficulty": "medium",
+    "acceptableAnswers": [
+      "Dark 'n' Stormy",
+      "Dark and Stormy"
+    ]
+  },
+  {
+    "slug": "cocktail-mint-julep",
+    "question": "What cocktail is made with Bourbon, Fresh Mint, Simple Syrup, and Crushed Ice?",
+    "answer": "Mint Julep",
+    "category": "Classic Cocktails",
+    "difficulty": "medium",
+    "acceptableAnswers": [
+      "Mint Julep"
+    ]
+  },
+  {
+    "slug": "cocktail-espresso-martini",
+    "question": "What cocktail is made with Vodka, Coffee Liqueur, and Freshly Brewed Espresso?",
+    "answer": "Espresso Martini",
+    "category": "Classic Cocktails",
+    "difficulty": "easy",
+    "acceptableAnswers": [
+      "Espresso Martini"
+    ]
+  },
+  {
+    "slug": "cocktail-french-75",
+    "question": "What cocktail is made with Gin, Fresh Lemon Juice, Simple Syrup, and Champagne?",
+    "answer": "French 75",
+    "category": "Classic Cocktails",
+    "difficulty": "hard",
+    "acceptableAnswers": [
+      "French 75"
+    ]
+  },
+  {
+    "slug": "cocktail-white-russian",
+    "question": "What cocktail is made with Vodka, Coffee Liqueur, and Heavy Cream or Milk?",
+    "answer": "White Russian",
+    "category": "Classic Cocktails",
+    "difficulty": "easy",
+    "acceptableAnswers": [
+      "White Russian"
+    ]
+  },
+  {
+    "slug": "cocktail-black-russian",
+    "question": "What cocktail is made with Vodka and Coffee Liqueur?",
+    "answer": "Black Russian",
+    "category": "Classic Cocktails",
+    "difficulty": "medium",
+    "acceptableAnswers": [
+      "Black Russian"
+    ]
+  },
+  {
+    "slug": "cocktail-bloody-mary",
+    "question": "What cocktail is made with Vodka, Tomato Juice, Lemon Juice, Worcestershire Sauce, Tabasco, Celery Salt, and Black Pepper?",
+    "answer": "Bloody Mary",
+    "category": "Classic Cocktails",
+    "difficulty": "easy",
+    "acceptableAnswers": [
+      "Bloody Mary"
+    ]
+  },
+  {
+    "slug": "cocktail-long-island-iced-tea",
+    "question": "What cocktail is made with Vodka, Gin, White Rum, Tequila, Triple Sec, Lemon Juice, and Cola?",
+    "answer": "Long Island Iced Tea",
+    "category": "Classic Cocktails",
+    "difficulty": "easy",
+    "acceptableAnswers": [
+      "Long Island Iced Tea",
+      "Long Island"
+    ]
+  },
+  {
+    "slug": "cocktail-mai-tai",
+    "question": "What cocktail is made with White Rum, Dark Rum, Orange Curaçao, Orgeat (Almond) Syrup, and Lime Juice?",
+    "answer": "Mai Tai",
+    "category": "Classic Cocktails",
+    "difficulty": "hard",
+    "acceptableAnswers": [
+      "Mai Tai"
+    ]
+  },
+  {
+    "slug": "cocktail-pina-colada",
+    "question": "What cocktail is made with White Rum, Pineapple Juice, and Coconut Cream?",
+    "answer": "Piña Colada",
+    "category": "Classic Cocktails",
+    "difficulty": "easy",
+    "acceptableAnswers": [
+      "Piña Colada",
+      "Pina Colada"
+    ]
+  },
+  {
+    "slug": "cocktail-tequila-sunrise",
+    "question": "What cocktail is made with Tequila, Orange Juice, and Grenadine?",
+    "answer": "Tequila Sunrise",
+    "category": "Classic Cocktails",
+    "difficulty": "easy",
+    "acceptableAnswers": [
+      "Tequila Sunrise"
+    ]
+  },
+  {
+    "slug": "cocktail-boulevardier",
+    "question": "What cocktail is made with Bourbon or Rye Whiskey, Sweet Vermouth, and Campari?",
+    "answer": "Boulevardier",
+    "category": "Classic Cocktails",
+    "difficulty": "hard",
+    "acceptableAnswers": [
+      "Boulevardier"
+    ]
+  },
+  {
+    "slug": "cocktail-sidecar",
+    "question": "What cocktail is made with Cognac, Triple Sec, Fresh Lemon Juice, and a Sugared rim?",
+    "answer": "Sidecar",
+    "category": "Classic Cocktails",
+    "difficulty": "medium",
+    "acceptableAnswers": [
+      "Sidecar"
+    ]
+  },
+  {
+    "slug": "cocktail-irish-coffee",
+    "question": "What cocktail is made with Irish Whiskey, Hot Coffee, Brown Sugar, and Whipped Cream?",
+    "answer": "Irish Coffee",
+    "category": "Classic Cocktails",
+    "difficulty": "easy",
+    "acceptableAnswers": [
+      "Irish Coffee"
+    ]
+  }
+]
+}
+

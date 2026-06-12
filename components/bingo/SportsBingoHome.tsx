@@ -121,6 +121,14 @@ function toLocalDateInput(date: Date): string {
   return local.toISOString().slice(0, 10);
 }
 
+function isValidDateInput(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+  const parsed = new Date(`${value}T00:00:00`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
 function getDateLabel(value: string, today: string): string {
   if (!value) return "";
   if (value === today) return "Today";
@@ -760,7 +768,15 @@ function LoadingState({ label }: { label: string }) {
   );
 }
 
-export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
+export function SportsBingoHome({
+  initialDate = "",
+  initialCardId = "",
+  onBack,
+}: {
+  initialDate?: string;
+  initialCardId?: string;
+  onBack?: () => void;
+}) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const { triggerAnimation } = useAnimationTrigger();
   const prevCardsRef = useRef<BingoCard[]>([]);
@@ -786,7 +802,9 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
   const [glowSquareKeys, setGlowSquareKeys] = useState<Set<string>>(new Set());
   const [recentlyAddedCardIds, setRecentlyAddedCardIds] = useState<Set<string>>(new Set());
   const [isScreenShaking, setIsScreenShaking] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<string>(() => toLocalDateInput(new Date()));
+  const [selectedDate, setSelectedDate] = useState<string>(() =>
+    isValidDateInput(initialDate) ? initialDate : toLocalDateInput(new Date())
+  );
   const [isLandscapeGameView, setIsLandscapeGameView] = useState(false);
   const [landscapeBoardMode, setLandscapeBoardMode] = useState<LandscapeBoardMode>("active");
   const [landscapeActiveBoardIndex, setLandscapeActiveBoardIndex] = useState(0);
@@ -817,18 +835,55 @@ export function SportsBingoHome({ onBack }: { onBack?: () => void }) {
   }, []);
 
   useEffect(() => {
+    if (isValidDateInput(initialDate)) {
+      setSelectedDate(initialDate);
+    }
+  }, [initialDate]);
+
+  useEffect(() => {
+    const targetCardId = initialCardId.trim();
+    if (!targetCardId || cards.length === 0) {
+      return;
+    }
+    const targetCard = cards.find((card) => card.id === targetCardId);
+    if (!targetCard) {
+      return;
+    }
+    const targetDate = toLocalDateKey(targetCard.startsAt);
+    if (isValidDateInput(targetDate)) {
+      setSelectedDate(targetDate);
+    }
+    if (targetCard.status === "active") {
+      setExpandedActiveCardId(targetCard.id);
+      setExpandedFinalCardId("");
+    } else {
+      setExpandedFinalCardId(targetCard.id);
+      setExpandedActiveCardId("");
+    }
+  }, [cards, initialCardId]);
+
+  useEffect(() => {
     const fromBell = sessionStorage.getItem("tp:celebrate") === "bingo";
+    const bellDelta = Number(sessionStorage.getItem("tp:celebrate:delta") ?? 0);
     if (fromBell) {
       sessionStorage.removeItem("tp:celebrate");
       sessionStorage.removeItem("tp:celebrate:delta");
       triggerAnimation("BINGO_WIN");
+      if (bellDelta > 0) {
+        window.dispatchEvent(
+          new CustomEvent("tp:coin-flight", {
+            detail: { delta: bellDelta, coins: Math.min(36, Math.max(12, Math.round(bellDelta / 4))) },
+          })
+        );
+      }
     }
     const uid = getUserId() ?? "";
     if (!uid) return;
+    const linkUrl = `${window.location.pathname}${window.location.search}`;
     void fetch("/api/notifications/celebrate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: uid, game: "bingo" }),
+      body: JSON.stringify({ userId: uid, game: "bingo", linkUrl }),
     })
       .then(async (res) => {
         if (!res.ok) return;

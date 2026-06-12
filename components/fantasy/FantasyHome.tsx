@@ -248,6 +248,14 @@ function getTodayDateInput(): string {
   return `${year}-${month}-${day}`;
 }
 
+function isValidDateInput(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+  const parsed = new Date(`${value}T00:00:00`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
 function toLocalDateInput(value: Date): string {
   const year = value.getFullYear();
   const month = String(value.getMonth() + 1).padStart(2, "0");
@@ -270,6 +278,12 @@ function parseDailyGameDateFromId(gameId: string): string | null {
     return /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null;
   }
   return null;
+}
+
+function getFantasySportFromEntrySportKey(sportKey: string): FantasySport {
+  if (sportKey === "basketball_wnba") return "wnba";
+  if (sportKey === "baseball_mlb") return "baseball";
+  return "nba";
 }
 
 function getGameIdForSportDate(sport: FantasySport, date: string): string {
@@ -656,17 +670,19 @@ function ChalkGrid({ fine = false }: { fine?: boolean }) {
 
 type FantasyHomeProps = {
   defaultSport?: FantasySport;
+  initialDate?: string;
+  initialEntryId?: string;
   onBack?: () => void;
 };
 
-export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) {
+export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEntryId = "", onBack }: FantasyHomeProps) {
   const { triggerAnimation } = useAnimationTrigger();
   const [userId, setUserId] = useState("");
   const [venueId, setVenueId] = useState("");
   const [games, setGames] = useState<FantasyGame[]>([]);
   const [entries, setEntries] = useState<FantasyEntry[]>([]);
   const [selectedSport, setSelectedSport] = useState<FantasySport>(defaultSport);
-  const [selectedDate, setSelectedDate] = useState(() => getTodayDateInput());
+  const [selectedDate, setSelectedDate] = useState(() => (isValidDateInput(initialDate) ? initialDate : getTodayDateInput()));
   const [serverTodayDate, setServerTodayDate] = useState(() => getTodayDateInput());
   const [selectedGameId, setSelectedGameId] = useState("");
   const [playerPool, setPlayerPool] = useState<FantasyPlayerPoolItem[]>([]);
@@ -745,6 +761,12 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
   }, [defaultSport]);
 
   useEffect(() => {
+    if (isValidDateInput(initialDate)) {
+      setSelectedDate(initialDate);
+    }
+  }, [initialDate]);
+
+  useEffect(() => {
     setUserId(getUserId() ?? "");
     setVenueId(getVenueId() ?? "");
   }, []);
@@ -763,10 +785,11 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
     }
     const uid = getUserId() ?? "";
     if (!uid) return;
+    const linkUrl = `${window.location.pathname}${window.location.search}`;
     void fetch("/api/notifications/celebrate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: uid, game: "fantasy" }),
+      body: JSON.stringify({ userId: uid, game: "fantasy", linkUrl }),
     })
       .then(async (res) => {
         if (!res.ok) return;
@@ -1095,6 +1118,22 @@ export function FantasyHome({ defaultSport = "nba", onBack }: FantasyHomeProps) 
     }
     void loadEntries(false);
   }, [loadEntries, userId]);
+
+  useEffect(() => {
+    const targetEntryId = initialEntryId.trim();
+    if (!targetEntryId || entries.length === 0) {
+      return;
+    }
+    const targetEntry = entries.find((entry) => entry.id === targetEntryId);
+    if (!targetEntry) {
+      return;
+    }
+    const targetDate = parseDailyGameDateFromId(targetEntry.gameId) ?? toLocalDateInput(new Date(targetEntry.startsAt));
+    if (isValidDateInput(targetDate)) {
+      setSelectedDate(targetDate);
+    }
+    setSelectedSport(getFantasySportFromEntrySportKey(targetEntry.sportKey));
+  }, [entries, initialEntryId]);
 
   useEffect(() => {
     void loadSelectedGameDetails();

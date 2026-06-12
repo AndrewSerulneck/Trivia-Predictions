@@ -313,10 +313,11 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "" }: { in
     }
     const uid = getUserId() ?? "";
     if (!uid) return;
+    const linkUrl = `${window.location.pathname}${window.location.search}`;
     void fetch("/api/notifications/celebrate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: uid, game: "pickem" }),
+      body: JSON.stringify({ userId: uid, game: "pickem", linkUrl }),
     })
       .then(async (res) => {
         if (!res.ok) return;
