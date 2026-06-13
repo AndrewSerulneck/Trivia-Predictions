@@ -874,7 +874,27 @@ async function loadSessionQuestion(
     throw new Error(sessionRowError.message || "Failed to load session question mapping.");
   }
 
-  const sessionRow = (sessionRowData as TriviaSessionQuestionRow | null) ?? null;
+  let sessionRow = (sessionRowData as TriviaSessionQuestionRow | null) ?? null;
+
+  // If no occurrence-specific row found, fall back to template rows (occurrence_date IS NULL).
+  // These are inserted by admin round-replace/reorder operations, which write without an occurrence_date.
+  if (!sessionRow) {
+    const { data: templateData, error: templateError } = await admin
+      .from("trivia_session_questions")
+      .select("id, schedule_id, question_id, round_number, question_index")
+      .eq("schedule_id", scheduleId)
+      .is("occurrence_date", null)
+      .eq("round_number", roundNumber)
+      .eq("question_index", questionIndex)
+      .limit(1)
+      .maybeSingle();
+
+    if (templateError) {
+      throw new Error(templateError.message || "Failed to load template session question mapping.");
+    }
+    sessionRow = (templateData as TriviaSessionQuestionRow | null) ?? null;
+  }
+
   if (!sessionRow) {
     return null;
   }

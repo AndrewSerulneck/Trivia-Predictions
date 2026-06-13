@@ -2464,7 +2464,113 @@
       "answer_format": "write_in",
       "category": "History",
       "difficulty": "medium"
-    }
+    },
+    {
+    "slug": "history-oxford-aztec",
+    "question": "Which is older: the Aztec Empire or Oxford University?",
+    "answer": "Oxford University",
+    "category": "History",
+    "difficulty": "medium",
+    "acceptableAnswers": [
+      "Oxford University",
+      "Oxford",
+      "University of Oxford"
+    ]
+  },
+  {
+    "slug": "history-cleopatra-pyramids-iphone",
+    "question": "Chronologically, did Egyptian Queen Cleopatra live closer to the construction of the Great Pyramid of Giza or closer to the release of the first Apple iPhone?",
+    "answer": "The iPhone",
+    "category": "History",
+    "difficulty": "medium",
+    "acceptableAnswers": [
+      "iPhone",
+      "The iPhone",
+      "The release of the iPhone",
+      "First iPhone"
+    ]
+  },
+  {
+    "slug": "history-anne-frank-martin-luther-king",
+    "question": "Diarist Anne Frank and civil rights leader Martin Luther King Jr. were both born in what exact same calendar year?",
+    "answer": "1929",
+    "category": "History",
+    "difficulty": "medium",
+    "acceptableAnswers": [
+      "1929"
+    ]
+  },
+  {
+    "slug": "history-harvard-calculus",
+    "question": "Which is older, calculus or Harvard University?",
+    "answer": "Harvard University",
+    "category": "History",
+    "difficulty": "medium",
+    "acceptableAnswers": [
+      "No",
+      "Calculus had not been invented",
+      "False"
+    ]
+  },
+  {
+    "slug": "history-picasso-chicago-bulls",
+    "question": "True or False: Pablo Picasso lived to see the Moon Landing.",
+    "answer": "True",
+    "category": "History",
+    "difficulty": "hard",
+    "acceptableAnswers": [
+      "1970s",
+      "1973",
+      "Seventies",
+      "The 1970s"
+    ]
+  },
+  {
+    "slug": "history-chicago-city-machu-picchu",
+    "question": "Which human creation is older: the Incas building the citadel of Machu Picchu in Peru, or the official founding of the city of Chicago?",
+    "answer": "Machu Picchu",
+    "category": "History",
+    "difficulty": "easy",
+    "acceptableAnswers": [
+      "Machu Picchu"
+    ]
+  },
+  
+  {
+    "slug": "history-sharks-saturn-rings",
+    "question": "Which came first: Sharks or Saturn's rings?",
+    "answer": "Sharks",
+    "category": "History",
+    "difficulty": "medium",
+    "acceptableAnswers": [
+      "Sharks",
+      "Earth's sharks"
+    ]
+  },
+  {
+    "slug": "history-match-lighter",
+    "question": "Which was invented first, matches or lighters?",
+    "answer": "Lighters",
+    "category": "History",
+    "difficulty": "hard",
+    "acceptableAnswers": [
+      "The lighter",
+      "Cigarette lighter",
+      "Lighter",
+      "The cigarette lighter"
+    ]
+  },
+  {
+    "slug": "history-stonehenge-great-wall",
+    "question": "Which structure was started first: Stonehenge or the Great Wall of China?",
+    "answer": "Stonehenge",
+    "category": "History",
+    "difficulty": "medium",
+    "acceptableAnswers": [
+      "Stonehenge"
+    ]
+  }
+  
   ],
   "familiarity": "moderate"
 }

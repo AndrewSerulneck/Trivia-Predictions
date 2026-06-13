@@ -1391,12 +1391,13 @@ export async function replaceRoundQuestionsWithCategory(
         .map((row) => ({ ...row, slug: String(row.slug ?? "").trim() }) as EligibleRow)
     ).slice(0, QUESTIONS_PER_ROUND);
 
-    // Delete existing session questions for this schedule + round
+    // Delete only template rows (occurrence_date IS NULL) — never touch seeded occurrence rows.
     const { error: deleteError } = await admin
       .from("trivia_session_questions")
       .delete()
       .eq("schedule_id", scheduleId)
-      .eq("round_number", roundNumber);
+      .eq("round_number", roundNumber)
+      .is("occurrence_date", null);
 
     if (deleteError) {
       throw new Error(deleteError.message || "Failed to delete existing round questions.");
@@ -1467,12 +1468,13 @@ export async function replaceRoundQuestionsWithCategory(
   const shuffled = shuffleInPlace([...catRows]);
   const picked = shuffled.slice(0, QUESTIONS_PER_ROUND);
 
-  // Delete existing session questions for this schedule + round
+  // Delete only template rows (occurrence_date IS NULL) — never touch seeded occurrence rows.
   const { error: deleteError } = await admin
     .from("trivia_session_questions")
     .delete()
     .eq("schedule_id", scheduleId)
-    .eq("round_number", roundNumber);
+    .eq("round_number", roundNumber)
+    .is("occurrence_date", null);
 
   if (deleteError) {
     throw new Error(deleteError.message || "Failed to delete existing round questions.");
