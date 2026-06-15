@@ -890,6 +890,14 @@
     "difficulty": "easy"
   },
   {
+"slug": "quote-muhammad-ali-butterfly",
+"question": "Which legendary American heavyweight boxer described his fighting style as being able to 'float like a butterfly, sting like a bee'?",
+"answer": "Muhammad Ali",
+"answer_format": "write_in",
+"category": "Famous Quotes",
+"difficulty": "easy"
+},
+  {
     "slug": "nba-denver",
     "question": "Name the professional basketball team from Denver.",
     "answer": "Nuggets",

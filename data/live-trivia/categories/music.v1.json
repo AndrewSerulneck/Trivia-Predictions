@@ -10,6 +10,22 @@
       "difficulty": "easy"
     },
     {
+"slug": "quote-john-lennon-life",
+"question": "Which British musicianfamously wrote the lyric, 'Life is what happens to you while you're busy making other plans'?",
+"answer": "John Lennon",
+"answer_format": "write_in",
+"category": "Famous Quotes",
+"difficulty": "easy"
+},
+{
+"slug": "quote-dolly-parton-rainbow",
+"question": "Which iconic American country music singer-songwriter famously observed, 'If you want the rainbow, you gotta put up with the rain'?",
+"answer": "Dolly Parton",
+"answer_format": "write_in",
+"category": "Famous Quotes",
+"difficulty": "easy"
+},
+    {
       "slug": "woodstock-festival-year",
       "question": "In which year did the original Woodstock festival take place?",
       "answer": "1969",

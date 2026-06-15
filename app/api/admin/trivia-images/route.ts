@@ -275,6 +275,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Missing slug" }, { status: 400 });
   }
 
+  try {
+
   // Handle question field edits
   if (source === "edit") {
     const { question: newQuestion, answer: newAnswer, difficulty: newDifficulty, acceptableAnswers: newAcceptable } = body;
@@ -377,6 +379,13 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Image fetch failed" },
+      { status: 500 }
+    );
+  }
+
+  } catch (error) {
+    return NextResponse.json(
+      { ok: false, error: error instanceof Error ? error.message : "Request failed" },
       { status: 500 }
     );
   }

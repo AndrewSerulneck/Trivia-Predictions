@@ -18,6 +18,14 @@
       "difficulty": "easy"
     },
     {
+"slug": "quote-marilyn-monroe-imperfect",
+"question": "Which American actress and cultural icon famously said, 'Imperfection is beauty, madness is genius and it's better to be absolutely ridiculous than absolutely boring'?",
+"answer": "Marilyn Monroe",
+"answer_format": "write_in",
+"category": "Famous Quotes",
+"difficulty": "easy"
+},
+    {
       "slug": "marvel-mcu-first-movie",
       "question": "Which film kicked off the Marvel Cinematic Universe in 2008?",
       "answer": "Iron Man",
@@ -338,6 +346,15 @@
       "category": "Pop Culture",
       "difficulty": "easy"
     },
+    {
+"slug": "quote-coco-chanel-irreplaceable",
+"question": "Which French fashion designer famously declared, 'In order to be irreplaceable one must always be different'?",
+"answer": "Coco Chanel",
+"answer_format": "write_in",
+"category": "Famous Quotes",
+"difficulty": "easy"
+},
+
     {
       "slug": "sabrina-carpenter-mans-best-friend-album",
       "question": "Sabrina Carpenter followed up 'Short n' Sweet' with which 2025 album that sparked controversy over its cover art?",

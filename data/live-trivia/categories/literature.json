@@ -1,0 +1,529 @@
+{
+  "categoryName": "Literature",
+  "questions": [
+    {
+      "slug": "quote-oscar-wilde-themselves",
+      "question": "Which Irish playwright famously advised readers, 'Be yourself; everyone else is already taken'?",
+      "answer": "Oscar Wilde",
+      "answer_format": "write_in",
+      "category": "Famous Quotes",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-george-orwell-big-brother",
+      "question": "Which English author coined the terrifying warning, 'Big Brother is watching you' in his dystopian novel 1984?",
+      "answer": "George Orwell",
+      "answer_format": "write_in",
+      "category": "Famous Quotes",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-friedrich-nietzsche-monster",
+      "question": "Which German philosopher warned, 'He who fights with monsters should look to it that he himself does not become a monster'?",
+      "answer": "Friedrich Nietzsche",
+      "answer_format": "write_in",
+      "category": "Famous Quotes",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "quote-charles-dickens-cities",
+      "question": "Which English novelist opened his book A Tale of Two Cities with the line, 'It was the best of times, it was the worst of times'?",
+      "answer": "Charles Dickens",
+      "answer_format": "write_in",
+      "category": "Famous Quotes",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-oscar-wilde-temptation",
+      "question": "Which witty Irish playwright and author wrote the famous line, 'I can resist everything except temptation'?",
+      "answer": "Oscar Wilde",
+      "answer_format": "write_in",
+      "category": "Famous Quotes",
+      "difficulty": "medium"
+    },
+    {
+      "slug": "quote-julius-caesar-brute",
+      "question": "According to William Shakespeare's historical tragedy, which Roman dictator utters the dying words, 'Et tu, Brute?'",
+      "answer": "Julius Caesar",
+      "answer_format": "write_in",
+      "category": "Famous Quotes",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-sherlock-holmes-elementary",
+      "question": "Which fictional detective created by Arthur Conan Doyle is famously associated with the phrase, 'Elementary, my dear Watson'?",
+      "answer": "Sherlock Holmes",
+      "answer_format": "write_in",
+      "category": "Famous Quotes",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "quote-hamlet-to-be",
+      "question": "Which fictional William Shakespeare character utters the famous line, 'To be, or not to be, that is the question'?",
+      "answer": "Hamlet",
+      "answer_format": "write_in",
+      "category": "Famous Quotes",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "language-homonyms",
+      "question": "What is the name given to words that share the same spelling, the same pronunciation, or both, but have completely different meanings?",
+      "answer": "Homonyms",
+      "category": "Literature",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Homonyms",
+        "Homophones",
+        "Homographs"
+      ]
+    },
+    {
+      "slug": "language-oxymoron",
+      "question": "What is the term for a figure of speech that pairs two seemingly contradictory terms, such as 'deafening silence' or 'jumbo shrimp'?",
+      "answer": "Oxymoron",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Oxymoron"
+      ]
+    },
+    {
+      "slug": "language-palindrome",
+      "question": "What name is given to a word, phrase, or sequence that reads the same backward as forward, such as 'racecar' or 'madam'?",
+      "answer": "Palindrome",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Palindrome",
+        "Palindromes"
+      ]
+    },
+    {
+      "slug": "language-onomatopoeia",
+      "question": "What is the linguistic term for a word that visually or phonetically imitates the sound it describes, such as 'buzz', 'hiss', or 'thud'?",
+      "answer": "Onomatopoeia",
+      "category": "Literature",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Onomatopoeia"
+      ]
+    },
+    {
+      "slug": "language-portmanteau",
+      "question": "What term refers to a blend of two words that combines their sounds and meanings, such as 'smog' (smoke and fog) or 'brunch' (breakfast and lunch)?",
+      "answer": "Portmanteau",
+      "category": "Literature",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Portmanteau",
+        "Portmanteau word",
+        "Blend word"
+      ]
+    },
+    {
+      "slug": "language-gerund",
+      "question": "What grammatical term refers to a verb form ending in '-ing' that functions exactly like a noun in a sentence, as in 'Swimming is great exercise'?",
+      "answer": "Gerund",
+      "category": "Literature",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Gerund"
+      ]
+    },
+    {
+      "slug": "language-oxford-comma",
+      "question": "What is the common name for the final comma placed right before the coordinating conjunction in a list of three or more items?",
+      "answer": "Oxford Comma",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Oxford Comma",
+        "Serial Comma",
+        "Harvard Comma"
+      ]
+    },
+    {
+      "slug": "language-alliteration",
+      "question": "What literary and linguistic device involves the repetition of the same consonant sound at the beginning of closely connected words?",
+      "answer": "Alliteration",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Alliteration"
+      ]
+    },
+    {
+      "slug": "language-anagram",
+      "question": "What do you call a word or phrase formed by completely rearranging the letters of another word or phrase, using all the original letters exactly once?",
+      "answer": "Anagram",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Anagram",
+        "Anagrams"
+      ]
+    },
+    {
+      "slug": "language-malapropism",
+      "question": "What is the specific term for the mistaken use of an incorrect word in place of a similar-sounding one, often with an unintentionally amusing result?",
+      "answer": "Malapropism",
+      "category": "Literature",
+      "difficulty": "hard",
+      "acceptableAnswers": [
+        "Malapropism",
+        "Malaprop"
+      ]
+    },
+    {
+      "slug": "language-antonym",
+      "question": "What basic linguistic term describes a word that expresses a meaning directly opposite to that of another word?",
+      "answer": "Antonym",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Antonym",
+        "Antonyms"
+      ]
+    },
+    {
+      "slug": "language-conjunction",
+      "question": "What part of speech is specifically used to connect words, phrases, or clauses together, with common examples being 'and', 'but', and 'or'?",
+      "answer": "Conjunction",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Conjunction",
+        "Coordinating conjunction"
+      ]
+    },
+    {
+      "slug": "language-euphemism",
+      "question": "What term describes a mild, indirect, or vague expression used in place of a harsh, blunt, or unpleasant one, such as using 'passed away' instead of 'died'?",
+      "answer": "Euphemism",
+      "category": "Literature",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Euphemism",
+        "Euphemisms"
+      ]
+    },
+    {
+      "slug": "language-active-voice",
+      "question": "What grammatical voice is being utilized when the subject of the sentence directly performs the action of the verb?",
+      "answer": "Active Voice",
+      "category": "Literature",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Active Voice",
+        "Active"
+      ]
+    },
+    {
+      "slug": "language-acronym",
+      "question": "What specific name is given to an abbreviation formed from the initial letters of other words and pronounced entirely as a single word, such as 'NASA' or 'LASER'?",
+      "answer": "Acronym",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Acronym",
+        "Acronyms"
+      ]
+    },
+    {
+      "slug": "language-superlative",
+      "question": "What grammatical form of an adjective expresses the highest degree of a quality, typically ending in '-est' or paired with the word 'most'?",
+      "answer": "Superlative",
+      "category": "Literature",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Superlative",
+        "Superlative adjective"
+      ]
+    },
+    {
+      "slug": "language-etymology",
+      "question": "What is the scientific and linguistic name given to the study of the history of words and how their origins and meanings have changed over time?",
+      "answer": "Etymology",
+      "category": "Literature",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Etymology"
+      ]
+    },
+    {
+      "slug": "language-interjection",
+      "question": "What part of speech consists of words or phrases used as sudden exclamations to express emotion, isolated from the rest of the sentence, such as 'Ouch!' or 'Wow!'?",
+      "answer": "Interjection",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Interjection",
+        "Interjections"
+      ]
+    },
+    {
+      "slug": "language-syntax",
+      "question": "What specific linguistic term refers to the rules, principles, and processes that govern the structure and arrangement of words to form proper sentences?",
+      "answer": "Syntax",
+      "category": "Literature",
+      "difficulty": "medium",
+      "acceptableAnswers": [
+        "Syntax"
+      ]
+    },
+    {
+      "slug": "language-preposition",
+      "question": "What part of speech sits before a noun or pronoun to show its spatial, temporal, or logical relationship to another word, with examples like 'under', 'through', or 'after'?",
+      "answer": "Preposition",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Preposition",
+        "Prepositions"
+      ]
+    },
+    {
+      "slug": "language-simile",
+      "question": "What figure of speech directly compares two different things using the words 'like' or 'as'?",
+      "answer": "Simile",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Simile",
+        "Similes"
+      ]
+    },
+    {
+      "slug": "language-metaphor",
+      "question": "What figure of speech compares two things by stating that one thing is another, without using 'like' or 'as'?",
+      "answer": "Metaphor",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Metaphor",
+        "Metaphors"
+      ]
+    },
+    {
+      "slug": "language-noun",
+      "question": "What basic part of speech is defined as a person, place, thing, or idea?",
+      "answer": "Noun",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Noun",
+        "Nouns"
+      ]
+    },
+    {
+      "slug": "language-verb",
+      "question": "What basic part of speech represents an action, occurrence, or state of being in a sentence?",
+      "answer": "Verb",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Verb",
+        "Verbs"
+      ]
+    },
+    {
+      "slug": "language-adjective",
+      "question": "What part of speech is used to describe, modify, or give more information about a noun?",
+      "answer": "Adjective",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Adjective",
+        "Adjectives"
+      ]
+    },
+    {
+      "slug": "language-pronoun",
+      "question": "What part of speech is used as a direct substitute for a noun to avoid repeating it, such as 'he', 'she', or 'it'?",
+      "answer": "Pronoun",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Pronoun",
+        "Pronouns"
+      ]
+    },
+    {
+      "slug": "language-synonym",
+      "question": "What do you call a word that has the same, or nearly the same, meaning as another word in the same language?",
+      "answer": "Synonym",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Synonym",
+        "Synonyms"
+      ]
+    },
+    {
+      "slug": "language-adverb",
+      "question": "What part of speech modifies a verb, an adjective, or another adverb, often ending in '-ly'?",
+      "answer": "Adverb",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Adverb",
+        "Adverbs"
+      ]
+    },
+    {
+      "slug": "language-personification",
+      "question": "What literary device gives human qualities, feelings, or actions to non-human things or animals?",
+      "answer": "Personification",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Personification"
+      ]
+    },
+    {
+      "slug": "language-proper-noun",
+      "question": "What specific type of noun names a specific person, place, or organization and always begins with a capital letter?",
+      "answer": "Proper Noun",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Proper Noun",
+        "Proper Nouns"
+      ]
+    },
+    {
+      "slug": "language-vowels",
+      "question": "What name is given to the core group of English letters consisting of A, E, I, O, U, and sometimes Y?",
+      "answer": "Vowels",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Vowels",
+        "Vowel"
+      ]
+    },
+    {
+      "slug": "language-consonants",
+      "question": "What term refers to all the letters in the alphabet that are not vowels?",
+      "answer": "Consonants",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Consonants",
+        "Consonant"
+      ]
+    },
+    {
+      "slug": "language-prefix",
+      "question": "What do you call a letter or group of letters added to the beginning of a word to alter its meaning, such as 'un-' or 're-'?",
+      "answer": "Prefix",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Prefix",
+        "Prefixes"
+      ]
+    },
+    {
+      "slug": "language-suffix",
+      "question": "What do you call a letter or group of letters added to the end of a word to alter its meaning or form, such as '-ful' or '-ly'?",
+      "answer": "Suffix",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Suffix",
+        "Suffixes"
+      ]
+    },
+    {
+      "slug": "language-idiom",
+      "question": "What is the term for a common phrase or expression whose meaning cannot be understood from the literal words, like 'bite the bullet'?",
+      "answer": "Idiom",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Idiom",
+        "Idioms",
+        "Expression"
+      ]
+    },
+    {
+      "slug": "language-contraction",
+      "question": "What do you call a shortened word form made by combining two words and replacing missing letters with an apostrophe, like 'don't' or 'it's'?",
+      "answer": "Contraction",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Contraction",
+        "Contractions"
+      ]
+    },
+    {
+      "slug": "language-cliche",
+      "question": "What term is used for an overused phrase or opinion that has lost its original impact and freshness, such as 'time heals all wounds'?",
+      "answer": "Cliche",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Cliche",
+        "Cliché",
+        "Cliches",
+        "Clichés"
+      ]
+    },
+    {
+      "slug": "language-compound-word",
+      "question": "What is the term for a single word made up of two complete independent words joined together, such as 'sunflower' or 'skateboard'?",
+      "answer": "Compound Word",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Compound Word",
+        "Compound Words",
+        "Compound"
+      ]
+    },
+    {
+      "slug": "language-subject",
+      "question": "In grammar, what term refers to the person, place, or thing that is performing the main action in a sentence? Hint: a sentence is composed of this and a predicate.",
+      "answer": "Subject",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Subject"
+      ]
+    },
+    {
+      "slug": "language-rhyme",
+      "question": "What do you call it when two or more words share the same ending sound as each other?",
+      "answer": "Rhyme",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Rhyme",
+        "Rhymes"
+      ]
+    },
+    {
+      "slug": "language-interrogation-point",
+      "question": "What punctuation mark is placed at the very end of a sentence to show that a direct question has been asked?",
+      "answer": "Question Mark",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Question Mark",
+        "Question Marks"
+      ]
+    },
+    {
+      "slug": "language-plural",
+      "question": "What grammatical term indicates that there is more than one of a particular noun? Hint: The opposite of singular is.... what?",
+      "answer": "Plural",
+      "category": "Literature",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "Plural"
+      ]
+    }
+  ]
+}
