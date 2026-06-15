@@ -1178,7 +1178,7 @@
     },
     {
       "slug": "titanic-cal-hockley-actor",
-      "question": "Who played the arrogant, wealthy antagonist Cal Hockley, serving as Rose's controlling fiancé aboard the ill-fated liner in Titanic?",
+      "question": "Who played the arrogant, wealthy antagonist Cal Hockley, serving as Rose's controlling fianc\u00e9 aboard the ill-fated liner in Titanic?",
       "answer": "Billy Zane",
       "answer_format": "write_in",
       "category": "Movies",
@@ -1210,7 +1210,7 @@
       "acceptableAnswers": [
         "Gollum",
         "Smeagol",
-        "Sméagol"
+        "Sm\u00e9agol"
       ]
     },
     {
@@ -1393,7 +1393,7 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Timothee Chalamet",
-        "Timothée Chalamet",
+        "Timoth\u00e9e Chalamet",
         "Chalamet"
       ]
     },
@@ -1627,15 +1627,15 @@
         "Allen"
       ]
     },
-        {
+    {
       "slug": "joker-2-subtitle",
       "question": "What is the official subtitle of the 2024 Joker sequel starring Joaquin Phoenix and Lady Gaga?",
-      "answer": "Folie à Deux",
+      "answer": "Folie \u00e0 Deux",
       "answer_format": "write_in",
       "category": "Movies",
       "difficulty": "easy"
     },
-       {
+    {
       "slug": "jeremy-allen-white-bruce-springsteen",
       "question": "Jeremy Allen White was cast to play which legendary musician in the 2025 biopic 'Deliver Me from Nowhere'?",
       "answer": "Bruce Springsteen",
@@ -1643,7 +1643,7 @@
       "category": "Movies",
       "difficulty": "medium"
     },
-        {
+    {
       "slug": "sonic-the-hedgehog-3-shadow-voice",
       "question": "Which actor was cast to provide the voice for Shadow the Hedgehog in the 2024 film 'Sonic the Hedgehog 3'?",
       "answer": "Keanu Reeves",
@@ -1651,7 +1651,7 @@
       "category": "Movies",
       "difficulty": "medium"
     },
-        {
+    {
       "slug": "beetlejuice-sequel-title",
       "question": "What is the official title of the 2024 Tim Burton sequel to 'Beetlejuice' starring Michael Keaton and Jenna Ortega?",
       "answer": "Beetlejuice Beetlejuice",
@@ -1659,7 +1659,7 @@
       "category": "Movies",
       "difficulty": "easy"
     },
-        {
+    {
       "slug": "deadpool-wolverine-cameo-blade",
       "question": "Which actor reprised his role as Blade in the 2024 film 'Deadpool & Wolverine'?",
       "answer": "Wesley Snipes",
@@ -1739,7 +1739,7 @@
         "Eastwood"
       ]
     },
-        {
+    {
       "slug": "twisters-movie-star",
       "question": "Glen Powell and Daisy Edgar-Jones starred in which 2024 sequel to a 1996 disaster film?",
       "answer": "Twisters",
@@ -1749,7 +1749,7 @@
     },
     {
       "slug": "schindlers-list-amon-goth-actor",
-      "question": "Who received critical acclaim for his deeply unsettling performance as the sadistic Nazi concentration camp commandant Amon Göth in Schindler's List?",
+      "question": "Who received critical acclaim for his deeply unsettling performance as the sadistic Nazi concentration camp commandant Amon G\u00f6th in Schindler's List?",
       "answer": "Ralph Fiennes",
       "answer_format": "write_in",
       "category": "Movies",
@@ -1757,18 +1757,6 @@
       "acceptableAnswers": [
         "Ralph Fiennes",
         "Fiennes"
-      ]
-    },
-    {
-      "slug": "fargo-marge-gunderson-actress",
-      "question": "Who won an Academy Award for her role as Marge Gunderson, the pregnant, cheerful, yet highly competent Minnesota police chief in Fargo?",
-      "answer": "Frances McDormand",
-      "answer_format": "write_in",
-      "category": "Movies",
-      "difficulty": "easy",
-      "acceptableAnswers": [
-        "Frances McDormand",
-        "McDormand"
       ]
     },
     {
@@ -1939,9 +1927,9 @@
       "difficulty": "easy",
       "acceptableAnswers": [
         "Alfonso Cuaron",
-        "Alfonso Cuarón",
+        "Alfonso Cuar\u00f3n",
         "Cuaron",
-        "Cuarón"
+        "Cuar\u00f3n"
       ]
     },
     {
@@ -2115,13 +2103,13 @@
     {
       "slug": "nomadland-director",
       "question": "Which acclaimed female filmmaker won the Academy Award for Best Director for helming the 2020 neo-western drama Nomadland?",
-      "answer": "Chloé Zhao",
+      "answer": "Chlo\u00e9 Zhao",
       "answer_format": "write_in",
       "category": "Movies",
       "difficulty": "easy",
       "acceptableAnswers": [
         "Chloe Zhao",
-        "Chloé Zhao",
+        "Chlo\u00e9 Zhao",
         "Zhao"
       ]
     },
@@ -2199,8 +2187,8 @@
       ]
     },
     {
-      "slug": "tár-lydia-tar-actress-2",
-      "question": "Who earned widespread critical acclaim for portraying Lydia Tár, an elite, complex orchestral conductor facing a public downfall in the 2022 film Tár?",
+      "slug": "t\u00e1r-lydia-tar-actress-2",
+      "question": "Who earned widespread critical acclaim for portraying Lydia T\u00e1r, an elite, complex orchestral conductor facing a public downfall in the 2022 film T\u00e1r?",
       "answer": "Cate Blanchett",
       "answer_format": "write_in",
       "category": "Movies",
@@ -2474,7 +2462,7 @@
     {
       "slug": "la-vie-en-rose-marion-cotillard",
       "question": "Which singer was played by Marion Cotillard in the 2007 film La Vie en Rose?",
-      "answer": "Édith Piaf",
+      "answer": "\u00c9dith Piaf",
       "category": "Movies",
       "difficulty": "easy"
     },
@@ -2876,7 +2864,7 @@
     },
     {
       "slug": "quote-bruce-lee-water",
-      "question": "Which iconic martial artist and actor famously advised philosophers to 'Empty your mind, be formless, shapeless — like water'?",
+      "question": "Which iconic martial artist and actor famously advised philosophers to 'Empty your mind, be formless, shapeless \u2014 like water'?",
       "answer": "Bruce Lee",
       "answer_format": "write_in",
       "category": "Movies",
@@ -3794,168 +3782,171 @@
       "difficulty": "easy"
     },
     {
-    "slug": "star-wars-opening",
-    "question": "In what movie does the opening line read: 'A long time ago in a galaxy far, far away...'?",
-    "answer": "Star Wars",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "gone-with-the-wind-opening",
-    "question": "In what movie does the opening line read: 'There was a land of Cavaliers and Cotton Fields called the Old South.'?",
-    "answer": "Gone with the Wind",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-godfather-opening",
-    "question": "In what movie does the opening monologue read: 'I believe in America. America has made my fortune. And I raised my daughter in the American fashion.'?",
-    "answer": "The Godfather",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
+      "slug": "star-wars-opening",
+      "question": "In what movie does the opening line read: 'A long time ago in a galaxy far, far away...'?",
+      "answer": "Star Wars",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
     {
-    "slug": "the-departed-opening",
-    "question": "In what movie does Jack Nicholson narrate this opening line: 'I don't want to be a product of my environment. I want my environment to be a product of me.'?",
-    "answer": "The Departed",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-     {
-    "slug": "conan-the-barbarian-opening",
-    "question": "What movie starts with this monologue: 'Between the time when the oceans drank Atlantis and the rise of the sons of Aryas, there was an age undreamed of. And unto this, Conan, destined to wear the jeweled crown of Aquilonia upon a troubled brow.'?",
-    "answer": "Conan the Barbarian",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-      {
-    "slug": "eternal-sunshine-opening",
-    "question": "What movie starts with this monologue by Jim Carey: 'Random Thoughts, for Valentines day, 2004. The day's a holiday invented by greeting card companies, to make people feel like crap. I ditched work today. Took a train out to Montauk. I don't know why.'",
-    "answer": "Eternal Sunshine of the Spotless Mind",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-        {
-    "slug": "lotr-opening",
-    "question": "What movie franchise starts with this monologue:'The world is changed. I feel it in the water. I feel it in the earth. I smell it in the air. Much that once was is lost, for none now live who remember it?'",
-    "answer": "The Lord of the Rings",
-    "category": "Movies",
-    "difficulty": "easy",
-    "acceptableAnswers": ["LOTR", "The Lord of the Rings"]
-  },
+      "slug": "gone-with-the-wind-opening",
+      "question": "In what movie does the opening line read: 'There was a land of Cavaliers and Cotton Fields called the Old South.'?",
+      "answer": "Gone with the Wind",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
     {
-    "slug": "dr-strangelove-opening",
-    "question": "In what movie does the opening line read: 'For more than a year, ominous rumors had been privately circulating among high-level western leaders that the Soviet Union had been at work on what was darkly hinted to be the Ultimate Weapon, a Doomsday Device.'?",
-    "answer": "Dr. Strangelove",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
+      "slug": "the-godfather-opening",
+      "question": "In what movie does the opening monologue read: 'I believe in America. America has made my fortune. And I raised my daughter in the American fashion.'?",
+      "answer": "The Godfather",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
     {
-    "slug": "kill-bill-vol-1-opening",
-    "question": "Which Quentin Tarantino movie has the opening line: 'Do you find me sadistic? You know, I bet I could fry an egg on your head right now, if I wanted to.'?",
-    "answer": "Kill Bill: Vol. 1",
-    "category": "Movies",
-    "difficulty": "hard"
-  },
+      "slug": "the-departed-opening",
+      "question": "In what movie does Jack Nicholson narrate this opening line: 'I don't want to be a product of my environment. I want my environment to be a product of me.'?",
+      "answer": "The Departed",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
     {
-    "slug": "the-social-network-opening",
-    "question": "In what movie (based on a true story) does Jesse Eisenberg recite the following opening line: 'Did you know there are more people with genius IQs living in China than there are people of any kind living in the United States?'",
-    "answer": "The Social Network",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
+      "slug": "conan-the-barbarian-opening",
+      "question": "What movie starts with this monologue: 'Between the time when the oceans drank Atlantis and the rise of the sons of Aryas, there was an age undreamed of. And unto this, Conan, destined to wear the jeweled crown of Aquilonia upon a troubled brow.'?",
+      "answer": "Conan the Barbarian",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
     {
-    "slug": "black-swan-opening",
-    "question": "In what movie does the opening line read: 'I had the craziest dream last night. I was dancing the White Swan.'?",
-    "answer": "Black Swan",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-          {
-    "slug": "raging-bull-opening",
-    "question": "What movie starts with this monologue by Robert de Niro: 'I remember those cheers. They still ring in my ears. After years, they remain in my thoughts. Go to one night, I took off my robe, and what’d I do? I forgot to wear shorts?'",
-    "answer": "Raging Bull",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-            {
-    "slug": "patton-opening",
-    "question": "What movie starts with this monologue by George C. Scott as General George Patton: 'Now, I want you to remember that no bastard ever won a war by dying for his country. He won it by making the other poor dumb bastard die for his country?'",
-    "answer": "Patton",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "stand-by-me-opening",
-    "question": "In what movie does the opening line read: 'I was 12 going on 13 the first time I saw a dead human being?'",
-    "answer": "Stand by Me",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "full-metal-jacket-opening",
-    "question": "In what movie does the opening line read: 'I am Gunnery Sergeant Hartman, your senior drill instructor. From now on you will speak only when spoken to, and the first and last words out of your filthy sewers will be sir.'?",
-    "answer": "Full Metal Jacket",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "fear-and-loathing-in-las-vegas-opening",
-    "question": "In what movie does the opening line read: 'We were somewhere around Barstow on the edge of the desert when the drugs began to take hold?'",
-    "answer": "Fear and Loathing in Las Vegas",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "trainspotting-opening",
-    "question": "In what movie does the opening line read: 'Choose Life. Choose a job. Choose a career. Choose a family. Choose a f***ing big television?'",
-    "answer": "Trainspotting",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "fight-club-opening",
-    "question": "In what movie does the opening line read: 'People are always asking me if I know Tyler Durden…?'",
-    "answer": "Fight Club",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "apocalypse-now-opening",
-    "question": "In what movie does the opening line read: 'Saigon. S**t! I'm still only in Saigon. Every time I think I'm gonna wake up back in the jungle...?'",
-    "answer": "Apocalypse Now",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "the-big-lebowski-opening",
-    "question": "In what movie does the opening line read: 'Way out west there was this fella I wanna tell ya about. Goes by the name of Jeff Lebowski?'",
-    "answer": "The Big Lebowski",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-   {
-    "slug": "sin-city-opening",
-    "question": "In what movie does the opening line read: 'She shivers in the wind like the last leaf on a dying tree?'",
-    "answer": "Sin City",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "dirty-dancing-opening",
-    "question": "In what movie does the opening line read: 'It was the summer of 1963, when everybody called me Baby and it didn't occur to me to mind?'",
-    "answer": "Dirty Dancing",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-  {
-    "slug": "a-clockwork-orange-opening",
-    "question": "In what movie does Malcolm McDowell say this opening line: 'There was me, that is Alex, and my three droogs, that is Pete, Georgie, and Dim, and we sat in the Korova Milkbar trying to make up our rassoodocks what to do with the evening?'",
-    "answer": "A Clockwork Orange",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-      {
+      "slug": "eternal-sunshine-opening",
+      "question": "What movie starts with this monologue by Jim Carey: 'Random Thoughts, for Valentines day, 2004. The day's a holiday invented by greeting card companies, to make people feel like crap. I ditched work today. Took a train out to Montauk. I don't know why.'",
+      "answer": "Eternal Sunshine of the Spotless Mind",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "lotr-opening",
+      "question": "What movie franchise starts with this monologue:'The world is changed. I feel it in the water. I feel it in the earth. I smell it in the air. Much that once was is lost, for none now live who remember it?'",
+      "answer": "The Lord of the Rings",
+      "category": "Movies",
+      "difficulty": "easy",
+      "acceptableAnswers": [
+        "LOTR",
+        "The Lord of the Rings"
+      ]
+    },
+    {
+      "slug": "dr-strangelove-opening",
+      "question": "In what movie does the opening line read: 'For more than a year, ominous rumors had been privately circulating among high-level western leaders that the Soviet Union had been at work on what was darkly hinted to be the Ultimate Weapon, a Doomsday Device.'?",
+      "answer": "Dr. Strangelove",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "kill-bill-vol-1-opening",
+      "question": "Which Quentin Tarantino movie has the opening line: 'Do you find me sadistic? You know, I bet I could fry an egg on your head right now, if I wanted to.'?",
+      "answer": "Kill Bill: Vol. 1",
+      "category": "Movies",
+      "difficulty": "hard"
+    },
+    {
+      "slug": "the-social-network-opening",
+      "question": "In what movie (based on a true story) does Jesse Eisenberg recite the following opening line: 'Did you know there are more people with genius IQs living in China than there are people of any kind living in the United States?'",
+      "answer": "The Social Network",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "black-swan-opening",
+      "question": "In what movie does the opening line read: 'I had the craziest dream last night. I was dancing the White Swan.'?",
+      "answer": "Black Swan",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "raging-bull-opening",
+      "question": "What movie starts with this monologue by Robert de Niro: 'I remember those cheers. They still ring in my ears. After years, they remain in my thoughts. Go to one night, I took off my robe, and what\u2019d I do? I forgot to wear shorts?'",
+      "answer": "Raging Bull",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "patton-opening",
+      "question": "What movie starts with this monologue by George C. Scott as General George Patton: 'Now, I want you to remember that no bastard ever won a war by dying for his country. He won it by making the other poor dumb bastard die for his country?'",
+      "answer": "Patton",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "stand-by-me-opening",
+      "question": "In what movie does the opening line read: 'I was 12 going on 13 the first time I saw a dead human being?'",
+      "answer": "Stand by Me",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "full-metal-jacket-opening",
+      "question": "In what movie does the opening line read: 'I am Gunnery Sergeant Hartman, your senior drill instructor. From now on you will speak only when spoken to, and the first and last words out of your filthy sewers will be sir.'?",
+      "answer": "Full Metal Jacket",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "fear-and-loathing-in-las-vegas-opening",
+      "question": "In what movie does the opening line read: 'We were somewhere around Barstow on the edge of the desert when the drugs began to take hold?'",
+      "answer": "Fear and Loathing in Las Vegas",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "trainspotting-opening",
+      "question": "In what movie does the opening line read: 'Choose Life. Choose a job. Choose a career. Choose a family. Choose a f***ing big television?'",
+      "answer": "Trainspotting",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "fight-club-opening",
+      "question": "In what movie does the opening line read: 'People are always asking me if I know Tyler Durden\u2026?'",
+      "answer": "Fight Club",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "apocalypse-now-opening",
+      "question": "In what movie does the opening line read: 'Saigon. S**t! I'm still only in Saigon. Every time I think I'm gonna wake up back in the jungle...?'",
+      "answer": "Apocalypse Now",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "the-big-lebowski-opening",
+      "question": "In what movie does the opening line read: 'Way out west there was this fella I wanna tell ya about. Goes by the name of Jeff Lebowski?'",
+      "answer": "The Big Lebowski",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "sin-city-opening",
+      "question": "In what movie does the opening line read: 'She shivers in the wind like the last leaf on a dying tree?'",
+      "answer": "Sin City",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "dirty-dancing-opening",
+      "question": "In what movie does the opening line read: 'It was the summer of 1963, when everybody called me Baby and it didn't occur to me to mind?'",
+      "answer": "Dirty Dancing",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
+    {
+      "slug": "a-clockwork-orange-opening",
+      "question": "In what movie does Malcolm McDowell say this opening line: 'There was me, that is Alex, and my three droogs, that is Pete, Georgie, and Dim, and we sat in the Korova Milkbar trying to make up our rassoodocks what to do with the evening?'",
+      "answer": "A Clockwork Orange",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
+    {
       "slug": "which-film-won-the-first-academy-award-for-best-picture",
       "question": "Which film won the first Academy Award for Best Picture?",
       "answer": "Wings",
@@ -3963,14 +3954,14 @@
       "category": "Movies",
       "difficulty": "medium"
     },
-  {
-    "slug": "the-sound-of-music-opening",
-    "question": "In what movie does the opening line read: 'The hills are alive with the sound of music?'",
-    "answer": "The Sound of Music",
-    "category": "Movies",
-    "difficulty": "easy"
-  },
-      {
+    {
+      "slug": "the-sound-of-music-opening",
+      "question": "In what movie does the opening line read: 'The hills are alive with the sound of music?'",
+      "answer": "The Sound of Music",
+      "category": "Movies",
+      "difficulty": "easy"
+    },
+    {
       "slug": "barbie-movie-director",
       "question": "Who directed the 2023 blockbuster movie 'Barbie'?",
       "answer": "Greta Gerwig",
@@ -3978,7 +3969,7 @@
       "category": "Movies",
       "difficulty": "easy"
     },
-        {
+    {
       "slug": "oscar-slap-year",
       "question": "In 2022 Will Smith infamously stood up and slapped a presenter at the Oscars. Who was the presenter that he slapped?",
       "answer": "Chris Rock",
@@ -3986,7 +3977,7 @@
       "category": "Movies",
       "difficulty": "medium"
     },
-        {
+    {
       "slug": "hunger-games-katniss-district",
       "question": "Katniss Everdeen represents which district in 'The Hunger Games'?",
       "answer": "District 12",
@@ -3994,7 +3985,7 @@
       "category": "Movies",
       "difficulty": "easy"
     },
-        {
+    {
       "slug": "barbie-ken-song-actor",
       "question": "Which actor performed the power ballad 'I'm Just Ken' in the 'Barbie' movie?",
       "answer": "Ryan Gosling",
@@ -4002,7 +3993,7 @@
       "category": "Movies",
       "difficulty": "easy"
     },
-        {
+    {
       "slug": "gladiator-ii-lead-actor",
       "question": "Which actor took on the lead role of Lucius in the 2024 sequel 'Gladiator II'?",
       "answer": "Paul Mescal",
@@ -4010,7 +4001,7 @@
       "category": "Movies",
       "difficulty": "medium"
     },
-        {
+    {
       "slug": "avengers-doomsday-dr-doom-actor",
       "question": "Which actor shocked fans by returning to the MCU to play Doctor Doom in 'Avengers: Doomsday'?",
       "answer": "Robert Downey Jr.",
@@ -4022,7 +4013,7 @@
         "Robert Downey"
       ]
     },
-        {
+    {
       "slug": "oppenheimer-barbie-phenomenon",
       "question": "What portmanteau was used to describe the 2023 cinematic event where 'Oppenheimer' and 'Barbie' were released on the same day?",
       "answer": "Barbenheimer",
@@ -4030,14 +4021,14 @@
       "category": "Movies",
       "difficulty": "easy"
     },
-        {
+    {
       "slug": "it-ends-with-us-drama",
       "question": "The 2024 film 'It Ends With Us' was overshadowed by a high-profile public feud between star Blake Lively and which director/co-star?",
       "answer": "Justin Baldoni",
       "answer_format": "write_in",
       "category": "Movies",
       "difficulty": "medium"
-    },   
+    },
     {
       "slug": "wicked-movie-elphaba",
       "question": "Who played the role of Elphaba in the 2024 film adaptation of the musical 'Wicked'?",
@@ -4046,7 +4037,7 @@
       "category": "Movies",
       "difficulty": "easy"
     },
-        {
+    {
       "slug": "everything-everywhere-lead-actress",
       "question": "Which actress won an Oscar for her lead role in 'Everything Everywhere All at Once'?",
       "answer": "Michelle Yeoh",
@@ -4054,7 +4045,7 @@
       "category": "Movies",
       "difficulty": "easy"
     },
-       {
+    {
       "slug": "oppenheimer-lead-actor",
       "question": "Which actor won the Academy Award for Best Actor for his role in the 2023 film 'Oppenheimer'?",
       "answer": "Cillian Murphy",
@@ -4062,7 +4053,7 @@
       "category": "Movies",
       "difficulty": "easy"
     },
-       {
+    {
       "slug": "marvel-mcu-first-movie",
       "question": "Which film kicked off the Marvel Cinematic Universe in 2008?",
       "answer": "Iron Man",
@@ -4070,12 +4061,12 @@
       "category": "Movies",
       "difficulty": "easy"
     },
-  {
-    "slug": "gone-girl-opening",
-    "question": "In what movie does the opening line read: 'When I think of my wife, I always think of her head. I picture cracking her lovely skull, unspooling her brains, trying to get answers.'?",
-    "answer": "Gone Girl",
-    "category": "Movies",
-    "difficulty": "easy"
-  }
+    {
+      "slug": "gone-girl-opening",
+      "question": "In what movie does the opening line read: 'When I think of my wife, I always think of her head. I picture cracking her lovely skull, unspooling her brains, trying to get answers.'?",
+      "answer": "Gone Girl",
+      "category": "Movies",
+      "difficulty": "easy"
+    }
   ]
 }

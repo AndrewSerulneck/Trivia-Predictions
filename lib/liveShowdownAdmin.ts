@@ -150,10 +150,41 @@ export async function replaceSessionQuestion(
   );
   if (safeExcludeSlug) usedSlugs.add(safeExcludeSlug);
 
+  const { data: excludedQuestionData, error: excludedQuestionError } = safeExcludeSlug
+    ? await admin
+        .from("trivia_questions")
+        .select("category")
+        .eq("slug", safeExcludeSlug)
+        .limit(1)
+        .maybeSingle<{ category: string | null }>()
+    : { data: null, error: null };
+  if (excludedQuestionError) {
+    throw new Error(excludedQuestionError.message || "Failed to load deleted question category.");
+  }
+  const targetCategory = excludedQuestionData?.category
+    ? normalizeCategory(excludedQuestionData.category)
+    : null;
+
+  let venueSeenSlugs = new Set<string>();
+  if (safeVenueId) {
+    const { data: seenData, error: seenError } = await admin
+      .from("venue_seen_questions")
+      .select("question_id")
+      .eq("venue_id", safeVenueId);
+    if (seenError) {
+      throw new Error(seenError.message || "Failed to load venue seen questions.");
+    }
+    venueSeenSlugs = new Set(
+      ((seenData ?? []) as Array<{ question_id: string | null }>)
+        .map((row) => String(row.question_id ?? "").trim())
+        .filter(Boolean)
+    );
+  }
+
   // Active candidates in a deterministic base order (exclude the deleted slug).
   const { data: poolData, error: poolError } = await admin
     .from("trivia_questions")
-    .select("slug")
+    .select("slug, category, options, correct_answer, question_pool")
     .eq("status", "active")
     .eq("question_pool", "live_showdown")
     .neq("slug", safeExcludeSlug)
@@ -164,15 +195,38 @@ export async function replaceSessionQuestion(
     throw new Error(poolError.message || "Failed to load replacement question pool.");
   }
 
-  const candidates = ((poolData ?? []) as Array<{ slug: string | null }>)
-    .map((row) => String(row.slug ?? "").trim())
-    .filter((slug) => slug && !usedSlugs.has(slug));
+  const candidates = ((poolData ?? []) as Array<{
+    slug: string | null;
+    category: string | null;
+    options: unknown;
+    correct_answer: number;
+  }>)
+    .map((row) => ({ ...row, slug: String(row.slug ?? "").trim() }))
+    .filter(
+      (row): row is {
+        slug: string;
+        category: string | null;
+        options: unknown;
+        correct_answer: number;
+      } =>
+        Boolean(row.slug) &&
+        !usedSlugs.has(row.slug) &&
+        !isBlockedLiveShowdownCategory(row.category) &&
+        isLiveShowdownEligibleAnswer(getCorrectAnswer(row))
+    );
   if (candidates.length === 0) {
     throw new Error("No eligible replacement question is available for this slot.");
   }
 
+  const categoryCandidates = targetCategory
+    ? candidates.filter((row) => normalizeCategory(row.category) === targetCategory)
+    : [];
+  const categoryPreferredCandidates = categoryCandidates.length > 0 ? categoryCandidates : candidates;
+  const unseenCandidates = categoryPreferredCandidates.filter((row) => !venueSeenSlugs.has(row.slug));
+  const replacementCandidates = unseenCandidates.length > 0 ? unseenCandidates : categoryPreferredCandidates;
+
   const seed = djb2(`${scheduleId}${occurrenceDate}${roundNumber}${questionIndex}`);
-  const newSlug = candidates[seed % candidates.length];
+  const newSlug = replacementCandidates[seed % replacementCandidates.length]!.slug;
 
   const { error: updateError } = await admin
     .from("trivia_session_questions")
@@ -258,7 +312,7 @@ function isLiveShowdownEligibleAnswer(value: string): boolean {
   return toWordCount(normalized) <= 2;
 }
 
-function getCorrectAnswer(row: LiveShowdownQuestionRow): string {
+function getCorrectAnswer(row: Pick<LiveShowdownQuestionRow, "options" | "correct_answer">): string {
   const options = coerceOptions(row.options);
   const answerIndex = Number.isInteger(row.correct_answer) ? row.correct_answer : -1;
   if (answerIndex < 0 || answerIndex >= options.length) return "";

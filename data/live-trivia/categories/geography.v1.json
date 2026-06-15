@@ -1036,15 +1036,6 @@
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
-      "slug": "geography-map-mexico",
-      "question": "Which country is shown highlighted on this map?",
-      "answer": "Mexico",
-      "category": "Geography",
-      "difficulty": "easy",
-      "imageUrl": "Cunadekcorporationyprodmx.png",
-      "imageCredit": "Map via Wikimedia Commons"
-    },
-    {
       "slug": "geography-map-germany",
       "question": "Which country is shown highlighted on this map?",
       "answer": "Germany",
@@ -2415,15 +2406,6 @@
       "imageCredit": "Photo by gustavo nacht on Unsplash"
     },
     {
-      "slug": "landmark-alhambra",
-      "question": "This sprawling hilltop palace and fortress complex in Granada, Spain, stands as one of the most famous surviving examples of Islamic architecture from the Nasrid dynasty.",
-      "answer": "Alhambra",
-      "category": "Geography",
-      "difficulty": "medium",
-      "imageUrl": "https://images.unsplash.com/photo-1620677368158-32b1293fac36?w=800&fit=crop",
-      "imageCredit": "Photo by Jorge Fernández Salas on Unsplash"
-    },
-    {
       "slug": "landmark-chichen-itza",
       "question": "Dominated by the massive step-pyramid known as El Castillo, this large pre-Columbian city built by the Maya civilization sits in the Mexican state of Yucatán.",
       "answer": "Chichen Itza",
@@ -2478,15 +2460,6 @@
       "imageCredit": "Photo by Hongbin on Unsplash"
     },
     {
-      "slug": "landmark-neuschwanstein-castle",
-      "question": "Commissioned by the reclusive 'Mad' King Ludwig II of Bavaria in 1869 as a personal refuge, this Romanesque Revival cliffside palace served as the direct inspiration for Disney's Sleeping Beauty Castle.",
-      "answer": "Neuschwanstein Castle",
-      "category": "Geography",
-      "difficulty": "medium",
-      "imageUrl": "https://images.unsplash.com/photo-1449452198679-05c7fd30f416?w=800&fit=crop",
-      "imageCredit": "Photo by Rachel Davis on Unsplash"
-    },
-    {
       "slug": "landmark-acropolis-of-athens",
       "question": "This ancient rocky citadel rises high above the Greek capital and contains the architectural remains of several historic structures of great universal significance, most notably the Parthenon.",
       "answer": "Acropolis of Athens",
@@ -2532,15 +2505,6 @@
       "imageCredit": "Photo by Florian Wehde on Unsplash"
     },
     {
-      "slug": "landmark-borobudur",
-      "question": "Dating back to the 9th century during the Sailendra Dynasty, this massive geometric step-pyramid on the island of Java, Indonesia, stands as the world's largest Buddhist temple.",
-      "answer": "Borobudur",
-      "category": "Geography",
-      "difficulty": "hard",
-      "imageUrl": "https://images.unsplash.com/photo-1620549146396-9024d914cd99?w=800&fit=crop",
-      "imageCredit": "Photo by Mario La Pergola on Unsplash"
-    },
-    {
       "slug": "landmark-mesa-verde",
       "question": "Located in southwestern Colorado, this rugged National Park protects over 600 ancient Ancestral Puebloan cliff dwellings, including the massive 150-room Cliff Palace built under overhanging rock ledges.",
       "answer": "Mesa Verde",
@@ -2548,15 +2512,6 @@
       "difficulty": "hard",
       "imageUrl": "https://images.unsplash.com/photo-1623107061821-ee462b5c7ea5?w=800&fit=crop",
       "imageCredit": "Photo by Wallace Bentt on Unsplash"
-    },
-    {
-      "slug": "landmark-potala-palace",
-      "question": "Rising dramatically over the Lhasa Valley from the side of Marpo Ri (Red Mountain), this massive, fortress-like sanctuary served as the winter residence of the Dalai Lamas until the 1959 Tibetan uprising.",
-      "answer": "Potala Palace",
-      "category": "Geography",
-      "difficulty": "hard",
-      "imageUrl": "https://images.unsplash.com/photo-1626359909709-8067b64e1655?w=800&fit=crop",
-      "imageCredit": "Photo by Xuyu Chi on Unsplash"
     },
     {
       "slug": "landmark-forbidden-city",
@@ -2593,15 +2548,6 @@
       "difficulty": "easy",
       "imageUrl": "https://images.unsplash.com/photo-1591828353335-197466da2a4e?w=800&fit=crop",
       "imageCredit": "Photo by Mathias Reding on Unsplash"
-    },
-    {
-      "slug": "landmark-moai-easter-island",
-      "question": "Carved by the Rapa Nui people between 1250 and 1500 AD out of compressed volcanic ash, these hundreds of monolithic human figures with oversized heads guard a remote Polynesian island.",
-      "answer": "Moai",
-      "category": "Geography",
-      "difficulty": "medium",
-      "imageUrl": "https://images.unsplash.com/photo-1671155281453-b345a0a5922a?w=800&fit=crop",
-      "imageCredit": "Photo by Hal Cooks on Unsplash"
     },
     {
       "slug": "landmark-cn-tower",
@@ -2667,15 +2613,6 @@
       "imageCredit": "Photo by Kit Suman on Unsplash"
     },
     {
-      "slug": "landmark-cappadocia",
-      "question": "Located on a high plateau in central Turkey, this volcanic landscape is famous for its towering 'fairy chimney' rock formations, ancient underground cities, and skies filled with hot air balloons.",
-      "answer": "Cappadocia",
-      "category": "Geography",
-      "difficulty": "medium",
-      "imageUrl": "https://images.unsplash.com/photo-1604156789095-3348604c0f43?w=800&fit=crop",
-      "imageCredit": "Photo by Timur Garifov on Unsplash"
-    },
-    {
       "slug": "landmark-terracotta-army",
       "question": "Discovered accidentally by local farmers digging a well in 1974, this massive collection of thousands of life-sized clay soldiers was buried in Xi'an to protect China's first emperor in the afterlife.",
       "answer": "Terracotta Army",
@@ -2703,15 +2640,6 @@
       "imageCredit": "Photo by JR Ross on Unsplash"
     },
     {
-      "slug": "landmark-lascaux-cave",
-      "question": "Discovered by a teenager and his dog in 1940, this complex of caves in southwestern France contains exceptionally detailed, 17,000-year-old Paleolithic wall paintings, primarily depicting large animals.",
-      "answer": "Lascaux Cave",
-      "category": "Geography",
-      "difficulty": "hard",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Lascaux-diverticule-f%C3%A9lins.jpg/960px-Lascaux-diverticule-f%C3%A9lins.jpg",
-      "imageCredit": "Photo: Caveman via Wikimedia Commons"
-    },
-    {
       "slug": "landmark-hagia-sophia-blue-mosque",
       "question": "Constructed between 1609 and 1616 during the rule of Ahmed I, this historic Istanbul mosque is famous for its cascading domes, six minarets, and interior walls hand-painted with over 20,000 blue Iznik tiles.",
       "answer": "Blue Mosque",
@@ -2737,15 +2665,6 @@
       "difficulty": "easy",
       "imageUrl": "https://images.unsplash.com/photo-1542223616-740d5dff7f56?w=800&fit=crop",
       "imageCredit": "Photo by Andrea Leopardi on Unsplash"
-    },
-    {
-      "slug": "landmark-sigiriya",
-      "question": "Dominated by a massive, 660-foot-tall column of sheer rock, this ancient fortress complex in Sri Lanka features a gateway carved into the shape of an enormous lion, complete with massive stone paws.",
-      "answer": "Sigiriya",
-      "category": "Geography",
-      "difficulty": "hard",
-      "imageUrl": "https://images.unsplash.com/photo-1612862862126-865765df2ded?w=800&fit=crop",
-      "imageCredit": "Photo by Dylan Shaw on Unsplash"
     },
     {
       "slug": "landmark-arc-de-triomphe",

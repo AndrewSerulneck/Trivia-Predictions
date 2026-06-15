@@ -518,7 +518,67 @@ async function loadExistingQuestionCatalog(supabase, pools) {
   return catalog;
 }
 
-async function upsertRows(rows) {
+async function pruneOrphanedLiveShowdownQuestions(supabase, canonicalSlugs) {
+  // Collect all active live_showdown slugs from the DB (paginated).
+  const dbSlugs = [];
+  for (let start = 0; ; start += CHUNK_SIZE) {
+    const { data, error } = await retryAsync(
+      async () => {
+        return supabase
+          .from("trivia_questions")
+          .select("slug")
+          .eq("question_pool", "live_showdown")
+          .eq("status", "active")
+          .range(start, start + CHUNK_SIZE - 1);
+      },
+      { operation: `load live_showdown slugs for pruning (offset ${start})` }
+    );
+
+    if (error) {
+      throw new Error(`Failed to load live_showdown slugs for pruning: ${describeError(error)}`);
+    }
+
+    const batch = data ?? [];
+    for (const row of batch) {
+      const slug = String(row.slug ?? "").trim();
+      if (slug) dbSlugs.push(slug);
+    }
+
+    if (batch.length < CHUNK_SIZE) break;
+  }
+
+  const orphanSlugs = dbSlugs.filter((slug) => !canonicalSlugs.has(slug));
+
+  if (orphanSlugs.length === 0) {
+    console.log("No orphaned live_showdown questions found — DB is in sync with JSON.");
+    return;
+  }
+
+  console.log(
+    `Found ${orphanSlugs.length} orphaned live_showdown question(s) not present in JSON files. Marking as deleted...`
+  );
+
+  for (let start = 0; start < orphanSlugs.length; start += CHUNK_SIZE) {
+    const batch = orphanSlugs.slice(start, start + CHUNK_SIZE);
+    await retryAsync(
+      async () => {
+        const { error } = await supabase
+          .from("trivia_questions")
+          .update({ status: "deleted" })
+          .in("slug", batch);
+
+        if (error) {
+          throw new Error(`Failed to soft-delete orphaned questions: ${describeError(error)}`);
+        }
+      },
+      { operation: `prune orphan batch ${Math.floor(start / CHUNK_SIZE) + 1}` }
+    );
+  }
+
+  console.log(`Pruned ${orphanSlugs.length} orphaned live_showdown question(s):`, orphanSlugs);
+}
+
+async function upsertRows(rows, options = {}) {
   const { supabaseUrl, supabase } = createSupabaseClient();
 
   await verifyConnectivity(supabaseUrl);
@@ -565,6 +625,11 @@ async function upsertRows(rows) {
   }
   if (skippedNearDuplicates > 0) {
     console.log(`Skipped ${skippedNearDuplicates} near-duplicate question(s) already present in Supabase.`);
+  }
+
+  if (options.pruneOrphans) {
+    const canonicalSlugs = new Set(rows.map((row) => row.slug).filter(Boolean));
+    await pruneOrphanedLiveShowdownQuestions(supabase, canonicalSlugs);
   }
 
   const { count, error } = await retryAsync(
@@ -796,7 +861,7 @@ async function main() {
     return;
   }
 
-  await upsertRows(rows);
+  await upsertRows(rows, { pruneOrphans: liveMode });
 }
 
 if (require.main === module) {
