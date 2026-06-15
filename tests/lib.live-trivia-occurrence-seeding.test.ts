@@ -21,6 +21,7 @@ import {
 function makeQuestion(category: string, index: number, overrides: Partial<LiveTriviaSeedQuestion> = {}): LiveTriviaSeedQuestion {
   return {
     slug: `${category.toLowerCase().replace(/\s+/g, "-")}-${index}`,
+    question: `What is ${category} question ${index}?`,
     category,
     options: [`${category} ${index}`],
     correct_answer: 0,
@@ -221,6 +222,91 @@ describe("Live Trivia occurrence seeding", () => {
     expect(result.slots).toHaveLength(6);
     expect(result.slots.some((slot) => slot.category === "Music")).toBe(false);
     expect(result.repeatedQuestions).toBe(false);
+  });
+
+  it("separates same-sounding movie adaptation questions when alternatives exist", () => {
+    const questions: LiveTriviaSeedQuestion[] = [
+      makeQuestion("Movies", 1, {
+        slug: "movies-adaptation-1",
+        question: "Which movie is based on the novel by Mario Puzo?",
+      }),
+      makeQuestion("Movies", 2, {
+        slug: "movies-adaptation-2",
+        question: "Which movie was adapted from the novel by Winston Groom?",
+      }),
+      makeQuestion("Movies", 3, {
+        slug: "movies-award-1",
+        question: "Which movie won the Academy Award for Best Picture in 1998?",
+      }),
+      makeQuestion("Movies", 4, {
+        slug: "movies-director-1",
+        question: "Which director made the movie Jaws?",
+      }),
+      makeQuestion("Movies", 5, {
+        slug: "movies-character-1",
+        question: "Which movie character says, I'll be back?",
+      }),
+    ];
+
+    const result = seedSlots({ questions, numRounds: 1, questionsPerRound: 4 });
+    const slugs = result.slots.map((slot) => slot.slug);
+
+    expect(result.slots).toHaveLength(4);
+    for (let index = 1; index < slugs.length; index += 1) {
+      expect(slugs[index - 1]!.startsWith("movies-adaptation") && slugs[index]!.startsWith("movies-adaptation")).toBe(false);
+    }
+  });
+
+  it("separates geography landmark questions when alternatives exist", () => {
+    const questions: LiveTriviaSeedQuestion[] = [
+      makeQuestion("Geography", 1, {
+        slug: "geography-landmark-1",
+        question: "Which landmark in Paris is known for its iron tower?",
+      }),
+      makeQuestion("Geography", 2, {
+        slug: "geography-landmark-2",
+        question: "Which landmark is a white marble monument in India?",
+      }),
+      makeQuestion("Geography", 3, {
+        slug: "geography-river-1",
+        question: "Which river flows through Cairo?",
+      }),
+      makeQuestion("Geography", 4, {
+        slug: "geography-capital-1",
+        question: "What is the capital city of Canada?",
+      }),
+      makeQuestion("Geography", 5, {
+        slug: "geography-island-1",
+        question: "Which island is the largest in the Mediterranean Sea?",
+      }),
+    ];
+
+    const result = seedSlots({ questions, numRounds: 1, questionsPerRound: 4 });
+    const slugs = result.slots.map((slot) => slot.slug);
+
+    expect(result.slots).toHaveLength(4);
+    for (let index = 1; index < slugs.length; index += 1) {
+      expect(slugs[index - 1]!.startsWith("geography-landmark") && slugs[index]!.startsWith("geography-landmark")).toBe(false);
+    }
+  });
+
+  it("still fills a round when every available question has the same subtopic", () => {
+    const questions: LiveTriviaSeedQuestion[] = [
+      makeQuestion("Geography", 1, {
+        question: "Which landmark in Paris is known for its iron tower?",
+      }),
+      makeQuestion("Geography", 2, {
+        question: "Which landmark is a white marble monument in India?",
+      }),
+      makeQuestion("Geography", 3, {
+        question: "Which landmark is a famous bridge in San Francisco?",
+      }),
+    ];
+
+    const result = seedSlots({ questions, numRounds: 1, questionsPerRound: 3 });
+
+    expect(result.slots).toHaveLength(3);
+    expect(new Set(result.slots.map((slot) => slot.slug)).size).toBe(3);
   });
 
   it("avoids recently used categories when fresh categories can fill the game", () => {

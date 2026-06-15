@@ -350,7 +350,7 @@
       "category": "Television",
       "difficulty": "easy"
     },
-    {
+    { 
       "slug": "hacks-deborah-vance-city",
       "question": "In the comedy-drama Hacks, legendary stand-up comic Deborah Vance fights to maintain her decades-long performance residency in which city?",
       "answer": "Las Vegas",
@@ -946,6 +946,285 @@
       "answer": "Eeyore",
       "category": "Television",
       "difficulty": "easy"
-    }
+    },
+    {
+"slug": "sopranos-finale-song",
+"question": "What 1981 Journey song abruptly cuts to black during the final scene of The Sopranos series finale at Holsten's diner?",
+"answer": "Don't Stop Believin'",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Don't Stop Believin'", "Dont Stop Believin", "Don't Stop Believing"]
+},
+{
+"slug": "breaking-bad-walter-alter-ego",
+"question": "Inspired by a real-world German physicist, what menacing alter-ego name does Walter White adopt in the criminal underworld of Breaking Bad?",
+"answer": "Heisenberg",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Heisenberg"]
+},
+{
+"slug": "game-of-thrones-stark-home",
+"question": "Serving as the capital of the North, what is the ancestral castle home of House Stark in Game of Thrones?",
+"answer": "Winterfell",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Winterfell"]
+},
+{
+"slug": "stranger-things-fictional-town",
+"question": "The mysterious supernatural events of Stranger Things primarily take place in what fictional Indiana town during the 1980s?",
+"answer": "Hawkins",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Hawkins"]
+},
+{
+"slug": "mad-men-advertising-agency",
+"question": "Located on Madison Avenue, what is the acronym of the fictional advertising agency where Don Draper works at the start of Mad Men?",
+"answer": "SC&P",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Sterling Cooper", "Sterling Cooper Advertising", "Sterling Cooper Advertising Agency"]
+},
+{
+"slug": "parks-and-rec-fictional-town",
+"question": "Leslie Knope works tirelessly to improve the parks and recreation department of what fictional Indiana city?",
+"answer": "Pawnee",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Pawnee"]
+},
+{
+"slug": "ted-lasso-football-club",
+"question": "What is the name of the fictional English Premier League football club that American coach Ted Lasso is hired to manage?",
+"answer": "AFC Richmond",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["AFC Richmond", "Richmond"]
+},
+{
+"slug": "the-wire-barksdale-enforcer",
+"question": "Played by Idris Elba, what is the business-minded, economics-studying second-in-command of the Barksdale drug empire in The Wire?",
+"answer": "Stringer Bell",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Stringer Bell", "Stringer", "Russell Bell"]
+},
+{
+"slug": "abbott-elementary-city",
+"question": "Created by Quinta Brunson, the mockumentary workplace comedy Abbott Elementary is set within a public school in what major Pennsylvania city?",
+"answer": "Philadelphia",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Philadelphia", "Philly"]
+},
+{
+"slug": "fleabag-confession-character",
+"question": "In the critically acclaimed second season of Fleabag, the protagonist falls in love with a character widely referred to by fans as what?",
+"answer": "The Hot Priest",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["The Hot Priest", "The Priest", "Priest"]
+},
+{
+"slug": "schitts-creek-motel",
+"question": "Purchased by Johnny Rose as a joke, what is the name of the run-down roadside lodging where the Rose family is forced to live in Schitt's Creek?",
+"answer": "Rosebud Motel",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Rosebud Motel", "The Rosebud Motel"]
+},
+{
+"slug": "white-lotus-season-one-resort",
+"question": "The dramatic, dark comedic chaos of The White Lotus season one unfolds at a luxury resort located in what island state?",
+"answer": "Hawaii",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Hawaii", "Maui"]
+},
+{
+"slug": "atlanta-earn-cousin-rapper",
+"question": "In the series Atlanta, Donald Glover's character Earn manages the rising rap career of his cousin Alfred, who performs under what stage name?",
+"answer": "Paper Boi",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Paper Boi", "Paperboy"]
+},
+{
+"slug": "the-crown-queen-elizabeth-premiere",
+"question": "The expansive historical drama The Crown kicks off its first season by detailing the 1947 wedding of Princess Elizabeth to which royal figure?",
+"answer": "Prince Philip",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Prince Philip", "Philip", "Duke of Edinburgh", "Prince Philip, Duke of Edinburgh"]
+},
+{
+"slug": "true-detective-carcosa-villain",
+"question": "In the acclaimed first season of True Detective, detectives Rust Cohle and Marty Hart spend seventeen years hunting down a serial killer known by what sinister mythological alias?",
+"answer": "The Yellow King",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["The Yellow King"]
+},
+{
+"slug": "the-west-wing-president-hometown",
+"question": "Played by Martin Sheen, brilliant President Josiah Bartlet frequently touts his deep family roots and political history in which northeastern US state?",
+"answer": "New Hampshire",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["New Hampshire"]
+},
+{
+"slug": "buffy-vampire-slayer-hometown",
+"question": "Buffy Summers fights vampires, demons, and the forces of darkness above a literal Hellmouth in what fictional California town?",
+"answer": "Sunnydale",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Sunnydale"]
+},
+{
+"slug": "arrested-development-frozen-banana",
+"question": "A classic corporate staple of the Bluth family empire in Arrested Development, what specific frozen fruit is sold out of a boardwalk stand that 'always has money in it'?",
+"answer": "banana",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Frozen banana", "Bananas", "Chocolate-covered banana"]
+},
+{
+"slug": "yellowstone-dutton-ranch",
+"question": "Led by patriarch John Dutton, the sweeping neo-western drama Yellowstone centers on the conflicts surrounding a massive cattle ranch located in what western state?",
+"answer": "Montana",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Montana"]
+},
+{
+"slug": "friday-night-lights-texas-town",
+"question": "The high-stakes world of high school football in Friday Night Lights centers on Coach Eric Taylor guiding the Dillon Panthers in what state?",
+"answer": "Texas",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Texas"]
+},
+{
+"slug": "sopranos-pine-barrens-interior-decorator",
+"question": "In the legendary Sopranos episode 'Pine Barrens,' Paulie Walnuts mistakenly warns Christopher that the missing Russian asset they are hunting held what profession?",
+"answer": "Interior decorator",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Interior decorator"]
+},
+{
+"slug": "simpsons-springfield-nuclear-owner",
+"question": "Who is the ancient, malevolent, and unimaginably wealthy billionaire owner of the Springfield Nuclear Power Plant in The Simpsons?",
+"answer": "Mr. Burns",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Mr. Burns", "Charles Montgomery Burns", "Monty Burns"]
+},
+{
+"slug": "american-dad-alien-attic",
+"question": "Boasting a massive wardrobe of eccentric alter-egos, what is the name of the sarcastic, wine-loving grey alien who lives in the Smith family's attic in American Dad!?",
+"answer": "Roger",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Roger", "Roger the Alien"]
+},
+{
+"slug": "seinfeld-soup-nazi-line",
+"question": "What iconic four-word phrase does the strict, unyielding stand owner known as the 'Soup Nazi' declare to customers who fail to follow his ordering rules in Seinfeld?",
+"answer": "No soup for you",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["No soup for you!", "No soup for you"]
+},
+{
+"slug": "friends-ross-divorce-count",
+"question": "Serving as a running gag throughout the entire series, paleontologist Ross Geller sets a group record by going through how many total divorces in Friends?",
+"answer": "3",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["3", "Three"]
+},
+{
+"slug": "sopranos-bada-bing-owner",
+"question": "Serving as a major hangout and front for the DiMeo crime family, what loyal consigliere formally owns and operates the Bada Bing! strip club in The Sopranos?",
+"answer": "Silvio Dante",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Silvio Dante", "Silvio", "Sil"]
+},
+{
+"slug": "american-dad-stan-employer",
+"question": "Stan Smith spends his working hours operating as a highly paranoid, ultra-conservative field agent for what federal government agency in American Dad!?",
+"answer": "CIA",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["CIA", "Central Intelligence Agency"]
+},
+{
+"slug": "seinfeld-art-vandelay-profession",
+"question": "George Costanza frequently uses the fake alias 'Art Vandelay' when lying to employers or women, famously claiming Vandelay works as what type of professional?",
+"answer": "Architect",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Architect", "An architect", "Importer exporter", "Importer-exporter"]
+},
+{
+"slug": "seinfeld-festivus-holiday-creator",
+"question": "Invented by Frank Costanza as a direct protest against the commercialism of Christmas, what is the name of the secular December holiday that features an aluminum pole?",
+"answer": "Festivus",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Festivus", "Festivus for the rest of us"]
+},
+{
+"slug": "american-dad-cochrane-political-party",
+"question": "Hayley Smith frequently clashes with her father due to her staunch, progressive activism and her card-carrying membership in what minor US political party?",
+"answer": "Green Party",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["Green Party", "The Green Party", "Libertarian"]
+},
+{
+"slug": "seinfeld-puddy-nj-devils",
+"question": "Elaine's on-again, off-again boyfriend David Puddy horrifies her during a hockey playoff game by painting his face to support what NHL team?",
+"answer": "New Jersey Devils",
+"answer_format": "write_in",
+"category": "television",
+"difficulty": "easy",
+"acceptableAnswers": ["New Jersey Devils", "Devils", "NJ Devils"]
+}
   ]
 }

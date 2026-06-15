@@ -1,0 +1,1757 @@
+
+<!DOCTYPE html><html>
+	<head>
+	<META http-equiv=Content-Type content="text/html; charset=utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+	
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+	
+	<title>Hightop Challenge Checkout</title>
+	
+
+
+   <style type="text/css">
+<!--
+    @import url("https://fonts.googleapis.com/css2?family=Bree+Serif&family=Nunito:wght@400;600;700;800;900&display=swap");
+
+    html, body {
+        margin: 0;
+        padding: 0;
+        background: #020617;
+        color: #f8fafc;
+        font-family: Nunito, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    table, tr, td, div, span {
+        font-family: Nunito, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    p {
+        color: #e2e8f0;
+        font-size: 10pt;
+        font-family: Nunito, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    p.bold_tags {
+        color: #e2e8f0;
+        font-size: 11pt;
+        font-weight: 700;
+        font-family: Nunito, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    p.colored_tags {
+        margin: 0;
+        color: #f8fafc;
+        font-size: 13pt;
+        font-weight: 800;
+        font-family: "Bree Serif", Georgia, serif;
+        letter-spacing: 0.02em;
+    }
+
+    p.error_tags {
+        color: #f43f5e;
+        font-size: 11pt;
+        font-weight: 700;
+        font-family: Nunito, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    a { color: #67e8f9; }
+    a:visited { color: #22d3ee; }
+    a:active { color: #0891b2; }
+
+    input[type="text"],
+    input[type="tel"],
+    input[type="number"],
+    input[type="email"],
+    select,
+    textarea {
+        background: #1e293b;
+        color: #f8fafc;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 16px;
+        font-weight: 600;
+        font-family: Nunito, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        outline: none;
+        box-sizing: border-box;
+    }
+
+    input[type="text"]:focus,
+    input[type="tel"]:focus,
+    input[type="number"]:focus,
+    input[type="email"]:focus,
+    select:focus,
+    textarea:focus {
+        border-color: #22d3ee;
+        box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.18);
+    }
+
+    input[type="submit"],
+    input[type="button"],
+    input[type="reset"],
+    button {
+        appearance: none;
+        -webkit-appearance: none;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 9999px;
+        background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+        color: #f8fafc;
+        font-family: Nunito, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        padding: 12px 22px;
+        cursor: pointer;
+        box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.30), 0 8px 28px rgba(34, 211, 238, 0.18);
+    }
+
+    input[type="submit"]:hover,
+    input[type="button"]:hover,
+    input[type="reset"]:hover,
+    button:hover {
+        filter: brightness(1.05);
+    }
+
+    #keypadT { margin: auto; margin-top: 0px; }
+
+    #keypadT tr td {
+        vertical-align: middle;
+        text-align: center;
+        border: 1px solid #334155;
+        font-size: 18px;
+        font-weight: 800;
+        cursor: pointer;
+        background-color: #1e293b;
+        color: #f8fafc;
+        border-radius: 10px;
+    }
+    #keypadT tr td:hover {
+        background-color: #334155;
+        color: #67e8f9;
+    }
+
+    #cardxx,
+    #accountxx {
+        text-align: left;
+        color: #f8fafc;
+        font-size: 18px;
+        font-weight: 700;
+        font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+    }
+
+    .tp-checkout-shell {
+        width: 100%;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 0 12px 28px;
+        box-sizing: border-box;
+    }
+
+    .tp-logo-wrap {
+        text-align: center;
+        margin: 0 0 18px 0;
+    }
+
+    .tp-logo-wrap img {
+        display: block;
+        margin: 0 auto;
+        width: min(420px, 100%);
+        height: auto;
+    }
+-->
+   </style>
+
+
+<script language="JavaScript" nonce="6yqGbku5JN9OeqYx">
+<!-- Begin
+
+	if (typeof(window.alert) === "undefined") {
+		alert = function(a){ }
+	}
+
+	function debug_log(str)
+	{
+//		console.log(str)
+	}
+//  End -->
+</script>
+
+<script nonce="6yqGbku5JN9OeqYx">
+
+function show_wallet_button()
+{
+	var btn = document.getElementById('wallet') ;
+	if (btn != null)
+	{
+		btn.style.display = 'block' ;
+		btn.disabled = false ;
+	}
+
+}
+
+function showErrMsgArea(errmsg)
+{
+	console.log(errmsg) ;
+    	var errArea = document.getElementById('errArea') ;
+	if (errArea != null)
+	{
+		errArea.innerHTML = '<font face="Nunito" color="#e2e8f0">Checkout error: ' + errmsg.replaceAll("'", "") + '. Try again.&nbsp;</font><br><br>'
+		show_wallet_button() ;
+	}
+	else
+        {
+		alert(errmsg) ;
+	}
+
+
+}
+
+function hide_pleasewaittext()
+{
+	id = document.getElementById('pleasewaittext') ;
+	if (id != null)
+	{
+		id.style.display='none';
+		id.style.visibility='hidden';
+	}
+}
+
+function show_pleasewait(frameid)
+{
+	var id ;
+
+	hide_pleasewaittext() ;
+
+	id = document.getElementById('pleasewait') ;
+	if (id != null)
+		id.style.display='block';
+
+// DON'T HIDE THE IFRAME SO THE CONTUNUE BUTTON CAN APPEAR
+//	id = document.getElementById(frameid) ;
+//	if (id != null)
+//		id.style.visibility='hidden';
+	id = document.getElementById(frameid) ;
+	if (id != null)
+	{
+		id.style.display='block';
+		id.style.visibility='visible';
+	}
+}
+
+function hide_pleasewait()
+{
+	var id ;
+
+	hide_pleasewaittext() ;
+
+	id = document.getElementById('pleasewait') ;
+	if (id != null)
+	{
+		id.style.visible='hidden';
+		id.style.display='none';
+	}
+
+}
+
+function show_iframe(frameid)
+{
+	var id ;
+
+//	id = document.getElementById('pleasewaittext') ;
+//	if (id != null)
+//		id.style.display='none';
+
+	id = document.getElementById('pleasewait') ;
+	if (id != null)
+	{
+		id.style.visible='hidden';
+		id.style.display='none';
+	}
+
+	setTimeout(function()
+	{
+		var id2 = document.getElementById(frameid) ;
+		if (id2 != null)
+			id2.style.visibility='visible';
+	}, 250);
+}
+
+function clear_hidden(span)
+{
+	var span = document.getElementById(span);
+	if(span != null)
+	{
+		while( span.firstChild )
+		{
+		    span.removeChild( span.firstChild );
+		}
+	}
+}
+
+function add_hidden(span,fieldname,fieldvalue)
+{
+	var span = document.getElementById(span);
+	if(span != null)
+	{
+		var x = document.createElement("input");
+		x.setAttribute("type", "hidden");
+		var name = "";
+		x.setAttribute("name",fieldname);
+		x.setAttribute("id",fieldname);
+		x.setAttribute("value",fieldvalue);
+		span.appendChild(x) ;
+	}
+}
+
+function get_hidden(fieldname)
+{
+
+	var field = document.getElementById(fieldname);
+	if(field != null)
+	{
+		return field.value ;
+	}
+	else
+	{
+		return '' ;
+	}
+
+}
+
+function viewport()
+{
+var e = window
+, a = 'inner';
+if ( !( 'innerWidth' in window ) )
+{
+a = 'client';
+e = document.documentElement || document.body;
+}
+return { width : e[ a+'Width' ] , height : e[ a+'Height' ] }
+}
+
+</script>
+
+
+
+
+<script language="JavaScript" nonce="6yqGbku5JN9OeqYx">
+<!-- Begin
+var submitcount=0;
+var IntervalID=-1;
+var SecondsCount ;
+var Timer_Seconds ;
+
+Timer_Seconds = 0;
+
+if (Timer_Seconds > 0) {
+	SecondsCount=Timer_Seconds;
+	IntervalID=setInterval ( 'ShowClock()', 990 );
+}
+
+function validatePhone(s)
+{
+	// remove non-numerics
+	var v = "0123456789";
+	var w = "";
+	for (i=0; i < s.length; i++)
+	 {
+		x = s.charAt(i);
+		if (v.indexOf(x,0) != -1)
+			w += x;
+	}
+
+	if (w.length == 10)
+		return(1) ;
+
+	return(0) ;
+
+}
+
+function validateZip(s)
+{
+	// remove non-numerics
+	var v = "0123456789";
+	var w = "";
+	for (i=0; i < s.length; i++)
+	 {
+		x = s.charAt(i);
+		if (v.indexOf(x,0) != -1)
+			w += x;
+	}
+
+	if (w.length == 5 || w.length == 9)
+		return(1) ;
+
+	return(0) ;
+}
+
+
+function CheckEmail(str)
+{
+
+	var at="@"
+	var dot="."
+	var lat=str.indexOf(at)
+	var lstr=str.length
+	var ldot=str.indexOf(dot)
+
+	if (str.indexOf(at)==-1)
+	{
+	   return('Valid E-mail Address\r\n')
+	}
+
+	if (str.indexOf(at)==-1 || str.indexOf(at)==0 || str.indexOf(at)==lstr)
+	{
+	   return('Valid E-mail Address\r\n')
+	}
+
+	if (str.indexOf(dot)==-1 || str.indexOf(dot)==0 || str.indexOf(dot)==lstr)
+	{
+	   return('Valid E-mail Address\r\n')
+	}
+
+	if (str.indexOf(at,(lat+1))!=-1)
+	{
+	   return('Valid E-mail Address\r\n')
+	}
+
+	if (str.substring(lat-1,lat)==dot || str.substring(lat+1,lat+2)==dot)
+	 {
+	   return('Valid E-mail Address\r\n')
+	 }
+
+	if (str.indexOf(dot,(lat+2))==-1)
+	 {
+	   return('Valid E-mail Address\r\n')
+	 }
+
+	if (str.indexOf(" ")!=-1)
+	{
+	   return('Valid E-mail Address\r\n')
+	}
+
+	 return ''
+}
+
+function disableForm(theform)
+{
+
+ if (document.all || document.getElementById)
+  {
+	for (i = 0; i < theform.length; i++)
+	 {
+		var tempobj = theform.elements[i];
+		if (tempobj.type.toLowerCase() == "submit" || tempobj.type.toLowerCase() == "reset" || tempobj.type.toLowerCase() == "button" || tempobj.type.toLowerCase() == "image")
+		{
+			if (tempobj.name == "process" || (tempobj.value == "Process Payment" || tempobj.value == "Cancel" || tempobj.name == "device" || tempobj.name == "crypto" || tempobj.name == "wallet"))
+			{
+				tempobj.disabled = true;
+			}
+		}
+	  }
+
+	var process = document.getElementsByName("process") ;
+	if(process != null)
+		if(process.hasOwnProperty('disabled'))
+			process.disabled=true ;
+
+      return true;
+   }
+  else
+   {
+    return false;
+   }
+}
+
+function enableForm(theform)
+{
+
+ if (document.all || document.getElementById)
+  {
+	for (i = 0; i < theform.length; i++)
+	 {
+		var tempobj = theform.elements[i];
+		if (tempobj.type.toLowerCase() == "submit" || tempobj.type.toLowerCase() == "reset" || tempobj.type.toLowerCase() == "button" || tempobj.type.toLowerCase() == "image")
+		{
+			if (tempobj.name == "process" || (tempobj.value == "Process Payment" || tempobj.value == "Cancel" || tempobj.name == "device"|| tempobj.name == "crypto" || tempobj.name == "wallet"))
+			{
+				tempobj.disabled = false;
+			}
+		}
+	  }
+
+	var process = document.getElementsByName("process") ;
+	if(process != null)
+		if(process.hasOwnProperty('disabled'))
+			process.disabled=false ;
+
+      return true;
+   }
+  else
+   {
+    return false;
+   }
+}
+
+function automatic_submitForm()
+{
+
+var id=document.getElementById("hiddencancel") ;
+if (id != null)
+	id.style.display="none";
+
+//var id=document.getElementById("hiddenbutton") ;
+//if (id != null)
+//	id.style.display="block";
+
+
+	show_pleasewait('frame3ds') ;
+
+	var theform = document.forms["PaymentForm"] ;
+
+	if (theform != null)
+	    theform.submit();
+
+}
+
+function automatic_crypto_submitForm()
+{
+
+var id=document.getElementById("hiddencryptocancel") ;
+if (id != null)
+	id.style.display="none";
+
+//var id=document.getElementById("hiddencryptobutton") ;
+//if (id != null)
+//	id.style.display="block";
+
+
+	//show_pleasewait('frame3ds') ;
+
+	var theform = document.forms["PaymentForm"] ;
+
+	if (theform != null)
+	    theform.submit();
+}
+
+
+
+function no_doubleclick(theform)
+{
+   if (submitcount == 0)
+      {
+      submitcount++;
+      disableForm(theform)
+      return true;
+      }
+   else
+      {
+      return false;
+      }
+}
+
+function CancelTransaction()
+{
+if (IntervalID >=0)
+    clearInterval(IntervalID) ;
+document.PaymentForm.sessionstate.value="cancel" ;
+
+return true;
+}
+
+function ResetTransaction()
+{
+if (IntervalID >=0)
+    clearInterval(IntervalID) ;
+document.PaymentForm.sessionstate.value="" ;
+
+// Find all matching input fields
+// Find all matching input fields
+const inputFields = document.querySelectorAll('input[name^="cardnumber_"]');
+
+// Check if any input fields were found
+if (inputFields.length > 0) {
+    // Use a traditional for loop for compatibility with older browsers
+    for (var i = 0; i < inputFields.length; i++) {
+        inputFields[i].value = ''; // Clear the content of the input field
+    }
+} else {
+    var cn = document.PaymentForm ? document.PaymentForm.cardnumber : null;
+    if (cn) {
+        cn.value = '';
+    }
+}
+
+return true;
+}
+
+
+function ClearErrorMessage()
+{
+	var span=document.getElementById("errstr") ;
+	if(span != null)
+	{
+		while( span.firstChild )
+		{
+		    span.removeChild( span.firstChild );
+		}
+	}
+}
+
+function PinpadTransaction()
+{
+	if (IntervalID >=0)
+	    clearInterval(IntervalID) ;
+
+	ClearErrorMessage() ;
+
+	document.PaymentForm.sessionstate.value="device" ;
+
+	return true;
+}
+
+
+function CryptoTransactionCurrencies()
+{
+
+	if (IntervalID >=0)
+	    clearInterval(IntervalID) ;
+
+	ClearErrorMessage() ;
+
+	document.PaymentForm.sessionstate.value="crypto_showcurrencies" ;
+
+	return true;
+}
+
+
+function CryptoTransaction()
+{
+
+	if (IntervalID >=0)
+	    clearInterval(IntervalID) ;
+
+	ClearErrorMessage() ;
+
+	document.PaymentForm.sessionstate.value="crypto" ;
+
+	return true;
+}
+
+var myVar = null ;
+
+
+function ProcessTransaction()
+{
+	if (IntervalID >=0)
+	    clearInterval(IntervalID) ;
+
+	if(myVar != null)
+	{
+		clearTimeout(myVar) ;
+		myVar = null ;
+	}
+
+	ClearErrorMessage() ;
+
+	if (document.PaymentForm.sessionstate.value != "cancel" && 
+		document.PaymentForm.sessionstate.value != "wallet" && 
+		document.PaymentForm.sessionstate.value != "device" && 
+		document.PaymentForm.sessionstate.value != "crypto" && 
+		document.PaymentForm.sessionstate.value != "crypto_showcurrencies")
+		document.PaymentForm.sessionstate.value="submit" ;
+
+	return true;
+}
+
+function disablePaymentFormInputs() {
+    // Get the form element
+    var paymentForm = document.forms["PaymentForm"];
+
+    // Check if the form exists
+    if (paymentForm) {
+        // Get all input, textarea, select, and button elements within the form
+        var formInputs = paymentForm.querySelectorAll('input, textarea, select, button');
+
+        // Loop through each input and disable it
+        formInputs.forEach(function(input) {
+            input.disabled = true;
+        });
+    } else {
+        console.error("Form with the name 'paymentForm' not found.");
+    }
+}
+function ProcessUfcTransaction()
+{
+	if (IntervalID >=0)
+	    clearInterval(IntervalID) ;
+
+	if(myVar != null)
+	{
+		clearTimeout(myVar) ;
+		myVar = null ;
+	}
+		
+	ClearErrorMessage() ;
+
+	document.PaymentForm.sessionstate.value="wallet";
+	return true;
+}
+
+
+
+function SubmitForm(buttonvalue)
+{
+
+//alert(document.PaymentForm.sessionstate.value);
+ var elem ;
+
+ elem = document.getElementById('keyoption');
+ if (elem)
+	elem.value=buttonvalue
+
+ elem = document.getElementById('process');
+
+  if(elem)
+  {
+     elem.disabled = false ;
+     elem.click();  // Internet Explorter,  click the button
+  }
+  else   	    // for chrome/safari/firefox, submit the form.
+     document.forms["PaymentForm"].submit();
+
+ return true;
+}
+
+
+function CancelForm()
+{
+
+ var elem ;
+ // Set the cancel variable and submit.
+ // This way it works even if there is no CANCEL button.
+
+ CancelTransaction() ;
+
+ elem = document.getElementById('process');
+
+  if(elem)
+    {
+     elem.disabled = false;
+     elem.click();  // Internet Explorter,  click the button
+    }
+  else   	    // for chrome/safari/firefox, submit the form.
+     document.forms["PaymentForm"].submit();
+
+ return true;
+}
+
+
+function calcage(secs, num1, num2) {
+  var s ;
+  s = ((Math.floor(secs/num1))%num2).toString();
+  if (s.length < 2)
+    s = '0' + s;
+  return s ;
+}
+
+function ShowClock ( )
+{
+  var x ;
+  var DisplayStr,elem ;
+
+ if(SecondsCount >= 0)
+	{
+	 // Show with minutes...
+	 if (Timer_Seconds >= 60)
+	 {
+
+		DisplayStr = calcage(SecondsCount,60,60) ;
+		if (DisplayStr.length == 1) DisplayStr = '0' + DisplayStr ;
+		DisplayStr = DisplayStr + ':' + calcage(SecondsCount,1,60) ;
+	 }
+	 else
+	 {
+		 // Show just seconds...
+		DisplayStr = '00:' + calcage(SecondsCount,1,60) ;
+ 	 }
+
+	 
+
+	 SecondsCount -= 1 ;
+
+	 elem = document.getElementById('sessiontimer') ;
+	 if(elem)
+            elem.value = SecondsCount ;
+        }
+   else
+	{
+		/* it's all over, check to see if we need to CANCEL the form! */
+		
+	}
+}
+
+// Credit Card Validation Javascript
+// copyright 12th May 2003, by Stephen Chapman, Felgall Pty Ltd
+
+// You have permission to copy and use this javascript provided that
+// the content of the script is not changed in any way.
+
+
+function validateCreditCard(s)
+{
+	// remove non-numerics
+	var v = "0123456789";
+	var w = "";
+	for (i=0; i < s.length; i++)
+	 {
+		x = s.charAt(i);
+		if (v.indexOf(x,0) != -1)
+			w += x;
+	}
+	// validate number
+	j = w.length / 2;
+	if (j < 6.5 || j > 8 || j == 7)
+		return false;
+	k = Math.floor(j);
+	m = Math.ceil(j) - k;
+	c = 0;
+	for (i=0; i<k; i++)
+	 {
+		a = w.charAt(i*2+m) * 2;
+		c += a > 9 ? Math.floor(a/10 + a%10) : a;
+	 }
+	for (i=0; i<k+m; i++)
+		c += w.charAt(i*2+1-m) * 1;
+
+	return (c%10 == 0) ;
+
+}
+
+function get_cardxx(cardno) {
+
+ var fill_char = "X";
+ var fill_char2 = fill_char ;
+
+ var txt = cardno ;
+
+ var last4str,str ;
+ var i,start,blocks=0 ;
+
+ var numblocks = Math.floor(txt.length/4) ;
+ var last4 = txt.length%4 ;
+ var amex;
+
+ if (last4 ==0)
+ {
+   if (numblocks>0)
+       numblocks-- ;
+
+   last4 = 4 ;
+ }
+
+ start=numblocks*4;
+
+ if (txt.length >= 2 && txt.substring(0,2) == '37')
+    amex=1;
+  else
+    amex=0;
+
+//alert ('amex=' + amex.toString() + ',SUB=' + txt.substring(0,2))
+
+ last4str = '' ;
+
+ last4str = txt.substring(start) ;
+
+ str = '';
+ for(i=0;i<numblocks;i++)
+ {
+  if (str.length != 0)
+     str = str + '-' ;
+  str = str + 'XXXX' ;
+  blocks++;
+ }
+
+ if (str.length > 0)
+     str = str + '-' ;
+
+ str = str + last4str ;
+ if (last4str.length==4 && txt.length <= 12) str += '-' ;
+
+ var post='';
+
+ if (amex == 1 && txt.length >= 12)
+   fill_char2 = '' ;
+
+ if (last4str.length==0)
+    post = "_" + fill_char + fill_char + fill_char2;
+ else if (last4str.length==1)
+    post = "_" + fill_char + fill_char2 ;
+ else if (last4str.length==2)
+    post = "_" + fill_char2 ;
+ else if (last4str.length==3)
+	{
+	    if (fill_char2 == fill_char)
+		    post = "_" ;
+	}
+ else if (txt.length <= 12)
+ {
+    post = "_" + fill_char + fill_char + fill_char2 ;
+    blocks++ ;
+ }
+
+ str += post ;
+ blocks++ ;
+
+ if (txt.length <= 12)
+   for(i=blocks;i<4;i++)
+    if (i==3 && amex==1)
+      str = str + '-XXX' ;
+    else
+      str = str + '-XXXX' ;
+
+ return('<nobr>' + str + '</nobr>') ;
+
+}
+
+function NumPressed (Num) {
+
+  var maxlen = 16 ;
+  var txt = document.PaymentForm.cardnumber.value ;
+
+     if (txt.length >= 2 && txt.substring(0,2) == '37')
+        maxlen = 15 ;
+
+     if (document.PaymentForm.cardnumber.value.length < maxlen)
+      {
+	document.PaymentForm.cardnumber.value += Num;
+	//document.getElementById('cardnumber').value=document.PaymentForm.cardnumber.value;
+
+	document.getElementById('cardxx').innerHTML = get_cardxx(document.PaymentForm.cardnumber.value);
+
+	if (document.PaymentForm.cardnumber.value.length == maxlen)
+		{
+			// check MOD10
+			if (validateCreditCard(document.PaymentForm.cardnumber.value)==false)
+				{
+					alert('This is not a valid cardnumber');
+					BackSpace () ;
+				}
+		}
+      }
+}
+
+
+function Clear () {
+document.PaymentForm.cardnumber.value = '';
+//document.getElementById('cardnumber').value=document.PaymentForm.cardnumber.value;
+document.getElementById('cardxx').innerHTML=get_cardxx('');
+}
+
+function BackSpace ()
+{
+
+	var txt = document.PaymentForm.cardnumber.value ;
+
+	if (txt.length > 0)
+	{
+		document.PaymentForm.cardnumber.value = txt.substring(0,txt.length-1);
+		//document.getElementById('cardnumber').value=document.PaymentForm.cardnumber.value;
+	}
+
+	document.getElementById('cardxx').innerHTML = get_cardxx(document.PaymentForm.cardnumber.value);
+}
+
+
+//  End -->
+</script>
+
+
+
+<script language="JavaScript" nonce="6yqGbku5JN9OeqYx">
+<!-- Begin
+
+function closeW()
+{
+	//open(location, '_self').close();
+	window.opener = self;
+	window.close();
+	//document.getElementsByTagName('html')[0].remove();
+	return false; // Prevents href from executing
+}
+
+function printW()
+{
+	if(window.print != null)
+	  {
+		 window.print();
+	  }
+	console.log("Print function called.");
+	return false; // Prevents href from executing
+}
+
+function checkEnter(event)
+{
+
+	var track1 = document.PaymentForm.trackdata ;
+
+	if(event.keyCode == 13 || event.keyCode == 10)
+	{
+	    	if(track1 != null)
+		{
+			var tval = track1.value ;
+			var tlen = tval.length ;
+
+			if (tlen > 1 && (tval.substr(0,1) == '%' || tval.substr(0,1) == ';'))
+				document.forms["PaymentForm"].submit() ; //submit the form
+			else
+				event.preventDefault() ;
+		}
+		return true ;
+	}
+	else
+	{
+		return true ;
+	}
+}
+
+
+
+	function runTimer() {
+
+	    if(myVar != null)
+		{
+			clearTimeout(myVar);
+			myVar = null ;
+		}
+
+		var track1 = document.PaymentForm.trackdata ;
+
+	    	if(track1 != null)
+		{
+			var tval = track1.value ;
+			var tlen = tval.length ;
+			if (tlen > 65 && tval.substr(0,2) == "02")
+			{
+				var last2 = tval.substring(tlen-2,tlen) ;
+
+				if(last2 == '03')
+					{
+					    myVar = setTimeout( function() {
+									clearTimeout(myVar) ;
+									myVar = null ;
+									document.PaymentForm.submit();
+									}
+								, 500);
+					}
+			}
+			else if (tlen >=12 && (tval.substr(0,8).toUpperCase() == 'DFEE2502' || tval.substr(0,6).toUpperCase() == '9F3901' || tval.substr(0,6).toUpperCase() == 'DFEF61' || tval.substr(0,6).toUpperCase() == 'DFEE12' || tval.substr(0,6).toUpperCase() == 'FFEE1F' || tval.substr(0,6).toUpperCase() == 'DFEE02'))
+			{
+					    myVar = setTimeout( function() {
+									clearTimeout(myVar) ;
+									myVar = null ;
+									document.PaymentForm.submit();
+									}
+								, 1000);
+			}
+		}
+	 }
+
+//  End -->
+</script>
+<!--here -->
+
+	
+
+	</head>
+
+	<body
+
+		BGCOLOR="#020617" TEXT="#f8fafc" LINK="#67e8f9" VLINK="#22d3ee" ALINK="#0891b2" 
+	>
+
+	
+		<center>
+		<div class="tp-checkout-shell">
+	<style>
+  /* Hides the default legacy top table/site name bar */
+  table valign, .site-header, #header, top-bar { 
+    display: none !important; 
+  }
+</style>
+
+		<table
+			width="720"
+			cellpadding="0" cellspacing="0" border="0">
+
+        	    <tr><td align="center" class="tp-logo-wrap">
+                	   <img alt="Hightop Challenge" src="https://hightopchallenge.com/brand/hightop-logo-header.png"></img>
+		    </td></tr>
+		</table>
+
+	
+		<noscript>
+			<p>
+			<center>
+			<h1>This page requires JavaScript.<br></h1>
+			<h2>Please enable JavaScript<br></h2>
+
+			<font face="Arial">
+			<table style="border-collapse:collapse; border:1px solid black;">
+			<tr><td align="right" style="border: 1px solid black;padding: 10px;">For Internet Explorer: </td><td style="border: 1px solid black;padding: 10px;"><a href="https://www.google.com/search?q=internet+explorer+enable+javascript">How to enable JavaScript in Internet Explorer</a></td>
+			<tr><td align="right" style="border: 1px solid black;padding: 10px;">For Chrome: </td><td style="border: 1px solid black;padding: 10px;"><a href="https://www.google.com/search?q=chrome+enable+javascript">How to enable JavaScript in Chrome</a></td>
+			<tr><td align="right" style="border: 1px solid black;padding: 10px;">For FireFox: </td><td style="border: 1px solid black;padding: 10px;"><a href="https://www.google.com/search?q=firefox+enable+javascript">How to enable JavaScript in FireFox</a></td>
+			<tr><td align="right" style="border: 1px solid black;padding: 10px;">For Safari: </td><td style="border: 1px solid black;padding: 10px;"><a href="https://www.google.com/search?q=safari+enable+javascript">How to enable JavaScript in Safari</a></td>
+			</table>
+			</font>
+			</center>
+
+			
+		</noscript>
+
+		<div id="hiddenpage" style="display:none;">
+	
+
+	<form action="https://stats.slimcd.com/soft/showsession.asp" name="PaymentForm" method="post"   data-nonce="6yqGbku5JN9OeqYx"  onSubmit="return no_doubleclick(this)" >
+
+	<input type="hidden" name="__m" id="mobile_flag" value="0">
+	<input type="hidden" name="__browsercontrol" value="0">
+
+	<input type="hidden" name="transientToken" id="transientToken" value="">
+	<input type="hidden" name="ufc_content" id="ufc_content" value="">
+	<input type="hidden" name="ufc_content_step" id="ufc_content_step" value="">
+
+	
+
+	<table
+	  width="720"
+		cellpadding="10" cellspacing="0" border="0"
+	  
+			Style="width:100%; max-width:720px; border:solid 1px #334155; border-radius:24px; box-shadow:0 20px 60px rgba(0,0,0,0.55);"
+	   bgcolor="#0f172a"
+	 >
+
+	<tr><td align="left">
+
+	
+
+	<center>
+
+	<table
+		
+			Style="width:100%; border:solid 1px rgba(255,255,255,0.08); border-radius:16px;"
+		 bgcolor="#0f172a"
+	>
+
+
+
+		<tr>
+			
+				<td align="right">
+					<font face="Nunito" color="#e2e8f0" size=-1>
+						Site:
+					</font>
+					</td>
+
+				<td align="left"><font face="Nunito" color="#e2e8f0" size=-1>Hightop Challenge</font></td>
+			
+		</tr>
+		
+
+		<tr>
+			<td colspan=2 align="center">
+				<input type=hidden name="sessionid" value="2D73E4A43D68D45EF4E91394BD7F1E22C902021B">
+				<input type=hidden name="sessionstate" value="submit">
+				<input type=hidden name="sessiontimer" value="0">
+
+				
+					&nbsp;
+				
+			</td>
+		</tr>
+
+<!--
+		<tr>
+			<td align="right">Amount:</td>
+			<td align="left">$1.00</td>
+		</tr>
+-->
+
+		
+
+		        <tr>
+				
+			       		<td align=right valign=top>
+					&nbsp;
+				<font face="Nunito" color="#e2e8f0" size=-1><label  for="amount">Amount:</label></font>
+					</td>
+				        <td align=left valign=top>
+				
+
+			<font face="Nunito" color="#f8fafc" size=-1>
+				<label id="amount" >$1.00</label>
+			</font>
+
+
+		&nbsp;
+				</td>
+		        </tr>
+			
+
+				<tr>
+					<td align=left colspan=2><p class="colored_tags">&nbsp;Payment Information&nbsp;</p>
+					</td>
+				</tr>
+			
+
+			<tr>
+			
+				<td align="right" valign="top">&nbsp;
+			<font color="#f43f5e" face="Nunito">*</font><font face="Nunito" color="#e2e8f0" size=-1><label title="Card Number Entry" for="cardnumber_22B86B5D4F8B8A12C5166C176F23C0CD2DF43841">Card&nbsp;Number:</label></font>
+					</td>
+					<td align="left">
+				<span id="placeholder"></span>&nbsp;
+				</td>
+			</tr>
+
+			<tr>
+
+			
+				<td align="right" valign="top">&nbsp;
+			<font color="#f43f5e" face="Nunito">*</font><font face="Nunito" color="#e2e8f0" size=-1><label title="Card Expiration Date" for="expires">Expiration&nbsp;Date:</label></font>
+				</td>
+				<td align="left">
+			
+
+				<input type="text" name="expires"  size="8" maxlength="4" title="Card Expiration Date" value="" autocomplete="off"> <font face="Nunito" color="" size=-1>&nbsp;(MMYY format)&nbsp;</font>
+				</td>
+
+			
+			</tr>
+
+			
+
+		<tr>
+			<td colspan="2" align=center>&nbsp;</td>
+		</tr>
+
+		
+			<tr>
+				<td colspan=2>
+				<table width="100%">
+				<tr>
+				
+					<td colspan="2" align=center><input type="submit" name="process" value="Process Payment" onclick="ProcessTransaction()"    data-nonce="6yqGbku5JN9OeqYx"></td>
+				
+				</tr>
+				</table>
+				</td>
+
+			</tr>
+			
+
+		<tr><td colspan=2>&nbsp;</td></tr>
+
+
+<script language="JavaScript" nonce="6yqGbku5JN9OeqYx">
+<!-- Begin
+
+	var trackdata=document.getElementById('trackdata')
+	if (trackdata !== null)
+		trackdata.focus();
+
+
+
+	var pl = document.getElementById('placeholder');
+	if(pl != null)
+	{
+	  while( pl.firstChild )
+	    pl.removeChild( pl.firstChild );
+
+	var x = document.createElement("input");
+	if ('type="text"' == 'type="text"')
+		x.setAttribute("type", "text");
+	else
+	{
+		x.setAttribute("type", "number");
+		x.setAttribute("pattern","[0-9]*") ;
+		x.setAttribute("inputmode","numeric*") ;
+		//x.setAttribute("min",0) ;
+		//x.setAttribute("max",9999999999999999999) ;
+	}
+	var name = "cardnumber_22B86B5D4F8B8A12C5166C176F23C0CD2DF43841" ;
+	x.setAttribute("name",name);
+	x.setAttribute("size","20");
+	x.setAttribute("maxlength","19");
+	x.setAttribute("autocomplete","off");
+	x.setAttribute("value","");
+	x.setAttribute("title","Card Number Entry") ;
+
+	if('' != '')
+		x.disabled=true ;
+
+	pl.appendChild(x) ;
+	}
+
+
+//  End -->
+</script>
+</table>
+</center>
+
+</td></tr>
+</table>
+
+		<span id="hidden_inputs"></span>
+		</form>
+
+</center>
+</div>
+</div>
+
+				<script nonce="6yqGbku5JN9OeqYx">
+
+				// Show the page that's hidden by the noscript div tags
+				var hiddenpage = document.getElementById("hiddenpage") ;
+				if(hiddenpage != null)
+					hiddenpage.style.display="block";
+				</script>
+			
+<script nonce="6yqGbku5JN9OeqYx">
+
+'use strict';
+
+function getAllInlineEventAttributes() {
+    var eventAttributes = [];
+
+    // Mouse events
+    eventAttributes.push('onclick');
+    eventAttributes.push('ondblclick');
+    eventAttributes.push('onmousedown');
+    eventAttributes.push('onmouseup');
+    eventAttributes.push('onmousemove');
+    eventAttributes.push('onmouseover');
+    eventAttributes.push('onmouseout');
+    eventAttributes.push('onmouseenter');
+    eventAttributes.push('onmouseleave');
+    eventAttributes.push('oncontextmenu');
+    eventAttributes.push('onmousewheel'); // For older browsers
+    eventAttributes.push('onwheel');
+
+    // Keyboard events
+    eventAttributes.push('onkeydown');
+    eventAttributes.push('onkeyup');
+    eventAttributes.push('onkeypress');
+
+    // Form events
+    eventAttributes.push('onchange');
+    eventAttributes.push('oninput');
+    eventAttributes.push('onsubmit');
+    eventAttributes.push('onreset');
+    eventAttributes.push('onselect');
+    eventAttributes.push('onfocus');
+    eventAttributes.push('onblur');
+    eventAttributes.push('onfocusin');
+    eventAttributes.push('onfocusout');
+
+    // Window/Document events
+    eventAttributes.push('onload');
+    eventAttributes.push('onerror');
+    eventAttributes.push('onunload');
+    eventAttributes.push('onresize');
+    eventAttributes.push('onscroll');
+    eventAttributes.push('onbeforeunload');
+    eventAttributes.push('onhashchange');
+    eventAttributes.push('onpopstate');
+    eventAttributes.push('onmessage');
+
+    // Clipboard events
+    eventAttributes.push('oncopy');
+    eventAttributes.push('oncut');
+    eventAttributes.push('onpaste');
+
+    // Drag and drop events
+    eventAttributes.push('ondrag');
+    eventAttributes.push('ondragstart');
+    eventAttributes.push('ondragend');
+    eventAttributes.push('ondragenter');
+    eventAttributes.push('ondragover');
+    eventAttributes.push('ondragleave');
+    eventAttributes.push('ondrop');
+
+    // Touch events
+    eventAttributes.push('ontouchstart');
+    eventAttributes.push('ontouchmove');
+    eventAttributes.push('ontouchend');
+    eventAttributes.push('ontouchcancel');
+
+    // Pointer events
+    eventAttributes.push('onpointerdown');
+    eventAttributes.push('onpointermove');
+    eventAttributes.push('onpointerup');
+    eventAttributes.push('onpointercancel');
+    eventAttributes.push('onpointerenter');
+    eventAttributes.push('onpointerleave');
+    eventAttributes.push('onpointerover');
+    eventAttributes.push('onpointerout');
+
+    // Animation & Transition events
+    eventAttributes.push('onanimationstart');
+    eventAttributes.push('onanimationend');
+    eventAttributes.push('onanimationiteration');
+    eventAttributes.push('ontransitionend');
+
+    // Media events
+    eventAttributes.push('onplay');
+    eventAttributes.push('onpause');
+    eventAttributes.push('onended');
+    eventAttributes.push('ontimeupdate');
+    eventAttributes.push('onvolumechange');
+    eventAttributes.push('onseeking');
+    eventAttributes.push('onseeked');
+    eventAttributes.push('onstalled');
+    eventAttributes.push('onwaiting');
+    eventAttributes.push('oncanplay');
+    eventAttributes.push('oncanplaythrough');
+
+    // Other events
+    eventAttributes.push('onabort');
+
+    return eventAttributes;
+}
+
+function alertUser(message) {
+    console.log(message);
+}
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const scriptNonce = 'nonce="6yqGbku5JN9OeqYx"';
+    const dataNonce = '6yqGbku5JN9OeqYx';
+
+    var inlineEventAttributes = getAllInlineEventAttributes();
+
+    const whitelistedDomains = ["https://www.google.com/recaptcha"];
+    const whitelistedDivs = ["g-recaptcha", "3ds_finaldata", "errstr"];
+
+    // Track trusted context
+    let trustedContext = false;
+
+    // Check if an element or script has a valid nonce
+    function hasValidNonce(element) {
+        const isScript = element.tagName === 'SCRIPT';
+        const nonceValue = isScript ? element.getAttribute('nonce') : element.getAttribute('data-nonce');
+        const expectedNonce = isScript ? scriptNonce : dataNonce;
+
+        return nonceValue === expectedNonce ;
+    }
+
+function replaceInlineEventHandlers(root) {
+    inlineEventAttributes.forEach((attribute) => {
+        const elements = root.querySelectorAll(`[${attribute}]`);
+
+        elements.forEach((el) => {
+            const handlerCode = el.getAttribute(attribute);
+            if (!handlerCode) return;
+
+            el.removeAttribute(attribute);
+
+            try {
+                const eventType = attribute.substring(2);
+                el.addEventListener(eventType, function(event) {
+                    let returnValue;
+                    try {
+                        returnValue = new Function('event', handlerCode).call(this, event);
+                    } catch (err) {
+                        console.error(`Error executing handler for ${attribute} on`, el, err);
+                    }
+                    
+                    if (returnValue === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                });
+            } catch (error) {
+                console.error(`Failed to replace inline ${attribute} handler for element:`, el, error);
+            }
+        });
+    });
+}
+
+
+    function processDynamicElements(node) {
+        if (trustedContext || hasValidNonce(node)) {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+                replaceInlineEventHandlers(node);
+
+                if (node.querySelectorAll) {
+                    node.querySelectorAll('*').forEach((child) => {
+                        replaceInlineEventHandlers(child);
+                    });
+                }
+            }
+        } else {
+            console.warn('Modification ignored as it was not made in a trusted context:', node);
+        }
+    }
+
+    function handleAddedNodes(nodes) {
+        nodes.forEach((node) => {
+            processDynamicElements(node);
+        });
+    }
+
+    function checkForInjectedScripts(mutation) {
+        for (var i = 0; i < mutation.addedNodes.length; i++) {
+            var node = mutation.addedNodes[i];
+            if (node.nodeType === Node.ELEMENT_NODE) {
+                // Check for injected script tags
+		 if (node.tagName === 'SCRIPT' && !hasValidNonce(node)) {
+                    alertUser('Injected script detected: ' + (node.src || node.textContent) + '. Please do not proceed.');
+		    node.remove();
+                    continue; // Skip further processing of this node
+                }
+
+                // Allow iframes with whitelisted src
+                if (node.nodeName === 'IFRAME' && whitelistedDomains.some(domain => node.src.startsWith(domain))) {
+                    //console.log('Allowed iframe detected:', node.src);
+                    return; // Skip processing for this iframe only
+                }
+            }
+        }
+    }
+
+    const observerCallback = (mutationsList) => {
+        trustedContext = true; // Temporarily enable trusted context during DOM modifications
+        mutationsList.forEach((mutation) => {
+            if (mutation.type === 'childList') {
+                handleAddedNodes(mutation.addedNodes);
+                checkForInjectedScripts(mutation);
+            }
+
+            if (mutation.type === 'attributes' && monitoredAttributes.indexOf(mutation.attributeName) !== -1) {
+                // Check if the target node is one of the whitelisted entities
+                if (whitelistedDivs.some(div => mutation.target.classList.contains(div) || mutation.target.id === div)) {
+                    // Skip this mutation as it relates to a whitelisted entity
+                    return;
+                }
+
+                var oldValue = mutation.oldValue;
+                var newValue = mutation.target.getAttribute(mutation.attributeName);
+
+                // Avoid triggering for style or class changes
+                if (mutation.attributeName !== 'style' && mutation.attributeName !== 'class') {
+                    alertUser('Attribute "' + mutation.attributeName + '" changed on ' + mutation.target.tagName + '. Old value: "' + oldValue + '", New value: "' + newValue + '". Please do not proceed.');
+                }
+            }
+        });
+        trustedContext = false; // Reset trusted context after processing
+    };
+
+    const observerConfig = { childList: true, subtree: true };
+
+  // Safely attach observers
+    const bodyNode = document.body;
+    const headNode = document.head;
+
+    if (bodyNode) {
+        new MutationObserver(observerCallback).observe(bodyNode, observerConfig);
+    } else {
+        console.error("document.body is not available.");
+    }
+
+    if (headNode) {
+        new MutationObserver(observerCallback).observe(headNode, observerConfig);
+    } else {
+        console.error("document.head is not available.");
+    }
+
+  // Observe iframes
+    const iframes = document.querySelectorAll('iframe');
+    iframes.forEach((iframe) => {
+        iframe.addEventListener('load', () => {
+            try {
+                const contentDoc = iframe.contentDocument;
+                if (contentDoc && contentDoc.body) {
+                    new MutationObserver(observerCallback).observe(contentDoc.body, observerConfig);
+                } else {
+                    console.warn('Iframe contentDocument or body is not accessible.');
+                }
+            } catch (error) {
+                console.error('Error observing iframe:', error);
+            }
+        });
+    });
+
+    const originalEval = window.eval;
+    window.eval = function (code) {
+        if (document.currentScript && hasValidNonce(document.currentScript)) {
+            trustedContext = true;
+            try {
+                return originalEval(code);
+            } finally {
+                trustedContext = false;
+            }
+        } else {
+            console.warn('Blocked script execution without valid nonce.');
+        }
+    };
+
+    replaceInlineEventHandlers(document);
+
+    // Mark existing scripts with valid nonce as trusted
+    document.querySelectorAll('script[nonce]').forEach((script) => {
+        if (hasValidNonce(script)) {
+            trustedContext = true;
+            try {
+                if (script.src) {
+                    const importedScript = document.createElement('script');
+                    importedScript.src = script.src;
+                    importedScript.setAttribute('nonce', scriptNonce);
+                    document.head.appendChild(importedScript);
+                } else {
+                    eval(script.textContent);
+                }
+            } catch (error) {
+                console.error('Error executing trusted script:', error);
+            } finally {
+                trustedContext = false;
+            }
+        }
+    });
+
+/////////////////// Script and Header logging ///////////////////
+
+// Step 1: Collect script tags
+function collectScripts() {
+    var scripts = document.querySelectorAll('script');
+    var scriptDetails = [];
+
+    for (var i = 0; i < scripts.length; i++) {
+        var script = scripts[i];
+        var scriptInfo = {};
+        scriptInfo.type = script.src ? "external" : "inline"; // External or Inline
+        scriptInfo.src = script.src || "";                    // External script source (empty for inline)
+        scriptInfo.content = script.src ? "" : script.innerHTML.trim(); // Inline script content (empty for external)
+        scriptDetails.push(scriptInfo);
+    }
+
+    return scriptDetails;
+}
+
+// Step 2: Collect headers using HEAD request
+function collectHeaders(callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("HEAD", window.location.href, true); // 'HEAD' request to avoid fetching body
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === xhr.DONE) {
+            if (xhr.status === 200) {
+                var headers = {};
+                var headerLines = xhr.getAllResponseHeaders().split('\r\n');
+
+                for (var i = 0; i < headerLines.length; i++) {
+                    var header = headerLines[i];
+                    var parts = header.split(': ');
+                    if (parts[0]) {
+                        headers[parts[0]] = parts[1]; // Collect both header name and value
+                    }
+                }
+                // Callback with the collected headers
+                callback(headers);
+            }
+        }
+    };
+    xhr.send();
+}
+
+// Step 3: Build URL-encoded body from collected data using string concatenation
+function buildRequestBody(sessionid, headers, scripts) {
+    var formData = [];
+
+    // Add session ID
+    formData.push('sessionid=' + encodeURIComponent(sessionid));
+
+    // Add headers count and each header's name and value
+    var headerKeys = Object.keys(headers);
+    formData.push('headercount=' + headerKeys.length);
+    for (var i = 0; i < headerKeys.length; i++) {
+        var header = headerKeys[i];
+        formData.push('headername' + (i + 1) + '=' + encodeURIComponent(header));
+        formData.push('headervalue' + (i + 1) + '=' + encodeURIComponent(headers[header]));
+    }
+
+    // Add scripts count and script details
+    formData.push('scriptcount=' + scripts.length);
+    for (var j = 0; j < scripts.length; j++) {
+        var script = scripts[j];
+        formData.push('scripttype' + (j + 1) + '=' + encodeURIComponent(script.type));
+        formData.push('scriptsrc' + (j + 1) + '=' + encodeURIComponent(script.src));
+        formData.push('scriptcontent' + (j + 1) + '=' + encodeURIComponent(script.content));
+    }
+
+    // Join all parameters to form a URL-encoded string
+    return formData.join('&');
+}
+
+// Step 4: Perform the POST request
+function postData() {
+    // Check if the form exists
+    var paymentForm = document.forms["PaymentForm"];
+    if (!paymentForm) {
+        console.error('Payment form not found. Aborting POST request.');
+        return; // Do not proceed if the form is missing
+    }
+
+    // Collect session ID from the hidden input in the form
+    var sessionid = paymentForm["sessionid"] ? paymentForm["sessionid"].value : null;
+
+    // Check if sessionid is null or empty
+    if (!sessionid || sessionid.trim() === "") {
+        //console.error('Session ID is missing. Aborting POST request.');
+        return; // Do not proceed with the POST request
+    }
+
+    // Collect scripts
+    var scripts = collectScripts();
+
+    // Collect headers and make the POST request when headers are ready
+    collectHeaders(function(headers) {
+        // Build the body
+        var requestBody = buildRequestBody(sessionid, headers, scripts);
+
+        // Send the POST request
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://stats.slimcd.com/soft/sessionlog.asp', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    console.log('Success:', xhr.responseText);
+                } else {
+                    console.error('Network response was not ok.');
+                }
+            }
+        };
+        xhr.send(requestBody);
+    });
+
+}
+
+// Call the function to perform the POST request
+postData();
+});
+
+/***************************/
+
+</script>
+
+		</body>
+</html>

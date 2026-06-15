@@ -56,6 +56,7 @@ type TriviaQuestionRow = {
 
 export type LiveTriviaSeedQuestion = {
   slug: string | null;
+  question?: string | null;
   category: string | null;
   options: unknown;
   correct_answer: number;
@@ -373,16 +374,235 @@ function isLiveTriviaSeedAnswerAllowed(answerRaw: unknown): boolean {
 type NormalizedLiveTriviaSeedQuestion = LiveTriviaSeedQuestion & {
   slug: string;
   category: string;
+  question: string;
 };
 
 function buildSeedKey(parts: readonly string[]): number {
   return djb2(parts.join(":"));
 }
 
-function uniquePush(target: string[], seen: Set<string>, slug: string): void {
-  if (!slug || seen.has(slug)) return;
-  target.push(slug);
-  seen.add(slug);
+type LiveTriviaQuestionDiversityProfile = {
+  cluster: string;
+  tags: Set<string>;
+  stem: string;
+};
+
+type LiveTriviaQuestionTopicRule = {
+  id: string;
+  patterns: RegExp[];
+};
+
+const LIVE_TRIVIA_TOPIC_RULES: LiveTriviaQuestionTopicRule[] = [
+  {
+    id: "adaptation",
+    patterns: [
+      /\bbased on\b/,
+      /\badapted from\b/,
+      /\bnovel\b/,
+      /\bbook\b/,
+      /\bshort story\b/,
+      /\bplay by\b/,
+    ],
+  },
+  {
+    id: "landmark",
+    patterns: [
+      /\blandmark\b/,
+      /\bmonument\b/,
+      /\bstatue\b/,
+      /\btower\b/,
+      /\bpalace\b/,
+      /\bcathedral\b/,
+      /\btemple\b/,
+      /\bbridge\b/,
+      /\bskyscraper\b/,
+      /\bworld heritage\b/,
+      /\bunesco\b/,
+    ],
+  },
+  {
+    id: "capital",
+    patterns: [/\bcapital\b/],
+  },
+  {
+    id: "river",
+    patterns: [/\briver\b/, /\bflows through\b/],
+  },
+  {
+    id: "mountain",
+    patterns: [/\bmountain\b/, /\bmount\b/, /\bpeak\b/, /\bvolcano\b/],
+  },
+  {
+    id: "island",
+    patterns: [/\bisland\b/, /\barchipelago\b/],
+  },
+  {
+    id: "ocean-sea",
+    patterns: [/\bocean\b/, /\bsea\b/, /\bbay\b/, /\bstrait\b/, /\bcanal\b/],
+  },
+  {
+    id: "border",
+    patterns: [/\bborder\b/, /\bbordered\b/, /\bseparates\b/, /\bconnects\b/],
+  },
+  {
+    id: "map",
+    patterns: [/\bshown highlighted on this map\b/, /\bhighlighted on this map\b/],
+  },
+  {
+    id: "award",
+    patterns: [/\baward\b/, /\boscar\b/, /\bacademy award\b/, /\bgrammy\b/, /\bemmy\b/, /\bnobel\b/],
+  },
+  {
+    id: "creator",
+    patterns: [/\bdirected\b/, /\bdirector\b/, /\bcreated\b/, /\bwritten by\b/, /\bauthor\b/, /\bcomposer\b/],
+  },
+  {
+    id: "performer",
+    patterns: [/\bplayed by\b/, /\bstarred\b/, /\bactor\b/, /\bactress\b/, /\bsinger\b/, /\bband\b/],
+  },
+  {
+    id: "character",
+    patterns: [/\bcharacter\b/, /\bprotagonist\b/, /\bvillain\b/, /\bplayed the role\b/],
+  },
+  {
+    id: "team",
+    patterns: [/\bteam\b/, /\bfranchise\b/, /\bclub\b/],
+  },
+  {
+    id: "championship",
+    patterns: [/\bchampionship\b/, /\bchampion\b/, /\bworld series\b/, /\bsuper bowl\b/, /\bfinals\b/],
+  },
+];
+
+const QUESTION_STEM_STOP_WORDS = new Set([
+  "a",
+  "an",
+  "and",
+  "are",
+  "by",
+  "did",
+  "does",
+  "for",
+  "from",
+  "in",
+  "is",
+  "of",
+  "on",
+  "the",
+  "to",
+  "was",
+  "were",
+]);
+
+function normalizeDiversityText(value: unknown): string {
+  return String(value ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function inferQuestionStem(question: string): string {
+  const tokens = normalizeDiversityText(question)
+    .split(" ")
+    .filter((token) => token && !QUESTION_STEM_STOP_WORDS.has(token));
+  return tokens.slice(0, 4).join("-");
+}
+
+function buildLiveTriviaDiversityProfile(row: NormalizedLiveTriviaSeedQuestion): LiveTriviaQuestionDiversityProfile {
+  const categoryKey = normalizeDiversityText(row.category) || "general";
+  const questionText = String(row.question ?? "").trim();
+  const haystack = normalizeDiversityText(`${row.category} ${questionText}`);
+  const matchedTags = LIVE_TRIVIA_TOPIC_RULES
+    .filter((rule) => rule.patterns.some((pattern) => pattern.test(haystack)))
+    .map((rule) => rule.id);
+  const stem = inferQuestionStem(questionText);
+  const primary = matchedTags[0] ?? (stem ? `stem:${stem}` : `slug:${row.slug}`);
+  const scopedTags = new Set(matchedTags.map((tag) => `${categoryKey}:${tag}`));
+
+  return {
+    cluster: `${categoryKey}:${primary}`,
+    tags: scopedTags,
+    stem: stem ? `${categoryKey}:${stem}` : "",
+  };
+}
+
+function countTagOverlap(left: Set<string>, right: Set<string>): number {
+  let overlap = 0;
+  for (const tag of left) {
+    if (right.has(tag)) overlap += 1;
+  }
+  return overlap;
+}
+
+function scoreLiveTriviaDiversityCandidate(params: {
+  profile: LiveTriviaQuestionDiversityProfile;
+  recentProfiles: readonly LiveTriviaQuestionDiversityProfile[];
+  wasSeen: boolean;
+}): number {
+  const recentProfiles = params.recentProfiles.slice(-3);
+  const immediate = recentProfiles[recentProfiles.length - 1] ?? null;
+  let penalty = params.wasSeen ? 12 : 0;
+
+  if (immediate) {
+    if (immediate.cluster === params.profile.cluster) penalty += 100;
+    penalty += countTagOverlap(immediate.tags, params.profile.tags) * 18;
+    if (params.profile.stem && immediate.stem === params.profile.stem) penalty += 12;
+  }
+
+  for (const profile of recentProfiles.slice(0, -1)) {
+    if (profile.cluster === params.profile.cluster) penalty += 28;
+    penalty += countTagOverlap(profile.tags, params.profile.tags) * 8;
+    if (params.profile.stem && profile.stem === params.profile.stem) penalty += 4;
+  }
+
+  return penalty;
+}
+
+function pickDiverseLiveTriviaRows(params: {
+  rows: readonly NormalizedLiveTriviaSeedQuestion[];
+  seenSlugs: ReadonlySet<string>;
+  usedInOccurrence: Set<string>;
+  recentProfiles: LiveTriviaQuestionDiversityProfile[];
+  count: number;
+  unseenSeed: number;
+  seenSeed: number;
+}): Array<{ row: NormalizedLiveTriviaSeedQuestion; wasSeen: boolean; profile: LiveTriviaQuestionDiversityProfile }> {
+  const unseenRows = params.rows.filter((row) => !params.seenSlugs.has(row.slug));
+  const seenRows = params.rows.filter((row) => params.seenSlugs.has(row.slug));
+  const candidates = [
+    ...seededShuffle(unseenRows, params.unseenSeed).map((row) => ({ row, wasSeen: false })),
+    ...seededShuffle(seenRows, params.seenSeed).map((row) => ({ row, wasSeen: true })),
+  ].filter((candidate) => !params.usedInOccurrence.has(candidate.row.slug));
+  const picked: Array<{ row: NormalizedLiveTriviaSeedQuestion; wasSeen: boolean; profile: LiveTriviaQuestionDiversityProfile }> = [];
+
+  while (picked.length < params.count && candidates.length > 0) {
+    let bestIndex = 0;
+    let bestPenalty = Number.POSITIVE_INFINITY;
+
+    for (let index = 0; index < candidates.length; index += 1) {
+      const candidate = candidates[index]!;
+      const profile = buildLiveTriviaDiversityProfile(candidate.row);
+      const penalty = scoreLiveTriviaDiversityCandidate({
+        profile,
+        recentProfiles: params.recentProfiles,
+        wasSeen: candidate.wasSeen,
+      });
+      if (penalty < bestPenalty) {
+        bestPenalty = penalty;
+        bestIndex = index;
+      }
+    }
+
+    const [candidate] = candidates.splice(bestIndex, 1);
+    if (!candidate) break;
+    const profile = buildLiveTriviaDiversityProfile(candidate.row);
+    params.usedInOccurrence.add(candidate.row.slug);
+    params.recentProfiles.push(profile);
+    picked.push({ ...candidate, profile });
+  }
+
+  return picked;
 }
 
 export function buildLiveTriviaOccurrenceSeedSlots(params: {
@@ -414,8 +634,9 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
     if (!isLiveTriviaSeedAnswerAllowed(getLiveTriviaCorrectAnswer(row))) continue;
 
     const category = normalizeLiveTriviaCategory(row.category);
+    const question = String(row.question ?? "").trim();
     const list = byCategory.get(category) ?? [];
-    list.push({ ...row, slug, category });
+    list.push({ ...row, slug, category, question });
     byCategory.set(category, list);
   }
 
@@ -477,6 +698,7 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
 
   const slots: LiveTriviaSeedSlot[] = [];
   const usedInOccurrence = new Set<string>();
+  const recentProfiles: LiveTriviaQuestionDiversityProfile[] = [];
   let usedSeen = false;
   let repeatedQuestions = false;
   let usedRecentCategory = false;
@@ -485,8 +707,6 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
     const category = selectedCategories[roundIndex] ?? eligibleCategories[0]!;
     if (recentCategorySet.has(category)) usedRecentCategory = true;
     const categoryRows = byCategory.get(category) ?? [];
-    const unseenRows = categoryRows.filter((row) => !params.seenSlugs.has(row.slug));
-    const seenRows = categoryRows.filter((row) => params.seenSlugs.has(row.slug));
     const unseenSeed = buildSeedKey([
       "live-trivia",
       "questions",
@@ -506,40 +726,41 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
       String(roundIndex + 1),
     ]);
 
-    const chosen: string[] = [];
-    for (const row of seededShuffle(unseenRows, unseenSeed)) {
-      if (chosen.length >= questionsPerRound) break;
-      uniquePush(chosen, usedInOccurrence, row.slug);
-    }
+    const picked = pickDiverseLiveTriviaRows({
+      rows: categoryRows,
+      seenSlugs: params.seenSlugs,
+      usedInOccurrence,
+      recentProfiles,
+      count: questionsPerRound,
+      unseenSeed,
+      seenSeed,
+    });
+    if (picked.some((candidate) => candidate.wasSeen)) usedSeen = true;
 
-    if (chosen.length < questionsPerRound) {
-      for (const row of seededShuffle(seenRows, seenSeed)) {
-        if (chosen.length >= questionsPerRound) break;
-        const before = chosen.length;
-        uniquePush(chosen, usedInOccurrence, row.slug);
-        if (chosen.length > before) usedSeen = true;
-      }
-    }
-
-    if (chosen.length < questionsPerRound) {
+    if (picked.length < questionsPerRound) {
       const repeatPool = seededShuffle(categoryRows, unseenSeed ^ 0x9e3779b9);
       let repeatIndex = 0;
-      while (chosen.length < questionsPerRound && repeatPool.length > 0) {
-        const repeatSlug = repeatPool[repeatIndex % repeatPool.length]!.slug;
-        chosen.push(repeatSlug);
-        if (params.seenSlugs.has(repeatSlug)) usedSeen = true;
+      while (picked.length < questionsPerRound && repeatPool.length > 0) {
+        const repeatRow = repeatPool[repeatIndex % repeatPool.length]!;
+        const repeatSlug = repeatRow.slug;
+        const profile = buildLiveTriviaDiversityProfile(repeatRow);
+        const wasSeen = params.seenSlugs.has(repeatSlug);
+        picked.push({ row: repeatRow, wasSeen, profile });
+        recentProfiles.push(profile);
+        if (wasSeen) usedSeen = true;
         repeatedQuestions = true;
         repeatIndex += 1;
       }
     }
 
-    for (let questionIndex = 0; questionIndex < chosen.length; questionIndex += 1) {
+    for (let questionIndex = 0; questionIndex < picked.length; questionIndex += 1) {
+      const candidate = picked[questionIndex]!;
       slots.push({
-        slug: chosen[questionIndex]!,
+        slug: candidate.row.slug,
         category,
         roundNumber: roundIndex + 1,
         questionIndex: questionIndex + 1,
-        wasSeen: params.seenSlugs.has(chosen[questionIndex]!),
+        wasSeen: candidate.wasSeen,
       });
     }
 
@@ -1420,7 +1641,7 @@ export async function seedOccurrenceQuestions(
   // Active question pool in a deterministic base order.
   const { data: poolData, error: poolError } = await admin
     .from("trivia_questions")
-    .select("slug, category, options, correct_answer, question_pool")
+    .select("slug, question, category, options, correct_answer, question_pool")
     .eq("status", "active")
     .eq("question_pool", "live_showdown")
     .not("slug", "is", null)

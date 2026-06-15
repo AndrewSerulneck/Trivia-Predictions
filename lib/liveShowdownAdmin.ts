@@ -393,7 +393,7 @@ async function buildLiveShowdownQuestionMatrix(params: {
   const totalNeeded = numRounds * QUESTIONS_PER_ROUND;
   const { data, error } = await admin
     .from("trivia_questions")
-    .select("slug, category, options, correct_answer, question_pool")
+    .select("slug, question, category, options, correct_answer, question_pool")
     .eq("question_pool", "live_showdown")
     .eq("status", "active");
 

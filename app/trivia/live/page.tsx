@@ -20,6 +20,7 @@ import {
   type LiveShowdownCommentTrigger,
 } from "@/lib/liveShowdownComments";
 import { ReadyPrompt } from "@/components/trivia/ReadyPrompt";
+import { RoundStartCountdownOverlay } from "@/components/animations/RoundStartCountdownOverlay";
 import { QuestionImage } from "@/components/trivia/QuestionImage";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 
@@ -1129,9 +1130,9 @@ export default function LiveShowdownPage() {
     state.activePhase === "mid_game_break" &&
     state.upcomingRoundNumber &&
     state.secondsRemaining > 0 &&
-    state.secondsRemaining <= 5
+    state.secondsRemaining <= 10
   );
-  const showReadyPrompt = showGameStartPrompt || showRoundStartPrompt;
+  const showReadyPrompt = showGameStartPrompt;
   const feedbackLabel =
     feedbackState === "right"
       ? "RIGHT"
@@ -1902,11 +1903,16 @@ export default function LiveShowdownPage() {
       ) : null}
 
       <ReadyPrompt
-        type={showGameStartPrompt ? "game_start" : "round_start"}
-        roundNumber={showRoundStartPrompt ? (state.upcomingRoundNumber ?? undefined) : undefined}
-        category={showRoundStartPrompt ? (state.upcomingRoundCategory ?? null) : null}
+        type="game_start"
         secondsRemaining={preGameSecondsRemaining}
         isVisible={showReadyPrompt}
+      />
+
+      <RoundStartCountdownOverlay
+        categoryName={state.upcomingRoundCategory}
+        roundNumber={state.upcomingRoundNumber}
+        secondsRemaining={state.secondsRemaining}
+        isVisible={showRoundStartPrompt}
       />
 
       {popupAd ? (

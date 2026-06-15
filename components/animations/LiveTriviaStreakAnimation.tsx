@@ -62,14 +62,12 @@ function injectKeyframes(): void {
 // ─── Particle generation (stable per render via useMemo) ─────────────────────
 
 function generateParticles(): FireParticle[] {
-  return Array.from({ length: 8 }, (_, i): FireParticle => {
-    const xPercent = 15 + Math.random() * 70;           // 15–85vw
-    const targetYPercent = 20 + Math.random() * 40;      // 20–60vh from top
-    // Travel distance: from bottom (100vh) up to targetYPercent vh
-    // expressed as a negative px value via CSS custom property at render
-    const fontSize = 28 + Math.random() * 20;            // 28–48px
-    const duration = 800 + Math.random() * 600;          // 800–1400ms
-    const delay = Math.random() * 400;                   // 0–400ms
+  return Array.from({ length: 20 }, (_, i): FireParticle => {
+    const xPercent = 5 + Math.random() * 90;             // 5–95vw
+    const targetYPercent = 10 + Math.random() * 50;      // 10–60vh from top
+    const fontSize = 36 + Math.random() * 28;            // 36–64px
+    const duration = 700 + Math.random() * 500;          // 700–1200ms
+    const delay = Math.random() * 500;                   // 0–500ms
 
     return { id: i, xPercent, targetYPercent, fontSize, duration, delay };
   });
@@ -92,7 +90,7 @@ export function LiveTriviaStreakAnimation({ onComplete }: GameplayAnimationProps
       if (!cancelledRef.current) {
         onComplete();
       }
-    }, 1600);
+    }, 2000);
 
     return () => {
       cancelledRef.current = true;
@@ -181,36 +179,36 @@ function StreakBadge() {
     >
       <motion.div
         style={{
-          background: "linear-gradient(to right, rgba(245,158,11,0.30), rgba(249,115,22,0.30))",
-          border: "1px solid rgba(251,191,36,0.70)",  // amber-400/70
-          borderRadius: "1rem",                         // rounded-2xl
-          paddingLeft: "2rem",
-          paddingRight: "2rem",
-          paddingTop: "1rem",
-          paddingBottom: "1rem",
-          maxWidth: "240px",
+          background: "linear-gradient(135deg, rgba(245,158,11,0.92), rgba(249,115,22,0.92))",
+          border: "2px solid rgba(251,191,36,1)",
+          borderRadius: "1.25rem",
+          paddingLeft: "2.5rem",
+          paddingRight: "2.5rem",
+          paddingTop: "1.25rem",
+          paddingBottom: "1.25rem",
+          maxWidth: "300px",
           textAlign: "center",
           willChange: "transform, opacity",
+          boxShadow: "0 0 40px 12px rgba(245,158,11,0.55), 0 0 80px 24px rgba(249,115,22,0.30)",
         }}
-        // Enter: scale 0 → overshoot 1.15 → settle 1.0 via spring
-        // Hold at scale 1.0 through t=1300ms
-        // Exit: y -40, opacity 0 over 300ms starting at t=1300ms
+        // Enter: scale 0 → overshoot 1.35 → settle 1.0
+        // Hold through t=1600ms, then fly up + fade out over 400ms
         //
-        // Keyframe normalised to 1.6s total:
-        //   t=0ms    (0.000): scale 0,    y 0,   opacity 0
-        //   t=220ms  (0.138): scale 1.15, y 0,   opacity 1   ← spring peak
-        //   t=350ms  (0.219): scale 1.0,  y 0,   opacity 1   ← settle
-        //   t=1300ms (0.813): scale 1.0,  y 0,   opacity 1   ← hold end
-        //   t=1600ms (1.000): scale 1.0,  y -40, opacity 0   ← exit
+        // Keyframe normalised to 2.0s total:
+        //   t=0ms    (0.00): scale 0,    y 0,   opacity 0
+        //   t=220ms  (0.11): scale 1.35, y 0,   opacity 1   ← spring peak
+        //   t=380ms  (0.19): scale 1.0,  y 0,   opacity 1   ← settle
+        //   t=1600ms (0.80): scale 1.0,  y 0,   opacity 1   ← hold end
+        //   t=2000ms (1.00): scale 1.0,  y -60, opacity 0   ← exit
         initial={{ scale: 0, y: 0, opacity: 0 }}
         animate={{
-          scale:   [0,    1.15, 1.0,  1.0,  1.0 ],
-          y:       [0,    0,    0,    0,    -40 ],
+          scale:   [0,    1.35, 1.0,  1.0,  1.0 ],
+          y:       [0,    0,    0,    0,    -60 ],
           opacity: [0,    1,    1,    1,    0   ],
         }}
         transition={{
-          duration: 1.6,
-          times: [0, 0.138, 0.219, 0.813, 1.0],
+          duration: 2.0,
+          times: [0, 0.11, 0.19, 0.80, 1.0],
           scale: {
             ease: ["easeOut", "easeOut", "linear", "linear"],
           },
@@ -225,22 +223,23 @@ function StreakBadge() {
         <p
           style={{
             margin: 0,
-            fontSize: "1.5rem",       // text-2xl
+            fontSize: "2.25rem",
             fontWeight: 900,
-            color: "rgba(253,230,138,1)", // amber-200
-            lineHeight: 1.2,
+            color: "rgba(255,255,255,1)",
+            lineHeight: 1.15,
+            textShadow: "0 2px 8px rgba(180,80,0,0.6)",
           }}
         >
           🔥 On Fire!
         </p>
         <p
           style={{
-            margin: "0.25rem 0 0",
-            fontSize: "0.75rem",      // text-xs
-            fontWeight: 700,
+            margin: "0.35rem 0 0",
+            fontSize: "0.875rem",
+            fontWeight: 800,
             textTransform: "uppercase",
-            letterSpacing: "0.14em",
-            color: "rgba(251,191,36,0.80)", // amber-400/80
+            letterSpacing: "0.18em",
+            color: "rgba(255,247,200,0.95)",
             lineHeight: 1,
           }}
         >
@@ -260,16 +259,16 @@ function VignettePulse() {
         position: "fixed",
         inset: 0,
         background:
-          "radial-gradient(ellipse at center, rgba(0,0,0,0) 0%, rgba(245,158,11,0.15) 80%)",
+          "radial-gradient(ellipse at center, rgba(0,0,0,0) 30%, rgba(245,158,11,0.55) 100%)",
         pointerEvents: "none",
         willChange: "opacity",
         zIndex: 9998,
       }}
       initial={{ opacity: 0 }}
-      animate={{ opacity: [0, 0.8, 0] }}
+      animate={{ opacity: [0, 1, 0.3, 1, 0] }}
       transition={{
-        duration: 0.8,
-        times: [0, 0.3, 1],
+        duration: 1.4,
+        times: [0, 0.2, 0.45, 0.6, 1.0],
         ease: "easeInOut",
       }}
     />
