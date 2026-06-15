@@ -1041,7 +1041,7 @@
       "answer": "Mexico",
       "category": "Geography",
       "difficulty": "easy",
-      "imageUrl": "/maps/geography-map-mexico.png",
+      "imageUrl": "Cunadekcorporationyprodmx.png",
       "imageCredit": "Map via Wikimedia Commons"
     },
     {
@@ -1139,7 +1139,7 @@
     },
     {
       "slug": "geography-map-egypt",
-      "question": "Which country is shown highlighted on this map?",
+      "question": "Which country is shown here?",
       "answer": "Egypt",
       "category": "Geography",
       "difficulty": "medium",
